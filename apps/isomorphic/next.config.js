@@ -21,6 +21,16 @@ module.exports = {
         destination: '/leaderboard',
         permanent: true,
       },
+      {
+        source: '/metrics',
+        destination: '/leaderboard',
+        permanent: true,
+      },
+      {
+        source: '/websites',
+        destination: '/leaderboard',
+        permanent: true,
+      },
     ]
   },
 };

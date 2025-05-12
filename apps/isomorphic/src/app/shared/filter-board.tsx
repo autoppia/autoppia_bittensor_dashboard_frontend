@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import cn from '@core/utils/class-names';
 import { Title } from 'rizzui/typography';
 import { Radio, RadioGroup, Checkbox, CheckboxGroup } from 'rizzui';
@@ -8,11 +8,34 @@ import { websitesData } from '@/data/websites-data';
 
 type FilterBoardProps = {
     classname?: string;
+    setTableData: (data: any) => void;
 };
 
-export default function FilterBoard({ classname }: FilterBoardProps) {
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+export default function FilterBoard({ classname, setTableData }: FilterBoardProps) {
     const [period, setPeriod] = useState<string>("All");
     const [websites, setWebsites] = useState<string[]>(websitesData.map((w) => w.value));
+    const isMounted = useRef(false);
+
+    useEffect(() => {
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/tasks/filtered/?period=${period}&websites=${websites.join(',')}`);
+                const data = await response.json();
+                setTableData(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, [websites, period, apiUrl, setTableData]);
 
     return (
         <div className={cn('flex flex-col rounded-lg border border-muted', classname)}>

@@ -1,18 +1,18 @@
 'use client';
 
-import { minerScoreData } from '@/data/miner-data';
+import { useEffect } from 'react';
 import Table from '@core/components/table';
 import { useTanStackTable } from '@core/components/table/custom/use-TanStack-Table';
 import Filters from '../filters';
 import { minerTimeColumns } from './columns';
 import TablePagination from '@core/components/table/pagination';
+import { TableDataType } from '@/app/shared/table/table-data';
 
 import TableFooter from '@core/components/table/footer';
-export type MinerTimeTableDataType = (typeof minerScoreData)[number];
 
-export default function MinerTimeTable() {
-  const { table, setData } = useTanStackTable<MinerTimeTableDataType>({
-    tableData: minerScoreData,
+export default function MinerDurationTable({ data }: { data: TableDataType[] }) {
+  const { table, setData } = useTanStackTable<TableDataType>({
+    tableData: data,
     columnConfig: minerTimeColumns,
     options: {
       initialState: {
@@ -25,6 +25,9 @@ export default function MinerTimeTable() {
     },
   });
 
+  useEffect(() => {
+    setData(data);
+  }, [data, setData]);
 
   return (
     <>

@@ -28,12 +28,12 @@ export default function TableLayout({
             Score
           </Button>
           <Button
-            variant={view == "time" ? "solid" : "outline"}
+            variant={view == "duration" ? "solid" : "outline"}
             className="w-full @lg:w-auto"
-            onClick={() => setView("time")}
+            onClick={() => setView("duration")}
           >
             <PiClock className="me-1.5 h-[17px] w-[17px]" />
-            Time
+            Duration
           </Button>
         </div>
       </PageHeader >
