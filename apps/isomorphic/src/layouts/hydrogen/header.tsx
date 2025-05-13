@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Fragment } from "react";
 import { usePathname } from "next/navigation";
 import cn from '@core/utils/class-names';
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
-import HeaderMenuRight from "@/layouts/header-menu-right";
 import StickyHeader from "@/layouts/sticky-header";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 
@@ -21,7 +21,7 @@ export default function Header() {
           aria-label="Site Logo"
           className="me-4 w-[155px] text-gray-800 hover:text-gray-900 lg:me-5"
         >
-          <img src="/logo.png" alt="Logo" />
+          <Image src="/logo.png" alt="Logo" width={155} height={36} />
         </Link>
         {menuItems.map((item, index) => {
           const isActive = pathname === (item?.href as string);
@@ -61,8 +61,6 @@ export default function Header() {
           )
         })}
       </div>
-
-      {/* <HeaderMenuRight /> */}
     </StickyHeader>
   );
 }

@@ -8,8 +8,6 @@ import { minerTimeColumns } from './columns';
 import TablePagination from '@core/components/table/pagination';
 import { TableDataType } from '@/app/shared/table/table-data';
 
-import TableFooter from '@core/components/table/footer';
-
 export default function MinerDurationTable({ data }: { data: TableDataType[] }) {
   const { table, setData } = useTanStackTable<TableDataType>({
     tableData: data,
@@ -39,7 +37,6 @@ export default function MinerDurationTable({ data }: { data: TableDataType[] }) 
           rowClassName: 'last:border-0',
         }}
       />
-      <TableFooter table={table} />
       <TablePagination table={table} className="py-4" />
     </>
   );

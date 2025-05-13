@@ -35,7 +35,7 @@ export default function FilterBoard({ classname, setTableData }: FilterBoardProp
         };
 
         fetchData();
-    }, [websites, period, apiUrl, setTableData]);
+    }, [websites, period, setTableData]);
 
     return (
         <div className={cn('flex flex-col rounded-lg border border-muted', classname)}>

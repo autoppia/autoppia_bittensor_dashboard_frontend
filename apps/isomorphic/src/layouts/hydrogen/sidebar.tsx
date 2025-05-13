@@ -2,6 +2,7 @@
 
 import cn from "@core/utils/class-names";
 import Link from "next/link";
+import Image from "next/image";
 import { SidebarMenu } from "./sidebar-menu";
 
 export default function Sidebar({ className }: { className?: string }) {
@@ -18,7 +19,7 @@ export default function Sidebar({ className }: { className?: string }) {
           aria-label="Site Logo"
           className="text-gray-800 hover:text-gray-900"
         >
-          <img src="/logo.png" alt="Logo" className="max-w-[155px]" />
+          <Image src="/logo.png" alt="Logo" width={155} height={36} />
         </Link>
       </div>
 

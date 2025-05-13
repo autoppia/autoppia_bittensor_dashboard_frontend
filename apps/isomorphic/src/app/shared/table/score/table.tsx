@@ -6,7 +6,6 @@ import { useTanStackTable } from '@core/components/table/custom/use-TanStack-Tab
 import Filters from '../filters';
 import { minerScoreColumns } from './columns';
 import TablePagination from '@core/components/table/pagination';
-import TableFooter from '@core/components/table/footer';
 import { TableDataType } from '@/app/shared/table/table-data';
 
 export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
@@ -38,7 +37,6 @@ export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
           rowClassName: 'last:border-0',
         }}
       />
-      <TableFooter table={table} />
       <TablePagination table={table} className="py-4" />
     </>
   );
