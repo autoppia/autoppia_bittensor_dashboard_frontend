@@ -33,7 +33,7 @@ export default function TableLayout({
             onClick={() => setView("duration")}
           >
             <PiClock className="me-1.5 h-[17px] w-[17px]" />
-            Duration
+            Time
           </Button>
         </div>
       </PageHeader >

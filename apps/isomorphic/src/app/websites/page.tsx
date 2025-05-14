@@ -1,12 +1,12 @@
+import Websites from './websites';
 import { metaObject } from '@/config/site.config';
-import Leaderboard from './leaderboard';
 
 export const metadata = {
-  ...metaObject('Leaderboard'),
+  ...metaObject('Websites'),
 };
 
 export default function Page() {
   return (
-    <Leaderboard />
+    <Websites />
   )
 }

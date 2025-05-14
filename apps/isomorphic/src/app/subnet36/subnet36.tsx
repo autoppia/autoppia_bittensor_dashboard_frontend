@@ -7,12 +7,12 @@ import TableLayout from '@/app/shared/table/table-layout';
 import FilterBoard from '@/app/shared/filter-board';
 
 const pageHeader = {
-    title: 'Leaderboard'
+    title: 'Subnet36'
 };
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Leaderboard() {
+export default function Subnet36() {
     const [view, setView] = useState<string>("score");
     const [tableData, setTableData] = useState<any>([]);
 

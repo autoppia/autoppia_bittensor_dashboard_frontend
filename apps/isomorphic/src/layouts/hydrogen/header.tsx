@@ -32,9 +32,9 @@ export default function Header() {
                 <Link
                   href={item?.href}
                   className={cn(
-                    "group relative mx-3 my-2 flex items-center justify-between rounded-md px-3 py-2 font-medium capitalize hidden lg:block",
+                    "group relative mx-3 my-2 flex items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:block",
                     isActive
-                      ? "text-primary"
+                      ? "bg-primary text-white"
                       : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"
                   )}
                 >
@@ -44,7 +44,7 @@ export default function Header() {
                         className={cn(
                           "me-2 inline-flex h-5 w-5 items-center justify-center rounded-md [&>svg]:h-[20px] [&>svg]:w-[20px]",
                           isActive
-                            ? "text-primary"
+                            ? "text-white"
                             : "text-gray-800 dark:text-gray-500 dark:group-hover:text-gray-700"
                         )}
                       >

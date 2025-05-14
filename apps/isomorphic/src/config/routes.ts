@@ -1,6 +1,6 @@
 export const routes = {
   home: "/",
-  leaderboard: "/leaderboard",
-  metrics: "/metrics",
-  websites: "/websites"
+  leaderboard: "/",
+  websites: "/websites",
+  subnet36: "/subnet36",
 }

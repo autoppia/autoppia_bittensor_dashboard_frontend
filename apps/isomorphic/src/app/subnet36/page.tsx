@@ -1,12 +1,12 @@
-import Leaderboard from './leaderboard';
+import Subnet36 from './subnet36';
 import { metaObject } from '@/config/site.config';
 
 export const metadata = {
-  ...metaObject('Leaderboard'),
+  ...metaObject('Subnet36'),
 };
 
 export default function Page() {
   return (
-    <Leaderboard />
+    <Subnet36 />
   )
 }

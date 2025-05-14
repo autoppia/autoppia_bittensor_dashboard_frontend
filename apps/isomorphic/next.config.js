@@ -13,24 +13,5 @@ module.exports = {
       },
     ],
   },
-  transpilePackages: ["core"],
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/leaderboard',
-        permanent: true,
-      },
-      {
-        source: '/metrics',
-        destination: '/leaderboard',
-        permanent: true,
-      },
-      {
-        source: '/websites',
-        destination: '/leaderboard',
-        permanent: true,
-      },
-    ]
-  },
+  transpilePackages: ["core"]
 };
