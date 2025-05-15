@@ -126,10 +126,10 @@
     /* ----------------------------------- */
     /* primary/brand colors */
     /* ----------------------------------- */
-    --primary-lighter: 215 227 254; /* #d7e3fe */
-    --primary-default: 56 114 250; /* #3872fa */
-    --primary-dark: 29 88 216; /* #1d58d8 */
-    --primary-foreground: 255 255 255; /* #ffffff */
+    --primary-lighter: 34 34 34; /* #222222 */
+    --primary-default: 241 241 241; /* #f1f1f1 */
+    --primary-dark: 255 255 255; /* #ffffff */
+    --primary-foreground: 0 0 0; /* #000000 */
 
     /* ----------------------------------- */
     /* secondary colors */

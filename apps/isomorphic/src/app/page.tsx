@@ -2,7 +2,7 @@ import { metaObject } from '@/config/site.config';
 import Leaderboard from './leaderboard';
 
 export const metadata = {
-  ...metaObject('Leaderboard'),
+  ...metaObject(),
 };
 
 export default function Page() {

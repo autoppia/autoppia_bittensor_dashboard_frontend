@@ -19,7 +19,7 @@ export default function Sidebar({ className }: { className?: string }) {
           aria-label="Site Logo"
           className="text-gray-800 hover:text-gray-900"
         >
-          <Image src="/logo.png" alt="Logo" width={155} height={36} />
+          <Image src="/logo.webp" alt="Logo" width={155} height={36} />
         </Link>
       </div>
 

@@ -21,7 +21,7 @@ export default function Header() {
           aria-label="Site Logo"
           className="me-4 w-[155px] text-gray-800 hover:text-gray-900 lg:me-5"
         >
-          <Image src="/logo.png" alt="Logo" width={155} height={36} />
+          <Image src="/logo.webp" alt="Logo" width={155} height={36} />
         </Link>
         {menuItems.map((item, index) => {
           const isActive = pathname === (item?.href as string);
@@ -34,7 +34,7 @@ export default function Header() {
                   className={cn(
                     "group relative mx-3 my-2 flex items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:block",
                     isActive
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-black"
                       : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"
                   )}
                 >
@@ -44,7 +44,7 @@ export default function Header() {
                         className={cn(
                           "me-2 inline-flex h-5 w-5 items-center justify-center rounded-md [&>svg]:h-[20px] [&>svg]:w-[20px]",
                           isActive
-                            ? "text-white"
+                            ? "text-black"
                             : "text-gray-800 dark:text-gray-500 dark:group-hover:text-gray-700"
                         )}
                       >
