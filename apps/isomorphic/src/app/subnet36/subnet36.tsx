@@ -21,7 +21,6 @@ export default function Subnet36() {
             try {
                 const response = await fetch(`${apiUrl}/metrics/`);
                 const data = await response.json();
-                console.log(data)
                 setTableData(data)
             } catch (error) {
                 console.error('Error fetching data:', error);

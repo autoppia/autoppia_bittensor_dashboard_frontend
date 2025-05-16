@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+/** @type {import("next").NextConfig} */
 module.exports = {
   reactStrictMode: true,
   images: {
@@ -13,5 +13,14 @@ module.exports = {
       },
     ],
   },
-  transpilePackages: ["core"]
+  transpilePackages: ["core"],
+  async redirects() {
+    return [
+      {
+        source: "/agents",
+        destination: "/agents/subnet-36-miner-6",
+        permanent: true, 
+      },
+    ];
+  },
 };

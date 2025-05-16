@@ -14,7 +14,7 @@ export default function Header() {
   const pathname = usePathname();
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10">
-      <div className="flex w-full max-w-2xl items-center">
+      <div className="flex w-full items-center">
         <HamburgerButton view={<Sidebar className="static w-full 2xl:w-full" />} />
         <Link
           href={"/"}
@@ -24,7 +24,8 @@ export default function Header() {
           <Image src="/logo.webp" alt="Logo" width={155} height={36} />
         </Link>
         {menuItems.map((item, index) => {
-          const isActive = pathname === (item?.href as string);
+          const href = item?.href as string;
+          const isActive = pathname === href || (href === "/agents" && pathname.startsWith(href));
 
           return (
             <Fragment key={item.name + "-" + index}>

@@ -13,7 +13,8 @@ export function SidebarMenu() {
   return (
     <div className="mt-4 pb-3 3xl:mt-6">
       {menuItems.map((item, index) => {
-        const isActive = pathname === (item?.href as string);
+        const href = item?.href as string;
+        const isActive = pathname === href || (href === "/agents" && pathname.startsWith(href));
 
         return (
           <Fragment key={item.name + "-" + index}>

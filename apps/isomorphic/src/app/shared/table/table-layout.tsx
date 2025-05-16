@@ -2,12 +2,12 @@
 
 import { Button } from 'rizzui';
 import { PiChartLineUpDuotone, PiClock } from 'react-icons/pi';
-import PageHeader, { PageHeaderTypes } from '@/app/shared/page-header';
+import PageHeader, { PageHeaderProps } from '@/app/shared/page-header';
 
 type TableLayoutProps = {
   view: string;
   setView: React.Dispatch<React.SetStateAction<string>>;
-} & PageHeaderTypes;
+} & PageHeaderProps;
 
 export default function TableLayout({
   view,

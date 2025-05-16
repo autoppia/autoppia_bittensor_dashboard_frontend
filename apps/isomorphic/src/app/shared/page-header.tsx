@@ -1,7 +1,7 @@
 import { Title } from 'rizzui/typography';
 import cn from '@core/utils/class-names';
 
-export type PageHeaderTypes = {
+export type PageHeaderProps = {
   title: string;
   className?: string;
 };
@@ -10,9 +10,9 @@ export default function PageHeader({
   title,
   children,
   className,
-}: React.PropsWithChildren<PageHeaderTypes>) {
+}: React.PropsWithChildren<PageHeaderProps>) {
   return (
-    <header className={cn('mb-6 @container xs:-mt-2 lg:mb-7', className)}>
+    <header className={cn('mb-6 @container lg:mb-7', className)}>
       <div className="flex flex-col @lg:flex-row @lg:items-center @lg:justify-between">
         <div>
           <Title

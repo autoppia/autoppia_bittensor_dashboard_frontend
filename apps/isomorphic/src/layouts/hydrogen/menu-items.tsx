@@ -2,7 +2,8 @@ import { routes } from "@/config/routes";
 import {
   PiSquaresFourDuotone,
   PiRocketLaunchDuotone,
-  PiNetworkDuotone
+  PiNetworkDuotone,
+  PiCodesandboxLogoDuotone
 } from "react-icons/pi";
 
 // Note: do not add href in the label object, it is rendering as label
@@ -16,6 +17,11 @@ export const menuItems = [
     name: "Leaderboard",
     href: routes.leaderboard,
     icon: <PiRocketLaunchDuotone />,
+  },
+  {
+    name: "Agents",
+    href: routes.agents,
+    icon: <PiCodesandboxLogoDuotone />,
   },
   {
     name: "Websites",

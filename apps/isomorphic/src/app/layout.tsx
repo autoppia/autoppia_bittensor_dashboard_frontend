@@ -10,8 +10,8 @@ import GlobalModal from "@/app/shared/modal-views/container";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "App Name",
-  description: "Write your app description",
+  title: "Leaderboard - Bittensor Subnet 36",
+  description: "The Bittensor Subnet 36 Leaderboard",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
