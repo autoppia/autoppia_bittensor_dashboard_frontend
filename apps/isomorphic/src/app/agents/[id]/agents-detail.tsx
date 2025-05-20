@@ -18,7 +18,7 @@ import {
   YAxis,
 } from 'recharts';
 
-const BAR_COLORS = ['#3962F7', '#2750AF', '#BBD6FF'];
+const BAR_COLORS = ['#FEDCBE', '#FF7E5F', '#BE3D2A'];
 
 export default function DetailsChart({ className }: { className?: string }) {
   const { id } = useParams();

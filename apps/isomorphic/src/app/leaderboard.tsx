@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import {
     Bar,
     XAxis,
@@ -37,6 +38,7 @@ const CustomLabel = (props: any) => {
 };
 
 export default function Leaderboard() {
+    const router = useRouter();
     const leaderboardData = getLeaderboardData();
 
     return (
@@ -57,6 +59,12 @@ export default function Leaderboard() {
                         data={leaderboardData}
                         className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
                     >
+                        <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stopColor="#FF7E5F" />
+                                <stop offset="100%" stopColor="#FEB47B" />
+                            </linearGradient>
+                        </defs>
                         <XAxis type="number" axisLine={false} tickLine={false} />
                         <YAxis
                             dataKey="name"
@@ -70,7 +78,12 @@ export default function Leaderboard() {
                             horizontal={false}
                         />
                         <Tooltip content={<CustomTooltip postfix='%' formattedNumber />} />
-                        <Bar dataKey="successRate" fill="#FF996D" >
+                        <Bar
+                            dataKey="successRate"
+                            fill="url(#barGradient)"
+                            onClick={(data) => router.push(data.href)}
+                            className="cursor-pointer"
+                        >
                             <LabelList dataKey="name" content={<CustomLabel data={leaderboardData} />} />
                         </Bar>
                     </ComposedChart>

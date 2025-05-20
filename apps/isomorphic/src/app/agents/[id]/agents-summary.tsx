@@ -4,8 +4,8 @@ import { Flex, Text } from 'rizzui';
 import WidgetCard from '@core/components/cards/widget-card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from 'recharts';
 
-const RADIAL_COLORS = ['#BBD6FF', '#0070F3']
-const HORIZONTAL_COLORS = ['#0070F3', '#3962F7', '#2750AF', '#BBD6FF'];
+const RADIAL_COLORS = ['#FEDCBE', '#FF7E5F']
+const HORIZONTAL_COLORS = ['#FF7E5F', '#FEB47B', '#FF7E5F', '#E05A3B'];
 
 type AgentsSummaryProps = {
   easy?: number;
