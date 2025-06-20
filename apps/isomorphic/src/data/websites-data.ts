@@ -4,63 +4,64 @@ export type WebsiteDataType = {
   href: string;
   origin: string;
   totalTasks: number[]; // Array of [easy, medium, hard] task counts
-}
+  image: string;
+};
 
 export const websitesData = [
   {
-    name: "Bittensor",
+    name: "Autozone",
     value: "bittensor",
-    href: "https://bittensor.com",
-    origin: "bittensor",
-    totalTasks: [25, 15, 8] // [easy, medium, hard]
+    href: "http://84.247.180.192:5001/",
+    origin: "Amazon",
+    totalTasks: [25, 15, 8], // [easy, medium, hard]
+    image: "/images/web1.png",
   },
   {
-    name: "Autoppia",
+    name: "AutoDining",
     value: "autoppia",
-    href: "https://autoppia.com",
-    origin: "autoppia",
-    totalTasks: [32, 18, 10]
+    href: "http://84.247.180.192:5002/",
+    origin: "OpenDining",
+    totalTasks: [32, 18, 10],
+    image: "/images/web2.png",
   },
   {
-    name: "T3rn",
+    name: "AutoCRM",
     value: "t3rn",
-    href: "https://t3rn.io",
-    origin: "t3rn",
-    totalTasks: [20, 12, 6]
+    href: "http://84.247.180.192:5003/",
+    origin: "ClientCRM",
+    totalTasks: [20, 12, 6],
+    image: "/images/web3.png",
   },
   {
-    name: "Subtensor",
+    name: "AutoMail",
     value: "subtensor",
-    href: "https://subtensor.network",
-    origin: "subtensor",
-    totalTasks: [28, 16, 9]
+    href: "http://84.247.180.192:5004/",
+    origin: "Gmail",
+    totalTasks: [28, 16, 9],
+    image: "/images/web4.png",
   },
   {
-    name: "Taostats",
+    name: "AutoDelivery",
     value: "taostats",
-    href: "https://taostats.io",
-    origin: "taostats",
-    totalTasks: [22, 14, 7]
+    href: "http://84.247.180.192:5005/",
+    origin: "DashDish",
+    totalTasks: [22, 14, 7],
+    image: "/images/web5.png",
   },
   {
-    name: "Tao Explorer",
+    name: "AutoLodge",
     value: "tao_explorer",
-    href: "https://explorer.tao.network",
-    origin: "explorer",
-    totalTasks: [18, 11, 5]
+    href: "http://84.247.180.192:5006/",
+    origin: "AirBnB",
+    totalTasks: [18, 11, 5],
+    image: "/images/web6.png",
   },
   {
-    name: "Finney",
+    name: "AutoConnect",
     value: "finney",
-    href: "https://finney.org",
-    origin: "finney",
-    totalTasks: [30, 17, 9]
+    href: "http://84.247.180.192:5007/",
+    origin: "LinkedIn",
+    totalTasks: [30, 17, 9],
+    image: "/images/web7.png",
   },
-  {
-    name: "Cortex",
-    value: "cortex",
-    href: "https://cortexlabs.ai",
-    origin: "cortexlabs",
-    totalTasks: [24, 13, 7]
-  },
-]
+];
