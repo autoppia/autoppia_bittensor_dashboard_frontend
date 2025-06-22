@@ -11,7 +11,7 @@ export const websitesData = [
   {
     name: "Autozone",
     value: "bittensor",
-    href: "http://84.247.180.192:5001/",
+    href: "http://autozone.autoppia.com",
     origin: "Amazon",
     totalTasks: [25, 15, 8], // [easy, medium, hard]
     image: "/images/web1.png",
@@ -19,7 +19,7 @@ export const websitesData = [
   {
     name: "AutoDining",
     value: "autoppia",
-    href: "http://84.247.180.192:5002/",
+    href: "http://autodining.autoppia.com",
     origin: "OpenDining",
     totalTasks: [32, 18, 10],
     image: "/images/web2.png",
@@ -27,7 +27,7 @@ export const websitesData = [
   {
     name: "AutoCRM",
     value: "t3rn",
-    href: "http://84.247.180.192:5003/",
+    href: "http://autocrm.autoppia.com",
     origin: "ClientCRM",
     totalTasks: [20, 12, 6],
     image: "/images/web3.png",
@@ -35,7 +35,7 @@ export const websitesData = [
   {
     name: "AutoMail",
     value: "subtensor",
-    href: "http://84.247.180.192:5004/",
+    href: "http://automail.autoppia.com",
     origin: "Gmail",
     totalTasks: [28, 16, 9],
     image: "/images/web4.png",
@@ -43,7 +43,7 @@ export const websitesData = [
   {
     name: "AutoDelivery",
     value: "taostats",
-    href: "http://84.247.180.192:5005/",
+    href: "http://autodelivery.autoppia.com",
     origin: "DashDish",
     totalTasks: [22, 14, 7],
     image: "/images/web5.png",
@@ -51,7 +51,7 @@ export const websitesData = [
   {
     name: "AutoLodge",
     value: "tao_explorer",
-    href: "http://84.247.180.192:5006/",
+    href: "http://autolodge.autoppia.com",
     origin: "AirBnB",
     totalTasks: [18, 11, 5],
     image: "/images/web6.png",
@@ -59,7 +59,7 @@ export const websitesData = [
   {
     name: "AutoConnect",
     value: "finney",
-    href: "http://84.247.180.192:5007/",
+    href: "http://autoconnect.autoppia.com",
     origin: "LinkedIn",
     totalTasks: [30, 17, 9],
     image: "/images/web7.png",
