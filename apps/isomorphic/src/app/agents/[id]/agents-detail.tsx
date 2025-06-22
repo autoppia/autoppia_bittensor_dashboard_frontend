@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { getAgentDetailsData } from '@/data/query';
-import WidgetCard from '@core/components/cards/widget-card';
-import { CustomTooltip } from '@core/components/charts/custom-tooltip';
-import { CustomYAxisTick } from '@core/components/charts/custom-yaxis-tick';
-import { useMedia } from '@core/hooks/use-media';
-import cn from '@core/utils/class-names';
-import { formatNumber } from '@core/utils/format-number';
+import { useParams } from "next/navigation";
+import { getAgentDetailsData } from "@/data/query";
+import WidgetCard from "@core/components/cards/widget-card";
+import { CustomTooltip } from "@core/components/charts/custom-tooltip";
+import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
+import { useMedia } from "@core/hooks/use-media";
+import cn from "@core/utils/class-names";
+import { formatNumber } from "@core/utils/format-number";
 import {
   Bar,
   CartesianGrid,
@@ -16,24 +16,22 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
 
-const BAR_COLORS = ['#FEDCBE', '#FF7E5F', '#BE3D2A'];
+const BAR_COLORS = ["#FEDCBE", "#FF7E5F", "#BE3D2A"];
 
 export default function DetailsChart({ className }: { className?: string }) {
   const { id } = useParams();
-  const agentDetailsData = getAgentDetailsData(id as string)
-  const isTab = useMedia('(max-width: 768px)', false);
+  const agentDetailsData = getAgentDetailsData(id as string);
+  const isTab = useMedia("(max-width: 768px)", false);
   const barSize = isTab ? 16 : 20;
 
   return (
     <WidgetCard
       title="Job Overview"
-      className={cn('min-h-[28rem]', className)}
+      className={cn("min-h-[28rem]", className)}
       titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
-      action={
-        <Legend className="my-4 flex @md:justify-end @2xl:hidden" />
-      }
+      action={<Legend className="my-4 flex @md:justify-end @2xl:hidden" />}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className="h-[450px] w-full pt-6">
@@ -61,12 +59,12 @@ export default function DetailsChart({ className }: { className?: string }) {
                     ...payload,
                     value: formatNumber(Number(payload.value)),
                   };
-                  return (
-                    <CustomYAxisTick payload={pl} postfix="%" {...rest} />
-                  );
+                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
                 }}
               />
-              <Tooltip content={<CustomTooltip postfix="%" formattedNumber />} />
+              <Tooltip
+                content={<CustomTooltip postfix="%" formattedNumber />}
+              />
               <Bar
                 dataKey="easy"
                 fill={BAR_COLORS[0]}
@@ -102,7 +100,7 @@ function Legend({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex flex-wrap items-start gap-3 text-xs @3xl:text-sm lg:gap-4',
+        "flex flex-wrap items-start gap-3 text-xs @3xl:text-sm lg:gap-4",
         className
       )}
     >

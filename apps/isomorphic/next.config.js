@@ -6,8 +6,8 @@ module.exports = {
     return [
       {
         source: "/agents",
-        destination: "/agents/subnet-36-miner-6",
-        permanent: true, 
+        destination: "/agents/subnet36-top",
+        permanent: true,
       },
     ];
   },

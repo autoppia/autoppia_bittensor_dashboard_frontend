@@ -1,75 +1,51 @@
-import { websitesData } from "./websites-data";
+/* src/data/query.ts */
+
 import { agentsData } from "./agents-data";
 
-export const getLeaderboardData = () => {
-    return agentsData.map(agent => {
-        const successRates = getAgentSummaryData(agent.id);
-        return {
-            name: agent.name,
-            href: agent.href,
-            imageUrl: agent.imageUrl,
-            successRate: successRates?.total as number
-        }
-    }).sort((a, b) => b.successRate - a.successRate);
-}
+/* ─────────────────────────────────────────────────────────────── */
+/*  1. leaderboard → ordena por successRate (ya en agentsData)      */
+/* ─────────────────────────────────────────────────────────────── */
+export const getLeaderboardData = () =>
+  [...agentsData].sort((a, b) => b.successRate - a.successRate);
 
-export const getAgentById = (id: string) => {
-    return agentsData.find(agent => agent.id === id);
-}
+/* ─────────────────────────────────────────────────────────────── */
+/*  2. utilidades por agente                                        */
+/* ─────────────────────────────────────────────────────────────── */
+export const getAgentById = (id: string) =>
+  agentsData.find((a) => a.id === id) ?? null;
 
-export const getTotalTaskCounts = () => {
-    let totalEasy = 0;
-    let totalMedium = 0;
-    let totalHard = 0;
-    for (const website of websitesData) {
-        const { totalTasks } = website;
-        totalEasy += totalTasks[0];
-        totalMedium += totalTasks[1];
-        totalHard += totalTasks[2];
-    }
-    return {
-        easy: totalEasy,
-        medium: totalMedium,
-        hard: totalHard,
-        total: totalEasy + totalMedium + totalHard
-    }
-}
-
+/*
+ * Devuelve porcentaje de cada use‑case respecto al total del agente.
+ * Mantiene el nombre original usado en las páginas (<AgentPage/>)
+ * para evitar romper imports: getAgentSummaryData(id)
+ */
 export const getAgentSummaryData = (id: string) => {
-    const selectedAgent = getAgentById(id);
-    if (!selectedAgent) return null;
+  const agent = getAgentById(id);
+  if (!agent) return null;
 
-    const { successfulTasks } = selectedAgent;
-    const totalTasks = getTotalTaskCounts();
+  const total = agent.usecase1 + agent.usecase2 + agent.usecase3;
+  if (total === 0) return { usecase1: 0, usecase2: 0, usecase3: 0, total: 0 };
 
-    let successfulEasy = 0, successfulMedium = 0, successfulHard = 0;
+  const pct = (v: number) => parseFloat(((100 * v) / total).toFixed(1));
 
-    for (const website in successfulTasks) {
-        successfulEasy += successfulTasks[website][0];
-        successfulMedium += successfulTasks[website][1];
-        successfulHard += successfulTasks[website][2];
-    }
-    let successfulTotal = successfulEasy + successfulMedium + successfulHard;
+  return {
+    usecase1: pct(agent.usecase1),
+    usecase2: pct(agent.usecase2),
+    usecase3: pct(agent.usecase3),
+    total: 100,
+  };
+};
 
-    return {
-        easy: parseFloat((100 * successfulEasy / totalTasks.easy).toFixed(1)),
-        medium: parseFloat((100 * successfulMedium / totalTasks.medium).toFixed(1)),
-        hard: parseFloat((100 * successfulHard / totalTasks.hard).toFixed(1)),
-        total: parseFloat((100 * successfulTotal / totalTasks.total).toFixed(1)),
-    }
-}
-
+/*
+ * Devuelve valores absolutos para un breakdown sencillo.
+ * Si tu UI no lo usa puedes omitirlo, pero lo exporto por si acaso.
+ */
 export const getAgentDetailsData = (id: string) => {
-    const selectedAgent = getAgentById(id);
-    if (!selectedAgent) return null;
-
-    const { successfulTasks } = selectedAgent;
-
-    return websitesData.map(website => ({
-        website: website.name,
-        easy: parseFloat((100 * successfulTasks[website.value][0] / website.totalTasks[0]).toFixed(1)),
-        medium: parseFloat((100 * successfulTasks[website.value][1] / website.totalTasks[1]).toFixed(1)),
-        hard: parseFloat((100 * successfulTasks[website.value][2] / website.totalTasks[2]).toFixed(1)),
-    }))
-}
-
+  const agent = getAgentById(id);
+  if (!agent) return null;
+  return [
+    { name: "Use case 1", value: agent.usecase1 },
+    { name: "Use case 2", value: agent.usecase2 },
+    { name: "Use case 3", value: agent.usecase3 },
+  ];
+};

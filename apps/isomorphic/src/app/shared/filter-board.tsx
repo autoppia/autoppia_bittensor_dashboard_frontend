@@ -78,7 +78,7 @@ export default function FilterBoard({
           {websitesData.map((w) => (
             <Checkbox
               key={w.portValidator}
-              label={`${w.name} :${w.portValidator}`}
+              label={`${w.name} `}
               value={w.portValidator}
             />
           ))}
