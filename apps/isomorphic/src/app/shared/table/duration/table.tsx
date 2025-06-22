@@ -1,43 +1,51 @@
-'use client';
+// src/app/shared/table/duration/table.tsx
+"use client";
 
-import { useEffect } from 'react';
-import Table from '@core/components/table';
-import { useTanStackTable } from '@core/components/table/custom/use-TanStack-Table';
-import Filters from '../filters';
-import { minerTimeColumns } from './columns';
-import TablePagination from '@core/components/table/pagination';
-import { TableDataType } from '@/app/shared/table/table-data';
+import { useEffect, useMemo } from "react";
+import Table from "@core/components/table";
+import TablePagination from "@core/components/table/pagination";
+import Filters from "../filters";
+import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
+import { TableDataType } from "@/app/shared/table/table-data";
+import { buildMinerDurationColumns } from "./columns";
 
-export default function MinerDurationTable({ data }: { data: TableDataType[] }) {
+export default function MinerDurationTable({
+  data,
+}: {
+  data: TableDataType[];
+}) {
+  const hasData = data.length > 0;
+  const columns = useMemo(() => buildMinerDurationColumns(data), [data]);
+
   const { table, setData } = useTanStackTable<TableDataType>({
     tableData: data,
-    columnConfig: minerTimeColumns,
+    columnConfig: columns,
     options: {
-      initialState: {
-        pagination: {
-          pageIndex: 0,
-          pageSize: 10,
-        },
-      },
+      initialState: { pagination: { pageIndex: 0, pageSize: 10 } },
       enableColumnResizing: false,
     },
   });
 
-  useEffect(() => {
-    setData(data);
-  }, [data, setData]);
+  useEffect(() => setData(data), [data, setData]);
 
+  /* nodo raíz estable */
   return (
-    <>
-      <Filters table={table} />
-      <Table
-        table={table}
-        classNames={{
-          container: 'border border-muted rounded-md',
-          rowClassName: 'last:border-0',
-        }}
-      />
-      <TablePagination table={table} className="py-4" />
-    </>
+    <div>
+      {!hasData ? (
+        <p className="py-8 text-center">Cargando métricas…</p>
+      ) : (
+        <>
+          <Filters table={table} />
+          <Table
+            table={table}
+            classNames={{
+              container: "border border-muted rounded-md",
+              rowClassName: "last:border-0",
+            }}
+          />
+          <TablePagination table={table} className="py-4" />
+        </>
+      )}
+    </div>
   );
 }
