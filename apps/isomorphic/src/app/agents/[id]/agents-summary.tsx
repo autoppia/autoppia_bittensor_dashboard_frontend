@@ -1,71 +1,89 @@
-'use client';
+/* src/app/shared/agents/AgentsSummary.tsx */
+"use client";
 
-import { Flex, Text } from 'rizzui';
-import WidgetCard from '@core/components/cards/widget-card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Label } from 'recharts';
+import { Flex, Text } from "rizzui";
+import WidgetCard from "@core/components/cards/widget-card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 
-const RADIAL_COLORS = ['#FEDCBE', '#FF7E5F']
-const HORIZONTAL_COLORS = ['#FF7E5F', '#FEB47B', '#FF7E5F', '#E05A3B'];
+/* -------- colores -------- */
+const RADIAL_COLORS = ["#FEDCBE", "#FF7E5F"];
+const BAR_COLORS = [
+  "#FF7E5F",
+  "#FFA173",
+  "#FFBC89",
+  "#FFD5A0",
+  "#FFE9B6",
+  "#E05A3B",
+  "#C14F37",
+  "#A44333",
+  "#88392F",
+  "#6C2E2B",
+];
 
-type AgentsSummaryProps = {
-  easy?: number;
-  medium?: number;
-  hard?: number;
-  total?: number;
+/* -------- tipos -------- */
+export type AgentsSummaryProps = {
+  /** array de diez porcentajes (0‑100) para los diez casos de uso */
+  usecases: number[]; // longitud 10
+  /** porcentaje global de éxito (0‑100) */
+  total: number;
   className?: string;
-}
+};
 
-export default function AgentsSummary(props: AgentsSummaryProps) {
-  const { easy, medium, hard, total, className } = props;
+/* -------- componente -------- */
+export default function AgentsSummary({
+  usecases,
+  total,
+  className,
+}: AgentsSummaryProps) {
+  /* radial chart: success vs failed */
   const radialData = [
-    { label: "failed", value: 100 - (total as number) },    
-    { label: "success", value: total }  
-  ]
-  const horizontalData = [
-    { label: "Total Tasks", value: total },
-    { label: "Easy Tasks", value: easy },
-    { label: "Medium Tasks", value: medium },
-    { label: "Hard Tasks", value: hard }
-  ]
+    { label: "failed", value: 100 - total },
+    { label: "success", value: total },
+  ];
+
+  /* listado horizontal de los 10 use-cases */
+  const horizontalData = Array.from({ length: 10 }, (_, i) => ({
+    label: `Use case ${i + 1}`,
+    value: usecases[i] ?? 0,
+  }));
 
   return (
     <WidgetCard
-      title={'Used Storage'}
+      title="Job Summary"
       headerClassName="hidden"
       className={className}
     >
+      {/* ───── donut ───── */}
       <div className="h-[320px] w-full @sm:py-3">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart className="[&_.recharts-layer:focus]:outline-none [&_.recharts-sector:focus]:outline-none dark:[&_.recharts-text.recharts-label]:first-of-type:fill-white">
+          <PieChart>
             <Pie
               data={radialData}
-              cornerRadius={40}
               innerRadius={100}
               outerRadius={120}
               paddingAngle={10}
-              fill="#BFDBFE"
-              stroke="rgba(0,0,0,0)"
+              cornerRadius={40}
               dataKey="value"
+              stroke="rgba(0,0,0,0)"
             >
               <Label
-                width={30}
                 position="center"
-                content={
-                  <CustomLabel value1={radialData[1].value?.toFixed(0)} value2={'For 100 Tasks'} />
-                }
-              ></Label>
-              {radialData.map((_, index) => (
+                content={<CenterLabel value={total.toFixed(0)} />}
+              />
+              {radialData.map((_, idx) => (
                 <Cell
-                  key={`cell-${index}`}
-                  fill={RADIAL_COLORS[index % RADIAL_COLORS.length]}
+                  key={idx}
+                  fill={RADIAL_COLORS[idx % RADIAL_COLORS.length]}
                 />
               ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
       </div>
+
+      {/* ───── lista horizontal ───── */}
       <div>
-        {horizontalData.map((item, index) => (
+        {horizontalData.map((item, idx) => (
           <Flex
             key={item.label}
             align="center"
@@ -75,7 +93,7 @@ export default function AgentsSummary(props: AgentsSummaryProps) {
             <Flex align="center" className="gap-0">
               <span
                 className="me-2 size-2 rounded-full"
-                style={{ backgroundColor: HORIZONTAL_COLORS[index] }}
+                style={{ backgroundColor: BAR_COLORS[idx] }}
               />
               <Text
                 as="span"
@@ -84,7 +102,7 @@ export default function AgentsSummary(props: AgentsSummaryProps) {
                 {item.label}
               </Text>
             </Flex>
-            <Text as="span">{item.value?.toFixed(1)}%</Text>
+            <Text as="span">{item.value.toFixed(1)}%</Text>
           </Flex>
         ))}
       </div>
@@ -92,32 +110,16 @@ export default function AgentsSummary(props: AgentsSummaryProps) {
   );
 }
 
-function CustomLabel(props: any) {
-  const { cx, cy } = props.viewBox;
+/* -------- etiqueta central del donut -------- */
+function CenterLabel({ value }: { value: string }) {
   return (
-    <>
-      <text
-        x={cx}
-        y={cy - 10}
-        fill="#111111"
-        className="recharts-text recharts-label"
-        textAnchor="middle"
-        dominantBaseline="central"
-      >
-        <tspan alignmentBaseline="middle" fontSize="36px">
-          {props.value1}%
-        </tspan>
-      </text>
-      <text
-        x={cx}
-        y={cy + 20}
-        fill="#666666"
-        className="recharts-text recharts-label"
-        textAnchor="middle"
-        dominantBaseline="central"
-      >
-        <tspan fontSize="14px">{props.value2}</tspan>
-      </text>
-    </>
+    <text textAnchor="middle" dominantBaseline="central" fill="#111">
+      <tspan x="0" dy="-10" fontSize="36px" fontWeight="700">
+        {value}%
+      </tspan>
+      <tspan x="0" dy="24" fontSize="14px" fill="#666">
+        Total
+      </tspan>
+    </text>
   );
 }
