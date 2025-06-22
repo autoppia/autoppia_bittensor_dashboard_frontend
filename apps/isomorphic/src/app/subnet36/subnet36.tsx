@@ -1,4 +1,4 @@
-/* src/app/subnet36/subnet36.tsx */
+/* ─────────────── src/app/subnet36/subnet36.tsx ─────────────── */
 "use client";
 
 import { useState } from "react";
@@ -13,7 +13,7 @@ const pageHeader = { title: "Subnet36" };
 export default function Subnet36() {
   const [view, setView] = useState<"score" | "duration">("score");
   const [tableData, setTableData] = useState<TableDataType[]>([]);
-  const loading = tableData.length === 0;
+  const [loading, setLoading] = useState(true);
 
   return (
     <TableLayout title={pageHeader.title} view={view} setView={setView}>
@@ -21,6 +21,7 @@ export default function Subnet36() {
         <FilterBoard
           classname="w-full md:w-[270px] border-box"
           setTableData={setTableData}
+          setLoading={setLoading}
         />
 
         <div className="w-full md:w-[calc(100%-270px)]">
