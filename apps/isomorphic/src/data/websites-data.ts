@@ -1,72 +1,71 @@
+/* src/data/websites-data.ts */
+
 export type WebsiteDataType = {
   name: string;
-  value: string;
+  portValidator: string; // ← puerto que usa el validador
   href: string;
   origin: string;
-  totalTasks: number[]; // Array of [easy, medium, hard] task counts
+  totalTasks: number[]; // [easy, medium, hard]
   image: string;
 };
 
-export const websitesData = [
+/**
+ *  Lista de webs con su puerto público del validador.
+ *  Se usa en <FilterBoard /> para construir el filtro “Ports”.
+ */
+export const websitesData: WebsiteDataType[] = [
   {
     name: "Autozone",
-    value: "bittensor",
+    portValidator: "8002",
     href: "http://autozone.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8002",
     origin: "Amazon",
-    totalTasks: [25, 15, 8], // [easy, medium, hard]
+    totalTasks: [25, 15, 8],
     image: "/images/web1.png",
   },
   {
     name: "AutoDining",
-    value: "autoppia",
+    portValidator: "8003",
     href: "http://autodining.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8003",
     origin: "OpenDining",
     totalTasks: [32, 18, 10],
     image: "/images/web2.png",
   },
   {
     name: "AutoCRM",
-    value: "t3rn",
+    portValidator: "8004",
     href: "http://autocrm.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8004",
     origin: "ClientCRM",
     totalTasks: [20, 12, 6],
     image: "/images/web3.png",
   },
   {
     name: "AutoMail",
-    value: "subtensor",
+    portValidator: "8005",
     href: "http://automail.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8005",
     origin: "Gmail",
     totalTasks: [28, 16, 9],
     image: "/images/web4.png",
   },
   {
     name: "AutoDelivery",
-    value: "taostats",
+    portValidator: "8006",
     href: "http://autodelivery.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8006",
     origin: "DashDish",
     totalTasks: [22, 14, 7],
     image: "/images/web5.png",
   },
   {
     name: "AutoLodge",
-    value: "tao_explorer",
+    portValidator: "8007",
     href: "http://autolodge.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8007",
     origin: "AirBnB",
     totalTasks: [18, 11, 5],
     image: "/images/web6.png",
   },
   {
     name: "AutoConnect",
-    value: "finney",
+    portValidator: "8008",
     href: "http://autoconnect.autoppia.com",
-    validatorWebUrl: "http://127.0.0.1:8008",
     origin: "LinkedIn",
     totalTasks: [30, 17, 9],
     image: "/images/web7.png",
