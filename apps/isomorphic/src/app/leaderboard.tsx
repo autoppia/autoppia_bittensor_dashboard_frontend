@@ -16,27 +16,27 @@ import { Title, Text } from "rizzui/typography";
 import { getLeaderboardData, getAgentById } from "@/data/query";
 
 /* ───────────────────────────── custom label ────────────────────────── */
-const CustomLabel = ({ x, y, width, height, value, data }: any) => {
-  const agent = data.find((item: any) => item.name === value);
+const CustomLabel = ({ x, y, payload, data }: any) => {
+  const agent = data.find((item: any) => item.name === payload.value);
   if (!agent) return null;
 
   return (
     <g>
       <image
         href={agent.imageUrl}
-        x={x + width + 15}
-        y={y + height / 2 - 15}
+        x={x - 175} // Position image to the left
+        y={y - 15} // Center image vertically
         width={30}
         height={30}
       />
       <text
-        x={x + width + 70}
-        y={y + height / 2}
+        x={x - 138} // Text position (adjusted to the left)
+        y={y}
         fill="#fff"
-        textAnchor="middle"
+        textAnchor="start" // Align text to the left
         dominantBaseline="middle"
       >
-        {agent.successRate.toFixed(1)}%
+        {agent.name}
       </text>
     </g>
   );
@@ -52,9 +52,9 @@ const TooltipContent = ({ active, payload }: any) => {
   return (
     <div className="rounded-md bg-gray-800/90 p-3 text-xs">
       <p className="font-semibold text-white mb-1">{agent.name}</p>
-      <p className="text-gray-300">Use case&nbsp;1 • {agent.usecase1}</p>
-      <p className="text-gray-300">Use case&nbsp;2 • {agent.usecase2}</p>
-      <p className="text-gray-300">Use case&nbsp;3 • {agent.usecase3}</p>
+      <p className="text-gray-300">Use case 1 • {agent.usecase1}</p>
+      <p className="text-gray-300">Use case 2 • {agent.usecase2}</p>
+      <p className="text-gray-300">Use case 3 • {agent.usecase3}</p>
     </div>
   );
 };
@@ -63,6 +63,11 @@ const TooltipContent = ({ active, payload }: any) => {
 export default function Leaderboard() {
   const router = useRouter();
   const leaderboardData = getLeaderboardData(); // ya viene ordenado
+
+  // Create a bound version of CustomLabel with leaderboardData
+  const BoundCustomLabel = (props: any) => (
+    <CustomLabel {...props} data={leaderboardData} />
+  );
 
   return (
     <div className="flex flex-col w-full px-6 md:px-12 lg:px-24 xl:px-36 items-center">
@@ -96,6 +101,9 @@ export default function Leaderboard() {
               axisLine={true}
               tickLine={false}
               style={{ fontSize: 12, fontWeight: 500, fill: "#fff" }}
+              tickFormatter={(value) => ""} // Hide default text
+              tick={BoundCustomLabel} // Use the bound component
+              tickMargin={10} // Add some margin for better spacing
             />
             <CartesianGrid horizontal={false} />
             <Tooltip content={<TooltipContent />} />
@@ -107,8 +115,29 @@ export default function Leaderboard() {
               className="cursor-pointer"
             >
               <LabelList
-                dataKey="name"
-                content={<CustomLabel data={leaderboardData} />}
+                dataKey="successRate"
+                content={({ x, y, width, value }) => {
+                  // Ensure width is a number, default to 0 if undefined
+                  const barWidth = typeof width === "number" ? width : 0;
+                  // Assert value as number
+                  const successRate =
+                    typeof value === "number"
+                      ? value
+                      : parseFloat(value as string);
+                  // Center the percentage vertically with the bar (barSize / 2)
+                  const barHeight = 35; // Matches barSize
+                  return (
+                    <text
+                      x={(x as number) + barWidth + 15}
+                      y={(y as number) + barHeight / 2}
+                      fill="#fff"
+                      textAnchor="start"
+                      dominantBaseline="middle"
+                    >
+                      {successRate.toFixed(1)}%
+                    </text>
+                  );
+                }}
               />
             </Bar>
           </ComposedChart>
