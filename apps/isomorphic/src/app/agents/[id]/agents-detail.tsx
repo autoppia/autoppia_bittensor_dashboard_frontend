@@ -17,14 +17,50 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useEffect, useState } from "react";
 
 const BAR_COLORS = ["#FEDCBE", "#FF7E5F", "#BE3D2A"];
 
 export default function DetailsChart({ className }: { className?: string }) {
   const { id } = useParams();
-  const agentDetailsData = getAgentDetailsData(id as string);
+  const [agentDetailsData, setAgentDetailsData] = useState<ChartData>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const isTab = useMedia("(max-width: 768px)", false);
   const barSize = isTab ? 16 : 20;
+
+  useEffect(() => {
+    const data = getAgentDetailsData(id as string);
+    setAgentDetailsData(data);
+    setIsLoading(false);
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <WidgetCard
+        title="Job Overview"
+        className={cn("min-h-[28rem]", className)}
+        titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
+      >
+        <div className="flex h-[450px] items-center justify-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </WidgetCard>
+    );
+  }
+
+  if (!agentDetailsData.length) {
+    return (
+      <WidgetCard
+        title="Job Overview"
+        className={cn("min-h-[28rem]", className)}
+        titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
+      >
+        <div className="flex h-[450px] items-center justify-center">
+          <p className="text-gray-500">No data available for this agent.</p>
+        </div>
+      </WidgetCard>
+    );
+  }
 
   return (
     <WidgetCard
