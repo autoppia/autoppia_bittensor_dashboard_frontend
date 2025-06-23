@@ -68,7 +68,9 @@ export default function AgentsSummary({
             >
               <Label
                 position="center"
-                content={<CenterLabel value={total.toFixed(0)} />}
+                content={
+                  <CenterLabel value={Number(total)?.toFixed(0) || "0"} />
+                }
               />
               {radialData.map((_, idx) => (
                 <Cell

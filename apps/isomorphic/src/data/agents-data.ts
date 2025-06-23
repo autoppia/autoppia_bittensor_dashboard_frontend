@@ -15,7 +15,7 @@ export type AgentDataType = {
 export const agentsData: AgentDataType[] = [
   {
     id: "subnet36-top-miner",
-    name: "Autoppia Bittensor Agent",
+    name: "Autoppia Bittensor",
     href: "/agents/subnet36-top",
     imageUrl: "/icons/bittensor.webp",
     usecase1: 64,
