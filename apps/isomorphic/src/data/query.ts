@@ -40,12 +40,80 @@ export const getAgentSummaryData = (id: string) => {
  * Devuelve valores absolutos para un breakdown sencillo.
  * Si tu UI no lo usa puedes omitirlo, pero lo exporto por si acaso.
  */
-export const getAgentDetailsData = (id: string) => {
-  const agent = getAgentById(id);
-  if (!agent) return null;
-  return [
-    { name: "Use case 1", value: agent.usecase1 },
-    { name: "Use case 2", value: agent.usecase2 },
-    { name: "Use case 3", value: agent.usecase3 },
+type UseCase = { id: number; name: string };
+type UseCaseScore = { useCaseId: number; score: number };
+
+type WebData = {
+  name: string;
+  useCases: UseCase[];
+  results: UseCaseScore[];
+};
+
+type AgentExtended = {
+  id: string;
+  successRate: number;
+  websites: WebData[];
+};
+
+export const getAgentExtendedData = (id: string): AgentExtended | null => {
+  // Hard-coded data for demonstration
+  const useCases: UseCase[] = [
+    { id: 1, name: "Easy" },
+    { id: 2, name: "Medium" },
+    { id: 3, name: "Hard" },
   ];
+
+  const hardCodedData: AgentExtended = {
+    id,
+    successRate: 85, // Example global success rate
+    websites: [
+      {
+        name: "web1",
+        useCases,
+        results: [
+          { useCaseId: 1, score: 90 }, // Easy
+          { useCaseId: 2, score: 75 }, // Medium
+          { useCaseId: 3, score: 60 }, // Hard
+        ],
+      },
+      {
+        name: "Web2",
+        useCases,
+        results: [
+          { useCaseId: 1, score: 85 },
+          { useCaseId: 2, score: 70 },
+          { useCaseId: 3, score: 55 },
+        ],
+      },
+      {
+        name: "Web3",
+        useCases,
+        results: [
+          { useCaseId: 1, score: 95 },
+          { useCaseId: 2, score: 80 },
+          { useCaseId: 3, score: 65 },
+        ],
+      },
+    ],
+  };
+
+  // Simulate "agent not found" for invalid IDs
+  if (!id || id === "invalid") {
+    return null;
+  }
+
+  return hardCodedData;
+};
+
+// Transform data for the chart
+export const getAgentDetailsData = (id: string) => {
+  const agent = getAgentExtendedData(id);
+  if (!agent) return [];
+
+  return agent.websites.map((website) => ({
+    website: website.name,
+    easy: website.results.find((r) => r.useCaseId === 1)?.score ?? 0,
+    medium: website.results.find((r) => r.useCaseId === 2)?.score ?? 0,
+    hard: website.results.find((r) => r.useCaseId === 3)?.score ?? 0,
+  }));
 };

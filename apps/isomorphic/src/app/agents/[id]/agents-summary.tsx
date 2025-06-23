@@ -1,9 +1,9 @@
-/* src/app/shared/agents/AgentsSummary.tsx */
 "use client";
 
 import { Flex, Text } from "rizzui";
 import WidgetCard from "@core/components/cards/widget-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
+import { getAgentExtendedData } from "@/data/query";
 
 /* -------- colores -------- */
 const RADIAL_COLORS = ["#FEDCBE", "#FF7E5F"];
@@ -11,41 +11,70 @@ const BAR_COLORS = [
   "#FF7E5F",
   "#FFA173",
   "#FFBC89",
-  "#FFD5A0",
+  "#FFD5DC",
   "#FFE9B6",
-  "#E05A3B",
+  "#E05A3D",
   "#C14F37",
   "#A44333",
-  "#88392F",
+  "#883B2F",
   "#6C2E2B",
+  "#4F2527",
+  "#FF9999", // Added for 12 use cases
 ];
 
 /* -------- tipos -------- */
 export type AgentsSummaryProps = {
-  /** array de diez porcentajes (0‑100) para los diez casos de uso */
-  usecases: number[]; // longitud 10
-  /** porcentaje global de éxito (0‑100) */
-  total: number;
+  id: string;
   className?: string;
 };
 
 /* -------- componente -------- */
-export default function AgentsSummary({
-  usecases,
-  total,
-  className,
-}: AgentsSummaryProps) {
+export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
+  const agent = getAgentExtendedData(id);
+
+  if (!agent) {
+    return (
+      <WidgetCard
+        title="Job Summary"
+        headerClassName="hidden"
+        className={className}
+      >
+        <div className="flex h-[320px] items-center justify-center">
+          <p className="text-gray-500">No data available for this agent.</p>
+        </div>
+      </WidgetCard>
+    );
+  }
+
   /* radial chart: success vs failed */
   const radialData = [
-    { label: "failed", value: 100 - total },
-    { label: "success", value: total },
+    { label: "failed", value: 100 - agent.successRate },
+    { label: "success", value: agent.successRate },
   ];
 
-  /* listado horizontal de los 10 use-cases */
-  const horizontalData = Array.from({ length: 10 }, (_, i) => ({
-    label: `Use case ${i + 1}`,
-    value: usecases[i] ?? 0,
-  }));
+  /* listado horizontal de los 12 use-cases */
+  const horizontalData = agent.websites[0].useCases.map((useCase, idx) => {
+    // Calculate average score for this use case across all websites
+    const scores = agent.websites
+      .map(
+        (website) =>
+          website.results.find((r) => r.useCaseId === useCase.id)?.score ?? 0
+      )
+      .filter((score) => score > 0);
+    const averageScore =
+      scores.length > 0
+        ? Number(
+            (
+              scores.reduce((sum, score) => sum + score, 0) / scores.length
+            ).toFixed(1)
+          )
+        : 0;
+
+    return {
+      label: useCase.name,
+      value: averageScore,
+    };
+  });
 
   return (
     <WidgetCard
@@ -69,7 +98,9 @@ export default function AgentsSummary({
               <Label
                 position="center"
                 content={
-                  <CenterLabel value={Number(total)?.toFixed(0) || "0"} />
+                  <CenterLabel
+                    value={Number(agent.successRate)?.toFixed(0) || "0"}
+                  />
                 }
               />
               {radialData.map((_, idx) => (
@@ -95,7 +126,7 @@ export default function AgentsSummary({
             <Flex align="center" className="gap-0">
               <span
                 className="me-2 size-2 rounded-full"
-                style={{ backgroundColor: BAR_COLORS[idx] }}
+                style={{ backgroundColor: BAR_COLORS[idx % BAR_COLORS.length] }}
               />
               <Text
                 as="span"
