@@ -28,7 +28,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         height={100}
       />
       <div className="mt-4">
-        <Button
+        {/* <Button
           onClick={() =>
             openModal({
               view: <WebsiteInfo title={website.name} />,
@@ -40,7 +40,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         >
           <PiLightbulbDuotone className="me-1.5 h-[17px] w-[17px]" />
           About
-        </Button>
+        </Button> */}
         <Link href={website.href} target="_blank">
           <Button size="sm" rounded="pill" className="ms-2">
             <PiEyeDuotone className="me-1.5 h-[17px] w-[17px]" />
