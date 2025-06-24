@@ -33,13 +33,13 @@ const CustomLabel = ({ x, y, payload, data }: any) => {
     >
       <image
         href={agent.imageUrl}
-        x={x - 175}
+        x={x - 155}
         y={y - 15}
         width={30}
         height={30}
       />
       <text
-        x={x - 138}
+        x={x - 118}
         y={y}
         fill="#fff"
         textAnchor="start"
@@ -113,7 +113,7 @@ export default function Leaderboard() {
               style={{ fontSize: 12, fontWeight: 500, fill: "#fff" }}
               tickFormatter={(value) => ""} // Hide default text
               tick={BoundCustomLabel} // Use the bound component
-              tickMargin={10} // Add some margin for better spacing
+              tickMargin={7} // Add some margin for better spacing
             />
             <CartesianGrid horizontal={false} />
             <Tooltip content={<TooltipContent />} />
