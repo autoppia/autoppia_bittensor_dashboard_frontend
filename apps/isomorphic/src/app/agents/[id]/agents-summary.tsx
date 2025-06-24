@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
 
-const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"]; // success, failed
+const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"];
 
 const BAR_COLORS = [
   "#FF7E5F",
@@ -21,7 +21,7 @@ const BAR_COLORS = [
   "#88392F",
   "#6C2E2B",
   "#6C2E2B",
-  "#6C2E2B", // Extended for 12 use cases
+  "#6C2E2B",
 ];
 
 export type AgentsSummaryProps = {
@@ -29,6 +29,11 @@ export type AgentsSummaryProps = {
   selectedWebsite?: string | null;
   usecases?: number[];
   total?: number;
+};
+
+type DisplayItem = {
+  label: string;
+  value: number;
 };
 
 export default function AgentsSummary({
@@ -49,9 +54,8 @@ export default function AgentsSummary({
     { label: "failed", value: 100 - successRate },
   ];
 
-  let displayData;
+  let displayData: DisplayItem[];
   if (selectedWebsite) {
-    // Per-website view: 12 use cases for the selected website
     const selectedWeb = agentData.websites.find(
       (web) => web.name === selectedWebsite
     );
@@ -66,7 +70,6 @@ export default function AgentsSummary({
       displayData = [];
     }
   } else {
-    // General view: List all websites with their average scores
     displayData = agentData.websites.map((web) => {
       const allScores = web.results.map((r) => r.score);
       const average = allScores.length
@@ -170,7 +173,7 @@ function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
       <text
         x={cx}
         y={cy - 10}
-        fill="#FFFFFF" // Hex for white
+        fill="#FFFFFF"
         textAnchor="middle"
         dominantBaseline="central"
       >

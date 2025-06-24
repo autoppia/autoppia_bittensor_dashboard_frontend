@@ -44,19 +44,21 @@ export default function DetailsChart({
   ];
 
   const chartData = selectedWebsite
-    ? [
-        {
-          website: selectedWebsite,
-          average: Number(
-            (
-              agentDetailsData.websites
-                .find((web) => web.name === selectedWebsite)
-                ?.results.map((r) => r.score)
-                .reduce((sum, s) => sum + s, 0) / 12 || 0
-            ).toPrecision(3)
-          ),
-        },
-      ]
+    ? (() => {
+        const selectedWeb = agentDetailsData.websites.find(
+          (web) => web.name === selectedWebsite
+        );
+        const scores = selectedWeb?.results.map((r) => r.score) ?? [];
+        const avg = scores.length
+          ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+          : 0;
+        return [
+          {
+            website: selectedWebsite,
+            average: Number(avg.toPrecision(3)),
+          },
+        ];
+      })()
     : agentDetailsData.websites.map((web) => {
         const allScores = web.results.map((r) => r.score);
         return {
