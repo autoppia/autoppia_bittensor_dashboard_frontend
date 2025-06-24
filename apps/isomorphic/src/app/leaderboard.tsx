@@ -17,24 +17,34 @@ import { getLeaderboardData, getAgentById } from "@/data/query";
 
 /* ───────────────────────────── custom label ────────────────────────── */
 const CustomLabel = ({ x, y, payload, data }: any) => {
+  const router = useRouter();
   const agent = data.find((item: any) => item.name === payload.value);
   if (!agent) return null;
 
+  const handleClick = () => {
+    router.push(agent.href);
+  };
+
   return (
-    <g>
+    <g
+      onClick={handleClick}
+      className="cursor-pointer"
+      style={{ pointerEvents: "all" }}
+    >
       <image
         href={agent.imageUrl}
-        x={x - 175} // Position image to the left
-        y={y - 15} // Center image vertically
+        x={x - 175}
+        y={y - 15}
         width={30}
         height={30}
       />
       <text
-        x={x - 138} // Text position (adjusted to the left)
+        x={x - 138}
         y={y}
         fill="#fff"
-        textAnchor="start" // Align text to the left
+        textAnchor="start"
         dominantBaseline="middle"
+        fontSize={12}
       >
         {agent.name}
       </text>
