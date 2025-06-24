@@ -1,5 +1,3 @@
-/* src/data/query.ts */
-
 import { agentsData } from "./agents-data";
 
 /* ─────────────────────────────────────────────────────────────── */
@@ -20,19 +18,22 @@ export const getAgentById = (id: string) =>
  * para evitar romper imports: getAgentSummaryData(id)
  */
 // export const getAgentSummaryData = (id: string) => {
-//   const agent = getAgentById(id);
-//   if (!agent) return null;
-
-//   const total = agent.usecase1 + agent.usecase2 + agent.usecase3;
-//   if (total === 0) return { usecase1: 0, usecase2: 0, usecase3: 0, total: 0 };
-
-//   const pct = (v: number) => parseFloat(((100 * v) / total).toFixed(1));
+//   const agent = getAgentExtendedData(id);
+//   const usecases = Array.from({ length: 10 }, (_, i) => {
+//     const useCaseId = i + 1;
+//     const scores = agent.websites
+//       .map(
+//         (web) => web.results.find((r) => r.useCaseId === useCaseId)?.score || 0
+//       )
+//       .filter((score) => score > 0);
+//     return scores.length
+//       ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+//       : 0;
+//   });
 
 //   return {
-//     usecase1: pct(agent.usecase1),
-//     usecase2: pct(agent.usecase2),
-//     usecase3: pct(agent.usecase3),
-//     total: 100,
+//     usecases,
+//     total: agent.successRate,
 //   };
 // };
 
@@ -117,6 +118,34 @@ const useCaseCatalogues = {
   ],
 };
 
+// Function to generate unique results based on agent ID
+const generateUniqueResults = (id: string, webName: string): UseCaseScore[] => {
+  const seed =
+    id.split("-").reduce((acc, part) => acc + part.charCodeAt(0), 0) +
+    webName.length; // Unique seed per website
+  const random = (min: number, max: number) => {
+    let rand = ((seed + Math.random()) % (max - min)) + min;
+    return Math.floor(rand);
+  };
+
+  const baseScores = Array.from({ length: 12 }, (_, i) => random(70, 95)); // Base scores between 70 and 95
+  const agentAdjustment = id.includes("36")
+    ? 0
+    : id.includes("37")
+      ? -5
+      : id.includes("38")
+        ? 5
+        : 0; // More granular adjustment
+  console.log(
+    `Generating results for ${id} - ${webName}:`,
+    baseScores.map((s) => s + agentAdjustment)
+  ); // Debug log
+  return baseScores.map((score, idx) => ({
+    useCaseId: idx + 1,
+    score: Math.min(100, Math.max(0, score + agentAdjustment)), // Cap at 0-100
+  }));
+};
+
 export function getAgentExtendedData(id: string): AgentExtended {
   const agentSummary = agentsData.find((agent) => agent.id === id) || {
     successRate: 50,
@@ -126,56 +155,17 @@ export function getAgentExtendedData(id: string): AgentExtended {
     {
       name: "Autozone",
       useCases: useCaseCatalogues.autozone,
-      results: [
-        { useCaseId: 1, score: 85 },
-        { useCaseId: 2, score: 90 },
-        { useCaseId: 3, score: 78 },
-        { useCaseId: 4, score: 82 },
-        { useCaseId: 5, score: 75 },
-        { useCaseId: 6, score: 88 },
-        { useCaseId: 7, score: 80 },
-        { useCaseId: 8, score: 83 },
-        { useCaseId: 9, score: 70 },
-        { useCaseId: 10, score: 87 },
-        { useCaseId: 11, score: 92 },
-        { useCaseId: 12, score: 79 },
-      ],
+      results: generateUniqueResults(id, "Autozone"),
     },
     {
       name: "Books",
       useCases: useCaseCatalogues.books,
-      results: [
-        { useCaseId: 1, score: 88 },
-        { useCaseId: 2, score: 76 },
-        { useCaseId: 3, score: 82 },
-        { useCaseId: 4, score: 79 },
-        { useCaseId: 5, score: 85 },
-        { useCaseId: 6, score: 90 },
-        { useCaseId: 7, score: 73 },
-        { useCaseId: 8, score: 81 },
-        { useCaseId: 9, score: 77 },
-        { useCaseId: 10, score: 84 },
-        { useCaseId: 11, score: 89 },
-        { useCaseId: 12, score: 80 },
-      ],
+      results: generateUniqueResults(id, "Books"),
     },
     {
       name: "Cinema",
       useCases: useCaseCatalogues.cinema,
-      results: [
-        { useCaseId: 1, score: 83 },
-        { useCaseId: 2, score: 79 },
-        { useCaseId: 3, score: 86 },
-        { useCaseId: 4, score: 81 },
-        { useCaseId: 5, score: 77 },
-        { useCaseId: 6, score: 84 },
-        { useCaseId: 7, score: 80 },
-        { useCaseId: 8, score: 88 },
-        { useCaseId: 9, score: 74 },
-        { useCaseId: 10, score: 82 },
-        { useCaseId: 11, score: 90 },
-        { useCaseId: 12, score: 85 },
-      ],
+      results: generateUniqueResults(id, "Cinema"),
     },
   ];
 
