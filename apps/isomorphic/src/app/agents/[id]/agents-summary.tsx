@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
 
-const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"];
+const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"]; // success, failed
 
 const BAR_COLORS = [
   "#FF7E5F",
@@ -21,7 +21,7 @@ const BAR_COLORS = [
   "#88392F",
   "#6C2E2B",
   "#6C2E2B",
-  "#6C2E2B",
+  "#6C2E2B", // Extended for 12 use cases
 ];
 
 export type AgentsSummaryProps = {
@@ -29,11 +29,6 @@ export type AgentsSummaryProps = {
   selectedWebsite?: string | null;
   usecases?: number[];
   total?: number;
-};
-
-type DisplayItem = {
-  label: string;
-  value: number;
 };
 
 export default function AgentsSummary({
@@ -47,15 +42,42 @@ export default function AgentsSummary({
   const { usecases: summaryUsecases, total: summaryTotal } =
     getAgentSummaryData(id as string) || {};
   const agent = agentsData.find((agent) => agent.id === id);
-  const successRate = agent ? agent.successRate : total || summaryTotal || 0;
+
+  // Determine successRate based on selection
+  let successRate;
+  if (selectedWebsite) {
+    // When a website is selected, use its average use case score
+    const selectedWeb = agentData.websites.find(
+      (web) => web.name === selectedWebsite
+    );
+    const allScores = selectedWeb?.results.map((r) => r.score) ?? [];
+    successRate = allScores.length
+      ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+      : 0;
+  } else {
+    // When "See All", use the average of the first 3 websites' averages
+    const websiteAverages = agentData.websites.slice(0, 3).map((web) => {
+      const allScores = web.results.map((r) => r.score);
+      return allScores.length
+        ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+        : 0;
+    });
+    successRate =
+      websiteAverages.length >= 3
+        ? websiteAverages.reduce((sum, avg) => sum + avg, 0) / 3
+        : agent
+          ? agent.successRate
+          : total || summaryTotal || 0;
+  }
 
   const radialData = [
     { label: "success", value: successRate },
     { label: "failed", value: 100 - successRate },
   ];
 
-  let displayData: DisplayItem[];
+  let displayData;
   if (selectedWebsite) {
+    // Per-website view: 12 use cases for the selected website
     const selectedWeb = agentData.websites.find(
       (web) => web.name === selectedWebsite
     );
@@ -70,6 +92,7 @@ export default function AgentsSummary({
       displayData = [];
     }
   } else {
+    // General view ("See All"): List all websites with their average scores
     displayData = agentData.websites.map((web) => {
       const allScores = web.results.map((r) => r.score);
       const average = allScores.length
@@ -173,7 +196,7 @@ function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
       <text
         x={cx}
         y={cy - 10}
-        fill="#FFFFFF"
+        fill="#FFFFFF" // Hex for white
         textAnchor="middle"
         dominantBaseline="central"
       >

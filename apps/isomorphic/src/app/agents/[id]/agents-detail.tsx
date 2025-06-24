@@ -118,7 +118,13 @@ export default function DetailsChart({
               />
               <Tooltip
                 content={(props) => (
-                  <CustomTooltip {...props} postfix="%" formattedNumber />
+                  <CustomTooltip
+                    {...props}
+                    postfix="%"
+                    formattedNumber={(payload) =>
+                      Number(payload.average).toFixed(1)
+                    }
+                  />
                 )}
               />
               <Bar
