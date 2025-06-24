@@ -35,11 +35,14 @@ export default function DetailsChart({
   const isTab = useMedia("(max-width: 768px)", false);
   const barSize = isTab ? 16 : 20;
 
-  // Derive dropdown options from websites
-  const websiteOptions = agentDetailsData.websites.map((web) => ({
-    value: web.name,
-    label: web.name,
-  }));
+  // Derive dropdown options from websites with a "Clear" option
+  const websiteOptions = [
+    { value: null, label: "See All" },
+    ...agentDetailsData.websites.map((web) => ({
+      value: web.name,
+      label: web.name,
+    })),
+  ];
 
   // Transform data for the chart based on selected website
   const chartData = selectedWebsite
@@ -101,7 +104,7 @@ export default function DetailsChart({
           <Select
             options={websiteOptions}
             value={websiteOptions.find((opt) => opt.value === selectedWebsite)}
-            onChange={(option) => setSelectedWebsite(option.value)} // Use the prop function
+            onChange={(option) => setSelectedWebsite(option.value)} // Handles "Clear" (null) and website names
             placeholder="Select Website"
             className="w-[200px]"
           />

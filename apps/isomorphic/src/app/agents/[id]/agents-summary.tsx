@@ -5,8 +5,10 @@ import WidgetCard from "@core/components/cards/widget-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
+import { agentsData } from "@/data/agents-data";
 
-const RADIAL_COLORS = ["#FEDCBE", "#FF7E5F"];
+const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"]; // success, failed
+
 const BAR_COLORS = [
   "#FF7E5F",
   "#FFA173",
@@ -39,10 +41,15 @@ export default function AgentsSummary({
   const agentData = getAgentExtendedData(id as string);
   const { usecases: summaryUsecases, total: summaryTotal } =
     getAgentSummaryData(id as string) || {};
+  const agent = agentsData.find((agent) => agent.id === id);
+  const successRate = agent ? agent.successRate : total || summaryTotal || 0;
+  console.log("my agent", agent);
+  console.log("my sucess", successRate);
+  console.log(typeof successRate, successRate);
 
   const radialData = [
-    { label: "failed", value: 100 - (total || summaryTotal || 0) },
-    { label: "success", value: total || summaryTotal || 0 },
+    { label: "success", value: successRate },
+    { label: "failed", value: 100 - successRate },
   ];
 
   let displayData;
@@ -125,12 +132,14 @@ export default function AgentsSummary({
             >
               <Label
                 position="center"
-                content={
+                content={(props) => (
                   <CenterLabel
-                    value={(total || summaryTotal || 0).toFixed(0)}
+                    value={successRate.toFixed(0)}
+                    viewBox={props.viewBox}
                   />
-                }
+                )}
               />
+
               {radialData.map((_, idx) => (
                 <Cell
                   key={idx}
@@ -190,16 +199,32 @@ export default function AgentsSummary({
     </WidgetCard>
   );
 }
-
-function CenterLabel({ value }: { value: string }) {
+function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
+  const { cx, cy } = viewBox;
   return (
-    <text textAnchor="middle" dominantBaseline="central" fill="#111">
-      <tspan x="0" dy="-10" fontSize="36px" fontWeight="700">
-        {value}%
-      </tspan>
-      <tspan x="0" dy="24" fontSize="14px" fill="#666">
-        Total
-      </tspan>
-    </text>
+    <>
+      <text
+        x={cx}
+        y={cy - 10}
+        fill="#FFFFFF" // Hex for white
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        <tspan fontSize="36" fontWeight="700">
+          {value}%
+        </tspan>
+      </text>
+      <text
+        x={cx}
+        y={cy + 30}
+        fill="#FFFFFF"
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        <tspan fontSize="14" fontWeight="600">
+          For Total Tasks
+        </tspan>
+      </text>
+    </>
   );
 }
