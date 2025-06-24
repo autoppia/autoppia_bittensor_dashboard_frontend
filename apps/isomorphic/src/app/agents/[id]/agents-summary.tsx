@@ -43,9 +43,6 @@ export default function AgentsSummary({
     getAgentSummaryData(id as string) || {};
   const agent = agentsData.find((agent) => agent.id === id);
   const successRate = agent ? agent.successRate : total || summaryTotal || 0;
-  console.log("my agent", agent);
-  console.log("my sucess", successRate);
-  console.log(typeof successRate, successRate);
 
   const radialData = [
     { label: "success", value: successRate },
@@ -69,47 +66,14 @@ export default function AgentsSummary({
       displayData = [];
     }
   } else {
-    // General view: Total, Hard, Medium, Easy tasks
-    const allScores = agentData.websites.flatMap((web) =>
-      web.results.map((r) => r.score)
-    );
-    const totalAverage = allScores.length
-      ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
-      : 0;
-    const easyAverage =
-      agentData.websites
-        .flatMap((web) =>
-          web.results
-            .filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
-            .map((r) => r.score)
-        )
-        .reduce((sum, s) => sum + s, 0) /
-        (agentData.websites.length * 4) || 0;
-    const mediumAverage =
-      agentData.websites
-        .flatMap((web) =>
-          web.results
-            .filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
-            .map((r) => r.score)
-        )
-        .reduce((sum, s) => sum + s, 0) /
-        (agentData.websites.length * 4) || 0;
-    const hardAverage =
-      agentData.websites
-        .flatMap((web) =>
-          web.results
-            .filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
-            .map((r) => r.score)
-        )
-        .reduce((sum, s) => sum + s, 0) /
-        (agentData.websites.length * 4) || 0;
-
-    displayData = [
-      { label: "Total Tasks", value: totalAverage },
-      { label: "Hard Tasks", value: hardAverage },
-      { label: "Medium Tasks", value: mediumAverage },
-      { label: "Easy Tasks", value: easyAverage },
-    ];
+    // General view: List all websites with their average scores
+    displayData = agentData.websites.map((web) => {
+      const allScores = web.results.map((r) => r.score);
+      const average = allScores.length
+        ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+        : 0;
+      return { label: web.name, value: average };
+    });
   }
 
   return (
@@ -139,7 +103,6 @@ export default function AgentsSummary({
                   />
                 )}
               />
-
               {radialData.map((_, idx) => (
                 <Cell
                   key={idx}
@@ -199,6 +162,7 @@ export default function AgentsSummary({
     </WidgetCard>
   );
 }
+
 function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
   const { cx, cy } = viewBox;
   return (

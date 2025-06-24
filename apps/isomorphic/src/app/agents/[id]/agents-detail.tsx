@@ -19,7 +19,7 @@ import {
 import { getAgentExtendedData } from "@/data/query";
 import { Select } from "rizzui";
 
-const BAR_COLORS = ["#FEDCBE", "#FF7E5F", "#BE3D2A"];
+const BAR_COLOR = "#FF7E5F";
 
 export default function DetailsChart({
   className,
@@ -35,7 +35,6 @@ export default function DetailsChart({
   const isTab = useMedia("(max-width: 768px)", false);
   const barSize = isTab ? 16 : 20;
 
-  // Derive dropdown options from websites with a "Clear" option
   const websiteOptions = [
     { value: null, label: "See All" },
     ...agentDetailsData.websites.map((web) => ({
@@ -44,53 +43,29 @@ export default function DetailsChart({
     })),
   ];
 
-  // Transform data for the chart based on selected website
   const chartData = selectedWebsite
     ? [
         {
           website: selectedWebsite,
-          easy:
-            agentDetailsData.websites
-              .find((web) => web.name === selectedWebsite)
-              ?.results.filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
-              .map((r) => r.score)
-              .reduce((sum, s) => sum + s, 0) / 4 || 0,
-          medium:
-            agentDetailsData.websites
-              .find((web) => web.name === selectedWebsite)
-              ?.results.filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
-              .map((r) => r.score)
-              .reduce((sum, s) => sum + s, 0) / 4 || 0,
-          hard:
-            agentDetailsData.websites
-              .find((web) => web.name === selectedWebsite)
-              ?.results.filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
-              .map((r) => r.score)
-              .reduce((sum, s) => sum + s, 0) / 4 || 0,
+          average: Number(
+            (
+              agentDetailsData.websites
+                .find((web) => web.name === selectedWebsite)
+                ?.results.map((r) => r.score)
+                .reduce((sum, s) => sum + s, 0) / 12 || 0
+            ).toPrecision(3)
+          ),
         },
       ]
     : agentDetailsData.websites.map((web) => {
-        const easyScores = web.results
-          .filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
-          .map((r) => r.score);
-        const mediumScores = web.results
-          .filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
-          .map((r) => r.score);
-        const hardScores = web.results
-          .filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
-          .map((r) => r.score);
-
+        const allScores = web.results.map((r) => r.score);
         return {
           website: web.name,
-          easy: easyScores.length
-            ? easyScores.reduce((sum, s) => sum + s, 0) / easyScores.length
-            : 0,
-          medium: mediumScores.length
-            ? mediumScores.reduce((sum, s) => sum + s, 0) / mediumScores.length
-            : 0,
-          hard: hardScores.length
-            ? hardScores.reduce((sum, s) => sum + s, 0) / hardScores.length
-            : 0,
+          average: Number(
+            (
+              allScores.reduce((sum, s) => sum + s, 0) / allScores.length || 0
+            ).toPrecision(3)
+          ),
         };
       });
 
@@ -104,7 +79,7 @@ export default function DetailsChart({
           <Select
             options={websiteOptions}
             value={websiteOptions.find((opt) => opt.value === selectedWebsite)}
-            onChange={(option) => setSelectedWebsite(option.value)} // Handles "Clear" (null) and website names
+            onChange={(option) => setSelectedWebsite(option.value)}
             placeholder="Select Website"
             className="w-[200px]"
           />
@@ -140,28 +115,14 @@ export default function DetailsChart({
                 }}
               />
               <Tooltip
-                content={<CustomTooltip postfix="%" formattedNumber />}
+                content={(props) => (
+                  <CustomTooltip {...props} postfix="%" formattedNumber />
+                )}
               />
               <Bar
-                dataKey="easy"
-                fill={BAR_COLORS[0]}
-                stroke={BAR_COLORS[0]}
-                barSize={barSize}
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                type="natural"
-                dataKey="medium"
-                fill={BAR_COLORS[1]}
-                stroke={BAR_COLORS[1]}
-                barSize={barSize}
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                type="natural"
-                dataKey="hard"
-                fill={BAR_COLORS[2]}
-                stroke={BAR_COLORS[2]}
+                dataKey="average"
+                fill={BAR_COLOR}
+                stroke={BAR_COLOR}
                 barSize={barSize}
                 radius={[4, 4, 0, 0]}
               />
@@ -181,15 +142,13 @@ function Legend({ className }: { className?: string }) {
         className
       )}
     >
-      {["Easy", "Medium", "Hard"].map((item, index) => (
-        <div key={item} className="flex items-center gap-1.5">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: BAR_COLORS[index] }}
-          />
-          <span>{item}</span>
-        </div>
-      ))}
+      <div className="flex items-center gap-1.5">
+        <span
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: BAR_COLOR }}
+        />
+        <span>Average</span>
+      </div>
     </div>
   );
 }
