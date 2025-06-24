@@ -3,78 +3,107 @@
 import { Flex, Text } from "rizzui";
 import WidgetCard from "@core/components/cards/widget-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
-import { getAgentExtendedData } from "@/data/query";
+import { useParams } from "next/navigation";
+import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 
-/* -------- colores -------- */
 const RADIAL_COLORS = ["#FEDCBE", "#FF7E5F"];
 const BAR_COLORS = [
   "#FF7E5F",
   "#FFA173",
   "#FFBC89",
-  "#FFD5DC",
+  "#FFD5A0",
   "#FFE9B6",
-  "#E05A3D",
+  "#E05A3B",
   "#C14F37",
   "#A44333",
-  "#883B2F",
+  "#88392F",
   "#6C2E2B",
-  "#4F2527",
-  "#FF9999", // Added for 12 use cases
+  "#6C2E2B",
+  "#6C2E2B", // Extended for 12 use cases
 ];
 
-/* -------- tipos -------- */
 export type AgentsSummaryProps = {
-  id: string;
   className?: string;
+  selectedWebsite?: string | null;
+  usecases?: number[];
+  total?: number;
 };
 
-/* -------- componente -------- */
-export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
-  const agent = getAgentExtendedData(id);
+export default function AgentsSummary({
+  className,
+  selectedWebsite,
+  usecases,
+  total,
+}: AgentsSummaryProps) {
+  const { id } = useParams();
+  const agentData = getAgentExtendedData(id as string);
+  const { usecases: summaryUsecases, total: summaryTotal } =
+    getAgentSummaryData(id as string) || {};
 
-  if (!agent) {
-    return (
-      <WidgetCard
-        title="Job Summary"
-        headerClassName="hidden"
-        className={className}
-      >
-        <div className="flex h-[320px] items-center justify-center">
-          <p className="text-gray-500">No data available for this agent.</p>
-        </div>
-      </WidgetCard>
-    );
-  }
-
-  /* radial chart: success vs failed */
   const radialData = [
-    { label: "failed", value: 100 - agent.successRate },
-    { label: "success", value: agent.successRate },
+    { label: "failed", value: 100 - (total || summaryTotal || 0) },
+    { label: "success", value: total || summaryTotal || 0 },
   ];
 
-  /* listado horizontal de los 12 use-cases */
-  const horizontalData = agent.websites[0].useCases.map((useCase, idx) => {
-    // Calculate average score for this use case across all websites
-    const scores = agent.websites
-      .map(
-        (website) =>
-          website.results.find((r) => r.useCaseId === useCase.id)?.score ?? 0
-      )
-      .filter((score) => score > 0);
-    const averageScore =
-      scores.length > 0
-        ? Number(
-            (
-              scores.reduce((sum, score) => sum + score, 0) / scores.length
-            ).toFixed(1)
-          )
-        : 0;
+  let displayData;
+  if (selectedWebsite) {
+    // Per-website view: 12 use cases for the selected website
+    const selectedWeb = agentData.websites.find(
+      (web) => web.name === selectedWebsite
+    );
+    if (selectedWeb) {
+      displayData = selectedWeb.results.map((result, idx) => ({
+        label:
+          selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
+          `Use Case ${result.useCaseId}`,
+        value: result.score,
+      }));
+    } else {
+      displayData = [];
+    }
+  } else {
+    // General view: Total, Hard, Medium, Easy tasks
+    const allScores = agentData.websites.flatMap((web) =>
+      web.results.map((r) => r.score)
+    );
+    const totalAverage = allScores.length
+      ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+      : 0;
+    const easyAverage =
+      agentData.websites
+        .flatMap((web) =>
+          web.results
+            .filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
+            .map((r) => r.score)
+        )
+        .reduce((sum, s) => sum + s, 0) /
+        (agentData.websites.length * 4) || 0;
+    const mediumAverage =
+      agentData.websites
+        .flatMap((web) =>
+          web.results
+            .filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
+            .map((r) => r.score)
+        )
+        .reduce((sum, s) => sum + s, 0) /
+        (agentData.websites.length * 4) || 0;
+    const hardAverage =
+      agentData.websites
+        .flatMap((web) =>
+          web.results
+            .filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
+            .map((r) => r.score)
+        )
+        .reduce((sum, s) => sum + s, 0) /
+        (agentData.websites.length * 4) || 0;
 
-    return {
-      label: useCase.name,
-      value: averageScore,
-    };
-  });
+    displayData = [
+      { label: "Total Tasks", value: totalAverage },
+      { label: "Hard Tasks", value: hardAverage },
+      { label: "Medium Tasks", value: mediumAverage },
+      { label: "Easy Tasks", value: easyAverage },
+    ];
+  }
 
   return (
     <WidgetCard
@@ -82,7 +111,6 @@ export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
       headerClassName="hidden"
       className={className}
     >
-      {/* ───── donut ───── */}
       <div className="h-[320px] w-full @sm:py-3">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -99,7 +127,7 @@ export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
                 position="center"
                 content={
                   <CenterLabel
-                    value={Number(agent.successRate)?.toFixed(0) || "0"}
+                    value={(total || summaryTotal || 0).toFixed(0)}
                   />
                 }
               />
@@ -114,9 +142,8 @@ export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* ───── lista horizontal ───── */}
       <div>
-        {horizontalData.map((item, idx) => (
+        {displayData.map((item, idx) => (
           <Flex
             key={item.label}
             align="center"
@@ -138,12 +165,32 @@ export default function AgentsSummary({ id, className }: AgentsSummaryProps) {
             <Text as="span">{item.value.toFixed(1)}%</Text>
           </Flex>
         ))}
+        {selectedWebsite && displayData.length > 0 && (
+          <Flex
+            align="center"
+            justify="between"
+            className="mt-4 pt-2 border-t border-muted"
+          >
+            <Text
+              as="span"
+              className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
+            >
+              Average
+            </Text>
+            <Text as="span">
+              {(
+                displayData.reduce((sum, item) => sum + item.value, 0) /
+                displayData.length
+              ).toFixed(1)}
+              %
+            </Text>
+          </Flex>
+        )}
       </div>
     </WidgetCard>
   );
 }
 
-/* -------- etiqueta central del donut -------- */
 function CenterLabel({ value }: { value: string }) {
   return (
     <text textAnchor="middle" dominantBaseline="central" fill="#111">
