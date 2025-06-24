@@ -14,7 +14,7 @@ export type AgentDataType = {
 /* ─────────────────────────  top‑5 agentes ───────────────────────── */
 export const agentsData: AgentDataType[] = [
   {
-    id: "subnet36-top-miner",
+    id: "subnet36-top",
     name: "Autoppia Bittensor",
     href: "/agents/subnet36-top",
     imageUrl: "/icons/bittensor.webp",
@@ -34,7 +34,7 @@ export const agentsData: AgentDataType[] = [
     successRate: 65.2,
   },
   {
-    id: "browser-use-gpt-o3",
+    id: "browser-gpt-o3",
     name: "Browser-Use GPT o3",
     href: "/agents/browser-gpt-o3",
     imageUrl: "/icons/browser-use.webp",
@@ -44,7 +44,7 @@ export const agentsData: AgentDataType[] = [
     successRate: 59.2,
   },
   {
-    id: "browser-use-sonnet4",
+    id: "browser-sonnet4",
     name: "Browser-Use Sonnet 4",
     href: "/agents/browser-sonnet4",
     imageUrl: "/icons/browser-use.webp",
