@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { getAgentDetailsData } from "@/data/query";
 import WidgetCard from "@core/components/cards/widget-card";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
@@ -17,66 +16,105 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useEffect, useState } from "react";
+import { getAgentExtendedData } from "@/data/query";
+import { Select } from "rizzui";
 
 const BAR_COLORS = ["#FEDCBE", "#FF7E5F", "#BE3D2A"];
 
-export default function DetailsChart({ className }: { className?: string }) {
+export default function DetailsChart({
+  className,
+  selectedWebsite,
+  setSelectedWebsite,
+}: {
+  className?: string;
+  selectedWebsite?: string | null;
+  setSelectedWebsite: (value: string | null) => void;
+}) {
   const { id } = useParams();
-  const [agentDetailsData, setAgentDetailsData] = useState<ChartData>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const agentDetailsData = getAgentExtendedData(id as string);
   const isTab = useMedia("(max-width: 768px)", false);
   const barSize = isTab ? 16 : 20;
 
-  useEffect(() => {
-    const data = getAgentDetailsData(id as string);
-    setAgentDetailsData(data);
-    setIsLoading(false);
-  }, [id]);
+  // Derive dropdown options from websites
+  const websiteOptions = agentDetailsData.websites.map((web) => ({
+    value: web.name,
+    label: web.name,
+  }));
 
-  if (isLoading) {
-    return (
-      <WidgetCard
-        title="Job Overview"
-        className={cn("min-h-[28rem]", className)}
-        titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
-      >
-        <div className="flex h-[450px] items-center justify-center">
-          <p className="text-gray-500">Loading...</p>
-        </div>
-      </WidgetCard>
-    );
-  }
+  // Transform data for the chart based on selected website
+  const chartData = selectedWebsite
+    ? [
+        {
+          website: selectedWebsite,
+          easy:
+            agentDetailsData.websites
+              .find((web) => web.name === selectedWebsite)
+              ?.results.filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
+              .map((r) => r.score)
+              .reduce((sum, s) => sum + s, 0) / 4 || 0,
+          medium:
+            agentDetailsData.websites
+              .find((web) => web.name === selectedWebsite)
+              ?.results.filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
+              .map((r) => r.score)
+              .reduce((sum, s) => sum + s, 0) / 4 || 0,
+          hard:
+            agentDetailsData.websites
+              .find((web) => web.name === selectedWebsite)
+              ?.results.filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
+              .map((r) => r.score)
+              .reduce((sum, s) => sum + s, 0) / 4 || 0,
+        },
+      ]
+    : agentDetailsData.websites.map((web) => {
+        const easyScores = web.results
+          .filter((r) => r.useCaseId >= 1 && r.useCaseId <= 4)
+          .map((r) => r.score);
+        const mediumScores = web.results
+          .filter((r) => r.useCaseId >= 5 && r.useCaseId <= 8)
+          .map((r) => r.score);
+        const hardScores = web.results
+          .filter((r) => r.useCaseId >= 9 && r.useCaseId <= 12)
+          .map((r) => r.score);
 
-  if (!agentDetailsData.length) {
-    return (
-      <WidgetCard
-        title="Job Overview"
-        className={cn("min-h-[28rem]", className)}
-        titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
-      >
-        <div className="flex h-[450px] items-center justify-center">
-          <p className="text-gray-500">No data available for this agent.</p>
-        </div>
-      </WidgetCard>
-    );
-  }
+        return {
+          website: web.name,
+          easy: easyScores.length
+            ? easyScores.reduce((sum, s) => sum + s, 0) / easyScores.length
+            : 0,
+          medium: mediumScores.length
+            ? mediumScores.reduce((sum, s) => sum + s, 0) / mediumScores.length
+            : 0,
+          hard: hardScores.length
+            ? hardScores.reduce((sum, s) => sum + s, 0) / hardScores.length
+            : 0,
+        };
+      });
 
   return (
     <WidgetCard
       title="Job Overview"
       className={cn("min-h-[28rem]", className)}
       titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
-      action={<Legend className="my-4 flex @md:justify-end @2xl:hidden" />}
+      action={
+        <div className="flex items-center gap-2">
+          <Select
+            options={websiteOptions}
+            value={websiteOptions.find((opt) => opt.value === selectedWebsite)}
+            onChange={(option) => setSelectedWebsite(option.value)} // Use the prop function
+            placeholder="Select Website"
+            className="w-[200px]"
+          />
+          <Legend className="my-4 flex @md:justify-end @2xl:hidden" />
+        </div>
+      }
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className="h-[450px] w-full pt-6">
           <ResponsiveContainer width="100%" height="100%" minWidth={700}>
             <ComposedChart
-              data={agentDetailsData as any[]}
-              margin={{
-                left: -6,
-              }}
+              data={chartData}
+              margin={{ left: -6 }}
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
