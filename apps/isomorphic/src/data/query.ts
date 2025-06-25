@@ -17,25 +17,25 @@ export const getAgentById = (id: string) =>
  * Mantiene el nombre original usado en las páginas (<AgentPage/>)
  * para evitar romper imports: getAgentSummaryData(id)
  */
-// export const getAgentSummaryData = (id: string) => {
-//   const agent = getAgentExtendedData(id);
-//   const usecases = Array.from({ length: 10 }, (_, i) => {
-//     const useCaseId = i + 1;
-//     const scores = agent.websites
-//       .map(
-//         (web) => web.results.find((r) => r.useCaseId === useCaseId)?.score || 0
-//       )
-//       .filter((score) => score > 0);
-//     return scores.length
-//       ? scores.reduce((sum, s) => sum + s, 0) / scores.length
-//       : 0;
-//   });
+export function getAgentSummaryData(id: string) {
+  const agent = getAgentExtendedData(id);
+  const usecases = Array.from({ length: 10 }, (_, i) => {
+    const useCaseId = i + 1;
+    const scores = agent.websites
+      .map(
+        (web) => web.results.find((r) => r.useCaseId === useCaseId)?.score || 0
+      )
+      .filter((score) => score > 0);
+    return scores.length
+      ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+      : 0;
+  });
 
-//   return {
-//     usecases,
-//     total: agent.successRate,
-//   };
-// };
+  return {
+    usecases,
+    total: agent.successRate,
+  };
+}
 
 /*
  * Devuelve valores absolutos para un breakdown sencillo.
@@ -59,6 +59,8 @@ export type UseCase = {
 export type UseCaseScore = {
   useCaseId: number;
   score: number; // 0-100
+  totalRequests: number; // Total requests received
+  successes: number; // Number of successful requests
 };
 
 export type WebData = {
@@ -118,38 +120,75 @@ const useCaseCatalogues = {
   ],
 };
 
-// Function to generate unique results based on agent ID
-const generateUniqueResults = (id: string, webName: string): UseCaseScore[] => {
-  const seed =
-    id.split("-").reduce((acc, part) => acc + part.charCodeAt(0), 0) +
-    webName.length; // Unique seed per website
-  const random = (min: number, max: number) => {
-    let rand = ((seed + Math.random()) % (max - min)) + min;
-    return Math.floor(rand);
-  };
+// Define the type for agent profiles
+type AgentProfile = {
+  [key: string]: number[];
+};
 
-  const baseScores = Array.from({ length: 12 }, (_, i) => random(70, 95)); // Base scores between 70 and 95
-  const agentAdjustment = id.includes("36")
-    ? 0
-    : id.includes("37")
-      ? -5
-      : id.includes("38")
-        ? 5
-        : 0; // More granular adjustment
-  console.log(
-    `Generating results for ${id} - ${webName}:`,
-    baseScores.map((s) => s + agentAdjustment)
-  ); // Debug log
-  return baseScores.map((score, idx) => ({
-    useCaseId: idx + 1,
-    score: Math.min(100, Math.max(0, score + agentAdjustment)), // Cap at 0-100
-  }));
+const agentProfiles: Record<string, AgentProfile> = {
+  "subnet36-top": {
+    autozone: [75, 82, 88, 70, 85, 90, 78, 83, 92, 76, 87, 80],
+    books: [80, 85, 91, 75, 88, 93, 82, 87, 95, 78, 90, 84],
+    cinema: [77, 83, 89, 72, 86, 94, 79, 84, 96, 81, 88, 82],
+  },
+  "openai-cua": {
+    autozone: [65, 78, 83, 71, 87, 89, 75, 80, 91, 73, 85, 79],
+    books: [72, 84, 90, 68, 81, 92, 79, 86, 94, 76, 88, 82],
+    cinema: [70, 77, 85, 74, 88, 90, 73, 82, 93, 78, 87, 80],
+  },
+  "browser-gpt-o3": {
+    autozone: [81, 88, 92, 77, 90, 95, 84, 86, 98, 79, 91, 83],
+    books: [85, 91, 96, 80, 93, 97, 87, 89, 99, 82, 94, 86],
+    cinema: [83, 87, 94, 75, 89, 96, 80, 85, 95, 78, 92, 84],
+  },
+  "browser-sonnet4": {
+    autozone: [70, 85, 89, 72, 86, 91, 77, 82, 93, 74, 88, 81],
+    books: [75, 87, 92, 69, 83, 94, 80, 85, 96, 77, 89, 83],
+    cinema: [73, 80, 87, 76, 90, 93, 78, 84, 95, 79, 91, 82],
+  },
+  "anthropic-cua": {
+    autozone: [68, 80, 84, 73, 88, 90, 76, 81, 94, 75, 86, 78],
+    books: [71, 83, 88, 70, 85, 91, 78, 87, 97, 74, 90, 80],
+    cinema: [69, 79, 86, 75, 89, 92, 77, 83, 96, 76, 88, 81],
+  },
+};
+
+// Function to generate unique results with distinct averages per agent
+const generateUniqueResults = (id: string, webName: string): UseCaseScore[] => {
+  console.log(`Processing agent ID: ${id} for website: ${webName}`);
+  const baseScores =
+    agentProfiles[id]?.[webName.toLowerCase()] ||
+    agentProfiles["subnet36-top"][webName.toLowerCase()]; // Default to subnet36-top if ID not found
+
+  if (!baseScores) {
+    console.warn(
+      `No profile found for agent ${id}, using subnet36-top as fallback`
+    );
+  }
+
+  console.log(`Generating results for ${id} - ${webName}:`, baseScores);
+
+  return baseScores.map((score: number, idx: number) => {
+    const adjustedScore = Math.min(100, Math.max(0, score));
+    const totalRequests = 100; // Fixed requests for consistency
+    const successes = Math.round((adjustedScore / 100) * totalRequests); // Successes based on score
+    return {
+      useCaseId: idx + 1,
+      score: adjustedScore,
+      totalRequests,
+      successes,
+    };
+  });
 };
 
 export function getAgentExtendedData(id: string): AgentExtended {
   const agentSummary = agentsData.find((agent) => agent.id === id) || {
     successRate: 50,
   };
+
+  console.log(
+    `Fetching data for agent ID: ${id}, successRate: ${agentSummary.successRate}`
+  );
 
   const websites: WebData[] = [
     {
@@ -173,25 +212,5 @@ export function getAgentExtendedData(id: string): AgentExtended {
     id,
     successRate: agentSummary.successRate,
     websites,
-  };
-}
-
-export function getAgentSummaryData(id: string) {
-  const agent = getAgentExtendedData(id);
-  const usecases = Array.from({ length: 10 }, (_, i) => {
-    const useCaseId = i + 1;
-    const scores = agent.websites
-      .map(
-        (web) => web.results.find((r) => r.useCaseId === useCaseId)?.score || 0
-      )
-      .filter((score) => score > 0);
-    return scores.length
-      ? scores.reduce((sum, s) => sum + s, 0) / scores.length
-      : 0;
-  });
-
-  return {
-    usecases,
-    total: agent.successRate,
   };
 }
