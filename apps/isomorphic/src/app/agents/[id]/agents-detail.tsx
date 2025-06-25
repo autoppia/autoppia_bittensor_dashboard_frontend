@@ -198,14 +198,6 @@ function Legend({ className }: { className?: string }) {
         "flex flex-wrap items-start gap-3 text-xs @3xl:text-sm lg:gap-4",
         className
       )}
-    >
-      <div className="flex items-center gap-1.5">
-        <span
-          className="h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: BAR_COLOR }}
-        />
-        <span>Average</span>
-      </div>
-    </div>
+    ></div>
   );
 }
