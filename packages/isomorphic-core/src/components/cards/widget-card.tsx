@@ -49,7 +49,7 @@ function WidgetCard({
     >
       <div
         className={cn(
-          action && "flex items-start justify-between",
+          action && "flex justify-between items-center",
           headerClassName
         )}
       >

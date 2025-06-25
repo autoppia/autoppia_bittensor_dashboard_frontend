@@ -170,8 +170,8 @@ const generateUniqueResults = (id: string, webName: string): UseCaseScore[] => {
 
   return baseScores.map((score: number, idx: number) => {
     const adjustedScore = Math.min(100, Math.max(0, score));
-    const totalRequests = 100; // Fixed requests for consistency
-    const successes = Math.round((adjustedScore / 100) * totalRequests); // Successes based on score
+    const totalRequests = 50 + idx * 10; // Vary totalRequests from 50 to 170 (e.g., 50, 60, 70, ..., 170)
+    const successes = Math.round((adjustedScore / 100) * totalRequests); // Adjust successes based on varied requests
     return {
       useCaseId: idx + 1,
       score: adjustedScore,
