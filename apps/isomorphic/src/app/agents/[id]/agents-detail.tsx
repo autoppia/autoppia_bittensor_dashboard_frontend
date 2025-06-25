@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import WidgetCard from "@core/components/cards/widget-card";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
@@ -19,6 +18,7 @@ import {
 } from "recharts";
 import { getAgentExtendedData } from "@/data/query";
 import { Select } from "rizzui";
+import { Text } from "rizzui";
 
 const BAR_COLOR = "#FF7E5F";
 const BAR_COLORS = [
@@ -69,6 +69,8 @@ export default function DetailsChart({
                 selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
                   ?.name || `Use Case ${result.useCaseId}`,
               average: Number(result.score.toPrecision(3)),
+              totalRequests: result.totalRequests,
+              successes: result.successes,
               colorIndex: idx,
             })) || []
           );
@@ -169,7 +171,65 @@ export default function DetailsChart({
                 }}
               />
               <Tooltip
-                content={<CustomTooltip postfix="%" formattedNumber={true} />}
+                content={({ payload, label }) => {
+                  console.log({ payload, label }); // Debug payload
+                  if (!payload || payload.length === 0) return null;
+                  const data = payload[0].payload;
+                  return (
+                    <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
+                      <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
+                        {data.website || "Unknown"}
+                      </Text>
+                      <div className="px-6 py-1 text-xs">
+                        <div className="chart-tooltip-item flex items-center p-1">
+                          <span
+                            className="me-1.5 h-2 w-2 rounded-full"
+                            style={{ backgroundColor: "#FF7E5F" }}
+                          />
+                          <Text>
+                            <Text as="span" className="capitalize">
+                              Average:
+                            </Text>{" "}
+                            <Text
+                              as="span"
+                              className="font-medium text-gray-900 dark:text-gray-700"
+                            >
+                              {data.average ? data.average.toFixed(1) : "0"}%
+                            </Text>
+                          </Text>
+                        </div>
+                        {selectedWebsite && selectedWebsite !== "__all__" && (
+                          <>
+                            <div className="chart-tooltip-item flex items-center p-1">
+                              <span
+                                className="me-1.5 h-2 w-2 rounded-full"
+                                style={{ backgroundColor: "#FF7E5F" }}
+                              />
+                              <Text className="text-gray-500">
+                                Requests:{" "}
+                                <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                  {data.totalRequests ?? 0}
+                                </span>
+                              </Text>
+                            </div>
+                            <div className="chart-tooltip-item flex items-center p-1">
+                              <span
+                                className="me-1.5 h-2 w-2 rounded-full"
+                                style={{ backgroundColor: "#FF7E5F" }}
+                              />
+                              <Text className="text-gray-500">
+                                Successes:{" "}
+                                <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                  {data.successes ?? 0}
+                                </span>
+                              </Text>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }}
               />
               <Bar dataKey="average" barSize={barSize} radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (

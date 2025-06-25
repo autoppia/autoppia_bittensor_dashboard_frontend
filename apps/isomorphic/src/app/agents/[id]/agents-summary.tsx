@@ -114,7 +114,7 @@ export default function AgentsSummary({
         label:
           selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
           `Use Case ${result.useCaseId}`,
-        value: result.score,
+        value: result.totalRequests,
         totalRequests: result.totalRequests,
         successes: result.successes,
       }));
@@ -138,49 +138,47 @@ export default function AgentsSummary({
     });
   }
 
-  // Prepare donut data with average score, totalRequests, and successes
+  // Prepare donut data with score as value and sorted colors
   const donutData = selectedWebsite
-    ? agentData.websites
-        .find((web) => web.name === selectedWebsite)
-        ?.results.map((result, idx) => {
-          const totalPrompts =
-            agentData.websites
-              .find((web) => web.name === selectedWebsite)
-              ?.results.reduce((sum, r) => sum + r.totalRequests, 0) || 1; // Avoid division by zero
-          const proportion = result.totalRequests / totalPrompts; // Raw proportion (0 to 1)
-          const average =
-            displayData.find(
-              (item) =>
-                item.label ===
-                (agentData.websites
-                  .find((web) => web.name === selectedWebsite)
-                  ?.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
-                  `Use Case ${result.useCaseId}`)
-            )?.value || 0;
-          console.log(
-            `Use Case: ${result.useCaseId}, Total Requests: ${result.totalRequests}, Total Prompts: ${totalPrompts}, Proportion: ${proportion}, Value: ${proportion * 100}%, Average: ${average}%`
-          ); // Debug log
-          return {
-            label:
-              agentData.websites
-                .find((web) => web.name === selectedWebsite)
-                ?.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
-              `Use Case ${result.useCaseId}`,
-            value: proportion * 100, // Percentage for pie chart
-            average: average, // Add average score
-            totalRequests: result.totalRequests, // Add total requests
-            successes: result.successes, // Add successes
-            fill: BAR_COLORS[idx % BAR_COLORS.length], // Ensure fill is included
-            stroke: BAR_COLORS[idx % BAR_COLORS.length], // Ensure stroke is included
-          };
-        }) || []
+    ? (() => {
+        const selectedWeb = agentData.websites.find(
+          (web) => web.name === selectedWebsite
+        );
+        if (!selectedWeb) return [];
+
+        const sortedResults = [...selectedWeb.results]
+          .map((result) => {
+            const useCase = selectedWeb.useCases.find(
+              (uc) => uc.id === result.useCaseId
+            );
+            const label = useCase?.name || `Use Case ${result.useCaseId}`;
+            const successRate =
+              result.totalRequests > 0
+                ? (result.successes / result.totalRequests) * 100
+                : 0;
+            return {
+              label,
+              value: result.totalRequests,
+              average: successRate,
+              totalRequests: result.totalRequests,
+              successes: result.successes,
+            };
+          })
+          .sort((a, b) => b.average - a.average); // Rank by success rate
+
+        return sortedResults.map((item, idx) => ({
+          ...item,
+          fill: BAR_COLORS[idx],
+          stroke: BAR_COLORS[idx],
+        }));
+      })()
     : [
         {
           label: "success",
           value: successRate,
           average: successRate,
-          totalRequests: totalRequests, // Use overall total requests
-          successes: totalSuccesses, // Use overall successes
+          totalRequests: totalRequests,
+          successes: totalSuccesses,
           fill: BAR_COLORS[0],
           stroke: BAR_COLORS[0],
         },
@@ -188,8 +186,8 @@ export default function AgentsSummary({
           label: "failed",
           value: 100 - successRate,
           average: 0,
-          totalRequests: totalRequests, // Use overall total requests
-          successes: 0, // No successes for failed
+          totalRequests: totalRequests,
+          successes: 0,
           fill: BAR_COLORS[1],
           stroke: BAR_COLORS[1],
         },
@@ -285,7 +283,11 @@ export default function AgentsSummary({
                 )}
               />
               {donutData.map((entry, idx) => (
-                <Cell key={`cell-${idx}`} fill={entry.fill} />
+                <Cell
+                  key={`cell-${idx}`}
+                  fill={entry.fill}
+                  stroke={entry.stroke}
+                />
               ))}
             </Pie>
           </PieChart>
