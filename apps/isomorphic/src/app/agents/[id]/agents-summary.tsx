@@ -138,7 +138,7 @@ export default function AgentsSummary({
     });
   }
 
-  // Prepare donut data with average score
+  // Prepare donut data with average score, totalRequests, and successes
   const donutData = selectedWebsite
     ? agentData.websites
         .find((web) => web.name === selectedWebsite)
@@ -168,6 +168,8 @@ export default function AgentsSummary({
               `Use Case ${result.useCaseId}`,
             value: proportion * 100, // Percentage for pie chart
             average: average, // Add average score
+            totalRequests: result.totalRequests, // Add total requests
+            successes: result.successes, // Add successes
             fill: BAR_COLORS[idx % BAR_COLORS.length], // Ensure fill is included
             stroke: BAR_COLORS[idx % BAR_COLORS.length], // Ensure stroke is included
           };
@@ -177,6 +179,8 @@ export default function AgentsSummary({
           label: "success",
           value: successRate,
           average: successRate,
+          totalRequests: totalRequests, // Use overall total requests
+          successes: totalSuccesses, // Use overall successes
           fill: BAR_COLORS[0],
           stroke: BAR_COLORS[0],
         },
@@ -184,6 +188,8 @@ export default function AgentsSummary({
           label: "failed",
           value: 100 - successRate,
           average: 0,
+          totalRequests: totalRequests, // Use overall total requests
+          successes: 0, // No successes for failed
           fill: BAR_COLORS[1],
           stroke: BAR_COLORS[1],
         },
@@ -210,15 +216,36 @@ export default function AgentsSummary({
                       {/* Fallback to payload label */}
                     </Text>
                     <div className="px-1 py-1 text-xs">
-                      <div className="chart-tooltip-item flex items-center justify-center">
+                      <div className="chart-tooltip-item flex items-center">
                         <span className="me-1.5 h-2 w-2 rounded-full" />
-                        <Text className="text-center">
+                        <Text>
+                          <Text as="span" className="capitalize">
+                            Average:
+                          </Text>{" "}
                           <Text
                             as="span"
                             className="font-medium text-gray-900 dark:text-gray-700"
                           >
                             {data.average ? data.average.toFixed(1) : "0"}%
                           </Text>
+                        </Text>
+                      </div>
+                      <div className="chart-tooltip-item flex items-center">
+                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                        <Text className="text-gray-500">
+                          Requests:{" "}
+                          <span className="text-gray-900 dark:text-gray-700 font-medium">
+                            {data.totalRequests ?? 0}
+                          </span>
+                        </Text>
+                      </div>
+                      <div className="chart-tooltip-item flex items-center">
+                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                        <Text className="text-gray-500">
+                          Successes:{" "}
+                          <span className="text-gray-900 dark:text-gray-700 font-medium">
+                            {data.successes ?? 0}
+                          </span>
                         </Text>
                       </div>
                     </div>
