@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
 
-const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"]; // success, failed
+const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"];
 
 const BAR_COLORS = [
   "#FF7E5F",
@@ -21,7 +21,7 @@ const BAR_COLORS = [
   "#88392F",
   "#6C2E2B",
   "#6C2E2B",
-  "#6C2E2B", // Extended for 12 use cases
+  "#6C2E2B",
 ];
 
 export type AgentsSummaryProps = {
@@ -29,6 +29,13 @@ export type AgentsSummaryProps = {
   selectedWebsite?: string | null;
   usecases?: number[];
   total?: number;
+};
+
+type DisplayDataItem = {
+  label: string;
+  value: number;
+  totalRequests: number;
+  successes: number;
 };
 
 export default function AgentsSummary({
@@ -43,31 +50,51 @@ export default function AgentsSummary({
     getAgentSummaryData(id as string) || {};
   const agent = agentsData.find((agent) => agent.id === id);
 
-  // Determine successRate based on selection
   let successRate;
+  let totalRequests = 0;
+  let totalSuccesses = 0;
+
   if (selectedWebsite) {
-    // When a website is selected, use its average use case score
     const selectedWeb = agentData.websites.find(
       (web) => web.name === selectedWebsite
     );
-    const allScores = selectedWeb?.results.map((r) => r.score) ?? [];
-    successRate = allScores.length
-      ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
-      : 0;
-  } else {
-    // When "See All", use the average of the first 3 websites' averages
-    const websiteAverages = agentData.websites.slice(0, 3).map((web) => {
-      const allScores = web.results.map((r) => r.score);
-      return allScores.length
+    if (selectedWeb) {
+      const allScores = selectedWeb.results.map((r) => r.score);
+      const allRequests = selectedWeb.results.map((r) => r.totalRequests);
+      const allSuccesses = selectedWeb.results.map((r) => r.successes);
+      successRate = allScores.length
         ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
         : 0;
+      totalRequests = allRequests.reduce((sum, r) => sum + r, 0);
+      totalSuccesses = allSuccesses.reduce((sum, s) => sum + s, 0);
+    } else {
+      successRate = 0;
+      totalRequests = 0;
+      totalSuccesses = 0;
+    }
+  } else {
+    const websiteAverages = agentData.websites.slice(0, 3).map((web) => {
+      const allScores = web.results.map((r) => r.score);
+      const allRequests = web.results.map((r) => r.totalRequests);
+      const allSuccesses = web.results.map((r) => r.successes);
+      return {
+        avgScore: allScores.length
+          ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+          : 0,
+        totalRequests: allRequests.reduce((sum, r) => sum + r, 0),
+        totalSuccesses: allSuccesses.reduce((sum, s) => sum + s, 0),
+      };
     });
     successRate =
       websiteAverages.length >= 3
-        ? websiteAverages.reduce((sum, avg) => sum + avg, 0) / 3
+        ? websiteAverages.reduce((sum, w) => sum + w.avgScore, 0) / 3
         : agent
           ? agent.successRate
           : total || summaryTotal || 0;
+    totalRequests =
+      websiteAverages.reduce((sum, w) => sum + w.totalRequests, 0) / 3;
+    totalSuccesses =
+      websiteAverages.reduce((sum, w) => sum + w.totalSuccesses, 0) / 3;
   }
 
   const radialData = [
@@ -75,30 +102,38 @@ export default function AgentsSummary({
     { label: "failed", value: 100 - successRate },
   ];
 
-  let displayData;
+  let displayData: DisplayDataItem[];
+
   if (selectedWebsite) {
-    // Per-website view: 12 use cases for the selected website
     const selectedWeb = agentData.websites.find(
       (web) => web.name === selectedWebsite
     );
     if (selectedWeb) {
-      displayData = selectedWeb.results.map((result, idx) => ({
+      displayData = selectedWeb.results.map((result) => ({
         label:
           selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
           `Use Case ${result.useCaseId}`,
         value: result.score,
+        totalRequests: result.totalRequests,
+        successes: result.successes,
       }));
     } else {
       displayData = [];
     }
   } else {
-    // General view ("See All"): List all websites with their average scores
     displayData = agentData.websites.map((web) => {
       const allScores = web.results.map((r) => r.score);
+      const allRequests = web.results.map((r) => r.totalRequests);
+      const allSuccesses = web.results.map((r) => r.successes);
       const average = allScores.length
         ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
         : 0;
-      return { label: web.name, value: average };
+      return {
+        label: web.name,
+        value: average,
+        totalRequests: allRequests.reduce((sum, r) => sum + r, 0),
+        successes: allSuccesses.reduce((sum, s) => sum + s, 0),
+      };
     });
   }
 
@@ -125,6 +160,8 @@ export default function AgentsSummary({
                 content={(props) => (
                   <CenterLabel
                     value={successRate.toFixed(0)}
+                    totalRequests={totalRequests.toFixed(0)}
+                    totalSuccesses={totalSuccesses.toFixed(0)}
                     viewBox={props.viewBox}
                   />
                 )}
@@ -144,64 +181,76 @@ export default function AgentsSummary({
         {displayData.map((item, idx) => (
           <Flex
             key={item.label}
-            align="center"
-            justify="between"
-            className="mb-4 gap-0 border-b border-muted pb-4 last:mb-0 last:border-0 last:pb-0"
+            direction="col"
+            align="start"
+            className="mb-4 gap-1 border-b border-muted pb-4 last:mb-0 last:border-0 last:pb-0"
           >
-            <Flex align="center" className="gap-0">
-              <span
-                className="me-2 size-2 rounded-full"
-                style={{ backgroundColor: BAR_COLORS[idx % BAR_COLORS.length] }}
-              />
+            <Flex align="center" className="w-full">
+              <Flex align="center" className="gap-2">
+                <span
+                  className="me-2 size-2 rounded-full"
+                  style={{
+                    backgroundColor: BAR_COLORS[idx % BAR_COLORS.length],
+                  }}
+                />
+                <Text
+                  as="span"
+                  className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
+                >
+                  {item.label}
+                </Text>
+              </Flex>
               <Text
                 as="span"
                 className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
               >
-                {item.label}
+                {item.value.toFixed(1)}%
               </Text>
             </Flex>
-            <Text as="span">{item.value.toFixed(1)}%</Text>
+            <Text as="span" className="text-xs text-gray-500">
+              Requests: {item.totalRequests}, Successes: {item.successes}
+            </Text>
           </Flex>
         ))}
-        {selectedWebsite && displayData.length > 0 && (
-          <Flex
-            align="center"
-            justify="between"
-            className="mt-4 pt-2 border-t border-muted"
-          >
-            <Text
-              as="span"
-              className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
-            >
-              Average
-            </Text>
-            <Text as="span">
-              {(
-                displayData.reduce((sum, item) => sum + item.value, 0) /
-                displayData.length
-              ).toFixed(1)}
-              %
-            </Text>
-          </Flex>
-        )}
       </div>
     </WidgetCard>
   );
 }
 
-function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
+function CenterLabel({
+  value,
+  totalRequests,
+  totalSuccesses,
+  viewBox,
+}: {
+  value: string;
+  totalRequests: string;
+  totalSuccesses: string;
+  viewBox: any;
+}) {
   const { cx, cy } = viewBox;
   return (
     <>
       <text
         x={cx}
-        y={cy - 10}
-        fill="#FFFFFF" // Hex for white
+        y={cy - 20}
+        fill="#FFFFFF"
         textAnchor="middle"
         dominantBaseline="central"
       >
         <tspan fontSize="36" fontWeight="700">
           {value}%
+        </tspan>
+      </text>
+      <text
+        x={cx}
+        y={cy + 10}
+        fill="#FFFFFF"
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        <tspan fontSize="14" fontWeight="600">
+          Requests: {totalRequests}
         </tspan>
       </text>
       <text
@@ -212,7 +261,7 @@ function CenterLabel({ value, viewBox }: { value: string; viewBox: any }) {
         dominantBaseline="central"
       >
         <tspan fontSize="14" fontWeight="600">
-          For Total Tasks
+          Successes: {totalSuccesses}
         </tspan>
       </text>
     </>

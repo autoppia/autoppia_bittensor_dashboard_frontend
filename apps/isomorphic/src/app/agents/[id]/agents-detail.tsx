@@ -36,40 +36,39 @@ export default function DetailsChart({
   const barSize = isTab ? 16 : 20;
 
   const websiteOptions = [
-    { value: null, label: "See All" },
+    { value: "__all__", label: "See All" },
     ...agentDetailsData.websites.map((web) => ({
       value: web.name,
       label: web.name,
     })),
   ];
 
-  const chartData = selectedWebsite
-    ? (() => {
-        const selectedWeb = agentDetailsData.websites.find(
-          (web) => web.name === selectedWebsite
-        );
-        const scores = selectedWeb?.results.map((r) => r.score) ?? [];
-        const avg = scores.length
-          ? scores.reduce((sum, s) => sum + s, 0) / scores.length
-          : 0;
-        return [
-          {
-            website: selectedWebsite,
-            average: Number(avg.toPrecision(3)),
-          },
-        ];
-      })()
-    : agentDetailsData.websites.map((web) => {
-        const allScores = web.results.map((r) => r.score);
-        return {
-          website: web.name,
-          average: Number(
-            (
-              allScores.reduce((sum, s) => sum + s, 0) / allScores.length || 0
-            ).toPrecision(3)
-          ),
-        };
-      });
+  const chartData =
+    selectedWebsite && selectedWebsite !== "__all__"
+      ? (() => {
+          const selectedWeb = agentDetailsData.websites.find(
+            (web) => web.name === selectedWebsite
+          );
+          return (
+            selectedWeb?.results.map((result) => ({
+              website:
+                selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
+                  ?.name || `Use Case ${result.useCaseId}`,
+              average: Number(result.score.toPrecision(3)),
+            })) || []
+          );
+        })()
+      : agentDetailsData.websites.map((web) => {
+          const allScores = web.results.map((r) => r.score);
+          return {
+            website: web.name,
+            average: Number(
+              (
+                allScores.reduce((sum, s) => sum + s, 0) / allScores.length || 0
+              ).toPrecision(3)
+            ),
+          };
+        });
 
   return (
     <WidgetCard
@@ -80,8 +79,14 @@ export default function DetailsChart({
         <div className="flex items-center gap-2">
           <Select
             options={websiteOptions}
-            value={websiteOptions.find((opt) => opt.value === selectedWebsite)}
-            onChange={(option) => setSelectedWebsite(option.value)}
+            value={websiteOptions.find(
+              (opt) => opt.value === (selectedWebsite ?? "__all__")
+            )}
+            onChange={(option: { label: string; value: string }) =>
+              setSelectedWebsite(
+                option.value === "__all__" ? null : option.value
+              )
+            }
             placeholder="Select Website"
             className="w-[200px]"
           />
@@ -117,15 +122,7 @@ export default function DetailsChart({
                 }}
               />
               <Tooltip
-                content={(props) => (
-                  <CustomTooltip
-                    {...props}
-                    postfix="%"
-                    formattedNumber={(payload) =>
-                      Number(payload.average).toFixed(1)
-                    }
-                  />
-                )}
+                content={<CustomTooltip postfix="%" formattedNumber={true} />}
               />
               <Bar
                 dataKey="average"
