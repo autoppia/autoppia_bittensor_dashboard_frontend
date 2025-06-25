@@ -99,7 +99,7 @@ export default function DetailsChart({
           <ResponsiveContainer width="100%" height="100%" minWidth={700}>
             <ComposedChart
               data={chartData}
-              margin={{ left: -6 }}
+              margin={{ left: -6, bottom: chartData.length === 12 ? 100 : 50 }} // Adjust bottom margin based on data length
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
@@ -107,7 +107,39 @@ export default function DetailsChart({
                 strokeOpacity={0.435}
                 strokeDasharray="8 10"
               />
-              <XAxis dataKey="website" axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="website"
+                axisLine={false}
+                tickLine={false}
+                interval={0} // Show all ticks
+                height={chartData.length === 12 ? 100 : 50} // Adjust height for vertical labels
+                tick={(props) => {
+                  const { x, y, payload } = props;
+                  if (chartData.length === 12) {
+                    // Vertical labels for 12 use cases
+                    return (
+                      <g transform={`translate(${x},${y + 20})`}>
+                        <text
+                          x={0}
+                          y={0}
+                          dy={10}
+                          textAnchor="end"
+                          fill="#666"
+                          transform="rotate(-90)"
+                        >
+                          {payload.value}
+                        </text>
+                      </g>
+                    );
+                  }
+                  // Horizontal labels for 3 websites
+                  return (
+                    <text x={x} y={y} dy={10} textAnchor="middle" fill="#666">
+                      {payload.value}
+                    </text>
+                  );
+                }}
+              />
               <YAxis
                 type="number"
                 domain={[0, 100]}
