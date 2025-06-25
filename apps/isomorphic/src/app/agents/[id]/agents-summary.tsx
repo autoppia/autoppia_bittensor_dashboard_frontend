@@ -215,9 +215,12 @@ export default function AgentsSummary({
                       {data.label || "Unknown"}{" "}
                       {/* Fallback to payload label */}
                     </Text>
-                    <div className="px-1 py-1 text-xs">
-                      <div className="chart-tooltip-item flex items-center mb-1">
-                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                    <div className="px-6 py-1 text-xs">
+                      <div className="chart-tooltip-item flex items-center p-1">
+                        <span
+                          className="me-1.5 h-2 w-2 rounded-full"
+                          style={{ backgroundColor: "#FF7E5F" }}
+                        />
                         <Text>
                           <Text as="span" className="capitalize">
                             Average:
@@ -230,8 +233,12 @@ export default function AgentsSummary({
                           </Text>
                         </Text>
                       </div>
-                      <div className="chart-tooltip-item flex items-center">
-                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                      <div className="chart-tooltip-item flex items-center p-1">
+                        <span
+                          className="me-1.5 h-2 w-2 rounded-full"
+                          style={{ backgroundColor: "#FF7E5F" }}
+                        />
+
                         <Text className="text-gray-500">
                           Requests:{" "}
                           <span className="text-gray-900 dark:text-gray-700 font-medium">
@@ -239,8 +246,12 @@ export default function AgentsSummary({
                           </span>
                         </Text>
                       </div>
-                      <div className="chart-tooltip-item flex items-center">
-                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                      <div className="chart-tooltip-item flex items-center p-1">
+                        <span
+                          className="me-1.5 h-2 w-2 rounded-full"
+                          style={{ backgroundColor: "#FF7E5F" }}
+                        />
+
                         <Text className="text-gray-500">
                           Successes:{" "}
                           <span className="text-gray-900 dark:text-gray-700 font-medium">
