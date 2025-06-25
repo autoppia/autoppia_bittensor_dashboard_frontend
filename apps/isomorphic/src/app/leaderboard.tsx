@@ -39,10 +39,10 @@ const CustomLabel = ({ x, y, payload, data }: any) => {
         height={30}
       />
       <text
-        x={x - 118}
+        x={x - 120}
         y={y}
         fill="#fff"
-        textAnchor="start"
+        // textAnchor="start"
         dominantBaseline="middle"
         fontSize={12}
       >
