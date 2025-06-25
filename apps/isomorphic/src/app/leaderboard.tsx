@@ -67,7 +67,7 @@ function TooltipContent({ active, payload }: any) {
   if (!agent || !agentExtended) return null;
 
   return (
-    <div className="rounded-md bg-[#1e1e1e] min-w-[160px] shadow-md border border-[#2a2a2a] text-sm">
+    <div className="rounded-md bg-[#1e1e1e] min-w-[160px] shadow-md border border-[#2a2a2a] text-sm px-1">
       <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 mb-2">
         <Text className="label block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
           {agent.name}
@@ -81,7 +81,7 @@ function TooltipContent({ active, payload }: any) {
         return (
           <p
             key={web.name}
-            className="font-medium text-gray-900 dark:text-gray-700 text-center mb-2"
+            className="font-medium text-gray-900 dark:text-gray-700 text-left mb-2"
           >
             {web.name}: {averageScore.toFixed(1)}%
           </p>

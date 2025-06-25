@@ -216,7 +216,7 @@ export default function AgentsSummary({
                       {/* Fallback to payload label */}
                     </Text>
                     <div className="px-1 py-1 text-xs">
-                      <div className="chart-tooltip-item flex items-center">
+                      <div className="chart-tooltip-item flex items-center mb-1">
                         <span className="me-1.5 h-2 w-2 rounded-full" />
                         <Text>
                           <Text as="span" className="capitalize">
