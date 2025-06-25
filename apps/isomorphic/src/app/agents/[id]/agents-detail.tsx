@@ -87,7 +87,7 @@ export default function DetailsChart({
 
   return (
     <WidgetCard
-      title="Job Overview"
+      title="Success Rate"
       className={cn("min-h-[28rem]", className)}
       titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
       action={
