@@ -95,11 +95,82 @@ function TooltipContent({ active, payload }: any) {
     </div>
   );
 }
+const SmallScreenCustomLabel = ({ x, y, payload, data }: any) => {
+  const router = useRouter();
+  const agent = data.find((item: any) => item.name === payload.value);
+  if (!agent) return null;
+
+  const handleClick = () => {
+    router.push(agent.href);
+  };
+
+  return (
+    <g
+      onClick={handleClick}
+      className="cursor-pointer block sm:hidden"
+      style={{ pointerEvents: "all" }}
+    >
+      <text
+        x={x - 80} // Adjusted for small screens
+        y={y}
+        fill="#fff"
+        dominantBaseline="middle"
+        fontSize={8} // Smaller for small screens
+      >
+        {agent.name}
+      </text>
+    </g>
+  );
+};
+
+function SmallScreenTooltipContent({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+
+  const { id } = payload[0].payload;
+  const agent = getAgentById(id);
+  const agentExtended = getAgentExtendedData(id);
+
+  if (!agent || !agentExtended) return null;
+
+  return (
+    <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 p-1 max-w-[150px] block sm:hidden">
+      <Text className="label block bg-gray-100 p-1 px-1 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
+        {agent.name}
+      </Text>
+      {agentExtended.websites.map((web) => {
+        const allScores = web.results.map((r) => r.score);
+        const averageScore = allScores.length
+          ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+          : 0;
+        return (
+          <div
+            key={web.name}
+            className="px-1 py-1 text-xs flex items-center flex-wrap"
+          >
+            <span
+              className="me-1 h-2 w-2 rounded-full inline-block"
+              style={{ backgroundColor: "#FF7E5F" }}
+            />
+            <Text className="font-medium text-gray-900 dark:text-gray-700 inline break-words">
+              {web.name}:
+            </Text>{" "}
+            <Text className="font-medium text-gray-900 dark:text-gray-700 inline">
+              {averageScore.toFixed(1)}%
+            </Text>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /* ──────────────────────────── component ────────────────────────────── */
 export default function Leaderboard() {
   const router = useRouter();
   const leaderboardData = getLeaderboardData(); // ya viene ordenado
+  const BoundSmallScreenCustomLabel = (props: any) => (
+    <SmallScreenCustomLabel {...props} data={leaderboardData} />
+  );
 
   // Create a bound version of CustomLabel with leaderboardData
   const BoundCustomLabel = (props: any) => (
@@ -117,7 +188,7 @@ export default function Leaderboard() {
       </Text>
 
       <div className="w-full overflow-x-auto text-white mb-5 sm:mb-7 md:mb-10">
-        <div className="min-w-[320px] sm:min-w-[320px] md:min-w-[500px] lg:min-w-[600px] h-[280px] sm:h-[320px] md:h-[440px] lg:h-[520px]">
+        <div className="hidden sm:block min-w-[550px] h-[300px] sm:h-[320px] md:h-[500px] lg:h-[600px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               layout="vertical"
@@ -185,6 +256,77 @@ export default function Leaderboard() {
                         textAnchor="start"
                         dominantBaseline="middle"
                         className="text-xs sm:text-sm md:text-base" // Original text-base for lg+
+                      >
+                        {successRate.toFixed(1)}%
+                      </text>
+                    );
+                  }}
+                />
+              </Bar>
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        {/* New Chart for small screens */}
+        <div className="min-w-[320px] h-[200px] block sm:hidden">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              layout="vertical"
+              margin={{ top: 5, bottom: -5, left: -10, right: 10 }}
+              barCategoryGap={30}
+              barSize={20}
+              data={leaderboardData}
+            >
+              <defs>
+                <linearGradient
+                  id="smallBarGradient"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="0"
+                >
+                  <stop offset="0%" stopColor="#FF7E5F" />
+                  <stop offset="100%" stopColor="#FEB47B" />
+                </linearGradient>
+              </defs>
+
+              <XAxis type="number" axisLine={false} tickLine={false} />
+              <YAxis
+                dataKey="name"
+                type="category"
+                width={100}
+                axisLine={true}
+                tickLine={false}
+                style={{ fontSize: 8, fontWeight: 400, fill: "#fff" }}
+                tickFormatter={() => ""}
+                tick={BoundSmallScreenCustomLabel}
+                tickMargin={4}
+              />
+              <CartesianGrid horizontal={false} />
+              <Tooltip content={<SmallScreenTooltipContent />} />
+
+              <Bar
+                dataKey="successRate"
+                fill="url(#smallBarGradient)"
+                onClick={({ href }) => router.push(href)}
+                className="cursor-pointer"
+              >
+                <LabelList
+                  dataKey="successRate"
+                  content={({ x, y, width, value }) => {
+                    const barWidth = typeof width === "number" ? width : 0;
+                    const successRate =
+                      typeof value === "number"
+                        ? value
+                        : parseFloat(value as string);
+                    const barHeight = 20;
+                    return (
+                      <text
+                        x={(x as number) + barWidth + 5}
+                        y={(y as number) + barHeight / 2}
+                        fill="#fff"
+                        textAnchor="start"
+                        dominantBaseline="middle"
+                        fontSize={6}
                       >
                         {successRate.toFixed(1)}%
                       </text>
