@@ -10,6 +10,7 @@ import { formatNumber } from "@core/utils/format-number";
 import {
   Bar,
   CartesianGrid,
+  Cell,
   ComposedChart,
   ResponsiveContainer,
   Tooltip,
@@ -20,7 +21,20 @@ import { getAgentExtendedData } from "@/data/query";
 import { Select } from "rizzui";
 
 const BAR_COLOR = "#FF7E5F";
-
+const BAR_COLORS = [
+  "#FF7E5F", // bright coral
+  "#FDB36A", // apricot
+  "#FFD166", // golden sand
+  "#F9F871", // lemon
+  "#C4F0C2", // soft mint
+  "#A0CED9", // light teal
+  "#84A9C0", // dusty blue
+  "#9381FF", // soft purple
+  "#B25D91", // plum
+  "#F67280", // pinkish red
+  "#C06C84", // rose
+  "#6C5B7B", // muted violet
+];
 export default function DetailsChart({
   className,
   selectedWebsite,
@@ -50,11 +64,12 @@ export default function DetailsChart({
             (web) => web.name === selectedWebsite
           );
           return (
-            selectedWeb?.results.map((result) => ({
+            selectedWeb?.results.map((result, idx) => ({
               website:
                 selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
                   ?.name || `Use Case ${result.useCaseId}`,
               average: Number(result.score.toPrecision(3)),
+              colorIndex: idx,
             })) || []
           );
         })()
@@ -125,7 +140,7 @@ export default function DetailsChart({
                           dy={10}
                           textAnchor="end"
                           fill="#666"
-                          transform="rotate(-90)"
+                          transform="rotate(-70)"
                         >
                           {payload.value}
                         </text>
@@ -156,13 +171,18 @@ export default function DetailsChart({
               <Tooltip
                 content={<CustomTooltip postfix="%" formattedNumber={true} />}
               />
-              <Bar
-                dataKey="average"
-                fill={BAR_COLOR}
-                stroke={BAR_COLOR}
-                barSize={barSize}
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="average" barSize={barSize} radius={[4, 4, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`bar-cell-${index}`}
+                    fill={
+                      selectedWebsite && selectedWebsite !== "__all__"
+                        ? BAR_COLORS[entry.colorIndex % BAR_COLORS.length]
+                        : BAR_COLOR
+                    }
+                  />
+                ))}
+              </Bar>
             </ComposedChart>
           </ResponsiveContainer>
         </div>

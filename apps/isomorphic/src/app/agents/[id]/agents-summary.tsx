@@ -2,26 +2,32 @@
 
 import { Flex, Text } from "rizzui";
 import WidgetCard from "@core/components/cards/widget-card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Label,
+  Tooltip,
+} from "recharts";
 import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
-
-const RADIAL_COLORS = ["#FF7E5F", "#FEDCBE"];
+import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 
 const BAR_COLORS = [
-  "#FF7E5F",
-  "#FFA173",
-  "#FFBC89",
-  "#FFD5A0",
-  "#FFE9B6",
-  "#E05A3B",
-  "#C14F37",
-  "#A44333",
-  "#88392F",
-  "#6C2E2B",
-  "#6C2E2B",
-  "#6C2E2B",
+  "#FF7E5F", // bright coral
+  "#FDB36A", // apricot
+  "#FFD166", // golden sand
+  "#F9F871", // lemon
+  "#C4F0C2", // soft mint
+  "#A0CED9", // light teal
+  "#84A9C0", // dusty blue
+  "#9381FF", // soft purple
+  "#B25D91", // plum
+  "#F67280", // pinkish red
+  "#C06C84", // rose
+  "#6C5B7B", // muted violet
 ];
 
 export type AgentsSummaryProps = {
@@ -97,11 +103,6 @@ export default function AgentsSummary({
       websiteAverages.reduce((sum, w) => sum + w.totalSuccesses, 0) / 3;
   }
 
-  const radialData = [
-    { label: "success", value: successRate },
-    { label: "failed", value: 100 - successRate },
-  ];
-
   let displayData: DisplayDataItem[];
 
   if (selectedWebsite) {
@@ -109,7 +110,7 @@ export default function AgentsSummary({
       (web) => web.name === selectedWebsite
     );
     if (selectedWeb) {
-      displayData = selectedWeb.results.map((result) => ({
+      displayData = selectedWeb.results.map((result, idx) => ({
         label:
           selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
           `Use Case ${result.useCaseId}`,
@@ -137,6 +138,57 @@ export default function AgentsSummary({
     });
   }
 
+  // Prepare donut data with average score
+  const donutData = selectedWebsite
+    ? agentData.websites
+        .find((web) => web.name === selectedWebsite)
+        ?.results.map((result, idx) => {
+          const totalPrompts =
+            agentData.websites
+              .find((web) => web.name === selectedWebsite)
+              ?.results.reduce((sum, r) => sum + r.totalRequests, 0) || 1; // Avoid division by zero
+          const proportion = result.totalRequests / totalPrompts; // Raw proportion (0 to 1)
+          const average =
+            displayData.find(
+              (item) =>
+                item.label ===
+                (agentData.websites
+                  .find((web) => web.name === selectedWebsite)
+                  ?.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
+                  `Use Case ${result.useCaseId}`)
+            )?.value || 0;
+          console.log(
+            `Use Case: ${result.useCaseId}, Total Requests: ${result.totalRequests}, Total Prompts: ${totalPrompts}, Proportion: ${proportion}, Value: ${proportion * 100}%, Average: ${average}%`
+          ); // Debug log
+          return {
+            label:
+              agentData.websites
+                .find((web) => web.name === selectedWebsite)
+                ?.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
+              `Use Case ${result.useCaseId}`,
+            value: proportion * 100, // Percentage for pie chart
+            average: average, // Add average score
+            fill: BAR_COLORS[idx % BAR_COLORS.length], // Ensure fill is included
+            stroke: BAR_COLORS[idx % BAR_COLORS.length], // Ensure stroke is included
+          };
+        }) || []
+    : [
+        {
+          label: "success",
+          value: successRate,
+          average: successRate,
+          fill: BAR_COLORS[0],
+          stroke: BAR_COLORS[0],
+        },
+        {
+          label: "failed",
+          value: 100 - successRate,
+          average: 0,
+          fill: BAR_COLORS[1],
+          stroke: BAR_COLORS[1],
+        },
+      ];
+
   return (
     <WidgetCard
       title="Job Summary"
@@ -146,11 +198,39 @@ export default function AgentsSummary({
       <div className="h-[320px] w-full @sm:py-3">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
+            <Tooltip
+              content={({ payload, label }) => {
+                console.log({ payload, label }); // Debug payload and label
+                if (!payload || payload.length === 0) return null;
+                const data = payload[0].payload; // Access the full data object
+                return (
+                  <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
+                    <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
+                      {data.label || "Unknown"}{" "}
+                      {/* Fallback to payload label */}
+                    </Text>
+                    <div className="px-1 py-1 text-xs">
+                      <div className="chart-tooltip-item flex items-center justify-center">
+                        <span className="me-1.5 h-2 w-2 rounded-full" />
+                        <Text className="text-center">
+                          <Text
+                            as="span"
+                            className="font-medium text-gray-900 dark:text-gray-700"
+                          >
+                            {data.average ? data.average.toFixed(1) : "0"}%
+                          </Text>
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            />
             <Pie
-              data={radialData}
+              data={donutData}
               innerRadius={100}
               outerRadius={120}
-              paddingAngle={10}
+              paddingAngle={5}
               cornerRadius={40}
               dataKey="value"
               stroke="rgba(0,0,0,0)"
@@ -166,11 +246,8 @@ export default function AgentsSummary({
                   />
                 )}
               />
-              {radialData.map((_, idx) => (
-                <Cell
-                  key={idx}
-                  fill={RADIAL_COLORS[idx % RADIAL_COLORS.length]}
-                />
+              {donutData.map((entry, idx) => (
+                <Cell key={`cell-${idx}`} fill={entry.fill} />
               ))}
             </Pie>
           </PieChart>

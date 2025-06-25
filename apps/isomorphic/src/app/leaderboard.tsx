@@ -1,4 +1,3 @@
-/* src/app/shared/leaderboard/Leaderboard.tsx */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -13,7 +12,12 @@ import {
   LabelList,
 } from "recharts";
 import { Title, Text } from "rizzui/typography";
-import { getLeaderboardData, getAgentById } from "@/data/query";
+import {
+  getLeaderboardData,
+  getAgentById,
+  getAgentExtendedData,
+} from "@/data/query";
+import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 
 /* ───────────────────────────── custom label ────────────────────────── */
 const CustomLabel = ({ x, y, payload, data }: any) => {
@@ -28,7 +32,7 @@ const CustomLabel = ({ x, y, payload, data }: any) => {
   return (
     <g
       onClick={handleClick}
-      className="cursor-pointer"
+      className="cursor-pointer hidden sm:block"
       style={{ pointerEvents: "all" }}
     >
       <image
@@ -53,21 +57,32 @@ const CustomLabel = ({ x, y, payload, data }: any) => {
 };
 
 /* ─────────────────────────── custom tooltip ────────────────────────── */
-const TooltipContent = ({ active, payload }: any) => {
+function TooltipContent({ active, payload }: any) {
   if (!active || !payload?.length) return null;
+
   const { id } = payload[0].payload;
   const agent = getAgentById(id);
-  if (!agent) return null;
+  const agentExtended = getAgentExtendedData(id);
+
+  if (!agent || !agentExtended) return null;
 
   return (
-    <div className="rounded-md bg-gray-800/90 p-3 text-xs">
-      <p className="font-semibold text-white mb-1">{agent.name}</p>
-      <p className="text-gray-300">Use case 1 • {agent.usecase1}</p>
-      <p className="text-gray-300">Use case 2 • {agent.usecase2}</p>
-      <p className="text-gray-300">Use case 3 • {agent.usecase3}</p>
+    <div className="rounded-md bg-[#1e1e1e] p-3 min-w-[160px] shadow-md border border-[#2a2a2a] text-sm">
+      <p className="text-white font-medium mb-2">{agent.name}</p>
+      {agentExtended.websites.map((web) => {
+        const allScores = web.results.map((r) => r.score);
+        const averageScore = allScores.length
+          ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+          : 0;
+        return (
+          <p key={web.name} className="text-gray-400 font-normal">
+            {web.name}: {averageScore.toFixed(1)}%
+          </p>
+        );
+      })}
     </div>
   );
-};
+}
 
 /* ──────────────────────────── component ────────────────────────────── */
 export default function Leaderboard() {
@@ -80,18 +95,28 @@ export default function Leaderboard() {
   );
 
   return (
-    <div className="flex flex-col w-full px-6 md:px-12 lg:px-24 xl:px-36 items-center">
-      <Title className="text-5xl font-bold text-center leading-tight mt-10 mb-10">
+    <div className="flex flex-col w-full px-6  sm:px-4 md:px-12 lg:px-24 xl:px-36 items-center">
+      <Title className="text-3xl sm:text-4xl md:text-5xl font-bold text-center leading-tight mt-5 sm:mt-7 md:mt-10 mb-5 sm:mb-7 md:mb-10">
         Infinite Web Arena Leaderboard
       </Title>
 
-      <Text className="text-4xl font-bold text-white">IWA Score</Text>
+      <Text className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+        IWA Score
+      </Text>
 
-      <div className="w-full min-w-[600px] h-[600px] text-white mb-10">
+      <div className="w-full min-w-[600px] h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] text-white mb-5 sm:mb-7 md:mb-10">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             layout="vertical"
-            margin={{ top: 20, bottom: -10, left: -50, right: 100 }}
+            margin={{
+              top: 20,
+              bottom: -10,
+              left: -50,
+              right: 100,
+              sm: { top: 15, bottom: -5, left: -30, right: 75 },
+              md: { top: 20, bottom: -10, left: -40, right: 100 },
+              lg: { top: 20, bottom: -10, left: -50, right: 100 },
+            }}
             barCategoryGap={100}
             barSize={35}
             data={leaderboardData}
@@ -108,12 +133,15 @@ export default function Leaderboard() {
               dataKey="name"
               type="category"
               width={300}
+              className="sm:width-200 md:width-250 lg:width-300"
+              className="sm:text-xs sm:font-medium md:text-sm md:font-semibold lg:text-base lg:font-medium" // Original fontSize=12 for lg+
               axisLine={true}
               tickLine={false}
               style={{ fontSize: 12, fontWeight: 500, fill: "#fff" }}
               tickFormatter={(value) => ""} // Hide default text
               tick={BoundCustomLabel} // Use the bound component
               tickMargin={7} // Add some margin for better spacing
+              className="sm:tick-margin-6 md:tick-margin-7 lg:tick-margin-7" // Original 7 for lg+
             />
             <CartesianGrid horizontal={false} />
             <Tooltip content={<TooltipContent />} />
@@ -143,6 +171,7 @@ export default function Leaderboard() {
                       fill="#fff"
                       textAnchor="start"
                       dominantBaseline="middle"
+                      className="text-xs sm:text-sm md:text-base" // Original text-base for lg+
                     >
                       {successRate.toFixed(1)}%
                     </text>
