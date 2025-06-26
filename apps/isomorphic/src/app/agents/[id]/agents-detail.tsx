@@ -97,10 +97,14 @@ export default function DetailsChart({
   return (
     <WidgetCard
       title="Success Rate"
+      titleClassName={cn(
+        "font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter hidden lg:block",
+        className
+      )}
       className={cn("min-h-[28rem]", className)}
-      titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
+      // titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
       action={
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2 mr-5 lg:mr-0")}>
           <Select
             options={websiteOptions}
             value={websiteOptions.find(
