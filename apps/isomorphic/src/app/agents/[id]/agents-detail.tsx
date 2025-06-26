@@ -19,6 +19,36 @@ import {
 import { getAgentExtendedData } from "@/data/query";
 import { Select, Text } from "rizzui";
 
+// Define interfaces for data structures
+interface UseCase {
+  id: string;
+  name: string;
+}
+
+interface Result {
+  useCaseId: string;
+  successRate: number;
+  total: number;
+  successCount: number;
+  avgSolutionTime: number;
+}
+
+interface Website {
+  name: string;
+  useCases: UseCase[];
+  results: Result[];
+  overall: {
+    successRate: number;
+    total: number;
+    successCount: number;
+    avgSolutionTime: number;
+  };
+}
+
+interface AgentExtendedData {
+  websites: Website[];
+}
+
 const BAR_COLORS = [
   "#FF7E5F", // bright coral (AutoZone)
   "#FDB36A", // apricot (Books)
@@ -43,19 +73,26 @@ function formatUseCaseName(name: string): string {
     .join(" ");
 }
 
+interface DetailsChartProps {
+  className?: string;
+  selectedWebsite?: string | null;
+  setSelectedWebsite: (value: string | null) => void;
+  hoveredUseCase: string | null;
+  setHoveredUseCase: (value: string | null) => void;
+}
+
 export default function DetailsChart({
   className,
   selectedWebsite,
   setSelectedWebsite,
-}: {
-  className?: string;
-  selectedWebsite?: string | null;
-  setSelectedWebsite: (value: string | null) => void;
-}) {
+  hoveredUseCase,
+  setHoveredUseCase,
+}: DetailsChartProps) {
   const { id } = useParams();
-  const agentDetailsData = getAgentExtendedData(id as string);
+  const agentDetailsData: AgentExtendedData = getAgentExtendedData(id as string);
   const isTab = useMedia("(max-width: 768px)", false);
-  const barSize = isTab ? 16 : 20;
+  const defaultBarSize = isTab ? 16 : 20;
+  const highlightedBarSize = isTab ? 24 : 30;
 
   const websiteOptions = [
     { value: "__all__", label: "See All" },
@@ -91,7 +128,7 @@ export default function DetailsChart({
           total: web.overall.total,
           successCount: web.overall.successCount,
           avgSolutionTime: web.overall.avgSolutionTime,
-          colorIndex: idx, // Assign index for color mapping
+          colorIndex: idx,
         }));
 
   return (
@@ -102,7 +139,6 @@ export default function DetailsChart({
         className
       )}
       className={cn("min-h-[28rem]", className)}
-      // titleClassName="font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter"
       action={
         <div className={cn("flex items-center gap-2 mr-5 lg:mr-0")}>
           <Select
@@ -184,14 +220,18 @@ export default function DetailsChart({
                   if (!payload || payload.length === 0) return null;
                   const data = payload[0].payload;
                   return (
-                    <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
+                    <div
+                      className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
+                      onMouseEnter={() => setHoveredUseCase(data.website)}
+                      onMouseLeave={() => setHoveredUseCase(null)}
+                    >
                       <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
                         {data.website || "Unknown"}
                       </Text>
                       <div className="px-6 py-1 text-xs">
                         <div className="chart-tooltip-item flex items-center p-1">
                           <span
-                            className="me-1.5 h-2 w-2 rounded-full inline-block"
+                            className="me-1.5 h-2 w-2 rounded-full"
                             style={{ backgroundColor: "#FF7E5F" }}
                           />
                           <Text>
@@ -210,7 +250,7 @@ export default function DetailsChart({
                           <>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                className="me-1.5 h-2 w-2 rounded-full"
                                 style={{ backgroundColor: "#F9F871" }}
                               />
                               <Text className="text-gray-500">
@@ -222,7 +262,7 @@ export default function DetailsChart({
                             </div>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                className="me-1.5 h-2 w-2 rounded-full"
                                 style={{ backgroundColor: "#FFD166" }}
                               />
                               <Text className="text-gray-500">
@@ -234,7 +274,7 @@ export default function DetailsChart({
                             </div>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                className="me-1.5 h-2 w-2 rounded-full"
                                 style={{ backgroundColor: "#FDB36A" }}
                               />
                               <Text className="text-gray-500">
@@ -254,11 +294,16 @@ export default function DetailsChart({
                   );
                 }}
               />
-              <Bar dataKey="average" barSize={barSize} radius={[4, 4, 0, 0]}>
+              <Bar dataKey="average" radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`bar-cell-${index}`}
                     fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
+                    width={
+                      entry.website === hoveredUseCase
+                        ? highlightedBarSize
+                        : defaultBarSize
+                    }
                   />
                 ))}
               </Bar>
