@@ -187,11 +187,8 @@ export default function DetailsChart({
                       <div className="px-6 py-1 text-xs">
                         <div className="chart-tooltip-item flex items-center p-1">
                           <span
-                            className="me-1.5 h-2 w-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                BAR_COLORS[data.colorIndex % BAR_COLORS.length],
-                            }}
+                            className="me-1.5 h-2 w-2 rounded-full inline-block"
+                            style={{ backgroundColor: "#FF7E5F" }}
                           />
                           <Text>
                             <Text as="span" className="capitalize">
@@ -209,13 +206,8 @@ export default function DetailsChart({
                           <>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    BAR_COLORS[
-                                      data.colorIndex % BAR_COLORS.length
-                                    ],
-                                }}
+                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                style={{ backgroundColor: "#F9F871" }}
                               />
                               <Text className="text-gray-500">
                                 Requests:{" "}
@@ -226,13 +218,8 @@ export default function DetailsChart({
                             </div>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    BAR_COLORS[
-                                      data.colorIndex % BAR_COLORS.length
-                                    ],
-                                }}
+                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                style={{ backgroundColor: "#FFD166" }}
                               />
                               <Text className="text-gray-500">
                                 Successes:{" "}
@@ -243,13 +230,8 @@ export default function DetailsChart({
                             </div>
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    BAR_COLORS[
-                                      data.colorIndex % BAR_COLORS.length
-                                    ],
-                                }}
+                                className="me-1.5 h-2 w-2 rounded-full inline-block"
+                                style={{ backgroundColor: "#FDB36A" }}
                               />
                               <Text className="text-gray-500">
                                 Avg Solution Time:{" "}
