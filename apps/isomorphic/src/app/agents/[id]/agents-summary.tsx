@@ -14,6 +14,47 @@ import { useParams } from "next/navigation";
 import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
 
+// Define interfaces for data structures
+interface UseCase {
+  id: string;
+  name: string;
+}
+
+interface Result {
+  useCaseId: string;
+  successRate: number;
+  total: number;
+  successCount: number;
+  avgSolutionTime: number;
+}
+
+interface Website {
+  name: string;
+  useCases: UseCase[];
+  results: Result[];
+  overall: {
+    successRate: number;
+    total: number;
+    successCount: number;
+    avgSolutionTime: number;
+  };
+}
+
+interface AgentExtendedData {
+  websites: Website[];
+}
+
+interface AgentSummaryData {
+  usecases: UseCase[];
+  total: number;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  successRate?: number;
+}
+
 const BAR_COLORS = [
   "#FF7E5F", // bright coral (AutoZone)
   "#FDB36A", // apricot (Books)
@@ -29,18 +70,19 @@ const BAR_COLORS = [
   "#6C5B7B", // muted violet
 ];
 
-export type AgentsSummaryProps = {
+export interface AgentsSummaryProps {
   className?: string;
   selectedWebsite?: string | null;
-};
+  setHoveredUseCase: (value: string | null) => void;
+}
 
-type DisplayDataItem = {
+interface DisplayDataItem {
   label: string;
   value: number;
   total: number;
   successCount: number;
   avgSolutionTime: number;
-};
+}
 
 // Utility function to format use case names
 function formatUseCaseName(name: string): string {
@@ -54,11 +96,14 @@ function formatUseCaseName(name: string): string {
 export default function AgentsSummary({
   className,
   selectedWebsite,
+  setHoveredUseCase,
 }: AgentsSummaryProps) {
   const { id } = useParams();
-  const agentData = getAgentExtendedData(id as string);
-  const { usecases, total } = getAgentSummaryData(id as string) || {};
-  const agent = agentsData.find((agent) => agent.id === id);
+  const agentData: AgentExtendedData = getAgentExtendedData(id as string);
+  const { usecases, total }: AgentSummaryData = getAgentSummaryData(
+    id as string
+  ) || { usecases: [], total: 0 };
+  const agent: Agent | undefined = agentsData.find((agent) => agent.id === id);
 
   let successRate: number;
   let totalRequests: number;
@@ -185,13 +230,20 @@ export default function AgentsSummary({
     >
       <div className="h-[320px] w-full @sm:py-3">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart
+            onMouseEnter={() => setHoveredUseCase(null)}
+            onMouseLeave={() => setHoveredUseCase(null)}
+          >
             <Tooltip
               content={({ payload }) => {
                 if (!payload || payload.length === 0) return null;
                 const data = payload[0].payload;
                 return (
-                  <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
+                  <div
+                    className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
+                    onMouseEnter={() => setHoveredUseCase(data.label)}
+                    onMouseLeave={() => setHoveredUseCase(null)}
+                  >
                     <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
                       {data.label || "Unknown"}
                     </Text>
@@ -207,7 +259,7 @@ export default function AgentsSummary({
                           </Text>{" "}
                           <Text
                             as="span"
-                            className="font-medium text-gray-900 dark:text-gray-700"
+                            className="font-medium text-gray-900 dark leth-gray-700"
                           >
                             {data.average ? data.average.toFixed(1) : "0"}%
                           </Text>
@@ -265,6 +317,8 @@ export default function AgentsSummary({
               cornerRadius={40}
               dataKey="value"
               stroke="rgba(0,0,0,0)"
+              onMouseEnter={(data) => setHoveredUseCase(data.label)}
+              onMouseLeave={() => setHoveredUseCase(null)}
             >
               <Label
                 position="center"
@@ -296,6 +350,8 @@ export default function AgentsSummary({
             direction="col"
             align="start"
             className="mb-4 gap-1 border-b border-muted pb-4 last:mb-0 last:border-0 last:pb-0"
+            onMouseEnter={() => setHoveredUseCase(item.label)}
+            onMouseLeave={() => setHoveredUseCase(null)}
           >
             <Flex align="center" className="w-full">
               <Flex align="center" className="gap-2">
@@ -332,17 +388,19 @@ export default function AgentsSummary({
   );
 }
 
+interface CenterLabelProps {
+  value: string;
+  totalRequests: string;
+  totalSuccesses: string;
+  viewBox: any;
+}
+
 function CenterLabel({
   value,
   totalRequests,
   totalSuccesses,
   viewBox,
-}: {
-  value: string;
-  totalRequests: string;
-  totalSuccesses: string;
-  viewBox: any;
-}) {
+}: CenterLabelProps) {
   const { cx, cy } = viewBox;
   return (
     <>
