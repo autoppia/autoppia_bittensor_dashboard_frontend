@@ -41,7 +41,7 @@ export const agentsData: AgentDataType[] = [
     usecase1: 68,
     usecase2: 56,
     usecase3: 47,
-    successRate: 88.2,
+    successRate: 80,
   },
   {
     id: "browser-sonnet4",
