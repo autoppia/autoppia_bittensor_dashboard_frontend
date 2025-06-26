@@ -24,7 +24,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
           {!isLargeScreen && (
             <Text
               as="h6"
-              className="text-[10px] sm:text-[5px] font-semibold text-gray-600 mt-1 sm:mt-2 text-center sm:text-left"
+              className="text-[11px] sm:text-[13px] font-semibold text-gray-600 mt-1 sm:mt-2 text-center sm:text-left"
             >
               Similar to {website.origin}
             </Text>
@@ -51,7 +51,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
           <Button
             size="sm"
             rounded="pill"
-            className="ms-1 sm:ms-2 text-xs sm:text-sm w-full sm:w-auto"
+            className="ms-1 sm:ms-2 text-xs sm:text-sm w-[150px] sm:w-auto"
           >
             <PiEyeDuotone className="me-1 sm:me-1.5 h-4 sm:h-[17px] w-4 sm:w-[17px]" />
             Explore
