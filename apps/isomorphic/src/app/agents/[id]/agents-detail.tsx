@@ -17,8 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { getAgentExtendedData } from "@/data/query";
-import { Select } from "rizzui";
-import { Text } from "rizzui";
+import { Select, Text } from "rizzui";
 
 const BAR_COLOR = "#FF7E5F";
 const BAR_COLORS = [
@@ -35,6 +34,7 @@ const BAR_COLORS = [
   "#C06C84", // rose
   "#6C5B7B", // muted violet
 ];
+
 export default function DetailsChart({
   className,
   selectedWebsite,
@@ -68,24 +68,21 @@ export default function DetailsChart({
               website:
                 selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
                   ?.name || `Use Case ${result.useCaseId}`,
-              average: Number(result.score.toPrecision(3)),
-              totalRequests: result.totalRequests,
-              successes: result.successes,
+              average: Number(result.successRate.toPrecision(3)),
+              total: result.total,
+              successCount: result.successCount,
+              avgSolutionTime: result.avgSolutionTime,
               colorIndex: idx,
             })) || []
           );
         })()
-      : agentDetailsData.websites.map((web) => {
-          const allScores = web.results.map((r) => r.score);
-          return {
-            website: web.name,
-            average: Number(
-              (
-                allScores.reduce((sum, s) => sum + s, 0) / allScores.length || 0
-              ).toPrecision(3)
-            ),
-          };
-        });
+      : agentDetailsData.websites.map((web) => ({
+          website: web.name,
+          average: Number(web.overall.successRate.toPrecision(3)),
+          total: web.overall.total,
+          successCount: web.overall.successCount,
+          avgSolutionTime: web.overall.avgSolutionTime,
+        }));
 
   return (
     <WidgetCard
@@ -116,7 +113,7 @@ export default function DetailsChart({
           <ResponsiveContainer width="100%" height="100%" minWidth={700}>
             <ComposedChart
               data={chartData}
-              margin={{ left: -6, bottom: chartData.length === 12 ? 100 : 50 }} // Adjust bottom margin based on data length
+              margin={{ left: -6, bottom: chartData.length === 12 ? 100 : 50 }}
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
@@ -128,12 +125,11 @@ export default function DetailsChart({
                 dataKey="website"
                 axisLine={false}
                 tickLine={false}
-                interval={0} // Show all ticks
-                height={chartData.length === 12 ? 100 : 50} // Adjust height for vertical labels
+                interval={0}
+                height={chartData.length === 12 ? 100 : 50}
                 tick={(props) => {
                   const { x, y, payload } = props;
                   if (chartData.length === 12) {
-                    // Vertical labels for 12 use cases
                     return (
                       <g transform={`translate(${x},${y + 20})`}>
                         <text
@@ -149,7 +145,6 @@ export default function DetailsChart({
                       </g>
                     );
                   }
-                  // Horizontal labels for 3 websites
                   return (
                     <text x={x} y={y} dy={10} textAnchor="middle" fill="#666">
                       {payload.value}
@@ -172,7 +167,6 @@ export default function DetailsChart({
               />
               <Tooltip
                 content={({ payload, label }) => {
-                  console.log({ payload, label }); // Debug payload
                   if (!payload || payload.length === 0) return null;
                   const data = payload[0].payload;
                   return (
@@ -208,7 +202,7 @@ export default function DetailsChart({
                               <Text className="text-gray-500">
                                 Requests:{" "}
                                 <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                  {data.totalRequests ?? 0}
+                                  {data.total ?? 0}
                                 </span>
                               </Text>
                             </div>
@@ -220,7 +214,22 @@ export default function DetailsChart({
                               <Text className="text-gray-500">
                                 Successes:{" "}
                                 <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                  {data.successes ?? 0}
+                                  {data.successCount ?? 0}
+                                </span>
+                              </Text>
+                            </div>
+                            <div className="chart-tooltip-item flex items-center p-1">
+                              <span
+                                className="me-1.5 h-2 w-2 rounded-full"
+                                style={{ backgroundColor: "#FF7E5F" }}
+                              />
+                              <Text className="text-gray-500">
+                                Avg Solution Time:{" "}
+                                <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                  {data.avgSolutionTime
+                                    ? data.avgSolutionTime.toFixed(2)
+                                    : "0"}
+                                  s
                                 </span>
                               </Text>
                             </div>

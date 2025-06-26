@@ -267,7 +267,7 @@ export default function Leaderboard() {
           </ResponsiveContainer>
         </div>
         {/* New Chart for small screens */}
-        <div className="min-w-[320px] h-[200px] block sm:hidden">
+        <div className="min-w-[320px] h-[200px]  block sm:hidden">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               layout="vertical"
