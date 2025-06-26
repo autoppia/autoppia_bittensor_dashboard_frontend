@@ -20,6 +20,21 @@ import {
 } from "@/data/query";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 
+const BAR_COLORS = [
+  "#FF7E5F", // bright coral (AutoZone)
+  "#FDB36A", // apricot (Books)
+  "#FFD166", // golden sand (Cinema)
+  "#F9F871", // lemon
+  "#C4F0C2", // soft mint
+  "#A0CED9", // light teal
+  "#84A9C0", // dusty blue
+  "#9381FF", // soft purple
+  "#B25D91", // plum
+  "#F67280", // pinkish red
+  "#C06C84", // rose
+  "#6C5B7B", // muted violet
+];
+
 const CustomLabel = ({ x, y, payload, data }: any) => {
   const router = useRouter();
   const agent = data.find((item: any) => item.name === payload.value);
@@ -69,11 +84,11 @@ function TooltipContent({ active, payload }: any) {
       <Text className="label block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
         {agent.name}
       </Text>
-      {agentExtended.websites.map((web) => (
+      {agentExtended.websites.map((web, index) => (
         <div key={web.name} className="px-6 py-1 text-xs flex items-center">
           <span
             className="me-1.5 h-2 w-2 rounded-full inline-block"
-            style={{ backgroundColor: "#FF7E5F" }}
+            style={{ backgroundColor: BAR_COLORS[index % BAR_COLORS.length] }}
           />
           <Text className="font-medium text-gray-900 dark:text-gray-700 inline">
             {web.name}:
@@ -101,14 +116,14 @@ const SmallScreenTooltipContent = ({ active, payload }: any) => {
       <Text className="label block bg-gray-100 p-1 px-1 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
         {agent.name}
       </Text>
-      {agentExtended.websites.map((web) => (
+      {agentExtended.websites.map((web, index) => (
         <div
           key={web.name}
           className="px-1 py-1 text-xs flex items-center flex-wrap"
         >
           <span
             className="me-1 h-2 w-2 rounded-full inline-block"
-            style={{ backgroundColor: "#FF7E5F" }}
+            style={{ backgroundColor: BAR_COLORS[index % BAR_COLORS.length] }}
           />
           <Text className="font-medium text-gray-900 dark:text-gray-700 inline break-words">
             {web.name}:
