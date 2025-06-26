@@ -21,7 +21,7 @@ export const agentsData: AgentDataType[] = [
     usecase1: 64,
     usecase2: 52,
     usecase3: 43,
-    successRate: 84.4,
+    successRate: 76,
   },
   {
     id: "openai-cua",
@@ -31,7 +31,7 @@ export const agentsData: AgentDataType[] = [
     usecase1: 85,
     usecase2: 72,
     usecase3: 60,
-    successRate: 81.2,
+    successRate: 65,
   },
   {
     id: "browser-gpt-o3",
@@ -51,7 +51,7 @@ export const agentsData: AgentDataType[] = [
     usecase1: 70,
     usecase2: 58,
     usecase3: 49,
-    successRate: 84.1,
+    successRate: 70,
   },
   {
     id: "anthropic-cua",
@@ -61,6 +61,6 @@ export const agentsData: AgentDataType[] = [
     usecase1: 78,
     usecase2: 66,
     usecase3: 55,
-    successRate: 82.2,
+    successRate: 63,
   },
 ];
