@@ -19,11 +19,10 @@ import {
 import { getAgentExtendedData } from "@/data/query";
 import { Select, Text } from "rizzui";
 
-const BAR_COLOR = "#FF7E5F";
 const BAR_COLORS = [
-  "#FF7E5F", // bright coral
-  "#FDB36A", // apricot
-  "#FFD166", // golden sand
+  "#FF7E5F", // bright coral (AutoZone)
+  "#FDB36A", // apricot (Books)
+  "#FFD166", // golden sand (Cinema)
   "#F9F871", // lemon
   "#C4F0C2", // soft mint
   "#A0CED9", // light teal
@@ -34,6 +33,15 @@ const BAR_COLORS = [
   "#C06C84", // rose
   "#6C5B7B", // muted violet
 ];
+
+// Utility function to format use case names
+function formatUseCaseName(name: string): string {
+  return name
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export default function DetailsChart({
   className,
@@ -65,10 +73,11 @@ export default function DetailsChart({
           );
           return (
             selectedWeb?.results.map((result, idx) => ({
-              website:
+              website: formatUseCaseName(
                 selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
-                  ?.name || `Use Case ${result.useCaseId}`,
-              average: Number(result.successRate.toPrecision(3)),
+                  ?.name || `Use Case ${result.useCaseId}`
+              ),
+              average: Number(result.successRate.toFixed(3)),
               total: result.total,
               successCount: result.successCount,
               avgSolutionTime: result.avgSolutionTime,
@@ -76,12 +85,13 @@ export default function DetailsChart({
             })) || []
           );
         })()
-      : agentDetailsData.websites.map((web) => ({
+      : agentDetailsData.websites.map((web, idx) => ({
           website: web.name,
-          average: Number(web.overall.successRate.toPrecision(3)),
+          average: Number(web.overall.successRate.toFixed(3)),
           total: web.overall.total,
           successCount: web.overall.successCount,
           avgSolutionTime: web.overall.avgSolutionTime,
+          colorIndex: idx, // Assign index for color mapping
         }));
 
   return (
@@ -178,7 +188,10 @@ export default function DetailsChart({
                         <div className="chart-tooltip-item flex items-center p-1">
                           <span
                             className="me-1.5 h-2 w-2 rounded-full"
-                            style={{ backgroundColor: "#FF7E5F" }}
+                            style={{
+                              backgroundColor:
+                                BAR_COLORS[data.colorIndex % BAR_COLORS.length],
+                            }}
                           />
                           <Text>
                             <Text as="span" className="capitalize">
@@ -197,7 +210,12 @@ export default function DetailsChart({
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
                                 className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#FF7E5F" }}
+                                style={{
+                                  backgroundColor:
+                                    BAR_COLORS[
+                                      data.colorIndex % BAR_COLORS.length
+                                    ],
+                                }}
                               />
                               <Text className="text-gray-500">
                                 Requests:{" "}
@@ -209,7 +227,12 @@ export default function DetailsChart({
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
                                 className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#FF7E5F" }}
+                                style={{
+                                  backgroundColor:
+                                    BAR_COLORS[
+                                      data.colorIndex % BAR_COLORS.length
+                                    ],
+                                }}
                               />
                               <Text className="text-gray-500">
                                 Successes:{" "}
@@ -221,7 +244,12 @@ export default function DetailsChart({
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
                                 className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#FF7E5F" }}
+                                style={{
+                                  backgroundColor:
+                                    BAR_COLORS[
+                                      data.colorIndex % BAR_COLORS.length
+                                    ],
+                                }}
                               />
                               <Text className="text-gray-500">
                                 Avg Solution Time:{" "}
@@ -244,11 +272,7 @@ export default function DetailsChart({
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`bar-cell-${index}`}
-                    fill={
-                      selectedWebsite && selectedWebsite !== "__all__"
-                        ? BAR_COLORS[entry.colorIndex % BAR_COLORS.length]
-                        : BAR_COLOR
-                    }
+                    fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
                   />
                 ))}
               </Bar>

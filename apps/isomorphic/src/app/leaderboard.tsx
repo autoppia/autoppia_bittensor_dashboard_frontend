@@ -244,6 +244,7 @@ export default function Leaderboard() {
               <Bar
                 dataKey="successRate"
                 fill="url(#smallBarGradient)"
+                onClick={({ href }) => router.push(href)}
                 barSize={25}
                 radius={[4, 4, 0, 0]}
               >

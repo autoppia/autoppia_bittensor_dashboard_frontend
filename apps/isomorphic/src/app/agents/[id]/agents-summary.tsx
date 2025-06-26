@@ -15,9 +15,9 @@ import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
 import { agentsData } from "@/data/agents-data";
 
 const BAR_COLORS = [
-  "#FF7E5F", // bright coral
-  "#FDB36A", // apricot
-  "#FFD166", // golden sand
+  "#FF7E5F", // bright coral (AutoZone)
+  "#FDB36A", // apricot (Books)
+  "#FFD166", // golden sand (Cinema)
   "#F9F871", // lemon
   "#C4F0C2", // soft mint
   "#A0CED9", // light teal
@@ -41,6 +41,15 @@ type DisplayDataItem = {
   successCount: number;
   avgSolutionTime: number;
 };
+
+// Utility function to format use case names
+function formatUseCaseName(name: string): string {
+  return name
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export default function AgentsSummary({
   className,
@@ -103,9 +112,10 @@ export default function AgentsSummary({
     );
     if (selectedWeb) {
       displayData = selectedWeb.results.map((result, idx) => ({
-        label:
+        label: formatUseCaseName(
           selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
-          `Use Case ${result.useCaseId}`,
+            `Use Case ${result.useCaseId}`
+        ),
         value: result.successRate,
         total: result.total,
         successCount: result.successCount,
@@ -136,7 +146,9 @@ export default function AgentsSummary({
             const useCase = selectedWeb.useCases.find(
               (uc) => uc.id === result.useCaseId
             );
-            const label = useCase?.name || `Use Case ${result.useCaseId}`;
+            const label = formatUseCaseName(
+              useCase?.name || `Use Case ${result.useCaseId}`
+            );
             return {
               label,
               value: result.total,
@@ -154,28 +166,16 @@ export default function AgentsSummary({
           stroke: BAR_COLORS[idx % BAR_COLORS.length],
         }));
       })()
-    : [
-        {
-          label: "success",
-          value: totalSuccesses,
-          average: successRate,
-          total: totalRequests,
-          successCount: totalSuccesses,
-          avgSolutionTime,
-          fill: BAR_COLORS[0],
-          stroke: BAR_COLORS[0],
-        },
-        {
-          label: "failed",
-          value: totalRequests - totalSuccesses,
-          average: 0,
-          total: totalRequests,
-          successCount: 0,
-          avgSolutionTime: 0,
-          fill: BAR_COLORS[1],
-          stroke: BAR_COLORS[1],
-        },
-      ];
+    : agentData.websites.map((web, idx) => ({
+        label: web.name,
+        value: web.overall.successCount,
+        average: web.overall.successRate,
+        total: web.overall.total,
+        successCount: web.overall.successCount,
+        avgSolutionTime: web.overall.avgSolutionTime,
+        fill: BAR_COLORS[idx % BAR_COLORS.length],
+        stroke: BAR_COLORS[idx % BAR_COLORS.length],
+      }));
 
   return (
     <WidgetCard
@@ -199,7 +199,7 @@ export default function AgentsSummary({
                       <div className="chart-tooltip-item flex items-center p-1">
                         <span
                           className="me-1.5 h-2 w-2 rounded-full"
-                          style={{ backgroundColor: "#FF7E5F" }}
+                          style={{ backgroundColor: data.fill }}
                         />
                         <Text>
                           <Text as="span" className="capitalize">
@@ -216,7 +216,7 @@ export default function AgentsSummary({
                       <div className="chart-tooltip-item flex items-center p-1">
                         <span
                           className="me-1.5 h-2 w-2 rounded-full"
-                          style={{ backgroundColor: "#FF7E5F" }}
+                          style={{ backgroundColor: data.fill }}
                         />
                         <Text className="text-gray-500">
                           Requests:{" "}
@@ -228,7 +228,7 @@ export default function AgentsSummary({
                       <div className="chart-tooltip-item flex items-center p-1">
                         <span
                           className="me-1.5 h-2 w-2 rounded-full"
-                          style={{ backgroundColor: "#FF7E5F" }}
+                          style={{ backgroundColor: data.fill }}
                         />
                         <Text className="text-gray-500">
                           Successes:{" "}
@@ -237,23 +237,21 @@ export default function AgentsSummary({
                           </span>
                         </Text>
                       </div>
-                      {selectedWebsite && (
-                        <div className="chart-tooltip-item flex items-center p-1">
-                          <span
-                            className="me-1.5 h-2 w-2 rounded-full"
-                            style={{ backgroundColor: "#FF7E5F" }}
-                          />
-                          <Text className="text-gray-500">
-                            Avg Solution Time:{" "}
-                            <span className="text-gray-900 dark:text-gray-700 font-medium">
-                              {data.avgSolutionTime
-                                ? data.avgSolutionTime.toFixed(2)
-                                : "0"}
-                              s
-                            </span>
-                          </Text>
-                        </div>
-                      )}
+                      <div className="chart-tooltip-item flex items-center p-1">
+                        <span
+                          className="me-1.5 h-2 w-2 rounded-full"
+                          style={{ backgroundColor: data.fill }}
+                        />
+                        <Text className="text-gray-500">
+                          Avg Solution Time:{" "}
+                          <span className="text-gray-900 dark:text-gray-700 font-medium">
+                            {data.avgSolutionTime
+                              ? data.avgSolutionTime.toFixed(2)
+                              : "0"}
+                            s
+                          </span>
+                        </Text>
+                      </div>
                     </div>
                   </div>
                 );
