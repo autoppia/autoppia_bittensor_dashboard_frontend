@@ -122,10 +122,7 @@ function TooltipContent({ active, payload }: any) {
             style={{ backgroundColor: BAR_COLORS[index % BAR_COLORS.length] }}
           />
           <Text className="font-medium text-gray-900 dark:text-gray-700 inline">
-            {web.name}:
-          </Text>{" "}
-          <Text className="font-medium text-gray-900 dark:text-gray-700 inline">
-            {web.overall.successRate.toFixed(1)}%
+            {web.name}: {web.overall.successRate.toFixed(1)}%
           </Text>
         </div>
       ))}
@@ -156,11 +153,8 @@ const SmallScreenTooltipContent = ({ active, payload }: any) => {
             className="me-1 h-2 w-2 rounded-full inline-block"
             style={{ backgroundColor: BAR_COLORS[index % BAR_COLORS.length] }}
           />
-          <Text className="font-medium text-gray-900 dark:text-gray-700 inline break-words">
-            {web.name}:
-          </Text>{" "}
           <Text className="font-medium text-gray-900 dark:text-gray-700 inline">
-            {web.overall.successRate.toFixed(1)}%
+            {web.name}: {web.overall.successRate.toFixed(1)}%
           </Text>
         </div>
       ))}

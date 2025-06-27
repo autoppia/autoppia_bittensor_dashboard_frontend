@@ -8,13 +8,8 @@ import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Tab
 import { TableDataType } from "@/app/shared/table/table-data";
 import { buildMinerScoreColumns } from "./columns";
 
-/* 👇 Si no hay datos, muestra un loader o nada */
 export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
-  if (!data?.length) {
-    return <p className="text-center py-8">Cargando métricas…</p>;
-  }
-
-  /* Ahora sí tenemos datos → generamos columnas */
+  // ✅ Always call hooks first
   const columns = useMemo(() => buildMinerScoreColumns(data), [data]);
 
   const { table, setData } = useTanStackTable<TableDataType>({
@@ -26,10 +21,14 @@ export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
     },
   });
 
-  /* Mantener datos reactivos */
   useEffect(() => {
     setData(data);
   }, [data, setData]);
+
+  // ✅ Do the conditional render AFTER hooks
+  if (!data?.length) {
+    return <p className="text-center py-8">Cargando métricas…</p>;
+  }
 
   return (
     <>

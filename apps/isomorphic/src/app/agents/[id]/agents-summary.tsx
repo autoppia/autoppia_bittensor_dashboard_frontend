@@ -16,12 +16,12 @@ import { agentsData } from "@/data/agents-data";
 
 // Define interfaces for data structures
 interface UseCase {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface Result {
-  useCaseId: string;
+  useCaseId: number;
   successRate: number;
   total: number;
   successCount: number;
@@ -45,7 +45,7 @@ interface AgentExtendedData {
 }
 
 interface AgentSummaryData {
-  usecases: UseCase[];
+  usecases: number[];
   total: number;
 }
 
