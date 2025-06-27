@@ -23,7 +23,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
           </span>
           {!isLargeScreen && (
             <Text
-              as="h6"
+              as="p"
               className="text-[11px] sm:text-[13px] font-semibold text-gray-600 mt-1 sm:mt-2 text-center sm:text-left"
             >
               Similar to {website.origin}

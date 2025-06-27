@@ -11,7 +11,7 @@ import { TableDataType } from "@/app/shared/table/table-data";
 const pageHeader = { title: "Subnet36" };
 
 export default function Subnet36() {
-  const [view, setView] = useState<"score" | "duration">("score");
+  const [view, setView] = useState<string>("score");
   const [tableData, setTableData] = useState<TableDataType[]>([]);
   const [loading, setLoading] = useState(true);
 
