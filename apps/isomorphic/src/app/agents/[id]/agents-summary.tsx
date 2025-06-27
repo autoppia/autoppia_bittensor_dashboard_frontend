@@ -149,7 +149,7 @@ export default function AgentsSummary({
         : 0;
   }
 
-  let displayData: DisplayDataItem[];
+  let displayData: DisplayDataItem[] = [];
 
   if (selectedWebsite) {
     const selectedWeb = agentData.websites.find(
@@ -166,8 +166,6 @@ export default function AgentsSummary({
         successCount: result.successCount,
         avgSolutionTime: result.avgSolutionTime,
       }));
-    } else {
-      displayData = [];
     }
   } else {
     displayData = agentData.websites.map((web) => ({
@@ -205,15 +203,32 @@ export default function AgentsSummary({
           })
           .sort((a, b) => b.average - a.average);
 
-        return sortedResults.map((item, idx) => ({
-          ...item,
-          fill: BAR_COLORS[idx % BAR_COLORS.length],
-          stroke: BAR_COLORS[idx % BAR_COLORS.length],
-        }));
+        // Use average (success rate) scaled by total as value for strength
+        return displayData.map((item, idx) => {
+          const matchingDonutData = sortedResults.find(
+            (data) => data.label === item.label
+          );
+          return {
+            label: item.label,
+            value: matchingDonutData
+              ? matchingDonutData.average * matchingDonutData.total
+              : item.value * item.total, // Scale average by total for strength
+            average: matchingDonutData ? matchingDonutData.average : item.value,
+            total: matchingDonutData ? matchingDonutData.total : item.total,
+            successCount: matchingDonutData
+              ? matchingDonutData.successCount
+              : item.successCount,
+            avgSolutionTime: matchingDonutData
+              ? matchingDonutData.avgSolutionTime
+              : item.avgSolutionTime,
+            fill: BAR_COLORS[idx % BAR_COLORS.length],
+            stroke: BAR_COLORS[idx % BAR_COLORS.length],
+          };
+        });
       })()
     : agentData.websites.map((web, idx) => ({
         label: web.name,
-        value: web.overall.successCount,
+        value: web.overall.successRate * web.overall.total, // Use success rate scaled by total
         average: web.overall.successRate,
         total: web.overall.total,
         successCount: web.overall.successCount,
@@ -259,7 +274,7 @@ export default function AgentsSummary({
                           </Text>{" "}
                           <Text
                             as="span"
-                            className="font-medium text-gray-900 dark leth-gray-700"
+                            className="font-medium text-gray-900 dark:text-gray-700"
                           >
                             {data.average ? data.average.toFixed(1) : "0"}%
                           </Text>
@@ -283,10 +298,7 @@ export default function AgentsSummary({
                           style={{ backgroundColor: "#FFD166" }}
                         />
                         <Text className="text-gray-500">
-                          Successes:{" "}
-                          <span className="text-gray-900 dark:text-gray-700 font-medium">
-                            {data.successCount ?? 0}
-                          </span>
+                          Successes: {data.successCount ?? 0}
                         </Text>
                       </div>
                       <div className="chart-tooltip-item flex items-center p-1">

@@ -93,7 +93,7 @@ export default function DetailsChart({
     id as string
   );
   const isTab = useMedia("(max-width: 768px)", false);
-  const defaultBarSize = isTab ? 16 : 20;
+  const defaultBarSize = isTab ? 16 : 30;
   const highlightedBarSize = isTab ? 16 : 20; // Same width as default for no width change
 
   const websiteOptions = [
@@ -202,7 +202,14 @@ export default function DetailsChart({
                     );
                   }
                   return (
-                    <text x={x} y={y} dy={10} textAnchor="middle" fill="#666">
+                    <text
+                      x={x}
+                      y={y}
+                      dy={10}
+                      dx={-40}
+                      textAnchor="end"
+                      fill="#666"
+                    >
                       {payload.value}
                     </text>
                   );
@@ -210,7 +217,7 @@ export default function DetailsChart({
               />
               <YAxis
                 type="number"
-                domain={[0, 120]} // Increased domain for upward effect
+                domain={[0, 100]} // Increased domain for upward effect
                 axisLine={false}
                 tickLine={false}
                 tick={({ payload, ...rest }) => {
@@ -305,11 +312,7 @@ export default function DetailsChart({
                   <Cell
                     key={`bar-cell-${index}`}
                     fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
-                    width={
-                      entry.website === hoveredUseCase
-                        ? highlightedBarSize
-                        : defaultBarSize
-                    }
+                    width={defaultBarSize}
                     style={{
                       transform:
                         entry.website === hoveredUseCase
