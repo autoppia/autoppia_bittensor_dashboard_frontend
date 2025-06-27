@@ -298,24 +298,29 @@ export default function AgentsSummary({
                           style={{ backgroundColor: "#FFD166" }}
                         />
                         <Text className="text-gray-500">
-                          Successes: {data.successCount ?? 0}
-                        </Text>
-                      </div>
-                      <div className="chart-tooltip-item flex items-center p-1">
-                        <span
-                          className="me-1.5 h-2 w-2 rounded-full inline-block"
-                          style={{ backgroundColor: "#FDB36A" }}
-                        />
-                        <Text className="text-gray-500">
-                          Avg Solution Time:{" "}
+                          Successes:{" "}
                           <span className="text-gray-900 dark:text-gray-700 font-medium">
-                            {data.avgSolutionTime
-                              ? data.avgSolutionTime.toFixed(2)
-                              : "0"}
-                            s
+                            {data.successCount ?? 0}
                           </span>
                         </Text>
                       </div>
+                      {selectedWebsite && selectedWebsite !== "__all__" && (
+                        <div className="chart-tooltip-item flex items-center p-1">
+                          <span
+                            className="me-1.5 h-2 w-2 rounded-full inline-block"
+                            style={{ backgroundColor: "#FDB36A" }}
+                          />
+                          <Text className="text-gray-500">
+                            Avg Solution Time:{" "}
+                            <span className="text-gray-900 dark:text-gray-700 font-medium">
+                              {data.avgSolutionTime
+                                ? data.avgSolutionTime.toFixed(2)
+                                : "0"}
+                              s
+                            </span>
+                          </Text>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

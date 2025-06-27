@@ -270,32 +270,32 @@ export default function DetailsChart({
                             </Text>
                           </Text>
                         </div>
-                        {selectedWebsite && selectedWebsite !== "__all__" && (
-                          <>
-                            <div className="chart-tooltip-item flex items-center p-1">
-                              <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#F9F871" }}
-                              />
-                              <Text className="text-gray-500">
-                                Requests:{" "}
-                                <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                  {data.total ?? 0}
-                                </span>
-                              </Text>
-                            </div>
-                            <div className="chart-tooltip-item flex items-center p-1">
-                              <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#FFD166" }}
-                              />
-                              <Text className="text-gray-500">
-                                Successes:{" "}
-                                <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                  {data.successCount ?? 0}
-                                </span>
-                              </Text>
-                            </div>
+                        <>
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full"
+                              style={{ backgroundColor: "#F9F871" }}
+                            />
+                            <Text className="text-gray-500">
+                              Requests:{" "}
+                              <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                {data.total ?? 0}
+                              </span>
+                            </Text>
+                          </div>
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full"
+                              style={{ backgroundColor: "#FFD166" }}
+                            />
+                            <Text className="text-gray-500">
+                              Successes:{" "}
+                              <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                {data.successCount ?? 0}
+                              </span>
+                            </Text>
+                          </div>
+                          {selectedWebsite && selectedWebsite !== "__all__" && (
                             <div className="chart-tooltip-item flex items-center p-1">
                               <span
                                 className="me-1.5 h-2 w-2 rounded-full"
@@ -311,8 +311,8 @@ export default function DetailsChart({
                                 </span>
                               </Text>
                             </div>
-                          </>
-                        )}
+                          )}
+                        </>
                       </div>
                     </div>
                   );
