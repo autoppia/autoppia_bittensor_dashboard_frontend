@@ -20,7 +20,7 @@ export default function FilterBoard({
   setTableData,
   setLoading,
 }: Props) {
-  const [period, setPeriod] = useState<"all" | "24h" | "7d" | "30d">("all");
+  const [period, setPeriod] = useState<string>("all");
   const [ports, setPorts] = useState<string[]>(
     websitesData.map((w) => w.portValidator)
   );
