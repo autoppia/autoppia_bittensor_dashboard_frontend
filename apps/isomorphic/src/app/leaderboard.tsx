@@ -70,6 +70,37 @@ const CustomLabel = ({ x, y, payload, data }: any) => {
   );
 };
 
+const CustomXAxisTick = ({ x, y, payload, data }: any) => {
+  const router = useRouter();
+  const agent = data.find((item: any) => item.name === payload.value);
+  if (!agent) return null;
+
+  const handleClick = () => {
+    router.push(agent.href);
+  };
+
+  return (
+    <g
+      transform={`translate(${x},${y})`}
+      onClick={handleClick}
+      className="cursor-pointer"
+      style={{ pointerEvents: "all" }}
+    >
+      <text
+        x={0}
+        y={0}
+        dy={10}
+        textAnchor="end"
+        fill="#fff"
+        fontSize={12}
+        transform="rotate(-45)"
+      >
+        {payload.value}
+      </text>
+    </g>
+  );
+};
+
 function TooltipContent({ active, payload }: any) {
   if (!active || !payload?.length) return null;
 
@@ -143,6 +174,10 @@ export default function Leaderboard() {
 
   const BoundCustomLabel = (props: any) => (
     <CustomLabel {...props} data={leaderboardData} />
+  );
+
+  const BoundCustomXAxisTick = (props: any) => (
+    <CustomXAxisTick {...props} data={leaderboardData} />
   );
 
   return (
@@ -245,7 +280,7 @@ export default function Leaderboard() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "#fff", fontSize: 22 }}
+                tick={BoundCustomXAxisTick}
                 angle={-45}
                 textAnchor="end"
                 interval={0}
