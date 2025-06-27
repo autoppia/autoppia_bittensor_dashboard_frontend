@@ -89,10 +89,12 @@ export default function DetailsChart({
   setHoveredUseCase,
 }: DetailsChartProps) {
   const { id } = useParams();
-  const agentDetailsData: AgentExtendedData = getAgentExtendedData(id as string);
+  const agentDetailsData: AgentExtendedData = getAgentExtendedData(
+    id as string
+  );
   const isTab = useMedia("(max-width: 768px)", false);
   const defaultBarSize = isTab ? 16 : 20;
-  const highlightedBarSize = isTab ? 24 : 30;
+  const highlightedBarSize = isTab ? 16 : 20; // Same width as default for no width change
 
   const websiteOptions = [
     { value: "__all__", label: "See All" },
@@ -163,7 +165,11 @@ export default function DetailsChart({
           <ResponsiveContainer width="100%" height="100%" minWidth={700}>
             <ComposedChart
               data={chartData}
-              margin={{ left: -6, bottom: chartData.length === 12 ? 100 : 50 }}
+              margin={{
+                left: -6,
+                bottom: chartData.length === 12 ? 100 : 50,
+                top: 20,
+              }} // Added top margin
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
@@ -204,7 +210,7 @@ export default function DetailsChart({
               />
               <YAxis
                 type="number"
-                domain={[0, 100]}
+                domain={[0, 120]} // Increased domain for upward effect
                 axisLine={false}
                 tickLine={false}
                 tick={({ payload, ...rest }) => {
@@ -304,6 +310,14 @@ export default function DetailsChart({
                         ? highlightedBarSize
                         : defaultBarSize
                     }
+                    style={{
+                      transform:
+                        entry.website === hoveredUseCase
+                          ? "scaleY(1.2)"
+                          : "scaleY(1)", // Upward stretch effect
+                      transformOrigin: "bottom",
+                      transition: "transform 0.2s ease",
+                    }}
                   />
                 ))}
               </Bar>
