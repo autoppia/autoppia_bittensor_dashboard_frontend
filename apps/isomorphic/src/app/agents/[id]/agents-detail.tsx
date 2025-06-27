@@ -21,12 +21,12 @@ import { Select, Text } from "rizzui";
 
 // Define interfaces for data structures
 interface UseCase {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface Result {
-  useCaseId: string;
+  useCaseId: number;
   successRate: number;
   total: number;
   successCount: number;
