@@ -185,6 +185,8 @@ export default function DetailsChart({
                 height={chartData.length === 12 ? 100 : 50}
                 tick={(props) => {
                   const { x, y, payload } = props;
+                  const chartHeight = 290; // Height of the ResponsiveContainer
+                  const barBaseY = chartHeight - 20; // Approximate Y position at the bottom of bars (adjust based on margin)
                   if (chartData.length === 12) {
                     return (
                       <g transform={`translate(${x},${y + 20})`}>
@@ -198,6 +200,15 @@ export default function DetailsChart({
                         >
                           {payload.value}
                         </text>
+                        <line
+                          x1={-5} // Small offset to the left to avoid text overlap
+                          y1={-25} // Start above the rotated text
+                          x2={-5} // Maintain offset
+                          y2={barBaseY - y - 20} // Extend to the bar base
+                          stroke="#666"
+                          strokeOpacity={0.3}
+                          strokeDasharray="2 2"
+                        />
                       </g>
                     );
                   }
