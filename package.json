@@ -1,0 +1,24 @@
+{
+  "name": "isomorphic",
+  "version": "7.6.2",
+  "description": "A nextjs template to build dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type:check": "turbo type:check",
+    "build": "turbo build",
+    "start": "turbo start",
+    "clean": "turbo clean && rm -rf node_modules .turbo",
+    "cache:clean": "turbo cache:clean && rm -rf .turbo",
+    "gen-icons": "turbo gen-icons --filter=core"
+  },
+  "devDependencies": {
+    "eslint": "9.23.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "turbo": "2.4.4",
+    "typescript-config": "workspace:*"
+  },
+  "packageManager": "pnpm@9.1.4"
+}
