@@ -54,7 +54,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         )}
       </div>
       
-      <div className="mt-3 sm:mt-4 flex justify-start">
+      <div className="mt-3 sm:mt-4 flex justify-center">
         {isComingSoon ? (
           <Button
             size="sm"

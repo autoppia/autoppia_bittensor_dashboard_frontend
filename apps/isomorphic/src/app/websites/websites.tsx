@@ -10,12 +10,6 @@ export default function Websites() {
     <div className="flex flex-col w-full px-6 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:max-w-7xl 2xl:mx-auto items-center">
       {/* Top right corner - Running indicator and social links */}
       <div className="flex items-center gap-4 self-end mt-6 mb-8">
-        {/* Running indicator */}
-        <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
-          <PiPlayCircleDuotone className="h-4 w-4" />
-          <span className="hidden sm:inline">Running</span>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-        </div>
         
         {/* Social links */}
         <a 

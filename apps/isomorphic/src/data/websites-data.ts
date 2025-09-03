@@ -73,38 +73,38 @@ export const websitesData: WebsiteDataType[] = [
   },
   // New websites
   {
-    name: "AutoShop",
+    name: "AutoWork",
     portValidator: "8009",
-    href: "http://autoshop.autoppia.com",
-    origin: "Shopify",
+    href: "https://autonetwork.autoppia.com",
+    origin: "Work",
     totalTasks: [35, 20, 12],
-    image: "/images/web1.png", // Reusing existing image for now
+    image: "/images/web10.png", // Reusing existing image for now
   },
   {
-    name: "AutoBank",
+    name: "AutoCalendar",
     portValidator: "8010",
-    href: "http://autobank.autoppia.com",
-    origin: "Chase",
+    href: "https://autocalendar.autoppia.com",
+    origin: "Calendar",
     totalTasks: [40, 25, 15],
-    image: "/images/web2.png", // Reusing existing image for now
+    image: "/images/web11.png", // Reusing existing image for now
   },
   {
-    name: "AutoLearn",
+    name: "AutoList",
     portValidator: "8011",
-    href: "http://autolearn.autoppia.com",
+    href: "https://autolist.autoppia.com",
     origin: "Coursera",
     totalTasks: [28, 18, 10],
-    image: "/images/web3.png", // Reusing existing image for now
+    image: "/images/web12.png", // Reusing existing image for now
   },
   // Coming soon websites
   {
-    name: "AutoSocial",
+    name: "AutoDrive",
     portValidator: "8012",
-    href: "#",
+    href: "https://autodrive.autoppia.com",
     origin: "Facebook",
     totalTasks: [0, 0, 0],
-    image: "/images/web4.png", // Reusing existing image for now
-    isComingSoon: true,
+    image: "/images/web13.png", // Reusing existing image for now
+    isComingSoon: false,
   },
   {
     name: "AutoVideo",
