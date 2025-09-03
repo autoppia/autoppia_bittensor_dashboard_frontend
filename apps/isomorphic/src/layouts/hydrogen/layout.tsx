@@ -14,7 +14,7 @@ export default function HydrogenLayout({ children }: { children: React.ReactNode
       </div>
       <div className="flex flex-col w-full">
         <Header />
-        <div className="flex flex-grow flex-col px-4 pb-6 pt-2 md:px-5 lg:px-6 lg:pb-8 3xl:px-8 3xl:pt-4 4xl:px-10 4xl:pb-9">
+        <div className="flex flex-grow flex-col px-4 pb-6 pt-2 md:px-5 lg:px-8 lg:pb-8 3xl:px-12 3xl:pt-4 4xl:px-24 4xl:pb-9">
           {children}
         </div>
       </div>

@@ -165,20 +165,35 @@ export default function DetailsChart({
           <ResponsiveContainer width="100%" height="100%" minWidth={700}>
             <ComposedChart
               data={chartData}
+              layout="vertical"
               margin={{
-                left: -6,
-                bottom: chartData.length === 12 ? 100 : 50,
+                left: 20,
+                // bottom: chartData.length === 12 ? 100 : 50,
                 top: 20,
               }} // Added top margin
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
-                vertical={false}
+                horizontal={false}
                 strokeOpacity={0.435}
                 strokeDasharray="8 10"
               />
               <XAxis
+                type="number"
+                domain={[0, 100]} // Increased domain for upward effect
+                axisLine={false}
+                tickLine={false}
+                tick={({ payload, ...rest }) => {
+                  const pl = {
+                    ...payload,
+                    value: formatNumber(Number(payload.value)),
+                  };
+                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
+                }}
+              />
+              <YAxis
                 dataKey="website"
+                type="category"
                 axisLine={false}
                 tickLine={false}
                 interval={0}
@@ -226,20 +241,7 @@ export default function DetailsChart({
                   );
                 }}
               />
-              <YAxis
-                type="number"
-                domain={[0, 100]} // Increased domain for upward effect
-                axisLine={false}
-                tickLine={false}
-                tick={({ payload, ...rest }) => {
-                  const pl = {
-                    ...payload,
-                    value: formatNumber(Number(payload.value)),
-                  };
-                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
-                }}
-              />
-              <Tooltip
+              {/* <Tooltip
                 content={({ payload, label }) => {
                   if (!payload || payload.length === 0) return null;
                   const data = payload[0].payload;
@@ -317,13 +319,13 @@ export default function DetailsChart({
                     </div>
                   );
                 }}
-              />
-              <Bar dataKey="average" radius={[4, 4, 0, 0]}>
+              /> */}
+              <Bar layout="horizontal" dataKey="average" radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`bar-cell-${index}`}
                     fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
-                    width={defaultBarSize}
+                    height={defaultBarSize}
                     style={{
                       transform:
                         entry.website === hoveredUseCase
