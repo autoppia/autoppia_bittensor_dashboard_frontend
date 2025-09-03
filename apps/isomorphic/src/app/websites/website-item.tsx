@@ -26,17 +26,6 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
           )}>
             {website.name}
           </span>
-          {isComingSoon && (
-            <div className="flex items-center gap-1 mt-1 sm:mt-2">
-              <PiClockDuotone className="h-4 w-4 text-gray-400" />
-              <Text
-                as="span"
-                className="text-xs sm:text-sm font-medium text-gray-400"
-              >
-                Coming Soon
-              </Text>
-            </div>
-          )}
         </div>
       }
       className={cn(
@@ -65,7 +54,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         )}
       </div>
       
-      <div className="mt-3 sm:mt-4 flex justify-center sm:justify-start">
+      <div className="mt-3 sm:mt-4 flex justify-center">
         {isComingSoon ? (
           <Button
             size="sm"
