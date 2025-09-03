@@ -19,9 +19,9 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
   return (
     <WidgetCard
       title={
-        <div className="flex flex-col items-center sm:items-start">
+        <div className="flex flex-col items-center">
           <span className={cn(
-            "text-lg sm:text-xl md:text-2xl font-bold text-center sm:text-left",
+            "text-lg sm:text-xl md:text-2xl font-bold text-center",
             isComingSoon && "text-gray-500"
           )}>
             {website.name}
@@ -54,7 +54,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         )}
       </div>
       
-      <div className="mt-3 sm:mt-4 flex justify-center">
+      <div className="mt-3 sm:mt-4 flex justify-start">
         {isComingSoon ? (
           <Button
             size="sm"
