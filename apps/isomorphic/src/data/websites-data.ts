@@ -79,6 +79,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Work",
     totalTasks: [35, 20, 12],
     image: "/images/web10.png", // Reusing existing image for now
+    isComingSoon: true,
   },
   {
     name: "AutoCalendar",
@@ -87,6 +88,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Calendar",
     totalTasks: [40, 25, 15],
     image: "/images/web11.png", // Reusing existing image for now
+    isComingSoon: true,
   },
   {
     name: "AutoList",
@@ -95,6 +97,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Coursera",
     totalTasks: [28, 18, 10],
     image: "/images/web12.png", // Reusing existing image for now
+    isComingSoon: true,
   },
   // Coming soon websites
   {
@@ -104,7 +107,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Facebook",
     totalTasks: [0, 0, 0],
     image: "/images/web13.png", // Reusing existing image for now
-    isComingSoon: false,
+    isComingSoon: true,
   },
   {
     name: "AutoVideo",
