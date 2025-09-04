@@ -41,6 +41,7 @@ export default function MinerDurationTable({
             classNames={{
               container: "border border-muted rounded-md",
               rowClassName: "last:border-0",
+              headerCellClassName: "subnet36-header-cell",
             }}
           />
           <TablePagination table={table} className="py-4" />
