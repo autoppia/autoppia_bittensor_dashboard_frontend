@@ -22,6 +22,7 @@ export default function Details() {
   const agentSummaryData = getAgentSummaryData(id as string);
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [hoveredUseCase, setHoveredUseCase] = useState<string | null>(null);
+  const [period, setPeriod] = useState<string | null>(null);
 
   // Use agent name if available, otherwise derive from ID
   const agentName = selectedAgent?.name || getFallbackName(id as string);
@@ -38,6 +39,8 @@ export default function Details() {
             setSelectedWebsite={setSelectedWebsite}
             hoveredUseCase={hoveredUseCase}
             setHoveredUseCase={setHoveredUseCase}
+            period={period}
+            setPeriod={setPeriod}
           />
           <AgentsSummary
             className="xl:col-span-4"

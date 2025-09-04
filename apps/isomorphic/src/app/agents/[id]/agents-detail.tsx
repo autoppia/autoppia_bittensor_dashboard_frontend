@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useMedia } from "@core/hooks/use-media";
 import WidgetCard from "@core/components/cards/widget-card";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
-import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import { formatNumber } from "@core/utils/format-number";
 import {
@@ -79,6 +79,8 @@ interface DetailsChartProps {
   setSelectedWebsite: (value: string | null) => void;
   hoveredUseCase: string | null;
   setHoveredUseCase: (value: string | null) => void;
+  period: string | null;
+  setPeriod: (value: string | null) => void;
 }
 
 export default function DetailsChart({
@@ -87,22 +89,28 @@ export default function DetailsChart({
   setSelectedWebsite,
   hoveredUseCase,
   setHoveredUseCase,
+  period,
+  setPeriod
 }: DetailsChartProps) {
   const { id } = useParams();
   const agentDetailsData: AgentExtendedData = getAgentExtendedData(
     id as string
   );
   const isTab = useMedia("(max-width: 768px)", false);
-  const defaultBarSize = isTab ? 16 : 30;
-  const highlightedBarSize = isTab ? 16 : 20; // Same width as default for no width change
 
   const websiteOptions = [
-    { value: "__all__", label: "See All" },
+    { value: "__all__", label: "All Websites" },
     ...agentDetailsData.websites.map((web) => ({
       value: web.name,
       label: web.name,
     })),
   ];
+
+  const periodOptions = [
+    { value: "24h", label: "24H"},
+    { value: "7d", label: "7D"},
+    { value: "__all__", label: "ALL"},
+  ]
 
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
@@ -136,40 +144,52 @@ export default function DetailsChart({
   return (
     <WidgetCard
       title="Success Rate"
-      titleClassName={cn(
-        "font-normal text-sm sm:text-sm text-gray-500 mb-2.5 font-inter hidden lg:block",
-        className
-      )}
-      className={cn("min-h-[28rem]", className)}
       action={
-        <div className={cn("flex items-center gap-2 mr-5 lg:mr-0")}>
-          <Select
-            options={websiteOptions}
-            value={websiteOptions.find(
-              (opt) => opt.value === (selectedWebsite ?? "__all__")
-            )}
-            onChange={(option: { label: string; value: string }) =>
-              setSelectedWebsite(
-                option.value === "__all__" ? null : option.value
-              )
-            }
-            placeholder="Select Website"
-            className="w-[200px]"
-          />
-          <Legend className="my-4 flex @md:justify-end @2xl:hidden" />
+        <div className="flex">
+          <div className="flex items-center gap-2 mr-2">
+            <Select
+              options={periodOptions}
+              value={periodOptions.find(
+                (opt) => opt.value === (period ?? "__all__")
+              )}
+              onChange={(option: { label: string; value: string }) =>
+                setPeriod(
+                  option.value === "__all__" ? null : option.value
+                )
+              }
+              className="text-gray-700/90 w-[80px]"
+            />
+          </div>
+          <div className="flex items-center gap-2 mr-5 lg:mr-0">
+            <Select
+              options={websiteOptions}
+              value={websiteOptions.find(
+                (opt) => opt.value === (selectedWebsite ?? "__all__")
+              )}
+              onChange={(option: { label: string; value: string }) =>
+                setSelectedWebsite(
+                  option.value === "__all__" ? null : option.value
+                )
+              }
+              className="text-gray-700/90 w-[150px]"
+            />
+          </div>
         </div>
       }
+      className={className}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
-        <div className="h-[450px] w-full pt-6">
-          <ResponsiveContainer width="100%" height="100%" minWidth={700}>
+        <div
+          className="w-full pt-6"
+          style={{ height: `${80 + chartData.length * 45}px` }}
+        >
+          <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
               margin={{
-                left: -6,
-                bottom: chartData.length === 12 ? 100 : 50,
-                top: 20,
-              }} // Added top margin
+                left: isTab ? 45 : 60,
+                top: 10,
+              }}
               className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <CartesianGrid
@@ -182,61 +202,25 @@ export default function DetailsChart({
                 axisLine={false}
                 tickLine={false}
                 interval={0}
-                height={chartData.length === 12 ? 100 : 50}
                 tick={(props) => {
                   const { x, y, payload } = props;
-                  const chartHeight = 290; // Height of the ResponsiveContainer
-                  const barBaseY = chartHeight - 20; // Approximate Y position at the bottom of bars (adjust based on margin)
-                  if (chartData.length === 12) {
-                    return (
-                      <g transform={`translate(${x},${y + 20})`}>
-                        <text
-                          x={0}
-                          y={0}
-                          dy={10}
-                          textAnchor="end"
-                          fill="#666"
-                          transform="rotate(-70)"
-                        >
-                          {payload.value}
-                        </text>
-                        <line
-                          x1={-5} // Small offset to the left to avoid text overlap
-                          y1={-25} // Start above the rotated text
-                          x2={-5} // Maintain offset
-                          y2={barBaseY - y - 20} // Extend to the bar base
-                          stroke="#666"
-                          strokeOpacity={0.3}
-                          strokeDasharray="2 2"
-                        />
-                      </g>
-                    );
-                  }
+                  const maxLength = isTab ? 9 : 12;
+                  const truncatedText =
+                    payload.value.length > maxLength
+                      ? payload.value.slice(0, maxLength) + "..."
+                      : payload.value;
                   return (
                     <text
                       x={x}
                       y={y}
-                      dy={10}
-                      dx={-40}
+                      dy={15}
+                      dx={0}
                       textAnchor="end"
                       fill="#666"
                     >
-                      {payload.value}
+                      {truncatedText}
                     </text>
                   );
-                }}
-              />
-              <YAxis
-                type="number"
-                domain={[0, 100]} // Increased domain for upward effect
-                axisLine={false}
-                tickLine={false}
-                tick={({ payload, ...rest }) => {
-                  const pl = {
-                    ...payload,
-                    value: formatNumber(Number(payload.value)),
-                  };
-                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
                 }}
               />
               <Tooltip
@@ -295,41 +279,39 @@ export default function DetailsChart({
                               </span>
                             </Text>
                           </div>
-                          {selectedWebsite && selectedWebsite !== "__all__" && (
-                            <div className="chart-tooltip-item flex items-center p-1">
-                              <span
-                                className="me-1.5 h-2 w-2 rounded-full"
-                                style={{ backgroundColor: "#FDB36A" }}
-                              />
-                              <Text className="text-gray-500">
-                                Avg Solution Time:{" "}
-                                <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                  {data.avgSolutionTime
-                                    ? data.avgSolutionTime.toFixed(2)
-                                    : "0"}
-                                  s
-                                </span>
-                              </Text>
-                            </div>
-                          )}
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full"
+                              style={{ backgroundColor: "#FDB36A" }}
+                            />
+                            <Text className="text-gray-500">
+                              Avg Solution Time:{" "}
+                              <span className="text-gray-900 dark:text-gray-700 font-medium">
+                                {data.avgSolutionTime
+                                  ? data.avgSolutionTime.toFixed(2)
+                                  : "0"}
+                                s
+                              </span>
+                            </Text>
+                          </div>
                         </>
                       </div>
                     </div>
                   );
                 }}
               />
-              <Bar dataKey="average" radius={[4, 4, 0, 0]}>
+              <Bar layout="horizontal" dataKey="average" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`bar-cell-${index}`}
                     fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
-                    width={defaultBarSize}
+                    height={30}
                     style={{
                       transform:
                         entry.website === hoveredUseCase
-                          ? "scaleY(1.2)"
-                          : "scaleY(1)", // Upward stretch effect
-                      transformOrigin: "bottom",
+                          ? "scaleX(1.05)"
+                          : "scaleX(1)", // Upward stretch effect
+                      transformOrigin: "left",
                       transition: "transform 0.2s ease",
                     }}
                   />
@@ -340,16 +322,5 @@ export default function DetailsChart({
         </div>
       </div>
     </WidgetCard>
-  );
-}
-
-function Legend({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-start gap-3 text-xs @3xl:text-sm lg:gap-4",
-        className
-      )}
-    ></div>
   );
 }
