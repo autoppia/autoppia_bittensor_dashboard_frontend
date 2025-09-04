@@ -38,6 +38,7 @@ export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
         classNames={{
           container: "border border-muted rounded-md",
           rowClassName: "last:border-0",
+          headerCellClassName: "subnet36-header-cell",
         }}
       />
       <TablePagination table={table} className="py-4" />

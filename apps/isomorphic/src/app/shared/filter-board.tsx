@@ -13,7 +13,7 @@ type Props = {
   setLoading: (v: boolean) => void;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
+const apiUrl = "https://api-leaderboard.autoppia.com";
 
 export default function FilterBoard({
   classname,
@@ -37,13 +37,32 @@ export default function FilterBoard({
         : `${apiUrl}/metrics/filtered/?${qs}`;
 
     setLoading(true);
+    console.log("Fetching from endpoint:", endpoint);
+    
     (async () => {
       try {
-        const res = await fetch(endpoint, { cache: "no-store" });
+        const res = await fetch(endpoint, { 
+          cache: "no-store",
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        console.log("Response status:", res.status);
+        console.log("Response headers:", res.headers);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const json = await res.json();
+        console.log("Fetched data:", json);
         setTableData(json);
       } catch (err) {
         console.error("Error fetching metrics:", err);
+        console.error("Endpoint attempted:", endpoint);
         setTableData([]);
       } finally {
         setLoading(false);

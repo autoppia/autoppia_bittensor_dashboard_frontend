@@ -10,6 +10,8 @@ import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { PiPlayCircleDuotone } from "react-icons/pi";
+import TwitterIcon from "@core/components/icons/twitter";
+import DiscordIcon from "@core/components/icons/discord";
 
 export default function Header() {
   const pathname = usePathname();
@@ -67,6 +69,28 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Social Media Buttons */}
+          <div className="flex items-center gap-2">
+            <a
+              href="https://x.com/AutoppiaAI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+              aria-label="Follow us on X (Twitter)"
+            >
+              <TwitterIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+            </a>
+            <a
+              href="https://discord.com/channels/799672011265015819/1339356060787408996"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+              aria-label="Join our Discord"
+            >
+              <DiscordIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+            </a>
+          </div>
+
           {/* Running indicator */}
           <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
             <PiPlayCircleDuotone className="h-4 w-4" />
