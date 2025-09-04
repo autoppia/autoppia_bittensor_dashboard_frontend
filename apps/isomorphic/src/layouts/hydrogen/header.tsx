@@ -9,6 +9,7 @@ import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
+import { PiPlayCircleDuotone } from "react-icons/pi";
 
 export default function Header() {
   const pathname = usePathname();
@@ -64,9 +65,19 @@ export default function Header() {
             );
           })}
         </div>
-        <HamburgerButton
-          view={<Sidebar className="static w-full 2xl:w-full" />}
-        />
+
+        <div className="flex items-center gap-3">
+          {/* Running indicator */}
+          <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
+            <PiPlayCircleDuotone className="h-4 w-4" />
+            <span className="hidden sm:inline">Running</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+          </div>
+
+          <HamburgerButton
+            view={<Sidebar className="static w-full 2xl:w-full" />}
+          />
+        </div>
       </div>
     </StickyHeader>
   );

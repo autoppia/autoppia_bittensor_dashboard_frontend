@@ -7,11 +7,12 @@ export type WebsiteDataType = {
   origin: string;
   totalTasks: number[]; // [easy, medium, hard]
   image: string;
+  isComingSoon?: boolean; // New field for "soon" websites
 };
 
 /**
  *  Lista de webs con su puerto público del validador.
- *  Se usa en <FilterBoard /> para construir el filtro “Ports”.
+ *  Se usa en <FilterBoard /> para construir el filtro "Ports".
  */
 export const websitesData: WebsiteDataType[] = [
   {
@@ -69,5 +70,67 @@ export const websitesData: WebsiteDataType[] = [
     origin: "LinkedIn",
     totalTasks: [30, 17, 9],
     image: "/images/web7.png",
+  },
+  // New websites
+  {
+    name: "AutoWork",
+    portValidator: "8009",
+    href: "https://autonetwork.autoppia.com",
+    origin: "Work",
+    totalTasks: [35, 20, 12],
+    image: "/images/web10.png", // Reusing existing image for now
+  },
+  {
+    name: "AutoCalendar",
+    portValidator: "8010",
+    href: "https://autocalendar.autoppia.com",
+    origin: "Calendar",
+    totalTasks: [40, 25, 15],
+    image: "/images/web11.png", // Reusing existing image for now
+  },
+  {
+    name: "AutoList",
+    portValidator: "8011",
+    href: "https://autolist.autoppia.com",
+    origin: "Coursera",
+    totalTasks: [28, 18, 10],
+    image: "/images/web12.png", // Reusing existing image for now
+  },
+  // Coming soon websites
+  {
+    name: "AutoDrive",
+    portValidator: "8012",
+    href: "https://autodrive.autoppia.com",
+    origin: "Facebook",
+    totalTasks: [0, 0, 0],
+    image: "/images/web13.png", // Reusing existing image for now
+    isComingSoon: false,
+  },
+  {
+    name: "AutoVideo",
+    portValidator: "8013",
+    href: "#",
+    origin: "YouTube",
+    totalTasks: [0, 0, 0],
+    image: "/images/web5.png", // Reusing existing image for now
+    isComingSoon: true,
+  },
+  {
+    name: "AutoMusic",
+    portValidator: "8014",
+    href: "#",
+    origin: "Spotify",
+    totalTasks: [0, 0, 0],
+    image: "/images/web6.png", // Reusing existing image for now
+    isComingSoon: true,
+  },
+  {
+    name: "AutoTravel",
+    portValidator: "8015",
+    href: "#",
+    origin: "Expedia",
+    totalTasks: [0, 0, 0],
+    image: "/images/web7.png", // Reusing existing image for now
+    isComingSoon: true,
   },
 ];
