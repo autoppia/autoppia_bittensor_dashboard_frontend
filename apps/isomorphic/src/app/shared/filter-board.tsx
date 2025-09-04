@@ -22,7 +22,7 @@ export default function FilterBoard({
 }: Props) {
   const [period, setPeriod] = useState<string>("all");
   const [ports, setPorts] = useState<string[]>(
-    websitesData.map((w) => w.portValidator)
+    websitesData.filter((w) => !w.isComingSoon).map((w) => w.portValidator)
   );
 
   useEffect(() => {
@@ -30,8 +30,9 @@ export default function FilterBoard({
     if (period !== "all") qs.set("period", period);
     if (ports.length) qs.set("ports", ports.join(","));
 
+    const enabledWebsitesCount = websitesData.filter((w) => !w.isComingSoon).length;
     const endpoint =
-      period === "all" && ports.length === websitesData.length
+      period === "all" && ports.length === enabledWebsitesCount
         ? `${apiUrl}/metrics/`
         : `${apiUrl}/metrics/filtered/?${qs}`;
 
@@ -75,7 +76,7 @@ export default function FilterBoard({
           setValues={setPorts}
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-4 ms-4"
         >
-          {websitesData.map((w) => (
+          {websitesData.filter((w) => !w.isComingSoon).map((w) => (
             <Checkbox
               key={w.portValidator}
               label={`${w.name} `}
