@@ -38,7 +38,7 @@ export default function Header() {
                   <Link
                     href={item?.href}
                     className={cn(
-                      "group relative mx-3 my-2 flex items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:block",
+                      "group relative mx-3 my-2 items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:flex",
                       isActive
                         ? "bg-primary text-black"
                         : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"

@@ -9,7 +9,6 @@ import TagIcon3 from "@core/components/icons/tag-3";
 import MinerChart from "@/app/shared/miner-chart";
 import PageHeader from "@/app/shared/page-header";
 import {
-  PiShieldDuotone,
   PiOpenAiLogoDuotone,
   PiCurrencyDollarDuotone,
   PiClockDuotone,
@@ -141,8 +140,10 @@ export default function Leaderboard() {
             key={val.uid}
             title={
               <div className="flex items-center text-white">
-                <span className="text-blue-500"><PiShieldDuotone /></span>
-                <span className="ms-2">Validator {val.uid}</span>
+                <div className="w-5 h-5">
+                  <img src={val.icon} className="rounded-full" alt="icon" />
+                </div>
+                <span className="ms-2">{val.name}</span>
               </div>
             }
             description={<div className="w-60 truncate">{val.hotkey}</div>}
