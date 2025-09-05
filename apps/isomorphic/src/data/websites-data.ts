@@ -8,6 +8,7 @@ export type WebsiteDataType = {
   totalTasks: number[]; // [easy, medium, hard]
   image: string;
   isComingSoon?: boolean; // New field for "soon" websites
+  color: string; // Add color property
 };
 
 /**
@@ -22,6 +23,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Amazon",
     totalTasks: [25, 15, 8],
     image: "/images/web1.png",
+    color: "#FF7E5F",
   },
   {
     name: "AutoDining",
@@ -30,6 +32,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "OpenDining",
     totalTasks: [32, 18, 10],
     image: "/images/web2.png",
+    color: "#FDB36A",
   },
   {
     name: "AutoCRM",
@@ -38,6 +41,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "ClientCRM",
     totalTasks: [20, 12, 6],
     image: "/images/web3.png",
+    color: "#FFD166",
   },
   {
     name: "AutoMail",
@@ -46,6 +50,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Gmail",
     totalTasks: [28, 16, 9],
     image: "/images/web4.png",
+    color: "#F9F871",
   },
   {
     name: "AutoDelivery",
@@ -54,6 +59,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "DashDish",
     totalTasks: [22, 14, 7],
     image: "/images/web5.png",
+    color: "#C4F0C2",
   },
   {
     name: "AutoLodge",
@@ -62,6 +68,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "AirBnB",
     totalTasks: [18, 11, 5],
     image: "/images/web6.png",
+    color: "#A0CED9",
   },
   {
     name: "AutoConnect",
@@ -70,6 +77,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "LinkedIn",
     totalTasks: [30, 17, 9],
     image: "/images/web7.png",
+    color: "#84A9C0",
   },
   // New websites
   {
@@ -80,6 +88,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [35, 20, 12],
     image: "/images/web10.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#9381FF",
   },
   {
     name: "AutoCalendar",
@@ -89,6 +98,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [40, 25, 15],
     image: "/images/web11.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#B25D91",
   },
   {
     name: "AutoList",
@@ -98,6 +108,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [28, 18, 10],
     image: "/images/web12.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#F67280",
   },
   // Coming soon websites
   {
@@ -108,6 +119,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web13.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#C06C84",
   },
   {
     name: "AutoVideo",
@@ -117,6 +129,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web5.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#6C5B7B",
   },
   {
     name: "AutoMusic",
@@ -126,6 +139,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web6.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#4A90A4", 
   },
   {
     name: "AutoTravel",
@@ -135,5 +149,11 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web7.png", // Reusing existing image for now
     isComingSoon: true,
+    color: "#2C3E50", 
   },
 ];
+
+export const websitesDataMap = websitesData.reduce((acc, website) => {
+  acc[website.name] = website;
+  return acc;
+}, {} as Record<string, WebsiteDataType>);

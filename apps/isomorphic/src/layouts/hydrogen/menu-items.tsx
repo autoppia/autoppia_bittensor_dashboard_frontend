@@ -1,5 +1,6 @@
 import { routes } from "@/config/routes";
 import {
+  PiShootingStarDuotone,
   PiSquaresFourDuotone,
   PiRocketLaunchDuotone,
   PiNetworkDuotone,
@@ -22,6 +23,11 @@ export const menuItems = [
     name: "Agents",
     href: routes.agents,
     icon: <PiCodesandboxLogoDuotone />,
+  },
+  {
+    name: "Tasks",
+    href: routes.tasks,
+    icon: <PiShootingStarDuotone />,
   },
   {
     name: "Websites",

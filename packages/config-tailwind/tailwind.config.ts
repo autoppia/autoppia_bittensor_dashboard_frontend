@@ -5,6 +5,15 @@ import contentQueries from "@tailwindcss/container-queries";
 
 const config: Omit<Config, "content"> = {
   darkMode: ["class", '[data-theme="dark"]'],
+  safelist: [
+    // Safelist dynamic color classes for website badges
+    {
+      pattern: /bg-\[#[A-Fa-f0-9]{6}\]/,
+    },
+    {
+      pattern: /text-\[#[A-Fa-f0-9]{6}\]/,
+    },
+  ],
   theme: {
     screens: {
       xs: "480px",
