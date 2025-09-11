@@ -1,9 +1,8 @@
 'use client';
 
-import { tasksColumns } from '@/app/shared/tasks-table/columns';
+import { taskColumns } from '@/app/shared/tasks-table/columns';
 import { tasksData } from '@/data/tasks-data';
 import Table from '@core/components/table';
-import { CustomExpandedComponent } from '@core/components/table/custom/expanded-row';
 import { useTanStackTable } from '@core/components/table/custom/use-TanStack-Table';
 import TablePagination from '@core/components/table/pagination';
 import Filters from './filters';
@@ -11,7 +10,7 @@ import { TableVariantProps } from 'rizzui';
 
 export type TasksDataType = (typeof tasksData)[number];
 
-export default function OrderTable({
+export default function TasksTable({
   className,
   variant = 'modern',
   hideFilters = false,
@@ -24,17 +23,12 @@ export default function OrderTable({
 }) {
   const { table, setData } = useTanStackTable<TasksDataType>({
     tableData: tasksData,
-    columnConfig: tasksColumns(),
+    columnConfig: taskColumns,
     options: {
       initialState: {
         pagination: {
           pageIndex: 0,
           pageSize: 10,
-        },
-      },
-      meta: {
-        handleDeleteRow: (row) => {
-          setData((prev) => prev.filter((r) => r.id !== row.id));
         },
       },
       enableColumnResizing: false,
