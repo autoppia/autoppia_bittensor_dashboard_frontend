@@ -1,4 +1,14 @@
-export const tasksData = [
+export type TaskDataType = {
+  id: string;
+  prompt: string;
+  website: string;
+  use_case: string;
+  validator_uid: number;
+  success_rate: number;
+  created_at: string;
+};
+
+export const tasksData: TaskDataType[] = [
   {
     id: '3413',
     prompt: 'Buy a product which has a price of 1000',
@@ -135,3 +145,8 @@ export const tasksData = [
     created_at: '2023-08-05T11:50:15.012Z',
   },
 ];
+
+export const tasksDataMap = tasksData.reduce((acc, task) => {
+  acc[task.id] = task;
+  return acc;
+}, {} as Record<string, TaskDataType>);

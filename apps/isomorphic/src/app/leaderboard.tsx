@@ -8,6 +8,7 @@ import TagIcon2 from "@core/components/icons/tag-2";
 import TagIcon3 from "@core/components/icons/tag-3";
 import MinerChart from "@/app/shared/miner-chart";
 import PageHeader from "@/app/shared/page-header";
+import BannerText from "@/app/shared/banner-text";
 import {
   PiOpenAiLogoDuotone,
   PiCurrencyDollarDuotone,
@@ -130,9 +131,7 @@ export default function Leaderboard() {
         </div>
       </div>
       <PageHeader title={"Live Events Feed"} className="mt-8">
-        <div className="text-green-500 animate-pulse">
-          <Badge renderAsDot className="me-0.5 ms-4 bg-green-500" /> Live Update
-        </div>
+        <BannerText color="#22C55E" text="Live Update" className="animate-pulse" />
       </PageHeader>
       <div className="grid grid-cols-3 gap-6">
         {validatorsData.map((val) => (

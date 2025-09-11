@@ -12,7 +12,7 @@ export default function FileListPage() {
     <>
       <PageHeader title="Tasks" className="mt-4" />
       <TasksStat className="mb-6 @5xl:mb-8 @7xl:mb-11" />
-      <OrderTable variant="elegant" />
+      <OrderTable variant="modern" />
     </>
   );
 }
