@@ -18,7 +18,7 @@ export default function TaskDetails() {
         <>
             <PageHeader title={`Task ${id as string}`} className="mt-4" />
             <div className="flex flex-col gap-2 mb-6">
-                <div className="flex flex-wrap gap-6">
+                <div className="flex flex-wrap gap-4">
                     <BannerText color="#2465FF" text={`Validator: ${validatorsDataMap[tasksDataMap[id as string].validator_uid].name}`} />
                     <BannerText color="#22C55E" text={`Created At: ${tasksDataMap[id as string].created_at}`} />
                     <BannerText color="#FF1A1A" text={`Website: ${tasksDataMap[id as string].website}`} />

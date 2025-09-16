@@ -15,7 +15,7 @@ import {
 const data: any[] = [];
 for (let i = 0; i < 256; i++) {
     data.push({
-        name: `Miner ${i}`,
+        name: i.toString(),
         score: Math.random().toFixed(2)
     });
 }

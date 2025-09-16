@@ -16,26 +16,24 @@ export default function Subnet36() {
   const [loading, setLoading] = useState(true);
 
   return (
-    <div className="subnet36-page">
-      <TableLayout title={pageHeader.title} view={view} setView={setView}>
-        <div className="flex flex-col md:flex-row w-full gap-4">
-          <FilterBoard
-            classname="w-full md:w-[270px] border-box filter-board"
-            setTableData={setTableData}
-            setLoading={setLoading}
-          />
+    <TableLayout title={pageHeader.title} view={view} setView={setView}>
+      <div className="flex flex-col md:flex-row w-full gap-4">
+        <FilterBoard
+          classname="w-full md:w-[270px] border-box filter-board"
+          setTableData={setTableData}
+          setLoading={setLoading}
+        />
 
-          <div className="w-full md:w-[calc(100%-270px)]">
-            {loading ? (
-              <p className="py-8 text-center">Cargando métricas…</p>
-            ) : view === "score" ? (
-              <MinerScoreTable data={tableData} />
-            ) : (
-              <MinerDurationTable data={tableData} />
-            )}
-          </div>
+        <div className="w-full md:w-[calc(100%-270px)]">
+          {loading ? (
+            <p className="py-8 text-center">Cargando métricas…</p>
+          ) : view === "score" ? (
+            <MinerScoreTable data={tableData} />
+          ) : (
+            <MinerDurationTable data={tableData} />
+          )}
         </div>
-      </TableLayout>
-    </div>
+      </div>
+    </TableLayout>
   );
 }

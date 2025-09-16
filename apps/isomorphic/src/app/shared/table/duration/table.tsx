@@ -14,7 +14,6 @@ export default function MinerDurationTable({
 }: {
   data: TableDataType[];
 }) {
-  const hasData = data.length > 0;
   const columns = useMemo(() => buildMinerDurationColumns(data), [data]);
 
   const { table, setData } = useTanStackTable<TableDataType>({
@@ -26,27 +25,27 @@ export default function MinerDurationTable({
     },
   });
 
-  useEffect(() => setData(data), [data, setData]);
+  useEffect(() => {
+    setData(data);
+  }, [data, setData]);
 
   /* nodo raíz estable */
   return (
     <div>
-      {!hasData ? (
-        <p className="py-8 text-center">Cargando métricas…</p>
-      ) : (
-        <>
-          <Filters table={table} />
-          <Table
-            table={table}
-            classNames={{
-              container: "border border-muted rounded-md",
-              rowClassName: "last:border-0",
-              headerCellClassName: "subnet36-header-cell",
-            }}
-          />
-          <TablePagination table={table} className="py-4" />
-        </>
-      )}
+      <>
+        <Filters table={table} />
+        <Table
+          table={table}
+          classNames={{
+            container: "border border-muted rounded-md bg-gray-0 dark:bg-gray-50",
+            rowClassName: "last:border-0",
+            headerCellClassName: "subnet36-header-cell",
+          }}
+          isLoading={data.length === 0}
+          showLoadingText={true}
+        />
+        <TablePagination table={table} className="py-4" />
+      </>
     </div>
   );
 }
