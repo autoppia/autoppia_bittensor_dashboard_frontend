@@ -30,7 +30,9 @@ export default function TaskTopMiner() {
                 </div>
                 <div className="border border-muted rounded-lg p-4">
                     <Text className="text-white text-lg font-medium mb-2">Generated GIF</Text>
-                    <div className="w-full h-[400px] bg-white rounded-lg"></div>
+                    <div className="flex justify-center items-center w-full h-[400px] border border-muted rounded-lg">
+                        <div className="text-4xl font-bold text-white">Comming soon</div>
+                    </div>
                 </div>
             </div>
         </div>

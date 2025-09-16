@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Title, Text, Button } from "rizzui";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
@@ -52,7 +53,13 @@ export default function TasksStat({ className }: TasksStatProps) {
               >
                 <div className="flex items-center justify-start gap-5">
                   <div className="w-14 h-14">
-                    <img src={val.icon} className="rounded-full" alt="validator" />
+                    <Image 
+                    src={val.icon} 
+                    className="rounded-full" 
+                    alt="validator" 
+                    width={24} 
+                    height={24} 
+                    />
                   </div>
                   <div className="">
                     <Text className="mb-1 text-sm font-medium text-gray-500">

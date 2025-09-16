@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import MetricCard from "@core/components/cards/metric-card";
 import WidgetCard from "@core/components/cards/widget-card";
 import TicketIcon from "@core/components/icons/ticket";
@@ -16,7 +17,6 @@ import {
   PiArrowClockwiseDuotone,
   PiHashDuotone
 } from "react-icons/pi";
-import { Badge } from "rizzui";
 
 import { validatorsData } from "@/data/validators-data";
 
@@ -139,9 +139,13 @@ export default function Leaderboard() {
             key={val.uid}
             title={
               <div className="flex items-center text-white">
-                <div className="w-5 h-5">
-                  <img src={val.icon} className="rounded-full" alt="icon" />
-                </div>
+                <Image
+                  src={val.icon}
+                  className="rounded-full"
+                  alt="icon"
+                  width={24}
+                  height={24}
+                />
                 <span className="ms-2">{val.name}</span>
               </div>
             }
@@ -163,7 +167,7 @@ export default function Leaderboard() {
                   <span className="ms-1">Current Task:</span>
                 </div>
                 <p className="mt-2 text-[1rem] text-white text-wrap">
-                  Login with email 'johndoe@gmail.com' and password 'PASSWORD'
+                  Login with email johndoe@gmail.com and password PASSWORD
                 </p>
               </div>
               <div className="flex items-center text-yellow-500">

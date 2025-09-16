@@ -25,18 +25,13 @@ export default function MinerScoreTable({ data }: { data: TableDataType[] }) {
     setData(data);
   }, [data, setData]);
 
-  // ✅ Do the conditional render AFTER hooks
-  if (!data?.length) {
-    return <p className="text-center py-8">Cargando métricas…</p>;
-  }
-
   return (
     <>
       <Filters table={table} />
       <Table
         table={table}
         classNames={{
-          container: "border border-muted rounded-md",
+          container: "border border-muted rounded-md bg-gray-0 dark:bg-gray-50",
           rowClassName: "last:border-0",
           headerCellClassName: "subnet36-header-cell",
         }}
