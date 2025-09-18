@@ -19,81 +19,7 @@ import {
 } from "react-icons/pi";
 
 import { validatorsData } from "@/data/validators-data";
-
-const data = [
-  {
-    month: "Jan",
-    newUser: 5000,
-    user: 1600,
-    sessions: 4000,
-  },
-  {
-    month: "Feb",
-    newUser: 8500,
-    user: 2000,
-    sessions: 5798,
-  },
-  {
-    month: "Mar",
-    newUser: 7000,
-    user: 3000,
-    sessions: 8300,
-  },
-  {
-    month: "Apr",
-    newUser: 5780,
-    user: 3908,
-    sessions: 6798,
-  },
-  {
-    month: "May",
-    newUser: 4890,
-    user: 2500,
-    sessions: 5000,
-  },
-  {
-    month: "Jun",
-    newUser: 8000,
-    user: 3200,
-    sessions: 7800,
-  },
-  {
-    month: "Jul",
-    newUser: 4890,
-    user: 2500,
-    sessions: 8500,
-  },
-  {
-    month: "Aug",
-    newUser: 3780,
-    user: 3908,
-    sessions: 9908,
-  },
-  {
-    month: "Sep",
-    newUser: 7800,
-    user: 2800,
-    sessions: 8500,
-  },
-  {
-    month: "Oct",
-    newUser: 5780,
-    user: 1908,
-    sessions: 7208,
-  },
-  {
-    month: "Nov",
-    newUser: 4780,
-    user: 1908,
-    sessions: 4908,
-  },
-  {
-    month: "Dec",
-    newUser: 7500,
-    user: 3000,
-    sessions: 9000,
-  },
-];
+import { leaderboardData } from "@/data/leaderboard-data";
 
 export default function Leaderboard() {
   return (
@@ -101,7 +27,7 @@ export default function Leaderboard() {
       <PageHeader title={"Network Analytics"} className="mt-4" />
       <div className="flex gap-8">
         <div className="w-[calc(100%-500px)]">
-          <MinerChart title="Top Miner" data={data} />
+          <MinerChart title="Top Miner" data={leaderboardData} />
         </div>
         <div className="w-[500px] grid grid-cols-2 gap-6">
           <MetricCard

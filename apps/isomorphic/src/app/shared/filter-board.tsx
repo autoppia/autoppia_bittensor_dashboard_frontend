@@ -7,11 +7,11 @@ import { Title } from "rizzui/typography";
 import { Radio, RadioGroup, Checkbox, CheckboxGroup } from "rizzui";
 import { websitesData } from "@/data/websites-data";
 
-type Props = {
+interface FilterBoardProps {
   classname?: string;
   setTableData: (rows: any[]) => void;
   setLoading: (v: boolean) => void;
-};
+}
 
 const apiUrl = "https://api-leaderboard.autoppia.com";
 
@@ -19,7 +19,7 @@ export default function FilterBoard({
   classname,
   setTableData,
   setLoading,
-}: Props) {
+}: FilterBoardProps) {
   const [period, setPeriod] = useState<string>("all");
   const [ports, setPorts] = useState<string[]>(
     websitesData.filter((w) => !w.isComingSoon).map((w) => w.portValidator)
