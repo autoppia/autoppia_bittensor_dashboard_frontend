@@ -52,16 +52,14 @@ export default function TasksStat({ className }: TasksStatProps) {
                 className="min-w-[292px] max-w-full flex-row-reverse"
               >
                 <div className="flex items-center justify-start gap-5">
-                  <div className="w-14 h-14">
-                    <Image 
-                    src={val.icon} 
-                    className="rounded-full" 
-                    alt="validator" 
-                    width={24} 
-                    height={24} 
-                    />
-                  </div>
-                  <div className="">
+                  <Image
+                    src={val.icon}
+                    className="rounded-full"
+                    alt="validator"
+                    width={56}
+                    height={56}
+                  />
+                  <div>
                     <Text className="mb-1 text-sm font-medium text-gray-500">
                       {val.name}
                     </Text>
