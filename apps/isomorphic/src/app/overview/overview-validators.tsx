@@ -26,7 +26,7 @@ export default function OverviewValidators() {
       </PageHeader>
       <div className="grid grid-cols-3 gap-6">
         {validatorsData.map((val) => (
-          <Link href={`/runs/current`}>
+          <Link key={`validator-${val.uid}`} href={`/runs/current`}>
             <WidgetCard
               title={
                 <div className="flex items-center text-white">
