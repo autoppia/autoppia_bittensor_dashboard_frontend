@@ -11,13 +11,18 @@ import {
 export const menuItems = [
   // label start
   {
-    name: "Overview",
+    name: "Home",
   },
   // label end
   {
-    name: "Leaderboard",
-    href: routes.leaderboard,
+    name: "Overview",
+    href: routes.overview,
     icon: <PiRocketLaunchDuotone />,
+  },
+  {
+    name: "Evaluation Runs",
+    href: routes.runs,
+    icon: <PiCodesandboxLogoDuotone />,
   },
   {
     name: "Agents",
