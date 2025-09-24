@@ -30,8 +30,7 @@ export default function Header() {
             const href = item?.href as string;
             const isActive =
               pathname === href ||
-              (href === "/agents" && pathname.startsWith(href)) ||
-              (href === "/tasks" && pathname.startsWith(href));
+              (href !== "/" && pathname.startsWith(href));
 
             return (
               <Fragment key={item.name + "-" + index}>

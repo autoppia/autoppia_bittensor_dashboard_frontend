@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Tasks from "./tasks";
+import Runs from "./runs";
 
 export const metadata = {
   ...metaObject(),
 };
 
-export default function FileListPage() {
-  return <Tasks />;
+export default function Page() {
+  return <Runs />;
 }

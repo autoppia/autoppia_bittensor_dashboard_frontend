@@ -9,7 +9,7 @@ import {
 
 export default function Websites() {
   return (
-    <div className="flex flex-col w-full px-6 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:max-w-7xl 2xl:mx-auto items-center">
+    <div className="flex flex-col w-full px-6 sm:px-6 md:px-6 lg:px-8 xl:px-12 2xl:max-w-7xl 2xl:mx-auto items-center">
       {/* Top right corner - Running indicator and GitHub link */}
       <div className="flex items-center gap-4 self-end mt-6 mb-8">
         {/* GitHub link */}
@@ -32,7 +32,7 @@ export default function Websites() {
       >
         Evaluation Sandbox
       </Title>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full">
         {websitesData.map((website, index) => (
           <WebsiteItem key={index} website={website} />
         ))}

@@ -1,5 +1,5 @@
 import { metaObject } from '@/config/site.config';
-import Leaderboard from './leaderboard';
+import Overview from './overview';
 
 export const metadata = {
   ...metaObject(),
@@ -7,6 +7,6 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <Leaderboard />
+    <Overview />
   )
 }
