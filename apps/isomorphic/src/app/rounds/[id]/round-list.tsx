@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "rizzui";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
 import CheckCircleIcon from "@core/components/icons/check-circle";
 import HourGlassRoundIcon from "@core/components/icons/hour-glass-round";
-import { RunType, runsData } from "@/data/runs-data";
-import RunsItem from "./runs-item";
+import { RoundType, roundsData } from "@/data/rounds-data";
+import RoundItem from "./round-item";
 
-export default function RunsList() {
+export default function RoundList() {
   const {
     sliderEl,
     sliderPrevBtn,
@@ -33,15 +34,16 @@ export default function RunsList() {
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
-          {runsData
+          {roundsData
             .slice()
             .reverse()
-            .map((run: RunType, index: number) => (
-              <RunsItem
-                key={`evaluation-run-${index}`}
-                run={run}
-                icon={run.current ? HourGlassRoundIcon : CheckCircleIcon}
-              />
+            .map((round: RoundType, index: number) => (
+              <Link key={`round-${index}`} href={`/rounds/${round.id}`}>
+                <RoundItem
+                  round={round}
+                  icon={round.current ? HourGlassRoundIcon : CheckCircleIcon}
+                />
+              </Link>
             ))}
         </div>
       </div>

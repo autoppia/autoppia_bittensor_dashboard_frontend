@@ -10,8 +10,8 @@ module.exports = {
         permanent: true,
       },
       {
-        source: "/runs",
-        destination: "/runs/current",
+        source: "/rounds",
+        destination: "/rounds/current",
         permanent: true,
       },
       {

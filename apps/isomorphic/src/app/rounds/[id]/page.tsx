@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Runs from "./runs";
+import Round from "./round";
 
 export const metadata = {
   ...metaObject(),
 };
 
 export default function Page() {
-  return <Runs />;
+  return <Round />;
 }

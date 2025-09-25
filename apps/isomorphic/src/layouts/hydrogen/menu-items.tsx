@@ -20,13 +20,18 @@ export const menuItems = [
     icon: <PiRocketLaunchDuotone />,
   },
   {
-    name: "Evaluation Runs",
-    href: routes.runs,
+    name: "Rounds",
+    href: routes.rounds,
     icon: <PiCodesandboxLogoDuotone />,
   },
   {
     name: "Agents",
     href: routes.agents,
+    icon: <PiCodesandboxLogoDuotone />,
+  },
+  {
+    name: "Agent Run",
+    href: routes.agent_run,
     icon: <PiCodesandboxLogoDuotone />,
   },
   {
@@ -39,9 +44,9 @@ export const menuItems = [
     href: routes.websites,
     icon: <PiSquaresFourDuotone />,
   },
-  {
-    name: "Subnet36",
-    href: routes.subnet36,
-    icon: <PiNetworkDuotone />,
-  }
+  // {
+  //   name: "Subnet36",
+  //   href: routes.subnet36,
+  //   icon: <PiNetworkDuotone />,
+  // }
 ];

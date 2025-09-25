@@ -58,7 +58,7 @@ export default function MinerChart({
   const isTablet = useMedia("(max-width: 800px)", false);
 
   const [filteredData, setFilteredData] = useState<LeaderboardDataType[]>(data);
-  const [compareWith, setCompareWith] = useState<string[]>([]);
+  // const [compareWith, setCompareWith] = useState<string[]>([]);
 
   function handleFilterBy(option: string) {
     if (option === "All") {
@@ -121,7 +121,7 @@ export default function MinerChart({
                 fillOpacity={1}
                 fill="url(#subnet36Area)"
               />
-              {sotaAgents.map((agent) => {
+              {/* {sotaAgents.map((agent) => {
                 return compareWith.includes(agent.value) && (
                   <Line
                     key={`line-chart-${agent.value}`}
@@ -132,17 +132,16 @@ export default function MinerChart({
                     dot={false}
                   />
                 );
-              })}
+              })} */}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center gap-4 mt-1 mb-0.5 text-white flex-wrap">
+        {/* <div className="flex items-center gap-4 mt-1 mb-0.5 text-white flex-wrap">
           <span className="ms-4">Compare with:</span>
           <CheckboxGroup
             values={compareWith}
             setValues={setCompareWith}
             className="flex items-center gap-4"
-            onChange={() => console.log("compareWith", compareWith)}
           >
             {sotaAgents.map((agent) => (
               <Checkbox
@@ -162,7 +161,7 @@ export default function MinerChart({
               />
             ))}
           </CheckboxGroup>
-        </div>
+        </div> */}
       </div>
     </WidgetCard>
   );

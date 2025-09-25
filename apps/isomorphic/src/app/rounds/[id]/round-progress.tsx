@@ -4,17 +4,17 @@ import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 import PageHeader from "@/app/shared/page-header";
 import BannerText from "@/app/shared/banner-text";
-import { RunType } from "@/data/runs-data";
+import { RoundType } from "@/data/rounds-data";
 
 interface RunsTimerProps {
-  run: RunType;
+  round: RoundType;
 }
 
-export default function RunsProgress({
-  run,
+export default function RoundProgress({
+  round,
 }: RunsTimerProps) {
   const currentBlock = 6513300;
-  const percentage = (currentBlock - run.startBlock) / (run.endBlock - run.startBlock);
+  const percentage = (currentBlock - round.startBlock) / (round.endBlock - round.startBlock);
   const cellCount = 100;
   const cells = Array.from({ length: cellCount }, (_, index) => {
     return {
@@ -23,13 +23,13 @@ export default function RunsProgress({
   });
   return (
     <>
-      <PageHeader title={"Evaluation Run " + run.id} className="mt-4">
+      <PageHeader title={"Round " + round.id} className="mt-4">
         <BannerText color="#10b981" text="Live Update" className="animate-pulse" />
       </PageHeader>
       <div className="w-full border border-muted rounded-lg p-8 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="text-xl font-bold text-gray-900 mb-4">
-            Run Progress
+            Round Progress
           </div>
           <div className="flex items-center text-md text-[#10b981]">
             <PiClockDuotone />
@@ -52,7 +52,7 @@ export default function RunsProgress({
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center">
               <PiCubeDuotone />
-              <span className="ms-1">Start Block: {run.startBlock}</span>
+              <span className="ms-1">Start Block: {round.startBlock}</span>
             </div>
             <div className="flex items-center font-semibold text-gray-900">
               <PiCubeDuotone />
@@ -60,7 +60,7 @@ export default function RunsProgress({
             </div>
             <div className="flex items-center">
               <PiCubeDuotone />
-              <span className="ms-1">End Block: {run.endBlock}</span>
+              <span className="ms-1">End Block: {round.endBlock}</span>
             </div>
           </div>
         </div>

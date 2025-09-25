@@ -19,14 +19,14 @@ export default function OverviewValidators() {
     <>
       <PageHeader title={"Live Event Update"} className="mt-6">
         <BannerText
-          color="#10b981"
+          color="primary-green"
           text="Live Update"
           className="animate-pulse"
         />
       </PageHeader>
       <div className="grid grid-cols-3 gap-6">
         {validatorsData.map((val) => (
-          <Link key={`validator-${val.uid}`} href={`/runs/current`}>
+          <Link key={`validator-${val.id}`} href={`/runs/current`}>
             <WidgetCard
               title={
                 <div className="flex items-center text-white">
@@ -40,11 +40,11 @@ export default function OverviewValidators() {
                   <span className="ms-2">{val.name}</span>
                 </div>
               }
-              className="hover:border-primary-green"
+              className="hover:border-gray-900"
               description={<div className="w-60 truncate">{val.hotkey}</div>}
               headerClassName="w-full"
               action={
-                <div className="flex items-center border border-[#10b981] px-2 py-1 rounded-full text-[#10b981]">
+                <div className="flex items-center border border-primary-green px-2 py-1 rounded-full text-primary-green">
                   <span className="animate-spin text-sm">
                     <PiArrowClockwiseDuotone />
                   </span>
@@ -54,7 +54,7 @@ export default function OverviewValidators() {
             >
               <div className="pt-4">
                 <div className="mb-2">
-                  <div className="flex items-center text-[#10b981]">
+                  <div className="flex items-center text-primary-green">
                     <PiOpenAiLogoDuotone />
                     <span className="ms-1">Current Task:</span>
                   </div>

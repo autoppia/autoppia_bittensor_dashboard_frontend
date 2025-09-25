@@ -1,11 +1,11 @@
-export type RunType = {
+export type RoundType = {
   id: number;
   startBlock: number;
   endBlock: number;
   current: boolean;
 };
 
-export const runsData: RunType[] = [
+export const roundsData: RoundType[] = [
   {
     id: 1,
     startBlock: 6507001,
