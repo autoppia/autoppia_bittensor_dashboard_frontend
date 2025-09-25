@@ -1,24 +1,26 @@
 "use client";
 
-import { RunType } from "@/data/runs-data";
+import { useParams } from "next/navigation";
+import { RoundType } from "@/data/rounds-data";
 import { IconType } from "react-icons/lib";
 import cn from "@core/utils/class-names";
 import { PiCubeDuotone } from "react-icons/pi";
 import TrophyIcon from "@core/components/icons/trophy";
 
-interface RunsItemProps {
-  run: RunType;
+interface RoundItemProps {
+  round: RoundType;
   icon: IconType;
 }
 
-export default function RunsItem({ run, icon }: RunsItemProps) {
+export default function RoundItem({ round, icon }: RoundItemProps) {
+  const { id } = useParams();
   const Icon = icon;
-  const isActive = run.current;
+  const isActive = (id === "current" && round.current) || round.id === parseInt(id as string);
 
   return (
     <div
       className={cn(
-        "w-full min-w-[290px] rounded-xl border border-gray-300 hover:border-primary-green px-6 py-7 @container bg-gray-50",
+        "w-full min-w-[290px] rounded-lg border border-gray-300 hover:border-primary-green px-6 py-7 @container bg-gray-50",
         isActive && "bg-primary-green border-primary-green"
       )}
     >
@@ -38,7 +40,7 @@ export default function RunsItem({ run, icon }: RunsItemProps) {
               isActive && "text-white"
             )}
           >
-            Run {run.id}
+            Round {round.id}
           </p>
           <p
             className={cn(
@@ -47,10 +49,10 @@ export default function RunsItem({ run, icon }: RunsItemProps) {
             )}
           >
             <PiCubeDuotone />
-            <span>{run.startBlock}</span>
+            <span>{round.startBlock}</span>
             <span className="mx-1">-</span>
             <PiCubeDuotone />
-            <span>{run.endBlock}</span>
+            <span>{round.endBlock}</span>
           </p>
         </div>
       </div>

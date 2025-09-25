@@ -1,9 +1,10 @@
 export const routes = {
   home: "/",
   overview: "/overview",
-  runs: "/runs",
+  rounds: "/rounds",
   agents: "/agents",
+  agent_run: "/agent_run",
   tasks: "/tasks",
   websites: "/websites",
-  subnet36: "/subnet36",
+  // subnet36: "/subnet36",
 }
