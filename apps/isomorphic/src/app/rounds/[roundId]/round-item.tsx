@@ -13,9 +13,11 @@ interface RoundItemProps {
 }
 
 export default function RoundItem({ round, icon }: RoundItemProps) {
-  const { id } = useParams();
+  const { roundId } = useParams();
   const Icon = icon;
-  const isActive = (id === "current" && round.current) || round.id === parseInt(id as string);
+  const isActive =
+    (roundId === "current" && round.current) ||
+    round.id === parseInt(roundId as string);
 
   return (
     <div

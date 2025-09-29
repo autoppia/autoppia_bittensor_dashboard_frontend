@@ -13,7 +13,7 @@ export type ValidatorDataType = {
 export const validatorsData: ValidatorDataType[] = [
   {
     id: "autoppia",
-    name: "Web Agents - Autoppia",
+    name: "Autoppia",
     hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
     icon: "/validators/Autoppia.png",
     status: "Online",

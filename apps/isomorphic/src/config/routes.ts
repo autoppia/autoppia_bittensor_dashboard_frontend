@@ -3,8 +3,6 @@ export const routes = {
   overview: "/overview",
   rounds: "/rounds",
   agents: "/agents",
-  agent_run: "/agent_run",
-  tasks: "/tasks",
+  agent_run: "/agent-run",
   websites: "/websites",
-  // subnet36: "/subnet36",
 }

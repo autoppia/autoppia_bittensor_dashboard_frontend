@@ -38,7 +38,7 @@ const topMinersList = [
   },
 ];
 
-export default function TopProductList() {
+export default function ValidatorTopMiners() {
   return (
     <WidgetCard
       title="Top 10 Miners"

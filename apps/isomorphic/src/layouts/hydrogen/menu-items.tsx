@@ -1,9 +1,7 @@
 import { routes } from "@/config/routes";
 import {
-  PiShootingStarDuotone,
   PiSquaresFourDuotone,
   PiRocketLaunchDuotone,
-  PiNetworkDuotone,
   PiCodesandboxLogoDuotone
 } from "react-icons/pi";
 
@@ -35,18 +33,8 @@ export const menuItems = [
     icon: <PiCodesandboxLogoDuotone />,
   },
   {
-    name: "Tasks",
-    href: routes.tasks,
-    icon: <PiShootingStarDuotone />,
-  },
-  {
     name: "Websites",
     href: routes.websites,
     icon: <PiSquaresFourDuotone />,
   },
-  // {
-  //   name: "Subnet36",
-  //   href: routes.subnet36,
-  //   icon: <PiNetworkDuotone />,
-  // }
 ];

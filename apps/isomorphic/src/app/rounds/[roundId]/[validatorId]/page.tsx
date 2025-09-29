@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Agent from "./agent";
+import Validator from "./validator";
 
 export const metadata = {
   ...metaObject(),
 };
 
-export default function FileListPage() {
-  return <Agent />;
+export default function Page() {
+  return <Validator />;
 }

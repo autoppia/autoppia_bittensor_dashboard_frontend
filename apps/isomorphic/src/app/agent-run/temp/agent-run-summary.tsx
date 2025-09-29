@@ -70,10 +70,9 @@ const BAR_COLORS = [
   "#6C5B7B", // muted violet
 ];
 
-export interface AgentsSummaryProps {
+export interface AgentRunSummaryProps {
   className?: string;
   selectedWebsite?: string | null;
-  setHoveredUseCase: (value: string | null) => void;
 }
 
 interface DisplayDataItem {
@@ -93,11 +92,10 @@ function formatUseCaseName(name: string): string {
     .join(" ");
 }
 
-export default function AgentsSummary({
+export default function AgentRunSummary({
   className,
   selectedWebsite,
-  setHoveredUseCase,
-}: AgentsSummaryProps) {
+}: AgentRunSummaryProps) {
   const { id } = useParams();
   const agentData: AgentExtendedData = getAgentExtendedData(id as string);
   const { usecases, total }: AgentSummaryData = getAgentSummaryData(
@@ -245,20 +243,13 @@ export default function AgentsSummary({
     >
       <div className="h-[320px] w-full @sm:py-3">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart
-            onMouseEnter={() => setHoveredUseCase(null)}
-            onMouseLeave={() => setHoveredUseCase(null)}
-          >
+          <PieChart>
             <Tooltip
               content={({ payload }) => {
                 if (!payload || payload.length === 0) return null;
                 const data = payload[0].payload;
                 return (
-                  <div
-                    className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
-                    onMouseEnter={() => setHoveredUseCase(data.label)}
-                    onMouseLeave={() => setHoveredUseCase(null)}
-                  >
+                  <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
                     <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
                       {data.label || "Unknown"}
                     </Text>
@@ -334,8 +325,6 @@ export default function AgentsSummary({
               cornerRadius={40}
               dataKey="value"
               stroke="rgba(0,0,0,0)"
-              onMouseEnter={(data) => setHoveredUseCase(data.label)}
-              onMouseLeave={() => setHoveredUseCase(null)}
             >
               <Label
                 position="center"
@@ -367,8 +356,6 @@ export default function AgentsSummary({
             direction="col"
             align="start"
             className="mb-4 gap-1 border-b border-muted pb-4 last:mb-0 last:border-0 last:pb-0"
-            onMouseEnter={() => setHoveredUseCase(item.label)}
-            onMouseLeave={() => setHoveredUseCase(null)}
           >
             <Flex align="center" className="w-full">
               <Flex align="center" className="gap-2">

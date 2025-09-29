@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import { useMedia } from "@core/hooks/use-media";
 import WidgetCard from "@core/components/cards/widget-card";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
-import cn from "@core/utils/class-names";
 import { formatNumber } from "@core/utils/format-number";
 import {
   Bar,
@@ -73,25 +72,17 @@ function formatUseCaseName(name: string): string {
     .join(" ");
 }
 
-interface DetailsChartProps {
+interface AgentRunChartProps {
   className?: string;
   selectedWebsite?: string | null;
   setSelectedWebsite: (value: string | null) => void;
-  hoveredUseCase: string | null;
-  setHoveredUseCase: (value: string | null) => void;
-  period: string | null;
-  setPeriod: (value: string | null) => void;
 }
 
-export default function DetailsChart({
+export default function AgentRunChart({
   className,
   selectedWebsite,
   setSelectedWebsite,
-  hoveredUseCase,
-  setHoveredUseCase,
-  period,
-  setPeriod
-}: DetailsChartProps) {
+}: AgentRunChartProps) {
   const { id } = useParams();
   const agentDetailsData: AgentExtendedData = getAgentExtendedData(
     id as string
@@ -105,12 +96,6 @@ export default function DetailsChart({
       label: web.name,
     })),
   ];
-
-  const periodOptions = [
-    { value: "24h", label: "24H"},
-    { value: "7d", label: "7D"},
-    { value: "__all__", label: "ALL"},
-  ]
 
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
@@ -146,20 +131,6 @@ export default function DetailsChart({
       title="Success Rate"
       action={
         <div className="flex">
-          <div className="flex items-center gap-2 mr-2">
-            <Select
-              options={periodOptions}
-              value={periodOptions.find(
-                (opt) => opt.value === (period ?? "__all__")
-              )}
-              onChange={(option: { label: string; value: string }) =>
-                setPeriod(
-                  option.value === "__all__" ? null : option.value
-                )
-              }
-              className="text-gray-700/90 w-[80px]"
-            />
-          </div>
           <div className="flex items-center gap-2 mr-5 lg:mr-0">
             <Select
               options={websiteOptions}
@@ -186,7 +157,7 @@ export default function DetailsChart({
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
-              layout="vertical"
+              layout="horizontal"
               margin={{
                 left: isTab ? 45 : 60,
                 top: 10,
@@ -199,19 +170,6 @@ export default function DetailsChart({
                 strokeDasharray="8 10"
               />
               <XAxis
-                type="number"
-                domain={[0, 100]} // Increased domain for upward effect
-                axisLine={false}
-                tickLine={false}
-                tick={({ payload, ...rest }) => {
-                  const pl = {
-                    ...payload,
-                    value: formatNumber(Number(payload.value)),
-                  };
-                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
-                }}
-              />
-              <YAxis
                 dataKey="website"
                 type="category"
                 axisLine={false}
@@ -238,16 +196,25 @@ export default function DetailsChart({
                   );
                 }}
               />
+              <YAxis
+                type="number"
+                domain={[0, 100]} // Increased domain for upward effect
+                axisLine={false}
+                tickLine={false}
+                tick={({ payload, ...rest }) => {
+                  const pl = {
+                    ...payload,
+                    value: formatNumber(Number(payload.value)),
+                  };
+                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
+                }}
+              />
               <Tooltip
                 content={({ payload, label }) => {
                   if (!payload || payload.length === 0) return null;
                   const data = payload[0].payload;
                   return (
-                    <div
-                      className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
-                      onMouseEnter={() => setHoveredUseCase(data.website)}
-                      onMouseLeave={() => setHoveredUseCase(null)}
-                    >
+                    <div className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2">
                       <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
                         {data.website || "Unknown"}
                       </Text>
@@ -315,20 +282,12 @@ export default function DetailsChart({
                   );
                 }}
               />
-              <Bar layout="horizontal" dataKey="average" radius={[0, 4, 4, 0]}>
+              <Bar layout="vertical" dataKey="average" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`bar-cell-${index}`}
                     fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
-                    height={30}
-                    style={{
-                      transform:
-                        entry.website === hoveredUseCase
-                          ? "scaleX(1.05)"
-                          : "scaleX(1)", // Upward stretch effect
-                      transformOrigin: "left",
-                      transition: "transform 0.2s ease",
-                    }}
+                    width={30}
                   />
                 ))}
               </Bar>

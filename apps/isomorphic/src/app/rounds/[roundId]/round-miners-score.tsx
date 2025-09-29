@@ -3,8 +3,8 @@
 import WidgetCard from "@core/components/cards/widget-card";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import {
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,20 +13,21 @@ import {
 } from "recharts";
 
 const data: any[] = [];
-for (let i = 0; i < 256; i++) {
+for (let i = 0; i < 25; i++) {
   data.push({
-    name: i.toString(),
-    score: Math.random().toFixed(2),
+    name: Math.floor(Math.random() * 256).toString(),
+    score: (0.5 + Math.random() * 0.5).toFixed(2),
   });
 }
-data.sort((a, b) => a.score - b.score);
+
+const barSize = 25;
 
 export default function RoundMinersScore() {
   return (
     <WidgetCard title="Scores" className="w-full h-[455px]">
       <div className="mt-5 aspect-[1060/660] w-full h-[350px] lg:mt-7">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
+          <ComposedChart
             data={data}
             margin={{
               left: -20,
@@ -34,27 +35,31 @@ export default function RoundMinersScore() {
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
             <defs>
-              <linearGradient id="scoreAreaChart" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="#10b981"
-                  className="[stop-opacity:0.3] dark:[stop-opacity:0.2]"
-                />
-                <stop offset="95%" stopColor={"#10b981"} stopOpacity={0} />
+              <linearGradient
+                id="score"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="100%"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0" stopColor="#FF7E5F" />
+                <stop offset="1" stopColor="#FEB47B" />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="score"
-              stroke="#10b981"
-              fill="url(#scoreAreaChart)"
-              strokeWidth={2}
+              fill="url(#score)"
+              stroke="#FF7E5F"
+              strokeWidth={0}
+              radius={[4, 4, 0, 0]}
+              barSize={barSize}
             />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </WidgetCard>

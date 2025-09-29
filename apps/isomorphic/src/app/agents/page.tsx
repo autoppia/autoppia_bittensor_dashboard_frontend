@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Round from "./round";
+import Agents from "./agents";
 
 export const metadata = {
   ...metaObject(),
 };
 
-export default function Page() {
-  return <Round />;
+export default function FileListPage() {
+  return <Agents />;
 }

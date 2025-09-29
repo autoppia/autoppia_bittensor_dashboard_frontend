@@ -13,6 +13,10 @@ const config: Pick<Config, "prefix" | "presets" | "content" | "theme"> = {
       colors: {
         "primary-green": "#10b981",
       },
+      backgroundImage: {
+        "gradient-primary": "linear-gradient(to right, #FF7E5F, #FEB47B)",
+        "gradient-secondary": "linear-gradient(to right, #CB587E, #145CC2)"
+      }
     },
   },
 };

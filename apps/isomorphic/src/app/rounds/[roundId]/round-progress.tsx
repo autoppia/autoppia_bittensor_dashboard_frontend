@@ -10,21 +10,27 @@ interface RunsTimerProps {
   round: RoundType;
 }
 
-export default function RoundProgress({
-  round,
-}: RunsTimerProps) {
+export default function RoundProgress({ round }: RunsTimerProps) {
   const currentBlock = 6513300;
-  const percentage = (currentBlock - round.startBlock) / (round.endBlock - round.startBlock);
+  const percentage =
+    currentBlock > round.endBlock
+      ? 1
+      : (currentBlock - round.startBlock) / (round.endBlock - round.startBlock);
   const cellCount = 100;
   const cells = Array.from({ length: cellCount }, (_, index) => {
     return {
       isPassed: index < percentage * cellCount,
     };
   });
+
   return (
     <>
       <PageHeader title={"Round " + round.id} className="mt-4">
-        <BannerText color="#10b981" text="Live Update" className="animate-pulse" />
+        <BannerText
+          color="#10b981"
+          text="Live Update"
+          className="animate-pulse"
+        />
       </PageHeader>
       <div className="w-full border border-muted rounded-lg p-8 bg-gray-50">
         <div className="flex items-center justify-between">
@@ -41,10 +47,10 @@ export default function RoundProgress({
             <span
               key={index}
               className={cn(
-                "w-[7px] h-10 rounded-full bg-[#10b981]",
-                !cell.isPassed && "bg-gray-300"
+                "w-[7px] h-10 rounded-full",
+                cell.isPassed ? "bg-primary-green" : "bg-gray-300"
               )}
-            ></span>
+            />
           ))}
         </div>
         <div className="w-full flex items-center justify-between mt-4">

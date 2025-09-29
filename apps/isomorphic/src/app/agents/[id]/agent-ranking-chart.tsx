@@ -4,11 +4,9 @@ import Image from "next/image";
 import { useState } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
-import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
-import { Checkbox, CheckboxGroup } from "rizzui";
+import { Text, Checkbox, CheckboxGroup } from "rizzui";
 import {
   Line,
   ComposedChart,
@@ -43,17 +41,17 @@ const sotaAgents = [
   },
 ];
 
-interface MinerChartProps {
+interface AgentRankingChartProps {
   title: string;
   data: LeaderboardDataType[];
   className?: string;
 }
 
-export default function MinerChart({
+export default function AgentRankingChart({
   title,
   data,
   className,
-}: MinerChartProps) {
+}: AgentRankingChartProps) {
   const isMediumScreen = useMedia("(max-width: 1200px)", false);
   const isTablet = useMedia("(max-width: 800px)", false);
 
@@ -95,33 +93,30 @@ export default function MinerChart({
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>
-                <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="rankingArea" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
                     stopColor="#F0F1FF"
                     className="[stop-opacity:0.2]"
                   />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="date" axisLine={false} tickLine={false} />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                domain={[
-                  Math.min(...filteredData.map((item) => item.score)),
-                  Math.max(...filteredData.map((item) => item.score)),
-                ]}
+                domain={[1, 10]}
                 tick={<CustomYAxisTick />}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
-                type="step"
-                dataKey="score"
-                stroke="#10b981"
+                type="monotone"
+                dataKey="rankScore"
+                stroke="#eab308"
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#scoreArea)"
+                fill="url(#rankingArea)"
               />
               {/* {sotaAgents.map((agent) => {
                 return compareWith.includes(agent.value) && (
@@ -166,5 +161,69 @@ export default function MinerChart({
         </div> */}
       </div>
     </WidgetCard>
+  );
+}
+
+function CustomYAxisTick({ x, y, payload, prefix, postfix }: any) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} dy={16} textAnchor="end" className="fill-gray-500">
+        {prefix && prefix}
+        {payload.value === 1 ? "10+" : 11 - payload.value}
+        {postfix && postfix}
+      </text>
+    </g>
+  );
+}
+
+function CustomTooltip({
+  label,
+  prefix,
+  active,
+  postfix,
+  payload,
+  className,
+}: any) {
+  if (!active) return null;
+
+  return (
+    <div
+      className={cn(
+        "rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100",
+        className
+      )}
+    >
+      <Text className="label mb-0.5 block bg-gray-100 p-2 px-2.5 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
+        {label}
+      </Text>
+      <div className="px-3 py-1.5 text-xs">
+        {payload?.map((item: any, index: number) => (
+          <div
+            key={item.dataKey + index}
+            className="chart-tooltip-item flex items-center py-1.5"
+          >
+            <span
+              className="me-1.5 h-2 w-2 rounded-full"
+              style={{
+                backgroundColor: "#10b981",
+              }}
+            />
+            <Text>
+              <Text as="span" className="capitalize">
+                Ranking:
+              </Text>{" "}
+              <Text
+                as="span"
+                className="font-medium text-gray-900 dark:text-gray-700"
+              >
+                {prefix && prefix}
+                {item.value === 1 ? "10+" : 11 - item.value}
+                {postfix && postfix}
+              </Text>
+            </Text>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
