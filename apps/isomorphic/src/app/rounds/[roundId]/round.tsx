@@ -10,17 +10,17 @@ import { RoundType, roundsData } from "@/data/rounds-data";
 import RoundValidators from "./round-validators";
 
 export default function Round() {
-  const { id } = useParams();
+  const { roundId } = useParams();
   const [selectedRound, setSelectedRound] = useState<RoundType | null>(null);
 
   useEffect(() => {
-    if (id === "current") {
+    if (roundId === "current") {
       setSelectedRound(roundsData[roundsData.length - 1]);
     } else {
-      const round = roundsData.find((round) => round.id === parseInt(id as string));
+      const round = roundsData.find((round) => round.id === parseInt(roundId as string));
       setSelectedRound(round || null);
     }
-  }, [id]);
+  }, [roundId]);
 
   return (
     <>

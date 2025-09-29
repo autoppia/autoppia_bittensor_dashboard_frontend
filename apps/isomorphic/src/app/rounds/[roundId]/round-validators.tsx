@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
 import Image from "next/image";
 import { Button, Text, Badge, Collapse } from "rizzui";
 import cn from "@core/utils/class-names";
-import { PiCaretDownBold } from "react-icons/pi";
 import {
+  PiCaretDownBold,
   PiCurrencyDollarDuotone,
   PiClockDuotone,
   PiHashDuotone,
@@ -13,6 +15,8 @@ import {
 import { validatorsData } from "@/data/validators-data";
 
 export default function RoundValidators() {
+  const { roundId } = useParams();
+
   return (
     <div>
       <PageHeader title="Validators" className="mt-6" />
@@ -99,13 +103,15 @@ export default function RoundValidators() {
                 </Text>
               </div>
               <div className="grid w-full grid-cols-2 items-center gap-4 sm:flex sm:w-auto ">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-md text-xs font-medium"
-                >
-                  View Details
-                </Button>
+                <Link href={`/rounds/${roundId}/${validator.id}`}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-md text-xs font-medium"
+                  >
+                    View Round
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

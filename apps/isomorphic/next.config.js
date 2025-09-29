@@ -15,8 +15,8 @@ module.exports = {
         permanent: true,
       },
       {
-        source: "/agents",
-        destination: "/agents/subnet36-top",
+        source: "/agent-run",
+        destination: "/agent-run/456872",
         permanent: true,
       },
     ];
