@@ -13,35 +13,43 @@ import {
   PiHashDuotone,
 } from "react-icons/pi";
 import BannerText from "../shared/banner-text";
+import { Text } from "rizzui";
+import { primaryColors } from "@/data/colors-data";
 
 export default function OverviewValidators() {
   return (
     <>
       <PageHeader title={"Live Event Update"} className="mt-6">
         <BannerText
-          color="primary-green"
+          color={primaryColors.green}
           text="Live Update"
           className="animate-pulse"
         />
       </PageHeader>
-      <div className="grid grid-cols-3 gap-6">
-        {validatorsData.map((val) => (
-          <Link key={`validator-${val.id}`} href={`/runs/current`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {validatorsData.map((validator) => (
+          <Link
+            key={`validator-${validator.id}`}
+            href={`/rounds/current/${validator.id}`}
+          >
             <WidgetCard
               title={
-                <div className="flex items-center text-white">
-                  <Image
-                    src={val.icon}
-                    className="rounded-full"
-                    alt="icon"
-                    width={24}
-                    height={24}
-                  />
-                  <span className="ms-2">{val.name}</span>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="relative aspect-square w-12">
+                    <Image
+                      src={validator.icon}
+                      alt={validator.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw"
+                      className="h-full w-full rounded-full object-contain"
+                    />
+                  </div>
+                  <Text className="font-semibold text-gray-900">
+                    {validator.name}
+                  </Text>
                 </div>
               }
               className="hover:border-gray-900"
-              description={<div className="w-60 truncate">{val.hotkey}</div>}
               headerClassName="w-full"
               action={
                 <div className="flex items-center border border-primary-green px-2 py-1 rounded-full text-primary-green">
@@ -58,23 +66,30 @@ export default function OverviewValidators() {
                     <PiOpenAiLogoDuotone />
                     <span className="ms-1">Current Task:</span>
                   </div>
-                  <p className="mt-2 text-[1rem] text-white text-wrap">
-                    Login with email johndoe@gmail.com and password PASSWORD
-                  </p>
+                  <div className="mt-2 overflow-hidden whitespace-nowrap bg-gray-100 p-2 rounded-md">
+                    <p
+                      className="inline-block animate-marquee transition-text-[1rem] text-white"
+                      style={{
+                        animationDuration: `${5 + validator.currentTask.length * 0.2}s`,
+                      }}
+                    >
+                      {validator.currentTask}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center text-yellow-500">
+                <div className="flex items-center text-primary-yellow">
                   <PiCurrencyDollarDuotone />
                   <span className="ms-1">
-                    Stake Weight: {val.weight.toLocaleString()}
+                    Stake Weight: {validator.weight.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center text-orange-500">
+                <div className="flex items-center text-primary-orange">
                   <PiClockDuotone />
-                  <span className="ms-1">Updated: {val.updated}</span>
+                  <span className="ms-1">Trust: {validator.trust}</span>
                 </div>
-                <div className="flex items-center text-blue-500">
+                <div className="flex items-center text-primary-blue">
                   <PiHashDuotone />
-                  <span className="ms-1">Version: {val.version}</span>
+                  <span className="ms-1">Version: {validator.version}</span>
                 </div>
               </div>
             </WidgetCard>

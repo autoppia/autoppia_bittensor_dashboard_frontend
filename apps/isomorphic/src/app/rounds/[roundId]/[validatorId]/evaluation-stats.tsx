@@ -4,10 +4,16 @@ import { Button } from "rizzui";
 import MetricCard from "@core/components/cards/metric-card";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
-import { LuAtom, LuChartColumnBig, LuCircleCheckBig, LuOctagonX } from "react-icons/lu";
+import { LuPickaxe, LuAtom, LuTrophy, LuChartColumnBig } from "react-icons/lu";
 import { primaryColors } from "@/data/colors-data";
 
 const statsData = [
+  {
+    title: "Total Miners",
+    metric: 25,
+    icon: LuPickaxe,
+    color: primaryColors.green,
+  },
   {
     title: "Total Tasks",
     metric: 3452,
@@ -15,26 +21,20 @@ const statsData = [
     color: primaryColors.blue,
   },
   {
-    title: "Successful Tasks",
-    metric: 3245,
-    icon: LuCircleCheckBig,
-    color: primaryColors.green,
-  },
-  {
-    title: "Failed Tasks",
-    metric: 207,
-    icon: LuOctagonX,
-    color: primaryColors.red,
-  },
-  {
-    title: "Average Score",
+    title: "Winning Score",
     metric: 0.95,
-    icon: LuChartColumnBig,
+    icon: LuTrophy,
     color: primaryColors.yellow,
+  },
+  {
+    title: "Averate Score",
+    metric: 0.88,
+    icon: LuChartColumnBig,
+    color: primaryColors.pink,
   },
 ];
 
-export default function AgentRunStats() {
+export default function EvaluationStats() {
   const {
     sliderEl,
     sliderPrevBtn,

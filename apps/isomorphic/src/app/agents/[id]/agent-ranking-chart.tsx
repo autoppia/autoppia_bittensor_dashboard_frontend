@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
-import { Text, Checkbox, CheckboxGroup } from "rizzui";
+import { Text } from "rizzui";
 import {
-  Line,
   ComposedChart,
   ResponsiveContainer,
   Tooltip,
@@ -17,33 +15,13 @@ import {
   Area,
 } from "recharts";
 
-import { LeaderboardDataType } from "@/data/leaderboard-data";
+import { MinerScoreDataType } from "@/data/miners-score-data";
 
 const filterOptions = ["7D", "15D", "All"];
-const sotaAgents = [
-  {
-    label: "OpenAI CUA",
-    value: "openai_cua",
-    image: "/icons/openai.webp",
-    stroke: "#3562FC",
-  },
-  {
-    label: "Anthropic CUA",
-    value: "anthropic_cua",
-    image: "/icons/anthropic.webp",
-    stroke: "#FC9D23",
-  },
-  {
-    label: "Browser Use",
-    value: "browser_use",
-    image: "/icons/browser-use.webp",
-    stroke: "#BBD6FF",
-  },
-];
 
 interface AgentRankingChartProps {
   title: string;
-  data: LeaderboardDataType[];
+  data: MinerScoreDataType[];
   className?: string;
 }
 
@@ -52,11 +30,7 @@ export default function AgentRankingChart({
   data,
   className,
 }: AgentRankingChartProps) {
-  const isMediumScreen = useMedia("(max-width: 1200px)", false);
-  const isTablet = useMedia("(max-width: 800px)", false);
-
-  const [filteredData, setFilteredData] = useState<LeaderboardDataType[]>(data);
-  // const [compareWith, setCompareWith] = useState<string[]>([]);
+  const [filteredData, setFilteredData] = useState<MinerScoreDataType[]>(data);
 
   function handleFilterBy(option: string) {
     if (option === "All") {
@@ -82,14 +56,12 @@ export default function AgentRankingChart({
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[160px] w-full pt-2")}>
-          <ResponsiveContainer
-            width="100%"
-            {...(isTablet && { minWidth: "700px" })}
-            height="100%"
-          >
+          <ResponsiveContainer width="100%" height="100%" minWidth={500}>
             <ComposedChart
               data={filteredData}
-              barSize={isMediumScreen ? 20 : 28}
+              margin={{
+                left: -20,
+              }}
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>
@@ -118,47 +90,9 @@ export default function AgentRankingChart({
                 fillOpacity={1}
                 fill="url(#rankingArea)"
               />
-              {/* {sotaAgents.map((agent) => {
-                return compareWith.includes(agent.value) && (
-                  <Line
-                    key={`line-chart-${agent.value}`}
-                    type="monotone"
-                    dataKey={agent.value}
-                    stroke={agent.stroke}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                );
-              })} */}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-        {/* <div className="flex items-center gap-4 mt-1 mb-0.5 text-white flex-wrap">
-          <span className="ms-4">Compare with:</span>
-          <CheckboxGroup
-            values={compareWith}
-            setValues={setCompareWith}
-            className="flex items-center gap-4"
-          >
-            {sotaAgents.map((agent) => (
-              <Checkbox
-                key={`checkbox-${agent.value}`}
-                label={
-                  <div className="flex items-center">
-                    <Image src={agent.image} alt={agent.label} width={16} height={16} className="rounded-md" />
-                    <span className="ms-1">{agent.label}</span>
-                  </div>
-                }
-                labelClassName="w-full"
-                labelPlacement="left"
-                size="sm"
-                iconClassName="top-0"
-                name={agent.value}
-                value={agent.value}
-              />
-            ))}
-          </CheckboxGroup>
-        </div> */}
       </div>
     </WidgetCard>
   );

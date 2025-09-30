@@ -16,13 +16,13 @@ import {
   Area,
 } from "recharts";
 
-import { LeaderboardDataType } from "@/data/leaderboard-data";
+import { MinerScoreDataType } from "@/data/miners-score-data";
 
 const filterOptions = ["7D", "15D", "All"];
 
 interface AgentScoreChartProps {
   title: string;
-  data: LeaderboardDataType[];
+  data: MinerScoreDataType[];
   className?: string;
 }
 
@@ -31,10 +31,9 @@ export default function AgentScoreChart({
   data,
   className,
 }: AgentScoreChartProps) {
-  const isMediumScreen = useMedia("(max-width: 1200px)", false);
   const isTablet = useMedia("(max-width: 800px)", false);
 
-  const [filteredData, setFilteredData] = useState<LeaderboardDataType[]>(data);
+  const [filteredData, setFilteredData] = useState<MinerScoreDataType[]>(data);
 
   function handleFilterBy(option: string) {
     if (option === "All") {
@@ -60,14 +59,12 @@ export default function AgentScoreChart({
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[160px] w-full pt-2")}>
-          <ResponsiveContainer
-            width="100%"
-            {...(isTablet && { minWidth: "700px" })}
-            height="100%"
-          >
+          <ResponsiveContainer width="100%" height="100%" minWidth={500}>
             <ComposedChart
               data={filteredData}
-              barSize={isMediumScreen ? 20 : 28}
+              margin={{
+                left: -20,
+              }}
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>

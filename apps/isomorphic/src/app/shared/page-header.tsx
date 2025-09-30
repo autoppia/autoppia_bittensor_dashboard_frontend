@@ -13,7 +13,7 @@ export default function PageHeader({
 }: React.PropsWithChildren<PageHeaderProps>) {
   return (
     <header className={cn('mb-6 @container', className)}>
-      <div className="flex flex-col @lg:flex-row @lg:items-center @lg:justify-between">
+      <div className="flex flex-col gap-2 @lg:flex-row @lg:items-center @lg:justify-between">
         <div>
           <Title
             as="h2"
