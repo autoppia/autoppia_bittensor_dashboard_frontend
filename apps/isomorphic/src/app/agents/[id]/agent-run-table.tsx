@@ -2,16 +2,16 @@
 
 import Table from "@core/components/table";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
-import { MinerDataType, minersData } from "@/data/miners-data";
 import { PiMagnifyingGlassBold } from "react-icons/pi";
 import { Flex, Input, Title } from "rizzui";
 import TablePagination from "@core/components/table/pagination";
 import { agentRunColumns } from "./agent-run-columns";
 import WidgetCard from "@core/components/cards/widget-card";
+import { agentRunData, AgentRunDataType } from "@/data/agent-run-data";
 
 export default function AgentRunTable() {
-  const { table, setData } = useTanStackTable<MinerDataType>({
-    tableData: minersData,
+  const { table, setData } = useTanStackTable<AgentRunDataType>({
+    tableData: agentRunData.slice().reverse(),
     columnConfig: agentRunColumns,
     options: {
       initialState: {
@@ -25,7 +25,7 @@ export default function AgentRunTable() {
   });
 
   return (
-    <WidgetCard className="mt-4">
+    <WidgetCard className="mt-6">
       <Flex
         direction="col"
         justify="between"
@@ -47,8 +47,10 @@ export default function AgentRunTable() {
       </Flex>
       <Table
         table={table}
-        variant="modern"
-        classNames={{ rowClassName: "last:!border-b-0" }}
+        variant="minimal"
+        classNames={{
+          rowClassName: "text-gray-900 border-b",
+        }}
       />
       <TablePagination table={table} className="mt-4" />
     </WidgetCard>

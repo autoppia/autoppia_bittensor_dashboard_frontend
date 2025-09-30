@@ -70,7 +70,7 @@ const data = [
   },
 ];
 
-export default function ValidatorTasks() {
+export default function EvaluationTasks() {
   return (
     <WidgetCard
       title="Total Tasks"

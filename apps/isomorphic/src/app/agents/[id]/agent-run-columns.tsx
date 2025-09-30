@@ -1,65 +1,82 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { createColumnHelper } from '@tanstack/react-table';
-import { MinerDataType } from '@/data/miners-data';
-import BannerText from '@/app/shared/banner-text';
+import Image from "next/image";
+import Link from "next/link";
+import { Text, Button } from "rizzui";
+import { createColumnHelper } from "@tanstack/react-table";
+import { AgentRunDataType } from "@/data/agent-run-data";
+import { validatorsDataMap } from "@/data/validators-data";
+import { LuArrowRight } from "react-icons/lu";
 
-const columnHelper = createColumnHelper<MinerDataType>();
+const columnHelper = createColumnHelper<AgentRunDataType>();
 
 export const agentRunColumns = [
   columnHelper.display({
-    id: 'uid',
-    size: 50,
-    header: 'UID',
-    cell: ({ row }) => <>{row.original.uid}</>,
+    id: "uid",
+    size: 150,
+    header: "Run UID",
+    cell: ({ row }) => <>{row.original.runUid}</>,
   }),
-  columnHelper.accessor('hotkey', {
-    id: 'hotkey',
+  columnHelper.accessor("round", {
+    id: "round",
+    size: 100,
+    header: "Round",
+    cell: ({ row }) => <>{row.original.round}</>,
+  }),
+  columnHelper.accessor("validatorId", {
+    id: "validatorId",
     size: 300,
-    header: 'Hotkey',
+    header: "Validator",
     enableSorting: false,
-    cell: ({ row }) => <div className="flex items-center gap-2">
-      <Image
-        src={`/miners/${row.original.uid % 50}.svg`}
-        alt="Hotkey"
-        className="w-6 h-6 rounded-full"
-        width={24}
-        height={24}
-      />
-      <span>{row.original.hotkey}</span>
-    </div>,
-  }),
-  columnHelper.accessor('success', {
-    id: 'success',
-    size: 50,
-    header: 'Success',
     cell: ({ row }) => (
-      <>
-        {row.original.success ?
-          <BannerText color="#22C55E" text="Success" /> :
-          <BannerText color="#FF1A1A" text="Failed" />
-        }
-      </>
+      <div className="flex items-center gap-2">
+        <Image
+          src={validatorsDataMap[row.original.validatorId].icon}
+          alt="Validator"
+          className="w-8 h-8 rounded-full"
+          width={32}
+          height={32}
+        />
+        <div className="flex flex-col">
+          <Text className="text-md font-semibold">
+            {validatorsDataMap[row.original.validatorId].name}
+          </Text>
+          <Text className="w-60 truncate text-sm text-gray-500">
+            {validatorsDataMap[row.original.validatorId].hotkey}
+          </Text>
+        </div>
+      </div>
     ),
   }),
-  columnHelper.accessor('score', {
-    id: 'score',
-    size: 50,
-    header: 'Score',
-    cell: ({ row }) => (
-      <>
-        {row.original.score > 0 ?
-          <span className="text-green-500">{row.original.score.toFixed(1)}</span> :
-          <span className="text-red-500">{row.original.score.toFixed(1)}</span>
-        }
-      </>
-    ),
+  columnHelper.accessor("totalTasks", {
+    id: "totalTasks",
+    size: 150,
+    header: "Total Tasks",
+    cell: ({ row }) => <>{row.original.totalTasks}</>,
   }),
-  columnHelper.accessor('duration', {
-    id: 'duration',
-    size: 50,
-    header: 'Duration',
-    cell: ({ row }) => <>{row.original.duration}</>,
+  columnHelper.accessor("score", {
+    id: "score",
+    size: 150,
+    header: "Score",
+    cell: ({ row }) => <>{row.original.score.toFixed(2)}</>,
+  }),
+  columnHelper.accessor("ranking", {
+    id: "ranking",
+    size: 150,
+    header: "Ranking",
+    cell: ({ row }) => <>{row.original.ranking}</>,
+  }),
+  columnHelper.display({
+    id: "action",
+    size: 150,
+    header: "Action",
+    cell: ({ row }) => (
+      <Link href={`/agent-run/${row.original.runUid}`}>
+        <Button variant="outline" size="sm">
+          <span>View Details</span>{" "}
+          <LuArrowRight strokeWidth="2" className="h-4 w-4 ml-2" />
+        </Button>
+      </Link>
+    ),
   }),
 ];

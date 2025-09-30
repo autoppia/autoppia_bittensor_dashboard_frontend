@@ -11,12 +11,25 @@ const config: Pick<Config, "prefix" | "presets" | "content" | "theme"> = {
   theme: {
     extend: {
       colors: {
-        "primary-green": "#10b981",
+        "primary-green": "#10B981",
+        "primary-blue": "#145CC2",
+        "primary-pink": "#CB587E",
+        "primary-orange": "#FF7E5F",
+        "primary-yellow": "#FDE047",
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(to right, #FF7E5F, #FEB47B)",
         "gradient-secondary": "linear-gradient(to right, #CB587E, #145CC2)"
-      }
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(640px)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee linear infinite',
+      },
     },
   },
 };

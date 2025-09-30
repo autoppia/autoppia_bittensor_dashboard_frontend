@@ -22,15 +22,14 @@ export default function Header() {
           <Link
             href={"/"}
             aria-label="Site Logo"
-            className="me-4 w-[155px] text-gray-800 hover:text-gray-900 lg:me-5"
+            className="me-3 w-[155px] text-gray-800 hover:text-gray-900 xl:me-5"
           >
             <Image src="/logo.webp" alt="Logo" width={155} height={36} />
           </Link>
           {menuItems.map((item, index) => {
             const href = item?.href as string;
             const isActive =
-              pathname === href ||
-              (href !== "/" && pathname.startsWith(href));
+              pathname === href || (href !== "/" && pathname.startsWith(href));
 
             return (
               <Fragment key={item.name + "-" + index}>
@@ -38,7 +37,7 @@ export default function Header() {
                   <Link
                     href={item?.href}
                     className={cn(
-                      "group relative mx-3 my-2 items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:flex",
+                      "group relative mx-1 xl:mx-2 my-2 items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:flex",
                       isActive
                         ? "bg-primary text-black"
                         : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"
@@ -68,9 +67,9 @@ export default function Header() {
           })}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 xl:gap-3">
           {/* Social Media Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <a
               href="https://x.com/AutoppiaAI"
               target="_blank"
@@ -92,9 +91,9 @@ export default function Header() {
           </div>
 
           {/* Running indicator */}
-          <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
+          <div className="hidden sm:flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
             <PiPlayCircleDuotone className="h-4 w-4" />
-            <span className="hidden sm:inline">Running</span>
+            <span>Running</span>
             <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
           </div>
 

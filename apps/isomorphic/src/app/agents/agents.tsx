@@ -52,7 +52,12 @@ export default function Agents() {
             }}
             error={error}
           />
-          <Button rounded="pill" size="lg" className="bg-gradient-primary text-white text-lg font-semibold" onClick={handleSearch}>
+          <Button
+            rounded="pill"
+            size="lg"
+            className="bg-gradient-primary text-white text-lg font-semibold"
+            onClick={handleSearch}
+          >
             Search
           </Button>
         </div>

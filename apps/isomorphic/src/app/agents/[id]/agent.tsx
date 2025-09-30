@@ -5,7 +5,7 @@ import PageHeader from "@/app/shared/page-header";
 import AgentScoreChart from "./agent-score-chart";
 import AgentRankingChart from "./agent-ranking-chart";
 import { minersData } from "@/data/miners-data";
-import { leaderboardData } from "@/data/leaderboard-data";
+import { minersScoreData } from "@/data/miners-score-data";
 import AgentRunTable from "./agent-run-table";
 
 
@@ -18,9 +18,9 @@ export default function Agent() {
   return (
     <>
       <PageHeader title={`Agent ${miner?.uid}`} className="mt-4" />
-      <div className="grid grid-cols-2 gap-4">
-        <AgentScoreChart title="Score History" data={leaderboardData} />
-        <AgentRankingChart title="Ranking History" data={leaderboardData} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AgentScoreChart title="Score History" data={minersScoreData} />
+        <AgentRankingChart title="Ranking History" data={minersScoreData} />
       </div>
       <AgentRunTable />
     </>

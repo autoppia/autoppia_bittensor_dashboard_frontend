@@ -1,8 +1,7 @@
 "use client";
 
-import MinerChart from "@/app/shared/miner-chart";
 import PageHeader from "@/app/shared/page-header";
-import { leaderboardData } from "@/data/leaderboard-data";
+import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
 
@@ -10,12 +9,10 @@ export default function Overview() {
   return (
     <>
       <PageHeader title={"Network Analytics"} className="mt-4" />
-      <div className="flex gap-8">
-        <div className="w-[calc(100%-500px)]">
-          <MinerChart title="Top Miner" data={leaderboardData} />
-        </div>
-        <OverviewMetrics />
-      </div>      
+      <div className="flex flex-col lg:flex-row gap-8">
+        <OverviewMinerChart className="w-full lg:w-[calc(100%-480px)]" />
+        <OverviewMetrics className="w-full lg:w-[480px]" />
+      </div>
       <OverviewValidators />
     </>
   );

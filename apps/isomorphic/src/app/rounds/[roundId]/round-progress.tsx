@@ -1,9 +1,10 @@
 "use client";
 
-import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
+import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import PageHeader from "@/app/shared/page-header";
 import BannerText from "@/app/shared/banner-text";
+import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
 import { RoundType } from "@/data/rounds-data";
 
 interface RunsTimerProps {
@@ -11,12 +12,16 @@ interface RunsTimerProps {
 }
 
 export default function RoundProgress({ round }: RunsTimerProps) {
+  const isTinyScreen = useMedia("(max-width: 639px)", false);
+  const isSmallScreen = useMedia("(min-width: 640px) and (max-width: 767px)", false);
+  const isMediumScreen = useMedia("(min-width: 768px) and (max-width: 1023px)", false);
+  const cellCount = isTinyScreen ? 30 : isSmallScreen ? 50 : isMediumScreen ? 75 : 100;
+
   const currentBlock = 6513300;
   const percentage =
     currentBlock > round.endBlock
       ? 1
       : (currentBlock - round.startBlock) / (round.endBlock - round.startBlock);
-  const cellCount = 100;
   const cells = Array.from({ length: cellCount }, (_, index) => {
     return {
       isPassed: index < percentage * cellCount,
