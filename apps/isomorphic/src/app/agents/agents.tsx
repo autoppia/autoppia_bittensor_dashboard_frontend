@@ -26,18 +26,18 @@ export default function Agents() {
   return (
     <>
       <PageHeader title="Agents" className="mt-4" />
-      <div className="w-full mt-28 flex flex-col gap-4 items-center justify-center">
-        <Text className="text-3xl font-semibold text-gray-900">
+      <div className="w-full mt-16 md:mt-28 flex flex-col gap-4 md:gap-6 items-center justify-center px-4 md:px-0">
+        <Text className="text-xl md:text-3xl font-semibold text-gray-900 text-center">
           Enter UID or hotkey to view agent details
         </Text>
-        <div className="flex items-start gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2 w-full max-w-2xl">
           <Input
             type="search"
             placeholder="Enter UID or hotkey..."
             prefix={<PiMagnifyingGlassBold className="size-4" />}
             inputClassName="text-gray-900 border-gray-900 placeholder-gray-700"
             errorClassName="text-md"
-            className="w-[600px]"
+            className="w-full sm:w-auto sm:flex-1"
             rounded="pill"
             size="lg"
             clearable
@@ -45,6 +45,11 @@ export default function Agents() {
             onChange={(e) => {
               setQuery(e.target.value);
               setError("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
             }}
             onClear={() => {
               setQuery("");
@@ -55,7 +60,7 @@ export default function Agents() {
           <Button
             rounded="pill"
             size="lg"
-            className="bg-gradient-primary text-white text-lg font-semibold"
+            className="bg-gradient-primary text-white text-base md:text-lg font-semibold w-full sm:w-auto sm:min-w-[120px]"
             onClick={handleSearch}
           >
             Search
