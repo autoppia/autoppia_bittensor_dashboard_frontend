@@ -1,9 +1,12 @@
 import { routes } from "@/config/routes";
 import {
-  PiSquaresFourDuotone,
-  PiRocketLaunchDuotone,
-  PiCodesandboxLogoDuotone
-} from "react-icons/pi";
+  LuComponent,
+  LuCodesandbox,
+  LuBot,
+  LuPackageCheck,
+  LuBoxes,
+  LuGlobe
+} from "react-icons/lu";
 
 // Note: do not add href in the label object, it is rendering as label
 export const menuItems = [
@@ -15,26 +18,31 @@ export const menuItems = [
   {
     name: "Overview",
     href: routes.overview,
-    icon: <PiRocketLaunchDuotone />,
+    icon: <LuComponent />,
   },
   {
     name: "Rounds",
     href: routes.rounds,
-    icon: <PiCodesandboxLogoDuotone />,
+    icon: <LuCodesandbox />,
   },
   {
     name: "Agents",
     href: routes.agents,
-    icon: <PiCodesandboxLogoDuotone />,
+    icon: <LuBot />,
   },
   {
     name: "Agent Run",
     href: routes.agent_run,
-    icon: <PiCodesandboxLogoDuotone />,
+    icon: <LuPackageCheck />,
+  },
+  {
+    name: "Tasks",
+    href: routes.tasks,
+    icon: <LuBoxes />,
   },
   {
     name: "Websites",
     href: routes.websites,
-    icon: <PiSquaresFourDuotone />,
+    icon: <LuGlobe />,
   },
 ];

@@ -49,7 +49,7 @@ export default function OverviewValidators() {
                   </Text>
                 </div>
               }
-              className="hover:border-gray-900"
+              className="hover:border-gray-900 p-5 lg:p-5"
               headerClassName="w-full"
               action={
                 <div className="flex items-center border border-primary-green px-2 py-1 rounded-full text-primary-green">
@@ -68,7 +68,7 @@ export default function OverviewValidators() {
                   </div>
                   <div className="mt-2 overflow-hidden whitespace-nowrap bg-gray-100 p-2 rounded-md">
                     <p
-                      className="inline-block animate-marquee transition-text-[1rem] text-white"
+                      className="inline-block animate-marquee transition-text-[1rem] text-gray-900"
                       style={{
                         animationDuration: `${5 + validator.currentTask.length * 0.2}s`,
                       }}

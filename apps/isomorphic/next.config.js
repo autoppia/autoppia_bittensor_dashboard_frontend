@@ -15,8 +15,8 @@ module.exports = {
         permanent: true,
       },
       {
-        source: "/agent-run",
-        destination: "/agent-run/456872",
+        source: "/agents",
+        destination: "/agents/1",
         permanent: true,
       },
     ];

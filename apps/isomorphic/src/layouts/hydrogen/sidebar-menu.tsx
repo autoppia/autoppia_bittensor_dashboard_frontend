@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { Fragment } from "react";
@@ -14,7 +14,8 @@ export function SidebarMenu() {
     <div className="mt-4 pb-3 3xl:mt-6">
       {menuItems.map((item, index) => {
         const href = item?.href as string;
-        const isActive = pathname === href || (href === "/agents" && pathname.startsWith(href));
+        const isActive =
+          pathname === href || (href !== "/" && pathname.startsWith(href));
 
         return (
           <Fragment key={item.name + "-" + index}>

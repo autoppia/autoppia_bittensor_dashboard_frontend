@@ -23,12 +23,12 @@ const config: Pick<Config, "prefix" | "presets" | "content" | "theme"> = {
       },
       keyframes: {
         marquee: {
-          '0%': { transform: 'translateX(640px)' },
+          '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(-100%)' },
         },
       },
       animation: {
-        marquee: 'marquee linear infinite',
+        marquee: 'marquee 15s linear infinite',
       },
     },
   },

@@ -10,8 +10,8 @@ export default function Overview() {
     <>
       <PageHeader title={"Network Analytics"} className="mt-4" />
       <div className="flex flex-col lg:flex-row gap-8">
-        <OverviewMinerChart className="w-full lg:w-[calc(100%-480px)]" />
-        <OverviewMetrics className="w-full lg:w-[480px]" />
+        <OverviewMinerChart className="w-full lg:w-[calc(100%-460px)]" />
+        <OverviewMetrics className="w-full lg:w-[460px]" />
       </div>
       <OverviewValidators />
     </>
