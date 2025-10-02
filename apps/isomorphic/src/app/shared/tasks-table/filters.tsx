@@ -75,7 +75,7 @@ export default function Filters<TData extends Record<string, any>>({
           prefix={<PiMagnifyingGlassBold className="size-4" />}
         />
 
-        <Button
+        {/* <Button
           variant={'outline'}
           onClick={() => setOpenDrawer(!openDrawer)}
           className="h-9 pe-3 ps-2.5"
@@ -84,7 +84,7 @@ export default function Filters<TData extends Record<string, any>>({
           Filters
         </Button>
 
-        <ToggleColumns table={table} />
+        <ToggleColumns table={table} /> */}
       </Flex>
     </Flex>
   );

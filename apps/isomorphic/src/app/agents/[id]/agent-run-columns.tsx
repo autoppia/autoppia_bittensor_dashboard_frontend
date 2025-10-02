@@ -13,13 +13,13 @@ const columnHelper = createColumnHelper<AgentRunDataType>();
 export const agentRunColumns = [
   columnHelper.display({
     id: "uid",
-    size: 150,
+    size: 120,
     header: "Run UID",
     cell: ({ row }) => <>{row.original.runUid}</>,
   }),
   columnHelper.accessor("round", {
     id: "round",
-    size: 100,
+    size: 80,
     header: "Round",
     cell: ({ row }) => <>{row.original.round}</>,
   }),
@@ -50,19 +50,19 @@ export const agentRunColumns = [
   }),
   columnHelper.accessor("totalTasks", {
     id: "totalTasks",
-    size: 150,
+    size: 120,
     header: "Total Tasks",
     cell: ({ row }) => <>{row.original.totalTasks}</>,
   }),
   columnHelper.accessor("score", {
     id: "score",
-    size: 150,
+    size: 80,
     header: "Score",
     cell: ({ row }) => <>{row.original.score.toFixed(2)}</>,
   }),
   columnHelper.accessor("ranking", {
     id: "ranking",
-    size: 150,
+    size: 80,
     header: "Ranking",
     cell: ({ row }) => <>{row.original.ranking}</>,
   }),

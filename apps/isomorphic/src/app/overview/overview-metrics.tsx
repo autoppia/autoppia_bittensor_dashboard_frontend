@@ -53,7 +53,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               />
             }
             iconClassName={cn("bg-transparent w-11 h-11", metric.bgColor)}
-            className="flex items-center bg-opacity-50"
+            className="flex items-center bg-opacity-50 p-5 lg:p-5"
           />
         );
       })}

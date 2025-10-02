@@ -4,5 +4,6 @@ export const routes = {
   rounds: "/rounds",
   agents: "/agents",
   agent_run: "/agent-run",
+  tasks: "/tasks",
   websites: "/websites",
 }

@@ -6,7 +6,6 @@ import Table from "@core/components/table";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Filters from "./filters";
-import { TableVariantProps } from "rizzui";
 
 export type TasksDataType = (typeof tasksData)[number];
 
@@ -26,7 +25,7 @@ export default function TasksTable() {
   });
 
   return (
-    <div className="mt-2">
+    <div className="mt-4">
       <Filters table={table} />
       <Table
         table={table}

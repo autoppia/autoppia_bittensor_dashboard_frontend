@@ -9,9 +9,7 @@ import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
-import { PiPlayCircleDuotone } from "react-icons/pi";
-import TwitterIcon from "@core/components/icons/twitter";
-import DiscordIcon from "@core/components/icons/discord";
+import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 
 export default function Header() {
   const pathname = usePathname();
@@ -22,9 +20,15 @@ export default function Header() {
           <Link
             href={"/"}
             aria-label="Site Logo"
-            className="me-3 w-[155px] text-gray-800 hover:text-gray-900 xl:me-5"
+            className="w-[155px] me-3 xl:me-5"
           >
-            <Image src="/logo.webp" alt="Logo" width={155} height={36} />
+            <Image
+              src="/logo.webp"
+              alt="Logo"
+              width={155}
+              height={36}
+              style={{ width: "auto" }}
+            />
           </Link>
           {menuItems.map((item, index) => {
             const href = item?.href as string;
@@ -36,27 +40,22 @@ export default function Header() {
                 {item?.href ? (
                   <Link
                     href={item?.href}
-                    className={cn(
-                      "group relative mx-1 xl:mx-2 my-2 items-center justify-between rounded-full px-3 py-2 font-medium capitalize hidden lg:flex",
-                      isActive
-                        ? "bg-primary text-black"
-                        : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"
-                    )}
+                    className="hidden xl:block mx-2 my-2"
                   >
-                    <div className="flex items-center truncate">
+                    <div
+                      className={cn(
+                        "flex items-center rounded-full px-3 py-2 transition-colors duration-200",
+                        isActive
+                          ? "bg-primary text-gray-0"
+                          : "text-gray-700 hover:bg-gray-100"
+                      )}
+                    >
                       {item?.icon && (
-                        <span
-                          className={cn(
-                            "me-2 inline-flex h-5 w-5 items-center justify-center rounded-md [&>svg]:h-[20px] [&>svg]:w-[20px]",
-                            isActive
-                              ? "text-black"
-                              : "text-gray-800 dark:text-gray-500 dark:group-hover:text-gray-700"
-                          )}
-                        >
+                        <span className="flex items-center justify-center me-2 h-5 w-5 [&>svg]:h-[20px] [&>svg]:w-[20px]">
                           {item?.icon}
                         </span>
                       )}
-                      <span className="truncate">{item.name}</span>
+                      <span>{item.name}</span>
                     </div>
                   </Link>
                 ) : (
@@ -67,37 +66,40 @@ export default function Header() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 xl:gap-3">
+        <div className="flex items-center gap-1">
           {/* Social Media Buttons */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-1">
+            <a
+              href="https://github.com/autoppia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full"
+              aria-label="Explore our GitHub"
+            >
+              <FaGithub className="w-5 h-5 text-gray-900" />
+            </a>
             <a
               href="https://x.com/AutoppiaAI"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+              className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full"
               aria-label="Follow us on X (Twitter)"
             >
-              <TwitterIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+              <FaXTwitter className="w-5 h-5 text-gray-900" />
             </a>
             <a
               href="https://discord.com/channels/799672011265015819/1339356060787408996"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+              className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full"
               aria-label="Join our Discord"
             >
-              <DiscordIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+              <FaDiscord className="w-5 h-5 text-gray-900" />
             </a>
           </div>
 
-          {/* Running indicator */}
-          <div className="hidden sm:flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-sm font-medium animate-pulse">
-            <PiPlayCircleDuotone className="h-4 w-4" />
-            <span>Running</span>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-          </div>
-
           <HamburgerButton
+            className="w-10 h-10 hover:bg-gray-100 rounded-full text-gray-900"
             view={<Sidebar className="static w-full 2xl:w-full" />}
           />
         </div>

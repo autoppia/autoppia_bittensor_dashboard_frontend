@@ -5,4 +5,5 @@ export const primaryColors = {
   orange: "#FF7E5F",
   yellow: "#FDE047",
   red: "#FF1A1A",
+  white: "#FFFFFF"
 };

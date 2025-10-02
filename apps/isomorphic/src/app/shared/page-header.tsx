@@ -12,8 +12,8 @@ export default function PageHeader({
   className,
 }: React.PropsWithChildren<PageHeaderProps>) {
   return (
-    <header className={cn('mb-6 @container', className)}>
-      <div className="flex flex-col gap-2 @lg:flex-row @lg:items-center @lg:justify-between">
+    <header className={cn('mb-6', className)}>
+      <div className="flex items-center justify-between">
         <div>
           <Title
             as="h2"

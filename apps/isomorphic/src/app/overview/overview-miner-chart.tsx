@@ -1,13 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
+import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
-import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
-import { Text } from "rizzui";
+import { Checkbox, CheckboxGroup } from "rizzui";
 import {
+  Line,
   ComposedChart,
   ResponsiveContainer,
   Tooltip,
@@ -15,56 +17,71 @@ import {
   YAxis,
   Area,
 } from "recharts";
-import { minersScoreData, MinerScoreDataType } from "@/data/miners-score-data";
+import { leaderboardData, LeaderboardDataType } from "@/data/leaderboard-data";
+import { primaryColors } from "@/data/colors-data";
 
 const filterOptions = ["7D", "15D", "All"];
+const sotaAgents = [
+  {
+    label: "OpenAI CUA",
+    value: "openai_cua",
+    image: "/icons/openai.webp",
+    stroke: primaryColors.blue,
+  },
+  {
+    label: "Anthropic CUA",
+    value: "anthropic_cua",
+    image: "/icons/anthropic.webp",
+    stroke: primaryColors.orange,
+  },
+  {
+    label: "Browser Use",
+    value: "browser_use",
+    image: "/icons/browser-use.webp",
+    stroke: primaryColors.white,
+  },
+];
 
-export default function MinerChart({ className }: { className?: string }) {
-  const isMediumScreen = useMedia("(max-width: 1200px)", false);
-  const isTablet = useMedia("(max-width: 800px)", false);
+interface MinerChartProps {
+  className?: string;
+}
 
-  const [filteredData, setFilteredData] = useState<MinerScoreDataType[]>(minersScoreData);
+export default function MinerChart({ className }: MinerChartProps) {
+  const [filteredData, setFilteredData] =
+    useState<LeaderboardDataType[]>(leaderboardData);
+  const [compareWith, setCompareWith] = useState<string[]>([]);
 
   function handleFilterBy(option: string) {
     if (option === "All") {
-      setFilteredData(minersScoreData);
+      setFilteredData(leaderboardData);
     } else {
       const length = option === "7D" ? 7 : 15;
-      setFilteredData(minersScoreData.slice(-1 * length));
+      setFilteredData(leaderboardData.slice(-1 * length));
     }
   }
 
   return (
     <WidgetCard
-      title="Top Miner"
+      title="Top Miner Growth"
       action={
         <ButtonGroupAction
           options={filterOptions}
           onChange={(option) => handleFilterBy(option)}
         />
       }
-      headerClassName="flex items-start space-between"
+      headerClassName="flex-row items-center space-between"
       rounded="lg"
-      className={className}
+      className={cn("p-5 lg:p-5", className)}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
-        <div className={cn("h-[150px] w-full pt-2")}>
-          <ResponsiveContainer
-            width="100%"
-            {...(isTablet && { minWidth: "700px" })}
-            height="100%"
-          >
+        <div className={cn("h-[160px] w-full pt-2")}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={filteredData}
-              barSize={isMediumScreen ? 20 : 28}
-              margin={{
-                top: 1,
-                left: -5,
-              }}
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>
-                <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="subnet36Area" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
                     stopColor="#F0F1FF"
@@ -78,67 +95,70 @@ export default function MinerChart({ className }: { className?: string }) {
                 axisLine={false}
                 tickLine={false}
                 domain={[
-                  Math.min(...filteredData.map((item) => item.score)),
-                  Math.max(...filteredData.map((item) => item.score)),
+                  Math.min(...filteredData.map((item) => item.subnet36)),
+                  Math.max(...filteredData.map((item) => item.subnet36)),
                 ]}
                 tick={<CustomYAxisTick />}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
                 type="step"
-                dataKey="score"
+                dataKey="subnet36"
                 stroke="#10b981"
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#scoreArea)"
+                fill="url(#subnet36Area)"
               />
+              {sotaAgents.map((agent) => {
+                return (
+                  compareWith.includes(agent.value) && (
+                    <Line
+                      key={`line-chart-${agent.value}`}
+                      type="monotone"
+                      dataKey={agent.value}
+                      stroke={agent.stroke}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )
+                );
+              })}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap">
+          <span className="ms-4">Compare with:</span>
+          <CheckboxGroup
+            values={compareWith}
+            setValues={setCompareWith}
+            className="flex items-center gap-4"
+          >
+            {sotaAgents.map((agent) => (
+              <Checkbox
+                key={`checkbox-${agent.value}`}
+                label={
+                  <div className="flex items-center">
+                    <Image
+                      src={agent.image}
+                      alt={agent.label}
+                      width={16}
+                      height={16}
+                      className="rounded-md"
+                    />
+                    <span className="ms-1">{agent.label}</span>
+                  </div>
+                }
+                labelClassName="w-full"
+                labelPlacement="left"
+                size="sm"
+                iconClassName="top-0"
+                name={agent.value}
+                value={agent.value}
+              />
+            ))}
+          </CheckboxGroup>
+        </div>
       </div>
     </WidgetCard>
-  );
-}
-
-export function CustomTooltip({ label, active, payload, className }: any) {
-  if (!active) return null;
-
-  return (
-    <div
-      className={cn(
-        "rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100",
-        className
-      )}
-    >
-      <Text className="label mb-0.5 block bg-gray-100 p-2 px-2.5 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
-        {label}
-      </Text>
-      <div className="px-3 py-1.5 text-xs">
-        {payload?.map((item: any, index: number) => (
-          <div
-            key={item.dataKey + index}
-            className="chart-tooltip-item flex items-center py-1.5"
-          >
-            <span
-              className="me-1.5 h-2 w-2 rounded-full"
-              style={{
-                backgroundColor: "#10b981",
-              }}
-            />
-            <Text>
-              <Text as="span" className="capitalize">
-                Score:
-              </Text>{" "}
-              <Text
-                as="span"
-                className="font-medium text-gray-900 dark:text-gray-700"
-              >
-                {item.value.toFixed(2)}
-              </Text>
-            </Text>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
