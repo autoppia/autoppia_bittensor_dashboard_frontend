@@ -1,74 +1,62 @@
 "use client";
 
 import { useState } from "react";
-import WidgetCard from "@core/components/cards/widget-card";
+import PageHeader from "@/app/shared/page-header";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
-import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import {
   ComposedChart,
   ResponsiveContainer,
+  CartesianGrid,
   Tooltip,
   XAxis,
   YAxis,
   Area,
 } from "recharts";
-
-import { MinerScoreDataType } from "@/data/miners-score-data";
+import { leaderboardData, LeaderboardDataType } from "@/data/leaderboard-data";
 
 const filterOptions = ["7D", "15D", "All"];
 
 interface AgentScoreChartProps {
-  title: string;
-  data: MinerScoreDataType[];
   className?: string;
 }
 
-export default function AgentScoreChart({
-  title,
-  data,
-  className,
-}: AgentScoreChartProps) {
-  const isTablet = useMedia("(max-width: 800px)", false);
-
-  const [filteredData, setFilteredData] = useState<MinerScoreDataType[]>(data);
+export default function AgentScoreChart({ className }: AgentScoreChartProps) {
+  const [filteredData, setFilteredData] =
+    useState<LeaderboardDataType[]>(leaderboardData);
 
   function handleFilterBy(option: string) {
     if (option === "All") {
-      setFilteredData(data);
+      setFilteredData(leaderboardData);
     } else {
       const length = option === "7D" ? 7 : 15;
-      setFilteredData(data.slice(-1 * length));
+      setFilteredData(leaderboardData.slice(-1 * length));
     }
   }
 
   return (
-    <WidgetCard
-      title={title}
-      action={
+    <div className="w-full mt-6">
+      <PageHeader title="Score Over Time">
         <ButtonGroupAction
           options={filterOptions}
           onChange={(option) => handleFilterBy(option)}
         />
-      }
-      headerClassName="flex items-start space-between"
-      rounded="lg"
-      className={className}
-    >
-      <div className="custom-scrollbar overflow-x-auto scroll-smooth">
-        <div className={cn("h-[160px] w-full pt-2")}>
-          <ResponsiveContainer width="100%" height="100%" minWidth={500}>
+      </PageHeader>
+      <div className="border border-muted rounded-lg bg-gray-50 p-5 custom-scrollbar overflow-x-auto scroll-smooth">
+        <div className={cn("h-[274px] w-full pt-2")}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={filteredData}
               margin={{
-                left: -20,
+                top: 30,
+                left: -10,
+                right: 10,
               }}
-              className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>
-                <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="subnet36Area" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
                     stopColor="#F0F1FF"
@@ -77,29 +65,30 @@ export default function AgentScoreChart({
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" axisLine={false} tickLine={false} />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="round" axisLine={true} tickLine={false} />
               <YAxis
-                axisLine={false}
+                axisLine={true}
                 tickLine={false}
                 domain={[
-                  Math.min(...filteredData.map((item) => item.score)),
-                  Math.max(...filteredData.map((item) => item.score)),
+                  Math.min(...filteredData.map((item) => item.subnet36)) - 0.01,
+                  Math.max(...filteredData.map((item) => item.subnet36)),
                 ]}
                 tick={<CustomYAxisTick />}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
-                type="step"
-                dataKey="score"
+                type="monotone"
+                dataKey="subnet36"
                 stroke="#10b981"
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#scoreArea)"
+                fill="url(#subnet36Area)"
               />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
-    </WidgetCard>
+    </div>
   );
 }

@@ -27,9 +27,13 @@ export default function RoundMinersScore({
 }: {
   className?: string;
 }) {
-  const isMobile = useMedia("(max-width: 767px)", false);
-  const barSize = isMobile ? 16 : 20;
-  const minWidth = isMobile ? 560 : 720;
+  const isSmallScreen = useMedia("(max-width: 767px)", false);
+  const isMediumScreen = useMedia(
+    "(min-width: 768px) and (max-width: 1023px)",
+    false
+  );
+  const barSize = isSmallScreen ? 16 : isMediumScreen ? 22 : 25;
+  const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
 
   return (
     <WidgetCard title="Scores" className={cn("h-[455px]", className)}>

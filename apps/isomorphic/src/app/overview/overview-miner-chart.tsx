@@ -62,7 +62,7 @@ export default function MinerChart({ className }: MinerChartProps) {
 
   return (
     <WidgetCard
-      title="Top Miner Growth"
+      title="Top Miner Score"
       action={
         <ButtonGroupAction
           options={filterOptions}

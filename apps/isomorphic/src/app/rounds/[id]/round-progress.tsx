@@ -1,21 +1,18 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
-import { RoundType } from "@/data/rounds-data";
+import { roundsData } from "@/data/rounds-data";
 
-interface RunsTimerProps {
-  round: RoundType;
-}
-
-export default function RoundProgress({ round }: RunsTimerProps) {
-  const isTinyScreen = useMedia("(max-width: 479px)", false);
-  const isSmallScreen = useMedia(
-    "(min-width: 480px) and (max-width: 767px)",
-    false
-  );    
-  const cellCount = isTinyScreen ? 30 : isSmallScreen ? 50 : 80;
+export default function RoundProgress() {
+  const { id } = useParams();
+  const round = roundsData.find((round) => round.id === parseInt(id as string))!;
+  const isTinyScreen = useMedia("(max-width: 639px)", false);
+  const isSmallScreen = useMedia("(min-width: 640px) and (max-width: 767px)", false);
+  const isMediumScreen = useMedia("(min-width: 768px) and (max-width: 1023px)", false);
+  const cellCount = isTinyScreen ? 30 : isSmallScreen ? 50 : isMediumScreen ? 75 : 100;
 
   const currentBlock = 6526300;
   const percentage =
@@ -45,7 +42,7 @@ export default function RoundProgress({ round }: RunsTimerProps) {
             key={index}
             className={cn(
               "w-[6px] h-10 rounded-full",
-              cell.isPassed ? "bg-primary-green" : "bg-gray-300"
+              cell.isPassed ? "bg-emerald-500" : "bg-gray-300"
             )}
           />
         ))}

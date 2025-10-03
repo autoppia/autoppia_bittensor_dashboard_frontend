@@ -1,15 +1,10 @@
-import { Suspense } from 'react';
-import { metaObject } from '@/config/site.config';
-import AgentRun from './agent-run';
-
-export const metadata = {
-    ...metaObject(),
-};
+import { redirect } from "next/navigation";
+import { agentRunData } from "@/data/agent-run-data";
 
 export default function Page() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <AgentRun />
-        </Suspense>
-    );
+  if (agentRunData) {
+    redirect(`/agent-run/${agentRunData[0].runUid}`);
+  }
+
+  return null;
 }

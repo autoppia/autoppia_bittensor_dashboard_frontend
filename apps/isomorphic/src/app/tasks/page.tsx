@@ -5,6 +5,6 @@ export const metadata = {
   ...metaObject(),
 };
 
-export default function FileListPage() {
+export default function Page() {
   return <Tasks />;
 }
