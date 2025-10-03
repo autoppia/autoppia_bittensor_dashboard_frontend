@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Agent from "./agent";
+import AgentRun from "./agent-run";
 
 export const metadata = {
   ...metaObject(),
 };
 
 export default function Page() {
-  return <Agent />;
+  return <AgentRun />;
 }

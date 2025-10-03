@@ -38,8 +38,8 @@ export default function RoundsSidebar() {
                     >
                       <div
                         className={cn(
-                          "flex items-center justify-center w-7 h-7 rounded-md bg-primary-orange text-white",
-                          isActive && "text-primary-orange bg-white"
+                          "flex items-center justify-center w-7 h-7 rounded-md bg-orange-500 text-white",
+                          isActive && "text-orange-500 bg-white"
                         )}
                       >
                         <LuCodesandbox className="w-5 h-5" />

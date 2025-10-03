@@ -109,7 +109,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                     </Text>
                   </div>
                   <div>
-                    <Text className="text-primary-green">
+                    <Text className="text-emerald-500">
                       {miner.avg_score.toFixed(2)}
                     </Text>
                   </div>
