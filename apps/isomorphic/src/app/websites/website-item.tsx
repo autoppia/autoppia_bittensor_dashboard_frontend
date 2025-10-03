@@ -5,10 +5,17 @@ import Link from "next/link";
 import { Button, Text } from "rizzui";
 import WidgetCard from "@core/components/cards/widget-card";
 import { WebsiteDataType } from "@/data/websites-data";
-import { PiEyeDuotone, PiClockDuotone } from "react-icons/pi";
+import { routes } from "@/config/routes";
+import { PiEyeDuotone } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 
-export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
+export default function WebsiteItem({ 
+  website, 
+  showFullInfo = false 
+}: { 
+  website: WebsiteDataType;
+  showFullInfo?: boolean;
+}) {
   const isComingSoon = website.isComingSoon;
 
   return (

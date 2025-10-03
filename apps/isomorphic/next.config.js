@@ -6,7 +6,7 @@ module.exports = {
     return [
       {
         source: "/",
-        destination: "/overview",
+        destination: "/land",
         permanent: true,
       },
       {
