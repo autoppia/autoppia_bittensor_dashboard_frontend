@@ -17,7 +17,7 @@ export default function PageHeader({
         <div>
           <Title
             as="h2"
-            className="text-[22px] lg:text-3xl 4xl:text-[26px]"
+            className="text-[22px] lg:text-3xl 4xl:text-[26px] font-extrabold font-mono text-cyan-400 drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
           >
             {title}
           </Title>

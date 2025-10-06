@@ -56,24 +56,23 @@ interface Agent {
 }
 
 const BAR_COLORS = [
-  "#FF7E5F", // bright coral (AutoZone)
-  "#FDB36A", // apricot (Books)
-  "#FFD166", // golden sand (Cinema)
-  "#F9F871", // lemon
-  "#C4F0C2", // soft mint
-  "#A0CED9", // light teal
-  "#84A9C0", // dusty blue
-  "#9381FF", // soft purple
-  "#B25D91", // plum
-  "#F67280", // pinkish red
-  "#C06C84", // rose
-  "#6C5B7B", // muted violet
+  "#00FFFF", // cyan
+  "#9333EA", // purple
+  "#10B981", // emerald
+  "#3B82F6", // blue
+  "#FBBF24", // yellow
+  "#EF4444", // red
+  "#8B5CF6", // violet
+  "#06B6D4", // sky
+  "#84CC16", // lime
+  "#F97316", // orange
+  "#EC4899", // pink
+  "#14B8A6", // teal
 ];
 
 export interface AgentRunSummaryProps {
   className?: string;
   selectedWebsite?: string | null;
-  setHoveredUseCase: (value: string | null) => void;
 }
 
 interface DisplayDataItem {
@@ -96,14 +95,15 @@ function formatUseCaseName(name: string): string {
 export default function AgentRunSummary({
   className,
   selectedWebsite,
-  setHoveredUseCase,
 }: AgentRunSummaryProps) {
   const { id } = useParams();
   const agentData: AgentExtendedData = getAgentExtendedData("openai-cua");
   const { usecases, total }: AgentSummaryData = getAgentSummaryData(
     "openai-cua"
   ) || { usecases: [], total: 0 };
-  const agent: Agent | undefined = agentsData.find((agent) => agent.id === "openai-cua");
+  const agent: Agent | undefined = agentsData.find(
+    (agent) => agent.id === "openai-cua"
+  );
 
   let successRate: number;
   let totalRequests: number;
@@ -238,170 +238,210 @@ export default function AgentRunSummary({
       }));
 
   return (
-    <WidgetCard
-      title="Job Summary"
-      headerClassName="hidden"
-      className={className}
+    <div
+      className={`group relative bg-black border border-purple-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-purple-500/50 hover:border-purple-400 transition-all duration-500 ${className}`}
     >
-      <div className="h-[280px] w-full @sm:py-3">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart
-            onMouseEnter={() => setHoveredUseCase(null)}
-            onMouseLeave={() => setHoveredUseCase(null)}
-          >
-            <Tooltip
-              content={({ payload }) => {
-                if (!payload || payload.length === 0) return null;
-                const data = payload[0].payload;
-                return (
-                  <div
-                    className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
-                    onMouseEnter={() => setHoveredUseCase(data.label)}
-                    onMouseLeave={() => setHoveredUseCase(null)}
-                  >
-                    <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
-                      {data.label || "Unknown"}
-                    </Text>
-                    <div className="px-6 py-1 text-xs">
-                      <div className="chart-tooltip-item flex items-center p-1">
-                        <span
-                          className="me-1.5 h-2 w-2 rounded-full inline-block"
-                          style={{ backgroundColor: "#FF7E5F" }}
-                        />
-                        <Text>
-                          <Text as="span" className="capitalize">
-                            Average:
-                          </Text>{" "}
-                          <Text
-                            as="span"
-                            className="font-medium text-gray-900 dark:text-gray-700"
-                          >
-                            {data.average ? data.average.toFixed(1) : "0"}%
-                          </Text>
-                        </Text>
-                      </div>
-                      <div className="chart-tooltip-item flex items-center p-1">
-                        <span
-                          className="me-1.5 h-2 w-2 rounded-full inline-block"
-                          style={{ backgroundColor: "#F9F871" }}
-                        />
-                        <Text className="text-gray-500">
-                          Requests:{" "}
-                          <span className="text-gray-900 dark:text-gray-700 font-medium">
-                            {data.total ?? 0}
-                          </span>
-                        </Text>
-                      </div>
-                      <div className="chart-tooltip-item flex items-center p-1">
-                        <span
-                          className="me-1.5 h-2 w-2 rounded-full inline-block"
-                          style={{ backgroundColor: "#FFD166" }}
-                        />
-                        <Text className="text-gray-500">
-                          Successes:{" "}
-                          <span className="text-gray-900 dark:text-gray-700 font-medium">
-                            {data.successCount ?? 0}
-                          </span>
-                        </Text>
-                      </div>
-                      {selectedWebsite && selectedWebsite !== "__all__" && (
-                        <div className="chart-tooltip-item flex items-center p-1">
-                          <span
-                            className="me-1.5 h-2 w-2 rounded-full inline-block"
-                            style={{ backgroundColor: "#FDB36A" }}
-                          />
-                          <Text className="text-gray-500">
-                            Avg Solution Time:{" "}
-                            <span className="text-gray-900 dark:text-gray-700 font-medium">
-                              {data.avgSolutionTime
-                                ? data.avgSolutionTime.toFixed(2)
-                                : "0"}
-                              s
-                            </span>
-                          </Text>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              }}
-            />
-            <Pie
-              data={donutData}
-              innerRadius={100}
-              outerRadius={120}
-              paddingAngle={5}
-              cornerRadius={40}
-              dataKey="value"
-              stroke="rgba(0,0,0,0)"
-              onMouseEnter={(data) => setHoveredUseCase(data.label)}
-              onMouseLeave={() => setHoveredUseCase(null)}
-            >
-              <Label
-                position="center"
-                content={(props) => (
-                  <CenterLabel
-                    value={successRate.toFixed(0)}
-                    totalRequests={totalRequests.toFixed(0)}
-                    totalSuccesses={totalSuccesses.toFixed(0)}
-                    viewBox={props.viewBox}
-                  />
-                )}
-              />
-              {donutData.map((entry, idx) => (
-                <Cell
-                  key={`cell-${idx}`}
-                  fill={entry.fill}
-                  stroke={entry.stroke}
-                />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      {/* Dark Cyberpunk Background with Subtle Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/5 via-transparent to-cyan-900/5"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(147,51,234,0.05),transparent_70%)]"></div>
+
+      {/* Header */}
+      <div className="relative p-6">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border-2 border-purple-400 shadow-2xl shadow-purple-500/80">
+              <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-sm"></div>
+            </div>
+            {/* Enhanced Pulsing Ring Effect */}
+            <div className="absolute inset-0 rounded-full border-2 border-purple-400 animate-pulse opacity-100"></div>
+            <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-30"></div>
+          </div>
+          <h2 className="text-xl font-bold text-purple-400 drop-shadow-[0_0_15px_rgba(147,51,234,1)] font-mono">
+            SUMMARY
+          </h2>
+        </div>
       </div>
 
-      <div>
-        {displayData.map((item, idx) => (
-          <Flex
-            key={item.label}
-            direction="col"
-            align="start"
-            className="mb-2 gap-1 border-b border-muted pb-2 last:mb-0 last:border-0 last:pb-0"
-            onMouseEnter={() => setHoveredUseCase(item.label)}
-            onMouseLeave={() => setHoveredUseCase(null)}
-          >
-            <Flex align="center" className="w-full">
-              <Flex align="center" className="gap-2">
-                <span
-                  className="me-2 size-2 rounded-full"
-                  style={{
-                    backgroundColor: BAR_COLORS[idx % BAR_COLORS.length],
-                  }}
+      {/* Content */}
+      <div className="relative p-6 pt-0">
+        <div className="h-[280px] w-full @sm:py-3">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Tooltip
+                content={({ payload }) => {
+                  if (!payload || payload.length === 0) return null;
+                  const data = payload[0].payload;
+                  return (
+                    <div className="relative bg-black border border-purple-400/30 rounded-lg shadow-2xl shadow-purple-500/50 pb-2 overflow-hidden">
+                      {/* Cyberpunk Background Effects */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/5 via-transparent to-cyan-900/5"></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(147,51,234,0.05),transparent_70%)]"></div>
+
+                      <div className="relative">
+                        <Text className="label mb-0.5 block bg-gradient-to-r from-purple-500/20 to-cyan-500/20 p-1 px-2 text-center font-mono text-xs font-semibold capitalize text-purple-300 py-2 border-b border-purple-400/20">
+                          {data.label || "Unknown"}
+                        </Text>
+                        <div className="px-6 py-1 text-xs">
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full border border-purple-400/50"
+                              style={{
+                                backgroundColor: "#9333EA",
+                                boxShadow: "0 0 8px rgba(147,51,234,0.8)",
+                              }}
+                            />
+                            <Text className="text-purple-300 font-mono">
+                              <Text as="span" className="capitalize">
+                                Average:
+                              </Text>{" "}
+                              <Text
+                                as="span"
+                                className="font-medium text-purple-200"
+                              >
+                                {data.average ? data.average.toFixed(1) : "0"}%
+                              </Text>
+                            </Text>
+                          </div>
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full border border-emerald-400/50"
+                              style={{
+                                backgroundColor: "#10B981",
+                                boxShadow: "0 0 8px rgba(16,185,129,0.8)",
+                              }}
+                            />
+                            <Text className="text-emerald-300 font-mono">
+                              Requests:{" "}
+                              <span className="text-emerald-200 font-medium">
+                                {data.total ?? 0}
+                              </span>
+                            </Text>
+                          </div>
+                          <div className="chart-tooltip-item flex items-center p-1">
+                            <span
+                              className="me-1.5 h-2 w-2 rounded-full border border-yellow-400/50"
+                              style={{
+                                backgroundColor: "#FBBF24",
+                                boxShadow: "0 0 8px rgba(251,191,36,0.8)",
+                              }}
+                            />
+                            <Text className="text-yellow-300 font-mono">
+                              Successes:{" "}
+                              <span className="text-yellow-200 font-medium">
+                                {data.successCount ?? 0}
+                              </span>
+                            </Text>
+                          </div>
+                          {selectedWebsite && selectedWebsite !== "__all__" && (
+                            <div className="chart-tooltip-item flex items-center p-1">
+                              <span
+                                className="me-1.5 h-2 w-2 rounded-full border border-orange-400/50"
+                                style={{
+                                  backgroundColor: "#F97316",
+                                  boxShadow: "0 0 8px rgba(249,115,22,0.8)",
+                                }}
+                              />
+                              <Text className="text-orange-300 font-mono">
+                                Avg Solution Time:{" "}
+                                <span className="text-orange-200 font-medium">
+                                  {data.avgSolutionTime
+                                    ? data.avgSolutionTime.toFixed(2)
+                                    : "0"}
+                                  s
+                                </span>
+                              </Text>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+              <Pie
+                data={donutData}
+                innerRadius={100}
+                outerRadius={120}
+                paddingAngle={5}
+                cornerRadius={40}
+                dataKey="value"
+                stroke="rgba(0,0,0,0)"
+              >
+                <Label
+                  position="center"
+                  content={(props) => (
+                    <CenterLabel
+                      value={successRate.toFixed(0)}
+                      totalRequests={totalRequests.toFixed(0)}
+                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      viewBox={props.viewBox}
+                    />
+                  )}
                 />
+                {donutData.map((entry, idx) => (
+                  <Cell
+                    key={`cell-${idx}`}
+                    fill={entry.fill}
+                    stroke={entry.stroke}
+                    strokeWidth={2}
+                    style={{
+                      filter: `drop-shadow(0 0 8px ${entry.fill}80)`,
+                    }}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div>
+          {displayData.map((item, idx) => (
+            <Flex
+              key={item.label}
+              direction="col"
+              align="start"
+              className="mb-2 gap-1 border-b border-purple-400/20 pb-2 last:mb-0 last:border-0 last:pb-0"
+            >
+              <Flex align="center" className="w-full">
+                <Flex align="center" className="gap-2">
+                  <span
+                    className="me-2 size-2 rounded-full border border-purple-400/50"
+                    style={{
+                      backgroundColor: BAR_COLORS[idx % BAR_COLORS.length],
+                      boxShadow: `0 0 8px ${BAR_COLORS[idx % BAR_COLORS.length]}80`,
+                    }}
+                  />
+                  <Text
+                    as="span"
+                    className="font-mono text-sm font-medium text-purple-300"
+                  >
+                    {item.label}
+                  </Text>
+                </Flex>
                 <Text
                   as="span"
-                  className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
+                  className="font-mono text-sm font-medium text-purple-400"
                 >
-                  {item.label}
+                  {item.value.toFixed(1)}%
                 </Text>
               </Flex>
-              <Text
-                as="span"
-                className="font-lexend text-sm font-medium text-gray-900 dark:text-gray-700"
-              >
-                {item.value.toFixed(1)}%
+              <Text as="span" className="text-xs text-purple-300 font-mono">
+                Requests: {item.total}, Successes: {item.successCount}
+                {selectedWebsite && (
+                  <>, Avg Time: {item.avgSolutionTime.toFixed(2)}s</>
+                )}
               </Text>
             </Flex>
-            <Text as="span" className="text-xs text-gray-500">
-              Requests: {item.total}, Successes: {item.successCount}
-              {selectedWebsite && (
-                <>, Avg Time: {item.avgSolutionTime.toFixed(2)}s</>
-              )}
-            </Text>
-          </Flex>
-        ))}
+          ))}
+        </div>
       </div>
-    </WidgetCard>
+
+      {/* Intense Cyberpunk Corner Accents */}
+      <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,1)]"></div>
+      <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,1)]"></div>
+      <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,1)]"></div>
+      <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,1)]"></div>
+    </div>
   );
 }
 
@@ -424,9 +464,13 @@ function CenterLabel({
       <text
         x={cx}
         y={cy - 20}
-        fill="#FFFFFF"
+        fill="#9333EA"
         textAnchor="middle"
         dominantBaseline="central"
+        style={{
+          filter: "drop-shadow(0 0 15px rgba(147,51,234,1))",
+          fontFamily: "monospace",
+        }}
       >
         <tspan fontSize="36" fontWeight="700">
           {value}%
@@ -435,9 +479,13 @@ function CenterLabel({
       <text
         x={cx}
         y={cy + 10}
-        fill="#FFFFFF"
+        fill="#10B981"
         textAnchor="middle"
         dominantBaseline="central"
+        style={{
+          filter: "drop-shadow(0 0 8px rgba(16,185,129,0.8))",
+          fontFamily: "monospace",
+        }}
       >
         <tspan fontSize="14" fontWeight="600">
           Requests: {totalRequests}
@@ -446,9 +494,13 @@ function CenterLabel({
       <text
         x={cx}
         y={cy + 30}
-        fill="#FFFFFF"
+        fill="#FBBF24"
         textAnchor="middle"
         dominantBaseline="central"
+        style={{
+          filter: "drop-shadow(0 0 8px rgba(251,191,36,0.8))",
+          fontFamily: "monospace",
+        }}
       >
         <tspan fontSize="14" fontWeight="600">
           Successes: {totalSuccesses}
