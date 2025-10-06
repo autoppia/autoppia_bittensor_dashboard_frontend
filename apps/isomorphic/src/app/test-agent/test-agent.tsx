@@ -134,10 +134,10 @@ export default function TestAgent() {
           Benchmark Your Agent in Real Time
         </Title>
         <Text className="text-lg text-gray-600 max-w-4xl">
-          Configure a custom benchmark run against IWA's synthetic websites.
+          {`Configure a custom benchmark run against IWA's synthetic websites.
           Select projects, choose specific use cases and prompts, define the
           number of runs, and provide your agent's endpoint. IWA will
-          automatically evaluate its performance and return detailed scores.
+          automatically evaluate its performance and return detailed scores.`}
         </Text>
       </div>
 
