@@ -7,7 +7,7 @@ import Image from "next/image";
 import { websitesData } from "@/data/websites-data";
 import { useCaseCatalogues } from "@/data/sample-data";
 import { routes } from "@/config/routes";
-import { LuArrowRight, LuExternalLink, LuFlask } from "react-icons/lu";
+import { LuArrowRight, LuExternalLink } from "react-icons/lu";
 import WidgetCard from "@core/components/cards/widget-card";
 
 const useCasePrompts: Record<string, Record<string, string>> = {
@@ -37,7 +37,8 @@ const useCasePrompts: Record<string, Record<string, string>> = {
     LOGIN_BOOK: "Login with username 'testuser' and password 'test123'",
     LOGOUT_BOOK: "Logout from the current session",
     PURCHASE_BOOK: "Purchase a book using test payment details",
-    REGISTRATION_BOOK: "Register a new user account with email test@example.com",
+    REGISTRATION_BOOK:
+      "Register a new user account with email test@example.com",
   },
   cinema: {
     ADD_COMMENT: "Add a comment to a film: 'Excellent movie!'",
@@ -58,16 +59,20 @@ const useCasePrompts: Record<string, Record<string, string>> = {
 export default function WebsiteDetail() {
   const params = useParams();
   const websiteName = (params?.name as string)?.toLowerCase();
-  
+
   const website = websitesData.find(
     (w) => w.name.toLowerCase() === websiteName
   );
 
-  const useCasesKey = websiteName === 'autozone' ? 'autozone' : 
-                       websiteName === 'autobooks' ? 'books' : 
-                       websiteName === 'autocinema' ? 'cinema' : 
-                       'autozone';
-  
+  const useCasesKey =
+    websiteName === "autozone"
+      ? "autozone"
+      : websiteName === "autobooks"
+        ? "books"
+        : websiteName === "autocinema"
+          ? "cinema"
+          : "autozone";
+
   const useCases = useCaseCatalogues[useCasesKey] || [];
   const prompts = useCasePrompts[useCasesKey] || {};
 
@@ -78,7 +83,7 @@ export default function WebsiteDetail() {
           Website Not Found
         </Title>
         <Text className="text-gray-400 mb-6">
-          The website you're looking for doesn't exist.
+          {`The website you're looking for doesn't exist.`}
         </Text>
         <Link href={routes.websites}>
           <Button>Back to All Projects</Button>
@@ -113,9 +118,7 @@ export default function WebsiteDetail() {
         <Title as="h1" className="text-3xl md:text-4xl font-bold mb-2">
           {website.name}
         </Title>
-        <Text className="text-gray-400 text-lg">
-          Origin: {website.origin}
-        </Text>
+        <Text className="text-gray-400 text-lg">Origin: {website.origin}</Text>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -138,8 +141,8 @@ export default function WebsiteDetail() {
               <div>
                 <Text className="text-sm text-gray-400 mb-1">Description</Text>
                 <Text>
-                  A synthetic {website.origin}-inspired web application designed for testing
-                  web agents in realistic scenarios.
+                  A synthetic {website.origin}-inspired web application designed
+                  for testing web agents in realistic scenarios.
                 </Text>
               </div>
               <div>
@@ -157,8 +160,8 @@ export default function WebsiteDetail() {
               <div>
                 <Text className="text-sm text-gray-400 mb-1">Total Tasks</Text>
                 <Text>
-                  Easy: {website.totalTasks[0]} | Medium: {website.totalTasks[1]} | Hard:{" "}
-                  {website.totalTasks[2]}
+                  Easy: {website.totalTasks[0]} | Medium:{" "}
+                  {website.totalTasks[1]} | Hard: {website.totalTasks[2]}
                 </Text>
               </div>
             </div>
@@ -167,7 +170,7 @@ export default function WebsiteDetail() {
           {!website.isComingSoon && (
             <Link href={routes.agent_run} className="block">
               <Button size="lg" className="w-full font-semibold">
-                <PiFlask className="mr-2" />
+                {/* <PiFlask className="mr-2" /> */}
                 Test Your Agent on This Project
               </Button>
             </Link>
@@ -179,7 +182,7 @@ export default function WebsiteDetail() {
         <Title as="h2" className="text-2xl font-bold mb-6">
           Use Cases
         </Title>
-        
+
         {website.isComingSoon ? (
           <div className="text-center py-12 bg-gray-900/50 rounded-lg">
             <Text className="text-gray-400 text-lg">
@@ -189,7 +192,10 @@ export default function WebsiteDetail() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {useCases.map((useCase) => (
-              <WidgetCard key={useCase.id} className="hover:shadow-lg transition-shadow">
+              <WidgetCard
+                key={useCase.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <Title as="h3" className="text-lg font-semibold">
                     {useCase.name}
@@ -201,7 +207,8 @@ export default function WebsiteDetail() {
                 <div className="space-y-2">
                   <Text className="text-sm text-gray-400">Example Prompt:</Text>
                   <Text className="text-sm bg-gray-900/50 p-3 rounded border border-gray-800">
-                    {prompts[useCase.name] || `Perform ${useCase.name} action on the website`}
+                    {prompts[useCase.name] ||
+                      `Perform ${useCase.name} action on the website`}
                   </Text>
                 </div>
               </WidgetCard>

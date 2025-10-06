@@ -158,9 +158,9 @@ export default function LandingPage() {
             Test Your Agent
           </Title>
           <Text className="text-lg text-gray-600 mb-8">
-            Want to see your Web Agent in action? Configure a benchmark run by
+            {`Want to see your Web Agent in action? Configure a benchmark run by
             selecting websites, use cases, and prompts. Define how many runs you
-            want, point us to your agent's IP/port, and let IWA do the rest.
+            want, point us to your agent's IP/port, and let IWA do the rest.`}
           </Text>
           <Link href={routes.agent_run}>
             <Button size="lg" className="font-semibold">
