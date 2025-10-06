@@ -23,7 +23,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Amazon",
     totalTasks: [25, 15, 8],
     image: "/images/web1.png",
-    color: "#FF7E5F",
+    color: "#00FFFF",
   },
   {
     name: "AutoDining",
@@ -32,7 +32,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "OpenDining",
     totalTasks: [32, 18, 10],
     image: "/images/web2.png",
-    color: "#FDB36A",
+    color: "#9333EA",
   },
   {
     name: "AutoCRM",
@@ -41,7 +41,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "ClientCRM",
     totalTasks: [20, 12, 6],
     image: "/images/web3.png",
-    color: "#FFD166",
+    color: "#10B981",
   },
   {
     name: "AutoMail",
@@ -50,7 +50,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "Gmail",
     totalTasks: [28, 16, 9],
     image: "/images/web4.png",
-    color: "#F9F871",
+    color: "#3B82F6",
   },
   {
     name: "AutoDelivery",
@@ -59,7 +59,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "DashDish",
     totalTasks: [22, 14, 7],
     image: "/images/web5.png",
-    color: "#C4F0C2",
+    color: "#FBBF24",
   },
   {
     name: "AutoLodge",
@@ -68,7 +68,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "AirBnB",
     totalTasks: [18, 11, 5],
     image: "/images/web6.png",
-    color: "#A0CED9",
+    color: "#EF4444",
   },
   {
     name: "AutoConnect",
@@ -77,7 +77,7 @@ export const websitesData: WebsiteDataType[] = [
     origin: "LinkedIn",
     totalTasks: [30, 17, 9],
     image: "/images/web7.png",
-    color: "#84A9C0",
+    color: "#8B5CF6",
   },
   // New websites
   {
@@ -88,7 +88,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [35, 20, 12],
     image: "/images/web10.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#9381FF",
+    color: "#06B6D4",
   },
   {
     name: "AutoCalendar",
@@ -98,7 +98,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [40, 25, 15],
     image: "/images/web11.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#B25D91",
+    color: "#84CC16",
   },
   {
     name: "AutoList",
@@ -108,7 +108,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [28, 18, 10],
     image: "/images/web12.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#F67280",
+    color: "#F97316",
   },
   // Coming soon websites
   {
@@ -119,7 +119,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web13.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#C06C84",
+    color: "#EC4899",
   },
   {
     name: "AutoVideo",
@@ -129,7 +129,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web5.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#6C5B7B",
+    color: "#14B8A6",
   },
   {
     name: "AutoMusic",
@@ -139,7 +139,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web6.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#4A90A4", 
+    color: "#00FFFF", 
   },
   {
     name: "AutoTravel",
@@ -149,7 +149,7 @@ export const websitesData: WebsiteDataType[] = [
     totalTasks: [0, 0, 0],
     image: "/images/web7.png", // Reusing existing image for now
     isComingSoon: true,
-    color: "#2C3E50", 
+    color: "#9333EA", 
   },
 ];
 

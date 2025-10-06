@@ -1,10 +1,5 @@
-import { redirect } from "next/navigation";
-import { agentRunData } from "@/data/agent-run-data";
+import AgentRunSearch from "./agent-run-search";
 
 export default function Page() {
-  if (agentRunData) {
-    redirect(`/agent-run/${agentRunData[0].runUid}`);
-  }
-
-  return null;
+  return <AgentRunSearch />;
 }

@@ -50,18 +50,18 @@ interface AgentExtendedData {
 }
 
 const BAR_COLORS = [
-  "#FF7E5F", // bright coral (AutoZone)
-  "#FDB36A", // apricot (Books)
-  "#FFD166", // golden sand (Cinema)
-  "#F9F871", // lemon
-  "#C4F0C2", // soft mint
-  "#A0CED9", // light teal
-  "#84A9C0", // dusty blue
-  "#9381FF", // soft purple
-  "#B25D91", // plum
-  "#F67280", // pinkish red
-  "#C06C84", // rose
-  "#6C5B7B", // muted violet
+  "#00FFFF", // cyan
+  "#9333EA", // purple
+  "#10B981", // emerald
+  "#3B82F6", // blue
+  "#FBBF24", // yellow
+  "#EF4444", // red
+  "#8B5CF6", // violet
+  "#06B6D4", // sky
+  "#84CC16", // lime
+  "#F97316", // orange
+  "#EC4899", // pink
+  "#14B8A6", // teal
 ];
 
 // Utility function to format use case names
@@ -77,8 +77,6 @@ interface AgentRunDetailProps {
   className?: string;
   selectedWebsite?: string | null;
   setSelectedWebsite: (value: string | null) => void;
-  hoveredUseCase: string | null;
-  setHoveredUseCase: (value: string | null) => void;
   period: string | null;
   setPeriod: (value: string | null) => void;
 }
@@ -87,15 +85,12 @@ export default function AgentRunDetail({
   className,
   selectedWebsite,
   setSelectedWebsite,
-  hoveredUseCase,
-  setHoveredUseCase,
   period,
-  setPeriod
+  setPeriod,
 }: AgentRunDetailProps) {
   const { id } = useParams();
-  const agentDetailsData: AgentExtendedData = getAgentExtendedData(
-    "openai-cua"
-  );
+  const agentDetailsData: AgentExtendedData =
+    getAgentExtendedData("openai-cua");
   const isTab = useMedia("(max-width: 768px)", false);
 
   const websiteOptions = [
@@ -107,10 +102,10 @@ export default function AgentRunDetail({
   ];
 
   const periodOptions = [
-    { value: "24h", label: "24H"},
-    { value: "7d", label: "7D"},
-    { value: "__all__", label: "ALL"},
-  ]
+    { value: "24h", label: "24H" },
+    { value: "7d", label: "7D" },
+    { value: "__all__", label: "ALL" },
+  ];
 
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
@@ -142,200 +137,256 @@ export default function AgentRunDetail({
         }));
 
   return (
-    <WidgetCard
-      title="Success Rate"
-      action={
-        <div className="flex">
-          <div className="flex items-center gap-2 mr-2">
-            <Select
-              options={periodOptions}
-              value={periodOptions.find(
-                (opt) => opt.value === (period ?? "__all__")
-              )}
-              onChange={(option: { label: string; value: string }) =>
-                setPeriod(
-                  option.value === "__all__" ? null : option.value
-                )
-              }
-              className="text-gray-700/90 w-[80px]"
-            />
+    <div
+      className={cn(
+        "group relative bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500",
+        className
+      )}
+    >
+      {/* Cyberpunk Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+
+      <div className="relative p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80">
+                <div className="w-4 h-4 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-sm"></div>
+              </div>
+              {/* Enhanced Pulsing Ring Effect */}
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse opacity-100"></div>
+              <div className="absolute inset-0 rounded-full border border-cyan-300 animate-ping opacity-30"></div>
+            </div>
+            <h2 className="text-xl font-bold text-cyan-400 drop-shadow-[0_0_15px_rgba(0,255,255,1)] font-mono">
+              SUCCESS RATE
+            </h2>
           </div>
-          <div className="flex items-center gap-2 mr-5 lg:mr-0">
-            <Select
-              options={websiteOptions}
-              value={websiteOptions.find(
-                (opt) => opt.value === (selectedWebsite ?? "__all__")
-              )}
-              onChange={(option: { label: string; value: string }) =>
-                setSelectedWebsite(
-                  option.value === "__all__" ? null : option.value
-                )
-              }
-              className="text-gray-700/90 w-[150px]"
-            />
+
+          <div className="flex">
+            <div className="flex items-center gap-2 mr-2">
+              <Select
+                options={periodOptions}
+                value={periodOptions.find(
+                  (opt) => opt.value === (period ?? "__all__")
+                )}
+                onChange={(option: { label: string; value: string }) =>
+                  setPeriod(option.value === "__all__" ? null : option.value)
+                }
+                className="text-cyan-300 w-[80px] [&_.rizzui-select]:bg-black/50 [&_.rizzui-select]:border-emerald-400/30 [&_.rizzui-select]:text-emerald-300 [&_.rizzui-select]:font-mono [&_.rizzui-select]:focus:border-emerald-400 [&_.rizzui-select]:focus:shadow-2xl [&_.rizzui-select]:focus:shadow-emerald-500/50"
+              />
+            </div>
+            <div className="flex items-center gap-2 mr-5 lg:mr-0">
+              <Select
+                options={websiteOptions}
+                value={websiteOptions.find(
+                  (opt) => opt.value === (selectedWebsite ?? "__all__")
+                )}
+                onChange={(option: { label: string; value: string }) =>
+                  setSelectedWebsite(
+                    option.value === "__all__" ? null : option.value
+                  )
+                }
+                className="text-blue-300 w-[150px] [&_.rizzui-select]:bg-black/50 [&_.rizzui-select]:border-blue-400/30 [&_.rizzui-select]:text-blue-300 [&_.rizzui-select]:font-mono [&_.rizzui-select]:focus:border-blue-400 [&_.rizzui-select]:focus:shadow-2xl [&_.rizzui-select]:focus:shadow-blue-500/50"
+              />
+            </div>
           </div>
         </div>
-      }
-      className={className}
-    >
-      <div className="custom-scrollbar overflow-x-auto scroll-smooth">
-        <div
-          className="w-full pt-6"
-          style={{ height: `${80 + chartData.length * 45}px` }}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              layout="vertical"
-              margin={{
-                left: isTab ? 45 : 60,
-                top: 10,
-              }}
-              className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
-            >
-              <CartesianGrid
-                horizontal={false}
-                strokeOpacity={0.435}
-                strokeDasharray="8 10"
-              />
-              <XAxis
-                type="number"
-                domain={[0, 100]} // Increased domain for upward effect
-                axisLine={false}
-                tickLine={false}
-                tick={({ payload, ...rest }) => {
-                  const pl = {
-                    ...payload,
-                    value: formatNumber(Number(payload.value)),
-                  };
-                  return <CustomYAxisTick payload={pl} postfix="%" {...rest} />;
+
+        <div className="custom-scrollbar overflow-x-auto scroll-smooth">
+          <div
+            className="w-full pt-6"
+            style={{ height: `${80 + chartData.length * 45}px` }}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                layout="vertical"
+                margin={{
+                  left: isTab ? 45 : 60,
+                  top: 10,
                 }}
-              />
-              <YAxis
-                dataKey="website"
-                type="category"
-                axisLine={false}
-                tickLine={false}
-                interval={0}
-                tick={(props) => {
-                  const { x, y, payload } = props;
-                  const maxLength = isTab ? 9 : 12;
-                  const truncatedText =
-                    payload.value.length > maxLength
-                      ? payload.value.slice(0, maxLength) + "..."
-                      : payload.value;
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      dy={15}
-                      dx={0}
-                      textAnchor="end"
-                      fill="#666"
-                    >
-                      {truncatedText}
-                    </text>
-                  );
-                }}
-              />
-              <Tooltip
-                content={({ payload, label }) => {
-                  if (!payload || payload.length === 0) return null;
-                  const data = payload[0].payload;
-                  return (
-                    <div
-                      className="rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100 pb-2"
-                      onMouseEnter={() => setHoveredUseCase(data.website)}
-                      onMouseLeave={() => setHoveredUseCase(null)}
-                    >
-                      <Text className="label mb-0.5 block bg-gray-100 p-1 px-2 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700 py-2">
-                        {data.website || "Unknown"}
-                      </Text>
-                      <div className="px-6 py-1 text-xs">
-                        <div className="chart-tooltip-item flex items-center p-1">
-                          <span
-                            className="me-1.5 h-2 w-2 rounded-full"
-                            style={{ backgroundColor: "#FF7E5F" }}
-                          />
-                          <Text>
-                            <Text as="span" className="capitalize">
-                              Average:
-                            </Text>{" "}
-                            <Text
-                              as="span"
-                              className="font-medium text-gray-900 dark:text-gray-700"
-                            >
-                              {data.average ? data.average.toFixed(1) : "0"}%
-                            </Text>
+                className="[&_.recharts-tooltip-cursor]:fill-opacity-20 dark:[&_.recharts-tooltip-cursor]:fill-opacity-10 [&_.recharts-cartesian-axis-tick-value]:fill-cyan-300 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
+              >
+                <CartesianGrid
+                  horizontal={false}
+                  stroke="#00FFFF"
+                  strokeOpacity={0.2}
+                  strokeDasharray="8 10"
+                />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]} // Increased domain for upward effect
+                  axisLine={false}
+                  tickLine={false}
+                  tick={({ payload, ...rest }) => {
+                    const pl = {
+                      ...payload,
+                      value: formatNumber(Number(payload.value)),
+                    };
+                    return (
+                      <CustomYAxisTick payload={pl} postfix="%" {...rest} />
+                    );
+                  }}
+                />
+                <YAxis
+                  dataKey="website"
+                  type="category"
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  tick={(props) => {
+                    const { x, y, payload } = props;
+                    const maxLength = isTab ? 9 : 12;
+                    const truncatedText =
+                      payload.value.length > maxLength
+                        ? payload.value.slice(0, maxLength) + "..."
+                        : payload.value;
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        dy={15}
+                        dx={0}
+                        textAnchor="end"
+                        fill="#00FFFF"
+                        className="font-mono"
+                        style={{
+                          filter: "drop-shadow(0 0 8px rgba(0,255,255,0.8))",
+                        }}
+                      >
+                        {truncatedText}
+                      </text>
+                    );
+                  }}
+                />
+                <Tooltip
+                  content={({ payload, label }) => {
+                    if (!payload || payload.length === 0) return null;
+                    const data = payload[0].payload;
+                    return (
+                      <div className="relative bg-black border border-cyan-400/30 rounded-lg shadow-2xl shadow-cyan-500/50 pb-2 overflow-hidden">
+                        {/* Cyberpunk Background Effects */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+
+                        <div className="relative">
+                          <Text className="label mb-0.5 block bg-gradient-to-r from-cyan-500/20 to-purple-500/20 p-1 px-2 text-center font-mono text-xs font-semibold capitalize text-cyan-300 py-2 border-b border-cyan-400/20">
+                            {data.website || "Unknown"}
                           </Text>
+                          <div className="px-6 py-1 text-xs">
+                            <div className="chart-tooltip-item flex items-center p-1">
+                              <span
+                                className="me-1.5 h-2 w-2 rounded-full border border-cyan-400/50"
+                                style={{
+                                  backgroundColor: "#00FFFF",
+                                  boxShadow: "0 0 8px rgba(0,255,255,0.8)",
+                                }}
+                              />
+                              <Text className="text-cyan-300 font-mono">
+                                <Text as="span" className="capitalize">
+                                  Average:
+                                </Text>{" "}
+                                <Text
+                                  as="span"
+                                  className="font-medium text-cyan-200"
+                                >
+                                  {data.average ? data.average.toFixed(1) : "0"}
+                                  %
+                                </Text>
+                              </Text>
+                            </div>
+                            <>
+                              <div className="chart-tooltip-item flex items-center p-1">
+                                <span
+                                  className="me-1.5 h-2 w-2 rounded-full border border-emerald-400/50"
+                                  style={{
+                                    backgroundColor: "#10B981",
+                                    boxShadow: "0 0 8px rgba(16,185,129,0.8)",
+                                  }}
+                                />
+                                <Text className="text-emerald-300 font-mono">
+                                  Requests:{" "}
+                                  <span className="text-emerald-200 font-medium">
+                                    {data.total ?? 0}
+                                  </span>
+                                </Text>
+                              </div>
+                              <div className="chart-tooltip-item flex items-center p-1">
+                                <span
+                                  className="me-1.5 h-2 w-2 rounded-full border border-yellow-400/50"
+                                  style={{
+                                    backgroundColor: "#FBBF24",
+                                    boxShadow: "0 0 8px rgba(251,191,36,0.8)",
+                                  }}
+                                />
+                                <Text className="text-yellow-300 font-mono">
+                                  Successes:{" "}
+                                  <span className="text-yellow-200 font-medium">
+                                    {data.successCount ?? 0}
+                                  </span>
+                                </Text>
+                              </div>
+                              <div className="chart-tooltip-item flex items-center p-1">
+                                <span
+                                  className="me-1.5 h-2 w-2 rounded-full border border-orange-400/50"
+                                  style={{
+                                    backgroundColor: "#F97316",
+                                    boxShadow: "0 0 8px rgba(249,115,22,0.8)",
+                                  }}
+                                />
+                                <Text className="text-orange-300 font-mono">
+                                  Avg Solution Time:{" "}
+                                  <span className="text-orange-200 font-medium">
+                                    {data.avgSolutionTime
+                                      ? data.avgSolutionTime.toFixed(2)
+                                      : "0"}
+                                    s
+                                  </span>
+                                </Text>
+                              </div>
+                            </>
+                          </div>
                         </div>
-                        <>
-                          <div className="chart-tooltip-item flex items-center p-1">
-                            <span
-                              className="me-1.5 h-2 w-2 rounded-full"
-                              style={{ backgroundColor: "#F9F871" }}
-                            />
-                            <Text className="text-gray-500">
-                              Requests:{" "}
-                              <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                {data.total ?? 0}
-                              </span>
-                            </Text>
-                          </div>
-                          <div className="chart-tooltip-item flex items-center p-1">
-                            <span
-                              className="me-1.5 h-2 w-2 rounded-full"
-                              style={{ backgroundColor: "#FFD166" }}
-                            />
-                            <Text className="text-gray-500">
-                              Successes:{" "}
-                              <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                {data.successCount ?? 0}
-                              </span>
-                            </Text>
-                          </div>
-                          <div className="chart-tooltip-item flex items-center p-1">
-                            <span
-                              className="me-1.5 h-2 w-2 rounded-full"
-                              style={{ backgroundColor: "#FDB36A" }}
-                            />
-                            <Text className="text-gray-500">
-                              Avg Solution Time:{" "}
-                              <span className="text-gray-900 dark:text-gray-700 font-medium">
-                                {data.avgSolutionTime
-                                  ? data.avgSolutionTime.toFixed(2)
-                                  : "0"}
-                                s
-                              </span>
-                            </Text>
-                          </div>
-                        </>
                       </div>
-                    </div>
-                  );
-                }}
-              />
-              <Bar layout="horizontal" dataKey="average" radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`bar-cell-${index}`}
-                    fill={BAR_COLORS[entry.colorIndex % BAR_COLORS.length]}
-                    height={30}
-                    style={{
-                      transform:
-                        entry.website === hoveredUseCase
-                          ? "scaleX(1.05)"
-                          : "scaleX(1)", // Upward stretch effect
-                      transformOrigin: "left",
-                      transition: "transform 0.2s ease",
-                    }}
-                  />
-                ))}
-              </Bar>
-            </ComposedChart>
-          </ResponsiveContainer>
+                    );
+                  }}
+                />
+                <Bar
+                  layout="horizontal"
+                  dataKey="average"
+                  radius={[0, 4, 4, 0]}
+                >
+                  {chartData.map((entry, index) => {
+                    const color =
+                      BAR_COLORS[entry.colorIndex % BAR_COLORS.length];
+                    return (
+                      <Cell
+                        key={`bar-cell-${index}`}
+                        fill={color}
+                        height={30}
+                        style={{
+                          filter: `drop-shadow(0 0 8px ${color}80)`,
+                          stroke: color,
+                          strokeWidth: 1,
+                          strokeOpacity: 0.8,
+                        }}
+                      />
+                    );
+                  })}
+                </Bar>
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
-    </WidgetCard>
+
+      {/* Cyberpunk Corner Accents */}
+      <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+      <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+      <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+      <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+    </div>
   );
 }
