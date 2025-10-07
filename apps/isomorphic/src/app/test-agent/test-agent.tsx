@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Title, Text, Button, Input, Select } from "rizzui";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Title, Text, Button, Input } from "rizzui";
 import WidgetCard from "@core/components/cards/widget-card";
 import { websitesData } from "@/data/websites-data";
 import { useCaseCatalogues } from "@/data/sample-data";
 import { CiCircleCheck } from "react-icons/ci";
 import { GoXCircle } from "react-icons/go";
-import { PiFlask } from "react-icons/pi";
+import { PiFlask, PiCaretDownDuotone } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 
 type TestResult = {
@@ -26,6 +27,17 @@ export default function TestAgent() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [isProjectsDropdownOpen, setIsProjectsDropdownOpen] = useState(false);
+  const [isUseCasesDropdownOpen, setIsUseCasesDropdownOpen] = useState(false);
+  const [projectsButtonRect, setProjectsButtonRect] = useState<DOMRect | null>(
+    null
+  );
+  const [useCasesButtonRect, setUseCasesButtonRect] = useState<DOMRect | null>(
+    null
+  );
+
+  const projectsButtonRef = useRef<HTMLButtonElement>(null);
+  const useCasesButtonRef = useRef<HTMLButtonElement>(null);
 
   const availableProjects = websitesData
     .filter((w) => !w.isComingSoon)
@@ -55,6 +67,69 @@ export default function TestAgent() {
 
     return allUseCases;
   };
+
+  // Close dropdowns when clicking outside and update positions on scroll
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (
+        isProjectsDropdownOpen &&
+        projectsButtonRef.current &&
+        !projectsButtonRef.current.contains(target) &&
+        !document.querySelector('[data-dropdown="projects"]')?.contains(target)
+      ) {
+        setIsProjectsDropdownOpen(false);
+      }
+
+      if (
+        isUseCasesDropdownOpen &&
+        useCasesButtonRef.current &&
+        !useCasesButtonRef.current.contains(target) &&
+        !document.querySelector('[data-dropdown="usecases"]')?.contains(target)
+      ) {
+        setIsUseCasesDropdownOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      if (isProjectsDropdownOpen && projectsButtonRef.current) {
+        setProjectsButtonRect(
+          projectsButtonRef.current.getBoundingClientRect()
+        );
+      }
+
+      if (isUseCasesDropdownOpen && useCasesButtonRef.current) {
+        setUseCasesButtonRect(
+          useCasesButtonRef.current.getBoundingClientRect()
+        );
+      }
+    };
+
+    const handleResize = () => {
+      if (isProjectsDropdownOpen && projectsButtonRef.current) {
+        setProjectsButtonRect(
+          projectsButtonRef.current.getBoundingClientRect()
+        );
+      }
+
+      if (isUseCasesDropdownOpen && useCasesButtonRef.current) {
+        setUseCasesButtonRect(
+          useCasesButtonRef.current.getBoundingClientRect()
+        );
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isProjectsDropdownOpen, isUseCasesDropdownOpen]);
 
   const handleRunBenchmark = async () => {
     if (
@@ -126,7 +201,7 @@ export default function TestAgent() {
             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
             "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400",
             "border-2 border-cyan-500/50 hover:border-cyan-400",
-            "transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30 hover:scale-105"
+            "transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
           )}
         >
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -137,254 +212,422 @@ export default function TestAgent() {
       </div>
 
       <div className="mb-8 text-center">
-        <Title as="h1" className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
-          Benchmark Your Agent in Real Time
-        </Title>
-        <Text className="text-lg text-gray-300 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80">
+            <PiFlask className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
+          </div>
+          <Title
+            as="h1"
+            className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
+          >
+            Benchmark Your Agent in Real Time
+          </Title>
+        </div>
+        <Text className="text-lg text-cyan-300 max-w-4xl mx-auto font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
           {`Configure a custom benchmark run against IWA's synthetic websites.
           Select projects, choose specific use cases and prompts, define the
-          number of runs, and provide your agent's endpoint. `}<span className="text-yellow-400 font-semibold">IWA</span>{` will
+          number of runs, and provide your agent's endpoint. `}
+          <span className="text-yellow-400 font-semibold">IWA</span>
+          {` will
           automatically evaluate its performance and return detailed scores.`}
         </Text>
       </div>
 
-      <div className="mb-8 p-8 rounded-lg border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-500/20">
-        <Title as="h2" className="text-2xl font-bold mb-6 text-cyan-400">
-          Configuration
-        </Title>
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-300">
-              Select Web Projects <span className="text-yellow-400">*</span>
-            </label>
-            <Select
-              options={availableProjects}
-              value={selectedProjects[0]}
-              onChange={(value: any) => {
-                if (!selectedProjects.includes(value.value)) {
-                  setSelectedProjects([...selectedProjects, value.value]);
-                }
-              }}
-              placeholder="Select projects..."
-              className="border-cyan-500/30 focus:border-cyan-400"
-            />
-            {selectedProjects.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {selectedProjects.map((project) => (
-                  <span
-                    key={project}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
-                      "bg-cyan-600/20 text-cyan-400 border border-cyan-500/50",
-                      "hover:border-cyan-400 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
-                    )}
-                  >
-                    {project}
-                    <button
-                      onClick={() =>
-                        setSelectedProjects(
-                          selectedProjects.filter((p) => p !== project)
-                        )
-                      }
-                      className="hover:text-red-400 transition-colors"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+      <div className="group relative mb-8 bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
+        {/* Cyberpunk Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-300">
-              Select Use Cases <span className="text-yellow-400">*</span>
-            </label>
-            <Select
-              options={getAvailableUseCases()}
-              value={selectedUseCases[0]}
-              onChange={(value: any) => {
-                if (!selectedUseCases.includes(value.value)) {
-                  setSelectedUseCases([...selectedUseCases, value.value]);
-                }
-              }}
-              placeholder="Select use cases..."
-              disabled={selectedProjects.length === 0}
-              className="border-cyan-500/30 focus:border-cyan-400"
-            />
-            {selectedUseCases.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {selectedUseCases.map((useCase) => (
-                  <span
-                    key={useCase}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
-                      "bg-yellow-600/20 text-yellow-400 border border-yellow-500/50",
-                      "hover:border-yellow-400 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/30"
-                    )}
-                  >
-                    {useCase}
-                    <button
-                      onClick={() =>
-                        setSelectedUseCases(
-                          selectedUseCases.filter((uc) => uc !== useCase)
-                        )
-                      }
-                      className="hover:text-red-400 transition-colors"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-300">
-              Number of Runs <span className="text-yellow-400">*</span>
-            </label>
-            <Input
-              type="number"
-              min={1}
-              max={10}
-              value={numRuns}
-              onChange={(e) => setNumRuns(parseInt(e.target.value) || 1)}
-              placeholder="Enter number of runs (1-10)"
-              className="border-cyan-500/30 focus:border-cyan-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-300">
-              Agent Endpoint (IP:Port) <span className="text-yellow-400">*</span>
-            </label>
-            <Input
-              type="text"
-              value={agentEndpoint}
-              onChange={(e) => setAgentEndpoint(e.target.value)}
-              placeholder="http://83.45.2.1:5005"
-              className="border-cyan-500/30 focus:border-cyan-400"
-            />
-          </div>
-
-          <Button
-            size="lg"
-            onClick={handleRunBenchmark}
-            disabled={isRunning}
-            className={cn(
-              "w-full font-semibold",
-              "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400",
-              "shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/70 transition-all duration-300",
-              "border border-cyan-400/50 hover:border-cyan-300 hover:scale-105",
-              isRunning && "opacity-50 cursor-not-allowed"
-            )}
+        <div className="relative p-8">
+          <Title
+            as="h2"
+            className="text-2xl font-bold mb-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
           >
-            <PiFlask className="mr-2 inline" />
-            {isRunning ? "Running Benchmark..." : "Run Benchmark"}
-          </Button>
-        </div>
-      </div>
-
-      {showResults && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className={cn(
-              "text-center p-6 rounded-lg",
-              "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10",
-              "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-500/30"
-            )}>
-              <Text className="text-sm text-gray-400 mb-2 uppercase tracking-wide">Success Rate</Text>
-              <Title as="h3" className="text-4xl font-bold text-cyan-400">
-                {calculateSuccessRate()}%
-              </Title>
-            </div>
-            <div className={cn(
-              "text-center p-6 rounded-lg",
-              "border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10",
-              "hover:border-yellow-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-yellow-500/30"
-            )}>
-              <Text className="text-sm text-gray-400 mb-2 uppercase tracking-wide">Average Score</Text>
-              <Title as="h3" className="text-4xl font-bold text-yellow-400">
-                {calculateAggregateScore()}
-              </Title>
-            </div>
-            <div className={cn(
-              "text-center p-6 rounded-lg",
-              "border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10",
-              "hover:border-blue-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/30"
-            )}>
-              <Text className="text-sm text-gray-200 mb-2 uppercase tracking-wide font-semibold">Total Tests</Text>
-              <Title as="h3" className="text-4xl font-bold text-blue-400">
-                {results.length}
-              </Title>
-            </div>
-          </div>
-
-          <div className={cn(
-            "mb-8 p-6 rounded-lg",
-            "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5",
-            "hover:border-cyan-400/50 transition-all duration-500"
-          )}>
-            <div className="flex items-center justify-between mb-6">
-              <Title as="h2" className="text-2xl font-bold text-cyan-400">
-                Detailed Results
-              </Title>
-              <Button 
-                onClick={downloadResults} 
-                variant="outline"
-                className={cn(
-                  "border-2 border-yellow-500/50 text-yellow-400 hover:text-yellow-300",
-                  "hover:border-yellow-400 hover:bg-yellow-500/10 transition-all duration-300",
-                  "hover:shadow-lg hover:shadow-yellow-500/30"
-                )}
+            Configuration
+          </Title>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                Select Web Projects <span className="text-yellow-400">*</span>
+              </label>
+              <button
+                type="button"
+                ref={projectsButtonRef}
+                onClick={() => {
+                  if (projectsButtonRef.current) {
+                    setProjectsButtonRect(
+                      projectsButtonRef.current.getBoundingClientRect()
+                    );
+                  }
+                  setIsProjectsDropdownOpen(!isProjectsDropdownOpen);
+                }}
+                className="w-full px-3 py-2 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between"
               >
-                Download Results (JSON)
-              </Button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-cyan-500/30">
-                    <th className="text-left py-3 px-4 text-cyan-400 font-semibold">Project</th>
-                    <th className="text-left py-3 px-4 text-cyan-400 font-semibold">Use Case</th>
-                    <th className="text-center py-3 px-4 text-cyan-400 font-semibold">Status</th>
-                    <th className="text-center py-3 px-4 text-cyan-400 font-semibold">Score</th>
-                    <th className="text-center py-3 px-4 text-cyan-400 font-semibold">Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((result, index) => (
-                    <tr
-                      key={index}
+                <span>
+                  {selectedProjects.length === 0
+                    ? "Select projects..."
+                    : `${selectedProjects.length} project${selectedProjects.length > 1 ? "s" : ""} selected`}
+                </span>
+                <PiCaretDownDuotone
+                  className={`w-4 h-4 text-cyan-400 transition-transform duration-200 ${isProjectsDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isProjectsDropdownOpen &&
+                projectsButtonRect &&
+                createPortal(
+                  <div
+                    data-dropdown="projects"
+                    className="fixed bg-black border border-cyan-400/30 rounded-lg shadow-2xl shadow-cyan-500/30 z-[9999] max-h-60 overflow-y-auto custom-scrollbar scroll-smooth"
+                    style={{
+                      top: projectsButtonRect.bottom + 4,
+                      left: projectsButtonRect.left,
+                      width: projectsButtonRect.width,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {availableProjects.map((project) => (
+                      <button
+                        key={project.value}
+                        type="button"
+                        onClick={() => {
+                          if (!selectedProjects.includes(project.value)) {
+                            setSelectedProjects([
+                              ...selectedProjects,
+                              project.value,
+                            ]);
+                          }
+                          setIsProjectsDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-cyan-300 font-mono hover:bg-cyan-900/30 hover:text-cyan-200 transition-colors duration-200 border-b border-cyan-400/20 last:border-b-0"
+                      >
+                        {project.label}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                )}
+
+              {selectedProjects.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedProjects.map((project) => (
+                    <span
+                      key={project}
                       className={cn(
-                        "border-b border-cyan-500/20 hover:bg-cyan-500/5",
-                        "transition-all duration-300"
+                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
+                        "bg-cyan-600/20 text-cyan-400 border border-cyan-500/50",
+                        "hover:border-cyan-400 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
                       )}
                     >
-                      <td className="py-3 px-4 capitalize text-gray-300">{result.project}</td>
-                      <td className="py-3 px-4 text-gray-300">{result.useCase}</td>
-                      <td className="py-3 px-4 text-center">
-                        {result.success ? (
-                          <CiCircleCheck className="inline h-6 w-6 text-cyan-400" />
-                        ) : (
-                          <GoXCircle className="inline h-6 w-6 text-red-400" />
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center font-semibold text-yellow-400">
-                        {result.score}
-                      </td>
-                      <td className="py-3 px-4 text-center text-gray-400">
-                        {result.duration.toFixed(2)}s
-                      </td>
-                    </tr>
+                      {project}
+                      <button
+                        onClick={() =>
+                          setSelectedProjects(
+                            selectedProjects.filter((p) => p !== project)
+                          )
+                        }
+                        className="hover:text-red-400 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                Select Use Cases <span className="text-yellow-400">*</span>
+              </label>
+              <button
+                type="button"
+                ref={useCasesButtonRef}
+                onClick={() => {
+                  if (selectedProjects.length === 0) return;
+                  if (useCasesButtonRef.current) {
+                    setUseCasesButtonRect(
+                      useCasesButtonRef.current.getBoundingClientRect()
+                    );
+                  }
+                  setIsUseCasesDropdownOpen(!isUseCasesDropdownOpen);
+                }}
+                disabled={selectedProjects.length === 0}
+                className={cn(
+                  "w-full px-3 py-2 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between",
+                  selectedProjects.length === 0 &&
+                    "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <span>
+                  {selectedUseCases.length === 0
+                    ? "Select use cases..."
+                    : `${selectedUseCases.length} use case${selectedUseCases.length > 1 ? "s" : ""} selected`}
+                </span>
+                <PiCaretDownDuotone
+                  className={`w-4 h-4 text-cyan-400 transition-transform duration-200 ${isUseCasesDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isUseCasesDropdownOpen &&
+                useCasesButtonRect &&
+                createPortal(
+                  <div
+                    data-dropdown="usecases"
+                    className="fixed bg-black border border-cyan-400/30 rounded-lg shadow-2xl shadow-cyan-500/30 z-[9999] max-h-60 overflow-y-auto custom-scrollbar scroll-smooth"
+                    style={{
+                      top: useCasesButtonRect.bottom + 4,
+                      left: useCasesButtonRect.left,
+                      width: useCasesButtonRect.width,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {getAvailableUseCases().map((useCase) => (
+                      <button
+                        key={useCase.value}
+                        type="button"
+                        onClick={() => {
+                          if (!selectedUseCases.includes(useCase.value)) {
+                            setSelectedUseCases([
+                              ...selectedUseCases,
+                              useCase.value,
+                            ]);
+                          }
+                          setIsUseCasesDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-cyan-300 font-mono hover:bg-cyan-900/30 hover:text-cyan-200 transition-colors duration-200 border-b border-cyan-400/20 last:border-b-0"
+                      >
+                        {useCase.label}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                )}
+
+              {selectedUseCases.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedUseCases.map((useCase) => (
+                    <span
+                      key={useCase}
+                      className={cn(
+                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
+                        "bg-yellow-600/20 text-yellow-400 border border-yellow-500/50",
+                        "hover:border-yellow-400 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/30"
+                      )}
+                    >
+                      {useCase}
+                      <button
+                        onClick={() =>
+                          setSelectedUseCases(
+                            selectedUseCases.filter((uc) => uc !== useCase)
+                          )
+                        }
+                        className="hover:text-red-400 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                Number of Runs <span className="text-yellow-400">*</span>
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={numRuns}
+                onChange={(e) => setNumRuns(parseInt(e.target.value) || 1)}
+                placeholder="Enter number of runs (1-10)"
+                className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                Agent Endpoint (IP:Port){" "}
+                <span className="text-yellow-400">*</span>
+              </label>
+              <Input
+                type="text"
+                value={agentEndpoint}
+                onChange={(e) => setAgentEndpoint(e.target.value)}
+                placeholder="http://83.45.2.1:5005"
+                className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300"
+              />
+            </div>
+
+            <Button
+              size="lg"
+              onClick={handleRunBenchmark}
+              disabled={isRunning}
+              className={cn(
+                "w-full font-semibold text-white",
+                "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400",
+                "shadow-lg shadow-blue-500/50 hover:shadow-blue-400/70 transition-all duration-300",
+                "border border-blue-400/50 hover:border-blue-300",
+                isRunning && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <PiFlask className="mr-2 inline" />
+              {isRunning ? "Running Benchmark..." : "Run Benchmark"}
+            </Button>
           </div>
-        </>
-      )}
+
+          {/* Cyberpunk Corner Accents */}
+          <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+          <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+          <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+          <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+        </div>
+
+        {showResults && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div
+                className={cn(
+                  "text-center p-6 rounded-lg bg-black",
+                  "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10",
+                  "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-500/30"
+                )}
+              >
+                <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                  Success Rate
+                </Text>
+                <Title
+                  as="h3"
+                  className="text-4xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
+                >
+                  {calculateSuccessRate()}%
+                </Title>
+              </div>
+              <div
+                className={cn(
+                  "text-center p-6 rounded-lg bg-black",
+                  "border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10",
+                  "hover:border-yellow-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-yellow-500/30"
+                )}
+              >
+                <Text className="text-sm text-yellow-300 mb-2 uppercase tracking-wide font-mono drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
+                  Average Score
+                </Text>
+                <Title
+                  as="h3"
+                  className="text-4xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(251,191,36,1)]"
+                >
+                  {calculateAggregateScore()}
+                </Title>
+              </div>
+              <div
+                className={cn(
+                  "text-center p-6 rounded-lg bg-black",
+                  "border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10",
+                  "hover:border-blue-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/30"
+                )}
+              >
+                <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-mono font-semibold drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                  Total Tests
+                </Text>
+                <Title
+                  as="h3"
+                  className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,1)]"
+                >
+                  {results.length}
+                </Title>
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "relative mb-8 p-6 rounded-lg bg-black overflow-hidden",
+                "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5",
+                "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/50"
+              )}
+            >
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+
+              <div className="relative flex items-center justify-between mb-6">
+                <Title
+                  as="h2"
+                  className="text-2xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
+                >
+                  Detailed Results
+                </Title>
+                <Button
+                  onClick={downloadResults}
+                  variant="outline"
+                  className={cn(
+                    "border-2 border-yellow-500/50 text-yellow-300 hover:text-white font-semibold",
+                    "hover:border-yellow-400 hover:bg-yellow-500/20 transition-all duration-300",
+                    "hover:shadow-lg hover:shadow-yellow-500/30"
+                  )}
+                >
+                  Download Results (JSON)
+                </Button>
+              </div>
+              <div className="relative overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-cyan-500/30">
+                      <th className="text-left py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
+                        Project
+                      </th>
+                      <th className="text-left py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
+                        Use Case
+                      </th>
+                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
+                        Status
+                      </th>
+                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
+                        Score
+                      </th>
+                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
+                        Duration
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((result, index) => (
+                      <tr
+                        key={index}
+                        className={cn(
+                          "border-b border-cyan-500/20 hover:bg-cyan-500/10",
+                          "transition-all duration-300"
+                        )}
+                      >
+                        <td className="py-3 px-4 capitalize text-cyan-300 font-mono">
+                          {result.project}
+                        </td>
+                        <td className="py-3 px-4 text-cyan-300 font-mono">
+                          {result.useCase}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {result.success ? (
+                            <CiCircleCheck className="inline h-6 w-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]" />
+                          ) : (
+                            <GoXCircle className="inline h-6 w-6 text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,1)]" />
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center font-semibold text-yellow-400 font-mono drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
+                          {result.score}
+                        </td>
+                        <td className="py-3 px-4 text-center text-cyan-300 font-mono">
+                          {result.duration.toFixed(2)}s
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
