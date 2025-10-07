@@ -5,14 +5,13 @@ import { Button } from "rizzui";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
-import WebsiteItem from "../websites/website-item";
+import { WebsiteItem } from "./cardItem";
 import { LuArrowRight, LuTrophy, LuFileText } from "react-icons/lu";
 import { PiFlask } from "react-icons/pi";
 import cn from "@core/utils/class-names";
+import { FaArrowRight } from "react-icons/fa";
 
 export default function LandingPage() {
-  const featuredProjects = websitesData.slice(0, 4);
-
   return (
     <div className="flex flex-col w-full">
       <section className="px-6 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto w-full py-16 md:py-24">
@@ -23,7 +22,7 @@ export default function LandingPage() {
           >
             The Synthetic Benchmark for Web Agents
           </Title>
-          <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-300 mb-8 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] px-2">
+          <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-300 my-8 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] px-2">
             Infinity Web Arena (IWA) is the most advanced synthetic benchmark,
             designed to rigorously test and evaluate Web Agents across dynamic,
             ever-changing web environments.
@@ -32,10 +31,11 @@ export default function LandingPage() {
             <Link href={routes.testAgent}>
               <Button
                 size="lg"
+                variant="outline"
                 className={cn(
-                  "font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400",
-                  "shadow-lg shadow-blue-500/50 hover:shadow-blue-400/70 transition-all duration-300",
-                  "border border-blue-400/50 hover:border-blue-300"
+                  "font-semibold border-2 bg-transparent border-blue-500/50 text-blue-300 hover:text-white",
+                  "hover:border-blue-400 hover:bg-blue-500/20 transition-all duration-300",
+                  "hover:shadow-lg hover:shadow-blue-500/30"
                 )}
               >
                 <PiFlask className="mr-2" />
@@ -79,47 +79,50 @@ export default function LandingPage() {
       </section>
 
       <section className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto w-full py-16 border-t border-cyan-500/30">
-        <div className="group relative max-w-4xl mx-auto p-4 sm:p-6 md:p-8 rounded-lg bg-black border border-cyan-400/30 overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
-          {/* Cyberpunk Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+        <div className="max-w-4xl mx-auto">
+          <Title
+            as="h2"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)] px-2"
+          >
+            What is IWA?
+          </Title>
 
-          <div className="relative">
-            <Title
-              as="h2"
-              className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-            >
-              What is IWA?
-            </Title>
-            <Text className="text-base sm:text-lg text-cyan-300 mb-4 sm:mb-6 leading-relaxed font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
-              Infinity Web Arena (IWA) is a{" "}
-              <span className="text-yellow-400 font-semibold">
-                synthetic benchmark
-              </span>{" "}
-              for Web Agents. Unlike static human-curated datasets, IWA
-              dynamically generates synthetic websites, tasks, and validation
-              tests. This ensures
-              <span className="text-cyan-400 font-semibold">
-                {" "}
-                infinite scalability
-              </span>
-              , no dataset leakage, and realistic performance evaluation.
-            </Text>
-            <a
-              href="https://github.com/autoppia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-yellow-300 hover:text-white font-semibold transition-all duration-300 hover:translate-x-2 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]"
-            >
-              👉 Read the Paper <LuArrowRight className="ml-2" />
-            </a>
+          <div className="group relative p-4 sm:p-6 md:p-8 rounded-lg bg-black border border-cyan-400/30 overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
+            {/* Cyberpunk Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+
+            <div className="relative">
+              <Text className="text-base sm:text-lg text-cyan-300 mb-6 leading-relaxed font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+                Infinity Web Arena (IWA) is a{" "}
+                <span className="text-yellow-400 font-semibold">
+                  synthetic benchmark
+                </span>{" "}
+                for Web Agents. Unlike static human-curated datasets, IWA
+                dynamically generates synthetic websites, tasks, and validation
+                tests. This ensures
+                <span className="text-cyan-400 font-semibold">
+                  {" "}
+                  infinite scalability
+                </span>
+                , no dataset leakage, and realistic performance evaluation.
+              </Text>
+              <a
+                href="https://github.com/autoppia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-yellow-300 hover:text-white font-semibold transition-all duration-300 hover:translate-x-2 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]"
+              >
+                👉 Read the Paper <LuArrowRight className="ml-2" />
+              </a>
+            </div>
+
+            {/* Cyberpunk Corner Accents */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
           </div>
-
-          {/* Cyberpunk Corner Accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
         </div>
       </section>
 
@@ -186,31 +189,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-6 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto w-full py-16 border-t border-cyan-500/30">
+      <section className="px-6 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto w-full py-16">
         <div className="text-center mb-12">
-          <Title
-            as="h2"
-            className="text-3xl md:text-4xl font-bold mb-4 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-          >
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]">
             Check Our Web Projects
-          </Title>
-          <Text className="text-lg text-cyan-300 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+          </h2>
+          <p className="text-lg text-cyan-300 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
             IWA includes{" "}
             <span className="text-yellow-400 font-bold">
-              15 synthetic websites
+              {websitesData.length} synthetic websites
             </span>{" "}
             covering e-commerce, cinema, bug tracking, social media, and more.
-          </Text>
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {featuredProjects.map((website, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          {websitesData.map((website, index) => (
             <div key={index} className="transition-transform duration-300">
               <WebsiteItem website={website} />
             </div>
           ))}
         </div>
         <div className="text-center">
-          <Link href={routes.websites}>
+          <Link href="/websites">
             <Button
               size="lg"
               variant="outline"
@@ -220,53 +220,56 @@ export default function LandingPage() {
                 "hover:shadow-lg hover:shadow-cyan-500/30 group"
               )}
             >
-              See All 15 Projects{" "}
-              <LuArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              See All {websitesData.length} Projects{" "}
+              <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
       </section>
-
       <section className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto w-full py-16 border-t border-cyan-500/30">
-        <div className="group relative max-w-4xl mx-auto text-center p-4 sm:p-6 md:p-10 rounded-lg bg-black border border-cyan-400/30 overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
-          {/* Cyberpunk Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+        <div className="max-w-4xl mx-auto">
+          <Title
+            as="h2"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)] px-2"
+          >
+            Test Your Agent
+          </Title>
 
-          <div className="relative">
-            <Title
-              as="h2"
-              className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-            >
-              Test Your Agent
-            </Title>
-            <Text className="text-base sm:text-lg text-cyan-300 mb-6 sm:mb-8 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
-              {`Want to see your Web Agent in action? Configure a benchmark run by
-              selecting websites, use cases, and prompts. Define how many runs you
-              want, point us to your agent's IP/port, and let `}
-              <span className="text-yellow-400 font-semibold">IWA</span>
-              {` do the rest.`}
-            </Text>
-            <Link href={routes.agent_run}>
-              <Button
-                size="lg"
-                className={cn(
-                  "font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400",
-                  "shadow-lg shadow-blue-500/50 hover:shadow-blue-400/70 transition-all duration-300",
-                  "border border-blue-400/50 hover:border-blue-300"
-                )}
-              >
-                <PiFlask className="mr-2" />
-                Go to Test Your Agent
-              </Button>
-            </Link>
+          <div className="group relative text-center p-4 sm:p-6 md:p-8 rounded-lg bg-black border border-cyan-400/30 overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
+            {/* Cyberpunk Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+
+            <div className="relative">
+              <Text className="text-base sm:text-lg text-cyan-300 mb-6 sm:mb-8 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+                {`Want to see your Web Agent in action? Configure a benchmark run by
+                selecting websites, use cases, and prompts. Define how many runs you
+                want, point us to your agent's IP/port, and let `}
+                <span className="text-yellow-400 font-semibold">IWA</span>
+                {` do the rest.`}
+              </Text>
+              <Link href={routes.agent_run}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className={cn(
+                    "font-semibold border-2 bg-transparent border-cyan-500/50 text-cyan-300 hover:text-white",
+                    "hover:border-cyan-400 hover:bg-cyan-500/20 transition-all duration-300",
+                    "hover:shadow-lg hover:shadow-cyan-500/30"
+                  )}
+                >
+                  <PiFlask className="mr-2" />
+                  Go to Test Your Agent
+                </Button>
+              </Link>
+            </div>
+
+            {/* Cyberpunk Corner Accents */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
           </div>
-
-          {/* Cyberpunk Corner Accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
         </div>
       </section>
 
@@ -342,7 +345,9 @@ export default function LandingPage() {
                     <span className="text-yellow-400 font-bold font-mono text-xs sm:text-sm">
                       🥇 1
                     </span>
-                    <span className="text-cyan-300 font-mono text-xs sm:text-sm">GPT-4 Agent</span>
+                    <span className="text-cyan-300 font-mono text-xs sm:text-sm">
+                      Browser-Use GPT-5 Agent
+                    </span>
                     <span className="text-yellow-400 font-bold font-mono text-xs sm:text-sm">
                       95.2
                     </span>
@@ -352,7 +357,7 @@ export default function LandingPage() {
                       🥈 2
                     </span>
                     <span className="text-cyan-300 font-mono text-xs sm:text-sm">
-                      Claude Agent
+                      Autoppia Agent
                     </span>
                     <span className="text-cyan-400 font-bold font-mono text-xs sm:text-sm">
                       92.8
@@ -362,7 +367,9 @@ export default function LandingPage() {
                     <span className="text-blue-400 font-bold font-mono text-xs sm:text-sm">
                       🥉 3
                     </span>
-                    <span className="text-cyan-300 font-mono text-xs sm:text-sm">Custom Bot</span>
+                    <span className="text-cyan-300 font-mono text-xs sm:text-sm">
+                      OpenAI CUA Agent
+                    </span>
                     <span className="text-blue-400 font-bold font-mono text-xs sm:text-sm">
                       89.5
                     </span>

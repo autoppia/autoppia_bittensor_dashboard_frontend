@@ -211,41 +211,41 @@ export default function TestAgent() {
         </a>
       </div>
 
-      <div className="mb-8 text-center px-2">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80 flex-shrink-0">
-            <PiFlask className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
+      <div className="mb-12 text-center px-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80 flex-shrink-0">
+            <PiFlask className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
           </div>
           <Title
             as="h1"
-            className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
           >
             Benchmark Your Agent in Real Time
           </Title>
         </div>
-        <Text className="text-base sm:text-lg text-cyan-300 max-w-4xl mx-auto font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] px-2">
-          {`Configure a custom benchmark run against IWA's synthetic websites.
-          Select projects, choose specific use cases and prompts, define the
-          number of runs, and provide your agent's endpoint. `}
-          <span className="text-yellow-400 font-semibold">IWA</span>
-          {` will
-          automatically evaluate its performance and return detailed scores.`}
+        <Text className="text-lg sm:text-xl md:text-2xl text-cyan-300 max-w-5xl mx-auto leading-relaxed px-4 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+          Configure a custom benchmark run against{" "}
+          <span className="text-yellow-400 font-semibold">IWA's</span> synthetic
+          websites. Select projects, choose specific use cases and prompts,
+          define the number of runs, and provide your agent's endpoint.{" "}
+          <span className="text-yellow-400 font-semibold">IWA</span> will
+          automatically evaluate its performance and return detailed scores.
         </Text>
       </div>
 
-      <div className="group relative mb-8 bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
+      <div className="group relative mb-12 bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
         {/* Cyberpunk Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
-        <div className="relative p-4 sm:p-6 md:p-8">
+        <div className="relative p-6 sm:p-8 md:p-10">
           <Title
             as="h2"
-            className="text-2xl font-bold mb-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
+            className="text-2xl sm:text-3xl font-bold mb-8 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
           >
             Configuration
           </Title>
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
               <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
                 Select Web Projects <span className="text-yellow-400">*</span>
@@ -261,7 +261,7 @@ export default function TestAgent() {
                   }
                   setIsProjectsDropdownOpen(!isProjectsDropdownOpen);
                 }}
-                className="w-full px-3 py-2 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between"
+                className="w-full px-4 py-3 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between"
               >
                 <span>
                   {selectedProjects.length === 0
@@ -269,7 +269,7 @@ export default function TestAgent() {
                     : `${selectedProjects.length} project${selectedProjects.length > 1 ? "s" : ""} selected`}
                 </span>
                 <PiCaretDownDuotone
-                  className={`w-4 h-4 text-cyan-400 transition-transform duration-200 ${isProjectsDropdownOpen ? "rotate-180" : ""}`}
+                  className={`w-5 h-5 text-cyan-400 transition-transform duration-200 ${isProjectsDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -309,12 +309,12 @@ export default function TestAgent() {
                 )}
 
               {selectedProjects.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-3 mt-4">
                   {selectedProjects.map((project) => (
                     <span
                       key={project}
                       className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
                         "bg-cyan-600/20 text-cyan-400 border border-cyan-500/50",
                         "hover:border-cyan-400 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
                       )}
@@ -326,7 +326,7 @@ export default function TestAgent() {
                             selectedProjects.filter((p) => p !== project)
                           )
                         }
-                        className="hover:text-red-400 transition-colors"
+                        className="hover:text-red-400 transition-colors text-lg"
                       >
                         ×
                       </button>
@@ -354,7 +354,7 @@ export default function TestAgent() {
                 }}
                 disabled={selectedProjects.length === 0}
                 className={cn(
-                  "w-full px-3 py-2 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between",
+                  "w-full px-4 py-3 bg-black/50 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono focus:border-cyan-400 focus:shadow-2xl focus:shadow-cyan-500/50 transition-all duration-300 outline-none hover:border-cyan-400/50 text-left flex items-center justify-between",
                   selectedProjects.length === 0 &&
                     "opacity-50 cursor-not-allowed"
                 )}
@@ -365,7 +365,7 @@ export default function TestAgent() {
                     : `${selectedUseCases.length} use case${selectedUseCases.length > 1 ? "s" : ""} selected`}
                 </span>
                 <PiCaretDownDuotone
-                  className={`w-4 h-4 text-cyan-400 transition-transform duration-200 ${isUseCasesDropdownOpen ? "rotate-180" : ""}`}
+                  className={`w-5 h-5 text-cyan-400 transition-transform duration-200 ${isUseCasesDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -405,12 +405,12 @@ export default function TestAgent() {
                 )}
 
               {selectedUseCases.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-3 mt-4">
                   {selectedUseCases.map((useCase) => (
                     <span
                       key={useCase}
                       className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm",
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
                         "bg-yellow-600/20 text-yellow-400 border border-yellow-500/50",
                         "hover:border-yellow-400 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/30"
                       )}
@@ -422,7 +422,7 @@ export default function TestAgent() {
                             selectedUseCases.filter((uc) => uc !== useCase)
                           )
                         }
-                        className="hover:text-red-400 transition-colors"
+                        className="hover:text-red-400 transition-colors text-lg"
                       >
                         ×
                       </button>
@@ -432,50 +432,53 @@ export default function TestAgent() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
-                Number of Runs <span className="text-yellow-400">*</span>
-              </label>
-              <Input
-                type="number"
-                min={1}
-                max={10}
-                value={numRuns}
-                onChange={(e) => setNumRuns(parseInt(e.target.value) || 1)}
-                placeholder="Enter number of runs (1-10)"
-                className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-3 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                  Number of Runs <span className="text-yellow-400">*</span>
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={numRuns}
+                  onChange={(e) => setNumRuns(parseInt(e.target.value) || 1)}
+                  placeholder="Enter number of runs (1-10)"
+                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-3 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+                  Agent Endpoint (IP:Port){" "}
+                  <span className="text-yellow-400">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={agentEndpoint}
+                  onChange={(e) => setAgentEndpoint(e.target.value)}
+                  placeholder="http://83.45.2.1:5005"
+                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
-                Agent Endpoint (IP:Port){" "}
-                <span className="text-yellow-400">*</span>
-              </label>
-              <Input
-                type="text"
-                value={agentEndpoint}
-                onChange={(e) => setAgentEndpoint(e.target.value)}
-                placeholder="http://83.45.2.1:5005"
-                className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300"
-              />
+            <div className="pt-4 border-t border-cyan-400/20">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleRunBenchmark}
+                disabled={isRunning}
+                className={cn(
+                  "w-full font-semibold bg-transparent hover:bg-cyan-500/20 text-cyan-300  py-4 text-lg border border-cyan-400 ",
+                  "shadow-lg shadow-cyan-500/50 transition-all duration-300",
+                  isRunning && "opacity-50 cursor-not-allowed "
+                )}
+              >
+                <PiFlask className="mr-2 inline text-xl" />
+                {isRunning ? "Running Benchmark..." : "Run Benchmark"}
+              </Button>
             </div>
-
-            <Button
-              size="lg"
-              onClick={handleRunBenchmark}
-              disabled={isRunning}
-              className={cn(
-                "w-full font-semibold text-white",
-                "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400",
-                "shadow-lg shadow-blue-500/50 hover:shadow-blue-400/70 transition-all duration-300",
-                "border border-blue-400/50 hover:border-blue-300",
-                isRunning && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <PiFlask className="mr-2 inline" />
-              {isRunning ? "Running Benchmark..." : "Run Benchmark"}
-            </Button>
           </div>
 
           {/* Cyberpunk Corner Accents */}
@@ -487,7 +490,7 @@ export default function TestAgent() {
 
         {showResults && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <div
                 className={cn(
                   "text-center p-6 rounded-lg bg-black",
@@ -543,7 +546,7 @@ export default function TestAgent() {
 
             <div
               className={cn(
-                "relative mb-8 p-6 rounded-lg bg-black overflow-hidden",
+                "relative mb-8 p-6 sm:p-8 rounded-lg bg-black overflow-hidden",
                 "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5",
                 "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/50"
               )}
@@ -551,7 +554,7 @@ export default function TestAgent() {
               {/* Background Effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
 
-              <div className="relative flex items-center justify-between mb-6">
+              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                 <Title
                   as="h2"
                   className="text-2xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
