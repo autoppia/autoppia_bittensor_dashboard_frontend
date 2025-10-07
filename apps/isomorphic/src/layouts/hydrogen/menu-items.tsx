@@ -3,7 +3,6 @@ import {
   LuComponent,
   LuCodesandbox,
   LuBot,
-  LuPackageCheck,
   LuBoxes,
   LuGlobe,
   LuFence,
@@ -42,11 +41,7 @@ export const menuItems = [
     href: routes.agents,
     icon: <LuFence />,
   },
-  {
-    name: "Test Agent",
-    href: routes.testAgent,
-    icon: <LuPackageCheck />,
-  },
+
   {
     name: "Tasks",
     href: routes.tasks,
