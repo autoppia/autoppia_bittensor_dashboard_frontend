@@ -1,10 +1,12 @@
-import { metaObject } from "@/config/site.config";
-import Overview from "./overview";
+import { metaObject } from '@/config/site.config';
+import Overview from './overview';
 
 export const metadata = {
   ...metaObject(),
 };
 
 export default function Page() {
-  return <Overview />;
+  return (
+    <Overview />
+  )
 }

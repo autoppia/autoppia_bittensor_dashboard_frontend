@@ -14,18 +14,14 @@ export const metadata: Metadata = {
   description: "The Bittensor Subnet 36 Leaderboard",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       // 💡 Prevent next-themes hydration warning
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" /> 
       </head>
       <body
         // to prevent any warning that is caused by third party extensions like Grammarly
