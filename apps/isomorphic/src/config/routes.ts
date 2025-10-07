@@ -4,9 +4,7 @@ export const routes = {
   rounds: "/rounds",
   agents: "/agents",
   agent_run: "/agent-run",
-  agent_test: "/test-agent",
+  testAgent: "/test-agent",
   tasks: "/tasks",
   websites: "/websites",
-  websiteDetail: (name: string) => `/websites/${name.toLowerCase()}`,
-  testAgent: "/test-agent",
 }

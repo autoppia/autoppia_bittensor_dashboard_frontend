@@ -3,24 +3,20 @@ import {
   LuComponent,
   LuCodesandbox,
   LuBot,
+  LuPackageCheck,
   LuBoxes,
   LuGlobe,
-  LuFence,
 } from "react-icons/lu";
 import { FaHome } from "react-icons/fa";
-
 // Note: do not add href in the label object, it is rendering as label
 export const menuItems = [
   // label start
-  {
-    name: "Navigation",
-  },
-  // label end
   {
     name: "Home",
     href: routes.home,
     icon: <FaHome />,
   },
+  // label end
   {
     name: "Overview",
     href: routes.overview,
@@ -38,10 +34,9 @@ export const menuItems = [
   },
   {
     name: "Agent Run",
-    href: routes.agents,
-    icon: <LuFence />,
+    href: routes.agent_run,
+    icon: <LuPackageCheck />,
   },
-
   {
     name: "Tasks",
     href: routes.tasks,
