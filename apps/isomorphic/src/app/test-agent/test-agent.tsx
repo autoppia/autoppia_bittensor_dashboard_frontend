@@ -211,19 +211,19 @@ export default function TestAgent() {
         </a>
       </div>
 
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80">
-            <PiFlask className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
+      <div className="mb-8 text-center px-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80 flex-shrink-0">
+            <PiFlask className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
           </div>
           <Title
             as="h1"
-            className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
+            className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
           >
             Benchmark Your Agent in Real Time
           </Title>
         </div>
-        <Text className="text-lg text-cyan-300 max-w-4xl mx-auto font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+        <Text className="text-base sm:text-lg text-cyan-300 max-w-4xl mx-auto font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] px-2">
           {`Configure a custom benchmark run against IWA's synthetic websites.
           Select projects, choose specific use cases and prompts, define the
           number of runs, and provide your agent's endpoint. `}
@@ -238,7 +238,7 @@ export default function TestAgent() {
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
-        <div className="relative p-8">
+        <div className="relative p-4 sm:p-6 md:p-8">
           <Title
             as="h2"
             className="text-2xl font-bold mb-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
