@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import PageHeader from "@/app/shared/page-header";
+import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
@@ -37,20 +37,25 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
   }
 
   return (
-    <div className="w-full mt-6">
-      <PageHeader title="Score Over Time">
+    <WidgetCard
+      title="Score Over Time"
+      action={
         <ButtonGroupAction
           options={filterOptions}
           onChange={(option) => handleFilterBy(option)}
         />
-      </PageHeader>
-      <div className="border border-muted rounded-lg bg-gray-50 p-5 custom-scrollbar overflow-x-auto scroll-smooth">
-        <div className={cn("h-[274px] w-full pt-2")}>
+      }
+      headerClassName="flex-row items-center space-between"
+      rounded="xl"
+      className={cn("p-5 lg:p-5", className)}
+    >
+      <div className="custom-scrollbar overflow-x-auto scroll-smooth">
+        <div className={cn("h-[289px] w-full pt-2")}>
           <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={filteredData}
               margin={{
-                top: 30,
+                top: 10,
                 left: -10,
                 right: 10,
               }}
@@ -89,6 +94,6 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
           </ResponsiveContainer>
         </div>
       </div>
-    </div>
+    </WidgetCard>
   );
 }

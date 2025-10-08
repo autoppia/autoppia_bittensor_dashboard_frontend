@@ -225,11 +225,12 @@ export default function TestAgent() {
         </div>
         <Text className="text-lg sm:text-xl md:text-2xl text-cyan-300 max-w-5xl mx-auto leading-relaxed px-4 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
           Configure a custom benchmark run against{" "}
-          <span className="text-yellow-400 font-semibold">IWA's</span> synthetic
-          websites. Select projects, choose specific use cases and prompts,
-          define the number of runs, and provide your agent's endpoint.{" "}
-          <span className="text-yellow-400 font-semibold">IWA</span> will
-          automatically evaluate its performance and return detailed scores.
+          <span className="text-yellow-400 font-semibold">IWA&apos;s</span>{" "}
+          synthetic websites. Select projects, choose specific use cases and
+          prompts, define the number of runs, and provide your agent&apos;s
+          endpoint. <span className="text-yellow-400 font-semibold">IWA</span>{" "}
+          will automatically evaluate its performance and return detailed
+          scores.
         </Text>
       </div>
 

@@ -26,6 +26,9 @@ const config: Omit<Config, "content"> = {
       "4xl": "2560px", // only need to control product grid mode in ultra 4k device
     },
     extend: {
+      placeholderColor: {
+        'gray-700': 'rgb(var(--gray-700) / <alpha-value>)',
+      },
       colors: {
         gray: {
           0: "rgb(var(--gray-0) / <alpha-value>)",

@@ -24,11 +24,15 @@ export default function AgentRun() {
   const [period, setPeriod] = useState<string | null>(null);
 
   return (
-    <div className="w-full px-4 lg:px-8 xl:px-12 2xl:px-24">
-      <PageHeader title={`Agent Run Details`} className="mt-4">
+    <div className="w-full max-w-[1280px] mx-auto">
+      <PageHeader
+        title={`Agent Run Details`}
+        description={`Agent Run ID: ${id}`}
+        className="mt-4"
+      >
         <Link
           href="/agents"
-          className="flex items-center font-mono text-cyan-400 drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
+          className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
           <PiArrowLeftLight className="w-4 h-4" />
           <span className="ms-1">Back to Agents</span>

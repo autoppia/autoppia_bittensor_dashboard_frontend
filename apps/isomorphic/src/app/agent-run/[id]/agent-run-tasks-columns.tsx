@@ -15,7 +15,7 @@ export const agentRunTasksColumns = [
     id: "id",
     size: 80,
     header: "Task Id",
-    cell: ({ row }) => <p className="ms-2 text-emerald-50 font-mono">#{row.original.id}</p>,
+    cell: ({ row }) => <p className="ms-2 text-gray-600">#{row.original.id}</p>,
   }),
   columnHelper.accessor("prompt", {
     id: "prompt",
@@ -23,7 +23,7 @@ export const agentRunTasksColumns = [
     size: 400,
     enableSorting: false,
     cell: ({ row }) => (
-      <Text className="font-medium text-emerald-50 font-mono">{row.original.prompt}</Text>
+      <Text className="font-medium text-gray-700">{row.original.prompt}</Text>
     ),
   }),
   columnHelper.accessor("website", {
@@ -42,7 +42,7 @@ export const agentRunTasksColumns = [
     header: "Use Case",
     enableSorting: false,
     cell: ({ row }) => (
-      <Text className="font-medium text-emerald-50 font-mono">
+      <Text className="font-medium text-gray-600">
         {row.original.use_case
           .split("_")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -56,20 +56,20 @@ export const agentRunTasksColumns = [
     header: "Score",
     cell: ({ row }) => {
       const score = row.original.score;
-      let scoreColor = "text-emerald-50"; // Default color
+      let scoreColor = "text-gray-600"; // Default color
       
       if (score >= 0.8) {
-        scoreColor = "text-emerald-400"; // High performance - bright emerald
+        scoreColor = "text-green-500"; // High performance - green
       } else if (score >= 0.6) {
-        scoreColor = "text-yellow-400"; // Medium performance - yellow
+        scoreColor = "text-yellow-500"; // Medium performance - yellow
       } else if (score >= 0.4) {
-        scoreColor = "text-orange-400"; // Low performance - orange
+        scoreColor = "text-orange-500"; // Low performance - orange
       } else {
-        scoreColor = "text-red-400"; // Poor performance - red
+        scoreColor = "text-red-500"; // Poor performance - red
       }
       
       return (
-        <Text className={`font-medium font-mono ${scoreColor}`}>
+        <Text className={`font-medium ${scoreColor}`}>
           {score.toFixed(2)}
         </Text>
       );
@@ -80,7 +80,7 @@ export const agentRunTasksColumns = [
     size: 100,
     header: "Solution Time",
     cell: ({ row }) => (
-      <Text className="font-medium text-emerald-50 font-mono">
+      <Text className="font-medium text-gray-600">
         {row.original.solutionTime}s
       </Text>
     ),
@@ -92,12 +92,12 @@ export const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`/tasks/${row.original.id}`}
-        className="flex items-center text-emerald-300 hover:text-emerald-200 transition-colors duration-200"
+        className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
       >
         <Button 
           variant="outline" 
           size="sm"
-          className="bg-black/50 border-emerald-400/30 text-emerald-300 hover:bg-emerald-900/30 hover:border-emerald-400 hover:shadow-emerald-500/50 font-mono"
+          className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
         >
           <PiEyeBold className="me-1.5 size-4" />
           <span>Inspect</span>
