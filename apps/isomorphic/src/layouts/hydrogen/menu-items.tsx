@@ -47,4 +47,9 @@ export const menuItems = [
     href: routes.websites,
     icon: <LuGlobe />,
   },
+  {
+    name: "Test Agent",
+    href: routes.testAgent,
+    icon: <LuPackageCheck />
+  }
 ];

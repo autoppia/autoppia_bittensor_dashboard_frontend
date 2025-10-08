@@ -6,6 +6,7 @@ import AgentStats from "./agent-stats";
 import AgentScoreChart from "./agent-score-chart";
 import AgentScoreAnalytics from "./agent-score-analytics";
 import AgentValidators from "./agent-validators";
+import { Text } from "rizzui";
 import { minersData } from "@/data/miners-data";
 
 export default function Agent() {
@@ -27,14 +28,19 @@ export default function Agent() {
           />
           <div className="flex flex-col">
             <span className="text-2xl font-bold text-gray-900">Miner {id}</span>
-            <span className="text-sm text-gray-700">Hotkey: {miner?.hotkey}</span>
+            <span className="text-sm text-gray-600">
+              Hotkey: {miner?.hotkey.slice(0, 6)}...{miner?.hotkey.slice(-6)}
+            </span>
           </div>
         </div>
       </div>
       <AgentStats />
-      <div className="flex gap-8 items-start">
-        <AgentScoreChart />
-        <AgentScoreAnalytics className="w-[450px]" />
+      <Text className="text-2xl font-bold text-gray-900 mt-6">
+        Score Analytics
+      </Text>
+      <div className="flex flex-col lg:flex-row gap-6 items-start mt-4">
+        <AgentScoreChart className="w-[calc(100%-350px)]" />
+        <AgentScoreAnalytics className="w-[350px]" />
       </div>
       <AgentValidators />
     </>
