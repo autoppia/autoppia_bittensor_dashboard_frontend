@@ -141,29 +141,111 @@ export default function TestAgent() {
       return;
     }
 
+    // Parse IP and port from endpoint
+    let ip = "";
+    let port = 0;
+
+    try {
+      const endpoint = agentEndpoint.trim();
+      // Handle format: http://ip:port or ip:port
+      const cleanEndpoint = endpoint.replace(/^https?:\/\//, "");
+      const parts = cleanEndpoint.split(":");
+
+      if (parts.length !== 2) {
+        alert("Invalid endpoint format. Use format: ip:port or http://ip:port");
+        return;
+      }
+
+      ip = parts[0];
+      port = parseInt(parts[1]);
+
+      if (isNaN(port) || port <= 0 || port > 65535) {
+        alert("Invalid port number");
+        return;
+      }
+    } catch (error) {
+      alert("Failed to parse endpoint");
+      return;
+    }
+
     setIsRunning(true);
     setShowResults(false);
 
-    const mockResults: TestResult[] = [];
-    for (let i = 0; i < numRuns; i++) {
-      selectedProjects.forEach((project) => {
-        selectedUseCases.forEach((useCase) => {
-          mockResults.push({
-            project: project,
-            useCase: useCase,
-            success: Math.random() > 0.3,
-            score: Math.floor(Math.random() * 100),
-            duration: Math.random() * 10 + 2,
+    try {
+      const payload = {
+        ip: ip,
+        port: port,
+        projects: selectedProjects,
+        num_use_cases: selectedUseCases.length,
+        use_cases: selectedUseCases.map((uc) =>
+          uc.toUpperCase().replace(/\s+/g, "_")
+        ),
+        runs: numRuns,
+        timeout: 120,
+        id: Date.now().toString(),
+        name: "TestAgent",
+        should_record_gif: false,
+        save_results_json: false,
+        plot_results: false,
+      };
+
+      const response = await fetch(
+        "http://84.247.180.192:5050/test-your-agent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform API response to our TestResult format
+      const transformedResults: TestResult[] = [];
+
+      if (data.results && Array.isArray(data.results)) {
+        data.results.forEach((result: any) => {
+          transformedResults.push({
+            project: result.project || result.website || "Unknown",
+            useCase: result.use_case || result.useCase || "Unknown",
+            success: result.success === true || result.status === "success",
+            score: result.score || (result.success ? 100 : 0),
+            duration: result.duration || result.time || 0,
           });
         });
-      });
+      } else {
+        // If API doesn't return expected format, create results from selected items
+        selectedProjects.forEach((project) => {
+          selectedUseCases.forEach((useCase) => {
+            for (let i = 0; i < numRuns; i++) {
+              transformedResults.push({
+                project: project,
+                useCase: useCase,
+                success: data.success === true,
+                score: data.score || 0,
+                duration: data.duration || 0,
+              });
+            }
+          });
+        });
+      }
+
+      setResults(transformedResults);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Benchmark error:", error);
+      alert(
+        `Failed to run benchmark: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    } finally {
+      setIsRunning(false);
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setResults(mockResults);
-    setShowResults(true);
-    setIsRunning(false);
   };
 
   const calculateAggregateScore = () => {
@@ -191,61 +273,50 @@ export default function TestAgent() {
   };
 
   return (
-    <div className="flex flex-col w-full px-6 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-7xl 2xl:mx-auto">
-      <div className="flex items-center gap-4 self-end mt-6 mb-8">
-        <a
-          href="https://github.com/autoppia"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
-            "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400",
-            "border-2 border-cyan-500/50 hover:border-cyan-400",
-            "transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
-          )}
-        >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-          </svg>
-          <span>GitHub</span>
-        </a>
-      </div>
+    <div className="flex flex-col w-full px-6 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto">
+      <div className="relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-3xl p-6 sm:p-12 mb-12 backdrop-blur-sm transition-all duration-300 shadow-xl overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
-      <div className="mb-12 text-center px-4">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80 flex-shrink-0">
-            <PiFlask className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,1)]" />
+        <div className="relative z-10 text-center">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            {/* <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
+              <PiFlask className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
+            </div> */}
+            <Title
+              as="h1"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+            >
+              Benchmark Your Agent
+            </Title>
           </div>
-          <Title
-            as="h1"
-            className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
-          >
-            Benchmark Your Agent in Real Time
-          </Title>
+          <Text className="text-base sm:text-lg md:text-xl text-cyan-500 max-w-4xl mx-auto leading-relaxed">
+            Configure a custom benchmark run against{" "}
+            <span className="text-yellow-400 font-bold bg-yellow-400/10 px-2 py-1 rounded">
+              IWA&apos;s
+            </span>{" "}
+            synthetic websites. Select projects, choose specific use cases,
+            define the number of runs, and provide your agent&apos;s endpoint.
+          </Text>
         </div>
-        <Text className="text-lg sm:text-xl md:text-2xl text-cyan-300 max-w-5xl mx-auto leading-relaxed px-4 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
-          Configure a custom benchmark run against{" "}
-          <span className="text-yellow-400 font-semibold">IWA&apos;s</span>{" "}
-          synthetic websites. Select projects, choose specific use cases and
-          prompts, define the number of runs, and provide your agent&apos;s
-          endpoint. <span className="text-yellow-400 font-semibold">IWA</span>{" "}
-          will automatically evaluate its performance and return detailed
-          scores.
-        </Text>
       </div>
 
-      <div className="group relative mb-12 bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500">
-        {/* Cyberpunk Background Effects */}
+      <div className="group relative mb-12 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/30 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400/50 transition-all duration-500 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
         <div className="relative p-6 sm:p-8 md:p-10">
-          <Title
-            as="h2"
-            className="text-2xl sm:text-3xl font-bold mb-8 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-          >
-            Configuration
-          </Title>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg">
+              <PiFlask className="w-6 h-6 text-white" />
+            </div>
+            <Title
+              as="h2"
+              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+            >
+              Configuration
+            </Title>
+          </div>
           <div className="space-y-8">
             <div>
               <label className="block text-sm font-medium mb-2 text-cyan-300 font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
@@ -458,22 +529,25 @@ export default function TestAgent() {
                   type="text"
                   value={agentEndpoint}
                   onChange={(e) => setAgentEndpoint(e.target.value)}
-                  placeholder="http://83.45.2.1:5005"
+                  placeholder="84.247.180.192:6789 or http://84.247.180.192:6789"
                   className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
                 />
+                <Text className="text-xs text-gray-400 mt-2">
+                  Enter your agent's IP address and port (e.g.,
+                  84.247.180.192:6789)
+                </Text>
               </div>
             </div>
 
             <div className="pt-4 border-t border-cyan-400/20">
               <Button
-                size="lg"
-                variant="outline"
+                size="xl"
                 onClick={handleRunBenchmark}
                 disabled={isRunning}
                 className={cn(
-                  "w-full font-semibold bg-transparent hover:bg-cyan-500/20 text-cyan-300  py-4 text-lg border border-cyan-400 ",
-                  "shadow-lg shadow-cyan-500/50 transition-all duration-300",
-                  isRunning && "opacity-50 cursor-not-allowed "
+                  "w-full font-bold py-4 text-lg transition-all duration-300 shadow-lg hover:shadow-2xl border-2",
+                  "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 text-white hover:to-blue-600 border-cyan-400 hover:scale-[1.02]",
+                  isRunning && "opacity-50 cursor-not-allowed hover:scale-100"
                 )}
               >
                 <PiFlask className="mr-2 inline text-xl" />
@@ -481,67 +555,52 @@ export default function TestAgent() {
               </Button>
             </div>
           </div>
-
-          {/* Cyberpunk Corner Accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
         </div>
 
         {showResults && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <div
-                className={cn(
-                  "text-center p-6 rounded-lg bg-black",
-                  "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10",
-                  "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-500/30"
-                )}
-              >
-                <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-mono drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
-                  Success Rate
-                </Text>
-                <Title
-                  as="h3"
-                  className="text-4xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-                >
-                  {calculateSuccessRate()}%
-                </Title>
+              <div className="relative text-center p-6 rounded-2xl border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/30 backdrop-blur-sm group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                <div className="relative">
+                  <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-bold">
+                    Success Rate
+                  </Text>
+                  <Title
+                    as="h3"
+                    className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+                  >
+                    {calculateSuccessRate()}%
+                  </Title>
+                </div>
               </div>
-              <div
-                className={cn(
-                  "text-center p-6 rounded-lg bg-black",
-                  "border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10",
-                  "hover:border-yellow-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-yellow-500/30"
-                )}
-              >
-                <Text className="text-sm text-yellow-300 mb-2 uppercase tracking-wide font-mono drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
-                  Average Score
-                </Text>
-                <Title
-                  as="h3"
-                  className="text-4xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(251,191,36,1)]"
-                >
-                  {calculateAggregateScore()}
-                </Title>
+              <div className="relative text-center p-6 rounded-2xl border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:border-yellow-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/30 backdrop-blur-sm group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                <div className="relative">
+                  <Text className="text-sm text-yellow-300 mb-2 uppercase tracking-wide font-bold">
+                    Average Score
+                  </Text>
+                  <Title
+                    as="h3"
+                    className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent"
+                  >
+                    {calculateAggregateScore()}
+                  </Title>
+                </div>
               </div>
-              <div
-                className={cn(
-                  "text-center p-6 rounded-lg bg-black",
-                  "border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10",
-                  "hover:border-blue-400/50 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/30"
-                )}
-              >
-                <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-mono font-semibold drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
-                  Total Tests
-                </Text>
-                <Title
-                  as="h3"
-                  className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,1)]"
-                >
-                  {results.length}
-                </Title>
+              <div className="relative text-center p-6 rounded-2xl border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/30 backdrop-blur-sm group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                <div className="relative">
+                  <Text className="text-sm text-purple-300 mb-2 uppercase tracking-wide font-bold">
+                    Total Tests
+                  </Text>
+                  <Title
+                    as="h3"
+                    className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent"
+                  >
+                    {results.length}
+                  </Title>
+                </div>
               </div>
             </div>
 

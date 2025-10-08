@@ -20,7 +20,7 @@ export default function LandingPage() {
             as="h1"
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent animate-pulse"
           >
-            The Synthetic Benchmark for Web Agents
+            Infinity Web Arena
           </Title>
           <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-300 my-8 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] px-2">
             Infinity Web Arena (IWA) is the most advanced synthetic benchmark,
@@ -194,7 +194,7 @@ export default function LandingPage() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]">
             Check Our Web Projects
           </h2>
-          <p className="text-lg text-cyan-300 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+          <p className="text-lg text-cyan-300 mt-4 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
             IWA includes{" "}
             <span className="text-yellow-400 font-bold">
               {websitesData.length} synthetic websites
