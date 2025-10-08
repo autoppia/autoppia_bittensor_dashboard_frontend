@@ -34,9 +34,10 @@ export default function AgentStats() {
       description: "Live leaderboard position",
       icon: LuChartNoAxesCombined,
       className:
-        "border-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/15",
+        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
       metricClassName: "text-yellow-500",
-      iconClassName: "bg-yellow-500/30 text-yellow-500",
+      iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      descriptionClassName: "text-yellow-200",
     },
     {
       title: "All-Time Best Score",
@@ -44,27 +45,30 @@ export default function AgentStats() {
       description: "Peak performance ever",
       icon: LuStar,
       className:
-        "border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/15",
+        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
       metricClassName: "text-emerald-500",
-      iconClassName: "bg-emerald-500/30 text-emerald-500",
+      iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      descriptionClassName: "text-emerald-200",
     },
     {
       title: "Rounds Completed",
       metric: 20,
       description: "Total evaluations",
       icon: LuCircleCheckBig,
-      className: "border-muted bg-gray-50",
+      className: "border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all duration-300 group",
       metricClassName: "text-violet-700",
-      iconClassName: "bg-violet-700/30 text-violet-700",
+      iconClassName: "bg-gradient-to-br from-violet-400 to-violet-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      descriptionClassName: "",
     },
     {
       title: "Total Alpha Earned",
       metric: "Coming Soon",
       description: "TAO rewards",
       icon: LuDollarSign,
-      className: "border-muted bg-gray-50",
+      className: "border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all duration-300 group",
       metricClassName: "text-blue-700 text-lg",
-      iconClassName: "bg-blue-700/30 text-blue-700",
+      iconClassName: "bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      descriptionClassName: "",
     },
   ];
 
@@ -90,34 +94,34 @@ export default function AgentStats() {
               <div
                 key={stat.title}
                 className={cn(
-                  "border p-5 rounded-lg min-w-[240px]",
+                  "p-5 rounded-xl min-w-[240px]",
                   stat.className
                 )}
               >
-                <div className="flex items-center">
+                <div className="flex items-center mb-2">
                   <div
                     className={cn(
-                      "flex items-center justify-center w-11 h-11 bg-opacity-30 rounded-lg",
+                      "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
                       stat.iconClassName
                     )}
                   >
-                    <Icon className="w-7 h-7" />
+                    <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
                   </div>
-                  <Text className="text-lg ms-3 text-gray-700">
+                  <Text className="text-sm font-medium ms-3 text-gray-700 uppercase tracking-wide">
                     {stat.title}
                   </Text>
                 </div>
-                <div className="flex items-center h-11 ms-1 pt-2">
+                <div className="flex items-center h-12 mb-1">
                   <Text
                     className={cn(
-                      "font-lexend text-3xl font-semibold",
+                      "font-bold text-3xl",
                       stat.metricClassName
                     )}
                   >
                     {stat.metric}
                   </Text>
                 </div>
-                <Text className="text-sm font-medium text-gray-500">
+                <Text className={cn("text-xs text-gray-600 font-medium", stat.descriptionClassName)}>
                   {stat.description}
                 </Text>
               </div>

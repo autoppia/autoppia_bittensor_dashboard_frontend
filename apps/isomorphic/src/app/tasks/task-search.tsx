@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { tasksData, tasksDataMap } from "@/data/tasks-data";
+import { websitesData, websitesDataMap } from "@/data/websites-data";
 import { agentRunData } from "@/data/agent-run-data";
-import { validatorsData, validatorsDataMap } from "@/data/validators-data";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -12,81 +13,101 @@ import {
   PiRobotDuotone,
   PiCaretDownDuotone,
   PiInfoDuotone,
+  PiGlobeDuotone,
+  PiCodeDuotone,
 } from "react-icons/pi";
 
-export default function AgentRunSearch() {
+export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [roundInput, setRoundInput] = useState<string>("");
-  const [selectedValidator, setSelectedValidator] = useState<string>("");
-  const [agentInput, setAgentInput] = useState<string>("");
+  const [agentRunInput, setAgentRunInput] = useState<string>("");
+  const [selectedWebsite, setSelectedWebsite] = useState<string>("");
+  const [selectedUseCase, setSelectedUseCase] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
+  const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
+  const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
 
-  const validatorDropdownRef = useRef<HTMLDivElement>(null);
+  const websiteDropdownRef = useRef<HTMLDivElement>(null);
+  const useCaseDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Get unique use cases from tasks data
+  const uniqueUseCases = useMemo(() => {
+    const useCases = Array.from(new Set(tasksData.map(task => task.use_case)));
+    return useCases.sort();
+  }, []);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        validatorDropdownRef.current &&
-        !validatorDropdownRef.current.contains(event.target as Node)
+        websiteDropdownRef.current &&
+        !websiteDropdownRef.current.contains(event.target as Node)
       ) {
-        setIsValidatorDropdownOpen(false);
+        setIsWebsiteDropdownOpen(false);
+      }
+      if (
+        useCaseDropdownRef.current &&
+        !useCaseDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsUseCaseDropdownOpen(false);
       }
     };
 
-    if (isValidatorDropdownOpen) {
+    if (isWebsiteDropdownOpen || isUseCaseDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isValidatorDropdownOpen]);
+  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
 
-  // Filter agent runs based on search criteria
-  const filteredRuns = useMemo(() => {
-    return agentRunData.filter((run) => {
+  // Filter tasks based on search criteria
+  const filteredTasks = useMemo(() => {
+    return tasksData.filter((task) => {
       const matchesSearch =
         searchTerm === "" ||
-        run.runUid.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRound =
-        roundInput === "" || run.round.toString().includes(roundInput);
-      const matchesValidator =
-        selectedValidator === "" || run.validatorId === selectedValidator;
-      const matchesAgent =
-        agentInput === "" ||
-        run.agentUid.toString().includes(agentInput) ||
-        run.runUid.toLowerCase().includes(agentInput.toLowerCase());
+        task.id.includes(searchTerm) ||
+        task.prompt.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesAgentRun =
+        agentRunInput === "" || 
+        task.id.includes(agentRunInput); // Match task ID with agent run input
+      
+      const matchesWebsite =
+        selectedWebsite === "" || task.website === selectedWebsite;
+      
+      const matchesUseCase =
+        selectedUseCase === "" || task.use_case === selectedUseCase;
 
-      return matchesSearch && matchesRound && matchesValidator && matchesAgent;
+      return matchesSearch && matchesAgentRun && matchesWebsite && matchesUseCase;
     });
-  }, [searchTerm, roundInput, selectedValidator, agentInput]);
+  }, [searchTerm, agentRunInput, selectedWebsite, selectedUseCase]);
 
   const handleSearch = () => {
     setHasSearched(true);
-    const results = filteredRuns.slice(0, 12); // Get recent 12 items
+    const results = filteredTasks.slice(0, 12); // Get recent 12 items
     setSearchResults(results);
 
     if (results.length === 1) {
-      router.push(`/agent-run/${results[0].runUid}`);
+      router.push(`/tasks/${results[0].id}`);
     }
   };
 
   const clearFilters = () => {
     setSearchTerm("");
-    setRoundInput("");
-    setSelectedValidator("");
-    setAgentInput("");
+    setAgentRunInput("");
+    setSelectedWebsite("");
+    setSelectedUseCase("");
     setHasSearched(false);
     setSearchResults([]);
-    setIsValidatorDropdownOpen(false);
+    setIsWebsiteDropdownOpen(false);
+    setIsUseCaseDropdownOpen(false);
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm !== "" || roundInput !== "" || selectedValidator !== "" || agentInput !== "";
+  const hasActiveFilters = searchTerm !== "" || agentRunInput !== "" || selectedWebsite !== "" || selectedUseCase !== "";
 
   return (
     <div className="w-full max-w-[1024px] mx-auto h-full py-8">
@@ -104,11 +125,11 @@ export default function AgentRunSearch() {
                 <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                AGENT RUN SEARCH
+                TASK SEARCH
               </h2>
             </div>
             <p className="text-cyan-300 text-sm">
-              Search by Run UID or filter by Round, Validator, and Agent
+              Search by Task ID or filter by Agent Run, Website, and Use Case
             </p>
           </div>
 
@@ -119,8 +140,7 @@ export default function AgentRunSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter Run UID (e.g., m4v1-6w9x)"
-                maxLength={9}
+                placeholder="Enter Task ID or Prompt (e.g., 3413)"
                 className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-sm focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -130,79 +150,79 @@ export default function AgentRunSearch() {
           </div>
 
           {/* Filter Section */}
-          <div className="mb-6 overflow-visible">
+          <div className="mb-6 overflow-visible z-100">
             <div className="flex items-center gap-2 mb-4">
               <PiFunnelDuotone className="w-5 h-5 text-purple-300" />
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-visible">
-              {/* Round Filter */}
+              {/* Agent Run Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300">
-                  ROUND
+                  AGENT RUN
                 </label>
                 <div className="relative">
                   <input
                     type="text"
-                    value={roundInput}
-                    onChange={(e) => setRoundInput(e.target.value)}
-                    placeholder="Enter Round Number"
+                    value={agentRunInput}
+                    onChange={(e) => setAgentRunInput(e.target.value)}
+                    placeholder="Enter Agent Run UID"
                     className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-sm focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <PiHashDuotone className="w-4 h-4 text-emerald-400" />
+                    <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
                   </div>
                 </div>
               </div>
 
-              {/* Validator Filter */}
+              {/* Website Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-blue-300">
-                  VALIDATOR
+                  WEBSITE
                 </label>
-                <div className="relative" ref={validatorDropdownRef}>
+                <div className="relative" ref={websiteDropdownRef}>
                   <button
                     type="button"
                     onClick={() => {
-                      setIsValidatorDropdownOpen(!isValidatorDropdownOpen);
+                      setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen);
                     }}
                     className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-sm focus:ring-0"
                   >
                     <span>
-                      {selectedValidator === ""
-                        ? "All Validators"
-                        : validatorsData.find((v) => v.id === selectedValidator)
-                            ?.name || selectedValidator}
+                      {selectedWebsite === ""
+                        ? "All Websites"
+                        : websitesData.find((w) => w.name === selectedWebsite)
+                            ?.name || selectedWebsite}
                     </span>
                     <PiCaretDownDuotone
-                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isValidatorDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
-                  {isValidatorDropdownOpen && (
+                  {isWebsiteDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-sm z-50">
                       <button
                         type="button"
                         onClick={() => {
-                          setSelectedValidator("");
-                          setIsValidatorDropdownOpen(false);
+                          setSelectedWebsite("");
+                          setIsWebsiteDropdownOpen(false);
                         }}
                         className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20"
                       >
-                        All Validators
+                        All Websites
                       </button>
-                      {validatorsData.map((validator) => (
+                      {websitesData.filter(w => !w.isComingSoon).map((website) => (
                         <button
-                          key={validator.id}
+                          key={website.name}
                           type="button"
                           onClick={() => {
-                            setSelectedValidator(validator.id);
-                            setIsValidatorDropdownOpen(false);
+                            setSelectedWebsite(website.name);
+                            setIsWebsiteDropdownOpen(false);
                           }}
                           className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
                         >
-                          {validator.name}
+                          {website.name}
                         </button>
                       ))}
                     </div>
@@ -210,29 +230,63 @@ export default function AgentRunSearch() {
                 </div>
               </div>
 
-              {/* Agent Filter - Text Input */}
+              {/* Use Case Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-purple-300">
-                  AGENT
+                  USE CASE
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={agentInput}
-                    onChange={(e) => setAgentInput(e.target.value)}
-                    placeholder="Enter Agent UID or Hotkey"
-                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm focus:border-purple-500 transition-all duration-300 outline-none placeholder-gray-400 backdrop-blur-sm focus:ring-0"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <PiRobotDuotone className="w-4 h-4 text-purple-400" />
-                  </div>
+                <div className="relative" ref={useCaseDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen);
+                    }}
+                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-sm focus:ring-0"
+                  >
+                    <span>
+                      {selectedUseCase === ""
+                        ? "All Use Cases"
+                        : selectedUseCase.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                    </span>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${isUseCaseDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {isUseCaseDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-sm z-50">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedUseCase("");
+                          setIsUseCaseDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                      >
+                        All Use Cases
+                      </button>
+                      {uniqueUseCases.map((useCase) => (
+                        <button
+                          key={useCase}
+                          type="button"
+                          onClick={() => {
+                            setSelectedUseCase(useCase);
+                            setIsUseCaseDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20 last:border-b-0"
+                        >
+                          {useCase.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center z-50">
             <button
               onClick={handleSearch}
               className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
@@ -269,7 +323,7 @@ export default function AgentRunSearch() {
                 READY TO SEARCH
               </h3>
               <p className="text-blue-200 text-sm">
-                Enter a Run UID or use filters to find agent runs
+                Enter a Task ID or use filters to find tasks
               </p>
             </div>
           </div>
@@ -284,17 +338,17 @@ export default function AgentRunSearch() {
               RECENT {searchResults.length} RESULTS
             </h3>
             <p className="text-purple-200 text-sm">
-              Showing recent agent runs matching your criteria
+              Showing recent tasks matching your criteria
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {searchResults.map((run) => {
-              const validator = validatorsDataMap[run.validatorId];
+            {searchResults.map((task) => {
+              const website = websitesDataMap[task.website];
               return (
                 <div
-                  key={run.runUid}
-                  onClick={() => router.push(`/agent-run/${run.runUid}`)}
+                  key={task.id}
+                  onClick={() => router.push(`/tasks/${task.id}`)}
                   className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-sm cursor-pointer hover:shadow-2xl hover:scale-105"
                 >
                   <div className="text-center">
@@ -302,10 +356,17 @@ export default function AgentRunSearch() {
                       <PiPlayDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
                     </div>
                     <div className="text-sm font-bold text-white mb-2">
-                      RUN UID: {run.runUid}
+                      TASK ID: {task.id}
                     </div>
-                    <div className="text-xs text-purple-200">
-                      Round {run.round} • {validator?.name || run.validatorId} • Agent {run.agentUid}
+                    <div className="text-xs text-purple-200 mb-2">
+                      {task.prompt.length > 50 ? `${task.prompt.substring(0, 50)}...` : task.prompt}
+                    </div>
+                    <div className="text-xs text-purple-300">
+                      {task.website} • {task.use_case.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                    </div>
+                    <div className="flex justify-center gap-4 mt-2 text-xs">
+                      <span className="text-green-300">Score: {(task.score * 100).toFixed(0)}%</span>
+                      <span className="text-blue-300">{task.solutionTime}s</span>
                     </div>
                   </div>
                 </div>

@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Tasks from "./tasks";
+import TaskSearch from "./task-search";
 
 export const metadata = {
   ...metaObject(),
 };
 
 export default function Page() {
-  return <Tasks />;
+  return <TaskSearch />;
 }

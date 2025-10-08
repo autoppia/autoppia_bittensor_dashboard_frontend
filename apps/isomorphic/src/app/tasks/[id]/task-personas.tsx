@@ -7,7 +7,7 @@ import {
   PiGithubLogoDuotone,
 } from "react-icons/pi";
 
-export default function AgentRunPersonas() {
+export default function TaskPersonas() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       {/* Round Card */}
@@ -67,7 +67,7 @@ export default function AgentRunPersonas() {
               width={56}
               height={56}
               className="rounded-xl group-hover:scale-105 transition-transform"
-              src="https://ext.same-assets.com/3351110290/1873003866.svg"
+              src="/miners/1.svg"
             />
             <div className="absolute -top-2 -right-2 px-2 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full text-xs font-bold text-white shadow-lg">#1</div>
           </div>
