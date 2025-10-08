@@ -1,15 +1,19 @@
-import { Title } from 'rizzui/typography';
+"use client";
+
+import { Title, Text } from 'rizzui/typography';
 import cn from '@core/utils/class-names';
 
 export type PageHeaderProps = {
   title: string;
+  description?: string;
   className?: string;
 };
 
 export default function PageHeader({
   title,
-  children,
+  description,
   className,
+  children,
 }: React.PropsWithChildren<PageHeaderProps>) {
   return (
     <header className={cn('mb-6', className)}>
@@ -17,10 +21,11 @@ export default function PageHeader({
         <div>
           <Title
             as="h2"
-            className="text-[22px] lg:text-3xl 4xl:text-[26px] font-extrabold font-mono text-cyan-400 drop-shadow-[0_0_15px_rgba(0,255,255,1)]"
+            className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold"
           >
             {title}
           </Title>
+          <Text className="mt-1 text-md lg:text-lg text-gray-500">{description}</Text>
         </div>
         {children}
       </div>

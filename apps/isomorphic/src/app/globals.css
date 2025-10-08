@@ -1092,10 +1092,7 @@ td.rc-table-cell-fix-right {
   @apply dark:fill-gray-400/50;
 }
 
-input::placeholder,
-textarea::placeholder {
-  @apply dark:!text-gray-300;
-}
+/* Placeholder styling - let Tailwind handle it */
 
 /* ................................................... */
 /* Google Map Styles */
