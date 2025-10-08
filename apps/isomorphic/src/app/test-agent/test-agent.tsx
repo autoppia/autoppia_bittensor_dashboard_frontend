@@ -533,8 +533,8 @@ export default function TestAgent() {
                   className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
                 />
                 <Text className="text-xs text-gray-400 mt-2">
-                  Enter your agent's IP address and port (e.g.,
-                  84.247.180.192:6789)
+                  {`Enter your agent's IP address and port (e.g.,
+                  84.247.180.192:6789)`}
                 </Text>
               </div>
             </div>

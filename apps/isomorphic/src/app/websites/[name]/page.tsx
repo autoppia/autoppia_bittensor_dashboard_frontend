@@ -269,7 +269,7 @@ export default function WebsiteDetailPage() {
                           color: "#D1D5DB",
                         }}
                       >
-                        "{useCase.examplePrompt}"
+                        {`"${useCase.examplePrompt}"`}
                       </div>
                     </div>
                   </div>
