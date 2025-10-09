@@ -13,7 +13,7 @@ import {
   PiCheckCircleDuotone,
   PiLightbulbDuotone,
 } from "react-icons/pi";
-import { FaExternalLinkAlt } from "react-icons/fa";
+import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 
 export default function WebsiteDetailPage() {
   const params = useParams();
@@ -83,7 +83,7 @@ export default function WebsiteDetailPage() {
 
             <div className="flex flex-col justify-center space-y-6">
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <div
                     className="px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-sm border-2"
                     style={{
@@ -124,11 +124,11 @@ export default function WebsiteDetailPage() {
                     href={website.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/btn"
+                    className="group/btn flex-1"
                   >
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
+                      className="w-full text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
                       style={{
                         backgroundColor: website.color,
                         borderColor: website.color,
@@ -139,6 +139,20 @@ export default function WebsiteDetailPage() {
                       <FaExternalLinkAlt className="ms-2 h-4 w-4 text-white" />
                     </Button>
                   </Link>
+                  <a
+                    href="https://github.com/autoppia"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/github"
+                  >
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto bg-black hover:bg-black/50 text-white border-2 border-black/50 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-gray-500/50"
+                    >
+                      <FaGithub className="me-2 h-5 w-5 group-hover/github:rotate-12 transition-transform" />
+                      View Demo
+                    </Button>
+                  </a>
                 </div>
               )}
 
@@ -293,8 +307,8 @@ export default function WebsiteDetailPage() {
           )}
         </div>
 
-        {!website.isComingSoon && website.href !== "#" && (
-          <div className="flex justify-center mt-12">
+        {/* {!website.isComingSoon && website.href !== "#" && (
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
             <Link
               href={website.href}
               target="_blank"
@@ -314,8 +328,26 @@ export default function WebsiteDetailPage() {
                 <FaExternalLinkAlt className="ms-3 h-5 w-5 transition-transform group-hover/cta:translate-x-1" />
               </Button>
             </Link>
+            <a
+              href="https://github.com/autoppia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/github-cta"
+              style={{
+                backgroundColor: website.color,
+                borderColor: website.color,
+              }}
+            >
+              <Button
+                size="xl"
+                className="bg-gradient-to-r from-gray-800 to-gray-900 text-white border-2 border-gray-700 hover:border-gray-500 hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-gray-500/50 px-8 py-4"
+              >
+                <FaGithub className="me-3 h-6 w-6 group-hover/github-cta:rotate-12 transition-transform" />
+                <span className="text-lg font-bold">View on GitHub</span>
+              </Button>
+            </a>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
