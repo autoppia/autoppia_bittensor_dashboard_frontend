@@ -51,21 +51,6 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5 animate-gradient"></div>
-        <div
-          className="absolute w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float"
-          style={{
-            left: `${mousePosition.x / 20}px`,
-            top: `${mousePosition.y / 20}px`,
-            transition: "all 0.3s ease-out",
-          }}
-        ></div>
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float-slow"></div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 md:py-24">
         <div
@@ -74,38 +59,11 @@ export default function LandingPage() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           )}
         >
-          {/* Animated Border Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl animate-border-flow"></div>
-
-          {/* Floating Particles */}
-          <div className="absolute inset-0 overflow-hidden rounded-3xl">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-particle"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 5}s`,
-                  animationDuration: `${5 + Math.random() * 10}s`,
-                }}
-              ></div>
-            ))}
-          </div>
-
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
           <div className="relative z-10 text-center max-w-4xl mx-auto">
             {/* Animated Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
-                <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full shadow-2xl animate-bounce-slow">
-                  <PiSparkle className="w-10 h-10 text-white animate-spin-slow" />
-                </div>
-              </div>
-            </div>
 
             {/* Typing Animation Title */}
             <Title
@@ -245,8 +203,8 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 animate-shimmer"></div>
 
-            <div className="relative p-8 sm:p-10 md:p-12">
-              <Text className="text-base sm:text-lg md:text-xl text-cyan-100 mb-6 leading-relaxed">
+            <div className="relative p-8 sm:p-10 md:p-12 flex flex-col items-center">
+              <Text className="text-base sm:text-lg md:text-xl text-cyan-100 mb-6">
                 Infinity Web Arena (IWA) is a{" "}
                 <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30 animate-pulse-slow">
                   synthetic benchmark
@@ -263,7 +221,7 @@ export default function LandingPage() {
                 href="https://github.com/autoppia"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/40 hover:border-yellow-300 rounded-xl text-yellow-200 hover:text-yellow-100 font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/30 group/link"
+                className="inline-flex w-fit items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/40 hover:border-yellow-300 rounded-xl text-yellow-200 hover:text-yellow-100 font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/30 group/link"
               >
                 <span className="text-lg">Read the Paper</span>
                 <FaArrowRight className="group-hover/link:translate-x-1 transition-transform" />
@@ -420,7 +378,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(168,85,247,0.05),transparent_70%)]"></div>
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-purple-500/5 to-pink-500/5 animate-shimmer"></div>
 
-            <div className="relative p-8 sm:p-10 md:p-12 text-center">
+            <div className="relative p-8 sm:p-10 md:p-12 text-center flex flex-col items-center">
               <Text className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 leading-relaxed">
                 Want to see your Web Agent in action? Configure a benchmark run
                 by selecting websites, use cases, and prompts. Define how many
@@ -431,7 +389,7 @@ export default function LandingPage() {
                 do the rest.
               </Text>
               <Link href={routes.testAgent}>
-                <button className="px-8 py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-purple-500/50">
+                <button className="px-8 w-fit py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-purple-500/50">
                   <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                   START TESTING NOW
                   <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -573,220 +531,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      <style jsx global>{`
-        @keyframes gradient {
-          0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translate(0, 0) rotate(0deg);
-          }
-          33% {
-            transform: translate(30px, -30px) rotate(120deg);
-          }
-          66% {
-            transform: translate(-20px, 20px) rotate(240deg);
-          }
-        }
-
-        @keyframes float-delayed {
-          0%,
-          100% {
-            transform: translate(0, 0) rotate(0deg);
-          }
-          33% {
-            transform: translate(-30px, 30px) rotate(-120deg);
-          }
-          66% {
-            transform: translate(20px, -20px) rotate(-240deg);
-          }
-        }
-
-        @keyframes float-slow {
-          0%,
-          100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(20px, 20px) scale(1.1);
-          }
-        }
-
-        @keyframes particle {
-          0% {
-            transform: translateY(0) scale(0);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-100vh) scale(1);
-            opacity: 0;
-          }
-        }
-
-        @keyframes bounce-slow {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes blink {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0;
-          }
-        }
-
-        @keyframes glow {
-          0%,
-          100% {
-            box-shadow: 0 0 5px rgba(6, 182, 212, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.8);
-          }
-        }
-
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-
-        @keyframes shimmer {
-          0% {
-            background-position: -100% 0;
-          }
-          100% {
-            background-position: 100% 0;
-          }
-        }
-
-        @keyframes bounce-x {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          50% {
-            transform: translateX(5px);
-          }
-        }
-
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-in-right {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes border-flow {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-
-        .animate-gradient {
-          animation: gradient 15s ease infinite;
-          background-size: 400% 400%;
-        }
-        .animate-float {
-          animation: float 20s ease-in-out infinite;
-        }
-        .animate-float-delayed {
-          animation: float-delayed 25s ease-in-out infinite;
-        }
-        .animate-float-slow {
-          animation: float-slow 30s ease-in-out infinite;
-        }
-        .animate-particle {
-          animation: particle linear infinite;
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
-        .animate-blink {
-          animation: blink 1s step-start infinite;
-        }
-        .animate-glow {
-          animation: glow 2s ease-in-out infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
-        }
-        .animate-shimmer {
-          animation: shimmer 3s linear infinite;
-          background-size: 200% 100%;
-        }
-        .animate-bounce-x {
-          animation: bounce-x 2s ease-in-out infinite;
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        .animate-slide-in-right {
-          animation: slide-in-right 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        .animate-border-flow {
-          animation: border-flow 8s linear infinite;
-        }
-      `}</style>
     </div>
   );
 }
