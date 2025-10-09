@@ -37,8 +37,8 @@ export default function RoundMiners({
         />
       </PageHeader>
       <div className="flex flex-col xl:flex-row gap-6">
-        <RoundMinersScore className="w-full xl:w-[calc(100%-360px)]" />
-        <RoundTopMiners className="w-full xl:w-[360px]" />
+        <RoundMinersScore className="w-full xl:w-[calc(100%-400px)]" />
+        <RoundTopMiners className="w-full xl:w-[400px]" />
       </div>
     </>
   );

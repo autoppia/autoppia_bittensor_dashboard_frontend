@@ -328,7 +328,7 @@ export default function LandingPage() {
 
             {/* Right: Leaderboard Preview/Image */}
             <div className="relative">
-              <div className="relative bg-black/50 border border-yellow-400/30 rounded-lg p-3 sm:p-4 md:p-6 backdrop-blur-sm">
+              <div className="relative bg-black/50 border border-yellow-400/30 rounded-lg p-3 sm:p-4 md:p-6 backdrop-blur-md">
                 <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-yellow-400/30">
                   <span className="text-yellow-400 font-semibold font-mono text-xs sm:text-sm">
                     RANK

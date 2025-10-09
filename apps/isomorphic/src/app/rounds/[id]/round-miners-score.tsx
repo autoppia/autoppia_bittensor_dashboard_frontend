@@ -36,7 +36,7 @@ export default function RoundMinersScore({
   const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
 
   return (
-    <WidgetCard title="Scores" className={cn("h-[455px]", className)}>
+    <WidgetCard title="Scores" className={cn("h-[460px] hover:border-emerald-500", className)}>
       <div className="mt-5 w-full h-[350px] lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
@@ -55,8 +55,9 @@ export default function RoundMinersScore({
                 y2="100%"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0" stopColor="#FF7E5F" />
-                <stop offset="1" stopColor="#FEB47B" />
+                <stop offset="0" stopColor="#10B981" />
+                <stop offset="40%" stopColor="#10B981" />
+                <stop offset="1" stopColor="#3B82F6" />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" />
@@ -66,7 +67,7 @@ export default function RoundMinersScore({
             <Bar
               dataKey="score"
               fill="url(#score)"
-              stroke="#FF7E5F"
+              stroke="#10B981"
               strokeWidth={0}
               radius={[4, 4, 0, 0]}
               barSize={barSize}
@@ -100,7 +101,7 @@ export function CustomTooltip({ label, active, payload, className }: any) {
             <span
               className="me-1.5 h-2 w-2 rounded-full"
               style={{
-                backgroundColor: "#FF7E5F",
+                backgroundColor: "#10B981",
               }}
             />
             <Text>

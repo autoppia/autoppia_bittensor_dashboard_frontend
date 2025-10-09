@@ -39,13 +39,13 @@ export default function TaskResults() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Side - Actions */}
-      <div className="border border-muted rounded-lg p-4 bg-gray-50">
+      <div className="border border-muted rounded-lg p-4 bg-gray-50 hover:border-emerald-500">
         <Text className="text-white text-lg font-medium mb-4">Actions</Text>
-        <div className="space-y-2 border border-muted rounded-lg h-[350px] p-4">
+        <div className="space-y-2 border border-muted rounded-lg h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto">
           {actions.map((action, index) => (
             <div
               key={`action-item-${index}`}
-              className="w-full flex items-center bg-gray-100 rounded-full px-3 py-2 italic text-gray-800"
+              className="w-full flex items-center bg-gray-100 rounded-lg px-3 py-2 italic text-gray-800"
             >
               {action.icon}
               <Text className="ms-2 font-medium w-full truncate">
@@ -57,12 +57,12 @@ export default function TaskResults() {
       </div>
 
       {/* Right Side - Generated GIF */}
-      <div className="border border-muted rounded-lg p-4 bg-gray-50">
+      <div className="border border-muted rounded-lg p-4 bg-gray-50 hover:border-emerald-500">
         <Text className="text-white text-lg font-medium mb-4">
           Generated GIF
         </Text>
-        <div className="flex justify-center items-center w-full h-[350px] border border-muted rounded-lg">
-          <div className="text-2xl font-bold text-gray-500">Coming Soon</div>
+        <div className="flex justify-center items-center w-full h-[350px] bg-gray-900 border border-muted rounded-lg">
+          <div className="text-3xl font-bold text-gray-100">Coming Soon</div>
         </div>
       </div>
     </div>

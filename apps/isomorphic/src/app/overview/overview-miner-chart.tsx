@@ -71,7 +71,7 @@ export default function MinerChart({ className }: MinerChartProps) {
       }
       headerClassName="flex-row items-center space-between"
       rounded="lg"
-      className={cn("p-5 lg:p-5", className)}
+      className={cn("p-5 lg:p-5 hover:border-emerald-500", className)}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[160px] w-full pt-2")}>

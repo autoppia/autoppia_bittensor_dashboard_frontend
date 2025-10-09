@@ -2,7 +2,7 @@
 
 export default function AgentRunStats() {
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
+    <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       {/* Mobile Layout - Stacked */}
       <div className="flex flex-col space-y-6 md:hidden">
         {/* Overall Score - Prominent on mobile */}

@@ -6,7 +6,7 @@ import { Button } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
-import { LuBox, LuTrophy, LuCircleCheckBig } from "react-icons/lu";
+import { LuBox, LuTrophy, LuClock } from "react-icons/lu";
 import { RoundType, roundsData } from "@/data/rounds-data";
 
 export default function RoundRecents() {
@@ -44,60 +44,42 @@ export default function RoundRecents() {
                 <Link key={`round-${index}`} href={`/rounds/${round.id}`}>
                   <div
                     className={cn(
-                      "w-full min-w-[290px] rounded-lg border border-gray-300 hover:border-emerald-500 px-6 py-7 @container bg-gray-50",
-                      isActive && "bg-emerald-500 border-emerald-500"
+                      "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md",
+                      isActive
+                        ? "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-400/40 hover:border-emerald-400/60"
+                        : "border border-muted hover:border-emerald-500 bg-gray-50 hover:bg-gray-100"
                     )}
                   >
-                    <div className="mb-4 flex items-center gap-5">
+                    <div className="mb-4 flex items-center gap-4">
                       <span
                         className={cn(
-                          "flex rounded-md p-2.5 bg-emerald-500 text-white",
-                          isActive && "bg-white text-emerald-500"
+                          "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110",
+                          "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110"
                         )}
                       >
-                        <LuCircleCheckBig className="h-auto w-[30px]" />
-                      </span>
-                      <div className="space-y-1.5">
-                        <p
-                          className={cn(
-                            "text-lg font-bold text-gray-700 2xl:text-[20px] 3xl:text-3xl",
-                            isActive && "text-white"
-                          )}
-                        >
-                          Round {round.id}
-                        </p>
-                        <p
-                          className={cn(
-                            "flex items-center space-x-0.5 font-medium text-gray-500",
-                            isActive && "text-white"
-                          )}
-                        >
-                          <LuBox />
-                          <span>{round.startBlock}</span>
-                          <span className="mx-1">-</span>
-                          <LuBox />
-                          <span>{round.endBlock}</span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span
-                        className={cn(
-                          "mr-2 px-2 py-1 rounded-full bg-emerald-500/70 text-white",
-                          isActive && "bg-white text-emerald-500/70"
-                        )}
-                      >
-                        <LuTrophy className="w-4 h-4" />
+                        <LuClock className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
                       </span>
                       <span
                         className={cn(
-                          "text-gray-700",
-                          isActive && "text-white"
+                          "text-[20px] font-bold uppercase tracking-wide",
+                          isActive ? "text-emerald-400" : "text-gray-700"
                         )}
                       >
-                        Winner UID: 234
+                        Round {round.id}
                       </span>
                     </div>
+                    <span
+                      className={cn(
+                        "flex items-center space-x-0.5 text-xs font-medium uppercase tracking-wide",
+                        isActive ? "text-emerald-200" : "text-gray-500"
+                      )}
+                    >
+                      <LuBox className="w-3 h-3" />
+                      <span>{round.startBlock}</span>
+                      <span className="mx-1">-</span>
+                      <LuBox className="w-3 h-3" />
+                      <span>{round.endBlock}</span>
+                    </span>
                   </div>
                 </Link>
               );

@@ -26,41 +26,53 @@ export default function RoundProgress() {
   });
 
   return (
-    <div className="w-full border border-muted rounded-lg mt-4 px-7 py-5 bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="text-xl font-bold text-gray-900 mb-4">
+    <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-2xl font-bold text-gray-900">
           Round Progress
         </div>
-        <div className="flex items-center text-md text-[#10b981]">
-          <PiClockDuotone />
+        <div className="flex items-center text-md text-yellow-500 font-semibold">
+          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg">
+            <PiClockDuotone className="w-3 h-3" />
+          </div>
           <span className="ms-1">12d 30m 20s</span>
         </div>
       </div>
-      <div className="w-full flex items-center justify-between">
+      
+      <div className="w-full flex items-center justify-between mb-4">
         {cells.map((cell, index) => (
           <span
             key={index}
             className={cn(
-              "w-[6px] h-10 rounded-full",
-              cell.isPassed ? "bg-emerald-500" : "bg-gray-300"
+              "w-[6px] h-10 rounded-full transition-all duration-300 hover:scale-110",
+              cell.isPassed 
+                ? "bg-gradient-to-b from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30" 
+                : "bg-gray-300/50 hover:bg-gray-400/70"
             )}
           />
         ))}
       </div>
-      <div className="w-full flex items-center justify-between mt-4">
+      
+      <div className="w-full flex items-center justify-between">
         <div></div>
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center">
-            <PiCubeDuotone />
-            <span className="ms-1">Start Block: {round.startBlock}</span>
+          <div className="flex items-center group">
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
+              <PiCubeDuotone className="w-3 h-3" />
+            </div>
+            <span className="ms-1 text-sm text-gray-700 font-medium">Start Block: {round.startBlock}</span>
           </div>
-          <div className="flex items-center font-semibold text-gray-900">
-            <PiCubeDuotone />
-            <span className="ms-1">Current Block: {currentBlock}</span>
+          <div className="flex items-center group">
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
+              <PiCubeDuotone className="w-3 h-3" />
+            </div>
+            <span className="ms-1 text-sm font-semibold text-gray-900">Current Block: {currentBlock}</span>
           </div>
-          <div className="flex items-center">
-            <PiCubeDuotone />
-            <span className="ms-1">End Block: {round.endBlock}</span>
+          <div className="flex items-center group">
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
+              <PiCubeDuotone className="w-3 h-3" />
+            </div>
+            <span className="ms-1 text-sm text-gray-700 font-medium">End Block: {round.endBlock}</span>
           </div>
         </div>
       </div>

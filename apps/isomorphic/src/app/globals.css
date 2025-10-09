@@ -45,9 +45,9 @@
     /* ----------------------------------- */
     /* primary/brand colors */
     /* ----------------------------------- */
-    --primary-lighter: 227 227 227; /* #e3e3e3 */
-    --primary-default: 17 17 17; /* #111111 */
-    --primary-dark: 0 0 0; /* #000000 */
+    --primary-lighter: 209 250 229; /* #d1fae5 - emerald-100 */
+    --primary-default: 16 185 129; /* #10b981 - emerald-500 */
+    --primary-dark: 4 120 87; /* #047857 - emerald-700 */
     --primary-foreground: 255 255 255; /* #ffffff */
 
     /* ----------------------------------- */
@@ -126,9 +126,9 @@
     /* ----------------------------------- */
     /* primary/brand colors */
     /* ----------------------------------- */
-    --primary-lighter: 34 34 34; /* #222222 */
-    --primary-default: 241 241 241; /* #f1f1f1 */
-    --primary-dark: 255 255 255; /* #ffffff */
+    --primary-lighter: 6 78 59; /* #064e3b - emerald-900 */
+    --primary-default: 52 211 153; /* #34d399 - emerald-400 */
+    --primary-dark: 16 185 129; /* #10b981 - emerald-500 */
     --primary-foreground: 0 0 0; /* #000000 */
 
     /* ----------------------------------- */

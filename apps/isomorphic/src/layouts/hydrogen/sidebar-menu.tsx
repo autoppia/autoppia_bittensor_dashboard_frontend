@@ -23,34 +23,40 @@ export function SidebarMenu() {
               <Link
                 href={item?.href}
                 className={cn(
-                  "group relative mx-3 my-0.5 flex items-center justify-between rounded-md px-3 py-2 font-medium capitalize lg:my-1 2xl:mx-5 2xl:my-2",
+                  "group relative mx-3 my-1 flex items-center px-4 py-3 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2",
+                  "font-medium text-sm",
                   isActive
-                    ? "before:top-2/5 text-primary before:absolute before:-start-3 before:block before:h-4/5 before:w-1 before:rounded-ee-md before:rounded-se-md before:bg-primary 2xl:before:-start-5"
-                    : "text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90"
+                    ? "text-emerald-700"
+                    : "text-gray-600 hover:text-emerald-700"
                 )}
               >
-                <div className="flex items-center truncate">
-                  {item?.icon && (
-                    <span
-                      className={cn(
-                        "me-2 inline-flex h-5 w-5 items-center justify-center rounded-md [&>svg]:h-[20px] [&>svg]:w-[20px]",
-                        isActive
-                          ? "text-primary"
-                          : "text-gray-800 dark:text-gray-500 dark:group-hover:text-gray-700"
-                      )}
-                    >
-                      {item?.icon}
-                    </span>
-                  )}
-                  <span className="truncate">{item.name}</span>
-                </div>
+                {/* Menu text */}
+                <span className={cn(
+                  "relative transition-all duration-300",
+                  isActive ? "font-semibold" : "font-medium group-hover:font-semibold"
+                )}>
+                  {item.name}
+                </span>
+                
+                {/* Animated left highlight with right glow */}
+                <div className={cn(
+                  "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300",
+                  "shadow-[4px_0_16px_rgba(16,185,129,0.6)]",
+                  isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
+                )}></div>
+                
+                {/* Subtle background highlight */}
+                <div className={cn(
+                  "absolute inset-0 bg-emerald-50/30 rounded-md transition-all duration-300",
+                  isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}></div>
               </Link>
             ) : (
               <Title
                 as="h6"
                 className={cn(
-                  "mb-2 truncate px-6 text-xs font-normal uppercase tracking-widest text-gray-500 2xl:px-8",
-                  index !== 0 && "mt-6 3xl:mt-7"
+                  "mb-3 truncate px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 2xl:px-8",
+                  index !== 0 && "mt-8 3xl:mt-10"
                 )}
               >
                 {item.name}

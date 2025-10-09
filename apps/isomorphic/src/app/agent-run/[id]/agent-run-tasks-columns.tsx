@@ -97,7 +97,7 @@ export const agentRunTasksColumns = [
         <Button 
           variant="outline" 
           size="sm"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+          className="border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-gray-900"
         >
           <PiEyeBold className="me-1.5 size-4" />
           <span>Inspect</span>
