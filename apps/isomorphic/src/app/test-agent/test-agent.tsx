@@ -516,7 +516,7 @@ export default function TestAgent() {
                   value={numRuns}
                   onChange={(e) => setNumRuns(parseInt(e.target.value) || 1)}
                   placeholder="Enter number of runs (1-10)"
-                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
+                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 rounded-2xl text-cyan-300 px-4 py-3"
                 />
               </div>
 
@@ -530,7 +530,7 @@ export default function TestAgent() {
                   value={agentEndpoint}
                   onChange={(e) => setAgentEndpoint(e.target.value)}
                   placeholder="84.247.180.192:6789 or http://84.247.180.192:6789"
-                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 text-cyan-300 px-4 py-3"
+                  className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 rounded-2xl text-cyan-300 px-4 py-3"
                 />
                 <Text className="text-xs text-gray-400 mt-2">
                   {`Enter your agent's IP address and port (e.g.,
