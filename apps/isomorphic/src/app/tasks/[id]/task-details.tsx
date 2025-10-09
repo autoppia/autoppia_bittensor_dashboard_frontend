@@ -16,7 +16,7 @@ export default function TaskDetails() {
   const taskData = tasksDataMap[id as string];
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
+    <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="hidden md:flex flex-col space-y-6">
         {/* Task Stats Grid - 2x2 on desktop */}
         <div className="grid grid-cols-4 gap-6">

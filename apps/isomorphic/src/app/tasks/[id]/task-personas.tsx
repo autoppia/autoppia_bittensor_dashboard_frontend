@@ -11,7 +11,7 @@ export default function TaskPersonas() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       {/* Round Card */}
-      <div className="bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 rounded-2xl p-5 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 rounded-2xl p-5 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
         <div className="text-center h-full flex flex-col justify-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
             <PiClockDuotone className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
@@ -23,7 +23,7 @@ export default function TaskPersonas() {
       </div>
 
       {/* Validator Card */}
-      <div className="bg-gradient-to-br from-purple-500/15 via-pink-500/15 to-purple-600/15 border-2 border-purple-500/40 rounded-2xl p-5 hover:border-purple-400/60 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 shadow-lg group backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-purple-500/15 via-pink-500/15 to-purple-600/15 border-2 border-purple-500/40 rounded-2xl p-5 hover:border-purple-400/60 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
         <div className="flex items-center space-x-4 h-20 mb-4">
           <div className="relative">
             <Image
@@ -59,7 +59,7 @@ export default function TaskPersonas() {
       </div>
 
       {/* Agent Card */}
-      <div className="bg-gradient-to-br from-blue-500/15 via-cyan-500/15 to-blue-600/15 border-2 border-blue-500/40 rounded-2xl p-5 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-blue-500/15 via-cyan-500/15 to-blue-600/15 border-2 border-blue-500/40 rounded-2xl p-5 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
         <div className="flex items-center space-x-4 h-20 mb-4">
           <div className="relative">
             <Image

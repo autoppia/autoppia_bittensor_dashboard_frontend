@@ -41,27 +41,29 @@ export default function Header() {
               <Fragment key={item.name + "-" + index}>
                 {item?.href ? (
                   <Link href={item?.href} className="hidden xl:block mx-1 my-2">
-                    <div className="relative flex items-center group">
+                    <div className="relative group">
                       {/* Main container */}
                       <div
                         className={cn(
-                          "relative flex items-center px-3 py-1.5 rounded-lg transition-all duration-300",
+                          "relative px-3 py-3 transition-all duration-300 ease-out",
                           isActive
-                            ? "bg-blue-500/10 text-blue-500 border border-blue-500 hover:border-blue-400"
-                            : "text-gray-700 hover:bg-gray-700/10"
+                            ? "text-emerald-600"
+                            : "text-gray-700 hover:text-emerald-600"
                         )}
                       >
-                        {/* {item?.icon && (
-                          <div className="relative mr-2">
-                            <span>{item.icon}</span>
-                            {isActive && (
-                              <div className="absolute -inset-1 border border-blue-500 rounded-full animate-ping opacity-50"></div>
-                            )}
-                          </div>
-                        )} */}
-
                         {/* Menu text */}
-                        <span className="font-medium text-md">{item.name}</span>
+                        <span>{item.name}</span>
+
+                        {/* Animated underline with fixed width */}
+                        <div
+                          className={cn(
+                            "absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-[3px] rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300",
+                            "shadow-[0_-4px_16px_rgba(16,185,129,0.6)]",
+                            isActive
+                              ? "opacity-100 scale-x-100"
+                              : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
+                          )}
+                        ></div>
                       </div>
                     </div>
                   </Link>
@@ -124,7 +126,7 @@ export default function Header() {
           </div>
 
           <HamburgerButton
-            className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-purple-400 hover:bg-purple-500/10 rounded-lg transition-all duration-300"
+            className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
             view={<Sidebar className="static w-full 2xl:w-full" />}
           />
         </div>

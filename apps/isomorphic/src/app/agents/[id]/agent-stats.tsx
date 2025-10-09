@@ -34,7 +34,7 @@ export default function AgentStats() {
       description: "Live leaderboard position",
       icon: LuChartNoAxesCombined,
       className:
-        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
+        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-yellow-500",
       iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "text-yellow-200",
@@ -45,7 +45,7 @@ export default function AgentStats() {
       description: "Peak performance ever",
       icon: LuStar,
       className:
-        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
+        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-emerald-500",
       iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "text-emerald-200",
@@ -55,9 +55,9 @@ export default function AgentStats() {
       metric: 20,
       description: "Total evaluations",
       icon: LuCircleCheckBig,
-      className: "border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all duration-300 group",
-      metricClassName: "text-violet-700",
-      iconClassName: "bg-gradient-to-br from-violet-400 to-violet-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      className: "bg-gradient-to-br from-purple-500/15 via-purple-400/15 to-purple-600/15 border-2 border-purple-500/40 hover:border-purple-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
+      metricClassName: "text-purple-700",
+      iconClassName: "bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "",
     },
     {
@@ -94,7 +94,7 @@ export default function AgentStats() {
               <div
                 key={stat.title}
                 className={cn(
-                  "p-5 rounded-xl min-w-[240px]",
+                  "p-5 rounded-xl min-w-[260px]",
                   stat.className
                 )}
               >

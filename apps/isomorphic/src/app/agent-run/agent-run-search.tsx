@@ -91,7 +91,7 @@ export default function AgentRunSearch() {
   return (
     <div className="w-full max-w-[1024px] mx-auto h-full py-8">
       {/* Main Search Card */}
-      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-sm z-50">
+      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
         {/* Glass-morphism Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
@@ -121,7 +121,7 @@ export default function AgentRunSearch() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter Run UID (e.g., m4v1-6w9x)"
                 maxLength={9}
-                className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-sm focus:ring-0"
+                className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <PiHashDuotone className="w-5 h-5 text-cyan-400" />
@@ -148,7 +148,7 @@ export default function AgentRunSearch() {
                     value={roundInput}
                     onChange={(e) => setRoundInput(e.target.value)}
                     placeholder="Enter Round Number"
-                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-sm focus:ring-0"
+                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiHashDuotone className="w-4 h-4 text-emerald-400" />
@@ -167,7 +167,7 @@ export default function AgentRunSearch() {
                     onClick={() => {
                       setIsValidatorDropdownOpen(!isValidatorDropdownOpen);
                     }}
-                    className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-sm focus:ring-0"
+                    className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {selectedValidator === ""
@@ -181,7 +181,7 @@ export default function AgentRunSearch() {
                   </button>
 
                   {isValidatorDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-sm z-50">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
                       <button
                         type="button"
                         onClick={() => {
@@ -221,7 +221,7 @@ export default function AgentRunSearch() {
                     value={agentInput}
                     onChange={(e) => setAgentInput(e.target.value)}
                     placeholder="Enter Agent UID or Hotkey"
-                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm focus:border-purple-500 transition-all duration-300 outline-none placeholder-gray-400 backdrop-blur-sm focus:ring-0"
+                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm focus:border-purple-500 transition-all duration-300 outline-none placeholder-gray-400 backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-purple-400" />
@@ -235,7 +235,7 @@ export default function AgentRunSearch() {
           <div className="flex gap-4 justify-center">
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
             >
               <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
               SEARCH
@@ -244,7 +244,7 @@ export default function AgentRunSearch() {
             <button
               onClick={clearFilters}
               disabled={!hasActiveFilters}
-              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-sm ${
+              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-md ${
                 hasActiveFilters
                   ? "bg-gradient-to-r from-red-500/60 to-orange-500/60 border-2 border-red-500/60 text-white hover:from-red-500 hover:to-orange-500 hover:border-red-500 cursor-pointer"
                   : "bg-gray-500/30 border-2 border-gray-500/30 text-gray-400 cursor-not-allowed"
@@ -259,7 +259,7 @@ export default function AgentRunSearch() {
       {/* No Filters Message */}
       {!hasSearched && (
         <div className="mt-6 text-center relative z-0">
-          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-sm transition-all duration-300">
+          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
             <div className="relative">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
@@ -295,7 +295,7 @@ export default function AgentRunSearch() {
                 <div
                   key={run.runUid}
                   onClick={() => router.push(`/agent-run/${run.runUid}`)}
-                  className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-sm cursor-pointer hover:shadow-2xl hover:scale-105"
+                  className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-105"
                 >
                   <div className="text-center">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg mb-3 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
@@ -318,7 +318,7 @@ export default function AgentRunSearch() {
       {/* No Results Message */}
       {hasSearched && searchResults.length === 0 && (
         <div className="mt-6 text-center relative z-0">
-          <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-sm transition-all duration-300">
+          <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
             <div className="relative">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">

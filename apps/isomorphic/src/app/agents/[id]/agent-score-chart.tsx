@@ -45,19 +45,18 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
           onChange={(option) => handleFilterBy(option)}
         />
       }
-      headerClassName="flex-row items-center space-between"
+      headerClassName="flex-row items-start space-between"
       rounded="xl"
-      className={cn("p-5 lg:p-5", className)}
+      className={cn("hover:border-emerald-500", className)}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
-        <div className={cn("h-[289px] w-full pt-2")}>
+        <div className={cn("h-[273px] w-full pt-2")}>
           <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={filteredData}
               margin={{
                 top: 10,
                 left: -10,
-                right: 10,
               }}
             >
               <defs>

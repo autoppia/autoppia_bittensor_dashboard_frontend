@@ -6,6 +6,7 @@ import WidgetCard from "@core/components/cards/widget-card";
 import cn from "@core/utils/class-names";
 import { Text } from "rizzui/typography";
 import { PiCrownFill } from "react-icons/pi";
+import Eye from "@core/components/icons/eye";
 
 const topMinersList = [
   {
@@ -64,7 +65,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
   return (
     <WidgetCard
       title="Top 10 Miners"
-      className={cn("h-[455px] px-2 lg:px-4", className)}
+      className={cn("h-[460px] px-2 lg:px-4 w-full hover:border-emerald-500", className)}
       headerClassName="px-3 pb-2"
     >
       <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
@@ -73,9 +74,9 @@ export default function RoundTopMiners({ className }: { className?: string }) {
             <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`}>
               <div
                 className={cn(
-                  "flex items-center rounded-lg hover:bg-gray-100 p-2 ",
+                  "relative flex items-center w-full px-4 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-md cursor-pointer group border border-transparent hover:border-gray-200",
                   index === 0 &&
-                    "mb-1 border-2 border-yellow-500 bg-gray-100 sticky top-0 z-10"
+                    "bg-yellow-500/10 border border-yellow-400/70 text-gray-900 hover:border-yellow-400 hover:bg-yellow-500/20"
                 )}
               >
                 <div className="relative me-3 h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100 @sm:h-12 @sm:w-12">
@@ -88,30 +89,59 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                   />
                 </div>
                 <div className="flex w-full items-center justify-between gap-2">
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center">
                       <Text
                         className={cn(
-                          "text-sm font-semibold text-gray-900 2xl:text-base",
-                          index === 0 && "text-yellow-500"
+                          "text-lg font-semibold text-gray-900",
+                          index === 0 &&
+                            "text-yellow-500"
                         )}
                       >
                         Miner {miner.uid}
                       </Text>
-                      <div className="ms-2 text-xl">
+                      <div className="relative ms-2 text-xl">
                         {index === 0 && (
-                          <PiCrownFill className="text-yellow-500" />
+                          <>
+                            <PiCrownFill className="animate-ping opacity-50 text-yellow-500" />
+                            <PiCrownFill className="absolute top-0 left-0 text-yellow-500" />
+                          </>
                         )}
                       </div>
                     </div>
-                    <Text className="w-40 truncate text-gray-500">
-                      {miner.hotkey}
+                    <Text className="text-gray-500 group-hover:text-gray-600">
+                      {miner.hotkey.slice(0, 6)}...{miner.hotkey.slice(-6)}
                     </Text>
                   </div>
-                  <div>
-                    <Text className="text-emerald-500">
-                      {miner.avg_score.toFixed(2)}
-                    </Text>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Text className="text-sm text-gray-500 font-medium">
+                        Score:
+                      </Text>
+                      <div
+                        className={cn(
+                          "text-lg font-semibold",
+                          index === 0 ? "text-yellow-500" : "text-emerald-500"
+                        )}
+                      >
+                        {miner.avg_score.toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-gray-600 transition-colors duration-200">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>

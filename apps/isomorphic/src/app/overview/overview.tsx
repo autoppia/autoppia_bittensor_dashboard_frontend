@@ -9,7 +9,7 @@ export default function Overview() {
   return (
     <>
       <PageHeader title={"Network Analytics"} className="mt-4" />
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6">
         <OverviewMinerChart className="w-full lg:w-[calc(100%-460px)]" />
         <OverviewMetrics className="w-full lg:w-[460px]" />
       </div>

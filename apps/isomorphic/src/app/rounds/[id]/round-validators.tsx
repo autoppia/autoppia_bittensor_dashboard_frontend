@@ -1,17 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
 import { validatorsData } from "@/data/validators-data";
 import { minersData } from "@/data/miners-data";
 import {
   PiListChecksDuotone,
-  PiTrophyDuotone,
   PiChartLineDuotone,
-  PiUserDuotone,
+  PiCurrencyDollarDuotone,
+  PiClockDuotone,
+  PiHashDuotone,
 } from "react-icons/pi";
 import { Text } from "rizzui";
+import cn from "@core/utils/class-names";
 
 // Helper function to get top miner and calculate average score
 const getValidatorStats = (validatorId: string) => {
@@ -33,117 +34,158 @@ export default function RoundValidators() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {validatorsData.map((validator) => {
           const stats = getValidatorStats(validator.id);
+
+          const primaryStats = [
+            {
+              title: "Avg Score",
+              metric: `${(stats.averageScore * 100).toFixed(1)}%`,
+              icon: PiChartLineDuotone,
+              className:
+                "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40",
+              metricClassName: "text-green-600",
+              iconClassName: "bg-green-500 text-white",
+            },
+            {
+              title: "Tasks",
+              metric: validator.total_tasks.toLocaleString(),
+              icon: PiListChecksDuotone,
+              className:
+                "bg-gradient-to-br from-blue-500/15 via-blue-400/15 to-blue-600/15 border-2 border-blue-500/40",
+              metricClassName: "text-blue-600",
+              iconClassName: "bg-blue-500 text-white",
+            },
+          ];
+
+          const secondaryStats = [
+            {
+              title: "Stake",
+              metric: `${(validator.weight / 1000).toFixed(0)}K`,
+              icon: PiCurrencyDollarDuotone,
+              metricClassName: "text-purple-500",
+              iconClassName: "bg-gray-200/50 text-purple-500",
+            },
+            {
+              title: "VTrust",
+              metric: `${(validator.trust * 100).toFixed(1)}%`,
+              icon: PiClockDuotone,
+              metricClassName: "text-purple-500",
+              iconClassName: "bg-gray-200/50 text-purple-500",
+            },
+            {
+              title: "Version",
+              metric: validator.version,
+              icon: PiHashDuotone,
+              metricClassName: "text-purple-500",
+              iconClassName: "bg-gray-200/50 text-purple-500",
+            },
+          ];
+
           return (
             <div key={`validator-${validator.id}`}>
-              <div className="group relative bg-black border border-cyan-400/30 rounded-lg overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/50 hover:border-cyan-400 transition-all duration-500 hover:scale-105">
-                {/* Dark Cyberpunk Background with Subtle Effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
-
+              <div className="bg-gray-50 border border-gray-200 hover:border-emerald-500 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                 {/* Header */}
-                <div className="relative p-4 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border-b border-cyan-400/20">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      {/* Intense Glowing Icon Container */}
-                      <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center border-2 border-cyan-400 shadow-2xl shadow-cyan-500/80">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative aspect-square w-10 h-10 rounded-full overflow-hidden">
                         <Image
                           src={validator.icon}
                           alt={validator.name}
-                          width={28}
-                          height={28}
-                          className="rounded-full object-contain"
+                          fill
+                          sizes="(max-width: 768px) 100vw"
+                          className="h-full w-full object-contain"
                         />
                       </div>
-                      {/* Intense Pulsing Ring Effect */}
-                      <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse opacity-100"></div>
-                      <div className="absolute inset-0 rounded-full border border-cyan-300 animate-ping opacity-30"></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-cyan-400 text-lg truncate drop-shadow-[0_0_15px_rgba(0,255,255,1)]">
-                        {validator.name}
-                      </h3>
-                      <div className="text-xs text-cyan-500 font-mono drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
-                        VALIDATOR_NODE
+                      <div>
+                        <Text className="font-bold text-gray-900">
+                          {validator.name}
+                        </Text>
+                        <Text className="text-xs text-gray-600 tracking-wide">
+                          {validator.hotkey.slice(0, 6)}...
+                          {validator.hotkey.slice(-6)}
+                        </Text>
                       </div>
                     </div>
                   </div>
                 </div>
+                <div className="px-4 py-3">
+                  {/* Primary Stats - Tasks and Score (2 columns) */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    {primaryStats.map((stat) => {
+                      const Icon = stat.icon;
+                      return (
+                        <div
+                          key={stat.title}
+                          className={cn("rounded-lg p-2", stat.className)}
+                        >
+                          <div className="flex flex-col items-center text-center">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div
+                                className={cn(
+                                  "flex items-center justify-center w-8 h-8 rounded-lg",
+                                  stat.iconClassName
+                                )}
+                              >
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <Text className="text-base font-semibold text-gray-900">
+                                {stat.title}
+                              </Text>
+                            </div>
+                            <Text
+                              className={cn(
+                                "font-bold text-lg",
+                                stat.metricClassName
+                              )}
+                            >
+                              {stat.metric}
+                            </Text>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Stats */}
-                <div className="relative p-6">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Total Tasks */}
-                      <div className="text-center p-4 bg-black/50 rounded-lg border border-emerald-400/30 hover:border-emerald-400 hover:shadow-2xl hover:shadow-emerald-500/60 transition-all duration-300">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <PiListChecksDuotone className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,1)]" />
-                          <span className="text-sm font-medium text-emerald-300 font-mono drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">
-                            TASKS
-                          </span>
-                        </div>
-                        <div className="text-2xl font-bold text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,1)]">
-                          {validator.total_tasks.toLocaleString()}
-                        </div>
-                      </div>
-
-                      {/* Average Score */}
-                      <div className="text-center p-4 bg-black/50 rounded-lg border border-blue-400/30 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/60 transition-all duration-300">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <PiChartLineDuotone className="w-4 h-4 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" />
-                          <span className="text-sm font-medium text-blue-300 font-mono drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">
-                            AVG_SCORE
-                          </span>
-                        </div>
-                        <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,1)]">
-                          {(stats.averageScore * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Top Miner */}
-                    <div className="p-4 bg-black/50 rounded-lg border border-yellow-400/30 hover:border-yellow-400 hover:shadow-2xl hover:shadow-yellow-500/60 transition-all duration-300">
-                      <div className="flex items-center justify-center gap-2 mb-3">
-                        <PiTrophyDuotone className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_10px_rgba(251,191,36,1)]" />
-                        <span className="text-sm font-medium text-yellow-300 font-mono drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]">
-                          TOP_MINER
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-yellow-500 font-mono font-medium drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
-                            UID:
-                          </span>
-                          <span className="text-sm font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,1)]">
-                            {stats.topMiner.uid}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-yellow-500 font-mono font-medium drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
-                            SCORE:
-                          </span>
-                          <span className="text-sm font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,1)]">
-                            {(stats.topMiner.score * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-yellow-500 font-mono font-medium drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
-                            HOTKEY:
-                          </span>
-                          <span className="text-sm font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,1)]">
-                            {stats.topMiner.hotkey.slice(0, 8)}...
-                            {stats.topMiner.hotkey.slice(-8)}
-                          </span>
-                        </div>
-                      </div>
+                  {/* Secondary Stats - Stake, VTrust, Version (responsive layout) */}
+                  <div className="bg-gray-100 rounded-lg p-2 sm:p-3">
+                    <div className="flex justify-center items-center gap-2 sm:gap-4 lg:gap-6">
+                      {secondaryStats.map((stat, index) => {
+                        const Icon = stat.icon;
+                        return (
+                          <div
+                            key={stat.title}
+                            className="flex items-center gap-1 sm:gap-2"
+                          >
+                            <div
+                              className={cn(
+                                "flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded",
+                                stat.iconClassName
+                              )}
+                            >
+                              <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <Text className="text-xs sm:text-xs text-gray-700">
+                                {stat.title}
+                              </Text>
+                              <Text
+                                className={cn(
+                                  "font-semibold text-xs sm:text-sm truncate",
+                                  stat.metricClassName
+                                )}
+                              >
+                                {stat.metric}
+                              </Text>
+                            </div>
+                            {index < secondaryStats.length - 1 && (
+                              <div className="w-px h-6 sm:h-8 bg-gray-300 ml-1 sm:ml-2 lg:ml-4" />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-
-                {/* Intense Cyberpunk Corner Accents */}
-                <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-                <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]"></div>
               </div>
             </div>
           );

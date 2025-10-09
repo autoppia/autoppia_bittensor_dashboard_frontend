@@ -23,7 +23,7 @@ export default function AgentScoreAnalytics({
       description: "Latest round performance",
       icon: LuStar,
       className:
-        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
+        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-emerald-500",
       iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "text-emerald-200",
@@ -34,7 +34,7 @@ export default function AgentScoreAnalytics({
       description: "Network-wide best this round",
       icon: LuCrown,
       className:
-        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-sm",
+        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-yellow-500",
       iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "text-yellow-200",
@@ -43,7 +43,7 @@ export default function AgentScoreAnalytics({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <div className="grid grid-cols-1 gap-5 2xl:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6">
         {minerStats.map((stat) => {
           const Icon = stat.icon;
           return (

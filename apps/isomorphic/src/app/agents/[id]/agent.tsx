@@ -38,9 +38,9 @@ export default function Agent() {
       <Text className="text-2xl font-bold text-gray-900 mt-6">
         Score Analytics
       </Text>
-      <div className="flex flex-col lg:flex-row gap-6 items-start mt-4">
-        <AgentScoreChart className="w-[calc(100%-350px)]" />
-        <AgentScoreAnalytics className="w-[350px]" />
+      <div className="flex flex-col xl:flex-row gap-6 items-start mt-4">
+        <AgentScoreChart className="w-full xl:w-[calc(100%-320px)]" />
+        <AgentScoreAnalytics className="w-full xl:w-[320px]" />
       </div>
       <AgentValidators />
     </>
