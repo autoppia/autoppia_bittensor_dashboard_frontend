@@ -88,8 +88,8 @@ export default function LandingPage() {
                 <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
                   advanced
                 </span>{" "}
-                synthetic benchmark designed to rigorously test and evaluate Web
-                Agents across dynamic, ever-changing web environments.
+                web operation benchmark designed to rigorously test and evaluate
+                Web Agents across dynamic, ever-changing web environments.
               </Text>
             </div>
 
@@ -215,7 +215,7 @@ export default function LandingPage() {
                 <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg border border-cyan-400/30 animate-pulse-slow">
                   infinite scalability
                 </span>
-                , no dataset leakage, and realistic performance evaluation.
+                , no overfitting, and realistic performance evaluation.
               </Text>
               <a
                 href="https://github.com/autoppia"
@@ -258,6 +258,15 @@ export default function LandingPage() {
               },
               {
                 num: 2,
+                title: "Synthetic tests generation",
+                desc: "IWA produces machine-checkable tests with clear goals and pass/fail criteria.",
+                color: "from-teal-400 to-emerald-500",
+                borderColor:
+                  "border-emerald-500/30 hover:border-emerald-400/50",
+                shadowColor: "hover:shadow-emerald-500/30",
+              },
+              {
+                num: 3,
                 title: "Agent Execution in Real Browsers",
                 desc: "Your Web Agent interacts with real DOMs, dynamic UIs, and realistic workflows.",
                 color: "from-blue-400 to-purple-500",
@@ -265,7 +274,7 @@ export default function LandingPage() {
                 shadowColor: "hover:shadow-blue-500/30",
               },
               {
-                num: 3,
+                num: 4,
                 title: "Automated Synthetic Validation",
                 desc: "Success is verified through predefined conditions across frontend and backend, ensuring unambiguous scoring.",
                 color: "from-purple-400 to-pink-500",
@@ -470,13 +479,13 @@ export default function LandingPage() {
                   {[
                     {
                       rank: "🥇 1",
-                      name: "Browser-Use GPT-5",
+                      name: "Autoppia Agent",
                       score: "95.2",
                       color: "yellow",
                     },
                     {
                       rank: "🥈 2",
-                      name: "Autoppia Agent",
+                      name: "Browser-Use GPT-5",
                       score: "92.8",
                       color: "cyan",
                     },
