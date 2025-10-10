@@ -65,7 +65,10 @@ export default function RoundTopMiners({ className }: { className?: string }) {
   return (
     <WidgetCard
       title="Top 10 Miners"
-      className={cn("h-[460px] px-2 lg:px-4 w-full hover:border-emerald-500", className)}
+      className={cn(
+        "h-[460px] px-2 lg:px-4 w-full hover:border-emerald-500 rounded-xl",
+        className
+      )}
       headerClassName="px-3 pb-2"
     >
       <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
@@ -94,8 +97,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                       <Text
                         className={cn(
                           "text-lg font-semibold text-gray-900",
-                          index === 0 &&
-                            "text-yellow-500"
+                          index === 0 && "text-yellow-500"
                         )}
                       >
                         Miner {miner.uid}

@@ -6,15 +6,15 @@ import cn from "@core/utils/class-names";
 import PageHeader from "@/app/shared/page-header";
 import RoundRecents from "./round-recents";
 import RoundProgress from "./round-progress";
-import RoundValidators from "./round-validators";
-import RoundMiners from "./round-miners";
+import RoundResult from "./round-result";
 import { LuCirclePlay, LuCircleCheckBig } from "react-icons/lu";
 import { roundsData } from "@/data/rounds-data";
 
 export default function Round() {
   const { id } = useParams();
-  const round = roundsData.find((round) => round.id === parseInt(id as string))!;
-  const [validator, setValidator] = useState<string>("all");
+  const round = roundsData.find(
+    (round) => round.id === parseInt(id as string)
+  )!;
 
   return (
     <>
@@ -37,8 +37,7 @@ export default function Round() {
       </PageHeader>
       <RoundRecents />
       <RoundProgress />
-      <RoundValidators />
-      <RoundMiners validator={validator} setValidator={setValidator} />
+      <RoundResult />
     </>
   );
 }

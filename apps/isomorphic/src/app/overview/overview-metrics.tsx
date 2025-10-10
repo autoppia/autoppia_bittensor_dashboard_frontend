@@ -22,6 +22,19 @@ const metricsData = [
     descriptionClassName: "text-amber-200",
   },
   {
+    id: "total-websites",
+    title: "Websites",
+    value: 11,
+    icon: LuGlobe,
+    color: primaryColors.pink,
+    bgColor:
+      "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
+    iconClassName:
+      "bg-gradient-to-br from-pink-400 to-rose-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
+    metricClassName: "text-2xl font-bold text-pink-400",
+    descriptionClassName: "text-pink-200",
+  },
+  {
     id: "total-validators",
     title: "Validators",
     value: 6,
@@ -47,19 +60,6 @@ const metricsData = [
     metricClassName: "text-2xl font-bold text-emerald-400",
     descriptionClassName: "text-emerald-200",
   },
-  {
-    id: "total-websites",
-    title: "Websites",
-    value: 11,
-    icon: LuGlobe,
-    color: primaryColors.pink,
-    bgColor:
-      "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-    iconClassName:
-      "bg-gradient-to-br from-pink-400 to-rose-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-    metricClassName: "text-2xl font-bold text-pink-400",
-    descriptionClassName: "text-pink-200",
-  },
 ];
 
 export default function OverviewMetrics({ className }: { className?: string }) {
@@ -71,7 +71,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
         const Icon = metric.icon;
         const metricCard = (
           <div className={cn("rounded-2xl p-5", metric.bgColor)}>
-            <div className="flex items-center space-x-4 mb-3">
+            <div className="flex space-x-4 mb-3">
               <div
                 className={cn(
                   "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg flex-shrink-0",
