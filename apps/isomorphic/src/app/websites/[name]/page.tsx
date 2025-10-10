@@ -113,7 +113,7 @@ export default function WebsiteDetailPage() {
                 >
                   {website.name}
                 </Title>
-                <Text className="text-base sm:text-lg white leading-relaxed">
+                <Text className="text-base sm:text-lg text-gray-300 leading-relaxed">
                   {website.description || "No description available."}
                 </Text>
               </div>
