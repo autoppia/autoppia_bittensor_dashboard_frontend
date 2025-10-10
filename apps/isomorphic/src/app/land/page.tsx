@@ -52,133 +52,129 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col w-full min-h-screen overflow-hidden">
       {/* Hero Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 md:py-24">
-        <div
-          className={cn(
-            "relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-3xl p-10 sm:p-16 backdrop-blur-xl transition-all duration-1000 shadow-2xl overflow-hidden group",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          )}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
+        {/* Subtle background gradients - much lighter than before */}
 
-          <div className="relative z-10 text-center max-w-4xl mx-auto">
-            {/* Animated Icon */}
+        <div className="relative z-10 text-center max-w-5xl mx-auto">
+          {/* Typing Animation Title */}
+          <h1
+            className={cn(
+              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-8 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] transition-all duration-1000",
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            )}
+          >
+            {displayedText}
+            <span className="animate-pulse">|</span>
+          </h1>
 
-            {/* Typing Animation Title */}
-            <Title
-              as="h1"
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] px-2"
+          {/* Animated Subtitle */}
+          <div
+            className={cn(
+              "transition-all duration-1000 delay-500",
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-5"
+            )}
+          >
+            <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-100 my-6 sm:my-8 leading-relaxed px-2">
+              The most{" "}
+              <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
+                advanced
+              </span>{" "}
+              web operation benchmark designed to rigorously test and evaluate
+              Web Agents across dynamic, ever-changing web environments.
+            </Text>
+          </div>
+          {/* CTA Buttons */}
+          <div
+            className={cn(
+              "flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center mt-12 transition-all duration-1000 delay-500",
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-5"
+            )}
+          >
+            <Link href={routes.testAgent} className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25">
+                <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                TEST YOUR AGENT
+                <PiLightningDuotone className="h-5 w-5 group-hover:animate-bounce" />
+              </button>
+            </Link>
+            <Link href={routes.overview} className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
+                <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                VIEW LEADERBOARD
+                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+            <a
+              href="https://github.com/autoppia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto"
             >
-              {displayedText}
-              <span className="animate-blink">|</span>
-            </Title>
+              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25">
+                <LuFileText className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                READ THE PAPER
+              </button>
+            </a>
+          </div>
 
-            {/* Animated Subtitle */}
-            <div
-              className={cn(
-                "transition-all duration-1000 delay-500",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-5"
-              )}
-            >
-              <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-100 my-6 sm:my-8 leading-relaxed px-2">
-                The most{" "}
-                <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
-                  advanced
-                </span>{" "}
-                web operation benchmark designed to rigorously test and evaluate
-                Web Agents across dynamic, ever-changing web environments.
-              </Text>
-            </div>
-
-            {/* Animated CTA Buttons */}
-            <div
-              className={cn(
-                "flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center mt-10 transition-all duration-1000 delay-700 px-4",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-5"
-              )}
-            >
-              <Link href={routes.testAgent} className="w-full sm:w-auto">
-                <button className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-gradient-to-r from-blue-500/60 to-cyan-500/60 border-2 border-blue-500/60 rounded-xl text-white font-bold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm group hover:from-blue-500 hover:to-cyan-500 hover:border-blue-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-blue-500/50">
-                  <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  TEST YOUR AGENT
-                  <PiLightningDuotone className="h-5 w-5 group-hover:animate-bounce" />
-                </button>
-              </Link>
-              <Link href={routes.overview} className="w-full sm:w-auto">
-                <button className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
-                  <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  VIEW LEADERBOARD
-                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </button>
-              </Link>
-              <a
-                href="https://github.com/autoppia"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto"
+          {/* Stats Counter - cleaner design */}
+          <div
+            className={cn(
+              "grid grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-20 max-w-3xl mx-auto transition-all duration-1000 delay-700",
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-5"
+            )}
+          >
+            {[
+              {
+                value: websitesData.length,
+                label: "Websites",
+                gradient: "from-cyan-400 to-blue-500",
+                glow: "group-hover:shadow-cyan-400/20",
+              },
+              {
+                value: "1000+",
+                label: "Tasks",
+                gradient: "from-yellow-400 to-orange-500",
+                glow: "group-hover:shadow-yellow-400/20",
+              },
+              {
+                value: "∞",
+                label: "Scalability",
+                gradient: "from-purple-400 to-pink-500",
+                glow: "group-hover:shadow-purple-400/20",
+              },
+            ].map((stat, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "group p-6 sm:p-8 rounded-2xl backdrop-blur-sm bg-background/50 border border-border/50 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-foreground/20",
+                  stat.glow
+                )}
+                style={{
+                  animationDelay: `${idx * 200}ms`,
+                }}
               >
-                <button className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 rounded-xl text-white font-bold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm group hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-purple-500/50">
-                  <LuFileText className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                  READ THE PAPER
-                </button>
-              </a>
-            </div>
-
-            {/* Stats Counter */}
-            <div className="grid grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-16 max-w-2xl mx-auto px-4">
-              {[
-                {
-                  value: websitesData.length,
-                  label: "Websites",
-                  color: "cyan",
-                },
-                { value: "1000+", label: "Tasks", color: "yellow" },
-                { value: "∞", label: "Scalability", color: "purple" },
-              ].map((stat, idx) => (
                 <div
-                  key={idx}
                   className={cn(
-                    "p-4 sm:p-6 rounded-xl backdrop-blur-sm border-2 transition-all duration-500 hover:scale-110 hover:shadow-xl",
-                    stat.color === "cyan" &&
-                      "border-cyan-500/30 hover:border-cyan-400/50 hover:shadow-cyan-500/30",
-                    stat.color === "yellow" &&
-                      "border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/30",
-                    stat.color === "purple" &&
-                      "border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/30"
+                    "text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-2",
+                    stat.gradient
                   )}
-                  style={{
-                    animationDelay: `${idx * 200}ms`,
-                  }}
                 >
-                  <div
-                    className={cn(
-                      "text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                      stat.color === "cyan" && "from-cyan-400 to-blue-500",
-                      stat.color === "yellow" &&
-                        "from-yellow-400 to-orange-500",
-                      stat.color === "purple" && "from-purple-400 to-pink-500"
-                    )}
-                  >
-                    {stat.value}
-                  </div>
-                  <div
-                    className={cn(
-                      "text-xs sm:text-sm mt-1 font-bold",
-                      stat.color === "cyan" && "text-cyan-300",
-                      stat.color === "yellow" && "text-yellow-300",
-                      stat.color === "purple" && "text-purple-300"
-                    )}
-                  >
-                    {stat.label}
-                  </div>
+                  {stat.value}
                 </div>
-              ))}
-            </div>
+                <div className="text-sm sm:text-base font-medium text-muted-foreground">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

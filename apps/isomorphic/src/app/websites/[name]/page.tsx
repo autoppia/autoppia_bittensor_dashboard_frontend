@@ -140,7 +140,7 @@ export default function WebsiteDetailPage() {
                     </Button>
                   </Link>
                   <a
-                    href="https://github.com/autoppia"
+                    href={`https://github.com/autoppia/${website.name.toLocaleLowerCase()}_webs_demo`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group/github"
@@ -306,7 +306,95 @@ export default function WebsiteDetailPage() {
             </div>
           )}
         </div>
+        {website?.taskExamples?.length ? (
+          <div className="mt-10 space-y-4">
+            <div className="flex items-center gap-3 mb-8">
+              <div
+                className="inline-flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${website.color}, ${colorWithOpacity10})`,
+                }}
+              >
+                <PiCheckCircleDuotone className="h-7 w-7 text-white" />
+              </div>
+              <Title
+                as="h2"
+                className="text-3xl sm:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: `linear-gradient(to right, ${website.color}, ${colorWithOpacity10})`,
+                }}
+              >
+                Task Examples
+              </Title>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {website.taskExamples.map((ex, index) => (
+                <div
+                  key={ex.title}
+                  className="relative rounded-2xl border-2 p-4 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden"
+                  style={{
+                    backgroundColor: colorWithOpacity10,
+                    borderColor: colorBorder,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = website.color;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = colorBorder;
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5" />
+                  <div
+                    className="absolute inset-0 opacity-0 transition-opacity duration-500"
+                    style={{
+                      background: `radial-gradient(circle at 50% 50%, ${colorWithOpacity20}, transparent 70%)`,
+                    }}
+                  />
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg group-hover/card:scale-110 transition-transform duration-300"
+                      style={{ backgroundColor: website.color }}
+                    >
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <Title
+                        as="h3"
+                        className="text-xl font-bold text-gray-100 mb-1"
+                      >
+                        {ex.title}
+                      </Title>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center gap-2">
+                      <PiLightbulbDuotone
+                        className="w-5 h-5"
+                        style={{ color: website.color }}
+                      />
+                      <Text className="text-sm font-semibold text-white">
+                        Example Prompt:
+                      </Text>
+                    </div>
+                    <div
+                      className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
+                      style={{
+                        backgroundColor: colorWithOpacity10,
+                        borderColor: colorBorder,
+                        color: "#D1D5DB",
+                      }}
+                    >
+                      {`"${ex.prompt}"`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Coming soon note under Task Examples */}
+          </div>
+        ) : null}
         {/* {!website.isComingSoon && website.href !== "#" && (
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
             <Link
