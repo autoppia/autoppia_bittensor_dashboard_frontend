@@ -1,5 +1,10 @@
 /* src/data/websites-data.ts */
 
+export type UseCase = {
+  name: string;
+  examplePrompt: string;
+};
+
 export type WebsiteDataType = {
   name: string;
   portValidator: string; // ← puerto que usa el validador
@@ -9,6 +14,8 @@ export type WebsiteDataType = {
   image: string;
   isComingSoon?: boolean; // New field for "soon" websites
   color: string; // Add color property
+  description?: string; // Short description
+  useCases?: UseCase[]; // List of use cases
 };
 
 /**
@@ -153,7 +160,10 @@ export const websitesData: WebsiteDataType[] = [
   },
 ];
 
-export const websitesDataMap = websitesData.reduce((acc, website) => {
-  acc[website.name] = website;
-  return acc;
-}, {} as Record<string, WebsiteDataType>);
+export const websitesDataMap = websitesData.reduce(
+  (acc, website) => {
+    acc[website.name] = website;
+    return acc;
+  },
+  {} as Record<string, WebsiteDataType>
+);
