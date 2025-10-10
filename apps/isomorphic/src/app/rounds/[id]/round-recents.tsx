@@ -6,7 +6,7 @@ import { Button } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
-import { LuBox, LuTrophy, LuClock } from "react-icons/lu";
+import { LuBox, LuCircleCheckBig, LuActivity } from "react-icons/lu";
 import { RoundType, roundsData } from "@/data/rounds-data";
 
 export default function RoundRecents() {
@@ -40,29 +40,29 @@ export default function RoundRecents() {
             .reverse()
             .map((round: RoundType, index: number) => {
               const isActive = round.id === parseInt(id as string);
+              const isCurrent = round.current;
+              const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
+              
               return (
                 <Link key={`round-${index}`} href={`/rounds/${round.id}`}>
                   <div
                     className={cn(
                       "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md",
                       isActive
-                        ? "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-400/40 hover:border-emerald-400/60"
-                        : "border border-muted hover:border-emerald-500 bg-gray-50 hover:bg-gray-100"
+                        ? "bg-gradient-to-br from-yellow-500/15 via-amber-400/15 to-yellow-600/15 border-2 border-yellow-400/40 hover:border-yellow-400/60"
+                        : "border border-muted hover:border-yellow-500 bg-gray-50 hover:bg-gray-100"
                     )}
                   >
                     <div className="mb-4 flex items-center gap-4">
                       <span
-                        className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110",
-                          "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110"
-                        )}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 bg-gradient-to-br from-yellow-400 to-amber-600 text-gray-900"
                       >
-                        <LuClock className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                        <RoundIcon className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
                       </span>
                       <span
                         className={cn(
                           "text-[20px] font-bold uppercase tracking-wide",
-                          isActive ? "text-emerald-400" : "text-gray-700"
+                          isActive ? "text-yellow-500" : "text-gray-700"
                         )}
                       >
                         Round {round.id}
@@ -71,7 +71,7 @@ export default function RoundRecents() {
                     <span
                       className={cn(
                         "flex items-center space-x-0.5 text-xs font-medium uppercase tracking-wide",
-                        isActive ? "text-emerald-200" : "text-gray-500"
+                        isActive ? "text-yellow-600" : "text-gray-500"
                       )}
                     >
                       <LuBox className="w-3 h-3" />

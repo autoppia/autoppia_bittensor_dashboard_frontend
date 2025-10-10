@@ -41,30 +41,15 @@ export default function Header() {
               <Fragment key={item.name + "-" + index}>
                 {item?.href ? (
                   <Link href={item?.href} className="hidden xl:block mx-1 my-2">
-                    <div className="relative group">
-                      {/* Main container */}
-                      <div
-                        className={cn(
-                          "relative px-3 py-3 transition-all duration-300 ease-out",
-                          isActive
-                            ? "text-emerald-600"
-                            : "text-gray-700 hover:text-emerald-600"
-                        )}
-                      >
-                        {/* Menu text */}
-                        <span>{item.name}</span>
-
-                        {/* Animated underline with fixed width */}
-                        <div
-                          className={cn(
-                            "absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-[3px] rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300",
-                            "shadow-[0_-4px_16px_rgba(16,185,129,0.6)]",
-                            isActive
-                              ? "opacity-100 scale-x-100"
-                              : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
-                          )}
-                        ></div>
-                      </div>
+                    <div
+                      className={cn(
+                        "px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium",
+                        isActive
+                          ? "bg-emerald-600 text-white"
+                          : "text-gray-700 hover:text-emerald-600 hover:bg-gray-100"
+                      )}
+                    >
+                      {item.name}
                     </div>
                   </Link>
                 ) : (
