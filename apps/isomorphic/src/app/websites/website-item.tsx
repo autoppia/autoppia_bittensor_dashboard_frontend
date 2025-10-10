@@ -92,7 +92,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                 <span>Active</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
+              <div className="flex items-center gap-1 text-xs font-medium text-gray-600">
                 <PiClockDuotone className="w-4 h-4" />
                 <span>Soon</span>
               </div>
@@ -146,7 +146,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
             </h3>
 
             {!isComingSoon && website.description && (
-              <Text className="text-sm text-gray-400 line-clamp-2 leading-relaxed">
+              <Text className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
                 {website.description}
               </Text>
             )}
@@ -160,7 +160,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                   >
                     {website.totalTasks[0]}
                   </Text>
-                  <Text className="text-xs text-gray-500">Easy</Text>
+                  <Text className="text-xs text-gray-600">Easy</Text>
                 </div>
                 <div className="text-center">
                   <Text
@@ -169,7 +169,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                   >
                     {website.totalTasks[1]}
                   </Text>
-                  <Text className="text-xs text-gray-500">Medium</Text>
+                  <Text className="text-xs text-gray-600">Medium</Text>
                 </div>
                 <div className="text-center">
                   <Text
@@ -178,7 +178,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                   >
                     {website.totalTasks[2]}
                   </Text>
-                  <Text className="text-xs text-gray-500">Hard</Text>
+                  <Text className="text-xs text-gray-600">Hard</Text>
                 </div>
               </div>
             </div>
