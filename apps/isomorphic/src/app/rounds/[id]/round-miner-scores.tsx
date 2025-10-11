@@ -36,7 +36,7 @@ export default function RoundMinerScores({
   const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
 
   return (
-    <WidgetCard title="Miner Scores" className={cn("h-[460px] hover:border-emerald-500 rounded-xl", className)}>
+    <WidgetCard title="Miner Scores" className={cn("h-[460px] rounded-xl", className)}>
       <div className="mt-5 w-full h-[350px] lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart

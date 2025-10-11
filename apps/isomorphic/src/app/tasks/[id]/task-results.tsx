@@ -39,7 +39,7 @@ export default function TaskResults() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Side - Actions */}
-      <div className="border border-muted rounded-lg p-4 bg-gray-50 hover:border-emerald-500">
+      <div className="border border-muted rounded-lg p-4 bg-gray-50">
         <Text className="text-white text-lg font-medium mb-4">Actions</Text>
         <div className="space-y-2 border border-muted rounded-lg h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto">
           {actions.map((action, index) => (
@@ -57,7 +57,7 @@ export default function TaskResults() {
       </div>
 
       {/* Right Side - Generated GIF */}
-      <div className="border border-muted rounded-lg p-4 bg-gray-50 hover:border-emerald-500">
+      <div className="border border-muted rounded-lg p-4 bg-gray-50">
         <Text className="text-white text-lg font-medium mb-4">
           Generated GIF
         </Text>

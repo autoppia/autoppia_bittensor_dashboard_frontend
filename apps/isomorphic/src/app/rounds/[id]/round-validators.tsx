@@ -6,7 +6,7 @@ import { Button } from "rizzui";
 import cn from "@core/utils/class-names";
 import { validatorsData } from "@/data/validators-data";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
-import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
+import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill } from "react-icons/pi";
 
 export default function RoundValidators({ className }: { className?: string }) {
   const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(
@@ -20,8 +20,6 @@ export default function RoundValidators({ className }: { className?: string }) {
     scrollToTheRight,
     scrollToTheLeft,
   } = useScrollableSlider();
-
-  const autoppiaValidator = validatorsData.find(v => v.id === "autoppia");
 
   return (
     <div className={cn(className)}>
@@ -43,52 +41,53 @@ export default function RoundValidators({ className }: { className?: string }) {
           >
             {/* All Validators Card */}
             <div
-              key="validator-all"
               onClick={() => setSelectedValidatorId("all")}
               className="cursor-pointer"
             >
               <div
                 className={cn(
-                  "w-full min-w-[210px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
+                  "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                   selectedValidatorId === "all"
                     ? "bg-gradient-to-br from-blue-500/15 via-blue-500/15 to-blue-600/15 border-blue-500/40 hover:border-blue-400/60 hover:shadow-xl hover:shadow-blue-500/25"
                     : "border-muted hover:border-blue-500 bg-gray-50 hover:bg-gray-100"
                 )}
               >
-                {/* Validator Content */}
+                {/* All Validators Content */}
                 <div className="flex flex-col items-center">
-                  <div
-                    className={cn(
-                      "relative aspect-square w-12 h-12 mb-3 transition-transform duration-300",
-                      "group-hover:scale-110"
-                    )}
-                  >
-                    <Image
-                      src={autoppiaValidator?.icon || "/validators/Autoppia.png"}
-                      alt="All Validators"
-                      fill
-                      sizes="(max-width: 768px) 100vw"
+                  {/* Icon Box with Blue Gradient */}
+                  <div className="relative mb-3 transition-transform duration-300 group-hover:scale-110">
+                    <div
                       className={cn(
-                        "h-full w-full rounded-full object-contain transition-all duration-300",
-                        selectedValidatorId === "all" && "ring-2 ring-blue-400/50 ring-offset-2"
+                        "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
+                        selectedValidatorId === "all"
+                          ? "shadow-lg shadow-blue-500/50"
+                          : "shadow-md"
                       )}
-                    />
+                    >
+                      <PiShieldCheckFill 
+                        className="w-7 h-7 text-white transition-all duration-300"
+                      />
+                    </div>
                   </div>
                   <span
                     className={cn(
                       "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                      selectedValidatorId === "all" ? "text-gray-900" : "text-gray-700"
+                      selectedValidatorId === "all"
+                        ? "text-gray-900"
+                        : "text-gray-700"
                     )}
                   >
                     All Validators
                   </span>
                   <span
                     className={cn(
-                      "mt-1.5 text-xs font-medium tracking-wide transition-colors duration-300 truncate max-w-full",
-                      selectedValidatorId === "all" ? "text-blue-600" : "text-gray-500"
+                      "mt-1.5 text-xs font-medium tracking-wide transition-colors duration-300",
+                      selectedValidatorId === "all"
+                        ? "text-blue-600"
+                        : "text-gray-500"
                     )}
                   >
-                    6 validators
+                    {validatorsData.length} Validators
                   </span>
                 </div>
               </div>
@@ -101,12 +100,14 @@ export default function RoundValidators({ className }: { className?: string }) {
               return (
                 <div
                   key={`validator-${validator.id}`}
-                  onClick={() => setSelectedValidatorId(isActive ? "all" : validator.id)}
+                  onClick={() =>
+                    setSelectedValidatorId(isActive ? "all" : validator.id)
+                  }
                   className="cursor-pointer"
                 >
                   <div
                     className={cn(
-                      "w-full min-w-[200px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
+                      "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
                         ? "bg-gradient-to-br from-blue-500/15 via-blue-500/15 to-blue-600/15 border-blue-500/40 hover:border-blue-400/60 hover:shadow-xl hover:shadow-blue-500/25"
                         : "border-muted hover:border-blue-500 bg-gray-50 hover:bg-gray-100"
@@ -127,7 +128,7 @@ export default function RoundValidators({ className }: { className?: string }) {
                           sizes="(max-width: 768px) 100vw"
                           className={cn(
                             "h-full w-full rounded-full object-contain transition-all duration-300",
-                            isActive && "ring-2 ring-blue-400/50 ring-offset-2"
+                            isActive && "ring-2 ring-blue-400/50 ring-offset-2 shadow-lg shadow-blue-500/50"
                           )}
                         />
                       </div>

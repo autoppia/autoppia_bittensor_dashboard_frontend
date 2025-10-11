@@ -8,7 +8,7 @@ import cn from "@core/utils/class-names";
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
-import { LuActivity, LuPackageCheck } from "react-icons/lu";
+import { LuActivity } from "react-icons/lu";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 
@@ -43,10 +43,10 @@ export default function Header() {
                   <Link href={item?.href} className="hidden xl:block mx-1 my-2">
                     <div
                       className={cn(
-                        "px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium",
+                        "px-4 py-2 rounded-lg transition-all duration-300 ease-out font-medium",
                         isActive
-                          ? "bg-emerald-600 text-white"
-                          : "text-gray-700 hover:text-emerald-600 hover:bg-gray-100"
+                          ? "bg-white text-black"
+                          : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
                       )}
                     >
                       {item.name}

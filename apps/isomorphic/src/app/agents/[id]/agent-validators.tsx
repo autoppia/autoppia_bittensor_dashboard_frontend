@@ -8,9 +8,9 @@ import {
   PiCurrencyDollarDuotone,
   PiClockDuotone,
   PiHashDuotone,
-  PiListChecksDuotone,
   PiChartLineDuotone,
   PiChartLineUpDuotone,
+  PiTrophyDuotone,
 } from "react-icons/pi";
 import { Text, Select, SelectOption } from "rizzui";
 import { roundsData, RoundType } from "@/data/rounds-data";
@@ -45,6 +45,8 @@ export default function AgentValidators() {
           // Mock data for agent evaluation - in production, this would come from API
           const agentRunId = "a7k2-9m4x";
           const score = 95 - index * 2; // Mock score
+          const rank = index + 1; // Mock rank
+          const avgResponseTime = (2.5 + index * 0.3).toFixed(1); // Mock avg response time in seconds
 
           const secondaryStats = [
             {
@@ -72,7 +74,7 @@ export default function AgentValidators() {
               key={`agent-run-${validator.id}`}
               href={`/agent-run/${agentRunId}`}
             >
-              <div className="bg-gray-50 border border-gray-200 hover:border-emerald-500 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
+              <div className="bg-gray-50 border-2 border-muted hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                 {/* Header - Validator Info & Agent Run ID */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between gap-4">
@@ -128,8 +130,8 @@ export default function AgentValidators() {
                   </div>
 
                   {/* Agent Performance */}
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2.5">
+                  <div className="border border-muted rounded-lg p-3">
+                    <div className="flex items-center justify-center gap-2 mb-2.5">
                       <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-green-500 text-white">
                         <PiChartLineDuotone className="w-3.5 h-3.5" />
                       </div>
@@ -138,7 +140,14 @@ export default function AgentValidators() {
                       </Text>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <PiTrophyDuotone className="w-3.5 h-3.5 text-emerald-600" />
+                          <Text className="text-xs text-gray-700">Rank:</Text>
+                          <Text className="text-sm font-bold text-gray-900">
+                            #{rank}
+                          </Text>
+                        </div>
                         <div className="flex items-center gap-1.5">
                           <PiChartLineUpDuotone className="w-3.5 h-3.5 text-emerald-600" />
                           <Text className="text-xs text-gray-700">Score:</Text>
@@ -146,13 +155,13 @@ export default function AgentValidators() {
                             {score}%
                           </Text>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <PiListChecksDuotone className="w-3.5 h-3.5 text-emerald-600" />
-                          <Text className="text-xs text-gray-700">Tasks:</Text>
-                          <Text className="text-sm font-bold text-gray-900">
-                            {validator.total_tasks.toLocaleString()}
-                          </Text>
-                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <PiClockDuotone className="w-3.5 h-3.5 text-emerald-600" />
+                        <Text className="text-xs text-gray-700">Avg Response Time:</Text>
+                        <Text className="text-sm font-bold text-gray-900">
+                          {avgResponseTime}s
+                        </Text>
                       </div>
                     </div>
                   </div>

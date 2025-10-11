@@ -66,7 +66,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
     <WidgetCard
       title="Top 10 Miners"
       className={cn(
-        "h-[460px] px-2 lg:px-4 w-full hover:border-emerald-500 rounded-xl",
+        "h-[460px] px-2 lg:px-4 w-full rounded-xl",
         className
       )}
       headerClassName="px-3 pb-2"
