@@ -4,7 +4,6 @@ import Link from "next/link";
 import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
-import { primaryColors } from "@/data/colors-data";
 
 const metricsData = [
   {
@@ -12,7 +11,6 @@ const metricsData = [
     title: "Score to Win",
     value: 0.95,
     icon: LuTrophy,
-    color: primaryColors.yellow,
     bgColor:
       "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
     iconClassName:
@@ -26,7 +24,6 @@ const metricsData = [
     title: "Websites",
     value: 11,
     icon: LuGlobe,
-    color: primaryColors.pink,
     bgColor:
       "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
     iconClassName:
@@ -39,7 +36,6 @@ const metricsData = [
     title: "Validators",
     value: 6,
     icon: LuShield,
-    color: primaryColors.blue,
     bgColor:
       "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
     iconClassName:
@@ -52,7 +48,6 @@ const metricsData = [
     title: "Miners",
     value: 24,
     icon: LuPickaxe,
-    color: primaryColors.green,
     bgColor:
       "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
     iconClassName:

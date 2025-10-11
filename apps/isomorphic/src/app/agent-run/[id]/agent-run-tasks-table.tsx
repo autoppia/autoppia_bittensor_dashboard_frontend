@@ -26,7 +26,7 @@ export default function AgentRunTasksTable() {
   });
 
   return (
-    <div className="bg-gray-50 border border-muted hover:border-emerald-500 rounded-xl p-6">
+    <div className="bg-gray-50 border border-muted rounded-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-700">All Tasks</h2>

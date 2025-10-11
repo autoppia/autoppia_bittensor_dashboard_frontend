@@ -128,7 +128,7 @@ export default function AgentRunDetail({
 
   return (
     <div
-      className={cn("bg-gray-50 border border-muted hover:border-emerald-500 rounded-xl p-6", className)}
+      className={cn("bg-gray-50 border border-muted rounded-xl p-6", className)}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">

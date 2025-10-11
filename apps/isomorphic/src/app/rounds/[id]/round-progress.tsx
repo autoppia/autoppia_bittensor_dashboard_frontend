@@ -56,23 +56,26 @@ export default function RoundProgress() {
       <div className="w-full flex items-center justify-between">
         <div></div>
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center group">
+          <div className="flex items-center group text-sm font-medium">
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
               <PiCubeDuotone className="w-3 h-3" />
             </div>
-            <span className="ms-1 text-sm text-gray-700 font-medium">Start Block: {round.startBlock}</span>
+            <span className="ms-1 hidden sm:block">Start Block: </span>
+            <span className="ms-1 text-gray-900">{round.startBlock}</span>
           </div>
-          <div className="flex items-center group">
+          <div className="flex items-center group text-sm font-medium">
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
               <PiCubeDuotone className="w-3 h-3" />
             </div>
-            <span className="ms-1 text-sm font-semibold text-gray-900">Current Block: {currentBlock}</span>
+            <span className="ms-1 hidden sm:block text-gray-900">Current Block: </span>
+            <span className="ms-1 text-gray-900">{currentBlock}</span>
           </div>
-          <div className="flex items-center group">
+          <div className="flex items-center group text-sm font-medium">
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
               <PiCubeDuotone className="w-3 h-3" />
             </div>
-            <span className="ms-1 text-sm text-gray-700 font-medium">End Block: {round.endBlock}</span>
+            <span className="ms-1 hidden sm:block">End Block: </span>
+            <span className="ms-1 text-gray-900">{round.endBlock}</span>
           </div>
         </div>
       </div>

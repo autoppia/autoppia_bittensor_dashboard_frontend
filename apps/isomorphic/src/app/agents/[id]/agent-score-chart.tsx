@@ -47,7 +47,7 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
       }
       headerClassName="flex-row items-start space-between"
       rounded="xl"
-      className={cn("hover:border-emerald-500", className)}
+      className={className}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[273px] w-full pt-2")}>

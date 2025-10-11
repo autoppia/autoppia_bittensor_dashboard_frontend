@@ -18,7 +18,6 @@ import {
   Area,
 } from "recharts";
 import { leaderboardData, LeaderboardDataType } from "@/data/leaderboard-data";
-import { primaryColors } from "@/data/colors-data";
 
 const filterOptions = ["7D", "15D", "All"];
 const sotaAgents = [
@@ -26,19 +25,19 @@ const sotaAgents = [
     label: "OpenAI CUA",
     value: "openai_cua",
     image: "/icons/openai.webp",
-    stroke: primaryColors.blue,
+    stroke: "#2196F3",
   },
   {
     label: "Anthropic CUA",
     value: "anthropic_cua",
     image: "/icons/anthropic.webp",
-    stroke: primaryColors.orange,
+    stroke: "#FF8C00",
   },
   {
     label: "Browser Use",
     value: "browser_use",
     image: "/icons/browser-use.webp",
-    stroke: primaryColors.white,
+    stroke: "#FFFFFF",
   },
 ];
 
@@ -71,7 +70,7 @@ export default function MinerChart({ className }: MinerChartProps) {
       }
       headerClassName="flex-row items-center space-between"
       rounded="lg"
-      className={cn("p-5 lg:p-5 hover:border-emerald-500", className)}
+      className={cn("p-5 lg:p-5", className)}
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[160px] w-full pt-2")}>

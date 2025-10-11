@@ -15,15 +15,15 @@ export default function Round() {
   const round = roundsData.find(
     (round) => round.id === parseInt(id as string)
   )!;
-
+  
   return (
-    <>
+    <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader title={"Round " + round.id} className="mt-4">
         <div
           className={cn(
             "flex items-center px-3 py-1.5 rounded-full",
             round.current
-              ? "animate-pulse bg-emerald-500 text-white"
+              ? "animate-pulse bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/50"
               : "bg-gray-500 text-white"
           )}
         >
@@ -38,6 +38,6 @@ export default function Round() {
       <RoundRecents />
       <RoundProgress />
       <RoundResult />
-    </>
+    </div>
   );
 }
