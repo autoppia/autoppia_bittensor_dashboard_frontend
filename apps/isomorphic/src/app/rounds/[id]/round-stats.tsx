@@ -1,5 +1,6 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import {
   PiTrophyDuotone,
   PiUsersDuotone,
@@ -8,8 +9,65 @@ import {
   PiCheckCircleDuotone,
   PiXCircleDuotone,
 } from "react-icons/pi";
+import { useRoundStatistics, useTopMiners } from "@/services/hooks/useRounds";
 
 export default function RoundStats() {
+  const { id } = useParams();
+  const roundId = parseInt(id as string);
+  
+  // Get statistics and top miners from API
+  const { data: statistics, loading: statsLoading, error: statsError } = useRoundStatistics(roundId);
+  const { data: topMiners, loading: minersLoading, error: minersError } = useTopMiners(roundId, 1);
+  
+  const loading = statsLoading || minersLoading;
+  const error = statsError || minersError;
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="bg-gray-200 rounded-xl p-3 animate-pulse">
+            <div className="h-8 w-8 bg-gray-300 rounded-lg mb-2"></div>
+            <div className="h-6 bg-gray-300 rounded mb-2"></div>
+            <div className="h-8 bg-gray-300 rounded mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  // Show error state with fallback data
+  if (error) {
+    return (
+      <div className="mb-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <p className="text-yellow-800 text-sm">
+            ⚠️ Statistics API Error: {error}. Using fallback data.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Fallback stats cards with static data */}
+          <div className="relative bg-gradient-to-br from-amber-500/15 via-orange-500/15 to-yellow-500/15 border-2 border-amber-500/40 rounded-xl p-3">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg shadow-lg">
+                <PiCrownDuotone className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-xs font-medium text-amber-300">WINNER</h3>
+            </div>
+            <div className="text-center mb-2">
+              <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
+                Miner 1
+              </div>
+              <div className="text-xs text-amber-200">5GHrA5gqhWVm1Cp92jXa...</div>
+            </div>
+          </div>
+          {/* Add other fallback cards... */}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       {/* Winner Card */}

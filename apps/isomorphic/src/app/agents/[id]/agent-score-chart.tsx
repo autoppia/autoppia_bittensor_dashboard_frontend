@@ -19,6 +19,28 @@ import { leaderboardData, LeaderboardDataType } from "@/data/leaderboard-data";
 
 const filterOptions = ["7D", "15D", "All"];
 
+// SOTA agent color definitions
+const sotaAgents = [
+  {
+    label: "OpenAI CUA",
+    value: "openai_cua",
+    stroke: "#2196F3",
+    fill: "rgba(33, 150, 243, 0.1)",
+  },
+  {
+    label: "Anthropic CUA", 
+    value: "anthropic_cua",
+    stroke: "#FF8C00",
+    fill: "rgba(255, 140, 0, 0.1)",
+  },
+  {
+    label: "Browser Use",
+    value: "browser_use", 
+    stroke: "#FFFFFF",
+    fill: "rgba(255, 255, 255, 0.1)",
+  },
+];
+
 interface AgentScoreChartProps {
   className?: string;
 }
@@ -68,6 +90,19 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
                   />
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
+                {/* SOTA agent gradients */}
+                <linearGradient id="openaiArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2196F3" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#2196F3" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="anthropicArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#FF8C00" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#FF8C00" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="browserUseArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#FFFFFF" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#FFFFFF" stopOpacity={0} />
+                </linearGradient>
               </defs>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="round" axisLine={true} tickLine={false} />
@@ -75,12 +110,23 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
                 axisLine={true}
                 tickLine={false}
                 domain={[
-                  Math.min(...filteredData.map((item) => item.subnet36)) - 0.01,
-                  Math.max(...filteredData.map((item) => item.subnet36)),
+                  Math.min(
+                    ...filteredData.map((item) => item.subnet36),
+                    ...filteredData.map((item) => item.openai_cua),
+                    ...filteredData.map((item) => item.anthropic_cua),
+                    ...filteredData.map((item) => item.browser_use)
+                  ) - 0.01,
+                  Math.max(
+                    ...filteredData.map((item) => item.subnet36),
+                    ...filteredData.map((item) => item.openai_cua),
+                    ...filteredData.map((item) => item.anthropic_cua),
+                    ...filteredData.map((item) => item.browser_use)
+                  ),
                 ]}
                 tick={<CustomYAxisTick />}
               />
               <Tooltip content={<CustomTooltip />} />
+              {/* Main subnet36 area */}
               <Area
                 type="monotone"
                 dataKey="subnet36"
@@ -88,6 +134,31 @@ export default function AgentScoreChart({ className }: AgentScoreChartProps) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#subnet36Area)"
+              />
+              {/* SOTA agent areas */}
+              <Area
+                type="monotone"
+                dataKey="openai_cua"
+                stroke="#2196F3"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#openaiArea)"
+              />
+              <Area
+                type="monotone"
+                dataKey="anthropic_cua"
+                stroke="#FF8C00"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#anthropicArea)"
+              />
+              <Area
+                type="monotone"
+                dataKey="browser_use"
+                stroke="#FFFFFF"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#browserUseArea)"
               />
             </ComposedChart>
           </ResponsiveContainer>

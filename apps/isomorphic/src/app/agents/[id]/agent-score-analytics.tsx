@@ -23,10 +23,10 @@ export default function AgentScoreAnalytics({
       description: "Latest round performance",
       icon: LuStar,
       className:
-        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      metricClassName: "text-emerald-500",
-      iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "text-emerald-200",
+        "relative overflow-hidden bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-emerald-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-emerald-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-emerald-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-emerald-100/80",
     },
     {
       title: "Last Round Best Score",
@@ -34,10 +34,10 @@ export default function AgentScoreAnalytics({
       description: "Network-wide best this round",
       icon: LuCrown,
       className:
-        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      metricClassName: "text-yellow-500",
-      iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "text-yellow-200",
+        "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-yellow-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-yellow-100/80",
     },
   ];
 
@@ -50,36 +50,50 @@ export default function AgentScoreAnalytics({
             <div key={stat.title}>
               <div
                 className={cn(
-                  "p-5 rounded-xl min-w-[240px]",
+                  "relative p-6 rounded-2xl min-w-[260px] cursor-pointer",
                   stat.className
                 )}
               >
-                <div className="flex items-center mb-3">
-                  <div
-                    className={cn(
-                      "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
-                      stat.iconClassName
-                    )}
-                  >
-                    <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl"></div>
+                </div>
+                
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl",
+                        stat.iconClassName
+                      )}
+                    >
+                      <Icon className="w-7 h-7 group-hover:rotate-12 transition-transform duration-500" />
+                    </div>
+                    <div className="text-right">
+                      <div className="w-2 h-2 rounded-full bg-current opacity-60 mb-1"></div>
+                      <div className="w-1 h-1 rounded-full bg-current opacity-40"></div>
+                    </div>
                   </div>
-                  <Text className="text-sm font-medium ms-3 text-gray-700 uppercase tracking-wide">
-                    {stat.title}
+                  
+                  <div className="mb-3">
+                    <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-1">
+                      {stat.title}
+                    </Text>
+                    <Text
+                      className={cn(
+                        "font-black text-4xl leading-none",
+                        stat.metricClassName
+                      )}
+                    >
+                      {stat.metric}
+                    </Text>
+                  </div>
+                  
+                  <Text className={cn("text-sm font-medium leading-relaxed", stat.descriptionClassName)}>
+                    {stat.description}
                   </Text>
                 </div>
-                <div className="flex items-center h-12 mb-1">
-                  <Text
-                    className={cn(
-                      "font-bold text-3xl",
-                      stat.metricClassName
-                    )}
-                  >
-                    {stat.metric}
-                  </Text>
-                </div>
-                <Text className={cn("text-xs text-gray-600 font-medium", stat.descriptionClassName)}>
-                  {stat.description}
-                </Text>
               </div>
             </div>
           );

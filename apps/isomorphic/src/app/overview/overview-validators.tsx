@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
 import cn from "@core/utils/class-names";
-import { validatorsData } from "@/data/validators-data";
 import {
   PiOpenAiLogoDuotone,
   PiCurrencyDollarDuotone,
@@ -18,11 +17,91 @@ import {
 } from "react-icons/pi";
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
-import { roundsData } from "@/data/rounds-data";
 import MarqueeText from "@/app/shared/marquee-text";
+import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
 
 export default function OverviewValidators() {
-  const currentRound = roundsData.find((round) => round.current);
+  const { data: validatorsData, loading: validatorsLoading, error: validatorsError } = useValidators({ limit: 6 });
+  const { data: currentRound, loading: roundLoading, error: roundError } = useCurrentRound();
+
+  // Show loading state
+  if (validatorsLoading || roundLoading) {
+    return (
+      <>
+        <PageHeader title={"What's happening on the subnet"} className="mt-12">
+          <div className="text-sm text-gray-600 mt-2">
+            Below are a list of validators currently running - click on any to see full details
+          </div>
+        </PageHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="bg-gray-50 border-2 border-muted rounded-xl overflow-hidden animate-pulse">
+              <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                  <div className="w-24 h-6 bg-gray-200 rounded-full"></div>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="border border-muted rounded-lg p-3">
+                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                </div>
+                <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-gray-200 rounded-lg"></div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-gray-200 rounded-lg"></div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-gray-200 rounded-lg"></div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // Show error state
+  if (validatorsError || roundError) {
+    return (
+      <>
+        <PageHeader title={"What's happening on the subnet"} className="mt-12">
+          <div className="text-sm text-gray-600 mt-2">
+            Below are a list of validators currently running - click on any to see full details
+          </div>
+        </PageHeader>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600 font-medium">Error loading validators</p>
+          <p className="text-red-500 text-sm mt-1">
+            {validatorsError || roundError}
+          </p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -32,7 +111,7 @@ export default function OverviewValidators() {
         </div>
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-        {validatorsData.map((validator, index) => {
+        {(validatorsData?.data?.validators || []).map((validator, index) => {
           const secondaryStats = [
             {
               title: "Stake",
