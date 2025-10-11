@@ -11,6 +11,7 @@ import StickyHeader from "@/layouts/sticky-header";
 import { LuActivity } from "react-icons/lu";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
+import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
 
 export default function Header() {
   const pathname = usePathname();
@@ -64,6 +65,24 @@ export default function Header() {
           {/* Social Media Buttons */}
           <div className="hidden sm:flex items-center gap-1">
             <a
+              href="https://autoppia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-blue-500/10 rounded-lg transition-all duration-300"
+              aria-label="Visit Autoppia Website"
+            >
+              <PiGlobeDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+            </a>
+            <a
+              href="https://luxit.gitbook.io/autoppia-docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300"
+              aria-label="View Documentation"
+            >
+              <PiBookOpenDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+            </a>
+            <a
               href="https://github.com/autoppia"
               target="_blank"
               rel="noopener noreferrer"
@@ -85,7 +104,7 @@ export default function Header() {
               href="https://discord.com/channels/799672011265015819/1339356060787408996"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-indigo-500/10 rounded-lg transition-all duration-300"
               aria-label="Join our Discord"
             >
               <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />

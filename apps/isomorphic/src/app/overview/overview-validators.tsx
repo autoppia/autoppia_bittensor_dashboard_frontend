@@ -26,12 +26,10 @@ export default function OverviewValidators() {
 
   return (
     <>
-      <PageHeader title={"Live Event Update"} className="mt-6">
-        <BannerText
-          color="#10B981"
-          text="Live Update"
-          className="animate-pulse"
-        />
+      <PageHeader title={"What's happening on the subnet"} className="mt-12">
+        <div className="text-sm text-gray-600 mt-2">
+          Below are a list of validators currently running - click on any to see full details
+        </div>
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {validatorsData.map((validator, index) => {
@@ -117,13 +115,35 @@ export default function OverviewValidators() {
                           {validator.status}
                         </span>
                       </span>
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   </div>
                 </div>
 
                 <div className="p-4 space-y-3">
+                  {/* Current Task */}
+                  <div className="border border-muted rounded-lg p-3">
+                    <div className="flex items-center justify-center gap-2 mb-2.5">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
+                        <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
+                      </div>
+                      <Text className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                        Current Task
+                      </Text>
+                    </div>
+                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3">
+                      <MarqueeText
+                        text={validator.currentTask}
+                        className="text-sm text-gray-900 font-medium"
+                        containerClassName=""
+                        speed={50}
+                        pauseDuration={0.5}
+                      />
+                    </div>
+                  </div>
+
                   {/* Secondary Stats - Compact Horizontal */}
-                  <div className="flex items-center justify-around gap-3 bg-gray-900/5 border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
                     {secondaryStats.map((stat, idx) => {
                       const Icon = stat.icon;
                       return (
@@ -145,27 +165,6 @@ export default function OverviewValidators() {
                         </div>
                       );
                     })}
-                  </div>
-
-                  {/* Current Task */}
-                  <div className="border border-muted rounded-lg p-3">
-                    <div className="flex items-center justify-center gap-2 mb-2.5">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
-                        <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
-                      </div>
-                      <Text className="text-xs font-bold text-gray-800 uppercase tracking-wide">
-                        Current Task
-                      </Text>
-                    </div>
-                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3">
-                      <MarqueeText
-                        text={validator.currentTask}
-                        className="text-sm text-gray-900 font-medium"
-                        containerClassName=""
-                        speed={50}
-                        pauseDuration={0.5}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>

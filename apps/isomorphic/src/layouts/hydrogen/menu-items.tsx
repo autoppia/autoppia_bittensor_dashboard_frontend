@@ -7,6 +7,7 @@ import {
   LuBoxes,
   LuGlobe,
 } from "react-icons/lu";
+import { PiFlaskDuotone } from "react-icons/pi";
 import { FaHome } from "react-icons/fa";
 // Note: do not add href in the label object, it is rendering as label
 export const menuItems = [
@@ -50,6 +51,6 @@ export const menuItems = [
   {
     name: "Test Agent",
     href: routes.testAgent,
-    icon: <LuPackageCheck />
+    icon: <PiFlaskDuotone />
   }
 ];

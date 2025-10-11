@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Button } from "rizzui";
+import { Button, Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { validatorsData } from "@/data/validators-data";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
-import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill } from "react-icons/pi";
+import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill, PiInfoDuotone } from "react-icons/pi";
 
 export default function RoundValidators({ className }: { className?: string }) {
   const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(
-    "all" // All validators selected by default
+    validatorsData[0]?.id || null // First validator selected by default
   );
 
   const {
@@ -21,8 +21,11 @@ export default function RoundValidators({ className }: { className?: string }) {
     scrollToTheLeft,
   } = useScrollableSlider();
 
+  const selectedValidator = validatorsData.find(v => v.id === selectedValidatorId);
+
   return (
     <div className={cn(className)}>
+
       <div className="relative flex w-auto items-center overflow-hidden">
         <Button
           title="Prev"
@@ -39,59 +42,6 @@ export default function RoundValidators({ className }: { className?: string }) {
             ref={sliderEl}
             className="custom-scrollbar grid grid-flow-col gap-4 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0"
           >
-            {/* All Validators Card */}
-            <div
-              onClick={() => setSelectedValidatorId("all")}
-              className="cursor-pointer"
-            >
-              <div
-                className={cn(
-                  "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
-                  selectedValidatorId === "all"
-                    ? "bg-gradient-to-br from-blue-500/15 via-blue-500/15 to-blue-600/15 border-blue-500/40 hover:border-blue-400/60 hover:shadow-xl hover:shadow-blue-500/25"
-                    : "border-muted hover:border-blue-500 bg-gray-50 hover:bg-gray-100"
-                )}
-              >
-                {/* All Validators Content */}
-                <div className="flex flex-col items-center">
-                  {/* Icon Box with Blue Gradient */}
-                  <div className="relative mb-3 transition-transform duration-300 group-hover:scale-110">
-                    <div
-                      className={cn(
-                        "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
-                        selectedValidatorId === "all"
-                          ? "shadow-lg shadow-blue-500/50"
-                          : "shadow-md"
-                      )}
-                    >
-                      <PiShieldCheckFill 
-                        className="w-7 h-7 text-white transition-all duration-300"
-                      />
-                    </div>
-                  </div>
-                  <span
-                    className={cn(
-                      "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                      selectedValidatorId === "all"
-                        ? "text-gray-900"
-                        : "text-gray-700"
-                    )}
-                  >
-                    All Validators
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-1.5 text-xs font-medium tracking-wide transition-colors duration-300",
-                      selectedValidatorId === "all"
-                        ? "text-blue-600"
-                        : "text-gray-500"
-                    )}
-                  >
-                    {validatorsData.length} Validators
-                  </span>
-                </div>
-              </div>
-            </div>
 
             {/* Individual Validator Cards */}
             {validatorsData.map((validator) => {
@@ -100,9 +50,7 @@ export default function RoundValidators({ className }: { className?: string }) {
               return (
                 <div
                   key={`validator-${validator.id}`}
-                  onClick={() =>
-                    setSelectedValidatorId(isActive ? "all" : validator.id)
-                  }
+                  onClick={() => setSelectedValidatorId(validator.id)}
                   className="cursor-pointer"
                 >
                   <div
@@ -166,6 +114,20 @@ export default function RoundValidators({ className }: { className?: string }) {
         >
           <PiCaretRightBold className="h-5 w-5" />
         </Button>
+      </div>
+
+      {/* Dynamic Content Separator */}
+      <div className="mt-6 mb-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <Text className="text-xs text-blue-600 font-medium">
+              {selectedValidator?.name || "Selected Validator"}
+            </Text>
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+        </div>
       </div>
     </div>
   );

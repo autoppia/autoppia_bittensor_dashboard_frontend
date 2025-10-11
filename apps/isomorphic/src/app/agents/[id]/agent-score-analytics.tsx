@@ -29,7 +29,7 @@ export default function AgentScoreAnalytics({
       descriptionClassName: "text-emerald-200",
     },
     {
-      title: "Round Best Score",
+      title: "Last Round Best Score",
       metric: sortedMinersData[0]?.score.toFixed(2),
       description: "Network-wide best this round",
       icon: LuCrown,
@@ -44,42 +44,43 @@ export default function AgentScoreAnalytics({
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6">
-        {minerStats.map((stat) => {
+        {minerStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div
-              key={stat.title}
-              className={cn(
-                "p-5 rounded-xl min-w-[240px]",
-                stat.className
-              )}
-            >
-              <div className="flex items-center mb-3">
-                <div
-                  className={cn(
-                    "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
-                    stat.iconClassName
-                  )}
-                >
-                  <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+            <div key={stat.title}>
+              <div
+                className={cn(
+                  "p-5 rounded-xl min-w-[240px]",
+                  stat.className
+                )}
+              >
+                <div className="flex items-center mb-3">
+                  <div
+                    className={cn(
+                      "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
+                      stat.iconClassName
+                    )}
+                  >
+                    <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <Text className="text-sm font-medium ms-3 text-gray-700 uppercase tracking-wide">
+                    {stat.title}
+                  </Text>
                 </div>
-                <Text className="text-sm font-medium ms-3 text-gray-700 uppercase tracking-wide">
-                  {stat.title}
+                <div className="flex items-center h-12 mb-1">
+                  <Text
+                    className={cn(
+                      "font-bold text-3xl",
+                      stat.metricClassName
+                    )}
+                  >
+                    {stat.metric}
+                  </Text>
+                </div>
+                <Text className={cn("text-xs text-gray-600 font-medium", stat.descriptionClassName)}>
+                  {stat.description}
                 </Text>
               </div>
-              <div className="flex items-center h-12 mb-1">
-                <Text
-                  className={cn(
-                    "font-bold text-3xl",
-                    stat.metricClassName
-                  )}
-                >
-                  {stat.metric}
-                </Text>
-              </div>
-              <Text className={cn("text-xs text-gray-600 font-medium", stat.descriptionClassName)}>
-                {stat.description}
-              </Text>
             </div>
           );
         })}

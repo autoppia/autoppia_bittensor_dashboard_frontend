@@ -8,7 +8,7 @@ import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
 const metricsData = [
   {
     id: "score-to-win",
-    title: "Score to Win",
+    title: "Top Score",
     value: 0.95,
     icon: LuTrophy,
     bgColor:
