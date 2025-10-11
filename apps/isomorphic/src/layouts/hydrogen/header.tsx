@@ -12,6 +12,7 @@ import { LuActivity } from "react-icons/lu";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
+import { Tooltip } from "rizzui";
 
 export default function Header() {
   const pathname = usePathname();
@@ -64,75 +65,89 @@ export default function Header() {
         <div className="flex items-center gap-1">
           {/* Social Media Buttons */}
           <div className="hidden sm:flex items-center gap-1">
-            <a
-              href="https://autoppia.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-blue-500/10 rounded-lg transition-all duration-300"
-              aria-label="Visit Autoppia Website"
-            >
-              <PiGlobeDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://luxit.gitbook.io/autoppia-docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300"
-              aria-label="View Documentation"
-            >
-              <PiBookOpenDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://github.com/autoppia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              aria-label="Explore our GitHub"
-            >
-              <FaGithub className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://x.com/AutoppiaAI"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              aria-label="Follow us on X (Twitter)"
-            >
-              <FaXTwitter className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://discord.com/channels/799672011265015819/1339356060787408996"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-indigo-500/10 rounded-lg transition-all duration-300"
-              aria-label="Join our Discord"
-            >
-              <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <div className="relative flex items-center ml-2 group">
-              {/* Glowing background */}
-              <div className="absolute inset-0 bg-red-500 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <Tooltip content="Visit Autoppia Website" placement="bottom">
+              <a
+                href="https://autoppia.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-blue-500/10 rounded-lg transition-all duration-300"
+                aria-label="Visit Autoppia Website"
+              >
+                <PiGlobeDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="View Documentation" placement="bottom">
+              <a
+                href="https://luxit.gitbook.io/autoppia-docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300"
+                aria-label="View Documentation"
+              >
+                <PiBookOpenDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Explore our GitHub" placement="bottom">
+              <a
+                href="https://github.com/autoppia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+                aria-label="Explore our GitHub"
+              >
+                <FaGithub className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Follow us on X (Twitter)" placement="bottom">
+              <a
+                href="https://x.com/AutoppiaAI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+                aria-label="Follow us on X (Twitter)"
+              >
+                <FaXTwitter className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Join our Discord" placement="bottom">
+              <a
+                href="https://discord.com/channels/799672011265015819/1339356060787408996"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-indigo-500/10 rounded-lg transition-all duration-300"
+                aria-label="Join our Discord"
+              >
+                <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Live Network Status" placement="bottom">
+              <div className="relative flex items-center ml-2 group">
+                {/* Glowing background */}
+                <div className="absolute inset-0 bg-red-500 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-              {/* Main container */}
-              <div className="relative flex items-center gap-2 px-3 py-1.5 bg-black border border-red-500 rounded-lg hover:border-red-400 transition-all duration-300">
-                {/* Animated broadcasting icon */}
-                <div className="relative">
-                  <LuActivity className="w-4 h-4 text-red-500 animate-pulse" />
-                  <div className="absolute -inset-1 border border-red-500 rounded-full animate-ping opacity-50"></div>
+                {/* Main container */}
+                <div className="relative flex items-center gap-2 px-3 py-1.5 bg-black border border-red-500 rounded-lg hover:border-red-400 transition-all duration-300">
+                  {/* Animated broadcasting icon */}
+                  <div className="relative">
+                    <LuActivity className="w-4 h-4 text-red-500 animate-pulse" />
+                    <div className="absolute -inset-1 border border-red-500 rounded-full animate-ping opacity-50"></div>
+                  </div>
+
+                  {/* Live text */}
+                  <span className="text-sm font-mono font-bold text-red-500 tracking-wider">
+                    ● LIVE
+                  </span>
                 </div>
-
-                {/* Live text */}
-                <span className="text-sm font-mono font-bold text-red-500 tracking-wider">
-                  ● LIVE
-                </span>
               </div>
-            </div>
+            </Tooltip>
           </div>
 
-          <HamburgerButton
-            className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-            view={<Sidebar className="static w-full 2xl:w-full" />}
-          />
+          <Tooltip content="Open Menu" placement="bottom">
+            <HamburgerButton
+              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+              view={<Sidebar className="static w-full 2xl:w-full" />}
+            />
+          </Tooltip>
         </div>
       </div>
     </StickyHeader>

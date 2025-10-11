@@ -24,7 +24,7 @@ export default function RoundResult() {
           <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 rounded-full border border-purple-200/50">
             <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
             <Text className="text-xs text-purple-600 font-medium">
-              Aggregated Summary
+              Round {roundId}
             </Text>
           </div>
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-300/50 to-transparent"></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Text } from "rizzui";
 import {
   PiGlobe,
@@ -8,6 +9,7 @@ import {
   PiChartBar,
   PiTimer,
   PiFileText,
+  PiPlay,
 } from "react-icons/pi";
 import { tasksDataMap } from "@/data/tasks-data";
 
@@ -18,8 +20,8 @@ export default function TaskDetails() {
   return (
     <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Task Stats Grid - 2x2 on desktop */}
-        <div className="grid grid-cols-4 gap-6">
+        {/* Task Stats Grid - 2x3 on desktop */}
+        <div className="grid grid-cols-6 gap-6">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <PiGlobe className="w-4 h-4 text-blue-400" />
@@ -55,6 +57,18 @@ export default function TaskDetails() {
               </div>
             </div>
             <div className="text-xs text-gray-700">Response Time</div>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <PiPlay className="w-4 h-4 text-purple-400" />
+              <Link 
+                href={`/agent-run/${taskData?.agentRunId || ''}`}
+                className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors duration-200"
+              >
+                {taskData?.agentRunId || 'N/A'}
+              </Link>
+            </div>
+            <div className="text-xs text-gray-700">Agent Run ID</div>
           </div>
         </div>
 

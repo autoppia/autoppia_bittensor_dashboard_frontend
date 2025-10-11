@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
@@ -17,7 +17,8 @@ import {
   YAxis,
   Area,
 } from "recharts";
-import { leaderboardData, LeaderboardDataType } from "@/data/leaderboard-data";
+import { useLeaderboard } from "@/services/hooks/useOverview";
+import type { LeaderboardData } from "@/services/api/types/overview";
 
 const filterOptions = ["7D", "15D", "All"];
 const sotaAgents = [
@@ -46,17 +47,81 @@ interface MinerChartProps {
 }
 
 export default function MinerChart({ className }: MinerChartProps) {
-  const [filteredData, setFilteredData] =
-    useState<LeaderboardDataType[]>(leaderboardData);
+  const [filteredData, setFilteredData] = useState<LeaderboardData[]>([]);
   const [compareWith, setCompareWith] = useState<string[]>([]);
+  const [currentFilter, setCurrentFilter] = useState<string>("All");
+  
+  const { data: leaderboardData, loading, error } = useLeaderboard({
+    timeRange: currentFilter === "All" ? "all" : currentFilter.toUpperCase() as "7D" | "15D"
+  });
+
+  useEffect(() => {
+    if (leaderboardData?.data?.leaderboard) {
+      console.log('Leaderboard data received:', leaderboardData.data.leaderboard);
+      setFilteredData(leaderboardData.data.leaderboard);
+    }
+  }, [leaderboardData]);
 
   function handleFilterBy(option: string) {
-    if (option === "All") {
-      setFilteredData(leaderboardData);
-    } else {
-      const length = option === "7D" ? 7 : 15;
-      setFilteredData(leaderboardData.slice(-1 * length));
-    }
+    setCurrentFilter(option);
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <WidgetCard
+        title="Top Miner Score"
+        action={
+          <ButtonGroupAction
+            options={filterOptions}
+            onChange={(option) => handleFilterBy(option)}
+          />
+        }
+        headerClassName="flex-row items-center space-between"
+        rounded="lg"
+        className={cn("p-5 lg:p-5", className)}
+      >
+        <div className="custom-scrollbar overflow-x-auto scroll-smooth">
+          <div className={cn("h-[160px] w-full pt-2")}>
+            <div className="h-full w-full bg-gray-100 animate-pulse rounded"></div>
+          </div>
+          <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap mt-4">
+            <span className="ms-4">Compare with:</span>
+            <div className="flex items-center gap-4">
+              {sotaAgents.map((agent) => (
+                <div key={agent.value} className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <span className="text-sm">{agent.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </WidgetCard>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <WidgetCard
+        title="Top Miner Score"
+        action={
+          <ButtonGroupAction
+            options={filterOptions}
+            onChange={(option) => handleFilterBy(option)}
+          />
+        }
+        headerClassName="flex-row items-center space-between"
+        rounded="lg"
+        className={cn("p-5 lg:p-5", className)}
+      >
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600 font-medium">Error loading leaderboard data</p>
+          <p className="text-red-500 text-sm mt-1">{error}</p>
+        </div>
+      </WidgetCard>
+    );
   }
 
   return (
@@ -74,6 +139,15 @@ export default function MinerChart({ className }: MinerChartProps) {
     >
       <div className="custom-scrollbar overflow-x-auto scroll-smooth">
         <div className={cn("h-[160px] w-full pt-2")}>
+          {filteredData.length < 2 ? (
+            <div className="h-full w-full flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <p className="text-sm">Insufficient data for chart</p>
+                <p className="text-xs mt-1">Need at least 2 data points</p>
+                <p className="text-xs">Current: {filteredData.length} points</p>
+              </div>
+            </div>
+          ) : (
           <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={filteredData}
@@ -93,10 +167,10 @@ export default function MinerChart({ className }: MinerChartProps) {
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                domain={[
-                  Math.min(...filteredData.map((item) => item.subnet36)),
-                  Math.max(...filteredData.map((item) => item.subnet36)),
-                ]}
+                domain={filteredData.length > 0 ? [
+                  Math.max(0, Math.min(...filteredData.map((item) => item.subnet36)) - 0.1),
+                  Math.min(1, Math.max(...filteredData.map((item) => item.subnet36)) + 0.1),
+                ] : [0, 1]}
                 tick={<CustomYAxisTick />}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -124,6 +198,7 @@ export default function MinerChart({ className }: MinerChartProps) {
               })}
             </ComposedChart>
           </ResponsiveContainer>
+          )}
         </div>
         <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap">
           <span className="ms-4">Compare with:</span>
