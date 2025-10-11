@@ -74,7 +74,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
       <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner, index) => (
-            <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`}>
+            <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`} title="Inspect Agent Run">
               <div
                 className={cn(
                   "relative flex items-center w-full px-4 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-md cursor-pointer group border border-transparent hover:border-gray-200",

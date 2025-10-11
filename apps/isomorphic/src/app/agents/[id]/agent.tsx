@@ -35,9 +35,14 @@ export default function Agent() {
         </div>
       </div>
       <AgentStats />
-      <Text className="text-2xl font-bold text-gray-900 mt-6">
-        Score Analytics
-      </Text>
+      <div className="mt-6">
+        <Text className="text-2xl font-bold text-gray-900">
+          Score Progress
+        </Text>
+        <Text className="text-sm text-gray-600 mt-1">
+          X-axis represents Round numbers
+        </Text>
+      </div>
       <div className="flex flex-col xl:flex-row gap-6 items-start mt-4">
         <AgentScoreChart className="w-full xl:w-[calc(100%-320px)]" />
         <AgentScoreAnalytics className="w-full xl:w-[320px]" />

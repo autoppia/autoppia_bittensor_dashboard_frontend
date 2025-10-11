@@ -11,6 +11,10 @@ import {
   PiChartLineDuotone,
   PiChartLineUpDuotone,
   PiTrophyDuotone,
+  PiListChecksDuotone,
+  PiTrendUpDuotone,
+  PiTimerDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
 import { Text, Select, SelectOption } from "rizzui";
 import { roundsData, RoundType } from "@/data/rounds-data";
@@ -40,6 +44,87 @@ export default function AgentValidators() {
           className="w-44"
         />
       </div>
+      
+      {/* Common Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          {
+            title: "Average Rank",
+            metric: "2.3",
+            description: "Across all validators",
+            icon: PiTrophyDuotone,
+            className: "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40",
+            metricClassName: "text-yellow-600",
+            iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white",
+          },
+          {
+            title: "Average Score",
+            metric: "92.4%",
+            description: "Performance average",
+            icon: PiTrendUpDuotone,
+            className: "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40",
+            metricClassName: "text-emerald-600",
+            iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white",
+          },
+          {
+            title: "Average Execution Time",
+            metric: "2.8s",
+            description: "Response time",
+            icon: PiTimerDuotone,
+            className: "bg-gradient-to-br from-blue-500/15 via-blue-400/15 to-blue-600/15 border-2 border-blue-500/40",
+            metricClassName: "text-blue-600",
+            iconClassName: "bg-gradient-to-br from-blue-400 to-blue-600 text-white",
+          },
+          {
+            title: "Average Tasks",
+            metric: "14.2",
+            description: "Tasks completed",
+            icon: PiListChecksDuotone,
+            className: "bg-gradient-to-br from-purple-500/15 via-purple-400/15 to-purple-600/15 border-2 border-purple-500/40",
+            metricClassName: "text-purple-600",
+            iconClassName: "bg-gradient-to-br from-purple-400 to-purple-600 text-white",
+          },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.title}
+              className={cn(
+                "p-4 rounded-xl transition-all duration-300 hover:scale-105",
+                stat.className
+              )}
+            >
+              <div className="flex items-center mb-2">
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-lg",
+                    stat.iconClassName
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <Text className="text-xs font-medium ms-2 text-gray-700 uppercase tracking-wide">
+                  {stat.title}
+                </Text>
+              </div>
+              <div className="flex items-center h-8 mb-1">
+                <Text
+                  className={cn(
+                    "font-bold text-2xl",
+                    stat.metricClassName
+                  )}
+                >
+                  {stat.metric}
+                </Text>
+              </div>
+              <Text className="text-xs text-gray-600 font-medium">
+                {stat.description}
+              </Text>
+            </div>
+          );
+        })}
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {validatorsData.map((validator, index) => {
           // Mock data for agent evaluation - in production, this would come from API
@@ -47,6 +132,7 @@ export default function AgentValidators() {
           const score = 95 - index * 2; // Mock score
           const rank = index + 1; // Mock rank
           const avgResponseTime = (2.5 + index * 0.3).toFixed(1); // Mock avg response time in seconds
+          const tasksCompleted = 12 + index * 2; // Mock tasks completed
 
           const secondaryStats = [
             {
@@ -104,31 +190,6 @@ export default function AgentValidators() {
                 </div>
 
                 <div className="p-4 space-y-3">
-                  {/* Secondary Stats - Compact Horizontal */}
-                  <div className="flex items-center justify-around gap-3 bg-gray-900/5 border border-gray-200 rounded-lg p-3">
-                    {secondaryStats.map((stat) => {
-                      const Icon = stat.icon;
-                      return (
-                        <div key={stat.title} className="flex items-center gap-2">
-                          <div className={cn(
-                            "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
-                            stat.iconClassName
-                          )}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <Text className="text-xs text-gray-600">
-                              {stat.title}
-                            </Text>
-                            <Text className="font-bold text-sm text-gray-900 truncate">
-                              {stat.metric}
-                            </Text>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
                   {/* Agent Performance */}
                   <div className="border border-muted rounded-lg p-3">
                     <div className="flex items-center justify-center gap-2 mb-2.5">
@@ -163,13 +224,76 @@ export default function AgentValidators() {
                           {avgResponseTime}s
                         </Text>
                       </div>
+                      <div className="flex items-center gap-1.5">
+                        <PiListChecksDuotone className="w-3.5 h-3.5 text-emerald-600" />
+                        <Text className="text-xs text-gray-700">Tasks:</Text>
+                        <Text className="text-sm font-bold text-gray-900">
+                          {tasksCompleted}
+                        </Text>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Secondary Stats - Compact Horizontal */}
+                  <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    {secondaryStats.map((stat) => {
+                      const Icon = stat.icon;
+                      return (
+                        <div key={stat.title} className="flex items-center gap-2">
+                          <div className={cn(
+                            "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
+                            stat.iconClassName
+                          )}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <Text className="text-xs text-gray-600">
+                              {stat.title}
+                            </Text>
+                            <Text className="font-bold text-sm text-gray-900 truncate">
+                              {stat.metric}
+                            </Text>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             </Link>
           );
         })}
+      </div>
+      
+      {/* Information Card */}
+      <div className="mt-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex-shrink-0">
+            <PiInfoDuotone className="w-6 h-6" />
+          </div>
+          <div className="flex-1">
+            <Text className="text-lg font-bold text-gray-900 mb-2">
+              How Agent Evaluation Works
+            </Text>
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Validators:</strong> Each validator runs independent evaluations of your agent across different tasks and scenarios.
+              </p>
+              <p>
+                <strong>Scoring:</strong> Agents are scored based on task completion accuracy, response quality, and execution efficiency.
+              </p>
+              <p>
+                <strong>Ranking:</strong> Your final rank is determined by your average performance across all validators in each round.
+              </p>
+              <p>
+                <strong>Tasks:</strong> Each evaluation includes multiple tasks designed to test different capabilities of your agent.
+              </p>
+              <p>
+                <strong>Execution Time:</strong> Faster response times with maintained quality result in higher scores.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

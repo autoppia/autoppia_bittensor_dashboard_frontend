@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
-import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
+import { PiCubeDuotone, PiClockDuotone, PiHourglassSimpleDuotone } from "react-icons/pi";
 import { roundsData } from "@/data/rounds-data";
 
 export default function RoundProgress() {
@@ -13,6 +14,31 @@ export default function RoundProgress() {
   const isSmallScreen = useMedia("(min-width: 640px) and (max-width: 767px)", false);
   const isMediumScreen = useMedia("(min-width: 768px) and (max-width: 1023px)", false);
   const cellCount = isTinyScreen ? 30 : isSmallScreen ? 50 : isMediumScreen ? 75 : 100;
+
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Calculate time remaining based on round end block
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      // Assuming each block takes ~12 seconds (Bittensor standard)
+      const blocksPerSecond = 1 / 12;
+      const currentBlock = 6526300;
+      const blocksRemaining = Math.max(0, round.endBlock - currentBlock);
+      const secondsRemaining = blocksRemaining / blocksPerSecond;
+
+      const days = Math.floor(secondsRemaining / (24 * 60 * 60));
+      const hours = Math.floor((secondsRemaining % (24 * 60 * 60)) / (60 * 60));
+      const minutes = Math.floor((secondsRemaining % (60 * 60)) / 60);
+      const seconds = Math.floor(secondsRemaining % 60);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, [round.endBlock]);
 
   const currentBlock = 6526300;
   const percentage =
@@ -31,11 +57,16 @@ export default function RoundProgress() {
         <div className="text-2xl font-bold text-gray-900">
           Round Progress
         </div>
-        <div className="flex items-center text-md text-yellow-500 font-semibold">
+        <div className="flex items-center text-md text-white font-semibold">
           <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg">
-            <PiClockDuotone className="w-3 h-3" />
+            <PiHourglassSimpleDuotone className="w-3 h-3" />
           </div>
-          <span className="ms-1">12d 30m 20s</span>
+          <span className="ms-1">
+            {timeLeft.days > 0 && `${timeLeft.days}d `}
+            {timeLeft.hours > 0 && `${timeLeft.hours}h `}
+            {timeLeft.minutes > 0 && `${timeLeft.minutes}m `}
+            {timeLeft.seconds}s
+          </span>
         </div>
       </div>
       
@@ -57,24 +88,15 @@ export default function RoundProgress() {
         <div></div>
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center group text-sm font-medium">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 hidden sm:block">Start Block: </span>
+            <span className="hidden sm:block">Start Block: </span>
             <span className="ms-1 text-gray-900">{round.startBlock}</span>
           </div>
           <div className="flex items-center group text-sm font-medium">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 hidden sm:block text-gray-900">Current Block: </span>
+            <span className="hidden sm:block text-gray-900">Current Block: </span>
             <span className="ms-1 text-gray-900">{currentBlock}</span>
           </div>
           <div className="flex items-center group text-sm font-medium">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 hidden sm:block">End Block: </span>
+            <span className="hidden sm:block">End Block: </span>
             <span className="ms-1 text-gray-900">{round.endBlock}</span>
           </div>
         </div>

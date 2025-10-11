@@ -10,6 +10,7 @@ import {
   LuStar,
   LuCircleCheckBig,
   LuDollarSign,
+  LuTrophy,
 } from "react-icons/lu";
 import { sortedMinersData } from "@/data/miners-data";
 
@@ -31,13 +32,24 @@ export default function AgentStats() {
     {
       title: "Current Rank",
       metric: `#${miner?.ranking}`,
-      description: "Live leaderboard position",
+      description: "Last network position",
       icon: LuChartNoAxesCombined,
       className:
         "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-yellow-500",
       iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "text-yellow-200",
+    },
+    {
+      title: "All-Time Best Rank",
+      metric: `#${miner?.ranking || 1}`,
+      description: "Best ranking achieved",
+      icon: LuTrophy,
+      className:
+        "bg-gradient-to-br from-blue-500/15 via-blue-400/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
+      metricClassName: "text-blue-500",
+      iconClassName: "bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
+      descriptionClassName: "text-blue-200",
     },
     {
       title: "All-Time Best Score",
@@ -51,23 +63,13 @@ export default function AgentStats() {
       descriptionClassName: "text-emerald-200",
     },
     {
-      title: "Rounds Completed",
+      title: "Rounds Participated",
       metric: 20,
       description: "Total evaluations",
       icon: LuCircleCheckBig,
       className: "bg-gradient-to-br from-purple-500/15 via-purple-400/15 to-purple-600/15 border-2 border-purple-500/40 hover:border-purple-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
       metricClassName: "text-purple-700",
       iconClassName: "bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "",
-    },
-    {
-      title: "Total Alpha Earned",
-      metric: "Coming Soon",
-      description: "TAO rewards",
-      icon: LuDollarSign,
-      className: "border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all duration-300 group",
-      metricClassName: "text-blue-700 text-lg",
-      iconClassName: "bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
       descriptionClassName: "",
     },
   ];
