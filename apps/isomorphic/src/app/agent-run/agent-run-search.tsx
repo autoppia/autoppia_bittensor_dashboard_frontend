@@ -237,6 +237,7 @@ export default function AgentRunSearch() {
       endTime: run.endTime ?? null,
       totalTasks,
       completedTasks,
+      successfulTasks,
       successRate,
       overallScore: Math.round(baseScore),
       ranking: run.ranking ?? 0,
@@ -464,23 +465,23 @@ export default function AgentRunSearch() {
                       {validatorOptions.map((validator) => {
                         const isActive = selectedValidator === validator.id;
                         return (
-                        <button
-                          key={validator.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedValidator(validator.id);
-                            setIsValidatorDropdownOpen(false);
-                          }}
-                          className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-blue-500/20 last:border-b-0 ${
-                            isActive
-                              ? "bg-blue-500/30 text-blue-100"
-                              : "text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200"
-                          }`}
-                        >
-                          {validator.label}
-                        </button>
-                      );
-                    })}
+                          <button
+                            key={validator.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedValidator(validator.id);
+                              setIsValidatorDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-blue-500/20 last:border-b-0 ${
+                              isActive
+                                ? "bg-blue-500/30 text-blue-100"
+                                : "text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200"
+                            }`}
+                          >
+                            {validator.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
