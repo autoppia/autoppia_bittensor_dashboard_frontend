@@ -399,6 +399,72 @@ export function useTaskTimeline(taskId: string) {
   return { timeline, isLoading, error };
 }
 
+// Hook for getting tasks list
+export function useTasksList(params?: {
+  page?: number;
+  limit?: number;
+  website?: string;
+  useCase?: string;
+  status?: string;
+  agentRunId?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}) {
+  const [tasks, setTasks] = useState<TaskData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(params?.page || 1);
+  const [limit, setLimit] = useState(params?.limit || 20);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await tasksService.getTasks({
+        ...params,
+        page,
+        limit,
+      });
+      setTasks(result.tasks);
+      setTotal(result.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, limit, params]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const refetch = useCallback(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const goToPage = useCallback((newPage: number) => {
+    setPage(newPage);
+  }, []);
+
+  const changeLimit = useCallback((newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when changing limit
+  }, []);
+
+  return {
+    tasks,
+    total,
+    page,
+    limit,
+    isLoading,
+    error,
+    refetch,
+    goToPage,
+    changeLimit,
+  };
+}
+
 // Hook for searching tasks
 export function useTaskSearch(params: {
   query?: string;

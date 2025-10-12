@@ -42,6 +42,15 @@ export class ApiClient {
     
     // Check if the API response indicates failure
     if (data && typeof data === 'object' && data.success === false) {
+      // Handle specific error cases
+      if (data.code === 'AGENT_RUN_NOT_FOUND') {
+        throw {
+          message: data.error || `Agent run with ID '${this.extractRunIdFromUrl(response.url)}' not found`,
+          status: 404,
+          code: 'AGENT_RUN_NOT_FOUND',
+        } as ApiError;
+      }
+      
       throw {
         message: data.error || data.message || 'API request failed',
         status: response.status,
@@ -53,6 +62,11 @@ export class ApiClient {
       data,
       success: true,
     };
+  }
+
+  private extractRunIdFromUrl(url: string): string {
+    const match = url.match(/\/agent-runs\/([^\/\?]+)/);
+    return match ? match[1] : 'unknown';
   }
 
   private async handleNetworkError<T>(endpoint: string): Promise<ApiResponse<T>> {

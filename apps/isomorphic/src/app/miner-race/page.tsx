@@ -20,55 +20,65 @@ import {
 import { Title, Text } from 'rizzui/typography';
 import PageHeader from "@/app/shared/page-header";
 
-// Mock data for top 5 miners over 7 days
+// Mock data for top 5 miners over 25 days
 const generateMockData = () => {
   const miners = [
     { 
       id: 1, 
       name: "QuantumMiner", 
       color: "#10b981",
-      avatar: "🤖"
+      avatar: "🤖",
+      image: "/icons/quantum-miner.png",
+      carIcon: "🚗"
     },
     { 
       id: 2, 
       name: "NeuralNet", 
       color: "#3b82f6",
-      avatar: "🧠"
+      avatar: "🧠",
+      image: "/icons/neural-net.png",
+      carIcon: "🏎️"
     },
     { 
       id: 3, 
       name: "CryptoForge", 
       color: "#f59e0b",
-      avatar: "⚡"
+      avatar: "⚡",
+      image: "/icons/crypto-forge.png",
+      carIcon: "🚙"
     },
     { 
       id: 4, 
       name: "BlockChain", 
       color: "#ef4444",
-      avatar: "🔗"
+      avatar: "🔗",
+      image: "/icons/blockchain.png",
+      carIcon: "🚕"
     },
     { 
       id: 5, 
       name: "DataMiner", 
       color: "#8b5cf6",
-      avatar: "💎"
+      avatar: "💎",
+      image: "/icons/data-miner.png",
+      carIcon: "🚓"
     },
   ];
 
-  const days = 7;
+  const days = 25; // More rounds for smoother animation
   const data: DayData[] = [];
 
-  // Generate initial scores (around 80-95 range)
-  let scores = miners.map(() => 80 + Math.random() * 15);
+  // Generate initial scores with more variation (60-100 range)
+  let scores = miners.map(() => 60 + Math.random() * 40);
 
   for (let day = 0; day < days; day++) {
     const dayData = {
       day: day + 1,
       date: new Date(Date.now() - (days - day - 1) * 24 * 60 * 60 * 1000),
       miners: miners.map((miner, index) => {
-        // Add some variation to scores each day
-        const variation = (Math.random() - 0.5) * 4; // ±2 points
-        scores[index] = Math.max(70, Math.min(100, scores[index] + variation));
+        // Add more variation to scores each day for better separation
+        const variation = (Math.random() - 0.5) * 8; // ±4 points
+        scores[index] = Math.max(50, Math.min(100, scores[index] + variation));
         
         return {
           ...miner,
@@ -99,6 +109,8 @@ interface MinerData {
   name: string;
   color: string;
   avatar: string;
+  image: string;
+  carIcon: string;
   score: number;
   rank: number;
   previousRank: number;
@@ -112,21 +124,36 @@ interface DayData {
 }
 
 export default function MinerRacePage() {
-  const [data] = useState<DayData[]>(generateMockData());
+  const [data, setData] = useState<DayData[]>([]);
   const [currentDay, setCurrentDay] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1000); // milliseconds per frame
+  const [speed, setSpeed] = useState(100); // milliseconds per frame for smoother animation
   const [animatingMiners, setAnimatingMiners] = useState<Set<number>>(new Set());
   const [previousMiners, setPreviousMiners] = useState<MinerData[]>([]);
+  const [interpolatedProgress, setInterpolatedProgress] = useState(0); // For smooth movement
+  const [isClient, setIsClient] = useState(false);
 
-  // Animation controls
+  // Initialize data on client side only to avoid hydration issues
+  useEffect(() => {
+    setIsClient(true);
+    setData(generateMockData());
+  }, []);
+
+  // Animation controls with smooth interpolation
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isPlaying && currentDay < data.length - 1) {
       interval = setInterval(() => {
-        setCurrentDay(prev => Math.min(prev + 1, data.length - 1));
-      }, speed);
+        setInterpolatedProgress(prev => {
+          const newProgress = prev + (100 / (speed / 10)); // Smooth interpolation
+          if (newProgress >= 100) {
+            setCurrentDay(day => Math.min(day + 1, data.length - 1));
+            return 0;
+          }
+          return newProgress;
+        });
+      }, 10); // 10ms for very smooth animation
     } else if (currentDay >= data.length - 1) {
       setIsPlaying(false);
     }
@@ -167,6 +194,7 @@ export default function MinerRacePage() {
   const handleReset = () => {
     setIsPlaying(false);
     setCurrentDay(0);
+    setInterpolatedProgress(0);
   };
 
   const handleNext = () => {
@@ -181,7 +209,24 @@ export default function MinerRacePage() {
     }
   };
 
+  const handleSpeedChange = (newSpeed: number) => {
+    setSpeed(newSpeed);
+  };
+
+  // Don't render until client-side data is ready
+  if (!isClient || data.length === 0) {
+    return (
+      <>
+        <PageHeader title="Miner Race" />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-lg text-gray-600">Loading race data...</div>
+        </div>
+      </>
+    );
+  }
+
   const currentData = data[currentDay];
+  const topMiner = currentData.miners[0]; // Current #1 miner
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -220,174 +265,183 @@ export default function MinerRacePage() {
     <>
       <PageHeader title="Miner Race" />
       
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <FaTrophy className="h-8 w-8 text-yellow-500" />
-            <Title as="h1" className="text-3xl font-bold text-gray-900">
-              Top 5 Miners Ranking Race
-            </Title>
-            <FaTrophy className="h-8 w-8 text-yellow-500" />
+      {/* Line Graph Race - Chess ELO Style */}
+      <div className="relative bg-black min-h-screen">
+        {/* Top Left - Current #1 Miner Info */}
+        <div className="absolute top-6 left-6 z-20">
+          <div className="text-white">
+            <div className="text-sm text-gray-400 mb-2">The history of the top miners over time</div>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-2xl">
+                {topMiner.avatar}
+              </div>
+              <div>
+                <div className="text-lg font-bold text-white">{topMiner.name}</div>
+                <div className="text-sm text-gray-300">UID: {topMiner.id}</div>
+                <div className="text-sm text-white">#{topMiner.rank} miner ({topMiner.score}%)</div>
+                <div className="text-xs text-gray-400">for {Math.floor((topMiner.id * 3) % 12) + 1} months</div>
+              </div>
+            </div>
           </div>
-          <Text className="text-gray-600">
-            Watch the competition unfold as miners compete for the top spot
-          </Text>
         </div>
 
-        {/* Controls */}
-        <WidgetCard
-          title="Animation Controls"
-          action={
+        {/* Top Right - Current Round */}
+        <div className="absolute top-6 right-6 z-20 text-right">
+          <div className="text-3xl font-bold text-white">Round {currentData.day}</div>
+          <div className="text-sm text-gray-400">Top miners by score</div>
+        </div>
+
+        {/* Main Chart Area */}
+        <div className="relative h-screen pt-24 pb-20">
+          {/* Grid Lines */}
+          <div className="absolute inset-0 opacity-20">
+            {/* Horizontal Grid Lines */}
+            {[50, 60, 70, 80, 90, 100].map((score) => (
+              <div
+                key={score}
+                className="absolute w-full h-px bg-gray-600"
+                style={{ top: `${((100 - score) / 50) * 100}%` }}
+              />
+            ))}
+            {/* Vertical Grid Lines */}
+            {Array.from({ length: data.length }, (_, i) => (
+              <div
+                key={i}
+                className="absolute h-full w-px bg-gray-600"
+                style={{ left: `${(i / (data.length - 1)) * 100}%` }}
+              />
+            ))}
+          </div>
+
+          {/* Y-Axis Labels */}
+          <div className="absolute left-4 top-24 bottom-20 flex flex-col justify-between text-white text-sm">
+            {[100, 90, 80, 70, 60, 50].map((score) => (
+              <div key={score}>{score}%</div>
+            ))}
+          </div>
+
+          {/* X-Axis Labels */}
+          <div className="absolute bottom-20 left-0 right-0 flex justify-between text-white text-sm px-8">
+            {Array.from({ length: Math.min(6, data.length) }, (_, i) => {
+              const index = Math.floor((i / 5) * (data.length - 1));
+              return (
+                <div key={i}>Round {data[index]?.day || i + 1}</div>
+              );
+            })}
+          </div>
+
+          {/* Line Graphs */}
+          <svg className="absolute inset-0 w-full h-full" style={{ top: '6rem', bottom: '5rem' }}>
+            {currentData.miners.map((miner, index) => {
+              const points = data.slice(0, currentDay + 1).map((dayData, dayIndex) => {
+                const minerData = dayData.miners.find(m => m.id === miner.id);
+                if (!minerData) return null;
+                
+                const x = (dayIndex / (data.length - 1)) * 100;
+                const y = ((100 - minerData.score) / 50) * 100; // Convert to percentage
+                return `${x},${y}`;
+              }).filter(Boolean).join(' ');
+
+              return (
+                <g key={miner.id}>
+                  {/* Line Path */}
+                  <polyline
+                    points={points}
+                    fill="none"
+                    stroke={miner.color}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Current Position Dot */}
+                  {currentDay >= 0 && (
+                    <circle
+                      cx={(currentDay / (data.length - 1)) * 100}
+                      cy={((100 - miner.score) / 50) * 100}
+                      r="6"
+                      fill={miner.color}
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  )}
+                  
+                  {/* Miner Name at End of Line */}
+                  <text
+                    x={(currentDay / (data.length - 1)) * 100 + 10}
+                    y={((100 - miner.score) / 50) * 100 + 5}
+                    fill="white"
+                    fontSize="12"
+                    fontWeight="bold"
+                  >
+                    {miner.name} ({miner.score}%)
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Legend - Right Side */}
+        <div className="absolute top-24 right-6 w-64 space-y-2">
+          {currentData.miners.map((miner, index) => (
+            <div key={miner.id} className="flex items-center gap-3 text-white text-sm">
+              <div 
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: miner.color }}
+              />
+              <div className="flex-1">
+                <div className="font-semibold">{miner.name}</div>
+                <div className="text-xs text-gray-400">UID: {miner.id}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold">{miner.score}%</div>
+                <div className="text-xs text-gray-400">#{miner.rank}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Animation Controls - Bottom */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-gray-900/80 backdrop-blur-sm rounded-lg px-6 py-3">
+          <button
+            onClick={handlePlay}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+              isPlaying 
+                ? "bg-red-500 text-white hover:bg-red-600" 
+                : "bg-green-500 text-white hover:bg-green-600"
+            )}
+          >
+            {isPlaying ? <FaPause /> : <FaPlay />}
+          </button>
+          
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <FaRedo />
+          </button>
+          
+          <div className="flex items-center gap-2 text-white">
+            <span className="text-sm">Speed:</span>
             <ButtonGroupAction
-              options={["Slow", "Normal", "Fast"]}
+              options={["0.5x", "1x", "2x", "4x"]}
               onChange={(option) => {
                 switch (option) {
-                  case "Slow": setSpeed(2000); break;
-                  case "Normal": setSpeed(1000); break;
-                  case "Fast": setSpeed(500); break;
+                  case "0.5x": setSpeed(2000); break;
+                  case "1x": setSpeed(1000); break;
+                  case "2x": setSpeed(500); break;
+                  case "4x": setSpeed(250); break;
                 }
               }}
             />
-          }
-          headerClassName="flex-row items-start space-between"
-          rounded="xl"
-        >
-          <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={handlePrevious}
-              disabled={currentDay === 0}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <FaStepBackward className="h-4 w-4" />
-            </button>
-            
-            <button
-              onClick={handlePlay}
-              className={`px-6 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${
-                isPlaying 
-                  ? "bg-red-600 text-white hover:bg-red-700" 
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {isPlaying ? <FaPause className="h-4 w-4" /> : <FaPlay className="h-4 w-4" />}
-              {isPlaying ? "Pause" : "Play"}
-            </button>
-            
-            <button
-              onClick={handleNext}
-              disabled={currentDay >= data.length - 1}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <FaStepForward className="h-4 w-4" />
-            </button>
-            
-            <button
-              onClick={handleReset}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2"
-            >
-              <FaRedo className="h-4 w-4" />
-              Reset
-            </button>
           </div>
-        </WidgetCard>
-
-
-        {/* Live Ranking Chart */}
-        <WidgetCard
-          title=""
-          rounded="xl"
-          className="relative"
-        >
-          {/* Round Info - Top Left */}
-          <div className="absolute top-4 left-6 z-10">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
-              <div className="text-sm font-semibold text-gray-700">
-                Round {currentData.day}
-              </div>
-              <div className="text-xs text-gray-500">
-                {currentData.date.toLocaleDateString()}
-              </div>
-            </div>
+          
+          <div className="text-white text-sm">
+            {currentDay + 1} / {data.length}
           </div>
-
-          {/* Live Ranking Chart Title - Top Right */}
-          <div className="absolute top-4 right-6 z-10">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
-              <div className="text-sm font-semibold text-gray-700">
-                Live Ranking Chart
-              </div>
-              <div className="text-xs text-gray-500">
-                {currentDay + 1} of {data.length}
-              </div>
-            </div>
-          </div>
-          <div className="space-y-3 pt-16">
-            {currentData.miners.map((miner, index) => (
-              <div 
-                key={miner.id} 
-                className={cn(
-                  "relative transition-all duration-500",
-                  animatingMiners.has(miner.id) && "transform scale-105"
-                )}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold transition-all duration-500",
-                      animatingMiners.has(miner.id) && "animate-pulse"
-                    )}
-                         style={{ 
-                           backgroundColor: miner.color,
-                           boxShadow: animatingMiners.has(miner.id) ? `0 0 15px ${miner.color}60` : "none"
-                         }}>
-                      {miner.rank}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{miner.name}</span>
-                      {currentDay > 0 && miner.rankChange !== 0 && (
-                        <div className={cn(
-                          "flex items-center gap-1 text-xs font-bold transition-all duration-300",
-                          getRankChangeColor(miner.rankChange),
-                          animatingMiners.has(miner.id) && "animate-bounce"
-                        )}>
-                          {getRankChangeIcon(miner.rankChange)}
-                          <span>{getRankChangeText(miner.rankChange)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <span className="font-bold text-gray-700">{miner.score}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden relative">
-                  <div
-                    className={cn(
-                      "h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out relative",
-                      animatingMiners.has(miner.id) && "animate-pulse"
-                    )}
-                    style={{ 
-                      backgroundColor: miner.color,
-                      width: `${miner.score}%`,
-                      boxShadow: animatingMiners.has(miner.id) ? `0 0 10px ${miner.color}40` : "none"
-                    }}
-                  >
-                    <span className="text-white text-sm font-medium">
-                      {miner.score}%
-                    </span>
-                    
-                    {/* Animated shine effect for rank changes */}
-                    {animatingMiners.has(miner.id) && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </WidgetCard>
-
-
-
+        </div>
       </div>
     </>
   );
