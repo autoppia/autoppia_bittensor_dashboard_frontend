@@ -19,9 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       // 💡 Prevent next-themes hydration warning
       suppressHydrationWarning
+      lang="en"
     >
       <head>
-        <link rel="icon" href="/favicon.ico" /> 
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body
         // to prevent any warning that is caused by third party extensions like Grammarly

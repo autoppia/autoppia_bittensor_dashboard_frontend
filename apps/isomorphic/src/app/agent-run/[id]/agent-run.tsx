@@ -38,7 +38,7 @@ export default function AgentRun() {
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
           title="Agent Run Details"
-          description={`Agent Run ID: ${id}`}
+          description={`Run ID: ${id}`}
           className="mt-4"
         >
           <Link
@@ -64,7 +64,7 @@ export default function AgentRun() {
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
           title="Agent Run Details"
-          description={`Agent Run ID: ${id}`}
+          description={`Run ID: ${id}`}
           className="mt-4"
         >
           <Link
@@ -75,11 +75,11 @@ export default function AgentRun() {
             <span className="ms-1">Back to Agents</span>
           </Link>
         </PageHeader>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
+          <div className="text-red-400 text-lg font-semibold mb-2">
             Failed to Load Agent Run Data
           </div>
-          <div className="text-red-500 text-sm mb-4">{error}</div>
+          <div className="text-red-300 text-sm mb-4">{error}</div>
           <button
             onClick={refetch}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
@@ -95,7 +95,7 @@ export default function AgentRun() {
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={`Agent Run ID: ${id}`}
+        description={`Run ID: ${id}`}
         className="mt-4"
       >
         <Link
@@ -148,22 +148,22 @@ export default function AgentRun() {
 
       {/* Error Indicators for Individual Sections */}
       {data.errors.personas && (
-        <div className="fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-4 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load personas data</div>
         </div>
       )}
       {data.errors.stats && (
-        <div className="fixed top-16 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-16 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load stats data</div>
         </div>
       )}
       {data.errors.summary && (
-        <div className="fixed top-28 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-28 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load summary data</div>
         </div>
       )}
       {data.errors.tasks && (
-        <div className="fixed top-40 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-40 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load tasks data</div>
         </div>
       )}

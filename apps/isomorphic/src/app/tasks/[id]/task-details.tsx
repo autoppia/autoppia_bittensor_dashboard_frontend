@@ -68,7 +68,7 @@ export default function TaskDetails() {
                 {taskData?.agentRunId || 'N/A'}
               </Link>
             </div>
-            <div className="text-xs text-gray-700">Agent Run ID</div>
+            <div className="text-xs text-gray-700">Run ID</div>
           </div>
         </div>
 

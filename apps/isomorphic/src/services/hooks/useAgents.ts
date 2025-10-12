@@ -7,12 +7,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { agentsService } from '../api/agents.service';
 import type {
   AgentData,
+  MinimalAgentData,
   AgentPerformanceMetrics,
   AgentRunData,
   AgentComparison,
   AgentStatistics,
   AgentActivity,
   AgentsListQueryParams,
+  MinimalAgentsListQueryParams,
   AgentRunsQueryParams,
   AgentPerformanceQueryParams,
   AgentActivityQueryParams,
@@ -52,7 +54,34 @@ function useApiCall<T>(
   return { data, loading, error, refetch };
 }
 
-// Hook for agents list with filtering and pagination
+// Hook for minimal miners list (optimized for sidebar)
+export function useMinersList(params?: MinimalAgentsListQueryParams) {
+  return useApiCall(
+    () => agentsService.getMinersList(params),
+    [JSON.stringify(params)]
+  );
+}
+
+// Hook for specific miner details by UID (optimized endpoint)
+export function useMinerDetails(uid: number) {
+  return useApiCall(
+    () => agentsService.getMinerDetails(uid),
+    [uid]
+  );
+}
+
+// Hook for miner performance metrics by UID (optimized endpoint)
+export function useMinerPerformance(
+  uid: number,
+  params?: { timeRange?: '7d' | '30d' | '90d'; granularity?: 'hour' | 'day' }
+) {
+  return useApiCall(
+    () => agentsService.getMinerPerformance(uid, params),
+    [uid, JSON.stringify(params)]
+  );
+}
+
+// Hook for agents list with filtering and pagination (legacy)
 export function useAgents(params?: AgentsListQueryParams) {
   return useApiCall(
     () => agentsService.getAgents(params),

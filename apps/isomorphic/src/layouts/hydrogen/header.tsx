@@ -8,14 +8,16 @@ import cn from "@core/utils/class-names";
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
-import { LuActivity } from "react-icons/lu";
+import { LuActivity, LuMinus } from "react-icons/lu";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
 import { Tooltip } from "rizzui";
+import { useNetworkStatus } from "@/services/hooks/useOverview";
 
 export default function Header() {
   const pathname = usePathname();
+  const { data: networkStatus, loading: statusLoading } = useNetworkStatus();
 
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10">
@@ -125,22 +127,54 @@ export default function Header() {
                 <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
               </a>
             </Tooltip>
-            <Tooltip content="Live Network Status" placement="bottom">
+            <Tooltip content={`Network Status: ${networkStatus?.status || 'Unknown'}`} placement="bottom">
               <div className="relative flex items-center ml-2 group">
-                {/* Glowing background */}
-                <div className="absolute inset-0 bg-red-500 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Dynamic glowing background based on status */}
+                <div className={cn(
+                  "absolute inset-0 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300",
+                  networkStatus?.status === 'healthy' ? "bg-green-500" :
+                  networkStatus?.status === 'degraded' ? "bg-yellow-500" :
+                  "bg-red-500"
+                )}></div>
 
                 {/* Main container */}
-                <div className="relative flex items-center gap-2 px-3 py-1.5 bg-black border border-red-500 rounded-lg hover:border-red-400 transition-all duration-300">
-                  {/* Animated broadcasting icon */}
+                <div className={cn(
+                  "relative flex items-center gap-2 px-3 py-1.5 bg-black rounded-lg transition-all duration-300",
+                  networkStatus?.status === 'healthy' ? "border border-green-500 hover:border-green-400" :
+                  networkStatus?.status === 'degraded' ? "border border-yellow-500 hover:border-yellow-400" :
+                  "border border-red-500 hover:border-red-400"
+                )}>
+                  {/* Dynamic icon and animation based on status */}
                   <div className="relative">
-                    <LuActivity className="w-4 h-4 text-red-500 animate-pulse" />
-                    <div className="absolute -inset-1 border border-red-500 rounded-full animate-ping opacity-50"></div>
+                    {networkStatus?.status === 'down' ? (
+                      <LuMinus className={cn(
+                        "w-4 h-4",
+                        "text-red-500"
+                      )} />
+                    ) : (
+                      <LuActivity className={cn(
+                        "w-4 h-4 animate-pulse",
+                        networkStatus?.status === 'healthy' ? "text-green-500" :
+                        networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                        "text-red-500"
+                      )} />
+                    )}
+                    {networkStatus?.status === 'healthy' && (
+                      <div className="absolute -inset-1 border border-green-500 rounded-full animate-ping opacity-50"></div>
+                    )}
                   </div>
 
-                  {/* Live text */}
-                  <span className="text-sm font-mono font-bold text-red-500 tracking-wider">
-                    ● LIVE
+                  {/* Dynamic status text */}
+                  <span className={cn(
+                    "text-sm font-mono font-bold tracking-wider",
+                    networkStatus?.status === 'healthy' ? "text-green-500" :
+                    networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                    "text-red-500"
+                  )}>
+                    {statusLoading ? "● LOADING" :
+                     networkStatus?.status === 'healthy' ? "● LIVE" :
+                     networkStatus?.status === 'degraded' ? "● DEGRADED" :
+                     "● DOWN"}
                   </span>
                 </div>
               </div>

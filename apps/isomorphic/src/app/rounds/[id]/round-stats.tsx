@@ -39,8 +39,8 @@ export default function RoundStats() {
   if (error) {
     return (
       <div className="mb-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800 text-sm">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+          <p className="text-red-400 text-sm">
             ⚠️ Failed to load round statistics: {error}
           </p>
         </div>

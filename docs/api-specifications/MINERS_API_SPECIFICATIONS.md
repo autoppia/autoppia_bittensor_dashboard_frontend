@@ -238,7 +238,7 @@ Retrieves a paginated list of runs for a specific miner.
   "data": {
     "runs": [
       {
-        "runId": "run_miner_123_1234567890_1",
+        "runId": "run_id_123_1234567890_1",
         "uid": 123,
         "roundId": 20,
         "validatorId": "autoppia",
@@ -372,7 +372,7 @@ Retrieves recent activity for a specific miner.
         "message": "Miner Autoppia Bittensor completed run with score 0.87",
         "timestamp": "2024-01-15T10:32:00Z",
         "metadata": {
-          "runId": "run_miner_123_1234567890_1",
+          "runId": "run_id_123_1234567890_1",
           "roundId": 20,
           "validatorId": "autoppia",
           "score": 0.87,
@@ -510,7 +510,7 @@ Retrieves activity across all miners.
         "message": "Miner Autoppia Bittensor completed run with score 0.87",
         "timestamp": "2024-01-15T10:32:00Z",
         "metadata": {
-          "runId": "run_miner_123_1234567890_1",
+          "runId": "run_id_123_1234567890_1",
           "roundId": 20,
           "validatorId": "autoppia",
           "score": 0.87,

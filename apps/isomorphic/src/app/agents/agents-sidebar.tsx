@@ -8,56 +8,55 @@ import cn from "@core/utils/class-names";
 import { Text, Input, Checkbox } from "rizzui";
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
-import { useAgents } from "@/services/hooks/useAgents";
+import { useMinersList } from "@/services/hooks/useAgents";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
-import type { AgentData } from "@/services/api/types/agents";
+import type { MinimalAgentData } from "@/services/api/types/agents";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
   const [query, setQuery] = useState<string>("");
   const [showSotaOnly, setShowSotaOnly] = useState<boolean>(false);
-  const [filteredAgents, setFilteredAgents] = useState<AgentData[]>([]);
+  const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
-  // Fetch agents data
-  const { data: agentsData, loading, error } = useAgents({
+  // Fetch miners data using optimized endpoint
+  const { data: minersData, loading, error } = useMinersList({
     limit: 100,
-    sortBy: 'averageScore',
-    sortOrder: 'desc',
   });
 
   // Update filtered agents when data changes
   useEffect(() => {
-    if (agentsData?.data?.agents) {
-      let filtered = agentsData.data.agents;
+    if (minersData?.miners) {
+      let filtered = minersData.miners;
       
-      // Apply SOTA filter
-      if (showSotaOnly) {
-        filtered = filtered.filter(agent => agent.isSota);
+      // Apply SOTA filter - when checked, show SOTA agents + all miners
+      // when unchecked, show only miners (exclude SOTA agents)
+      if (!showSotaOnly) {
+        filtered = filtered.filter(miner => !miner.isSota);
       }
       
       setFilteredAgents(filtered);
     }
-  }, [agentsData, showSotaOnly]);
+  }, [minersData, showSotaOnly]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setQuery(query);
 
-    if (!agentsData?.data?.agents) return;
+    if (!minersData?.miners) return;
 
-    let filtered = agentsData.data.agents;
+    let filtered = minersData.miners;
     
-    // Apply SOTA filter first
-    if (showSotaOnly) {
-      filtered = filtered.filter(agent => agent.isSota);
+    // Apply SOTA filter - when checked, show SOTA agents + all miners
+    // when unchecked, show only miners (exclude SOTA agents)
+    if (!showSotaOnly) {
+      filtered = filtered.filter(miner => !miner.isSota);
     }
     
     // Then apply search filter
     if (query.trim() !== "") {
-      filtered = filtered.filter((agent) =>
-        agent.name.toLowerCase().includes(query.toLowerCase()) ||
-        agent.id.toLowerCase().includes(query.toLowerCase()) ||
-        agent.description?.toLowerCase().includes(query.toLowerCase())
+      filtered = filtered.filter((miner) =>
+        miner.name.toLowerCase().includes(query.toLowerCase()) ||
+        miner.uid.toString().includes(query.toLowerCase())
       );
     }
     
@@ -100,10 +99,11 @@ export default function AgentsSidebar() {
                 onChange={handleSearch}
                 onClear={() => {
                   setQuery("");
-                  if (agentsData?.data?.agents) {
-                    let filtered = agentsData.data.agents;
-                    if (showSotaOnly) {
-                      filtered = filtered.filter(agent => agent.isSota);
+                  if (minersData?.miners) {
+                    let filtered = minersData.miners;
+                    // Apply SOTA filter - when unchecked, show only miners (exclude SOTA agents)
+                    if (!showSotaOnly) {
+                      filtered = filtered.filter(miner => !miner.isSota);
                     }
                     setFilteredAgents(filtered);
                   }
@@ -115,46 +115,39 @@ export default function AgentsSidebar() {
                   onChange={(e) => setShowSotaOnly(e.target.checked)}
                   className="text-xs"
                 />
-                <Text className="text-xs text-gray-600">Show SOTA agents only</Text>
+                <Text className="text-xs text-gray-600">Show SOTA agents</Text>
               </div>
             </div>
-            {filteredAgents.map((agent, index) => {
-              const isActive = agent.id === id;
-              const isTopRanked = index === 0; // First agent is top ranked
+            {filteredAgents.map((miner, index) => {
+              const isActive = miner.uid.toString() === id;
+              const isTopRanked = miner.ranking === 1; // Top ranked miner
 
               return (
                 <Link
-                  key={`agent-menu-${agent.id}`}
-                  href={`/agents/${agent.id}`}
+                  key={`miner-menu-${miner.uid}`}
+                  href={`/agents/${miner.uid}`}
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200",
-                      isTopRanked &&
-                        "bg-yellow-500/10 border border-yellow-400 text-gray-900 hover:bg-yellow-500/30",
+                      "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 group",
                       isActive
-                        ? "bg-emerald-500/60 hover:bg-emerald-500/60 text-gray-900"
-                        : "hover:bg-emerald-500/30"
+                        ? "bg-emerald-500/20 border border-emerald-500/40 text-white shadow-lg"
+                        : isTopRanked
+                        ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
+                        : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
                     )}
                   >
                     {/* Crown badge for top agent - positioned at top-left corner */}
                     {isTopRanked && (
-                      <div
-                        className={cn(
-                          "absolute -top-2 -left-2 rounded-full p-1 shadow-xl border-2 z-10",
-                          isActive
-                            ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-yellow-900 border-yellow-300 animate-pulse"
-                            : "bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-yellow-900 border-yellow-300"
-                        )}
-                      >
-                        <FaCrown className="w-3 h-3 drop-shadow-sm" />
+                      <div className="absolute -top-2 -left-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
+                        <FaCrown className="w-3 h-3 text-white drop-shadow-sm" />
                       </div>
                     )}
 
-                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-3">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-3 flex items-center justify-center">
                       <Image
-                        src={agent.imageUrl}
-                        alt={agent.name}
+                        src={`/miners/${miner.uid % 50}.svg`}
+                        alt={miner.name}
                         fill
                         sizes="(max-width: 768px) 100vw"
                         className="object-cover"
@@ -162,33 +155,34 @@ export default function AgentsSidebar() {
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold truncate text-gray-900">
-                          {agent.name}
+                        <span className={cn(
+                          "text-sm font-semibold truncate",
+                          isActive ? "text-white" : isTopRanked ? "text-white" : "text-gray-300 group-hover:text-white"
+                        )}>
+                          {miner.name}
                         </span>
-                        {agent.isSota && (
-                          <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                        {miner.isSota && (
+                          <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs font-semibold rounded-full border border-yellow-500/30">
                             SOTA
                           </span>
                         )}
                       </div>
-                      <span className="text-xs font-medium text-gray-700">
-                        Score: {(agent.averageScore * 100).toFixed(1)}%
-                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={cn(
+                          "text-xs font-medium",
+                          isActive ? "text-emerald-200" : isTopRanked ? "text-orange-200" : "text-gray-400 group-hover:text-gray-200"
+                        )}>
+                          Score: {(miner.score * 100).toFixed(1)}%
+                        </span>
+                        <span className={cn(
+                          "text-xs font-mono",
+                          isActive ? "text-emerald-300" : isTopRanked ? "text-orange-300" : "text-gray-500 group-hover:text-gray-300"
+                        )}>
+                          UID: {miner.uid}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Status badge - positioned on the right */}
-                    <div
-                      className={cn(
-                        "flex items-center justify-center px-2 py-1 rounded-full text-xs font-bold shrink-0 ml-2",
-                        agent.status === 'active'
-                          ? "bg-green-100 text-green-700"
-                          : agent.status === 'maintenance'
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-700"
-                      )}
-                    >
-                      {agent.status}
-                    </div>
                   </div>
                 </Link>
               );

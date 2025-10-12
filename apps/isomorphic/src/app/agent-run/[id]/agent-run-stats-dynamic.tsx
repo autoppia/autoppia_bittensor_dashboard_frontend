@@ -41,7 +41,7 @@ export default function AgentRunStatsDynamic() {
           </div>
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-orange-400">
-              {stats.websites}
+              {stats.performanceByWebsite?.length || 0}
             </div>
             <div className="text-xs sm:text-sm text-gray-700">Websites</div>
           </div>
@@ -80,7 +80,7 @@ export default function AgentRunStatsDynamic() {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-400">
-              {stats.websites}
+              {stats.performanceByWebsite?.length || 0}
             </div>
             <div className="text-sm text-gray-700">Websites</div>
           </div>

@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { LuStar, LuCrown } from "react-icons/lu";
-import { useAgent, useAgentStatistics } from "@/services/hooks/useAgents";
+import { useMinerDetails, useAgentStatistics } from "@/services/hooks/useAgents";
 import { AgentScoreAnalyticsPlaceholder } from "@/components/placeholders/agent-placeholders";
 
 export default function AgentScoreAnalytics({
@@ -13,7 +13,9 @@ export default function AgentScoreAnalytics({
   className?: string;
 }) {
   const { id } = useParams();
-  const { data: agent, loading: agentLoading } = useAgent(id as string);
+  const uid = parseInt(id as string, 10);
+  const { data: agentData, loading: agentLoading } = useMinerDetails(uid);
+  const agent = agentData?.agent;
   const { data: statistics, loading: statsLoading } = useAgentStatistics();
 
   const loading = agentLoading || statsLoading;
@@ -29,39 +31,39 @@ export default function AgentScoreAnalytics({
 
   const agentStats = [
     {
-      title: "Average Duration",
-      metric: agent.averageDuration.toFixed(1) + 's',
-      description: "Average execution time",
+      title: "Current Score",
+      metric: (agent?.currentScore ?? 0).toFixed(1) + '%',
+      description: "Miner Score in last round",
       icon: LuStar,
       className:
-        "relative overflow-hidden bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-emerald-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-emerald-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+        "relative overflow-hidden bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-emerald-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-emerald-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-emerald-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName: "relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-emerald-100/80",
     },
     {
-      title: "Task Completion",
-      metric: ((agent.completedTasks / agent.totalTasks) * 100).toFixed(1) + '%',
-      description: "Tasks completed successfully",
+      title: "Current Top Score",
+      metric: (agent?.currentTopScore ?? 0).toFixed(1) + '%',
+      description: "Top Score in last round",
       icon: LuCrown,
       className:
-        "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+        "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-yellow-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName: "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-yellow-100/80",
     },
   ];
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6">
+    <div className={cn("flex flex-col min-h-[180px]", className)}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6 h-full">
         {agentStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.title}>
+            <div key={stat.title} className="h-full">
               <div
                 className={cn(
-                  "relative p-6 rounded-2xl min-w-[260px] cursor-pointer",
+                  "relative p-4 rounded-xl min-w-[200px] cursor-pointer h-full flex flex-col",
                   stat.className
                 )}
               >
@@ -71,39 +73,35 @@ export default function AgentScoreAnalytics({
                 </div>
                 
                 {/* Content */}
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="relative z-10 flex flex-col h-full justify-center items-center text-center">
+                  <div className="mb-4">
                     <div
                       className={cn(
-                        "flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl",
+                        "flex items-center justify-center w-14 h-14 rounded-xl shadow-lg mx-auto",
                         stat.iconClassName
                       )}
                     >
                       <Icon className="w-7 h-7 group-hover:rotate-12 transition-transform duration-500" />
                     </div>
-                    <div className="text-right">
-                      <div className="w-2 h-2 rounded-full bg-current opacity-60 mb-1"></div>
-                      <div className="w-1 h-1 rounded-full bg-current opacity-40"></div>
-                    </div>
                   </div>
                   
-                  <div className="mb-3">
-                    <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-1">
+                  <div className="flex-1 flex flex-col justify-center items-center text-center px-2">
+                    <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-2">
                       {stat.title}
                     </Text>
                     <Text
                       className={cn(
-                        "font-black text-4xl leading-none",
+                        "font-black text-3xl leading-none mb-3",
                         stat.metricClassName
                       )}
                     >
                       {stat.metric}
                     </Text>
+                    
+                    <Text className={cn("text-xs font-medium leading-relaxed text-center", stat.descriptionClassName)}>
+                      {stat.description}
+                    </Text>
                   </div>
-                  
-                  <Text className={cn("text-sm font-medium leading-relaxed", stat.descriptionClassName)}>
-                    {stat.description}
-                  </Text>
                 </div>
               </div>
             </div>

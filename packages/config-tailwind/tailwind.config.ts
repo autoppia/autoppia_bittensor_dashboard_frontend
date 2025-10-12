@@ -13,6 +13,17 @@ const config: Omit<Config, "content"> = {
     {
       pattern: /text-\[#[A-Fa-f0-9]{6}\]/,
     },
+    // Safelist specific hex colors used in the codebase
+    'bg-[#f3f3f3]',
+    'bg-[#05361e]',
+    'bg-[#33095e]',
+    'bg-[#07274e]',
+    'bg-[#0d1e42]',
+    'bg-[#2B7F75]',
+    'bg-[#e6e6e6]',
+    'text-green-light',
+    'text-secondary-light',
+    'text-blue-light',
   ],
   theme: {
     screens: {

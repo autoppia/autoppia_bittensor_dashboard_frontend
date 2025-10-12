@@ -2,6 +2,11 @@
 module.exports = {
   reactStrictMode: true,
   transpilePackages: ["core"],
+  // Increase timeout for chunk loading
+  experimental: {
+    // Enable faster refresh
+    optimizePackageImports: ['@core/components', '@core/utils'],
+  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
@@ -9,7 +14,7 @@ module.exports = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // Fix for react-icons module resolution
     if (!isServer) {
       config.resolve.fallback = {
@@ -22,6 +27,25 @@ module.exports = {
     config.resolve.alias = {
       ...config.resolve.alias,
     };
+
+    // Fix chunk loading timeout issues in development
+    if (dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            default: {
+              ...config.optimization.splitChunks?.cacheGroups?.default,
+              minChunks: 1,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      };
+    }
     
     return config;
   },
@@ -32,6 +56,24 @@ module.exports = {
         hostname: 'taostats.io',
         port: '',
         pathname: '/favicon.ico',
+      },
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.example.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

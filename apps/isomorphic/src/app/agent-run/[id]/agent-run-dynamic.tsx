@@ -6,9 +6,9 @@ import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
 import AgentRunPersonasDynamic from "./agent-run-personas-dynamic";
 import AgentRunStatsDynamic from "./agent-run-stats-dynamic";
-import AgentRunDetail from "./agent-run-detail";
-import AgentRunSummary from "./agent-run-summary";
-import AgentRunTasksTable from "./agent-run-tasks-table";
+import AgentRunDetailDynamic from "./agent-run-detail-dynamic";
+import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
+import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 import LoadingScreen from "@/app/shared/loading-screen";
@@ -38,7 +38,7 @@ export default function AgentRunDynamic() {
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
           title="Agent Run Details"
-          description={`Agent Run ID: ${id}`}
+          description={`Run ID: ${id}`}
           className="mt-4"
         >
           <Link
@@ -64,7 +64,7 @@ export default function AgentRunDynamic() {
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
           title="Agent Run Details"
-          description={`Agent Run ID: ${id}`}
+          description={`Run ID: ${id}`}
           className="mt-4"
         >
           <Link
@@ -75,11 +75,11 @@ export default function AgentRunDynamic() {
             <span className="ms-1">Back to Agents</span>
           </Link>
         </PageHeader>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
+          <div className="text-red-400 text-lg font-semibold mb-2">
             Failed to Load Agent Run Data
           </div>
-          <div className="text-red-500 text-sm mb-4">{error}</div>
+          <div className="text-red-300 text-sm mb-4">{error}</div>
           <button
             onClick={refetch}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
@@ -95,7 +95,7 @@ export default function AgentRunDynamic() {
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={`Agent Run ID: ${id}`}
+        description={`Run ID: ${id}`}
         className="mt-4"
       >
         <Link
@@ -117,7 +117,7 @@ export default function AgentRunDynamic() {
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         {/* Agent Run Detail - Left Column */}
         <div className="xl:col-span-8">
-          <AgentRunDetail
+          <AgentRunDetailDynamic
             selectedWebsite={selectedWebsite}
             setSelectedWebsite={setSelectedWebsite}
             period={period}
@@ -127,35 +127,15 @@ export default function AgentRunDynamic() {
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          {data.summary ? (
-            <AgentRunSummary
-              className="xl:col-span-4"
-              {...data.summary}
-              selectedWebsite={selectedWebsite}
-            />
-          ) : (
-            <div className="bg-white/10 rounded-2xl p-6 border border-gray-200/20">
-              <div className="text-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <div className="text-gray-600 text-sm">Loading summary...</div>
-              </div>
-            </div>
-          )}
+          <AgentRunSummaryDynamic
+            selectedWebsite={selectedWebsite}
+          />
         </div>
       </div>
 
       {/* Tasks Table - Loads last */}
       <div className="mb-6">
-        {data.tasks ? (
-          <AgentRunTasksTable />
-        ) : (
-          <div className="bg-white/10 rounded-2xl p-6 border border-gray-200/20">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="text-gray-600 text-sm">Loading tasks...</div>
-            </div>
-          </div>
-        )}
+        <AgentRunTasksTableDynamic />
       </div>
 
       {/* Loading Indicator for Partial Updates */}

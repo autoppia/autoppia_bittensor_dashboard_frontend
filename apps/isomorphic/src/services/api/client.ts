@@ -66,6 +66,17 @@ export class ApiClient {
     } as ApiError;
   }
 
+  private async handleAgentRunNotFound<T>(endpoint: string, runId: string): Promise<ApiResponse<T>> {
+    // Handle specific case where agent run is not found
+    console.warn(`Agent run ${runId} not found for ${endpoint}`);
+    
+    throw {
+      message: `Agent run '${runId}' not found. Please check the URL or try a different run ID.`,
+      status: 404,
+      code: 'AGENT_RUN_NOT_FOUND',
+    } as ApiError;
+  }
+
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
     try {
       const url = new URL(`${this.baseUrl}${endpoint}`);

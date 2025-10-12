@@ -72,11 +72,11 @@ export default function TaskDynamic() {
             <span className="ms-1">Back to Agent Run</span>
           </Link>
         </PageHeader>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
+          <div className="text-red-400 text-lg font-semibold mb-2">
             Failed to Load Task Data
           </div>
-          <div className="text-red-500 text-sm mb-4">{error}</div>
+          <div className="text-red-300 text-sm mb-4">{error}</div>
           <button
             onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"

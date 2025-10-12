@@ -22,7 +22,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
   if (loading) {
     return (
       <WidgetCard
-        title="Top 10 Miners"
+        title="Top Miners"
         className={cn(
           "h-[520px] px-2 lg:px-4 w-full rounded-xl",
           className
@@ -51,7 +51,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
   if (error) {
     return (
       <WidgetCard
-        title="Top 10 Miners"
+        title="Top Miners"
         className={cn(
           "h-[520px] px-2 lg:px-4 w-full rounded-xl",
           className
@@ -72,7 +72,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
 
   return (
     <WidgetCard
-      title="Top 10 Miners"
+      title="Top Miners"
       className={cn(
         "h-[520px] px-2 lg:px-4 w-full rounded-xl",
         className

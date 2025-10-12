@@ -126,7 +126,7 @@ export default function AgentRunTasksTableDynamic() {
     changeLimit 
   } = useAgentRunTasks(id as string, {
     page: 1,
-    limit: 10,
+    limit: 20,
   });
 
   const { table, setData } = useTanStackTable<AgentRunTaskData>({
@@ -135,13 +135,13 @@ export default function AgentRunTasksTableDynamic() {
     options: {
       initialState: {
         pagination: {
-          pageIndex: page - 1,
-          pageSize: limit,
+          pageIndex: (page || 1) - 1,
+          pageSize: limit || 20,
         },
       },
       enableColumnResizing: false,
       manualPagination: true,
-      pageCount: Math.ceil(total / limit),
+      pageCount: Math.ceil((total || 0) / (limit || 20)),
     },
   });
 
@@ -151,6 +151,14 @@ export default function AgentRunTasksTableDynamic() {
       setData(tasks);
     }
   }, [tasks, setData]);
+
+  // Update pagination when page/limit change
+  React.useEffect(() => {
+    if (page && limit) {
+      table.setPageIndex(page - 1);
+      table.setPageSize(limit);
+    }
+  }, [page, limit, table]);
 
 
   // Show loading state

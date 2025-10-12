@@ -7,13 +7,39 @@ import AgentScoreChart from "./agent-score-chart";
 import AgentScoreAnalytics from "./agent-score-analytics";
 import AgentValidators from "./agent-validators";
 import { Text } from "rizzui";
-import { useAgent } from "@/services/hooks/useAgents";
+import { useMinerDetails, useMinerPerformance } from "@/services/hooks/useAgents";
+import { agentsService } from "@/services/api/agents.service";
+import { useState, useEffect } from "react";
 import { AgentHeaderPlaceholder } from "@/components/placeholders/agent-placeholders";
-import { PiGithubLogoDuotone, PiHashDuotone, PiKeyDuotone, PiCopyDuotone, PiExternalLinkDuotone } from "react-icons/pi";
+import { PiGithubLogoDuotone, PiHashDuotone, PiKeyDuotone, PiCopyDuotone, PiInfoDuotone } from "react-icons/pi";
 
 export default function Agent() {
   const { id } = useParams();
-  const { data: agent, loading, error } = useAgent(id as string);
+  const uid = parseInt(id as string, 10);
+  const { data: agentData, loading, error } = useMinerDetails(uid);
+  const [scoreRoundData, setScoreRoundData] = useState<any[]>([]);
+
+  // Extract agent and scoreRoundData from the new API format
+  const agent = agentData?.agent;
+  const apiScoreRoundData = agentData?.scoreRoundData || [];
+
+  // Update scoreRoundData when agent data is loaded
+  useEffect(() => {
+    if (apiScoreRoundData && apiScoreRoundData.length > 0) {
+      // Transform the API data to match the expected format
+      const transformedData = apiScoreRoundData.map((point: any) => ({
+        round_id: point.round_id,
+        score: point.score / 100, // Convert percentage back to decimal for chart
+        rank: point.rank,
+        reward: 0, // Not available in new format
+        timestamp: point.timestamp
+      }));
+      
+      setScoreRoundData(transformedData);
+    } else {
+      setScoreRoundData([]);
+    }
+  }, [apiScoreRoundData]);
 
   // Show loading state
   if (loading) {
@@ -49,7 +75,7 @@ export default function Agent() {
       <div className="flex items-center justify-between mt-2 mb-6">
         <div className="flex items-center gap-6">
           <Image
-            src={agent.imageUrl}
+            src={`/miners/${agent.uid % 50}.svg`}
             alt={agent.name}
             width={56}
             height={56}
@@ -68,21 +94,26 @@ export default function Agent() {
                 {agent.status}
               </span>
             </div>
+            {/* UID and Hotkey moved under agent name */}
             <div className="flex items-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <PiHashDuotone className="w-4 h-4 text-gray-500" />
-                <span className="font-mono">UID: {agent.uid}</span>
+                <span className="font-mono">UID: {agent.uid || 'unknown'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <PiKeyDuotone className="w-4 h-4 text-gray-500" />
-                <span className="font-mono text-xs">{agent.hotkey.slice(0, 8)}...{agent.hotkey.slice(-8)}</span>
-                <button 
-                  onClick={() => navigator.clipboard.writeText(agent.hotkey)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Copy hotkey"
-                >
-                  <PiCopyDuotone className="w-3 h-3" />
-                </button>
+                <span className="font-mono text-xs">
+                  {agent.hotkey ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}` : 'unknown'}
+                </span>
+                {agent.hotkey && (
+                  <button 
+                    onClick={() => navigator.clipboard.writeText(agent.hotkey)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Copy hotkey"
+                  >
+                    <PiCopyDuotone className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               {agent.isSota && (
                 <div className="flex items-center gap-2">
@@ -92,43 +123,32 @@ export default function Agent() {
                 </div>
               )}
             </div>
-            {agent.description && (
-              <div className="text-sm text-gray-600 mt-1">
-                {agent.description}
-              </div>
-            )}
           </div>
         </div>
         
-        {/* External links */}
-        <div className="flex items-center gap-3">
-          {agent.githubUrl && (
-            <a 
-              href={agent.githubUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
-              title="View GitHub repository"
-            >
-              <PiGithubLogoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
-            </a>
-          )}
-          {agent.taostatsUrl && (
-            <a 
-              href={agent.taostatsUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
-              title="View on TaoStats"
-            >
-              <PiExternalLinkDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
-            </a>
-          )}
+        {/* Top right icons */}
+        <div className="flex items-center gap-2">
+          <a 
+            href={agent.githubUrl || '#'} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
+            title={agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}
+            onClick={!agent.githubUrl ? (e) => e.preventDefault() : undefined}
+          >
+            <PiGithubLogoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+          </a>
+          <button 
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
+            title="Taostats"
+          >
+            <PiInfoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+          </button>
         </div>
       </div>
       <AgentStats />
-      <div className="flex flex-col xl:flex-row gap-6 items-start mt-6">
-        <AgentScoreChart className="w-full xl:w-[calc(100%-320px)]" />
+      <div className="flex flex-col xl:flex-row gap-6 items-stretch mt-6">
+        <AgentScoreChart className="w-full xl:w-[calc(100%-320px)]" scoreRoundData={scoreRoundData} />
         <AgentScoreAnalytics className="w-full xl:w-[320px]" />
       </div>
       <AgentValidators />
