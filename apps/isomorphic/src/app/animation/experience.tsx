@@ -600,7 +600,7 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
       const clipPathId = `clip-${minerId}`;
 
       return (
-        <g>
+        <g key={`dot-${minerId}`}>
           <defs>
             <clipPath id={clipPathId}>
               <circle cx={cx} cy={cy} r={imageRadius} />

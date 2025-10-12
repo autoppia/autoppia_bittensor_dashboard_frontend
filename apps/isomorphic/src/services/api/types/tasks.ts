@@ -228,6 +228,14 @@ export interface TaskQueryParams {
   includeMetadata?: boolean;
 }
 
+export interface TaskDetailQueryParams {
+  includeActions?: boolean;
+  includeScreenshots?: boolean;
+  includeLogs?: boolean;
+  includePerformance?: boolean;
+  includeMetadata?: boolean;
+}
+
 export interface TasksListQueryParams {
   page?: number;
   limit?: number;

@@ -19,7 +19,7 @@ import {
 import { useTaskResults, useTaskActions, useTaskScreenshots } from "@/services/hooks/useTask";
 import Placeholder, { TextPlaceholder, ListItemPlaceholder } from "@/app/shared/placeholder";
 import { TaskAction } from "@/services/api/types/tasks";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 // Action type icons mapping
 const getActionIcon = (type: string) => {
@@ -99,6 +99,57 @@ export default function TaskResults() {
   
   // Fetch task screenshots
   const { screenshots, isLoading: screenshotsLoading, error: screenshotsError } = useTaskScreenshots(id as string);
+
+  const hasApiScreenshots = screenshots.length > 0;
+
+  const fallbackScreenshots = useMemo(() => {
+    if (hasApiScreenshots || !results?.screenshots?.length) {
+      return [];
+    }
+
+    return results.screenshots.map((url, index) => {
+      const timelineTimestamp = results.timeline?.[index]?.timestamp;
+      const actionTimestamp = results.actions?.[index]?.timestamp;
+      const fallbackTimestamp =
+        timelineTimestamp ??
+        actionTimestamp ??
+        results.timeline?.[0]?.timestamp ??
+        results.actions?.[0]?.timestamp ??
+        new Date().toISOString();
+      const actionType = results.actions?.[index]?.type;
+
+      return {
+        id: `results-gif-${index}`,
+        url,
+        timestamp: fallbackTimestamp,
+        actionId: results.actions?.[index]?.id,
+        description: actionType
+          ? `GIF Replay • ${actionType}`
+          : `GIF Replay ${index + 1}`,
+      };
+    });
+  }, [hasApiScreenshots, results]);
+
+  const mediaItems = hasApiScreenshots ? screenshots : fallbackScreenshots;
+  const isUsingFallbackMedia = !hasApiScreenshots && mediaItems.length > 0;
+
+  const gifCount = mediaItems.length;
+
+  const isMediaLoading =
+    screenshotsLoading || (!hasApiScreenshots && resultsLoading);
+  const showMediaError =
+    !isMediaLoading && !!screenshotsError && !isUsingFallbackMedia && mediaItems.length === 0;
+  const showMediaEmpty =
+    !isMediaLoading && !showMediaError && mediaItems.length === 0;
+
+  const formatTimestampLabel = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toLocaleString();
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -197,18 +248,25 @@ export default function TaskResults() {
       {/* Right Side - Screenshots */}
       <div className="border border-muted rounded-lg p-4 bg-gray-50">
         <div className="flex items-center justify-between mb-4">
-          <Text className="text-white text-lg font-medium">
-            Screenshots
-          </Text>
-          {!screenshotsLoading && screenshots.length > 0 && (
+          <div className="flex flex-col">
+            <Text className="text-white text-lg font-medium">
+              GIF Replays
+            </Text>
+            {!isMediaLoading && isUsingFallbackMedia && (
+              <span className="text-xs text-gray-500">
+                Loaded from task results payload
+              </span>
+            )}
+          </div>
+          {!isMediaLoading && gifCount > 0 && (
             <Text className="text-gray-500 text-sm">
-              {screenshots.length} screenshots
+              {gifCount} GIF{gifCount === 1 ? "" : "s"}
             </Text>
           )}
         </div>
         
         <div className="h-[350px] border border-muted rounded-lg overflow-y-auto custom-scrollbar">
-          {screenshotsLoading ? (
+          {isMediaLoading ? (
             // Loading state
             <div className="p-4 space-y-4">
               {Array.from({ length: 3 }, (_, index) => (
@@ -218,53 +276,60 @@ export default function TaskResults() {
                 </div>
               ))}
             </div>
-          ) : screenshotsError ? (
+          ) : showMediaError ? (
             // Error state
             <div className="flex items-center justify-center h-full text-red-500">
               <div className="text-center">
                 <PiXCircle className="w-8 h-8 mx-auto mb-2" />
-                <Text className="text-sm">Failed to load screenshots</Text>
+                <Text className="text-sm">
+                  {screenshotsError || resultsError || "Failed to load GIF replays"}
+                </Text>
               </div>
             </div>
-          ) : screenshots.length === 0 ? (
+          ) : showMediaEmpty ? (
             // Empty state
             <div className="flex items-center justify-center h-full text-gray-500">
               <div className="text-center">
                 <PiCamera className="w-8 h-8 mx-auto mb-2" />
-                <Text className="text-sm">No screenshots available</Text>
+                <Text className="text-sm">No GIF replays available</Text>
               </div>
             </div>
           ) : (
             // Screenshots grid
             <div className="p-4 space-y-4">
-              {screenshots.map((screenshot, index) => (
-                <div key={`screenshot-${screenshot.id || index}`} className="space-y-2">
-                  <div className="relative bg-gray-900 rounded-lg overflow-hidden">
-                    <img
-                      src={screenshot.url}
-                      alt={`Screenshot ${index + 1}`}
-                      className="w-full h-32 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden absolute inset-0 flex items-center justify-center text-gray-500">
-                      <div className="text-center">
-                        <PiCamera className="w-8 h-8 mx-auto mb-2" />
-                        <Text className="text-sm">Image unavailable</Text>
+              {mediaItems.map((screenshot, index) => {
+                const timestampLabel = formatTimestampLabel(screenshot.timestamp);
+                return (
+                  <div key={`gif-${screenshot.id || index}`} className="space-y-2">
+                    <div className="relative bg-gray-900 rounded-lg overflow-hidden">
+                      <img
+                        src={screenshot.url}
+                        alt={`GIF Replay ${index + 1}`}
+                        className="w-full h-32 object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 flex items-center justify-center text-gray-500">
+                        <div className="text-center">
+                          <PiCamera className="w-8 h-8 mx-auto mb-2" />
+                          <Text className="text-sm">GIF unavailable</Text>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <div className="font-medium">
+                        {screenshot.description || `GIF Replay ${index + 1}`}
+                      </div>
+                      <div className="text-gray-500">
+                        {timestampLabel ?? "Timestamp unavailable"}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-600">
-                    <div className="font-medium">{screenshot.description || `Screenshot ${index + 1}`}</div>
-                    <div className="text-gray-500">
-                      {new Date(screenshot.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
