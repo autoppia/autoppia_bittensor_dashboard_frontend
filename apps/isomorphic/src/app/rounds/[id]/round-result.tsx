@@ -9,11 +9,14 @@ import PageHeader from "@/app/shared/page-header";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
 import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiXCircleDuotone, PiCodeDuotone } from "react-icons/pi";
-import { validatorsData } from "@/data/validators-data";
+import { useRoundValidators } from "@/services/hooks/useRounds";
 
 export default function RoundResult() {
   const { id } = useParams();
   const roundId = parseInt(id as string);
+  
+  // Get validators data from API
+  const { data: validatorsData } = useRoundValidators(roundId);
 
   return (
     <>
@@ -187,7 +190,7 @@ export default function RoundResult() {
             <div className="flex-1 flex flex-col justify-center">
               <div className="text-center mb-2">
                 <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
-                  v{validatorsData[0]?.version || 7}
+                  v{validatorsData?.[0]?.version || 7}
                 </div>
                 <div className="text-xs text-blue-200">Validator version</div>
               </div>

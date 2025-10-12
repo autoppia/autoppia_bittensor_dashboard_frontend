@@ -14,7 +14,7 @@ import {
   LeaderboardQueryParams,
   RoundsQueryParams,
   ValidatorData,
-  RoundData,
+  OverviewRoundData,
   LeaderboardData,
   OverviewMetrics,
   SubnetStatistics,
@@ -27,21 +27,57 @@ export class OverviewService {
    * Get overview metrics (top score, total websites, validators, miners, etc.)
    */
   async getMetrics(): Promise<OverviewMetrics> {
-    const response = await apiClient.get<OverviewMetricsResponse>(
-      `${this.baseEndpoint}/metrics`
-    );
-    return response.data.data.metrics;
+    try {
+      const response = await apiClient.get<OverviewMetricsResponse>(
+        `${this.baseEndpoint}/metrics`
+      );
+      
+      // Ensure response.data is an object before accessing properties
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response data format');
+      }
+      
+      // Handle both nested and flat response structures
+      if (response.data?.data?.metrics) {
+        return response.data.data.metrics;
+      } else if (response.data?.metrics) {
+        return response.data.metrics;
+      } else {
+        // Fallback to direct data structure
+        return response.data as OverviewMetrics;
+      }
+    } catch (error: any) {
+      // If there's an error, throw it with a more descriptive message
+      throw new Error(`Failed to fetch overview metrics: ${error.message}`);
+    }
   }
 
   /**
    * Get all validators with optional filtering and pagination
    */
   async getValidators(params?: ValidatorsQueryParams): Promise<ValidatorsResponse> {
-    const response = await apiClient.get<ValidatorsResponse>(
-      `${this.baseEndpoint}/validators`,
-      params
-    );
-    return response.data;
+    try {
+      const response = await apiClient.get<ValidatorsResponse>(
+        `${this.baseEndpoint}/validators`,
+        params
+      );
+      
+      // Ensure response.data is an object before accessing properties
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response data format');
+      }
+      
+      // Handle both nested and flat response structures
+      if (response.data?.data) {
+        return response.data;
+      } else {
+        // If response.data is already the expected structure
+        return response.data as ValidatorsResponse;
+      }
+    } catch (error: any) {
+      // If there's an error, throw it with a more descriptive message
+      throw new Error(`Failed to fetch validators: ${error.message}`);
+    }
   }
 
   /**
@@ -57,11 +93,19 @@ export class OverviewService {
   /**
    * Get current round information
    */
-  async getCurrentRound(): Promise<RoundData> {
-    const response = await apiClient.get<{ data: { round: RoundData } }>(
+  async getCurrentRound(): Promise<OverviewRoundData> {
+    const response = await apiClient.get<{ data: { round: OverviewRoundData } }>(
       `${this.baseEndpoint}/rounds/current`
     );
-    return response.data.data.round;
+    // Handle both nested and flat response structures
+    if (response.data?.data?.round) {
+      return response.data.data.round;
+    } else if (response.data?.round) {
+      return response.data.round;
+    } else {
+      // Fallback to direct data structure
+      return response.data as OverviewRoundData;
+    }
   }
 
   /**
@@ -78,8 +122,8 @@ export class OverviewService {
   /**
    * Get a specific round by ID
    */
-  async getRound(id: number): Promise<RoundData> {
-    const response = await apiClient.get<{ round: RoundData }>(
+  async getRound(id: number): Promise<OverviewRoundData> {
+    const response = await apiClient.get<{ round: OverviewRoundData }>(
       `${this.baseEndpoint}/rounds/${id}`
     );
     return response.data.round;
@@ -89,11 +133,28 @@ export class OverviewService {
    * Get leaderboard data for performance comparison
    */
   async getLeaderboard(params?: LeaderboardQueryParams): Promise<LeaderboardResponse> {
-    const response = await apiClient.get<LeaderboardResponse>(
-      `${this.baseEndpoint}/leaderboard`,
-      params
-    );
-    return response.data;
+    try {
+      const response = await apiClient.get<LeaderboardResponse>(
+        `${this.baseEndpoint}/leaderboard`,
+        params
+      );
+      
+      // Ensure response.data is an object before accessing properties
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response data format');
+      }
+      
+      // Handle both nested and flat response structures
+      if (response.data?.data) {
+        return response.data;
+      } else {
+        // If response.data is already the expected structure
+        return response.data as LeaderboardResponse;
+      }
+    } catch (error: any) {
+      // If there's an error, throw it with a more descriptive message
+      throw new Error(`Failed to fetch leaderboard: ${error.message}`);
+    }
   }
 
   /**
@@ -103,7 +164,13 @@ export class OverviewService {
     const response = await apiClient.get<SubnetStatisticsResponse>(
       `${this.baseEndpoint}/statistics`
     );
-    return response.data.statistics;
+    // Handle both nested and flat response structures
+    if (response.data?.statistics) {
+      return response.data.statistics;
+    } else {
+      // Fallback to direct data structure
+      return response.data as SubnetStatistics;
+    }
   }
 
   /**
@@ -125,7 +192,19 @@ export class OverviewService {
         networkLatency: number;
       };
     }>(`${this.baseEndpoint}/network-status`);
-    return response.data.data;
+    // Handle both nested and flat response structures
+    if (response.data?.data) {
+      return response.data.data;
+    } else {
+      // Fallback to direct data structure
+      return response.data as {
+        status: 'healthy' | 'degraded' | 'down';
+        message: string;
+        lastChecked: string;
+        activeValidators: number;
+        networkLatency: number;
+      };
+    }
   }
 
   /**

@@ -11,12 +11,12 @@ export default function ApiTest() {
     setLoading(true);
     try {
       const result = await testFn();
-      setTestResults(prev => ({
+      setTestResults((prev: any) => ({
         ...prev,
         [name]: { success: true, data: result }
       }));
     } catch (error: any) {
-      setTestResults(prev => ({
+      setTestResults((prev: any) => ({
         ...prev,
         [name]: { success: false, error: error.message }
       }));
@@ -50,7 +50,7 @@ export default function ApiTest() {
       </div>
 
       <div className="space-y-4">
-        {Object.entries(testResults).map(([name, result]) => (
+        {Object.entries(testResults).map(([name, result]: [string, any]) => (
           <div key={name} className="border rounded p-4">
             <h3 className="font-semibold mb-2">{name}</h3>
             {result.success ? (

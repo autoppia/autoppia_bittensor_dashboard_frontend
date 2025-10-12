@@ -6,7 +6,7 @@
 import type {
   OverviewMetrics,
   ValidatorData,
-  RoundData,
+  OverviewRoundData,
   LeaderboardData,
   SubnetStatistics,
 } from './types/overview';
@@ -120,7 +120,7 @@ export const mockValidators: ValidatorData[] = [
   },
 ];
 
-export const mockCurrentRound: RoundData = {
+export const mockCurrentRound: OverviewRoundData = {
   id: 42,
   startBlock: 2847000,
   endBlock: 2848000,

@@ -6,18 +6,17 @@ import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import { PiCubeDuotone, PiClockDuotone, PiHourglassSimpleDuotone } from "react-icons/pi";
 import { useRoundProgress, useRound } from "@/services/hooks/useRounds";
-import { roundsData } from "@/data/rounds-data";
+import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundProgress() {
   const { id } = useParams();
   const roundId = parseInt(id as string);
   
-  // Try to get progress data from API, fallback to static data
+  // Get data from API only
   const { data: progressData, loading: progressLoading, error: progressError } = useRoundProgress(roundId);
   const { data: roundData, loading: roundLoading, error: roundError } = useRound(roundId);
   
-  // Use API data if available, otherwise fallback to static data
-  const round = roundData || roundsData.find((round) => round.id === roundId);
+  const round = roundData;
   const progress = progressData;
   
   const loading = progressLoading || roundLoading;
@@ -33,77 +32,66 @@ export default function RoundProgress() {
     if (!round) return;
     
     const calculateTimeLeft = () => {
-      // Use API progress data if available, otherwise calculate from static data
+      // Use API progress data only
       if (progress?.estimatedTimeRemaining) {
         setTimeLeft(progress.estimatedTimeRemaining);
         return;
       }
       
-      // Fallback calculation for static data
-      const blocksPerSecond = 1 / 12;
-      const currentBlock = 6526300;
-      const blocksRemaining = Math.max(0, round.endBlock - currentBlock);
-      const secondsRemaining = blocksRemaining / blocksPerSecond;
-
-      const days = Math.floor(secondsRemaining / (24 * 60 * 60));
-      const hours = Math.floor((secondsRemaining % (24 * 60 * 60)) / (60 * 60));
-      const minutes = Math.floor((secondsRemaining % (60 * 60)) / 60);
-      const seconds = Math.floor(secondsRemaining % 60);
-
-      setTimeLeft({ days, hours, minutes, seconds });
+      // If no API data, set default values
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     };
 
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [round?.endBlock, progress?.estimatedTimeRemaining]);
+  }, [round, progress?.estimatedTimeRemaining]);
 
-  // Use API data if available, otherwise fallback to static calculation
-  const currentBlock = progress?.currentBlock || 6526300;
-  const percentage = progress?.progress || (
-    currentBlock > round.endBlock
-      ? 1
-      : (currentBlock - round.startBlock) / (round.endBlock - round.startBlock)
-  );
+  // Use API data only
+  const currentBlock = progress?.currentBlock || 0;
+  const percentage = progress?.progress || 0;
   const cells = Array.from({ length: cellCount }, (_, index) => {
     return {
       isPassed: index < percentage * cellCount,
     };
   });
 
-  // Show loading state
+  // Show loading state with skeleton
   if (loading) {
     return (
       <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-2xl font-bold text-gray-900">
-            Round Progress
-          </div>
-          <div className="animate-pulse bg-gray-300 h-6 w-24 rounded"></div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-24" />
         </div>
         <div className="w-full flex items-center justify-between mb-4">
           {Array.from({ length: cellCount }, (_, index) => (
-            <span
+            <Skeleton
               key={index}
-              className="w-[6px] h-10 rounded-full bg-gray-300 animate-pulse"
+              className="w-[6px] h-10 rounded-full"
             />
           ))}
         </div>
-        <div className="text-center text-gray-600">
-          Loading progress data...
+        <div className="w-full flex items-center justify-between">
+          <div></div>
+          <div className="w-full flex items-center justify-between">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show error state with fallback
-  if ((progressError || roundError) && !round) {
+  // Show error state
+  if (progressError || roundError) {
     return (
       <div className="w-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-red-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
         <div className="text-center text-red-600">
           <p className="text-lg font-semibold">Progress Data Unavailable</p>
-          <p className="text-sm mt-2">Using static data as fallback</p>
+          <p className="text-sm mt-2">Failed to load round data</p>
         </div>
       </div>
     );
@@ -126,10 +114,7 @@ export default function RoundProgress() {
           Round Progress
         </div>
         <div className="flex items-center text-md text-white font-semibold">
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg">
-            <PiHourglassSimpleDuotone className="w-3 h-3" />
-          </div>
-          <span className="ms-1">
+          <span>
             {timeLeft.days > 0 && `${timeLeft.days}d `}
             {timeLeft.hours > 0 && `${timeLeft.hours}h `}
             {timeLeft.minutes > 0 && `${timeLeft.minutes}m `}

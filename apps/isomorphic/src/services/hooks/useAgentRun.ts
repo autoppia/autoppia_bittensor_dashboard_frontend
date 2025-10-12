@@ -79,7 +79,7 @@ export function useAgentRun(
 
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchData]);
+  }, [autoRefresh, refreshInterval, fetchData, runId]);
 
   const refetch = useCallback(() => {
     fetchData();

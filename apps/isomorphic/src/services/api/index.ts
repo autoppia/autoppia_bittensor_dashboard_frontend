@@ -18,7 +18,7 @@ export type {
   // Overview types
   OverviewMetrics,
   ValidatorData,
-  RoundData,
+  OverviewRoundData,
   LeaderboardData,
   SubnetStatistics,
   OverviewMetricsResponse,

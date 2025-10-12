@@ -39,6 +39,16 @@ export class ApiClient {
     }
 
     const data = await response.json();
+    
+    // Check if the API response indicates failure
+    if (data && typeof data === 'object' && data.success === false) {
+      throw {
+        message: data.error || data.message || 'API request failed',
+        status: response.status,
+        code: data.code || 'API_ERROR',
+      } as ApiError;
+    }
+    
     return {
       data,
       success: true,
@@ -46,45 +56,11 @@ export class ApiClient {
   }
 
   private async handleNetworkError<T>(endpoint: string): Promise<ApiResponse<T>> {
-    // If we can't reach the backend, we'll return mock data for development
-    console.warn(`Backend not available for ${endpoint}, using mock data`);
+    // Instead of using mock data, throw an error to trigger loading states
+    console.warn(`Backend not available for ${endpoint}, will show loading state`);
     
-    // Import mock data dynamically to avoid circular dependencies
-    const { 
-      mockOverviewMetrics,
-      mockValidators,
-      mockCurrentRound,
-      mockLeaderboard,
-      mockSubnetStatistics,
-      mockNetworkStatus,
-      mockRecentActivity,
-      mockPerformanceTrends
-    } = await import('./mock-data');
-
-    // Map endpoints to mock data
-    const mockDataMap: Record<string, any> = {
-      '/api/v1/overview/metrics': { metrics: mockOverviewMetrics },
-      '/api/v1/overview/validators': { validators: mockValidators, total: mockValidators.length, page: 1, limit: 10 },
-      '/api/v1/overview/rounds/current': { round: mockCurrentRound },
-      '/api/v1/overview/rounds': { rounds: [mockCurrentRound], currentRound: mockCurrentRound, total: 1 },
-      '/api/v1/overview/leaderboard': { leaderboard: mockLeaderboard, total: mockLeaderboard.length, timeRange: { start: '', end: '' } },
-      '/api/v1/overview/statistics': { statistics: mockSubnetStatistics },
-      '/api/v1/overview/network-status': mockNetworkStatus,
-      '/api/v1/overview/recent-activity': mockRecentActivity,
-      '/api/v1/overview/performance-trends': mockPerformanceTrends,
-    };
-
-    const mockData = mockDataMap[endpoint];
-    if (mockData) {
-      return {
-        data: mockData,
-        success: true,
-      };
-    }
-
-    // If no mock data available, throw error
     throw {
-      message: `No mock data available for ${endpoint}`,
+      message: `Backend service unavailable for ${endpoint}`,
       status: 503,
       code: 'SERVICE_UNAVAILABLE',
     } as ApiError;
@@ -109,11 +85,7 @@ export class ApiClient {
 
       return this.handleResponse<T>(response);
     } catch (error: any) {
-      // If it's a network error (backend not available), use mock data
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        return this.handleNetworkError<T>(endpoint);
-      }
-      // Re-throw other errors
+      // Re-throw all errors to trigger loading states in components
       throw error;
     }
   }

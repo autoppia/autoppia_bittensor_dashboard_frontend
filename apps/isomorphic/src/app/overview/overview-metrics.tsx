@@ -66,15 +66,19 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     return (
       <div className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4", className)}>
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-2xl p-5 bg-gray-100 animate-pulse">
+          <div key={index} className="rounded-2xl p-5 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
             <div className="flex space-x-4 mb-3">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+              <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
               <div className="flex-1">
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
               </div>
             </div>
-            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+            <div className="mt-2 flex items-center">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse mr-2"></div>
+              <div className="h-2 bg-gray-200 rounded w-20 animate-pulse"></div>
+            </div>
           </div>
         ))}
       </div>
@@ -95,12 +99,12 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     );
   }
 
-  // Create dynamic metrics data from API
+  // Create dynamic metrics data from API with safe fallbacks
   const dynamicMetricsData = [
     {
       id: "score-to-win",
       title: "Top Score",
-      value: metrics?.topScore || 0,
+      value: metrics?.topScore ?? 0,
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -113,7 +117,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-websites",
       title: "Websites",
-      value: metrics?.totalWebsites || 0,
+      value: metrics?.totalWebsites ?? 0,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -125,7 +129,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-validators",
       title: "Validators",
-      value: metrics?.totalValidators || 0,
+      value: metrics?.totalValidators ?? 0,
       icon: LuShield,
       bgColor:
         "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -137,7 +141,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-miners",
       title: "Miners",
-      value: metrics?.totalMiners || 0,
+      value: metrics?.totalMiners ?? 0,
       icon: LuPickaxe,
       bgColor:
         "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -204,3 +208,4 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     </div>
   );
 }
+

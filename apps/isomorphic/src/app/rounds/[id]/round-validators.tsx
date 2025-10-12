@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Button, Text } from "rizzui";
 import cn from "@core/utils/class-names";
-import { validatorsData } from "@/data/validators-data";
+import { Skeleton } from "@core/ui/skeleton";
+import { useRoundValidators } from "@/services/hooks/useRounds";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill, PiInfoDuotone } from "react-icons/pi";
 
 export default function RoundValidators({ className }: { className?: string }) {
-  const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(
-    validatorsData[0]?.id || null // First validator selected by default
-  );
+  const { id } = useParams();
+  const roundId = parseInt(id as string);
+  
+  // Get validators data from API
+  const { data: validatorsData, loading, error } = useRoundValidators(roundId);
+  
+  const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(null);
 
   const {
     sliderEl,
@@ -21,7 +27,60 @@ export default function RoundValidators({ className }: { className?: string }) {
     scrollToTheLeft,
   } = useScrollableSlider();
 
-  const selectedValidator = validatorsData.find(v => v.id === selectedValidatorId);
+  // Set first validator as selected when data loads
+  React.useEffect(() => {
+    if (validatorsData && validatorsData.length > 0 && !selectedValidatorId) {
+      setSelectedValidatorId(validatorsData[0].id);
+    }
+  }, [validatorsData, selectedValidatorId]);
+
+  const selectedValidator = validatorsData?.find(v => v.id === selectedValidatorId);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className={cn(className)}>
+        <div className="relative flex w-auto items-center overflow-hidden">
+          <div className="w-full overflow-hidden">
+            <div className="grid grid-flow-col gap-4 overflow-x-auto scroll-smooth">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className="w-full min-w-[220px] rounded-xl px-5 py-5 border-2 border-gray-200">
+                  <div className="flex flex-col items-center">
+                    <Skeleton className="w-12 h-12 rounded-full mb-3" />
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 mb-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
+              <Skeleton className="w-2 h-2 rounded-full" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className={cn(className)}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 text-sm">
+            ⚠️ Failed to load validators: {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(className)}>
@@ -44,7 +103,7 @@ export default function RoundValidators({ className }: { className?: string }) {
           >
 
             {/* Individual Validator Cards */}
-            {validatorsData.map((validator) => {
+            {validatorsData?.map((validator) => {
               const isActive = selectedValidatorId === validator.id;
 
               return (

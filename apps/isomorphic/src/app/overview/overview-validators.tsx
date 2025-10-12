@@ -29,13 +29,19 @@ export default function OverviewValidators() {
     return (
       <>
         <PageHeader title={"What's happening on the subnet"} className="mt-12">
-          <div className="text-sm text-gray-600 mt-2">
-            Below are a list of validators currently running - click on any to see full details
+          <div className="flex items-center space-x-3">
+            <div className="text-sm text-gray-600">
+              Below are a list of validators currently running - click on any to see full details
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-xs text-blue-600">Loading...</span>
+            </div>
           </div>
         </PageHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-gray-50 border-2 border-muted rounded-xl overflow-hidden animate-pulse">
+            <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden">
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
