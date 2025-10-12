@@ -6,12 +6,59 @@ import { useState, useEffect, useCallback } from 'react';
 import { agentRunsService } from '../api/agent-runs.service';
 import {
   AgentRunData,
+  AgentRunListItem,
   AgentRunStats,
   AgentRunSummary,
   AgentRunPersonas,
   AgentRunTaskData,
   AgentRunPartialData,
+  AgentRunsListQueryParams,
 } from '../api/types/agent-runs';
+
+// Hook for getting agent runs list with optional filters
+export function useAgentRunsList(params?: AgentRunsListQueryParams) {
+  const [runs, setRuns] = useState<AgentRunListItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(params?.page ?? 1);
+  const [limit, setLimit] = useState(params?.limit ?? 20);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRuns = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await agentRunsService.listAgentRuns(params);
+      setRuns(result.runs);
+      setTotal(result.total);
+      setPage(result.page);
+      setLimit(result.limit);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch agent runs');
+      setRuns([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [params]);
+
+  useEffect(() => {
+    fetchRuns();
+  }, [fetchRuns]);
+
+  const refetch = useCallback(() => {
+    fetchRuns();
+  }, [fetchRuns]);
+
+  return {
+    runs,
+    total,
+    page,
+    limit,
+    isLoading,
+    error,
+    refetch,
+  };
+}
 
 // Hook for getting agent run data with progressive loading
 export function useAgentRun(

@@ -11,8 +11,6 @@ import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
 import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
-import LoadingScreen from "@/app/shared/loading-screen";
-import Placeholder from "@/app/shared/placeholder";
 
 export default function AgentRun() {
   const { id } = useParams();
@@ -32,38 +30,12 @@ export default function AgentRun() {
     }
   );
 
-  // Show loading screen only if we're still loading the initial data
-  if (isLoading && !data.personas && !data.stats && !data.summary) {
-    return (
-      <div className="w-full max-w-[1280px] mx-auto">
-        <PageHeader
-          title="Agent Run Details"
-          description={`Run ID: ${id}`}
-          className="mt-4"
-        >
-          <Link
-            href="/agents"
-            className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
-          >
-            <PiArrowLeftLight className="w-4 h-4" />
-            <span className="ms-1">Back to Agents</span>
-          </Link>
-        </PageHeader>
-        <LoadingScreen 
-          title="Loading Agent Run Data" 
-          subtitle="Fetching evaluation run details..."
-          size="lg"
-        />
-      </div>
-    );
-  }
-
   // Show error state if there's a critical error
   if (error && !data.personas && !data.stats && !data.summary) {
     const isNotFoundError = error.includes('not found') || error.includes('AGENT_RUN_NOT_FOUND');
     
     return (
-      <div className="w-full max-w-[1280px] mx-auto">
+      <div className="w-full max-w-[1600px] mx-auto">
         <PageHeader
           title="Agent Run Details"
           description={`Run ID: ${id}`}
@@ -109,7 +81,7 @@ export default function AgentRun() {
   }
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto">
+    <div className="w-full max-w-[1600px] mx-auto">
       <PageHeader
         title="Agent Run Details"
         description={`Run ID: ${id}`}
@@ -156,7 +128,7 @@ export default function AgentRun() {
       </div>
 
       {/* Loading Indicator for Partial Updates */}
-      {isAnyLoading && (
+      {(isLoading || isAnyLoading) && (
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm">Updating data...</span>

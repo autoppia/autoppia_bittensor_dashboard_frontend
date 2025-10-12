@@ -41,6 +41,26 @@ export interface AgentRunData {
   };
 }
 
+// ===== AGENT RUN LIST ITEM =====
+export interface AgentRunListItem {
+  runId: string;
+  agentId: string;
+  roundId: number;
+  validatorId: string;
+  validatorName?: string;
+  validatorImage?: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
+  startTime: string;
+  endTime?: string | null;
+  totalTasks: number;
+  completedTasks: number;
+  averageScore: number;
+  successRate: number;
+  overallScore: number;
+  ranking: number;
+  duration: number;
+}
+
 // ===== AGENT RUN TASK DATA =====
 export interface AgentRunTaskData {
   taskId: string;
@@ -197,6 +217,15 @@ export interface AgentRunTasksResponse {
   };
 }
 
+export interface AgentRunsListResponse {
+  data: {
+    runs: AgentRunListItem[];
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
 // ===== QUERY PARAMETERS =====
 export interface AgentRunQueryParams {
   includeTasks?: boolean;
@@ -217,6 +246,17 @@ export interface AgentRunTasksQueryParams {
   useCase?: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';
   sortBy?: 'startTime' | 'score' | 'duration';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AgentRunsListQueryParams {
+  page?: number;
+  limit?: number;
+  roundId?: number;
+  validatorId?: string;
+  agentId?: string;
+  status?: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
+  sortBy?: 'startTime' | 'score' | 'duration' | 'ranking';
   sortOrder?: 'asc' | 'desc';
 }
 

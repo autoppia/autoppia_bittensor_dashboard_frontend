@@ -4,7 +4,6 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { useAgentRunTasks } from "@/services/hooks/useAgentRun";
 import { createColumnHelper } from "@tanstack/react-table";
-import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input } from "rizzui";
 import Link from "next/link";
@@ -38,7 +37,9 @@ const agentRunTasksColumns = [
     header: "Website",
     enableSorting: false,
     cell: ({ row }) => (
-      <BannerText color="blue" text={row.original.website} />
+      <span className="inline-flex items-center rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+        {row.original.website}
+      </span>
     ),
   }),
   columnHelper.accessor("useCase", {
