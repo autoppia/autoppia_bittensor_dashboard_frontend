@@ -20,7 +20,7 @@ Get comprehensive details for a specific task.
 #### Parameters
 - `taskId` (path, required): The unique identifier of the task
 - `includeActions` (query, optional): Include task actions (default: false)
-- `includeScreenshots` (query, optional): Include screenshots (default: false)
+- `includeScreenshots` (query, optional): Include screenshots/GIF replays (default: false)
 - `includeLogs` (query, optional): Include logs (default: false)
 - `includeMetadata` (query, optional): Include metadata (default: false)
 
@@ -51,10 +51,10 @@ Get comprehensive details for a specific task.
           "timestamp": "2024-01-15T10:30:00Z",
           "duration": 2.1,
           "success": true,
-          "screenshot": "screenshot-1.png"
+          "screenshot": "replay-1.gif"
         }
       ],
-      "screenshots": ["screenshot-1.png", "screenshot-2.png"],
+      "screenshots": ["replay-1.gif", "replay-2.gif"],
       "logs": ["Task started", "Navigation successful", "Task completed"],
       "metadata": {
         "environment": "production",
@@ -69,6 +69,8 @@ Get comprehensive details for a specific task.
   }
 }
 ```
+
+> ℹ️ **Media format:** the `screenshots` collection is used by the dashboard to render animated GIF replays. Supplying `.gif` URLs delivers a full playback inside the Task Detail panel; static images still work but won't show motion.
 
 ### 2. Get Task Personas
 **GET** `/api/v1/tasks/{taskId}/personas`
@@ -117,7 +119,16 @@ Get personas data (round, validator, agent, task information) for a task.
 ### 3. Get Task Details (Extended)
 **GET** `/api/v1/tasks/{taskId}/details`
 
-Get detailed information for a specific task including performance metrics.
+Return the complete payload required to render the Task Detail view (summary metrics, agent run metadata, performance counters, and raw execution artefacts).
+
+#### Query Parameters
+- `includeActions` (query, optional, default: `true`): Toggle inclusion of the `actions` array. Set to `false` for lightweight summaries.
+- `includeScreenshots` (query, optional, default: `true`): When `false`, omits the `screenshots` array (used for looping GIF replays in the UI).
+- `includeLogs` (query, optional, default: `true`): When `false`, omits execution log messages.
+- `includePerformance` (query, optional, default: `true`): When `false`, omits the `performance` object.
+- `includeMetadata` (query, optional, default: `true`): When `false`, omits the `metadata` object.
+
+If a flag is `false`, the corresponding key MUST be either omitted or set to `null`.
 
 #### Response
 ```json
@@ -125,28 +136,48 @@ Get detailed information for a specific task including performance metrics.
   "data": {
     "details": {
       "taskId": "task-3413",
-      "agentRunId": "a7k2-9m4x",
-      "website": "Autozone",
-      "useCase": "buy_product",
-      "prompt": "Buy a product which has a price of 1000",
+      "agentRunId": "b8l3-0n5y",
+      "website": "autodining",
+      "useCase": "book_reservation",
+      "prompt": "Book a table for four people at 7 PM tonight.",
       "status": "completed",
-      "score": 0.82,
-      "successRate": 75,
-      "duration": 45,
-      "startTime": "2024-01-15T10:30:00Z",
-      "endTime": "2024-01-15T10:30:45Z",
-      "createdAt": "2024-01-15T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:45Z",
-      "actions": [...],
-      "screenshots": [...],
-      "logs": [...],
+      "score": 0.75,
+      "successRate": 68,
+      "duration": 60,
+      "startTime": "2024-03-15T18:02:11Z",
+      "endTime": "2024-03-15T18:03:11Z",
+      "createdAt": "2024-03-15T18:02:11Z",
+      "updatedAt": "2024-03-15T18:03:11Z",
+      "actions": [
+        {
+          "id": "action-001",
+          "type": "navigate",
+          "timestamp": "2024-03-15T18:02:11Z",
+          "duration": 1.2,
+          "success": true,
+          "value": "https://autodining.autoppia.com/",
+          "metadata": {
+            "target": "_self"
+          },
+          "screenshot": "https://cdn.autoppia.com/tasks/task-3413/action-001.gif"
+        }
+      ],
+      "screenshots": [
+        "https://cdn.autoppia.com/tasks/task-3413/summary.gif",
+        "https://cdn.autoppia.com/tasks/task-3413/cart.gif"
+      ],
+      "logs": [
+        "Task started",
+        "Reservation flow executed",
+        "Task completed successfully"
+      ],
       "performance": {
-        "totalActions": 15,
-        "successfulActions": 12,
-        "failedActions": 3,
-        "averageActionDuration": 3.0,
-        "totalWaitTime": 10.5,
-        "totalNavigationTime": 5.2
+        "totalActions": 14,
+        "successfulActions": 13,
+        "failedActions": 1,
+        "averageActionDuration": 3.5,
+        "totalWaitTime": 12.4,
+        "totalNavigationTime": 6.1
       },
       "metadata": {
         "environment": "production",
@@ -155,17 +186,36 @@ Get detailed information for a specific task including performance metrics.
           "width": 1920,
           "height": 1080
         },
-        "userAgent": "Mozilla/5.0...",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "resources": {
-          "cpu": 2.5,
-          "memory": 512,
-          "network": 1024
+          "cpu": 2.2,
+          "memory": 485,
+          "network": 892
         }
       }
     }
   }
 }
 ```
+
+#### Field Reference
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `details.taskId` | `string` | Unique identifier for the task execution. |
+| `details.agentRunId` | `string` | Identifier of the agent run associated with the task. |
+| `details.website` | `string` | Synthetic website slug (lowercase, underscore-free). |
+| `details.useCase` | `string` | Use case slug that categorises the task. |
+| `details.score` | `number` | Final evaluation score (0–1, two decimal precision recommended). |
+| `details.successRate` | `number` | Percentage of successful actions (0–100). |
+| `details.duration` | `number` | Total execution time in seconds. |
+| `details.actions[]` | `TaskAction` | Ordered list of low-level actions executed by the agent. |
+| `details.performance.totalActions` | `number` | Count of actions in the run. |
+| `details.performance.failedActions` | `number` | Count of actions flagged as failures. |
+| `details.metadata.environment` | `string` | Runtime environment label (`production`, `staging`, etc.). |
+| `details.metadata.resources.cpu` | `number` | Average CPU usage percentage recorded during the run. |
+
+> **Note:** The `TaskAction` shape follows the contract defined in [Get Task Actions](#11-get-task-actions).
 
 ### 4. Get Task Results
 **GET** `/api/v1/tasks/{taskId}/results`
@@ -182,7 +232,7 @@ Get results and execution details for a specific task.
       "score": 0.82,
       "duration": 45,
       "actions": [...],
-      "screenshots": [...],
+      "screenshots": [...], // GIF replays or still images
       "logs": [...],
       "summary": {
         "totalActions": 15,
@@ -415,7 +465,7 @@ Get actions for a specific task with pagination.
           "url": "http://localhost:8000/",
           "statusCode": 200
         },
-        "screenshot": "screenshot-1.png"
+        "screenshot": "replay-1.gif"
       }
     ],
     "total": 15,
@@ -428,7 +478,7 @@ Get actions for a specific task with pagination.
 ### 12. Get Task Screenshots
 **GET** `/api/v1/tasks/{taskId}/screenshots`
 
-Get screenshots for a specific task.
+Get screenshots or GIF replays for a specific task.
 
 #### Response
 ```json
@@ -437,14 +487,14 @@ Get screenshots for a specific task.
     "screenshots": [
       {
         "id": "screenshot-1",
-        "url": "/screenshots/task-3413/screenshot-1.png",
+        "url": "/screenshots/task-3413/replay-1.gif",
         "timestamp": "2024-01-15T10:30:00Z",
         "actionId": "action-1",
         "description": "Initial page load"
       },
       {
         "id": "screenshot-2",
-        "url": "/screenshots/task-3413/screenshot-2.png",
+        "url": "/screenshots/task-3413/replay-2.gif",
         "timestamp": "2024-01-15T10:30:15Z",
         "actionId": "action-5",
         "description": "After clicking product"
@@ -452,6 +502,8 @@ Get screenshots for a specific task.
     ]
   }
 }
+
+> 🔁 **Media format guidance:** even though we keep the endpoint name for backwards compatibility, the dashboard now renders animated GIFs inside the Task Detail panel. Prefer serving GIF (or other animated) assets through this endpoint so users get the full playback.
 ```
 
 ### 13. Get Task Logs

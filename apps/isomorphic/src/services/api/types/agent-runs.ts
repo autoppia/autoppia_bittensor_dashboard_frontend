@@ -45,20 +45,20 @@ export interface AgentRunData {
 export interface AgentRunListItem {
   runId: string;
   agentId: string;
+  agentName?: string;
   roundId: number;
   validatorId: string;
   validatorName?: string;
   validatorImage?: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
+  status: 'running' | 'completed' | 'failed' | 'timeout';
   startTime: string;
   endTime?: string | null;
   totalTasks: number;
-  completedTasks: number;
-  averageScore: number;
-  successRate: number;
+  completedTasks?: number;
+  successfulTasks?: number;
   overallScore: number;
-  ranking: number;
-  duration: number;
+  successRate?: number | null;
+  ranking?: number;
 }
 
 // ===== AGENT RUN TASK DATA =====
@@ -223,6 +223,12 @@ export interface AgentRunsListResponse {
     total: number;
     page: number;
     limit: number;
+    facets?: {
+      validators: { id: string; name?: string; count: number }[];
+      rounds: { id: number; count: number }[];
+      agents: { id: string; name?: string; count: number }[];
+      statuses: { name: string; count: number }[];
+    };
   };
 }
 
@@ -250,6 +256,7 @@ export interface AgentRunTasksQueryParams {
 }
 
 export interface AgentRunsListQueryParams {
+  query?: string;
   page?: number;
   limit?: number;
   roundId?: number;
@@ -258,6 +265,8 @@ export interface AgentRunsListQueryParams {
   status?: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
   sortBy?: 'startTime' | 'score' | 'duration' | 'ranking';
   sortOrder?: 'asc' | 'desc';
+  startDate?: string;
+  endDate?: string;
 }
 
 // ===== PARTIAL LOADING TYPES =====

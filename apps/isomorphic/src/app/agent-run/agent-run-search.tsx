@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAgentRunsList } from "@/services/hooks/useAgentRun";
-import {
+import type {
   AgentRunData,
   AgentRunListItem,
   AgentRunsListQueryParams,
@@ -19,7 +19,8 @@ import {
   PiInfoDuotone,
 } from "react-icons/pi";
 
-const DEFAULT_LIMIT = 200;
+const DEFAULT_LIMIT = 50;
+const LIMIT_OPTIONS = [25, 50, 100, 200];
 
 function formatValidatorLabel(validatorId: string) {
   if (!validatorId) {
@@ -76,10 +77,18 @@ export default function AgentRunSearch() {
 
   const {
     runs,
+    total,
+    page: currentPage,
+    limit: currentLimit,
+    facets,
     isLoading,
     error,
     refetch,
   } = useAgentRunsList(queryParams);
+
+  const isManualSearchActive = manualResults !== null;
+  const resolvedPage = currentPage ?? queryParams.page ?? 1;
+  const resolvedLimit = currentLimit ?? queryParams.limit ?? DEFAULT_LIMIT;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -101,36 +110,103 @@ export default function AgentRunSearch() {
     };
   }, [isValidatorDropdownOpen]);
 
-  const validatorOptions = useMemo(() => {
-    const values = new Set<string>();
-    const sourceRuns = manualResults ?? runs;
+  const activeRuns = useMemo<AgentRunListItem[]>(() => {
+    return manualResults ?? runs;
+  }, [manualResults, runs]);
 
-    sourceRuns.forEach((run) => {
+  const validatorOptions = useMemo<{ id: string; label: string }[]>(() => {
+    if (facets?.validators?.length) {
+      const options = facets.validators.map((validator) => ({
+        id: validator.id,
+        label: validator.name || formatValidatorLabel(validator.id),
+      }));
+
+      if (
+        selectedValidator &&
+        !options.some((option) => option.id === selectedValidator)
+      ) {
+        options.push({
+          id: selectedValidator,
+          label: formatValidatorLabel(selectedValidator),
+        });
+      }
+
+      return options.sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    const values = new Map<string, string>();
+    activeRuns.forEach((run) => {
       if (run.validatorId) {
-        values.add(run.validatorId);
+        values.set(
+          run.validatorId,
+          run.validatorName || formatValidatorLabel(run.validatorId)
+        );
       }
     });
 
     if (selectedValidator && !values.has(selectedValidator)) {
-      values.add(selectedValidator);
+      values.set(selectedValidator, formatValidatorLabel(selectedValidator));
     }
 
-    return Array.from(values).sort();
-  }, [runs, selectedValidator, manualResults]);
+    return Array.from(values.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [activeRuns, facets, selectedValidator]);
+
+  const selectedValidatorLabel = useMemo(() => {
+    if (!selectedValidator) {
+      return null;
+    }
+    const match = validatorOptions.find(
+      (option) => option.id === selectedValidator
+    );
+    return match?.label ?? formatValidatorLabel(selectedValidator);
+  }, [selectedValidator, validatorOptions]);
 
   const displayedRuns = useMemo(() => {
-    const activeRuns = manualResults ?? runs;
-    return [...activeRuns]
-      .sort(
-        (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-      )
-      .slice(0, 12);
-  }, [manualResults, runs]);
+    return [...activeRuns].sort(
+      (a, b) =>
+        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
+  }, [activeRuns]);
+
+  const totalPages = isManualSearchActive
+    ? 1
+    : Math.max(1, Math.ceil((total || 0) / resolvedLimit));
+
+  const startIndex =
+    displayedRuns.length === 0
+      ? 0
+      : isManualSearchActive
+      ? 1
+      : (resolvedPage - 1) * resolvedLimit + 1;
+
+  const endIndex =
+    displayedRuns.length === 0
+      ? 0
+      : isManualSearchActive
+      ? displayedRuns.length
+      : startIndex + displayedRuns.length - 1;
+
+  const canGoPrev = !isManualSearchActive && resolvedPage > 1;
+  const canGoNext = !isManualSearchActive && resolvedPage < totalPages;
+
+  const limitValue = queryParams.limit ?? resolvedLimit;
+
+  const limitOptions = useMemo(() => {
+    const options = new Set<number>(LIMIT_OPTIONS);
+    options.add(limitValue);
+    return Array.from(options).sort((a, b) => a - b);
+  }, [limitValue]);
+
+  const headerCount = isManualSearchActive
+    ? displayedRuns.length
+    : total || displayedRuns.length;
 
   const effectiveLoading =
-    manualResults !== null ? manualLoading : manualLoading || isLoading;
-  const effectiveError = manualError || error;
+    manualLoading || (!isManualSearchActive && isLoading);
+  const effectiveError =
+    manualError || (!isManualSearchActive ? error : null);
 
   const mapRunDetailToListItem = (run: AgentRunData): AgentRunListItem => {
     const totalTasks = run.totalTasks ?? run.tasks?.length ?? 0;
@@ -161,18 +237,17 @@ export default function AgentRunSearch() {
       endTime: run.endTime ?? null,
       totalTasks,
       completedTasks,
-      averageScore: baseScore,
       successRate,
       overallScore: Math.round(baseScore),
       ranking: run.ranking ?? 0,
-      duration: run.duration ?? 0,
     };
   };
 
   const handleSearch = async () => {
     setHasSearched(true);
 
-    const hasRunId = searchTerm.trim().length > 0;
+    const trimmedRunId = searchTerm.trim();
+    const hasRunId = trimmedRunId.length > 0;
     const roundIdParam = roundInput.trim()
       ? Number(roundInput.trim())
       : undefined;
@@ -183,13 +258,13 @@ export default function AgentRunSearch() {
       setManualLoading(true);
       setManualError(null);
       try {
-        const run = await agentRunsService.getAgentRun(searchTerm.trim());
+        const run = await agentRunsService.getAgentRun(trimmedRunId);
         setManualResults([mapRunDetailToListItem(run)]);
       } catch (err: any) {
         setManualResults([]);
         setManualError(
           err?.message ||
-            `Agent run '${searchTerm.trim()}' not found. Please verify the ID.`
+            `Agent run '${trimmedRunId}' not found. Please verify the ID.`
         );
       } finally {
         setManualLoading(false);
@@ -201,13 +276,22 @@ export default function AgentRunSearch() {
     setManualError(null);
     setManualLoading(false);
 
-    setQueryParams({
+    const nextQuery: AgentRunsListQueryParams = {
       page: 1,
-      limit: DEFAULT_LIMIT,
-      roundId: Number.isFinite(roundIdParam) ? roundIdParam : undefined,
-      validatorId: validatorIdParam,
-      agentId: agentIdParam,
-    });
+      limit: queryParams.limit ?? DEFAULT_LIMIT,
+    };
+
+    if (Number.isFinite(roundIdParam)) {
+      nextQuery.roundId = roundIdParam;
+    }
+    if (validatorIdParam) {
+      nextQuery.validatorId = validatorIdParam;
+    }
+    if (agentIdParam) {
+      nextQuery.agentId = agentIdParam;
+    }
+
+    setQueryParams(nextQuery);
   };
 
   const clearFilters = () => {
@@ -222,9 +306,8 @@ export default function AgentRunSearch() {
     setManualLoading(false);
     setQueryParams({
       page: 1,
-      limit: DEFAULT_LIMIT,
+      limit: queryParams.limit ?? DEFAULT_LIMIT,
     });
-    refetch();
   };
 
   const hasActiveFilters =
@@ -232,6 +315,39 @@ export default function AgentRunSearch() {
     roundInput !== "" ||
     selectedValidator !== "" ||
     agentInput !== "";
+
+  const handlePageChange = (nextPage: number) => {
+    if (
+      nextPage < 1 ||
+      nextPage === resolvedPage ||
+      (totalPages > 0 && nextPage > totalPages)
+    ) {
+      return;
+    }
+
+    setManualResults(null);
+    setManualError(null);
+    setManualLoading(false);
+    setQueryParams((prev) => ({
+      ...prev,
+      page: nextPage,
+    }));
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    if (!Number.isFinite(newLimit) || newLimit <= 0) {
+      return;
+    }
+
+    setManualResults(null);
+    setManualError(null);
+    setManualLoading(false);
+    setQueryParams((prev) => ({
+      ...prev,
+      page: 1,
+      limit: newLimit,
+    }));
+  };
 
   const handleRetry = () => {
     if (manualResults !== null || searchTerm.trim()) {
@@ -287,7 +403,7 @@ export default function AgentRunSearch() {
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-visible">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
               {/* Round Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300">
@@ -323,7 +439,8 @@ export default function AgentRunSearch() {
                     <span>
                       {selectedValidator === ""
                         ? "All Validators"
-                        : formatValidatorLabel(selectedValidator)}
+                        : selectedValidatorLabel ??
+                          formatValidatorLabel(selectedValidator)}
                     </span>
                     <PiCaretDownDuotone
                       className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${
@@ -344,19 +461,26 @@ export default function AgentRunSearch() {
                       >
                         All Validators
                       </button>
-                      {validatorOptions.map((validatorId) => (
+                      {validatorOptions.map((validator) => {
+                        const isActive = selectedValidator === validator.id;
+                        return (
                         <button
-                          key={validatorId}
+                          key={validator.id}
                           type="button"
                           onClick={() => {
-                            setSelectedValidator(validatorId);
+                            setSelectedValidator(validator.id);
                             setIsValidatorDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
+                          className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-blue-500/20 last:border-b-0 ${
+                            isActive
+                              ? "bg-blue-500/30 text-blue-100"
+                              : "text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200"
+                          }`}
                         >
-                          {formatValidatorLabel(validatorId)}
+                          {validator.label}
                         </button>
-                      ))}
+                      );
+                    })}
                     </div>
                   )}
                 </div>
@@ -378,6 +502,29 @@ export default function AgentRunSearch() {
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-purple-400" />
                   </div>
+                </div>
+              </div>
+
+              {/* Results Limit */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-cyan-300">
+                  RESULTS PER PAGE
+                </label>
+                <div className="relative">
+                  <select
+                    value={limitValue}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-200 text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
                 </div>
               </div>
             </div>
@@ -459,10 +606,12 @@ export default function AgentRunSearch() {
         <div className="mt-6 relative z-0">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              {displayedRuns.length} RESULTS
+              {headerCount} RESULT{headerCount === 1 ? "" : "S"}
             </h3>
             <p className="text-purple-200 text-sm">
-              Showing recent agent runs matching your criteria
+              {isManualSearchActive
+                ? "Showing exact match for the requested run"
+                : `Showing ${startIndex}-${endIndex} of ${total} results`}
             </p>
           </div>
 
@@ -506,6 +655,40 @@ export default function AgentRunSearch() {
               </div>
             ))}
           </div>
+
+          {!isManualSearchActive &&
+            totalPages > 1 &&
+            displayedRuns.length > 0 && (
+              <div className="mt-6 flex items-center justify-center gap-4 text-sm text-purple-200">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(resolvedPage - 1)}
+                  disabled={!canGoPrev}
+                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                    canGoPrev
+                      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-100"
+                      : "border-purple-500/20 bg-purple-500/5 text-purple-400 cursor-not-allowed"
+                  }`}
+                >
+                  Previous
+                </button>
+                <span className="text-purple-100">
+                  Page {resolvedPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(resolvedPage + 1)}
+                  disabled={!canGoNext}
+                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                    canGoNext
+                      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-100"
+                      : "border-purple-500/20 bg-purple-500/5 text-purple-400 cursor-not-allowed"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
         </div>
       )}
 
