@@ -99,9 +99,9 @@ export default function OverviewValidators() {
             Below are a list of validators currently running - click on any to see full details
           </div>
         </PageHeader>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-600 font-medium">Error loading validators</p>
-          <p className="text-red-500 text-sm mt-1">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
+          <p className="text-red-400 font-medium">Error loading validators</p>
+          <p className="text-red-300 text-sm mt-1">
             {validatorsError || roundError}
           </p>
         </div>

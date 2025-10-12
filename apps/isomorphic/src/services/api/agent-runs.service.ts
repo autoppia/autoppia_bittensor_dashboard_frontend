@@ -41,30 +41,51 @@ export class AgentRunsService {
    * Get personas data for an agent run (round, validator, agent info)
    */
   async getAgentRunPersonas(runId: string): Promise<AgentRunPersonas> {
-    const response = await apiClient.get<AgentRunPersonasResponse>(
-      `${this.baseEndpoint}/${runId}/personas`
-    );
-    return response.data.data.personas;
+    try {
+      const response = await apiClient.get<AgentRunPersonasResponse>(
+        `${this.baseEndpoint}/${runId}/personas`
+      );
+      return response.data.data.personas;
+    } catch (error: any) {
+      if (error.code === 'AGENT_RUN_NOT_FOUND') {
+        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
+      }
+      throw error;
+    }
   }
 
   /**
    * Get statistics for an agent run
    */
   async getAgentRunStats(runId: string): Promise<AgentRunStats> {
-    const response = await apiClient.get<AgentRunStatsResponse>(
-      `${this.baseEndpoint}/${runId}/stats`
-    );
-    return response.data.data.stats;
+    try {
+      const response = await apiClient.get<AgentRunStatsResponse>(
+        `${this.baseEndpoint}/${runId}/stats`
+      );
+      return response.data.data.stats;
+    } catch (error: any) {
+      if (error.code === 'AGENT_RUN_NOT_FOUND') {
+        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
+      }
+      throw error;
+    }
   }
 
   /**
    * Get summary for an agent run
    */
   async getAgentRunSummary(runId: string): Promise<AgentRunSummary> {
-    const response = await apiClient.get<AgentRunSummaryResponse>(
-      `${this.baseEndpoint}/${runId}/summary`
-    );
-    return response.data.data.summary;
+    try {
+      const response = await apiClient.get<AgentRunSummaryResponse>(
+        `${this.baseEndpoint}/${runId}/summary`
+      );
+      return response.data.data.summary;
+    } catch (error: any) {
+      if (error.code === 'AGENT_RUN_NOT_FOUND') {
+        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
+      }
+      throw error;
+    }
   }
 
   /**

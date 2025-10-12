@@ -7,7 +7,7 @@ import OverviewValidators from "./overview-validators";
 import { Title, Text } from 'rizzui/typography';
 import cn from '@core/utils/class-names';
 import Link from 'next/link';
-import { PiArrowSquareOutDuotone, PiGithubLogoDuotone, PiArrowClockwiseDuotone, PiWifiHighDuotone } from 'react-icons/pi';
+import { PiArrowSquareOutDuotone, PiGithubLogoDuotone, PiArrowClockwiseDuotone, PiWifiHighDuotone, PiMinusBold } from 'react-icons/pi';
 import { useOverviewData } from "@/services/hooks/useOverview";
 
 export default function Overview() {
@@ -58,7 +58,11 @@ export default function Overview() {
           <div className="flex items-center gap-4">
             {/* Network Status */}
             <div className="flex items-center gap-2">
-              <PiWifiHighDuotone className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
+              {networkStatus.status === 'down' ? (
+                <PiMinusBold className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
+              ) : (
+                <PiWifiHighDuotone className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
+              )}
               <span className={cn("text-sm font-medium", getNetworkStatusColor(networkStatus.status))}>
                 {getNetworkStatusIcon(networkStatus.status)} {networkStatus.status || 'Unknown'}
               </span>
@@ -104,15 +108,15 @@ export default function Overview() {
 
       {/* Global Error State */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="mb-6 bg-red-900/20 border border-red-700/50 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-600 font-medium">Error loading overview data</p>
-              <p className="text-red-500 text-sm mt-1">{error}</p>
+              <p className="text-red-400 font-medium">Error loading overview data</p>
+              <p className="text-red-300 text-sm mt-1">{error}</p>
             </div>
             <button
               onClick={refetch}
-              className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded text-sm font-medium transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
             >
               Try Again
             </button>

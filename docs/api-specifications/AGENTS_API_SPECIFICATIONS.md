@@ -236,7 +236,7 @@ Retrieves a paginated list of runs for a specific agent.
   "data": {
     "runs": [
       {
-        "runId": "run_autoppia_1234567890_1",
+        "runId": "run_id_1234567890_1",
         "agentId": "autoppia-bittensor",
         "roundId": 20,
         "validatorId": "autoppia",
@@ -370,7 +370,7 @@ Retrieves recent activity for a specific agent.
         "message": "Agent Autoppia Bittensor completed run with score 0.87",
         "timestamp": "2024-01-15T10:32:00Z",
         "metadata": {
-          "runId": "run_autoppia_1234567890_1",
+          "runId": "run_id_1234567890_1",
           "roundId": 20,
           "validatorId": "autoppia",
           "score": 0.87,
@@ -506,7 +506,7 @@ Retrieves activity across all agents.
         "message": "Agent Autoppia Bittensor completed run with score 0.87",
         "timestamp": "2024-01-15T10:32:00Z",
         "metadata": {
-          "runId": "run_autoppia_1234567890_1",
+          "runId": "run_id_1234567890_1",
           "roundId": 20,
           "validatorId": "autoppia",
           "score": 0.87,

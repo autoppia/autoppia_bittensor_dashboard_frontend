@@ -302,7 +302,7 @@ export default function AgentRunSearch() {
                       <PiPlayDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
                     </div>
                     <div className="text-sm font-bold text-white mb-2">
-                      RUN UID: {run.runUid}
+                      RUN ID: {run.runUid}
                     </div>
                     <div className="text-xs text-purple-200">
                       Round {run.round} • {validator?.name || run.validatorId} • Agent {run.agentUid}

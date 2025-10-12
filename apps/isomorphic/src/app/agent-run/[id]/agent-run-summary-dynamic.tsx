@@ -123,7 +123,7 @@ export default function AgentRunSummaryDynamic({
   successRate = summary.overallScore;
   totalRequests = summary.totalTasks;
   totalSuccesses = summary.successfulTasks;
-  avgSolutionTime = summary.duration / summary.totalTasks; // Average duration per task
+  avgSolutionTime = summary.totalTasks > 0 ? summary.duration / summary.totalTasks : 0; // Average duration per task
 
   // Create display data from summary information
   const displayData: DisplayDataItem[] = [

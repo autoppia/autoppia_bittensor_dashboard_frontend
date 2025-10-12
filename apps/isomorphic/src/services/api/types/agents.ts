@@ -3,28 +3,53 @@
  * These types define the structure of data returned by the backend API
  */
 
-// ===== AGENT DATA (MINERS) =====
+// ===== MINIMAL AGENT DATA (for listing) =====
+export interface MinimalAgentData {
+  uid: number; // Miner UID
+  name: string;
+  ranking: number; // Current ranking based on average score
+  score: number; // Average score (renamed from averageScore for consistency with API)
+  isSota: boolean; // Whether this is a SOTA agent
+  imageUrl: string;
+}
+
+// ===== FULL AGENT DATA (for details) =====
 export interface AgentData {
   id: string; // Keep for backward compatibility, but now represents UID as string
   uid: number; // Miner UID
   name: string;
   hotkey: string; // Miner hotkey
+  type: string; // Agent type (e.g., "autoppia")
   imageUrl: string;
   githubUrl?: string; // GitHub repository URL
   taostatsUrl: string; // TaoStats URL
   isSota: boolean; // Whether this is a SOTA agent
   status: 'active' | 'inactive' | 'maintenance';
+  description?: string; // Miner description
+  version?: string; // Agent version
   totalRuns: number;
   successfulRuns: number;
-  averageScore: number;
-  bestScore: number;
-  successRate: number;
+  currentScore: number; // RENAMED from averageScore
+  currentTopScore: number; // RENAMED from bestScore
+  currentRank: number; // NEW FIELD
+  bestRankEver: number; // NEW FIELD
+  roundsParticipated: number; // NEW FIELD
+  alphaWonInPrizes: number; // NEW FIELD
   averageDuration: number;
   totalTasks: number;
   completedTasks: number;
   lastSeen: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ===== SCORE ROUND DATA =====
+export interface ScoreRoundDataPoint {
+  round_id: number;
+  score: number;
+  rank: number | null;
+  reward: number;
+  timestamp: string;
 }
 
 // ===== AGENT PERFORMANCE METRICS =====
@@ -37,10 +62,9 @@ export interface AgentPerformanceMetrics {
   totalRuns: number;
   successfulRuns: number;
   failedRuns: number;
-  averageScore: number;
-  bestScore: number;
+  currentScore: number; // RENAMED from averageScore
+  currentTopScore: number; // RENAMED from bestScore
   worstScore: number;
-  successRate: number;
   averageDuration: number;
   totalTasks: number;
   completedTasks: number;
@@ -52,10 +76,8 @@ export interface AgentPerformanceMetrics {
     poor: number;      // 0.0-0.49
   };
   performanceTrend: {
-    period: string;
+    round: number;
     score: number;
-    successRate: number;
-    duration: number;
   }[];
 }
 
@@ -101,11 +123,11 @@ export interface AgentComparison {
     agentId: string;
     name: string;
     metrics: {
-      averageScore: number;
-      successRate: number;
+      currentScore: number; // RENAMED from averageScore
+      currentTopScore: number; // RENAMED from bestScore
       averageDuration: number;
       totalRuns: number;
-      ranking: number;
+      currentRank: number; // RENAMED from ranking
     };
   }[];
   comparisonMetrics: {
@@ -127,8 +149,7 @@ export interface AgentStatistics {
   inactiveAgents: number;
   totalRuns: number;
   successfulRuns: number;
-  averageSuccessRate: number;
-  averageScore: number;
+  averageCurrentScore: number; // RENAMED from averageScore
   topPerformingAgent: {
     id: string;
     name: string;
@@ -167,6 +188,13 @@ export interface AgentActivity {
 }
 
 // ===== API RESPONSE TYPES =====
+export interface MinimalAgentsListResponse {
+  miners: MinimalAgentData[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface AgentsListResponse {
   data: {
     agents: AgentData[];
@@ -179,6 +207,14 @@ export interface AgentsListResponse {
 export interface AgentDetailsResponse {
   data: {
     agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
+  };
+}
+
+export interface MinerDetailsResponse {
+  data: {
+    agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
   };
 }
 
@@ -223,12 +259,19 @@ export interface AgentActivityResponse {
 }
 
 // ===== QUERY PARAMETERS =====
+export interface MinimalAgentsListQueryParams {
+  page?: number;
+  limit?: number;
+  isSota?: boolean; // Filter by SOTA status
+  search?: string; // Search by miner name or UID
+}
+
 export interface AgentsListQueryParams {
   page?: number;
   limit?: number;
   isSota?: boolean; // Filter by SOTA status
   status?: 'active' | 'inactive' | 'maintenance';
-  sortBy?: 'name' | 'uid' | 'averageScore' | 'successRate' | 'totalRuns' | 'lastSeen';
+  sortBy?: 'name' | 'uid' | 'currentScore' | 'currentTopScore' | 'currentRank' | 'totalRuns' | 'lastSeen';
   sortOrder?: 'asc' | 'desc';
   search?: string; // Search by name, UID, or hotkey
 }

@@ -6,6 +6,7 @@ import {
   LuPackageCheck,
   LuBoxes,
   LuGlobe,
+  LuTrophy,
 } from "react-icons/lu";
 import { PiFlaskDuotone } from "react-icons/pi";
 import { FaHome } from "react-icons/fa";
@@ -52,5 +53,10 @@ export const menuItems = [
     name: "Test Agent",
     href: routes.testAgent,
     icon: <PiFlaskDuotone />
+  },
+  {
+    name: "Miner Race",
+    href: routes.minerRace,
+    icon: <LuTrophy />
   }
 ];

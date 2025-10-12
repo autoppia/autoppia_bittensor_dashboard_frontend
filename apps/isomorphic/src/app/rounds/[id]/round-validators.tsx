@@ -72,7 +72,7 @@ export default function RoundValidators({
         <div className="mt-6 mb-4">
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/20 rounded-full border border-blue-700/50">
               <Skeleton className="w-2 h-2 rounded-full" />
               <Skeleton className="h-3 w-24" />
             </div>
@@ -87,8 +87,8 @@ export default function RoundValidators({
   if (error) {
     return (
       <div className={cn(className)}>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800 text-sm">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+          <p className="text-red-400 text-sm">
             ⚠️ Failed to load validators: {error}
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function RoundValidators({
       <div className="mt-8 mb-6">
         <div className="flex items-center gap-6">
           <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
-          <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full border border-blue-200/50">
+          <div className="flex items-center gap-3 px-6 py-3 bg-blue-900/20 rounded-full border border-blue-700/50">
             <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
             <Text className="text-lg text-blue-600 font-bold">
               {selectedValidator?.name || "Selected Validator"}

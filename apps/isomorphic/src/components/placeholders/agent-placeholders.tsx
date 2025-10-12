@@ -14,15 +14,19 @@ export function AgentStatsPlaceholder() {
       className: "bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30",
     },
     {
-      title: "All-Time Best Rank", 
-      className: "bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30",
+      title: "Best Rank Ever", 
+      className: "bg-gradient-to-br from-gray-400/20 via-gray-300/15 to-gray-500/25 border border-gray-400/30",
     },
     {
-      title: "All-Time Best Score",
-      className: "bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30",
+      title: "Current Score",
+      className: "bg-gradient-to-br from-green-500/20 via-green-400/15 to-green-600/25 border border-green-500/30",
     },
     {
       title: "Rounds Participated",
+      className: "bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30",
+    },
+    {
+      title: "Alpha Won in Prizes",
       className: "bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30",
     },
   ];
