@@ -205,7 +205,7 @@ export default function LandingPage() {
 
             <div className="relative p-8 sm:p-10 md:p-12 flex flex-col items-center">
               <Text className="text-base sm:text-lg md:text-xl text-cyan-100 mb-6">
-                Infinity Web Arena (IWA) is a{" "}
+                Infinite Web Arena (IWA) is a{" "}
                 <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30 animate-pulse-slow">
                   synthetic benchmark
                 </span>{" "}
