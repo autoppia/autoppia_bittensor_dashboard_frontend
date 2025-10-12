@@ -43,7 +43,7 @@ export default function Overview() {
               as="h2"
               className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold"
             >
-              Web Agents - Subnet 36
+              Subnet 36 - Web Agents
             </Title>
             <Link 
               href="https://taostats.io/subnets/36" 

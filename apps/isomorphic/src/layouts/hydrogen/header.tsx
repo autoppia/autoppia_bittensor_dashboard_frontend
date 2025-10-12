@@ -45,12 +45,17 @@ export default function Header() {
                   <Link href={item?.href} className="hidden xl:block mx-1 my-2">
                     <div
                       className={cn(
-                        "px-4 py-2 rounded-lg transition-all duration-300 ease-out font-medium",
+                        "px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-2.5 text-sm",
                         isActive
                           ? "bg-white text-black"
                           : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
                       )}
                     >
+                      {item.icon && (
+                        <span className="text-base">
+                          {item.icon}
+                        </span>
+                      )}
                       {item.name}
                     </div>
                   </Link>

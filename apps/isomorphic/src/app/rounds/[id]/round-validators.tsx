@@ -10,7 +10,13 @@ import { useRoundValidators } from "@/services/hooks/useRounds";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill, PiInfoDuotone } from "react-icons/pi";
 
-export default function RoundValidators({ className }: { className?: string }) {
+export default function RoundValidators({ 
+  className, 
+  onValidatorSelect 
+}: { 
+  className?: string;
+  onValidatorSelect?: (validator: any) => void;
+}) {
   const { id } = useParams();
   const roundId = parseInt(id as string);
   
@@ -27,12 +33,20 @@ export default function RoundValidators({ className }: { className?: string }) {
     scrollToTheLeft,
   } = useScrollableSlider();
 
-  // Set first validator as selected when data loads
+  // Set first validator as selected when data loads and notify parent
   React.useEffect(() => {
-    if (validatorsData && validatorsData.length > 0 && !selectedValidatorId) {
-      setSelectedValidatorId(validatorsData[0].id);
+    if (validatorsData && validatorsData.length > 0) {
+      if (!selectedValidatorId) {
+        // Auto-select first validator
+        setSelectedValidatorId(validatorsData[0].id);
+      }
+      // Always notify parent with current selection
+      const currentValidator = validatorsData.find(v => v.id === selectedValidatorId) || validatorsData[0];
+      if (onValidatorSelect) {
+        onValidatorSelect(currentValidator);
+      }
     }
-  }, [validatorsData, selectedValidatorId]);
+  }, [validatorsData, selectedValidatorId, onValidatorSelect]);
 
   const selectedValidator = validatorsData?.find(v => v.id === selectedValidatorId);
 
@@ -116,7 +130,7 @@ export default function RoundValidators({ className }: { className?: string }) {
                     className={cn(
                       "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
-                        ? "bg-gradient-to-br from-blue-500/15 via-blue-500/15 to-blue-600/15 border-blue-500/40 hover:border-blue-400/60 hover:shadow-xl hover:shadow-blue-500/25"
+                        ? "bg-white border-gray-300 hover:border-gray-400 hover:shadow-xl hover:shadow-gray-500/25"
                         : "border-muted hover:border-blue-500 bg-gray-50 hover:bg-gray-100"
                     )}
                   >
@@ -135,14 +149,14 @@ export default function RoundValidators({ className }: { className?: string }) {
                           sizes="(max-width: 768px) 100vw"
                           className={cn(
                             "h-full w-full rounded-full object-contain transition-all duration-300",
-                            isActive && "ring-2 ring-blue-400/50 ring-offset-2 shadow-lg shadow-blue-500/50"
+                            isActive && "ring-2 ring-gray-400/50 ring-offset-2 shadow-lg shadow-gray-500/50"
                           )}
                         />
                       </div>
                       <span
                         className={cn(
                           "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                          isActive ? "text-gray-900" : "text-gray-700"
+                          isActive ? "text-black" : "text-gray-700"
                         )}
                       >
                         {validator.name}
@@ -150,7 +164,7 @@ export default function RoundValidators({ className }: { className?: string }) {
                       <span
                         className={cn(
                           "mt-1.5 text-xs font-medium tracking-wide font-mono transition-colors duration-300 truncate max-w-full",
-                          isActive ? "text-blue-600" : "text-gray-500"
+                          isActive ? "text-black" : "text-gray-500"
                         )}
                       >
                         {validator.hotkey.slice(0, 6)}...
@@ -176,16 +190,16 @@ export default function RoundValidators({ className }: { className?: string }) {
       </div>
 
       {/* Dynamic Content Separator */}
-      <div className="mt-6 mb-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <Text className="text-xs text-blue-600 font-medium">
+      <div className="mt-8 mb-6">
+        <div className="flex items-center gap-6">
+          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+          <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full border border-blue-200/50">
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            <Text className="text-lg text-blue-600 font-bold">
               {selectedValidator?.name || "Selected Validator"}
             </Text>
           </div>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
+          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
         </div>
       </div>
     </div>

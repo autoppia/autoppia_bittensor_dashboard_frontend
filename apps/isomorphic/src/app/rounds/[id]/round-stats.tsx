@@ -11,6 +11,7 @@ import {
 } from "react-icons/pi";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundStatistics, useTopMiners } from "@/services/hooks/useRounds";
+import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 
 export default function RoundStats() {
   const { id } = useParams();
@@ -23,24 +24,12 @@ export default function RoundStats() {
   const loading = statsLoading || minersLoading;
   const error = statsError || minersError;
   
-  // Show loading state
-  if (loading) {
+  // Show loading state or when any required data is not available
+  if (loading || !statistics || !topMiners) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="bg-gradient-to-br from-gray-500/10 via-gray-500/10 to-gray-500/10 border-2 border-gray-500/30 rounded-xl p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Skeleton className="h-8 w-8 rounded-lg" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-            <div className="text-center mb-2">
-              <Skeleton className="h-8 w-20 mx-auto mb-2" />
-              <Skeleton className="h-3 w-32 mx-auto" />
-            </div>
-            <div className="bg-gray-500/20 rounded-lg p-2">
-              <Skeleton className="h-4 w-full" />
-            </div>
-          </div>
+          <StatsCardPlaceholder key={index} />
         ))}
       </div>
     );
@@ -82,10 +71,10 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                {topMiners?.[0] ? `Miner ${topMiners[0].uid}` : 'N/A'}
+                Miner {topMiners[0].uid}
               </div>
               <div className="text-xs text-amber-200">
-                {topMiners?.[0]?.hotkey ? `${topMiners[0].hotkey.slice(0, 6)}...${topMiners[0].hotkey.slice(-6)}` : 'No data'}
+                {topMiners[0].hotkey ? `${topMiners[0].hotkey.slice(0, 6)}...${topMiners[0].hotkey.slice(-6)}` : 'No hotkey'}
               </div>
             </div>
           </div>
@@ -94,7 +83,7 @@ export default function RoundStats() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-200">Top Score</span>
               <span className="text-sm font-bold text-white">
-                {topMiners?.[0]?.score ? `${(topMiners[0].score * 100).toFixed(1)}%` : 'N/A'}
+                {topMiners[0].score ? `${(topMiners[0].score * 100).toFixed(1)}%` : '0.0%'}
               </span>
             </div>
           </div>
@@ -122,7 +111,7 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-                {statistics?.topScore ? `${(statistics.topScore * 100).toFixed(1)}%` : 'N/A'}
+                {statistics.topScore ? `${(statistics.topScore * 100).toFixed(1)}%` : '0.0%'}
               </div>
               <div className="text-xs text-emerald-200">Top performance</div>
             </div>
@@ -132,7 +121,7 @@ export default function RoundStats() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-emerald-200">Average Score</span>
               <span className="text-sm font-bold text-white">
-                {statistics?.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : 'N/A'}
+                {statistics.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : '0.0%'}
               </span>
             </div>
           </div>
@@ -160,7 +149,7 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
-                {statistics?.totalMiners || 'N/A'}
+                {statistics.totalMiners || 0}
               </div>
               <div className="text-xs text-violet-200">Total participants</div>
             </div>
@@ -171,7 +160,7 @@ export default function RoundStats() {
               <span className="text-xs text-violet-200">Active Miners</span>
               <div className="flex items-center space-x-1">
                 <span className="text-sm font-bold text-green-400">
-                  {statistics?.activeMiners || 'N/A'}
+                  {statistics.activeMiners || 0}
                 </span>
                 <span className="text-xs text-violet-200">active</span>
               </div>
@@ -201,10 +190,10 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                {statistics?.successRate ? (statistics.successRate >= 0.8 ? 'Yes' : 'Partial') : 'N/A'}
+                {statistics.successRate ? (statistics.successRate >= 0.8 ? 'Yes' : 'Partial') : 'No'}
               </div>
               <div className="text-xs text-green-200 mt-1">
-                {statistics?.successRate ? `${(statistics.successRate * 100).toFixed(1)}% success rate` : 'No data'}
+                {statistics.successRate ? `${(statistics.successRate * 100).toFixed(1)}% success rate` : 'No data'}
               </div>
             </div>
           </div>
@@ -213,7 +202,7 @@ export default function RoundStats() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-green-200">Success Rate</span>
               <span className="text-sm font-bold text-white">
-                {statistics?.successRate ? `${(statistics.successRate * 100).toFixed(1)}%` : 'N/A'}
+                {statistics.successRate ? `${(statistics.successRate * 100).toFixed(1)}%` : '0.0%'}
               </span>
             </div>
           </div>

@@ -13,7 +13,7 @@ import { Skeleton } from "@core/ui/skeleton";
 export default function RoundRecents() {
   const { id } = useParams();
   
-  // Get rounds data from API
+  // Get rounds data from API - ordered from higher to lower (descending)
   const { data: roundsData, loading, error } = useRounds({ limit: 10, sortBy: 'id', sortOrder: 'desc' });
   
   const {
@@ -75,9 +75,7 @@ export default function RoundRecents() {
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
           {roundsData?.data?.rounds
-            ?.slice()
-            .reverse()
-            .map((round, index: number) => {
+            ?.map((round, index: number) => {
               const isActive = round.id === parseInt(id as string);
               const isCurrent = round.current;
               const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
@@ -111,7 +109,7 @@ export default function RoundRecents() {
                       <span
                         className={cn(
                           "text-[20px] font-bold uppercase tracking-wide",
-                          isCurrent ? "text-yellow-500" : isActive ? "text-white" : "text-gray-700"
+                          isCurrent ? "text-yellow-500" : isActive ? "text-blue-400" : "text-gray-700"
                         )}
                       >
                         Round {round.id}
@@ -144,8 +142,8 @@ export default function RoundRecents() {
       </Button>
 
       {/* Rounds Slider Separator */}
-      <div className="mt-8 mb-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-300/50 to-transparent"></div>
+      <div className="mt-10 mb-8">
+        <div className="h-[3px] bg-gradient-to-r from-transparent via-gray-400/70 to-transparent shadow-sm"></div>
       </div>
     </div>
   );

@@ -12,7 +12,8 @@ import {
   LuDollarSign,
   LuTrophy,
 } from "react-icons/lu";
-import { sortedMinersData } from "@/data/miners-data";
+import { useAgent, useAgentPerformance } from "@/services/hooks/useAgents";
+import { AgentStatsPlaceholder } from "@/components/placeholders/agent-placeholders";
 
 export default function AgentStats() {
   const {
@@ -24,15 +25,27 @@ export default function AgentStats() {
   } = useScrollableSlider();
 
   const { id } = useParams();
-  const miner = sortedMinersData.find(
-    (miner) => miner.uid === parseInt(id as string)
-  );
+  const { data: agent, loading: agentLoading } = useAgent(id as string);
+  const { data: performance, loading: performanceLoading } = useAgentPerformance(id as string, {
+    timeRange: '7d'
+  });
 
-  const minerStats = [
+  const loading = agentLoading || performanceLoading;
+
+  // Show loading placeholder
+  if (loading) {
+    return <AgentStatsPlaceholder />;
+  }
+
+  if (!agent) {
+    return null;
+  }
+
+  const agentStats = [
     {
-      title: "Current Rank",
-      metric: `#${miner?.ranking}`,
-      description: "Last network position",
+      title: "Current Score",
+      metric: (agent.averageScore * 100).toFixed(1) + '%',
+      description: "Average performance score",
       icon: LuChartNoAxesCombined,
       className:
         "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -41,9 +54,9 @@ export default function AgentStats() {
       descriptionClassName: "text-yellow-100/80",
     },
     {
-      title: "All-Time Best Rank",
-      metric: `#${miner?.ranking || 1}`,
-      description: "Best ranking achieved",
+      title: "Best Score",
+      metric: (agent.bestScore * 100).toFixed(1) + '%',
+      description: "Peak performance achieved",
       icon: LuTrophy,
       className:
         "relative overflow-hidden bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -52,9 +65,9 @@ export default function AgentStats() {
       descriptionClassName: "text-blue-100/80",
     },
     {
-      title: "All-Time Best Score",
-      metric: miner?.score.toFixed(2),
-      description: "Peak performance ever",
+      title: "Success Rate",
+      metric: agent.successRate.toFixed(1) + '%',
+      description: "Successful run percentage",
       icon: LuStar,
       className:
         "relative overflow-hidden bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-emerald-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-emerald-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -63,9 +76,9 @@ export default function AgentStats() {
       descriptionClassName: "text-emerald-100/80",
     },
     {
-      title: "Rounds Participated",
-      metric: 20,
-      description: "Total evaluations",
+      title: "Total Runs",
+      metric: agent.totalRuns.toLocaleString(),
+      description: "All-time executions",
       icon: LuCircleCheckBig,
       className: "relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-purple-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-purple-500 drop-shadow-sm",
@@ -90,56 +103,44 @@ export default function AgentStats() {
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
-          {minerStats.map((stat) => {
+          {agentStats.map((stat) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.title}
                 className={cn(
-                  "relative p-6 rounded-2xl min-w-[280px] cursor-pointer",
+                  "p-4 rounded-lg min-w-[200px] cursor-pointer shadow-sm",
                   stat.className
                 )}
               >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl"></div>
+                <div className="flex items-center justify-between mb-3">
+                  <div
+                    className={cn(
+                      "flex items-center justify-center w-10 h-10 rounded-lg",
+                      stat.iconClassName
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
                 </div>
                 
-                {/* Content */}
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={cn(
-                        "flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl",
-                        stat.iconClassName
-                      )}
-                    >
-                      <Icon className="w-7 h-7 group-hover:rotate-12 transition-transform duration-500" />
-                    </div>
-                    <div className="text-right">
-                      <div className="w-2 h-2 rounded-full bg-current opacity-60 mb-1"></div>
-                      <div className="w-1 h-1 rounded-full bg-current opacity-40"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-1">
-                      {stat.title}
-                    </Text>
-                    <Text
-                      className={cn(
-                        "font-black text-4xl leading-none",
-                        stat.metricClassName
-                      )}
-                    >
-                      {stat.metric}
-                    </Text>
-                  </div>
-                  
-                  <Text className={cn("text-sm font-medium leading-relaxed", stat.descriptionClassName)}>
-                    {stat.description}
+                <div className="mb-2">
+                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                    {stat.title}
+                  </Text>
+                  <Text
+                    className={cn(
+                      "font-bold text-2xl leading-none",
+                      stat.metricClassName
+                    )}
+                  >
+                    {stat.metric}
                   </Text>
                 </div>
+                
+                <Text className={cn("text-xs font-medium", stat.descriptionClassName)}>
+                  {stat.description}
+                </Text>
               </div>
             );
           })}

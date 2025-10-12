@@ -24,12 +24,12 @@ export default function RoundTopMiners({ className }: { className?: string }) {
       <WidgetCard
         title="Top 10 Miners"
         className={cn(
-          "h-[460px] px-2 lg:px-4 w-full rounded-xl",
+          "h-[520px] px-2 lg:px-4 w-full rounded-xl",
           className
         )}
         headerClassName="px-3 pb-2"
       >
-        <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
+        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
             {Array.from({ length: 10 }, (_, index) => (
               <div key={index} className="flex items-center w-full px-4 py-1.5">
@@ -53,12 +53,12 @@ export default function RoundTopMiners({ className }: { className?: string }) {
       <WidgetCard
         title="Top 10 Miners"
         className={cn(
-          "h-[460px] px-2 lg:px-4 w-full rounded-xl",
+          "h-[520px] px-2 lg:px-4 w-full rounded-xl",
           className
         )}
         headerClassName="px-3 pb-2"
       >
-        <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3 flex items-center justify-center">
+        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-red-600">
             <p className="text-lg font-semibold">Failed to load top miners</p>
             <p className="text-sm mt-2">Please try again later</p>
@@ -74,12 +74,12 @@ export default function RoundTopMiners({ className }: { className?: string }) {
     <WidgetCard
       title="Top 10 Miners"
       className={cn(
-        "h-[460px] px-2 lg:px-4 w-full rounded-xl",
+        "h-[520px] px-2 lg:px-4 w-full rounded-xl",
         className
       )}
       headerClassName="px-3 pb-2"
     >
-      <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
+      <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner, index) => (
             <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`} title="Inspect Agent Run">
