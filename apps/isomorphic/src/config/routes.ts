@@ -1,5 +1,5 @@
 export const routes = {
-  home: "/land",
+  home: "/home",
   overview: "/overview",
   rounds: "/rounds",
   agents: "/agents",

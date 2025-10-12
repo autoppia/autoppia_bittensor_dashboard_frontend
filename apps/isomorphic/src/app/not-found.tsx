@@ -18,10 +18,10 @@ export default function NotFound() {
             Go Home
           </Link>
           <Link 
-            href="/land"
+            href="/home"
             className="px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded"
           >
-            Back to Landing
+            Back to Home
           </Link>
         </div>
       </div>

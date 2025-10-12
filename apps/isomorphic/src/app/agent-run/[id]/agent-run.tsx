@@ -60,6 +60,8 @@ export default function AgentRun() {
 
   // Show error state if there's a critical error
   if (error && !data.personas && !data.stats && !data.summary) {
+    const isNotFoundError = error.includes('not found') || error.includes('AGENT_RUN_NOT_FOUND');
+    
     return (
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
@@ -77,15 +79,30 @@ export default function AgentRun() {
         </PageHeader>
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
           <div className="text-red-400 text-lg font-semibold mb-2">
-            Failed to Load Agent Run Data
+            {isNotFoundError ? 'Agent Run Not Found' : 'Failed to Load Agent Run Data'}
           </div>
-          <div className="text-red-300 text-sm mb-4">{error}</div>
-          <button
-            onClick={refetch}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
+          <div className="text-red-300 text-sm mb-4">
+            {isNotFoundError 
+              ? `The agent run with ID '${id}' does not exist. Please check the URL or try a different run ID.`
+              : error
+            }
+          </div>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={refetch}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+            {isNotFoundError && (
+              <Link
+                href="/agent-run"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Browse Available Runs
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     );
