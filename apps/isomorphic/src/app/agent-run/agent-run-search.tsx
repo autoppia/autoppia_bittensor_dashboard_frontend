@@ -2,8 +2,13 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { agentRunData } from "@/data/agent-run-data";
-import { validatorsData, validatorsDataMap } from "@/data/validators-data";
+import { useAgentRunsList } from "@/services/hooks/useAgentRun";
+import {
+  AgentRunData,
+  AgentRunListItem,
+  AgentRunsListQueryParams,
+} from "@/services/api/types/agent-runs";
+import { agentRunsService } from "@/services/api/agent-runs.service";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -14,6 +19,41 @@ import {
   PiInfoDuotone,
 } from "react-icons/pi";
 
+const DEFAULT_LIMIT = 200;
+
+function formatValidatorLabel(validatorId: string) {
+  if (!validatorId) {
+    return "Unknown Validator";
+  }
+
+  const parts = validatorId.split("-");
+  if (parts.length > 1) {
+    return `Validator ${parts[parts.length - 1]}`;
+  }
+
+  return validatorId;
+}
+
+function formatAgentLabel(agentId: string) {
+  if (!agentId) {
+    return "Unknown Agent";
+  }
+
+  const parts = agentId.split("-");
+  if (parts.length > 1) {
+    return `Agent ${parts[parts.length - 1]}`;
+  }
+
+  return agentId;
+}
+
+function formatScore(score: number) {
+  if (Number.isNaN(score)) {
+    return "N/A";
+  }
+  return `${Math.round(score)}%`;
+}
+
 export default function AgentRunSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,10 +61,25 @@ export default function AgentRunSearch() {
   const [selectedValidator, setSelectedValidator] = useState<string>("");
   const [agentInput, setAgentInput] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
+  const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] =
+    useState(false);
+  const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualLoading, setManualLoading] = useState(false);
 
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [queryParams, setQueryParams] = useState<AgentRunsListQueryParams>({
+    page: 1,
+    limit: DEFAULT_LIMIT,
+  });
+
+  const {
+    runs,
+    isLoading,
+    error,
+    refetch,
+  } = useAgentRunsList(queryParams);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -46,33 +101,113 @@ export default function AgentRunSearch() {
     };
   }, [isValidatorDropdownOpen]);
 
-  // Filter agent runs based on search criteria
-  const filteredRuns = useMemo(() => {
-    return agentRunData.filter((run) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        run.runUid.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRound =
-        roundInput === "" || run.round.toString().includes(roundInput);
-      const matchesValidator =
-        selectedValidator === "" || run.validatorId === selectedValidator;
-      const matchesAgent =
-        agentInput === "" ||
-        run.agentUid.toString().includes(agentInput) ||
-        run.runUid.toLowerCase().includes(agentInput.toLowerCase());
+  const validatorOptions = useMemo(() => {
+    const values = new Set<string>();
+    const sourceRuns = manualResults ?? runs;
 
-      return matchesSearch && matchesRound && matchesValidator && matchesAgent;
+    sourceRuns.forEach((run) => {
+      if (run.validatorId) {
+        values.add(run.validatorId);
+      }
     });
-  }, [searchTerm, roundInput, selectedValidator, agentInput]);
 
-  const handleSearch = () => {
-    setHasSearched(true);
-    const results = filteredRuns.slice(0, 12); // Get recent 12 items
-    setSearchResults(results);
-
-    if (results.length === 1) {
-      router.push(`/agent-run/${results[0].runUid}`);
+    if (selectedValidator && !values.has(selectedValidator)) {
+      values.add(selectedValidator);
     }
+
+    return Array.from(values).sort();
+  }, [runs, selectedValidator, manualResults]);
+
+  const displayedRuns = useMemo(() => {
+    const activeRuns = manualResults ?? runs;
+    return [...activeRuns]
+      .sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      )
+      .slice(0, 12);
+  }, [manualResults, runs]);
+
+  const effectiveLoading =
+    manualResults !== null ? manualLoading : manualLoading || isLoading;
+  const effectiveError = manualError || error;
+
+  const mapRunDetailToListItem = (run: AgentRunData): AgentRunListItem => {
+    const totalTasks = run.totalTasks ?? run.tasks?.length ?? 0;
+    const completedTasks = run.completedTasks ?? run.successfulTasks ?? 0;
+    const successfulTasks = run.successfulTasks ?? completedTasks;
+    const baseScore =
+      typeof run.overallScore === "number"
+        ? run.overallScore
+        : typeof run.score === "number"
+        ? run.score <= 1
+          ? run.score * 100
+          : run.score
+        : 0;
+    const successRate =
+      totalTasks > 0
+        ? Math.round((successfulTasks / totalTasks) * 100)
+        : 0;
+
+    return {
+      runId: run.runId,
+      agentId: run.agentId,
+      roundId: run.roundId,
+      validatorId: run.validatorId,
+      validatorName: run.validatorName,
+      validatorImage: run.validatorImage,
+      status: run.status,
+      startTime: run.startTime,
+      endTime: run.endTime ?? null,
+      totalTasks,
+      completedTasks,
+      averageScore: baseScore,
+      successRate,
+      overallScore: Math.round(baseScore),
+      ranking: run.ranking ?? 0,
+      duration: run.duration ?? 0,
+    };
+  };
+
+  const handleSearch = async () => {
+    setHasSearched(true);
+
+    const hasRunId = searchTerm.trim().length > 0;
+    const roundIdParam = roundInput.trim()
+      ? Number(roundInput.trim())
+      : undefined;
+    const validatorIdParam = selectedValidator || undefined;
+    const agentIdParam = agentInput.trim() || undefined;
+
+    if (hasRunId) {
+      setManualLoading(true);
+      setManualError(null);
+      try {
+        const run = await agentRunsService.getAgentRun(searchTerm.trim());
+        setManualResults([mapRunDetailToListItem(run)]);
+      } catch (err: any) {
+        setManualResults([]);
+        setManualError(
+          err?.message ||
+            `Agent run '${searchTerm.trim()}' not found. Please verify the ID.`
+        );
+      } finally {
+        setManualLoading(false);
+      }
+      return;
+    }
+
+    setManualResults(null);
+    setManualError(null);
+    setManualLoading(false);
+
+    setQueryParams({
+      page: 1,
+      limit: DEFAULT_LIMIT,
+      roundId: Number.isFinite(roundIdParam) ? roundIdParam : undefined,
+      validatorId: validatorIdParam,
+      agentId: agentIdParam,
+    });
   };
 
   const clearFilters = () => {
@@ -81,18 +216,35 @@ export default function AgentRunSearch() {
     setSelectedValidator("");
     setAgentInput("");
     setHasSearched(false);
-    setSearchResults([]);
     setIsValidatorDropdownOpen(false);
+    setManualResults(null);
+    setManualError(null);
+    setManualLoading(false);
+    setQueryParams({
+      page: 1,
+      limit: DEFAULT_LIMIT,
+    });
+    refetch();
   };
 
-  // Check if any filters are active
-  const hasActiveFilters = searchTerm !== "" || roundInput !== "" || selectedValidator !== "" || agentInput !== "";
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    roundInput !== "" ||
+    selectedValidator !== "" ||
+    agentInput !== "";
+
+  const handleRetry = () => {
+    if (manualResults !== null || searchTerm.trim()) {
+      void handleSearch();
+    } else {
+      refetch();
+    }
+  };
 
   return (
     <div className="w-full max-w-[1024px] mx-auto h-full py-8">
       {/* Main Search Card */}
       <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
-        {/* Glass-morphism Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
@@ -119,8 +271,7 @@ export default function AgentRunSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter Run UID (e.g., m4v1-6w9x)"
-                maxLength={9}
+                placeholder="Enter Run UID (e.g., round_020_42_005)"
                 className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -172,11 +323,12 @@ export default function AgentRunSearch() {
                     <span>
                       {selectedValidator === ""
                         ? "All Validators"
-                        : validatorsData.find((v) => v.id === selectedValidator)
-                            ?.name || selectedValidator}
+                        : formatValidatorLabel(selectedValidator)}
                     </span>
                     <PiCaretDownDuotone
-                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isValidatorDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${
+                        isValidatorDropdownOpen ? "rotate-180" : ""
+                      }`}
                     />
                   </button>
 
@@ -192,17 +344,17 @@ export default function AgentRunSearch() {
                       >
                         All Validators
                       </button>
-                      {validatorsData.map((validator) => (
+                      {validatorOptions.map((validatorId) => (
                         <button
-                          key={validator.id}
+                          key={validatorId}
                           type="button"
                           onClick={() => {
-                            setSelectedValidator(validator.id);
+                            setSelectedValidator(validatorId);
                             setIsValidatorDropdownOpen(false);
                           }}
                           className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
                         >
-                          {validator.name}
+                          {formatValidatorLabel(validatorId)}
                         </button>
                       ))}
                     </div>
@@ -210,7 +362,7 @@ export default function AgentRunSearch() {
                 </div>
               </div>
 
-              {/* Agent Filter - Text Input */}
+              {/* Agent Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-purple-300">
                   AGENT
@@ -220,8 +372,8 @@ export default function AgentRunSearch() {
                     type="text"
                     value={agentInput}
                     onChange={(e) => setAgentInput(e.target.value)}
-                    placeholder="Enter Agent UID or Hotkey"
-                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm focus:border-purple-500 transition-all duration-300 outline-none placeholder-gray-400 backdrop-blur-md focus:ring-0"
+                    placeholder="Enter Agent UID or Run UID"
+                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm placeholder-gray-400 focus:border-purple-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-purple-400" />
@@ -235,7 +387,7 @@ export default function AgentRunSearch() {
           <div className="flex gap-4 justify-center">
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
+              className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center gap-2 backdrop-blur-md"
             >
               <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
               SEARCH
@@ -256,8 +408,54 @@ export default function AgentRunSearch() {
         </div>
       </div>
 
+      {/* Error State */}
+      {effectiveError && (
+        <div className="mt-6 relative z-0">
+          <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
+            <div className="relative text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
+                <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
+                FAILED TO LOAD AGENT RUNS
+              </h3>
+              <p className="text-red-200 text-sm mb-4">
+                {effectiveError}
+              </p>
+              <button
+                onClick={handleRetry}
+                className="px-4 py-2 bg-red-500/70 border border-red-500/40 text-white rounded-lg hover:bg-red-500 transition-colors duration-200"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {effectiveLoading && (
+        <div className="mt-6 text-center relative z-0">
+          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
+            <div className="relative">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-2">
+                LOADING AGENT RUNS
+              </h3>
+              <p className="text-blue-200 text-sm">
+                Fetching runs from the validator network...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* No Filters Message */}
-      {!hasSearched && (
+      {!hasSearched && !error && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
@@ -277,11 +475,11 @@ export default function AgentRunSearch() {
       )}
 
       {/* Search Results */}
-      {hasSearched && searchResults.length > 0 && (
+      {hasSearched && displayedRuns.length > 0 && (
         <div className="mt-6 relative z-0">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              RECENT {searchResults.length} RESULTS
+              {displayedRuns.length} RESULTS
             </h3>
             <p className="text-purple-200 text-sm">
               Showing recent agent runs matching your criteria
@@ -289,34 +487,50 @@ export default function AgentRunSearch() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {searchResults.map((run) => {
-              const validator = validatorsDataMap[run.validatorId];
-              return (
-                <div
-                  key={run.runUid}
-                  onClick={() => router.push(`/agent-run/${run.runUid}`)}
-                  className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-105"
-                >
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg mb-3 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
-                      <PiPlayDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
-                    </div>
-                    <div className="text-sm font-bold text-white mb-2">
-                      RUN ID: {run.runUid}
-                    </div>
-                    <div className="text-xs text-purple-200">
-                      Round {run.round} • {validator?.name || run.validatorId} • Agent {run.agentUid}
-                    </div>
+            {displayedRuns.map((run) => (
+              <div
+                key={run.runId}
+                onClick={() => router.push(`/agent-run/${run.runId}`)}
+                className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-105"
+              >
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg mb-3 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
+                    <PiPlayDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <div className="text-sm font-bold text-white mb-2">
+                    RUN ID: {run.runId}
+                  </div>
+                  <div className="text-xs text-purple-200 mb-3">
+                    Round {run.roundId} • {formatValidatorLabel(run.validatorId)} •{" "}
+                    {formatAgentLabel(run.agentId)}
                   </div>
                 </div>
-              );
-            })}
+                <div className="flex justify-center gap-4 text-xs text-purple-200">
+                  <span>
+                    Score:{" "}
+                    <span className="text-purple-100">
+                      {formatScore(run.overallScore)}
+                    </span>
+                  </span>
+                  <span>
+                    Tasks:{" "}
+                    <span className="text-purple-100">
+                      {run.totalTasks}
+                    </span>
+                  </span>
+                  <span>
+                    Rank:{" "}
+                    <span className="text-purple-100">{run.ranking}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* No Results Message */}
-      {hasSearched && searchResults.length === 0 && (
+      {hasSearched && displayedRuns.length === 0 && !effectiveError && !effectiveLoading && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>

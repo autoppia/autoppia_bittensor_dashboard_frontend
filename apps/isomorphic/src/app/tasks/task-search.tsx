@@ -15,6 +15,14 @@ import {
   PiCodeDuotone,
 } from "react-icons/pi";
 
+function formatWebsiteLabel(website: string) {
+  return website
+    ? website
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter: string) => letter.toUpperCase())
+    : website;
+}
+
 export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +39,7 @@ export default function TaskSearch() {
   const { tasks, isLoading, error, refetch } = useTasksList({
     website: selectedWebsite || undefined,
     useCase: selectedUseCase || undefined,
+    agentRunId: agentRunInput || undefined,
     limit: 50, // Get more tasks for filtering
   });
 
@@ -42,7 +51,13 @@ export default function TaskSearch() {
 
   // Get unique websites from API data
   const uniqueWebsites = useMemo(() => {
-    const websites = Array.from(new Set(tasks.map(task => task.website)));
+    const websites = Array.from(
+      new Set(
+        tasks
+          .map((task) => task.website)
+          .filter((website): website is string => Boolean(website))
+      )
+    );
     return websites.sort();
   }, [tasks]);
 
@@ -197,8 +212,7 @@ export default function TaskSearch() {
                     <span>
                       {selectedWebsite === ""
                         ? "All Websites"
-                        : websitesData.find((w) => w.name === selectedWebsite)
-                            ?.name || selectedWebsite}
+                        : formatWebsiteLabel(selectedWebsite)}
                     </span>
                     <PiCaretDownDuotone
                       className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`}
@@ -217,17 +231,17 @@ export default function TaskSearch() {
                       >
                         All Websites
                       </button>
-                      {websitesData.filter(w => !w.isComingSoon).map((website) => (
+                      {uniqueWebsites.map((website) => (
                         <button
-                          key={website.name}
+                          key={website}
                           type="button"
                           onClick={() => {
-                            setSelectedWebsite(website.name);
+                            setSelectedWebsite(website);
                             setIsWebsiteDropdownOpen(false);
                           }}
                           className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
                         >
-                          {website.name}
+                          {formatWebsiteLabel(website)}
                         </button>
                       ))}
                     </div>
