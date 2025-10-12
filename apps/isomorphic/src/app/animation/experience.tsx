@@ -733,11 +733,11 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
                     className="z-20 rounded-full border border-white/80 shadow"
                   />
                   <div className="leading-tight text-black">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-gray-500">
-                      Rank #{miner.rank.toString().padStart(2, "0")}
+                    <p className="inline-flex items-center gap-1 rounded-full bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+                      Rank #{miner.rank}
                     </p>
                     <p className="text-sm font-semibold text-black">{miner.name}</p>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-black">
                       Score: {miner.score.toFixed(1)}%
                     </p>
                   </div>

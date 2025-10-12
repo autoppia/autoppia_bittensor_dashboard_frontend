@@ -454,26 +454,6 @@ export default function AgentRunSearch() {
         </div>
       )}
 
-      {/* No Filters Message */}
-      {!hasSearched && !error && (
-        <div className="mt-6 text-center relative z-0">
-          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
-            <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
-                <PiInfoDuotone className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-2">
-                READY TO SEARCH
-              </h3>
-              <p className="text-blue-200 text-sm">
-                Enter a Run UID or use filters to find agent runs
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Search Results */}
       {hasSearched && displayedRuns.length > 0 && (
         <div className="mt-6 relative z-0">
