@@ -10,6 +10,7 @@ import {
   PiTimer,
   PiFileText,
   PiPlay,
+  PiHash,
 } from "react-icons/pi";
 import { useTaskDetails } from "@/services/hooks/useTask";
 import LoadingScreen from "@/app/shared/loading-screen";
@@ -18,6 +19,12 @@ import Placeholder, { TextPlaceholder } from "@/app/shared/placeholder";
 export default function TaskDetailsDynamic() {
   const { id } = useParams();
   const { details, isLoading, error } = useTaskDetails(id as string);
+
+  const formatUseCase = (value: string) =>
+    value
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
   if (isLoading) {
     return (
@@ -67,62 +74,68 @@ export default function TaskDetailsDynamic() {
   return (
     <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Task Stats Grid - 2x3 on desktop */}
-        <div className="grid grid-cols-6 gap-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiGlobe className="w-4 h-4 text-blue-400" />
-              <div className="text-xl font-bold text-blue-400">
-                {details.website}
+        <div className="grid grid-cols-7 gap-4">
+          {[
+            {
+              label: "Website",
+              value: details.website,
+              icon: <PiGlobe className="h-5 w-5" />,
+              accent: "bg-blue-100 text-blue-600",
+            },
+            {
+              label: "Use Case",
+              value: formatUseCase(details.useCase),
+              icon: <PiTarget className="h-5 w-5" />,
+              accent: "bg-emerald-100 text-emerald-600",
+            },
+            {
+              label: "Score",
+              value: `${Math.round(details.score * 100)}%`,
+              icon: <PiChartBar className="h-5 w-5" />,
+              accent: "bg-purple-100 text-purple-600",
+            },
+            {
+              label: "Duration",
+              value: `${details.duration}s`,
+              icon: <PiTimer className="h-5 w-5" />,
+              accent: "bg-orange-100 text-orange-600",
+            },
+            {
+              label: "Actions",
+              value: details.performance.totalActions,
+              icon: <PiFileText className="h-5 w-5" />,
+              accent: "bg-indigo-100 text-indigo-600",
+            },
+            {
+              label: "Run ID",
+              value: details.agentRunId ?? "—",
+              icon: <PiHash className="h-5 w-5" />,
+              accent: "bg-slate-200 text-slate-700",
+            },
+            {
+              label: "Status",
+              value: details.status,
+              icon: <PiPlay className="h-5 w-5" />,
+              accent: "bg-teal-100 text-teal-600",
+            },
+          ].map((metric) => (
+            <div
+              key={metric.label}
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/85 px-3 py-4 text-center shadow-sm"
+            >
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-lg font-semibold ${metric.accent}`}
+              >
+                {metric.icon}
+              </div>
+              <div className="text-base font-semibold text-gray-900">
+                {metric.value}
+              </div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                {metric.label}
               </div>
             </div>
-            <div className="text-xs text-gray-700">Website</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiTarget className="w-4 h-4 text-green-400" />
-              <div className="text-xl font-bold text-green-400">
-                {details.useCase}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Use Case</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiChartBar className="w-4 h-4 text-purple-400" />
-              <div className="text-xl font-bold text-purple-400">
-                {Math.round(details.score * 100)}%
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Score</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiTimer className="w-4 h-4 text-orange-400" />
-              <div className="text-xl font-bold text-orange-400">
-                {details.duration}s
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Duration</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiFileText className="w-4 h-4 text-indigo-400" />
-              <div className="text-xl font-bold text-indigo-400">
-                {details.performance.totalActions}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Actions</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiPlay className="w-4 h-4 text-teal-400" />
-              <div className="text-xl font-bold text-teal-400">
-                {details.status}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Status</div>
-          </div>
+          ))}
         </div>
 
         {/* Task Prompt */}

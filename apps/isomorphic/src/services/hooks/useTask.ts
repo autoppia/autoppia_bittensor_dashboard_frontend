@@ -2,7 +2,7 @@
  * Custom hooks for Task data management with partial loading
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { tasksService } from '../api/tasks.service';
 import {
   TaskData,
@@ -228,6 +228,21 @@ export function useTaskActions(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const serializedParams = useMemo(
+    () => JSON.stringify(params ?? {}),
+    [params]
+  );
+
+  const stableParams = useMemo(
+    () => JSON.parse(serializedParams) as Record<string, unknown>,
+    [serializedParams]
+  );
+
+  const desiredLimit = useMemo(() => {
+    const raw = (stableParams as Record<string, unknown>).limit;
+    return typeof raw === 'number' ? raw : undefined;
+  }, [stableParams]);
+
   const fetchActions = useCallback(async () => {
     if (!taskId) return;
 
@@ -235,7 +250,7 @@ export function useTaskActions(
       setIsLoading(true);
       setError(null);
       const result = await tasksService.getTaskActions(taskId, {
-        ...params,
+        ...stableParams,
         page,
         limit,
       });
@@ -246,7 +261,7 @@ export function useTaskActions(
     } finally {
       setIsLoading(false);
     }
-  }, [taskId, page, limit, params]);
+  }, [taskId, page, limit, stableParams]);
 
   useEffect(() => {
     fetchActions();
@@ -264,6 +279,13 @@ export function useTaskActions(
     setLimit(newLimit);
     setPage(1); // Reset to first page when changing limit
   }, []);
+
+  useEffect(() => {
+    if (desiredLimit && desiredLimit !== limit) {
+      setLimit(desiredLimit);
+      setPage(1);
+    }
+  }, [desiredLimit, limit]);
 
   return {
     actions,
@@ -400,16 +422,24 @@ export function useTaskTimeline(taskId: string) {
 }
 
 // Hook for getting tasks list
-export function useTasksList(params?: {
-  page?: number;
-  limit?: number;
-  website?: string;
-  useCase?: string;
-  status?: string;
-  agentRunId?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}) {
+export function useTasksList(
+  params?:
+    | {
+        page?: number;
+        limit?: number;
+        website?: string;
+        useCase?: string;
+        status?: string;
+        agentRunId?: string;
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
+      }
+    | null,
+  options?: {
+    enabled?: boolean;
+  }
+) {
+  const enabled = options?.enabled ?? true;
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(params?.page || 1);
@@ -417,12 +447,34 @@ export function useTasksList(params?: {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const serializedParams = useMemo(
+    () => JSON.stringify(params ?? {}),
+    [params]
+  );
+
+  const stableParams = useMemo(
+    () => JSON.parse(serializedParams) as Record<string, unknown>,
+    [serializedParams]
+  );
+
+  const desiredLimit = useMemo(() => {
+    const raw = (stableParams as Record<string, unknown>).limit;
+    return typeof raw === 'number' ? raw : undefined;
+  }, [stableParams]);
+
   const fetchTasks = useCallback(async () => {
+    if (!enabled) {
+      setTasks([]);
+      setTotal(0);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setError(null);
       const result = await tasksService.getTasks({
-        ...params,
+        ...stableParams,
         page,
         limit,
       });
@@ -433,15 +485,23 @@ export function useTasksList(params?: {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, params]);
+  }, [enabled, limit, page, stableParams]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
 
   const refetch = useCallback(() => {
+    if (!enabled) return;
     fetchTasks();
-  }, [fetchTasks]);
+  }, [enabled, fetchTasks]);
+
+  useEffect(() => {
+    if (desiredLimit && desiredLimit !== limit) {
+      setLimit(desiredLimit);
+      setPage(1);
+    }
+  }, [desiredLimit, limit]);
 
   const goToPage = useCallback((newPage: number) => {
     setPage(newPage);

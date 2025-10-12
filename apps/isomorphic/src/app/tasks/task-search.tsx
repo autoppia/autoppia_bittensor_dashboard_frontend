@@ -10,7 +10,6 @@ import {
   PiHashDuotone,
   PiRobotDuotone,
   PiCaretDownDuotone,
-  PiInfoDuotone,
   PiGlobeDuotone,
   PiCodeDuotone,
 } from "react-icons/pi";
@@ -36,12 +35,22 @@ export default function TaskSearch() {
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
 
   // Use the API hook to get tasks data
-  const { tasks, isLoading, error, refetch } = useTasksList({
-    website: selectedWebsite || undefined,
-    useCase: selectedUseCase || undefined,
-    agentRunId: agentRunInput || undefined,
-    limit: 50, // Get more tasks for filtering
-  });
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const taskFilters = useMemo(
+    () => ({
+      website: selectedWebsite || undefined,
+      useCase: selectedUseCase || undefined,
+      agentRunId: agentRunInput || undefined,
+      limit: 50, // Fetch a wider result set for client-side filtering
+    }),
+    [selectedWebsite, selectedUseCase, agentRunInput]
+  );
+
+  const { tasks, isLoading, error } = useTasksList(
+    hasSearched ? taskFilters : null,
+    { enabled: hasSearched }
+  );
 
   // Get unique use cases from API data
   const uniqueUseCases = useMemo(() => {
@@ -89,6 +98,10 @@ export default function TaskSearch() {
 
   // Filter tasks based on search criteria
   const filteredTasks = useMemo(() => {
+    if (!hasSearched) {
+      return [];
+    }
+
     return tasks.filter((task) => {
       const matchesSearch =
         searchTerm === "" ||
@@ -107,14 +120,10 @@ export default function TaskSearch() {
 
       return matchesSearch && matchesAgentRun && matchesWebsite && matchesUseCase;
     });
-  }, [tasks, searchTerm, agentRunInput, selectedWebsite, selectedUseCase]);
+  }, [tasks, searchTerm, agentRunInput, selectedWebsite, selectedUseCase, hasSearched]);
 
   const handleSearch = () => {
-    const results = filteredTasks.slice(0, 12); // Get recent 12 items
-
-    if (results.length === 1) {
-      router.push(`/tasks/${results[0].taskId}`);
-    }
+    setHasSearched(true);
   };
 
   const clearFilters = () => {
@@ -124,6 +133,7 @@ export default function TaskSearch() {
     setSelectedUseCase("");
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
+    setHasSearched(false);
   };
 
   // Check if any filters are active
@@ -330,19 +340,20 @@ export default function TaskSearch() {
       </div>
 
       {/* No Filters Message */}
-      {!hasSearched && (
+      {/* Error State */}
+      {hasSearched && error && (
         <div className="mt-6 text-center relative z-0">
-          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
+          <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10" />
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
-                <PiInfoDuotone className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
+                <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-2">
-                READY TO SEARCH
+              <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
+                FAILED TO LOAD TASKS
               </h3>
-              <p className="text-blue-200 text-sm">
-                Enter a Task ID or use filters to find tasks
+              <p className="text-red-200 text-sm">
+                {error}
               </p>
             </div>
           </div>
@@ -350,7 +361,7 @@ export default function TaskSearch() {
       )}
 
       {/* Loading State */}
-      {isLoading && (
+      {hasSearched && isLoading && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
@@ -370,7 +381,7 @@ export default function TaskSearch() {
       )}
 
       {/* Search Results */}
-      {!isLoading && filteredTasks.length > 0 && (
+      {hasSearched && !isLoading && filteredTasks.length > 0 && (
         <div className="mt-6 relative z-0">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
@@ -415,7 +426,7 @@ export default function TaskSearch() {
       )}
 
       {/* No Results Message */}
-      {!isLoading && filteredTasks.length === 0 && (
+      {hasSearched && !isLoading && filteredTasks.length === 0 && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
