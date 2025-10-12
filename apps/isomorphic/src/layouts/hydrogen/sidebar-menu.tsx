@@ -23,13 +23,24 @@ export function SidebarMenu() {
               <Link
                 href={item?.href}
                 className={cn(
-                  "group relative mx-3 my-1 flex items-center px-4 py-3 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2",
-                  "font-medium text-sm",
+                  "group relative mx-3 my-1 flex items-center px-4 py-4 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2",
+                  "font-medium text-base",
                   isActive
                     ? "text-emerald-700"
                     : "text-gray-600 hover:text-emerald-700"
                 )}
               >
+                {/* Menu icon */}
+                {item.icon && (
+                  <span className={cn(
+                    "mr-3 flex-shrink-0 transition-all duration-300",
+                    "text-lg",
+                    isActive ? "text-emerald-600" : "text-gray-500 group-hover:text-emerald-600"
+                  )}>
+                    {item.icon}
+                  </span>
+                )}
+                
                 {/* Menu text */}
                 <span className={cn(
                   "relative transition-all duration-300",
@@ -40,7 +51,7 @@ export function SidebarMenu() {
                 
                 {/* Animated left highlight with right glow */}
                 <div className={cn(
-                  "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300",
+                  "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-10 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300",
                   "shadow-[4px_0_16px_rgba(16,185,129,0.6)]",
                   isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
                 )}></div>

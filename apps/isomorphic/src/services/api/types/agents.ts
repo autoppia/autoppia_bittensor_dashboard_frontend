@@ -3,14 +3,16 @@
  * These types define the structure of data returned by the backend API
  */
 
-// ===== AGENT DATA =====
+// ===== AGENT DATA (MINERS) =====
 export interface AgentData {
-  id: string;
+  id: string; // Keep for backward compatibility, but now represents UID as string
+  uid: number; // Miner UID
   name: string;
-  type: 'autoppia' | 'openai' | 'anthropic' | 'browser-use' | 'custom';
+  hotkey: string; // Miner hotkey
   imageUrl: string;
-  description?: string;
-  version?: string;
+  githubUrl?: string; // GitHub repository URL
+  taostatsUrl: string; // TaoStats URL
+  isSota: boolean; // Whether this is a SOTA agent
   status: 'active' | 'inactive' | 'maintenance';
   totalRuns: number;
   successfulRuns: number;
@@ -224,11 +226,11 @@ export interface AgentActivityResponse {
 export interface AgentsListQueryParams {
   page?: number;
   limit?: number;
-  type?: 'autoppia' | 'openai' | 'anthropic' | 'browser-use' | 'custom';
+  isSota?: boolean; // Filter by SOTA status
   status?: 'active' | 'inactive' | 'maintenance';
-  sortBy?: 'name' | 'averageScore' | 'successRate' | 'totalRuns' | 'lastSeen';
+  sortBy?: 'name' | 'uid' | 'averageScore' | 'successRate' | 'totalRuns' | 'lastSeen';
   sortOrder?: 'asc' | 'desc';
-  search?: string;
+  search?: string; // Search by name, UID, or hotkey
 }
 
 export interface AgentRunsQueryParams {

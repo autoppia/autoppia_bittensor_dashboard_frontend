@@ -9,6 +9,22 @@ module.exports = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  webpack: (config, { isServer }) => {
+    // Fix for react-icons module resolution
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    
+    // Ensure proper module resolution for react-icons
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    };
+    
+    return config;
+  },
   images: {
     remotePatterns: [
       {

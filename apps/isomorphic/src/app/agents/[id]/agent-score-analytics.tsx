@@ -4,7 +4,8 @@ import { useParams } from "next/navigation";
 import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { LuStar, LuCrown } from "react-icons/lu";
-import { sortedMinersData } from "@/data/miners-data";
+import { useAgent, useAgentStatistics } from "@/services/hooks/useAgents";
+import { AgentScoreAnalyticsPlaceholder } from "@/components/placeholders/agent-placeholders";
 
 export default function AgentScoreAnalytics({
   className,
@@ -12,15 +13,25 @@ export default function AgentScoreAnalytics({
   className?: string;
 }) {
   const { id } = useParams();
-  const miner = sortedMinersData.find(
-    (miner) => miner.uid === parseInt(id as string)
-  );
+  const { data: agent, loading: agentLoading } = useAgent(id as string);
+  const { data: statistics, loading: statsLoading } = useAgentStatistics();
 
-  const minerStats = [
+  const loading = agentLoading || statsLoading;
+
+  // Show loading placeholder
+  if (loading) {
+    return <AgentScoreAnalyticsPlaceholder className={className} />;
+  }
+
+  if (!agent) {
+    return null;
+  }
+
+  const agentStats = [
     {
-      title: "Current Score",
-      metric: miner?.score.toFixed(2),
-      description: "Latest round performance",
+      title: "Average Duration",
+      metric: agent.averageDuration.toFixed(1) + 's',
+      description: "Average execution time",
       icon: LuStar,
       className:
         "relative overflow-hidden bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-emerald-600/25 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-emerald-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-emerald-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -29,9 +40,9 @@ export default function AgentScoreAnalytics({
       descriptionClassName: "text-emerald-100/80",
     },
     {
-      title: "Last Round Best Score",
-      metric: sortedMinersData[0]?.score.toFixed(2),
-      description: "Network-wide best this round",
+      title: "Task Completion",
+      metric: ((agent.completedTasks / agent.totalTasks) * 100).toFixed(1) + '%',
+      description: "Tasks completed successfully",
       icon: LuCrown,
       className:
         "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -44,7 +55,7 @@ export default function AgentScoreAnalytics({
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6">
-        {minerStats.map((stat, index) => {
+        {agentStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div key={stat.title}>
