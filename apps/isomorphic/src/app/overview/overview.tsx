@@ -31,6 +31,9 @@ export default function Overview() {
     }
   };
 
+  // Safe access to network status with fallback
+  const networkStatus = data?.networkStatus || { status: 'unknown', networkLatency: 0 };
+
   return (
     <>
       <header className={cn('mb-6 mt-4')}>
@@ -55,13 +58,13 @@ export default function Overview() {
           <div className="flex items-center gap-4">
             {/* Network Status */}
             <div className="flex items-center gap-2">
-              <PiWifiHighDuotone className={cn("w-4 h-4", getNetworkStatusColor(data.networkStatus?.status))} />
-              <span className={cn("text-sm font-medium", getNetworkStatusColor(data.networkStatus?.status))}>
-                {getNetworkStatusIcon(data.networkStatus?.status)} {data.networkStatus?.status || 'Unknown'}
+              <PiWifiHighDuotone className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
+              <span className={cn("text-sm font-medium", getNetworkStatusColor(networkStatus.status))}>
+                {getNetworkStatusIcon(networkStatus.status)} {networkStatus.status || 'Unknown'}
               </span>
-              {data.networkStatus?.networkLatency && (
+              {networkStatus.networkLatency && (
                 <span className="text-xs text-gray-500">
-                  ({data.networkStatus.networkLatency}ms)
+                  ({networkStatus.networkLatency}ms)
                 </span>
               )}
             </div>
@@ -98,6 +101,7 @@ export default function Overview() {
         </div>
       </header>
 
+
       {/* Global Error State */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -116,6 +120,7 @@ export default function Overview() {
         </div>
       )}
 
+      {/* Content - always render components, let them handle their own loading states */}
       <div className="flex flex-col lg:flex-row gap-6">
         <OverviewMinerChart className="w-full lg:w-[calc(100%-460px)]" />
         <OverviewMetrics className="w-full lg:w-[460px]" />

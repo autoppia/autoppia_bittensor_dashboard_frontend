@@ -2,7 +2,7 @@ import { metaObject } from '@/config/site.config';
 import ApiTest from '../overview/api-test';
 
 export const metadata = {
-  ...metaObject('API Test'),
+  ...metaObject(),
 };
 
 export default function ApiTestPage() {

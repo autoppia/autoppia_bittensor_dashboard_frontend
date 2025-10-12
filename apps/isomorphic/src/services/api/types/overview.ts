@@ -33,7 +33,7 @@ export interface ValidatorData {
 }
 
 // ===== ROUND DATA =====
-export interface RoundData {
+export interface OverviewRoundData {
   id: number;
   startBlock: number;
   endBlock: number;
@@ -98,8 +98,8 @@ export interface ValidatorsResponse {
 }
 
 export interface RoundsResponse {
-  rounds: RoundData[];
-  currentRound: RoundData;
+  rounds: OverviewRoundData[];
+  currentRound: OverviewRoundData;
   total: number;
 }
 

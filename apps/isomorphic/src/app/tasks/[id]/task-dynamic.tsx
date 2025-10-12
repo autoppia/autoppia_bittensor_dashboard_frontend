@@ -6,6 +6,9 @@ import PageHeader from "@/app/shared/page-header";
 import TaskPersonasDynamic from "./task-personas-dynamic";
 import TaskDetailsDynamic from "./task-details-dynamic";
 import TaskResults from "./task-results";
+import TaskLogsDynamic from "./task-logs-dynamic";
+import TaskMetricsDynamic from "./task-metrics-dynamic";
+import TaskTimelineDynamic from "./task-timeline-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useTask } from "@/services/hooks/useTask";
 import LoadingScreen from "@/app/shared/loading-screen";
@@ -14,7 +17,7 @@ export default function TaskDynamic() {
   const { id } = useParams();
 
   // Use the partial loading hook with progressive data fetching
-  const { data, isLoading, error, refetch, isAnyLoading } = useTask(
+  const { data, isLoading, error, isAnyLoading } = useTask(
     id as string,
     {
       includePersonas: true,
@@ -75,7 +78,7 @@ export default function TaskDynamic() {
           </div>
           <div className="text-red-500 text-sm mb-4">{error}</div>
           <button
-            onClick={refetch}
+            onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             Retry
@@ -107,18 +110,24 @@ export default function TaskDynamic() {
       {/* Task Details Section - Loads independently */}
       <TaskDetailsDynamic />
 
-      {/* Task Results Section - Loads last */}
+      {/* Task Results Section - Loads independently */}
       <div className="mb-6">
-        {data.results ? (
-          <TaskResults />
-        ) : (
-          <div className="bg-white/10 rounded-2xl p-6 border border-gray-200/20">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="text-gray-600 text-sm">Loading task results...</div>
-            </div>
-          </div>
-        )}
+        <TaskResults />
+      </div>
+
+      {/* Task Metrics Section - Loads independently */}
+      <div className="mb-6">
+        <TaskMetricsDynamic />
+      </div>
+
+      {/* Task Timeline Section - Loads independently */}
+      <div className="mb-6">
+        <TaskTimelineDynamic />
+      </div>
+
+      {/* Task Logs Section - Loads independently */}
+      <div className="mb-6">
+        <TaskLogsDynamic />
       </div>
 
       {/* Loading Indicator for Partial Updates */}

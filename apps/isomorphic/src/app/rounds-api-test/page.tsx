@@ -131,7 +131,7 @@ function RoundStatisticsTest({ roundId }: { roundId: number }) {
       </div>
       <div className="bg-red-50 p-3 rounded col-span-2">
         <h4 className="font-medium text-red-800">Success Rate</h4>
-        <p className="text-2xl font-bold text-red-600">{(data?.successRate * 100).toFixed(1)}%</p>
+        <p className="text-2xl font-bold text-red-600">{((data?.successRate || 0) * 100).toFixed(1)}%</p>
       </div>
     </div>
   );

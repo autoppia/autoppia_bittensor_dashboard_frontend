@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
@@ -47,7 +47,10 @@ interface MinerChartProps {
 }
 
 export default function MinerChart({ className }: MinerChartProps) {
-  // Static data for testing - this was working before
+  // Get leaderboard data from API
+  const { data: leaderboardData, loading, error } = useLeaderboard({ timeRange: '7D' });
+  
+  // Static data for testing - fallback when API fails
   const staticData = [
     { round: 42, subnet36: 0.95, openai_cua: 0.87, anthropic_cua: 0.89, browser_use: 0.92, timestamp: new Date().toISOString() },
     { round: 41, subnet36: 0.92, openai_cua: 0.85, anthropic_cua: 0.87, browser_use: 0.90, timestamp: new Date().toISOString() },
@@ -56,11 +59,19 @@ export default function MinerChart({ className }: MinerChartProps) {
     { round: 38, subnet36: 0.85, openai_cua: 0.79, anthropic_cua: 0.81, browser_use: 0.84, timestamp: new Date().toISOString() },
   ];
   
-  const [filteredData, setFilteredData] = useState<LeaderboardData[]>(staticData);
-  const [compareWith, setCompareWith] = useState<string[]>([]);
+  // Memoize chart data to prevent infinite re-renders
+  const chartData = useMemo(() => {
+    return leaderboardData?.data?.leaderboard || staticData;
+  }, [leaderboardData?.data?.leaderboard]);
+  
+  const [filteredData, setFilteredData] = useState<LeaderboardData[]>(chartData);
+  const [compareWith, setCompareWith] = useState<string[]>(["openai_cua", "anthropic_cua", "browser_use"]);
   const [currentFilter, setCurrentFilter] = useState<string>("All");
-  const loading = false;
-  const error = null;
+
+  // Update filtered data when chart data changes
+  useEffect(() => {
+    setFilteredData(chartData);
+  }, [chartData]);
 
   function handleFilterBy(option: string) {
     setCurrentFilter(option);
@@ -70,7 +81,7 @@ export default function MinerChart({ className }: MinerChartProps) {
   if (loading) {
     return (
       <WidgetCard
-        title="Top Miner Score"
+        title="Top Miner Score Evolution"
         action={
           <ButtonGroupAction
             options={filterOptions}
@@ -83,7 +94,12 @@ export default function MinerChart({ className }: MinerChartProps) {
       >
         <div className="custom-scrollbar overflow-x-auto scroll-smooth">
           <div className={cn("h-[160px] w-full pt-2")}>
-            <div className="h-full w-full bg-gray-100 animate-pulse rounded"></div>
+            <div className="h-full w-full bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="text-gray-600 text-sm">Loading chart data...</div>
+              </div>
+            </div>
           </div>
           <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap mt-4">
             <span className="ms-4">Compare with:</span>
@@ -91,7 +107,7 @@ export default function MinerChart({ className }: MinerChartProps) {
               {sotaAgents.map((agent) => (
                 <div key={agent.value} className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                  <span className="text-sm">{agent.label}</span>
+                  <span className="text-sm text-gray-400">{agent.label}</span>
                 </div>
               ))}
             </div>
@@ -105,7 +121,7 @@ export default function MinerChart({ className }: MinerChartProps) {
   if (error) {
     return (
       <WidgetCard
-        title="Top Miner Score"
+        title="Top Miner Score Evolution"
         action={
           <ButtonGroupAction
             options={filterOptions}
