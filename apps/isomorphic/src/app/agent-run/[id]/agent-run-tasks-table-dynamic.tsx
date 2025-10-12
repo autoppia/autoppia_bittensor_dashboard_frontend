@@ -4,6 +4,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { useAgentRunTasks } from "@/services/hooks/useAgentRun";
 import { createColumnHelper } from "@tanstack/react-table";
+import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input } from "rizzui";
 import Link from "next/link";
@@ -37,9 +38,7 @@ const agentRunTasksColumns = [
     header: "Website",
     enableSorting: false,
     cell: ({ row }) => (
-      <span className="inline-flex items-center rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-        {row.original.website}
-      </span>
+      <BannerText color="blue" text={row.original.website} />
     ),
   }),
   columnHelper.accessor("useCase", {
@@ -127,7 +126,7 @@ export default function AgentRunTasksTableDynamic() {
     changeLimit 
   } = useAgentRunTasks(id as string, {
     page: 1,
-    limit: 20,
+    limit: 10,
   });
 
   const { table, setData } = useTanStackTable<AgentRunTaskData>({
@@ -136,13 +135,13 @@ export default function AgentRunTasksTableDynamic() {
     options: {
       initialState: {
         pagination: {
-          pageIndex: (page || 1) - 1,
-          pageSize: limit || 20,
+          pageIndex: page - 1,
+          pageSize: limit,
         },
       },
       enableColumnResizing: false,
       manualPagination: true,
-      pageCount: Math.ceil((total || 0) / (limit || 20)),
+      pageCount: Math.ceil(total / limit),
     },
   });
 
@@ -152,14 +151,6 @@ export default function AgentRunTasksTableDynamic() {
       setData(tasks);
     }
   }, [tasks, setData]);
-
-  // Update pagination when page/limit change
-  React.useEffect(() => {
-    if (page && limit) {
-      table.setPageIndex(page - 1);
-      table.setPageSize(limit);
-    }
-  }, [page, limit, table]);
 
 
   // Show loading state
