@@ -2,9 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { tasksData, tasksDataMap } from "@/data/tasks-data";
-import { websitesData, websitesDataMap } from "@/data/websites-data";
-import { agentRunData } from "@/data/agent-run-data";
+import { useTasksList } from "@/services/hooks/useTask";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -23,19 +21,30 @@ export default function TaskSearch() {
   const [agentRunInput, setAgentRunInput] = useState<string>("");
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
-  const [hasSearched, setHasSearched] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get unique use cases from tasks data
+  // Use the API hook to get tasks data
+  const { tasks, isLoading, error, refetch } = useTasksList({
+    website: selectedWebsite || undefined,
+    useCase: selectedUseCase || undefined,
+    limit: 50, // Get more tasks for filtering
+  });
+
+  // Get unique use cases from API data
   const uniqueUseCases = useMemo(() => {
-    const useCases = Array.from(new Set(tasksData.map(task => task.use_case)));
+    const useCases = Array.from(new Set(tasks.map(task => task.useCase)));
     return useCases.sort();
-  }, []);
+  }, [tasks]);
+
+  // Get unique websites from API data
+  const uniqueWebsites = useMemo(() => {
+    const websites = Array.from(new Set(tasks.map(task => task.website)));
+    return websites.sort();
+  }, [tasks]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -65,33 +74,31 @@ export default function TaskSearch() {
 
   // Filter tasks based on search criteria
   const filteredTasks = useMemo(() => {
-    return tasksData.filter((task) => {
+    return tasks.filter((task) => {
       const matchesSearch =
         searchTerm === "" ||
-        task.id.includes(searchTerm) ||
+        task.taskId.includes(searchTerm) ||
         task.prompt.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesAgentRun =
         agentRunInput === "" || 
-        task.id.includes(agentRunInput); // Match task ID with agent run input
+        task.agentRunId.includes(agentRunInput);
       
       const matchesWebsite =
         selectedWebsite === "" || task.website === selectedWebsite;
       
       const matchesUseCase =
-        selectedUseCase === "" || task.use_case === selectedUseCase;
+        selectedUseCase === "" || task.useCase === selectedUseCase;
 
       return matchesSearch && matchesAgentRun && matchesWebsite && matchesUseCase;
     });
-  }, [searchTerm, agentRunInput, selectedWebsite, selectedUseCase]);
+  }, [tasks, searchTerm, agentRunInput, selectedWebsite, selectedUseCase]);
 
   const handleSearch = () => {
-    setHasSearched(true);
     const results = filteredTasks.slice(0, 12); // Get recent 12 items
-    setSearchResults(results);
 
     if (results.length === 1) {
-      router.push(`/tasks/${results[0].id}`);
+      router.push(`/tasks/${results[0].taskId}`);
     }
   };
 
@@ -100,8 +107,6 @@ export default function TaskSearch() {
     setAgentRunInput("");
     setSelectedWebsite("");
     setSelectedUseCase("");
-    setHasSearched(false);
-    setSearchResults([]);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
   };
@@ -330,25 +335,44 @@ export default function TaskSearch() {
         </div>
       )}
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="mt-6 text-center relative z-0">
+          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
+            <div className="relative">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-2">
+                LOADING TASKS
+              </h3>
+              <p className="text-blue-200 text-sm">
+                Fetching tasks from the API...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search Results */}
-      {hasSearched && searchResults.length > 0 && (
+      {!isLoading && filteredTasks.length > 0 && (
         <div className="mt-6 relative z-0">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              RECENT {searchResults.length} RESULTS
+              {filteredTasks.length} TASKS FOUND
             </h3>
             <p className="text-purple-200 text-sm">
-              Showing recent tasks matching your criteria
+              Showing tasks matching your criteria
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {searchResults.map((task) => {
-              const website = websitesDataMap[task.website];
+            {filteredTasks.slice(0, 12).map((task) => {
               return (
                 <div
-                  key={task.id}
-                  onClick={() => router.push(`/tasks/${task.id}`)}
+                  key={task.taskId}
+                  onClick={() => router.push(`/tasks/${task.taskId}`)}
                   className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-105"
                 >
                   <div className="text-center">
@@ -356,17 +380,17 @@ export default function TaskSearch() {
                       <PiPlayDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
                     </div>
                     <div className="text-sm font-bold text-white mb-2">
-                      TASK ID: {task.id}
+                      TASK ID: {task.taskId}
                     </div>
                     <div className="text-xs text-purple-200 mb-2">
                       {task.prompt.length > 50 ? `${task.prompt.substring(0, 50)}...` : task.prompt}
                     </div>
                     <div className="text-xs text-purple-300">
-                      {task.website} • {task.use_case.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                      {task.website} • {task.useCase.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </div>
                     <div className="flex justify-center gap-4 mt-2 text-xs">
                       <span className="text-green-300">Score: {(task.score * 100).toFixed(0)}%</span>
-                      <span className="text-blue-300">{task.solutionTime}s</span>
+                      <span className="text-blue-300">{task.duration}s</span>
                     </div>
                   </div>
                 </div>
@@ -377,7 +401,7 @@ export default function TaskSearch() {
       )}
 
       {/* No Results Message */}
-      {hasSearched && searchResults.length === 0 && (
+      {!isLoading && filteredTasks.length === 0 && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>

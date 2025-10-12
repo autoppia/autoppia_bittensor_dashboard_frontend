@@ -243,7 +243,7 @@ export default function AgentRunSummary({
 
   return (
     <div
-      className={`bg-gray-50 border border-muted hover:border-emerald-500 rounded-xl p-6 ${className}`}
+      className={`bg-gray-50 border border-muted rounded-xl p-6 ${className}`}
     >
       {/* Header */}
       <div className="mb-2">

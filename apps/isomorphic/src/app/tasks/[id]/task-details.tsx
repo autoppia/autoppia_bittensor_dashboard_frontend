@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Text } from "rizzui";
 import {
   PiGlobe,
@@ -8,23 +9,61 @@ import {
   PiChartBar,
   PiTimer,
   PiFileText,
+  PiPlay,
 } from "react-icons/pi";
-import { tasksDataMap } from "@/data/tasks-data";
+import { useTask } from "@/services/hooks/useTask";
 
 export default function TaskDetails() {
   const { id } = useParams();
-  const taskData = tasksDataMap[id as string];
+  
+  // Use the API hook to get real task data
+  const { data, isLoading, error } = useTask(id as string, {
+    includeDetails: true,
+    includePersonas: false,
+    includeResults: false,
+    includeStatistics: false,
+  });
+  
+  const taskData = data.details;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md">
+        <div className="flex items-center justify-center h-32">
+          <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="ml-2 text-emerald-400">Loading task details...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !taskData) {
+    return (
+      <div className="bg-gradient-to-r from-red-500/10 via-red-500/10 to-red-500/10 border-2 border-red-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md">
+        <div className="text-center">
+          <div className="text-red-400 text-lg font-semibold mb-2">
+            Failed to Load Task Data
+          </div>
+          <div className="text-red-300 text-sm">
+            {error || 'Task not found'}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Task Stats Grid - 2x2 on desktop */}
-        <div className="grid grid-cols-4 gap-6">
+        {/* Task Stats Grid - 2x3 on desktop */}
+        <div className="grid grid-cols-6 gap-6">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <PiGlobe className="w-4 h-4 text-blue-400" />
               <div className="text-xl font-bold text-blue-400">
-                {taskData?.website || "Autozone"}
+                {taskData?.website || "Unknown"}
               </div>
             </div>
             <div className="text-xs text-gray-700">Website</div>
@@ -33,7 +72,7 @@ export default function TaskDetails() {
             <div className="flex items-center justify-center gap-2 mb-1">
               <PiTarget className="w-4 h-4 text-green-400" />
               <div className="text-xl font-bold text-green-400">
-                {taskData?.use_case || "buy_product"}
+                {taskData?.useCase || "Unknown"}
               </div>
             </div>
             <div className="text-xs text-gray-700">Use Case</div>
@@ -42,7 +81,7 @@ export default function TaskDetails() {
             <div className="flex items-center justify-center gap-2 mb-1">
               <PiChartBar className="w-4 h-4 text-red-400" />
               <div className="text-xl font-bold text-red-400">
-                {taskData?.score || 0.95}
+                {taskData?.score || 0}
               </div>
             </div>
             <div className="text-xs text-gray-700">Score</div>
@@ -51,10 +90,22 @@ export default function TaskDetails() {
             <div className="flex items-center justify-center gap-2 mb-1">
               <PiTimer className="w-4 h-4 text-orange-400" />
               <div className="text-xl font-bold text-orange-400">
-                {taskData?.solutionTime || 10}s
+                {taskData?.duration || 0}s
               </div>
             </div>
-            <div className="text-xs text-gray-700">Response Time</div>
+            <div className="text-xs text-gray-700">Duration</div>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <PiPlay className="w-4 h-4 text-purple-400" />
+              <Link 
+                href={`/agent-run/${taskData?.agentRunId || ''}`}
+                className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors duration-200"
+              >
+                {taskData?.agentRunId || 'N/A'}
+              </Link>
+            </div>
+            <div className="text-xs text-gray-700">Run ID</div>
           </div>
         </div>
 

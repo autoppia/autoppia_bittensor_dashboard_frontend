@@ -2,76 +2,87 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import WidgetCard from "@core/components/cards/widget-card";
 import cn from "@core/utils/class-names";
 import { Text } from "rizzui/typography";
+import { Skeleton } from "@core/ui/skeleton";
 import { PiCrownFill } from "react-icons/pi";
+import { useTopMiners } from "@/services/hooks/useRounds";
 import Eye from "@core/components/icons/eye";
 
-const topMinersList = [
-  {
-    uid: 25,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.95,
-  },
-  {
-    uid: 84,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.92,
-  },
-  {
-    uid: 36,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.9,
-  },
-  {
-    uid: 120,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.88,
-  },
-  {
-    uid: 150,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.85,
-  },
-  {
-    uid: 100,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.82,
-  },
-  {
-    uid: 180,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.82,
-  },
-  {
-    uid: 190,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.82,
-  },
-  {
-    uid: 200,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.82,
-  },
-  {
-    uid: 210,
-    hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    avg_score: 0.82,
-  },
-];
-
 export default function RoundTopMiners({ className }: { className?: string }) {
+  const { id } = useParams();
+  const roundId = parseInt(id as string);
+  
+  // Get top miners data from API
+  const { data: topMinersData, loading, error } = useTopMiners(roundId, 10);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <WidgetCard
+        title="Top Miners"
+        className={cn(
+          "h-[520px] px-2 lg:px-4 w-full rounded-xl",
+          className
+        )}
+        headerClassName="px-3 pb-2"
+      >
+        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 10 }, (_, index) => (
+              <div key={index} className="flex items-center w-full px-4 py-1.5">
+                <Skeleton className="h-10 w-10 rounded-full me-3" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </WidgetCard>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <WidgetCard
+        title="Top Miners"
+        className={cn(
+          "h-[520px] px-2 lg:px-4 w-full rounded-xl",
+          className
+        )}
+        headerClassName="px-3 pb-2"
+      >
+        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3 flex items-center justify-center">
+          <div className="text-center text-red-600">
+            <p className="text-lg font-semibold">Failed to load top miners</p>
+            <p className="text-sm mt-2">Please try again later</p>
+          </div>
+        </div>
+      </WidgetCard>
+    );
+  }
+
+  const topMinersList = topMinersData || [];
+
   return (
     <WidgetCard
-      title="Top 10 Miners"
-      className={cn("h-[460px] px-2 lg:px-4 w-full hover:border-emerald-500", className)}
+      title="Top Miners"
+      className={cn(
+        "h-[520px] px-2 lg:px-4 w-full rounded-xl",
+        className
+      )}
       headerClassName="px-3 pb-2"
     >
-      <div className="custom-scrollbar h-[370px] overflow-y-auto mt-3">
+      <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner, index) => (
-            <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`}>
+            <Link key={`top-miner-${index}`} href={`/agents/${miner.uid}`} title="Inspect Agent Run">
               <div
                 className={cn(
                   "relative flex items-center w-full px-4 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-md cursor-pointer group border border-transparent hover:border-gray-200",
@@ -94,8 +105,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                       <Text
                         className={cn(
                           "text-lg font-semibold text-gray-900",
-                          index === 0 &&
-                            "text-yellow-500"
+                          index === 0 && "text-yellow-500"
                         )}
                       >
                         Miner {miner.uid}
@@ -124,7 +134,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                           index === 0 ? "text-yellow-500" : "text-emerald-500"
                         )}
                       >
-                        {miner.avg_score.toFixed(2)}
+                        {miner.score.toFixed(2)}
                       </div>
                     </div>
                     <div className="text-gray-400 group-hover:text-gray-600 transition-colors duration-200">

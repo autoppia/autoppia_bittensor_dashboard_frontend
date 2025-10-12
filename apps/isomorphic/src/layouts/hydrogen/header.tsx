@@ -8,12 +8,16 @@ import cn from "@core/utils/class-names";
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
-import { LuActivity, LuPackageCheck } from "react-icons/lu";
+import { LuActivity, LuMinus } from "react-icons/lu";
 import { menuItems } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
+import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
+import { Tooltip } from "rizzui";
+import { useNetworkStatus } from "@/services/hooks/useOverview";
 
 export default function Header() {
   const pathname = usePathname();
+  const { data: networkStatus, loading: statusLoading } = useNetworkStatus();
 
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10">
@@ -41,30 +45,20 @@ export default function Header() {
               <Fragment key={item.name + "-" + index}>
                 {item?.href ? (
                   <Link href={item?.href} className="hidden xl:block mx-1 my-2">
-                    <div className="relative group">
-                      {/* Main container */}
-                      <div
-                        className={cn(
-                          "relative px-3 py-3 transition-all duration-300 ease-out",
-                          isActive
-                            ? "text-emerald-600"
-                            : "text-gray-700 hover:text-emerald-600"
-                        )}
-                      >
-                        {/* Menu text */}
-                        <span>{item.name}</span>
-
-                        {/* Animated underline with fixed width */}
-                        <div
-                          className={cn(
-                            "absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-[3px] rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300",
-                            "shadow-[0_-4px_16px_rgba(16,185,129,0.6)]",
-                            isActive
-                              ? "opacity-100 scale-x-100"
-                              : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
-                          )}
-                        ></div>
-                      </div>
+                    <div
+                      className={cn(
+                        "px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-2.5 text-sm",
+                        isActive
+                          ? "bg-white text-black"
+                          : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
+                      )}
+                    >
+                      {item.icon && (
+                        <span className="text-base">
+                          {item.icon}
+                        </span>
+                      )}
+                      {item.name}
                     </div>
                   </Link>
                 ) : (
@@ -78,57 +72,121 @@ export default function Header() {
         <div className="flex items-center gap-1">
           {/* Social Media Buttons */}
           <div className="hidden sm:flex items-center gap-1">
-            <a
-              href="https://github.com/autoppia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              aria-label="Explore our GitHub"
-            >
-              <FaGithub className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://x.com/AutoppiaAI"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              aria-label="Follow us on X (Twitter)"
-            >
-              <FaXTwitter className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <a
-              href="https://discord.com/channels/799672011265015819/1339356060787408996"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              aria-label="Join our Discord"
-            >
-              <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-            </a>
-            <div className="relative flex items-center ml-2 group">
-              {/* Glowing background */}
-              <div className="absolute inset-0 bg-red-500 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <Tooltip content="Visit Autoppia Website" placement="bottom">
+              <a
+                href="https://autoppia.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-blue-500/10 rounded-lg transition-all duration-300"
+                aria-label="Visit Autoppia Website"
+              >
+                <PiGlobeDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="View Documentation" placement="bottom">
+              <a
+                href="https://luxit.gitbook.io/autoppia-docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300"
+                aria-label="View Documentation"
+              >
+                <PiBookOpenDuotone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Explore our GitHub" placement="bottom">
+              <a
+                href="https://github.com/autoppia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+                aria-label="Explore our GitHub"
+              >
+                <FaGithub className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Follow us on X (Twitter)" placement="bottom">
+              <a
+                href="https://x.com/AutoppiaAI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+                aria-label="Follow us on X (Twitter)"
+              >
+                <FaXTwitter className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content="Join our Discord" placement="bottom">
+              <a
+                href="https://discord.com/channels/799672011265015819/1339356060787408996"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-indigo-500/10 rounded-lg transition-all duration-300"
+                aria-label="Join our Discord"
+              >
+                <FaDiscord className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </a>
+            </Tooltip>
+            <Tooltip content={`Network Status: ${networkStatus?.status || 'Unknown'}`} placement="bottom">
+              <div className="relative flex items-center ml-2 group">
+                {/* Dynamic glowing background based on status */}
+                <div className={cn(
+                  "absolute inset-0 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300",
+                  networkStatus?.status === 'healthy' ? "bg-green-500" :
+                  networkStatus?.status === 'degraded' ? "bg-yellow-500" :
+                  "bg-red-500"
+                )}></div>
 
-              {/* Main container */}
-              <div className="relative flex items-center gap-2 px-3 py-1.5 bg-black border border-red-500 rounded-lg hover:border-red-400 transition-all duration-300">
-                {/* Animated broadcasting icon */}
-                <div className="relative">
-                  <LuActivity className="w-4 h-4 text-red-500 animate-pulse" />
-                  <div className="absolute -inset-1 border border-red-500 rounded-full animate-ping opacity-50"></div>
+                {/* Main container */}
+                <div className={cn(
+                  "relative flex items-center gap-2 px-3 py-1.5 bg-black rounded-lg transition-all duration-300",
+                  networkStatus?.status === 'healthy' ? "border border-green-500 hover:border-green-400" :
+                  networkStatus?.status === 'degraded' ? "border border-yellow-500 hover:border-yellow-400" :
+                  "border border-red-500 hover:border-red-400"
+                )}>
+                  {/* Dynamic icon and animation based on status */}
+                  <div className="relative">
+                    {networkStatus?.status === 'down' ? (
+                      <LuMinus className={cn(
+                        "w-4 h-4",
+                        "text-red-500"
+                      )} />
+                    ) : (
+                      <LuActivity className={cn(
+                        "w-4 h-4 animate-pulse",
+                        networkStatus?.status === 'healthy' ? "text-green-500" :
+                        networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                        "text-red-500"
+                      )} />
+                    )}
+                    {networkStatus?.status === 'healthy' && (
+                      <div className="absolute -inset-1 border border-green-500 rounded-full animate-ping opacity-50"></div>
+                    )}
+                  </div>
+
+                  {/* Dynamic status text */}
+                  <span className={cn(
+                    "text-sm font-mono font-bold tracking-wider",
+                    networkStatus?.status === 'healthy' ? "text-green-500" :
+                    networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                    "text-red-500"
+                  )}>
+                    {statusLoading ? "● LOADING" :
+                     networkStatus?.status === 'healthy' ? "● LIVE" :
+                     networkStatus?.status === 'degraded' ? "● DEGRADED" :
+                     "● DOWN"}
+                  </span>
                 </div>
-
-                {/* Live text */}
-                <span className="text-sm font-mono font-bold text-red-500 tracking-wider">
-                  ● LIVE
-                </span>
               </div>
-            </div>
+            </Tooltip>
           </div>
 
-          <HamburgerButton
-            className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-            view={<Sidebar className="static w-full 2xl:w-full" />}
-          />
+          <Tooltip content="Open Menu" placement="bottom">
+            <HamburgerButton
+              className="group flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-600 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+              view={<Sidebar className="static w-full 2xl:w-full" />}
+            />
+          </Tooltip>
         </div>
       </div>
     </StickyHeader>

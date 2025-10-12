@@ -38,3 +38,6 @@ dist/
 
 .vercel
 .vscode
+
+# agent files
+agent-files/
