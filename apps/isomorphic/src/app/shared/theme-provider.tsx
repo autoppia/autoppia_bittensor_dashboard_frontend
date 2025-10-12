@@ -9,6 +9,7 @@ export function ThemeProvider({ children }: React.PropsWithChildren<{}>) {
     <NextThemeProvider
       enableSystem={false}
       defaultTheme={String(siteConfig.mode)}
+      attribute="data-theme"
     >
       {children}
     </NextThemeProvider>

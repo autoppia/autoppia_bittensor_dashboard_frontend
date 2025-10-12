@@ -1,7 +1,6 @@
 import { metaObject } from "@/config/site.config";
 import { redirect } from "next/navigation";
 import Round from "./round";
-import { roundsData } from "@/data/rounds-data";
 
 export const metadata = {
   ...metaObject(),
@@ -17,7 +16,9 @@ export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
   if (id === "current") {
-    redirect(`/rounds/${roundsData[roundsData.length - 1].id}`);
+    // For now, redirect to a default round ID
+    // In a real implementation, you might want to get the current round from API
+    redirect(`/rounds/1`);
   }
 
   return <Round />;

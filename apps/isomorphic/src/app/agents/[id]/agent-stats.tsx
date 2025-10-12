@@ -10,8 +10,13 @@ import {
   LuStar,
   LuCircleCheckBig,
   LuDollarSign,
+  LuTrophy,
+  LuAward,
+  LuTarget,
+  LuCoins,
 } from "react-icons/lu";
-import { sortedMinersData } from "@/data/miners-data";
+import { useMinerDetails, useAgentPerformance } from "@/services/hooks/useAgents";
+import { AgentStatsPlaceholder } from "@/components/placeholders/agent-placeholders";
 
 export default function AgentStats() {
   const {
@@ -23,52 +28,77 @@ export default function AgentStats() {
   } = useScrollableSlider();
 
   const { id } = useParams();
-  const miner = sortedMinersData.find(
-    (miner) => miner.uid === parseInt(id as string)
-  );
+  const uid = parseInt(id as string, 10);
+  const { data: agentData, loading: agentLoading } = useMinerDetails(uid);
+  const agent = agentData?.agent;
+  const { data: performance, loading: performanceLoading } = useAgentPerformance(id as string, {
+    timeRange: '7d'
+  });
 
-  const minerStats = [
+  const loading = agentLoading || performanceLoading;
+
+  // Show loading placeholder
+  if (loading) {
+    return <AgentStatsPlaceholder />;
+  }
+
+  if (!agent) {
+    return null;
+  }
+
+  const agentStats = [
     {
       title: "Current Rank",
-      metric: `#${miner?.ranking}`,
-      description: "Live leaderboard position",
-      icon: LuChartNoAxesCombined,
+      metric: `#${agent?.currentRank || 'N/A'}`,
+      description: "Current ranking position",
+      icon: LuAward,
       className:
-        "bg-gradient-to-br from-yellow-500/15 via-yellow-400/15 to-yellow-600/15 border-2 border-yellow-500/40 hover:border-yellow-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      metricClassName: "text-yellow-500",
-      iconClassName: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "text-yellow-200",
+        "relative overflow-hidden bg-gradient-to-br from-amber-500/20 via-amber-400/15 to-amber-600/25 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-amber-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-amber-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-amber-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-amber-100/80",
     },
     {
-      title: "All-Time Best Score",
-      metric: miner?.score.toFixed(2),
-      description: "Peak performance ever",
-      icon: LuStar,
+      title: "Best Rank Ever",
+      metric: `#${agent?.bestRankEver || 'N/A'}`,
+      description: "Highest ranking achieved",
+      icon: LuTrophy,
       className:
-        "bg-gradient-to-br from-emerald-500/15 via-emerald-400/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      metricClassName: "text-emerald-500",
-      iconClassName: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "text-emerald-200",
+        "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-yellow-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-yellow-100/80",
     },
     {
-      title: "Rounds Completed",
-      metric: 20,
-      description: "Total evaluations",
+      title: "Current Score",
+      metric: (agent?.currentScore ?? 0).toFixed(1) + '%',
+      description: "Current performance score",
+      icon: LuTarget,
+      className:
+        "relative overflow-hidden bg-gradient-to-br from-green-500/20 via-green-400/15 to-green-600/25 border border-green-500/30 hover:border-green-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-green-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-green-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-green-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-green-400 via-green-500 to-green-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-green-100/80",
+    },
+    {
+      title: "Rounds Participated",
+      metric: (agent.roundsParticipated || agent.totalRuns).toLocaleString(),
+      description: "Total rounds participated in",
       icon: LuCircleCheckBig,
-      className: "bg-gradient-to-br from-purple-500/15 via-purple-400/15 to-purple-600/15 border-2 border-purple-500/40 hover:border-purple-400/60 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      metricClassName: "text-purple-700",
-      iconClassName: "bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "",
+      className: "relative overflow-hidden bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-blue-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-blue-100/80",
     },
     {
-      title: "Total Alpha Earned",
-      metric: "Coming Soon",
-      description: "TAO rewards",
-      icon: LuDollarSign,
-      className: "border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all duration-300 group",
-      metricClassName: "text-blue-700 text-lg",
-      iconClassName: "bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 group-hover:scale-110 transition-all duration-300",
-      descriptionClassName: "",
+      title: "Alpha Won in Prizes",
+      metric: (agent.alphaWonInPrizes || 0).toFixed(2) + ' α',
+      description: "Total alpha tokens earned",
+      icon: LuCoins,
+      className: "relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-purple-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-purple-500 drop-shadow-sm",
+      iconClassName: "relative bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      descriptionClassName: "text-purple-100/80",
     },
   ];
 
@@ -88,42 +118,47 @@ export default function AgentStats() {
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
-          {minerStats.map((stat) => {
+          {agentStats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div
-                key={stat.title}
-                className={cn(
-                  "p-5 rounded-xl min-w-[260px]",
-                  stat.className
-                )}
-              >
-                <div className="flex items-center mb-2">
-                  <div
-                    className={cn(
-                      "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
-                      stat.iconClassName
-                    )}
-                  >
-                    <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+            <div
+              key={stat.title}
+              className={cn(
+                "relative p-4 rounded-xl min-w-[200px] cursor-pointer",
+                stat.className
+              )}
+            >
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl"></div>
+                </div>
+                
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg",
+                        stat.iconClassName
+                      )}
+                    >
+                      <Icon className="w-6 h-6 group-hover:rotate-6 transition-transform duration-500" />
+                    </div>
+                    <div className="flex-1">
+                      <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-1">
+                        {stat.title}
+                      </Text>
+                      <Text
+                        className={cn(
+                          "font-black text-2xl leading-none",
+                          stat.metricClassName
+                        )}
+                      >
+                        {stat.metric}
+                      </Text>
+                    </div>
                   </div>
-                  <Text className="text-sm font-medium ms-3 text-gray-700 uppercase tracking-wide">
-                    {stat.title}
-                  </Text>
                 </div>
-                <div className="flex items-center h-12 mb-1">
-                  <Text
-                    className={cn(
-                      "font-bold text-3xl",
-                      stat.metricClassName
-                    )}
-                  >
-                    {stat.metric}
-                  </Text>
-                </div>
-                <Text className={cn("text-xs text-gray-600 font-medium", stat.descriptionClassName)}>
-                  {stat.description}
-                </Text>
               </div>
             );
           })}

@@ -1,29 +1,111 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
-import { PiCubeDuotone, PiClockDuotone } from "react-icons/pi";
-import { roundsData } from "@/data/rounds-data";
+import { PiCubeDuotone, PiClockDuotone, PiHourglassSimpleDuotone } from "react-icons/pi";
+import { useRoundProgress, useRound } from "@/services/hooks/useRounds";
+import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundProgress() {
   const { id } = useParams();
-  const round = roundsData.find((round) => round.id === parseInt(id as string))!;
+  const roundId = parseInt(id as string);
+  
+  // Get data from API only
+  const { data: progressData, loading: progressLoading, error: progressError } = useRoundProgress(roundId);
+  const { data: roundData, loading: roundLoading, error: roundError } = useRound(roundId);
+  
+  const round = roundData;
+  const progress = progressData;
+  
+  const loading = progressLoading || roundLoading;
   const isTinyScreen = useMedia("(max-width: 639px)", false);
   const isSmallScreen = useMedia("(min-width: 640px) and (max-width: 767px)", false);
   const isMediumScreen = useMedia("(min-width: 768px) and (max-width: 1023px)", false);
   const cellCount = isTinyScreen ? 30 : isSmallScreen ? 50 : isMediumScreen ? 75 : 100;
 
-  const currentBlock = 6526300;
-  const percentage =
-    currentBlock > round.endBlock
-      ? 1
-      : (currentBlock - round.startBlock) / (round.endBlock - round.startBlock);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Calculate time remaining based on round end block
+  useEffect(() => {
+    if (!round) return;
+    
+    const calculateTimeLeft = () => {
+      // Use API progress data only
+      if (progress?.estimatedTimeRemaining) {
+        setTimeLeft(progress.estimatedTimeRemaining);
+        return;
+      }
+      
+      // If no API data, set default values
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, [round, progress?.estimatedTimeRemaining]);
+
+  // Use API data only
+  const currentBlock = progress?.currentBlock || 0;
+  const percentage = progress?.progress || 0;
   const cells = Array.from({ length: cellCount }, (_, index) => {
     return {
       isPassed: index < percentage * cellCount,
     };
   });
+
+  // Show loading state with skeleton
+  if (loading) {
+    return (
+      <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="w-full flex items-center justify-between mb-4">
+          {Array.from({ length: cellCount }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="w-[6px] h-10 rounded-full"
+            />
+          ))}
+        </div>
+        <div className="w-full flex items-center justify-between">
+          <div></div>
+          <div className="w-full flex items-center justify-between">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (progressError || roundError) {
+    return (
+      <div className="w-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-red-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+        <div className="text-center text-red-600">
+          <p className="text-lg font-semibold">Progress Data Unavailable</p>
+          <p className="text-sm mt-2">Failed to load round data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!round) {
+    return (
+      <div className="w-full bg-gradient-to-r from-gray-500/10 via-gray-500/10 to-gray-500/10 border-2 border-gray-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+        <div className="text-center text-gray-600">
+          <p className="text-lg font-semibold">Round Not Found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
@@ -31,11 +113,13 @@ export default function RoundProgress() {
         <div className="text-2xl font-bold text-gray-900">
           Round Progress
         </div>
-        <div className="flex items-center text-md text-yellow-500 font-semibold">
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg">
-            <PiClockDuotone className="w-3 h-3" />
-          </div>
-          <span className="ms-1">12d 30m 20s</span>
+        <div className="flex items-center text-md text-white font-semibold">
+          <span>
+            {timeLeft.days > 0 && `${timeLeft.days}d `}
+            {timeLeft.hours > 0 && `${timeLeft.hours}h `}
+            {timeLeft.minutes > 0 && `${timeLeft.minutes}m `}
+            {timeLeft.seconds}s
+          </span>
         </div>
       </div>
       
@@ -56,23 +140,17 @@ export default function RoundProgress() {
       <div className="w-full flex items-center justify-between">
         <div></div>
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center group">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 text-sm text-gray-700 font-medium">Start Block: {round.startBlock}</span>
+          <div className="flex items-center group text-sm font-medium">
+            <span className="hidden sm:block">Start Block: </span>
+            <span className="ms-1 text-gray-900">{round.startBlock}</span>
           </div>
-          <div className="flex items-center group">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 text-sm font-semibold text-gray-900">Current Block: {currentBlock}</span>
+          <div className="flex items-center group text-sm font-medium">
+            <span className="hidden sm:block text-gray-900">Current Block: </span>
+            <span className="ms-1 text-gray-900">{currentBlock}</span>
           </div>
-          <div className="flex items-center group">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 text-gray-900 shadow-lg group-hover:scale-110 transition-all duration-300">
-              <PiCubeDuotone className="w-3 h-3" />
-            </div>
-            <span className="ms-1 text-sm text-gray-700 font-medium">End Block: {round.endBlock}</span>
+          <div className="flex items-center group text-sm font-medium">
+            <span className="hidden sm:block">End Block: </span>
+            <span className="ms-1 text-gray-900">{round.endBlock}</span>
           </div>
         </div>
       </div>
