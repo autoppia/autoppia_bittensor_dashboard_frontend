@@ -6,21 +6,14 @@ import {
   PiClockDuotone,
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
-  PiHashDuotone,
-  PiKeyDuotone,
-  PiCopyDuotone,
 } from "react-icons/pi";
 import { useAgentRunPersonas } from "@/services/hooks/useAgentRun";
-import { useAgent } from "@/services/hooks/useAgents";
 import LoadingScreen, { CardLoadingSkeleton } from "@/app/shared/loading-screen";
 import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
 
 export default function AgentRunPersonasDynamic() {
   const { id } = useParams();
   const { personas, isLoading, error } = useAgentRunPersonas(id as string);
-  
-  // Fetch full agent data to get UID and hotkey
-  const { data: agentData } = useAgent(personas?.agent?.id || '');
 
   if (isLoading) {
     return <CardLoadingSkeleton count={3} className="mb-6" />;
@@ -111,28 +104,6 @@ export default function AgentRunPersonasDynamic() {
           <h3 className="text-sm font-medium text-emerald-300 mb-2">AGENT</h3>
           <div className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
             {personas.agent.name}
-          </div>
-          {/* UID and Hotkey under agent name */}
-          <div className="flex items-center justify-center gap-3 text-xs text-emerald-200 mt-1">
-            <div className="flex items-center gap-1">
-              <PiHashDuotone className="w-3 h-3" />
-              <span className="font-mono">UID: {agentData?.uid || 'unknown'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <PiKeyDuotone className="w-3 h-3" />
-              <span className="font-mono text-xs">
-                {agentData?.hotkey ? `${agentData.hotkey.slice(0, 6)}...${agentData.hotkey.slice(-6)}` : 'unknown'}
-              </span>
-              {agentData?.hotkey && (
-                <button 
-                  onClick={() => navigator.clipboard.writeText(agentData.hotkey)}
-                  className="p-0.5 hover:bg-emerald-500/20 rounded transition-colors"
-                  title="Copy hotkey"
-                >
-                  <PiCopyDuotone className="w-2.5 h-2.5" />
-                </button>
-              )}
-            </div>
           </div>
           <div className="text-xs text-emerald-200 mt-2 capitalize">
             {personas.agent.type} agent

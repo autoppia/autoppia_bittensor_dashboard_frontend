@@ -101,9 +101,9 @@ export default function AgentRunDetailDynamic({
   // Generate website options from stats data
   const websiteOptions = [
     { value: "__all__", label: "All Websites" },
-    ...(Array.isArray(stats.performanceByWebsite) ? stats.performanceByWebsite : []).map((website: any) => ({
-      value: website.website,
-      label: website.website,
+    ...(Array.isArray(stats.websites) ? stats.websites : []).map((website: any) => ({
+      value: website.name,
+      label: website.name,
     })),
   ];
 
@@ -116,25 +116,27 @@ export default function AgentRunDetailDynamic({
   // Generate chart data based on selected website
   const chartData = selectedWebsite && selectedWebsite !== "__all__"
     ? (() => {
-        const websites = Array.isArray(stats.performanceByWebsite) ? stats.performanceByWebsite : [];
+        const websites = Array.isArray(stats.websites) ? stats.websites : [];
         const selectedWeb = websites.find(
-          (web: any) => web.website === selectedWebsite
+          (web: any) => web.name === selectedWebsite
         );
-        return selectedWeb ? [{
-          website: selectedWeb.website,
-          average: Number((selectedWeb.averageScore * 100).toFixed(1)),
-          total: selectedWeb.tasks,
-          successCount: selectedWeb.successful,
-          avgSolutionTime: selectedWeb.averageDuration,
-          colorIndex: 0,
-        }] : [];
+        return (
+          selectedWeb?.useCases?.map((useCase: any, idx: number) => ({
+            website: formatUseCaseName(useCase.name),
+            average: Number(useCase.successRate.toFixed(3)),
+            total: useCase.total,
+            successCount: useCase.successCount,
+            avgSolutionTime: useCase.avgSolutionTime,
+            colorIndex: idx,
+          })) || []
+        );
       })()
-    : (Array.isArray(stats.performanceByWebsite) ? stats.performanceByWebsite : []).map((web: any, idx: number) => ({
-        website: web.website,
-        average: Number((web.averageScore * 100).toFixed(1)),
-        total: web.tasks,
-        successCount: web.successful,
-        avgSolutionTime: web.averageDuration,
+    : (Array.isArray(stats.websites) ? stats.websites : []).map((web: any, idx: number) => ({
+        website: web.name,
+        average: Number(web.overall.successRate.toFixed(3)),
+        total: web.overall.total,
+        successCount: web.overall.successCount,
+        avgSolutionTime: web.overall.avgSolutionTime,
         colorIndex: idx,
       }));
 
