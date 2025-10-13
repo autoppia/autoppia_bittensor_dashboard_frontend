@@ -145,7 +145,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#10B981",
     description:
       "Book store with shopping cart, reviews, and e-commerce features.",
-    avgDifficulty: 7.2,
+    avgDifficulty: 6.5,
     completionRate: 74,
     useCases: [
       {
@@ -260,7 +260,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#EF4444",
     description:
       "E-commerce storefront for product search, carts, and checkout.",
-    avgDifficulty: 6.8,
+    avgDifficulty: 7.5,
     completionRate: 82,
     useCases: [
       {
@@ -441,7 +441,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#3B82F6",
     description:
       "Legal case management with matters, clients, documents, and time tracking.",
-    avgDifficulty: 8.1,
+    avgDifficulty: 8,
     completionRate: 68,
     useCases: [
       {
@@ -535,7 +535,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#8B5CF6",
     description:
       "Email client with compose, labels, search, and organization features.",
-    avgDifficulty: 7.8,
+    avgDifficulty: 7.5,
     completionRate: 72,
     useCases: [
       {
@@ -633,7 +633,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#EC4899",
     description:
       "Food delivery platform with restaurant search, cart, and order placement.",
-    avgDifficulty: 7.4,
+    avgDifficulty: 8.5,
     completionRate: 76,
     useCases: [
       {
@@ -731,7 +731,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#06B6D4",
     description:
       "Hotel and lodging booking platform with search, wishlist, and reservations.",
-    avgDifficulty: 7.6,
+    avgDifficulty: 8,
     completionRate: 70,
     useCases: [
       {
@@ -818,7 +818,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#0EA5E9",
     description:
       "Professional networking platform with profiles, posts, jobs, and connections.",
-    avgDifficulty: 6.9,
+    avgDifficulty: 7,
     completionRate: 79,
     useCases: [
       {
@@ -905,7 +905,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#14B8A6",
     description:
       "Freelancer and consultant hiring platform with job postings and bookings.",
-    avgDifficulty: 7.3,
+    avgDifficulty: 8,
     completionRate: 73,
     useCases: [
       {
@@ -996,7 +996,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#A855F7",
     description:
       "Calendar application with events, reminders, attendees, and multiple views.",
-    avgDifficulty: 8.3,
+    avgDifficulty: 9.5,
     completionRate: 65,
     useCases: [
       {
@@ -1133,7 +1133,7 @@ export const websitesData: WebsiteDataType[] = [
     color: "#F97316",
     description:
       "Task and team management platform with priorities, dates, and collaboration.",
-    avgDifficulty: 7.1,
+    avgDifficulty: 9,
     completionRate: 75,
     useCases: [
       {
