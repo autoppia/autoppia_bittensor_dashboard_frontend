@@ -1,17 +1,34 @@
 "use client";
 
-import { Title, Text } from "rizzui";
+import { useState } from "react";
+import { Title, Text, Button } from "rizzui";
 import { websitesData } from "@/data/websites-data";
 import WebsiteItem from "./website-item";
 import {
   PiGlobeDuotone,
   PiRocketLaunchDuotone,
   PiClockDuotone,
+  PiSortAscendingBold,
+  PiSortDescendingBold,
 } from "react-icons/pi";
 
+type SortOption = "difficulty-asc" | "difficulty-desc" | "name";
+
 export default function Websites() {
+  const [sortBy, setSortBy] = useState<SortOption>("difficulty-asc");
+
   const activeWebsites = websitesData.filter((w) => !w.isComingSoon);
   const comingSoonWebsites = websitesData.filter((w) => w.isComingSoon);
+
+  const sortedActiveWebsites = [...activeWebsites].sort((a, b) => {
+    if (sortBy === "difficulty-asc") {
+      return a.avgDifficulty - b.avgDifficulty;
+    } else if (sortBy === "difficulty-desc") {
+      return b.avgDifficulty - a.avgDifficulty;
+    } else {
+      return a.name.localeCompare(b.name);
+    }
+  });
 
   return (
     <div className="w-full min-h-screen">
@@ -55,19 +72,42 @@ export default function Websites() {
         </div>
 
         <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg">
-              <PiRocketLaunchDuotone className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg">
+                <PiRocketLaunchDuotone className="w-6 h-6 text-white" />
+              </div>
+              <Title
+                as="h2"
+                className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent"
+              >
+                Active Websites
+              </Title>
             </div>
-            <Title
-              as="h2"
-              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent"
-            >
-              Active Websites
-            </Title>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant={sortBy === "difficulty-asc" ? "solid" : "outline"}
+                size="sm"
+                onClick={() => setSortBy("difficulty-asc")}
+                className="gap-1.5"
+              >
+                <PiSortAscendingBold className="w-4 h-4" />
+                Easy First
+              </Button>
+              <Button
+                variant={sortBy === "difficulty-desc" ? "solid" : "outline"}
+                size="sm"
+                onClick={() => setSortBy("difficulty-desc")}
+                className="gap-1.5"
+              >
+                <PiSortDescendingBold className="w-4 h-4" />
+                Hard First
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {activeWebsites.map((website, index) => (
+            {sortedActiveWebsites.map((website, index) => (
               <WebsiteItem key={index} website={website} />
             ))}
           </div>

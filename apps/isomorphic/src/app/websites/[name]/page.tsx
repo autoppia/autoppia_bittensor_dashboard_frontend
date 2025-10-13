@@ -18,9 +18,9 @@ import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 export default function WebsiteDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const websiteName = params?.name as string;
+  const websiteSlug = params?.name as string;
 
-  const website = websitesData.find((w) => w.name === websiteName);
+  const website = websitesData.find((w) => w.slug === websiteSlug);
 
   if (!website) {
     return (
@@ -168,10 +168,10 @@ export default function WebsiteDetailPage() {
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
                   >
-                    {website.totalTasks[0]}
+                    {website.useCases.length}
                   </Text>
                   <Text className="text-xs text-white font-medium">
-                    Easy Tasks
+                    Use Cases
                   </Text>
                 </div>
                 <div className="text-center">
@@ -179,21 +179,10 @@ export default function WebsiteDetailPage() {
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
                   >
-                    {website.totalTasks[1]}
+                    {website.avgDifficulty}/10
                   </Text>
                   <Text className="text-xs text-white font-medium">
-                    Medium Tasks
-                  </Text>
-                </div>
-                <div className="text-center">
-                  <Text
-                    className="text-3xl font-bold mb-1"
-                    style={{ color: website.color }}
-                  >
-                    {website.totalTasks[2]}
-                  </Text>
-                  <Text className="text-xs text-white font-medium">
-                    Hard Tasks
+                    Avg Difficulty
                   </Text>
                 </div>
               </div>
@@ -272,18 +261,23 @@ export default function WebsiteDetailPage() {
                           style={{ color: website.color }}
                         />
                         <Text className="text-sm font-semibold text-white">
-                          Example Prompt:
+                          Example Prompts:
                         </Text>
                       </div>
-                      <div
-                        className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
-                        style={{
-                          backgroundColor: colorWithOpacity10,
-                          borderColor: colorBorder,
-                          color: "#D1D5DB",
-                        }}
-                      >
-                        {`"${useCase.examplePrompt}"`}
+                      <div className="space-y-2">
+                        {useCase.examplePrompt.map((prompt, promptIndex) => (
+                          <div
+                            key={promptIndex}
+                            className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
+                            style={{
+                              backgroundColor: colorWithOpacity10,
+                              borderColor: colorBorder,
+                              color: "#D1D5DB",
+                            }}
+                          >
+                            {`"${prompt}"`}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
