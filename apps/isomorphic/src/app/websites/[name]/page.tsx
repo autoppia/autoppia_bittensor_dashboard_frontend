@@ -157,13 +157,13 @@ export default function WebsiteDetailPage() {
               )}
 
               <div
-                className="grid grid-cols-3 gap-4 p-6 rounded-2xl border-2 backdrop-blur-sm"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 rounded-2xl border-2 backdrop-blur-sm"
                 style={{
                   backgroundColor: colorWithOpacity10,
                   borderColor: colorBorder,
                 }}
               >
-                <div className="text-center">
+                <div className="gap-4 sm:gap-0 items-center text-center flex flex-row sm:flex-col">
                   <Text
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
@@ -174,7 +174,7 @@ export default function WebsiteDetailPage() {
                     Use Cases
                   </Text>
                 </div>
-                <div className="text-center">
+                <div className="gap-4 sm:gap-0 items-center text-center flex flex-row sm:flex-col">
                   <Text
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
