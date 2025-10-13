@@ -23,7 +23,7 @@ import { FaArrowRight, FaGithub } from "react-icons/fa";
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Infinity Web Arena";
+  const fullText = "Infinite Web Arena";
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
