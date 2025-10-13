@@ -4,7 +4,8 @@
  */
 
 import { apiClient } from './client';
-import {
+import { mockAgentRunRecords } from './mock-agent-runs';
+import type {
   AgentRunData,
   AgentRunStats,
   AgentRunSummary,
@@ -18,6 +19,9 @@ import {
   AgentRunQueryParams,
   AgentRunTasksQueryParams,
   AgentRunPartialData,
+  AgentRunListItem,
+  AgentRunsListQueryParams,
+  AgentRunsListResponse,
 } from './types/agent-runs';
 
 export class AgentRunsService {
@@ -47,10 +51,17 @@ export class AgentRunsService {
       );
       return response.data.data.personas;
     } catch (error: any) {
+      const fallback = mockAgentRunRecords[runId]?.personas;
+      if (fallback) {
+        return fallback;
+      }
       if (error.code === 'AGENT_RUN_NOT_FOUND') {
         throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
       }
-      throw error;
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Failed to fetch agent run personas');
     }
   }
 
@@ -64,10 +75,17 @@ export class AgentRunsService {
       );
       return response.data.data.stats;
     } catch (error: any) {
+      const fallback = mockAgentRunRecords[runId]?.stats;
+      if (fallback) {
+        return fallback;
+      }
       if (error.code === 'AGENT_RUN_NOT_FOUND') {
         throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
       }
-      throw error;
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Failed to fetch agent run statistics');
     }
   }
 
@@ -81,10 +99,17 @@ export class AgentRunsService {
       );
       return response.data.data.summary;
     } catch (error: any) {
+      const fallback = mockAgentRunRecords[runId]?.summary;
+      if (fallback) {
+        return fallback;
+      }
       if (error.code === 'AGENT_RUN_NOT_FOUND') {
         throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
       }
-      throw error;
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Failed to fetch agent run summary');
     }
   }
 
@@ -100,15 +125,59 @@ export class AgentRunsService {
     page: number;
     limit: number;
   }> {
-    const response = await apiClient.get<AgentRunTasksResponse>(
-      `${this.baseEndpoint}/${runId}/tasks`,
+    try {
+      const response = await apiClient.get<AgentRunTasksResponse>(
+        `${this.baseEndpoint}/${runId}/tasks`,
+        params
+      );
+      return {
+        tasks: response.data.data.tasks,
+        total: response.data.data.total,
+        page: response.data.data.page,
+        limit: response.data.data.limit,
+      };
+    } catch (error: any) {
+      const fallback = mockAgentRunRecords[runId]?.tasks;
+      if (fallback) {
+        return {
+          tasks: fallback.tasks,
+          total: fallback.total,
+          page: fallback.page,
+          limit: fallback.limit,
+        };
+      }
+      if (error.code === 'AGENT_RUN_NOT_FOUND') {
+        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
+      }
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Failed to fetch agent run tasks');
+    }
+  }
+
+  /**
+   * List agent runs with optional filtering
+   */
+  async listAgentRuns(
+    params?: AgentRunsListQueryParams
+  ): Promise<{
+    runs: AgentRunListItem[];
+    total: number;
+    page: number;
+    limit: number;
+    facets?: AgentRunsListResponse['data']['facets'];
+  }> {
+    const response = await apiClient.get<AgentRunsListResponse>(
+      this.baseEndpoint,
       params
     );
     return {
-      tasks: response.data.data.tasks,
+      runs: response.data.data.runs,
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,
+      facets: response.data.data.facets,
     };
   }
 

@@ -1,111 +1,26 @@
 "use client";
 
-import PageHeader from "@/app/shared/page-header";
 import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
-import { Title, Text } from 'rizzui/typography';
-import cn from '@core/utils/class-names';
-import Link from 'next/link';
-import { PiArrowSquareOutDuotone, PiGithubLogoDuotone, PiArrowClockwiseDuotone, PiWifiHighDuotone, PiMinusBold } from 'react-icons/pi';
+import { Title } from "rizzui/typography";
+import Link from "next/link";
+import { PiGithubLogoDuotone } from "react-icons/pi";
+import { FaPlay } from "react-icons/fa";
+import MinerAnimationModal from "@/app/shared/modal-views/miner-animation-modal";
+import { useModal } from "@/app/shared/modal-views/use-modal";
 import { useOverviewData } from "@/services/hooks/useOverview";
 
 export default function Overview() {
-  const { data, loading, error, refetch } = useOverviewData();
+  const { loading, error, refetch } = useOverviewData();
+  const { openModal } = useModal();
 
-  const getNetworkStatusColor = (status?: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-500';
-      case 'degraded': return 'text-yellow-500';
-      case 'down': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getNetworkStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'healthy': return '🟢';
-      case 'degraded': return '🟡';
-      case 'down': return '🔴';
-      default: return '⚪';
-    }
-  };
-
-  // Safe access to network status with fallback
-  const networkStatus = data?.networkStatus || { status: 'unknown', networkLatency: 0 };
+  function handleOpenTimeline() {
+    openModal({ view: <MinerAnimationModal />, customSize: 1260, size: "xl" });
+  }
 
   return (
     <>
-      <header className={cn('mb-6 mt-4')}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Title
-              as="h2"
-              className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold"
-            >
-              Subnet 36 - Web Agents
-            </Title>
-            <Link 
-              href="https://taostats.io/subnets/36" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 transition-colors"
-            >
-              Learn more
-              <PiArrowSquareOutDuotone className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Network Status */}
-            <div className="flex items-center gap-2">
-              {networkStatus.status === 'down' ? (
-                <PiMinusBold className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
-              ) : (
-                <PiWifiHighDuotone className={cn("w-4 h-4", getNetworkStatusColor(networkStatus.status))} />
-              )}
-              <span className={cn("text-sm font-medium", getNetworkStatusColor(networkStatus.status))}>
-                {getNetworkStatusIcon(networkStatus.status)} {networkStatus.status || 'Unknown'}
-              </span>
-              {networkStatus.networkLatency && (
-                <span className="text-xs text-gray-500">
-                  ({networkStatus.networkLatency}ms)
-                </span>
-              )}
-            </div>
-            
-            {/* Refresh Button */}
-            <button
-              onClick={refetch}
-              disabled={loading}
-              className={cn(
-                "group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300",
-                loading && "animate-spin"
-              )}
-              title="Refresh data"
-            >
-              <PiArrowClockwiseDuotone className={cn("w-4 h-4 group-hover:scale-110 transition-transform duration-300", loading && "animate-spin")} />
-            </button>
-
-            {/* Version */}
-            <span className="text-sm text-gray-500 font-medium">
-              IM Version 1.0.0
-            </span>
-            
-            {/* GitHub Link */}
-            <Link 
-              href="https://github.com/autoppia/autoppia_bittensor_dashboard_frontend" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
-              title="View Subnet Repository"
-            >
-              <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
-
       {/* Global Error State */}
       {error && (
         <div className="mb-6 bg-red-900/20 border border-red-700/50 rounded-lg p-4">
@@ -116,7 +31,8 @@ export default function Overview() {
             </div>
             <button
               onClick={refetch}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
               Try Again
             </button>
@@ -126,8 +42,41 @@ export default function Overview() {
 
       {/* Content - always render components, let them handle their own loading states */}
       <div className="flex flex-col lg:flex-row gap-6">
-        <OverviewMinerChart className="w-full lg:w-[calc(100%-460px)]" />
-        <OverviewMetrics className="w-full lg:w-[460px]" />
+        <div className="w-full lg:w-[calc(100%-460px)]">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <Title
+              as="h2"
+              className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold"
+            >
+              Subnet 36 - Web Agents
+            </Title>
+            <button
+              onClick={handleOpenTimeline}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black"
+            >
+              <FaPlay className="h-3.5 w-3.5 text-black" />
+              Replay
+            </button>
+          </div>
+          <OverviewMinerChart className="w-full" />
+        </div>
+        <div className="w-full lg:w-[460px]">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-sm text-gray-500 font-medium">
+              IM Version 1.0.0
+            </span>
+            <Link
+              href="https://github.com/autoppia/autoppia_bittensor_dashboard_frontend"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+              title="View Subnet Repository"
+            >
+              <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+            </Link>
+          </div>
+          <OverviewMetrics className="w-full" />
+        </div>
       </div>
       <OverviewValidators />
     </>
