@@ -272,18 +272,23 @@ export default function WebsiteDetailPage() {
                           style={{ color: website.color }}
                         />
                         <Text className="text-sm font-semibold text-white">
-                          Example Prompt:
+                          Example Prompts:
                         </Text>
                       </div>
-                      <div
-                        className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
-                        style={{
-                          backgroundColor: colorWithOpacity10,
-                          borderColor: colorBorder,
-                          color: "#D1D5DB",
-                        }}
-                      >
-                        {`"${useCase.examplePrompt}"`}
+                      <div className="space-y-2">
+                        {useCase.examplePrompt.map((prompt, promptIndex) => (
+                          <div
+                            key={promptIndex}
+                            className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
+                            style={{
+                              backgroundColor: colorWithOpacity10,
+                              borderColor: colorBorder,
+                              color: "#D1D5DB",
+                            }}
+                          >
+                            {`"${prompt}"`}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
