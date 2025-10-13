@@ -23,7 +23,7 @@ import { FaArrowRight, FaGithub } from "react-icons/fa";
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Infinity Web Arena";
+  const fullText = "Infinite Web Arena";
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -537,7 +537,7 @@ export default function LandingPage() {
                     </span>
                   </div>
                   <Text className="text-purple-100 text-sm leading-relaxed">
-                    <span className="text-pink-300">Infinity Web Arena</span>{" "}
+                    <span className="text-pink-300">Infinite Web Arena</span>{" "}
                     feeds the subnet with synthetic, ever-changing tasks and
                     sites—preventing memorization and pushing
                     <span className="text-pink-300"> generalization</span>.
