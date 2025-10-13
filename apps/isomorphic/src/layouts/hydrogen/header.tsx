@@ -18,6 +18,14 @@ import { useNetworkStatus } from "@/services/hooks/useOverview";
 export default function Header() {
   const pathname = usePathname();
   const { data: networkStatus, loading: statusLoading } = useNetworkStatus();
+  const status = networkStatus?.status;
+  const statusLabel = statusLoading
+    ? "● LOADING"
+    : status === "healthy"
+      ? "● LIVE"
+      : status === "degraded"
+        ? "● WARN"
+        : "● DOWN";
 
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10">
@@ -132,21 +140,21 @@ export default function Header() {
                 {/* Dynamic glowing background based on status */}
                 <div className={cn(
                   "absolute inset-0 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300",
-                  networkStatus?.status === 'healthy' ? "bg-green-500" :
-                  networkStatus?.status === 'degraded' ? "bg-yellow-500" :
+                  status === 'healthy' ? "bg-green-500" :
+                  status === 'degraded' ? "bg-yellow-500" :
                   "bg-red-500"
                 )}></div>
 
                 {/* Main container */}
                 <div className={cn(
-                  "relative flex items-center gap-2 px-3 py-1.5 bg-black rounded-lg transition-all duration-300",
-                  networkStatus?.status === 'healthy' ? "border border-green-500 hover:border-green-400" :
-                  networkStatus?.status === 'degraded' ? "border border-yellow-500 hover:border-yellow-400" :
+                  "relative flex items-center gap-2 px-3 py-1.5 bg-black rounded-lg transition-all duration-300 whitespace-nowrap",
+                  status === 'healthy' ? "border border-green-500 hover:border-green-400" :
+                  status === 'degraded' ? "border border-yellow-500 hover:border-yellow-400" :
                   "border border-red-500 hover:border-red-400"
                 )}>
                   {/* Dynamic icon and animation based on status */}
                   <div className="relative">
-                    {networkStatus?.status === 'down' ? (
+                    {status === 'down' ? (
                       <LuMinus className={cn(
                         "w-4 h-4",
                         "text-red-500"
@@ -154,12 +162,12 @@ export default function Header() {
                     ) : (
                       <LuActivity className={cn(
                         "w-4 h-4 animate-pulse",
-                        networkStatus?.status === 'healthy' ? "text-green-500" :
-                        networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                        status === 'healthy' ? "text-green-500" :
+                        status === 'degraded' ? "text-yellow-500" :
                         "text-red-500"
                       )} />
                     )}
-                    {networkStatus?.status === 'healthy' && (
+                    {status === 'healthy' && (
                       <div className="absolute -inset-1 border border-green-500 rounded-full animate-ping opacity-50"></div>
                     )}
                   </div>
@@ -167,14 +175,11 @@ export default function Header() {
                   {/* Dynamic status text */}
                   <span className={cn(
                     "text-sm font-mono font-bold tracking-wider",
-                    networkStatus?.status === 'healthy' ? "text-green-500" :
-                    networkStatus?.status === 'degraded' ? "text-yellow-500" :
+                    status === 'healthy' ? "text-green-500" :
+                    status === 'degraded' ? "text-yellow-500" :
                     "text-red-500"
                   )}>
-                    {statusLoading ? "● LOADING" :
-                     networkStatus?.status === 'healthy' ? "● LIVE" :
-                     networkStatus?.status === 'degraded' ? "● DEGRADED" :
-                     "● DOWN"}
+                    {statusLabel}
                   </span>
                 </div>
               </div>

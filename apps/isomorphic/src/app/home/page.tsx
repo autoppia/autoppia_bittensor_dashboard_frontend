@@ -355,7 +355,7 @@ export default function LandingPage() {
             {websitesData.length} synthetic websites
           </span>{" "}
           covering e-commerce, dining, CRM, email, delivery, lodging, and
-          professional networking. Here's a preview of our projects:
+          professional networking. Here&apos;s a preview of our projects:
         </Text>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">

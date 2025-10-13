@@ -90,8 +90,8 @@ export default function OverviewValidators() {
     );
   }
 
-  // Show error state
-  if (validatorsError || roundError) {
+  // Show error state - only show validator error if validators actually failed
+  if (validatorsError) {
     return (
       <>
         <PageHeader title={"What's happening on the subnet"} className="mt-12">
@@ -102,7 +102,7 @@ export default function OverviewValidators() {
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
           <p className="text-red-400 font-medium">Error loading validators</p>
           <p className="text-red-300 text-sm mt-1">
-            {validatorsError || roundError}
+            {validatorsError}
           </p>
         </div>
       </>
