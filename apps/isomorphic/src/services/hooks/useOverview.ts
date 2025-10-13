@@ -135,9 +135,9 @@ export function useOverviewData() {
                   leaderboard.loading || statistics.loading || networkStatus.loading || 
                   recentActivity.loading;
 
-  const error = metrics.error || validators.error || currentRound.error || 
-                leaderboard.error || statistics.error || networkStatus.error || 
-                recentActivity.error;
+  // Only consider critical endpoints as errors - currentRound is not critical for basic overview
+  const error = metrics.error || validators.error || 
+                leaderboard.error || statistics.error || networkStatus.error;
 
   const refetch = useCallback(() => {
     metrics.refetch();

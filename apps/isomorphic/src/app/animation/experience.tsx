@@ -579,8 +579,8 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
   const topMinerId = topMiner?.id;
 
   const renderDot =
-    (minerId: string) =>
-    (props: any) => {
+    (minerId: string) => {
+      const DotComponent = (props: any) => {
       const { cx = 0, cy = 0, stroke, index } = props;
       if (!activeData.length || index !== activeData.length - 1) {
         return <g />;
@@ -635,10 +635,13 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
         </g>
       );
     };
+    DotComponent.displayName = `DotComponent-${minerId}`;
+    return DotComponent;
+  };
 
   const createLineLabel =
-    (minerId: string) =>
-    (props: any) => {
+    (minerId: string) => {
+      const LineLabelComponent = (props: any) => {
       const { x = 0, y = 0, index } = props;
       if (!activeData.length || index !== activeData.length - 1) {
         return null;
@@ -685,6 +688,9 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
         </g>
       );
     };
+    LineLabelComponent.displayName = `LineLabelComponent-${minerId}`;
+    return LineLabelComponent;
+  };
 
   const containerSpacing = condensed ? "space-y-5" : "space-y-6";
   const chartHeightClass = condensed ? "h-[360px]" : "h-[420px]";
