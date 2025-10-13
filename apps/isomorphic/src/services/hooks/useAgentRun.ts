@@ -2,16 +2,77 @@
  * Custom hooks for Agent Run data management with partial loading
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { agentRunsService } from '../api/agent-runs.service';
-import {
+import type {
   AgentRunData,
   AgentRunStats,
   AgentRunSummary,
   AgentRunPersonas,
   AgentRunTaskData,
   AgentRunPartialData,
+  AgentRunListItem,
+  AgentRunsListQueryParams,
+  AgentRunsListResponse,
 } from '../api/types/agent-runs';
+
+// Hook for listing agent runs with filters
+export function useAgentRunsList(params?: AgentRunsListQueryParams) {
+  const [runs, setRuns] = useState<AgentRunListItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(params?.page ?? 1);
+  const [limit, setLimit] = useState(params?.limit ?? 20);
+  const [facets, setFacets] = useState<AgentRunsListResponse['data']['facets'] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const serializedParams = useMemo(
+    () => JSON.stringify(params ?? {}),
+    [params]
+  );
+
+  const stableParams = useMemo(
+    () => JSON.parse(serializedParams) as AgentRunsListQueryParams,
+    [serializedParams]
+  );
+
+  const fetchRuns = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await agentRunsService.listAgentRuns(stableParams);
+      setRuns(response.runs);
+      setTotal(response.total);
+      setPage(response.page);
+      setLimit(response.limit);
+      setFacets(response.facets ?? null);
+    } catch (err) {
+      setRuns([]);
+      setError(err instanceof Error ? err.message : 'Failed to fetch agent runs');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [stableParams]);
+
+  useEffect(() => {
+    fetchRuns();
+  }, [fetchRuns]);
+
+  const refetch = useCallback(() => {
+    fetchRuns();
+  }, [fetchRuns]);
+
+  return {
+    runs,
+    total,
+    page,
+    limit,
+    facets,
+    isLoading,
+    error,
+    refetch,
+  };
+}
 
 // Hook for getting agent run data with progressive loading
 export function useAgentRun(

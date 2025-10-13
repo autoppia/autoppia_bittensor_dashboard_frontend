@@ -355,11 +355,11 @@ export default function LandingPage() {
             {websitesData.length} synthetic websites
           </span>{" "}
           covering e-commerce, dining, CRM, email, delivery, lodging, and
-          professional networking.
+          professional networking. Here's a preview of our projects:
         </Text>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {websitesData.map((website, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {websitesData.slice(0, 6).map((website, index) => (
             <div
               key={index}
               className="transition-transform duration-300 animate-fade-in-up"

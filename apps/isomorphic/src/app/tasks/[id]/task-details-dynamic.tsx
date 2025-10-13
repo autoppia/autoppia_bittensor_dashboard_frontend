@@ -10,10 +10,22 @@ import {
   PiTimer,
   PiFileText,
   PiPlay,
+  PiHash,
 } from "react-icons/pi";
 import { useTaskDetails } from "@/services/hooks/useTask";
 import LoadingScreen from "@/app/shared/loading-screen";
 import Placeholder, { TextPlaceholder } from "@/app/shared/placeholder";
+
+const toTitleCase = (value?: string) =>
+  value
+    ? value
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "—";
 
 export default function TaskDetailsDynamic() {
   const { id } = useParams();
@@ -64,65 +76,71 @@ export default function TaskDetailsDynamic() {
     );
   }
 
+  const metricCards = [
+    {
+      label: "Website",
+      value: toTitleCase(details.website),
+      icon: <PiGlobe className="h-5 w-5" />,
+      accent: "bg-blue-100 text-blue-600 border-blue-200",
+    },
+    {
+      label: "Use Case",
+      value: toTitleCase(details.useCase),
+      icon: <PiTarget className="h-5 w-5" />,
+      accent: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    },
+    {
+      label: "Score",
+      value: `${Math.round(details.score * 100)}%`,
+      icon: <PiChartBar className="h-5 w-5" />,
+      accent: "bg-purple-100 text-purple-600 border-purple-200",
+    },
+    {
+      label: "Duration",
+      value: `${details.duration}s`,
+      icon: <PiTimer className="h-5 w-5" />,
+      accent: "bg-orange-100 text-orange-600 border-orange-200",
+    },
+    {
+      label: "Actions",
+      value: details.performance.totalActions,
+      icon: <PiFileText className="h-5 w-5" />,
+      accent: "bg-indigo-100 text-indigo-600 border-indigo-200",
+    },
+    {
+      label: "Run ID",
+      value: details.agentRunId ?? "—",
+      icon: <PiHash className="h-5 w-5" />,
+      accent: "bg-slate-100 text-slate-700 border-slate-200",
+    },
+    {
+      label: "Status",
+      value: toTitleCase(details.status),
+      icon: <PiPlay className="h-5 w-5" />,
+      accent: "bg-teal-100 text-teal-600 border-teal-200",
+    },
+  ];
+
   return (
     <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Task Stats Grid - 2x3 on desktop */}
-        <div className="grid grid-cols-6 gap-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiGlobe className="w-4 h-4 text-blue-400" />
-              <div className="text-xl font-bold text-blue-400">
-                {details.website}
+        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+          {metricCards.map((metric) => (
+            <div
+              key={metric.label}
+              className={`flex flex-col items-center gap-2 rounded-xl border ${metric.accent} px-3 py-4 text-center shadow-sm`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/70">
+                {metric.icon}
+              </div>
+              <div className="text-base font-semibold text-gray-900">
+                {metric.value}
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {metric.label}
               </div>
             </div>
-            <div className="text-xs text-gray-700">Website</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiTarget className="w-4 h-4 text-green-400" />
-              <div className="text-xl font-bold text-green-400">
-                {details.useCase}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Use Case</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiChartBar className="w-4 h-4 text-purple-400" />
-              <div className="text-xl font-bold text-purple-400">
-                {Math.round(details.score * 100)}%
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Score</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiTimer className="w-4 h-4 text-orange-400" />
-              <div className="text-xl font-bold text-orange-400">
-                {details.duration}s
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Duration</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiFileText className="w-4 h-4 text-indigo-400" />
-              <div className="text-xl font-bold text-indigo-400">
-                {details.performance.totalActions}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Actions</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <PiPlay className="w-4 h-4 text-teal-400" />
-              <div className="text-xl font-bold text-teal-400">
-                {details.status}
-              </div>
-            </div>
-            <div className="text-xs text-gray-700">Status</div>
-          </div>
+          ))}
         </div>
 
         {/* Task Prompt */}
@@ -158,46 +176,28 @@ export default function TaskDetailsDynamic() {
 
       {/* Mobile Layout - Stacked */}
       <div className="flex flex-col space-y-4 md:hidden">
-        {/* Overall Score - Prominent on mobile */}
-        <div className="text-center">
-          <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {Math.round(details.score * 100)}%
-          </div>
-          <div className="text-sm text-gray-700 mt-1">Task Score</div>
+        <div className="grid grid-cols-2 gap-3">
+          {metricCards.map((metric) => (
+            <div
+              key={metric.label}
+              className={`flex flex-col items-center gap-1 rounded-lg border ${metric.accent} px-3 py-3 text-center shadow-sm`}
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70">
+                {metric.icon}
+              </div>
+              <div className="text-sm font-semibold text-gray-900">{metric.value}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{metric.label}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Task Info */}
         <div className="bg-white/10 rounded-lg p-3">
-          <div className="text-sm font-medium text-gray-700 mb-2">Task Details</div>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Website:</span>
-              <span className="font-medium">{details.website}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Use Case:</span>
-              <span className="font-medium">{details.useCase}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Duration:</span>
-              <span className="font-medium">{details.duration}s</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Status:</span>
-              <span className="font-medium capitalize">{details.status}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Task Prompt */}
-        <div className="bg-white/10 rounded-lg p-3">
-          <div className="text-sm font-medium text-gray-700 mb-2">Prompt</div>
+          <div className="text-sm font-medium text-gray-700 mb-2">Task Prompt</div>
           <div className="text-gray-800 text-sm leading-relaxed">
             {details.prompt}
           </div>
         </div>
 
-        {/* Performance Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/5 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-green-400">
@@ -210,6 +210,12 @@ export default function TaskDetailsDynamic() {
               {details.performance.failedActions}
             </div>
             <div className="text-xs text-gray-600">Failed</div>
+          </div>
+          <div className="bg-white/5 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-blue-400">
+              {details.performance.averageActionDuration.toFixed(1)}s
+            </div>
+            <div className="text-xs text-gray-600">Avg Duration</div>
           </div>
         </div>
       </div>

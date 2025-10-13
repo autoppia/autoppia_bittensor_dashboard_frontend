@@ -12,7 +12,73 @@ All endpoints require authentication via API key or JWT token.
 
 ## Endpoints
 
-### 1. Get Agent Run Details
+### 1. List Agent Runs
+**GET** `/api/v1/agent-runs`
+
+Retrieve a paginated list of agent runs with optional filters. This endpoint powers the Agent Run Search view.
+
+#### Query Parameters
+- `query` (optional): Free-text search across run ID, agent ID, and validator metadata.
+- `page` (optional, default: 1): Page number.
+- `limit` (optional, default: 20): Page size.
+- `roundId` (optional): Filter by round identifier.
+- `validatorId` (optional): Filter by validator UID.
+- `agentId` (optional): Filter by agent UID.
+- `status` (optional): Filter by run status (`running`, `completed`, `failed`, `timeout`).
+- `sortBy` (optional): Sort field (`startTime`, `score`, `duration`, `ranking`).
+- `sortOrder` (optional): Sort direction (`asc`, `desc`).
+- `startDate` / `endDate` (optional): Filter runs that started within a time range (ISO 8601).
+
+#### Response
+```json
+{
+  "data": {
+    "runs": [
+      {
+        "runId": "b8l3-0n5y",
+        "agentId": "agent-42",
+        "agentName": "AutoPPIA Agent",
+        "roundId": 21,
+        "validatorId": "autoppia",
+        "validatorName": "AutoPPIA",
+        "validatorImage": "/validators/Autoppia.png",
+        "status": "completed",
+        "startTime": "2024-04-21T18:00:00Z",
+        "endTime": "2024-04-21T18:12:00Z",
+        "totalTasks": 180,
+        "completedTasks": 176,
+        "successfulTasks": 152,
+        "overallScore": 0.87,
+        "successRate": 84,
+        "ranking": 3
+      }
+    ],
+    "total": 428,
+    "page": 1,
+    "limit": 50,
+    "facets": {
+      "validators": [
+        { "id": "autoppia", "name": "AutoPPIA", "count": 132 },
+        { "id": "kraken", "name": "Kraken Validator", "count": 94 }
+      ],
+      "rounds": [
+        { "id": 21, "count": 65 },
+        { "id": 20, "count": 58 }
+      ],
+      "agents": [
+        { "id": "agent-42", "name": "AutoPPIA Agent", "count": 32 },
+        { "id": "agent-108", "name": "Kraken Agent", "count": 21 }
+      ],
+      "statuses": [
+        { "name": "completed", "count": 372 },
+        { "name": "failed", "count": 41 }
+      ]
+    }
+  }
+}
+```
+
+### 2. Get Agent Run Details
 **GET** `/api/v1/agent-runs/{runId}`
 
 Get comprehensive details for a specific agent run.
@@ -83,7 +149,7 @@ Get comprehensive details for a specific agent run.
 }
 ```
 
-### 2. Get Agent Run Personas
+### 3. Get Agent Run Personas
 **GET** `/api/v1/agent-runs/{runId}/personas`
 
 Get personas data (round, validator, agent information) for an agent run.
@@ -120,7 +186,7 @@ Get personas data (round, validator, agent information) for an agent run.
 }
 ```
 
-### 3. Get Agent Run Statistics
+### 4. Get Agent Run Statistics
 **GET** `/api/v1/agent-runs/{runId}/stats`
 
 Get detailed statistics for an agent run.
@@ -169,7 +235,7 @@ Get detailed statistics for an agent run.
 }
 ```
 
-### 4. Get Agent Run Summary
+### 5. Get Agent Run Summary
 **GET** `/api/v1/agent-runs/{runId}/summary`
 
 Get summary information for an agent run.
@@ -214,7 +280,7 @@ Get summary information for an agent run.
 }
 ```
 
-### 5. Get Agent Run Tasks
+### 6. Get Agent Run Tasks
 **GET** `/api/v1/agent-runs/{runId}/tasks`
 
 Get tasks for an agent run with pagination and filtering.
@@ -254,7 +320,7 @@ Get tasks for an agent run with pagination and filtering.
             "success": true
           }
         ],
-        "screenshots": ["screenshot-1.png"],
+        "screenshots": ["replay-1.gif"],
         "logs": ["Task started", "Navigation successful"]
       }
     ],
@@ -265,7 +331,9 @@ Get tasks for an agent run with pagination and filtering.
 }
 ```
 
-### 6. Get Agent Runs by Agent
+> ℹ️ **Screenshots vs GIF replays:** the `screenshots` array is reused in the frontend to render animated GIF replays for each task. When the backend provides a `.gif` URL the UI will show the looping replay instead of a static frame, so prefer exporting GIF files here.
+
+### 7. Get Agent Runs by Agent
 **GET** `/api/v1/agents/{agentId}/runs`
 
 Get all agent runs for a specific agent.
@@ -279,7 +347,7 @@ Get all agent runs for a specific agent.
 - `sortBy` (query, optional): Sort field (startTime, score, duration, ranking)
 - `sortOrder` (query, optional): Sort order (asc, desc)
 
-### 7. Get Agent Runs by Round
+### 8. Get Agent Runs by Round
 **GET** `/api/v1/rounds/{roundId}/agent-runs`
 
 Get all agent runs for a specific round.
@@ -292,7 +360,7 @@ Get all agent runs for a specific round.
 - `sortBy` (query, optional): Sort field (startTime, score, duration, ranking)
 - `sortOrder` (query, optional): Sort order (asc, desc)
 
-### 8. Get Agent Runs by Validator
+### 9. Get Agent Runs by Validator
 **GET** `/api/v1/validators/{validatorId}/agent-runs`
 
 Get all agent runs for a specific validator.
@@ -305,7 +373,7 @@ Get all agent runs for a specific validator.
 - `sortBy` (query, optional): Sort field (startTime, score, duration, ranking)
 - `sortOrder` (query, optional): Sort order (asc, desc)
 
-### 9. Compare Agent Runs
+### 10. Compare Agent Runs
 **POST** `/api/v1/agent-runs/compare`
 
 Compare multiple agent runs.
@@ -332,7 +400,7 @@ Compare multiple agent runs.
 }
 ```
 
-### 10. Get Agent Run Timeline
+### 11. Get Agent Run Timeline
 **GET** `/api/v1/agent-runs/{runId}/timeline`
 
 Get timeline of events for an agent run.
@@ -366,7 +434,7 @@ Get timeline of events for an agent run.
 }
 ```
 
-### 11. Get Agent Run Logs
+### 12. Get Agent Run Logs
 **GET** `/api/v1/agent-runs/{runId}/logs`
 
 Get logs for an agent run.
@@ -396,7 +464,7 @@ Get logs for an agent run.
 }
 ```
 
-### 12. Get Agent Run Metrics
+### 13. Get Agent Run Metrics
 **GET** `/api/v1/agent-runs/{runId}/metrics`
 
 Get performance metrics for an agent run.

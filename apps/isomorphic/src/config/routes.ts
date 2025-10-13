@@ -7,5 +7,4 @@ export const routes = {
   testAgent: "/test-agent",
   tasks: "/tasks",
   websites: "/websites",
-  minerRace: "/miner-race",
 }

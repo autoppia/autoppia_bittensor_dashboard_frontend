@@ -82,7 +82,12 @@ module.exports = {
       {
         source: "/",
         destination: "/home",
-        permanent: true,
+        permanent: false,
+      },
+      {
+        source: "/land",
+        destination: "/home",
+        permanent: false,
       },
     ];
   },

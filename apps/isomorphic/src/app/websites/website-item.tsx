@@ -32,7 +32,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
 
   return (
     <Link
-      href={isComingSoon ? "#" : `/websites/${website.name}`}
+      href={isComingSoon ? "#" : `/websites/${website.slug}`}
       className={cn(
         "group relative block h-full",
         isComingSoon && "pointer-events-none"
@@ -152,33 +152,24 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
             )}
 
             <div className="flex items-center justify-between pt-3 border-t border-white/10">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <div className="text-center">
                   <Text
                     className="text-lg font-bold"
                     style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
                   >
-                    {website.totalTasks[0]}
+                    {website.useCases.length}
                   </Text>
-                  <Text className="text-xs text-gray-600">Easy</Text>
+                  <Text className="text-xs text-gray-600">Use Cases</Text>
                 </div>
                 <div className="text-center">
                   <Text
                     className="text-lg font-bold"
                     style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
                   >
-                    {website.totalTasks[1]}
+                    {website.avgDifficulty}/10
                   </Text>
-                  <Text className="text-xs text-gray-600">Medium</Text>
-                </div>
-                <div className="text-center">
-                  <Text
-                    className="text-lg font-bold"
-                    style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
-                  >
-                    {website.totalTasks[2]}
-                  </Text>
-                  <Text className="text-xs text-gray-600">Hard</Text>
+                  <Text className="text-xs text-gray-600">Difficulty</Text>
                 </div>
               </div>
             </div>

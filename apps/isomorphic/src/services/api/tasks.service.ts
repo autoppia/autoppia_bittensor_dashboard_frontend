@@ -16,6 +16,7 @@ import {
   TaskStatisticsResponse,
   TasksListResponse,
   TaskQueryParams,
+  TaskDetailQueryParams,
   TasksListQueryParams,
   TaskPartialData,
   TaskSearchParams,
@@ -42,12 +43,15 @@ export class TasksService {
   /**
    * Get detailed information for a specific task
    */
-  async getTaskDetails(taskId: string): Promise<TaskDetails> {
+  async getTaskDetails(
+    taskId: string,
+    params?: TaskDetailQueryParams
+  ): Promise<TaskDetails> {
     const response = await apiClient.get<{
       data: {
         details: TaskDetails;
       };
-    }>(`${this.baseEndpoint}/${taskId}/details`);
+    }>(`${this.baseEndpoint}/${taskId}/details`, params);
     return response.data.data.details;
   }
 
