@@ -27,7 +27,7 @@ export function WebsiteItem({ website }: WebsiteItemProps) {
 
   return (
     <Link
-      href={website.isComingSoon ? "#" : `/websites/${website.name}`}
+      href={website.isComingSoon ? "#" : `/websites/${website.slug}`}
       className={cn(
         "group relative block h-full",
         website.isComingSoon && "pointer-events-none"

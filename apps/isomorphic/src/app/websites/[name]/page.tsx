@@ -18,9 +18,9 @@ import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 export default function WebsiteDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const websiteName = params?.name as string;
+  const websiteSlug = params?.name as string;
 
-  const website = websitesData.find((w) => w.name === websiteName);
+  const website = websitesData.find((w) => w.slug === websiteSlug);
 
   if (!website) {
     return (

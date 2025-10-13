@@ -32,7 +32,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
 
   return (
     <Link
-      href={isComingSoon ? "#" : `/websites/${website.name}`}
+      href={isComingSoon ? "#" : `/websites/${website.slug}`}
       className={cn(
         "group relative block h-full",
         isComingSoon && "pointer-events-none"
