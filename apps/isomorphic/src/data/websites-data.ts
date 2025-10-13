@@ -12,6 +12,7 @@ export type TaskExample = {
 
 export type WebsiteDataType = {
   name: string;
+  slug: string; // URL-friendly version: lowercase with hyphens
   portValidator: string;
   href: string;
   origin: string;
@@ -32,6 +33,7 @@ export type WebsiteDataType = {
 export const websitesData: WebsiteDataType[] = [
   {
     name: "Autoppia Cinema",
+    slug: "autoppia-cinema",
     portValidator: "8000",
     href: "http://autocinema.autoppia.com",
     origin: "Movie Database",
@@ -129,6 +131,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "Autoppia Books",
+    slug: "autoppia-books",
     portValidator: "8001",
     href: "http://autobooks.autoppia.com",
     origin: "Book Store",
@@ -241,6 +244,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "Autozone",
+    slug: "autozone",
     portValidator: "8002",
     href: "http://autozone.autoppia.com",
     origin: "Amazon",
@@ -318,6 +322,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoDining",
+    slug: "autodining",
     portValidator: "8003",
     href: "http://autodining.autoppia.com",
     origin: "OpenTable",
@@ -416,6 +421,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoCRM",
+    slug: "autocrm",
     portValidator: "8004",
     href: "http://autocrm.autoppia.com",
     origin: "Legal CRM",
@@ -507,6 +513,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoMail",
+    slug: "automail",
     portValidator: "8005",
     href: "http://automail.autoppia.com",
     origin: "Gmail",
@@ -602,6 +609,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoDelivery",
+    slug: "autodelivery",
     portValidator: "8006",
     href: "http://autodelivery.autoppia.com",
     origin: "Uber Eats",
@@ -697,6 +705,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoLodge",
+    slug: "autolodge",
     portValidator: "8007",
     href: "http://autolodge.autoppia.com",
     origin: "Airbnb",
@@ -781,6 +790,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoConnect",
+    slug: "autoconnect",
     portValidator: "8008",
     href: "http://autoconnect.autoppia.com",
     origin: "LinkedIn",
@@ -865,6 +875,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoWork",
+    slug: "autowork",
     portValidator: "8009",
     href: "http://autowork.autoppia.com",
     origin: "Upwork",
@@ -953,6 +964,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoCalendar",
+    slug: "autocalendar",
     portValidator: "8010",
     href: "http://autocalendar.autoppia.com",
     origin: "Google Calendar",
@@ -1087,6 +1099,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "AutoList",
+    slug: "autolist",
     portValidator: "8011",
     href: "http://autolist.autoppia.com",
     origin: "Trello/Asana",
@@ -1185,6 +1198,14 @@ export const websitesData: WebsiteDataType[] = [
 export const websitesDataMap = websitesData.reduce(
   (acc, website) => {
     acc[website.name] = website;
+    return acc;
+  },
+  {} as Record<string, WebsiteDataType>
+);
+
+export const websitesDataBySlug = websitesData.reduce(
+  (acc, website) => {
+    acc[website.slug] = website;
     return acc;
   },
   {} as Record<string, WebsiteDataType>
