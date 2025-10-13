@@ -152,7 +152,7 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
             )}
 
             <div className="flex items-center justify-between pt-3 border-t border-white/10">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <div className="text-center">
                   <Text
                     className="text-lg font-bold"
@@ -170,15 +170,6 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                     {website.avgDifficulty}/10
                   </Text>
                   <Text className="text-xs text-gray-600">Difficulty</Text>
-                </div>
-                <div className="text-center">
-                  <Text
-                    className="text-lg font-bold"
-                    style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
-                  >
-                    {website.completionRate}%
-                  </Text>
-                  <Text className="text-xs text-gray-600">Completion</Text>
                 </div>
               </div>
             </div>

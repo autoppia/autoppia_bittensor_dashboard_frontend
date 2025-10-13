@@ -185,17 +185,6 @@ export default function WebsiteDetailPage() {
                     Avg Difficulty
                   </Text>
                 </div>
-                <div className="text-center">
-                  <Text
-                    className="text-3xl font-bold mb-1"
-                    style={{ color: website.color }}
-                  >
-                    {website.completionRate}%
-                  </Text>
-                  <Text className="text-xs text-white font-medium">
-                    Completion Rate
-                  </Text>
-                </div>
               </div>
             </div>
           </div>
