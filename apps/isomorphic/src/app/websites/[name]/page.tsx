@@ -168,10 +168,10 @@ export default function WebsiteDetailPage() {
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
                   >
-                    {website.totalTasks[0]}
+                    {website.useCases.length}
                   </Text>
                   <Text className="text-xs text-white font-medium">
-                    Easy Tasks
+                    Use Cases
                   </Text>
                 </div>
                 <div className="text-center">
@@ -179,10 +179,10 @@ export default function WebsiteDetailPage() {
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
                   >
-                    {website.totalTasks[1]}
+                    {website.avgDifficulty}/10
                   </Text>
                   <Text className="text-xs text-white font-medium">
-                    Medium Tasks
+                    Avg Difficulty
                   </Text>
                 </div>
                 <div className="text-center">
@@ -190,10 +190,10 @@ export default function WebsiteDetailPage() {
                     className="text-3xl font-bold mb-1"
                     style={{ color: website.color }}
                   >
-                    {website.totalTasks[2]}
+                    {website.completionRate}%
                   </Text>
                   <Text className="text-xs text-white font-medium">
-                    Hard Tasks
+                    Completion Rate
                   </Text>
                 </div>
               </div>

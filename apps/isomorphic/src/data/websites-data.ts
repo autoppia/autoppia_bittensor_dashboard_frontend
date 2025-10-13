@@ -16,7 +16,7 @@ export type WebsiteDataType = {
   portValidator: string;
   href: string;
   origin: string;
-  totalTasks: number[]; // [easy, medium, hard]
+  totalTasks: number[]; // [easy, medium, hard] - deprecated, use stats below
   image: string;
   isComingSoon?: boolean;
   color: string;
@@ -24,6 +24,9 @@ export type WebsiteDataType = {
   useCases: UseCase[]; // already added
   taskExamples?: TaskExample[]; // NEW: Task Examples
   comingSoonNote?: string; // NEW: note to show under section
+  // New stats fields:
+  avgDifficulty: number; // Average difficulty: 1-10 scale
+  completionRate: number; // Success/completion rate: 0-100%
 };
 /**
  *  Lista de webs con su puerto público del validador.
@@ -33,7 +36,7 @@ export type WebsiteDataType = {
 export const websitesData: WebsiteDataType[] = [
   {
     name: "Autoppia Cinema",
-    slug: "autoppia-cinema",
+    slug: "autocinema",
     portValidator: "8000",
     href: "http://autocinema.autoppia.com",
     origin: "Movie Database",
@@ -41,6 +44,8 @@ export const websitesData: WebsiteDataType[] = [
     image: "/images/web1.png",
     color: "#9333EA",
     description: "Movie catalog with search, reviews, and user management.",
+    avgDifficulty: 6.5,
+    completionRate: 78,
     useCases: [
       {
         name: "Registration",
@@ -131,7 +136,7 @@ export const websitesData: WebsiteDataType[] = [
   },
   {
     name: "Autoppia Books",
-    slug: "autoppia-books",
+    slug: "autobooks",
     portValidator: "8001",
     href: "http://autobooks.autoppia.com",
     origin: "Book Store",
@@ -140,6 +145,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#10B981",
     description:
       "Book store with shopping cart, reviews, and e-commerce features.",
+    avgDifficulty: 7.2,
+    completionRate: 74,
     useCases: [
       {
         name: "Registration",
@@ -253,6 +260,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#EF4444",
     description:
       "E-commerce storefront for product search, carts, and checkout.",
+    avgDifficulty: 6.8,
+    completionRate: 82,
     useCases: [
       {
         name: "View Product Detail",
@@ -331,6 +340,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#F59E0B",
     description:
       "Restaurant booking platform with search, menus, and reservations.",
+    avgDifficulty: 7.5,
+    completionRate: 71,
     useCases: [
       {
         name: "Date Dropdown Opened",
@@ -430,6 +441,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#3B82F6",
     description:
       "Legal case management with matters, clients, documents, and time tracking.",
+    avgDifficulty: 8.1,
+    completionRate: 68,
     useCases: [
       {
         name: "View Matter Details",
@@ -522,6 +535,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#8B5CF6",
     description:
       "Email client with compose, labels, search, and organization features.",
+    avgDifficulty: 7.8,
+    completionRate: 72,
     useCases: [
       {
         name: "View Email",
@@ -618,6 +633,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#EC4899",
     description:
       "Food delivery platform with restaurant search, cart, and order placement.",
+    avgDifficulty: 7.4,
+    completionRate: 76,
     useCases: [
       {
         name: "Search Restaurant",
@@ -714,6 +731,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#06B6D4",
     description:
       "Hotel and lodging booking platform with search, wishlist, and reservations.",
+    avgDifficulty: 7.6,
+    completionRate: 70,
     useCases: [
       {
         name: "Search Hotel",
@@ -799,6 +818,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#0EA5E9",
     description:
       "Professional networking platform with profiles, posts, jobs, and connections.",
+    avgDifficulty: 6.9,
+    completionRate: 79,
     useCases: [
       {
         name: "View User Profile",
@@ -884,6 +905,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#14B8A6",
     description:
       "Freelancer and consultant hiring platform with job postings and bookings.",
+    avgDifficulty: 7.3,
+    completionRate: 73,
     useCases: [
       {
         name: "Book a Consultation",
@@ -973,6 +996,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#A855F7",
     description:
       "Calendar application with events, reminders, attendees, and multiple views.",
+    avgDifficulty: 8.3,
+    completionRate: 65,
     useCases: [
       {
         name: "Select Month View",
@@ -1108,6 +1133,8 @@ export const websitesData: WebsiteDataType[] = [
     color: "#F97316",
     description:
       "Task and team management platform with priorities, dates, and collaboration.",
+    avgDifficulty: 7.1,
+    completionRate: 75,
     useCases: [
       {
         name: "Add Task Clicked",

@@ -158,27 +158,27 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
                     className="text-lg font-bold"
                     style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
                   >
-                    {website.totalTasks[0]}
+                    {website.useCases.length}
                   </Text>
-                  <Text className="text-xs text-gray-600">Easy</Text>
+                  <Text className="text-xs text-gray-600">Use Cases</Text>
                 </div>
                 <div className="text-center">
                   <Text
                     className="text-lg font-bold"
                     style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
                   >
-                    {website.totalTasks[1]}
+                    {website.avgDifficulty}/10
                   </Text>
-                  <Text className="text-xs text-gray-600">Medium</Text>
+                  <Text className="text-xs text-gray-600">Difficulty</Text>
                 </div>
                 <div className="text-center">
                   <Text
                     className="text-lg font-bold"
                     style={{ color: isComingSoon ? "#9CA3AF" : website.color }}
                   >
-                    {website.totalTasks[2]}
+                    {website.completionRate}%
                   </Text>
-                  <Text className="text-xs text-gray-600">Hard</Text>
+                  <Text className="text-xs text-gray-600">Completion</Text>
                 </div>
               </div>
             </div>
