@@ -51,7 +51,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen overflow-hidden">
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
         {/* Subtle background gradients - much lighter than before */}
         {/* Hero Section */}
 
@@ -123,28 +123,15 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* Stats Counter - cleaner design */}
-          <div
-            className={cn(
-              "grid grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-20 max-w-3xl mx-auto transition-all duration-1000 delay-700",
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-5"
-            )}
-          >
+          {/* Stats Counter */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 mt-12 sm:mt-16 max-w-2xl mx-auto">
             {[
               {
                 value: websitesData.length,
                 label: "Websites",
-                gradient: "from-cyan-400 to-blue-500",
-                glow: "group-hover:shadow-cyan-400/20",
+                color: "cyan",
               },
-              {
-                value: "1000+",
-                label: "Tasks",
-                gradient: "from-yellow-400 to-orange-500",
-                glow: "group-hover:shadow-yellow-400/20",
-              },
+              { value: "1000+", label: "Tasks", color: "yellow" },
               {
                 value: (
                   <span className="inline-block scale-150 align-baseline text-purple-400">
@@ -152,15 +139,19 @@ export default function LandingPage() {
                   </span>
                 ),
                 label: "Scalability",
-                gradient: "from-purple-400 to-pink-500",
-                glow: "group-hover:shadow-purple-400/20",
+                color: "purple",
               },
             ].map((stat, idx) => (
               <div
                 key={idx}
                 className={cn(
-                  "group p-6 sm:p-8 rounded-2xl backdrop-blur-sm bg-background/50 border border-border/50 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-foreground/20",
-                  stat.glow
+                  "p-3 sm:p-6 rounded-xl backdrop-blur-sm border-2 transition-all duration-500 hover:scale-110 hover:shadow-xl",
+                  stat.color === "cyan" &&
+                    "border-cyan-500/30 hover:border-cyan-400/50 hover:shadow-cyan-500/30",
+                  stat.color === "yellow" &&
+                    "border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/30",
+                  stat.color === "purple" &&
+                    "border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/30"
                 )}
                 style={{
                   animationDelay: `${idx * 200}ms`,
@@ -168,13 +159,22 @@ export default function LandingPage() {
               >
                 <div
                   className={cn(
-                    "text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-2",
-                    stat.gradient
+                    "text-xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                    stat.color === "cyan" && "from-cyan-400 to-blue-500",
+                    stat.color === "yellow" && "from-yellow-400 to-orange-500",
+                    stat.color === "purple" && "from-purple-400 to-pink-500"
                   )}
                 >
                   {stat.value}
                 </div>
-                <div className="text-sm sm:text-base font-medium text-muted-foreground">
+                <div
+                  className={cn(
+                    "text-xs sm:text-sm mt-1 font-bold",
+                    stat.color === "cyan" && "text-cyan-300",
+                    stat.color === "yellow" && "text-yellow-300",
+                    stat.color === "purple" && "text-purple-300"
+                  )}
+                >
                   {stat.label}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
       </section>
 
       {/* What is IWA Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
@@ -203,22 +203,22 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 animate-shimmer"></div>
 
-            <div className="relative p-8 sm:p-10 md:p-12 flex flex-col items-center">
+            <div className="relative p-8 sm:p-10 md:p-12 flex flex-col items-center text-center sm:text-left">
               <Text className="text-base sm:text-lg md:text-xl text-cyan-100 mb-6">
                 Infinite Web Arena (IWA) is a{" "}
-                <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30 animate-pulse-slow">
+                <span className="sm:text-yellow-300 sm:font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 sm:rounded-lg sm:border sm:border-yellow-400/30 sm:animate-pulse-slow">
                   synthetic benchmark
                 </span>{" "}
                 for Web Agents. Unlike static human-curated datasets, IWA
                 dynamically generates synthetic websites, tasks, and validation
                 tests. This ensures{" "}
-                <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg border border-cyan-400/30 animate-pulse-slow">
+                <span className="sm:text-cyan-300 sm:font-bold sm:bg-cyan-400/20 sm:px-3 sm:py-1.5 sm:rounded-lg sm:border sm:border-cyan-400/30 sm:animate-pulse-slow">
                   infinite scalability
                 </span>
                 , no overfitting, and realistic performance evaluation.
               </Text>
 
-              <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
                 <a
                   href="https://autoppia.com/papers/infinite-web-arena.html"
                   target="_blank"
@@ -245,7 +245,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
@@ -337,7 +337,7 @@ export default function LandingPage() {
       </section>
 
       {/* Web Projects Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
             <PiRocketLaunchDuotone className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:animate-bounce" />
@@ -351,7 +351,7 @@ export default function LandingPage() {
         </div>
         <Text className="text-center text-lg sm:text-xl text-cyan-100 mb-12 max-w-3xl mx-auto">
           IWA includes{" "}
-          <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30">
+          <span className="sm:text-yellow-300 sm:font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 sm:rounded-lg sm:border sm:border-yellow-400/30">
             {websitesData.length} synthetic websites
           </span>{" "}
           covering e-commerce, dining, CRM, email, delivery, lodging, and
@@ -372,7 +372,7 @@ export default function LandingPage() {
 
         <div className="text-center">
           <Link href="/websites">
-            <button className="px-8 py-4 bg-gradient-to-r from-cyan-500/60 to-blue-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-blue-500 hover:border-cyan-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50 mx-auto">
+            <button className="px-2 sm:px-8 py-4 bg-gradient-to-r from-cyan-500/60 to-blue-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-blue-500 hover:border-cyan-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50 mx-auto">
               SEE ALL {websitesData.length} PROJECTS
               <FaArrowRight className="group-hover:translate-x-2 transition-transform" />
             </button>
@@ -380,8 +380,8 @@ export default function LandingPage() {
         </div>
       </section>
       {/* About Bittensor */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
+        <div className="max-w-5xl mx-auto flex flex-col items-center sm:items-start text-center sm:text-left">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
@@ -454,9 +454,9 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <Link href={routes.overview} className="w-full sm:w-auto">
-                  <button className="px-8 py-4 bg-gradient-to-r from-cyan-500/60 to-teal-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-teal-500 hover:border-cyan-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50">
+              <div className="flex flex-col sm:flex-row gap-4 pt-2 items-center sm:items-start">
+                <Link href={routes.overview} className="w-fit sm:w-auto">
+                  <button className="px-2 sm:px-8 py-4 bg-gradient-to-r from-cyan-500/60 to-teal-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-cyan-500 hover:to-teal-500 hover:border-cyan-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50">
                     <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                     VIEW SUBNET LEADERBOARD
                   </button>
@@ -475,7 +475,7 @@ export default function LandingPage() {
         </div>
       </section>
       {/* Why Bittensor */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
@@ -596,13 +596,13 @@ export default function LandingPage() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 mb-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8 mb-16">
         <div className="relative rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl border-2 border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 group">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.05),transparent_70%)]"></div>
 
           <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center p-8 sm:p-12">
-            <div>
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6 group/icon justify-center sm:justify-start">
                 <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg group-hover/icon:scale-125 group-hover/icon:rotate-12 transition-all duration-300">
                   <LuTrophy className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -614,9 +614,9 @@ export default function LandingPage() {
                   Leaderboard
                 </Title>
               </div>
-              <Text className="text-base sm:text-lg text-orange-100 mb-6 leading-relaxed">
+              <Text className=" text-base sm:text-lg text-orange-100 mb-6 leading-relaxed">
                 Discover which{" "}
-                <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30">
+                <span className="sm:text-yellow-300 sm:font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 sm:rounded-lg sm:border sm:border-yellow-400/30">
                   SOTA agents
                 </span>{" "}
                 are leading the benchmark worldwide. Our leaderboard tracks
@@ -640,7 +640,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <Link href={routes.overview}>
-                <button className="px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
+                <button className="px-2 sm:px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
                   <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                   VIEW LEADERBOARD
                   <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -727,7 +727,7 @@ export default function LandingPage() {
         </div>
       </section>
       {/* Test Your Agent Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
@@ -757,7 +757,7 @@ export default function LandingPage() {
                 do the rest.
               </Text>
               <Link href={routes.testAgent}>
-                <button className="px-8 w-fit py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-purple-500/50">
+                <button className="px-2 sm:px-8 w-fit py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-purple-500/50">
                   <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                   START TESTING NOW
                   <FaArrowRight className="group-hover:translate-x-1 transition-transform" />

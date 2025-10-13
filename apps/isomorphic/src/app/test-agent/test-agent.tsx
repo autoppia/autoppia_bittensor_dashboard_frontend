@@ -3,12 +3,21 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Title, Text, Button, Input } from "rizzui";
-import WidgetCard from "@core/components/cards/widget-card";
+// import WidgetCard from "@core/components/cards/widget-card";
+import toast from "react-hot-toast";
 import { websitesData } from "@/data/websites-data";
 import { useCaseCatalogues } from "@/data/sample-data";
 import { CiCircleCheck } from "react-icons/ci";
 import { GoXCircle } from "react-icons/go";
-import { PiFlask, PiCaretDownDuotone } from "react-icons/pi";
+import {
+  PiFlask,
+  PiCaretDownDuotone,
+  PiXBold,
+  PiDownloadDuotone,
+  PiCheckCircleDuotone,
+  PiXCircleDuotone,
+  PiSparkle,
+} from "react-icons/pi";
 import cn from "@core/utils/class-names";
 
 type TestResult = {
@@ -18,6 +27,7 @@ type TestResult = {
   score: number;
   duration: number;
 };
+const TEST_AGENT_API = "http://84.247.180.192:5050/test-your-agent";
 
 export default function TestAgent() {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -137,111 +147,70 @@ export default function TestAgent() {
       selectedUseCases.length === 0 ||
       !agentEndpoint
     ) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
 
-    // Parse IP and port from endpoint
+    // Parse IP and port from input like: 84.247.180.192:6789 or http://84.247.180.192:6789
     let ip = "";
     let port = 0;
 
     try {
       const endpoint = agentEndpoint.trim();
-      // Handle format: http://ip:port or ip:port
-      const cleanEndpoint = endpoint.replace(/^https?:\/\//, "");
-      const parts = cleanEndpoint.split(":");
-
-      if (parts.length !== 2) {
-        alert("Invalid endpoint format. Use format: ip:port or http://ip:port");
-        return;
-      }
-
+      const clean = endpoint.replace(/^https?:\/\//, "");
+      const parts = clean.split(":");
+      if (parts.length !== 2) throw new Error("Invalid endpoint");
       ip = parts[0];
-      port = parseInt(parts[1]);
-
-      if (isNaN(port) || port <= 0 || port > 65535) {
-        alert("Invalid port number");
-        return;
+      port = parseInt(parts[1], 10);
+      if (!ip || isNaN(port) || port < 1 || port > 65535) {
+        throw new Error("Invalid endpoint");
       }
-    } catch (error) {
-      alert("Failed to parse endpoint");
+    } catch {
+      toast.error("Invalid endpoint format. Use: ip:port or http://ip:port");
       return;
     }
 
     setIsRunning(true);
-    setShowResults(false);
 
     try {
+      // ✅ payload exactly like your curl (but built from UI)
       const payload = {
-        ip: ip,
-        port: port,
-        projects: selectedProjects,
+        ip, // "<your_public_ip_or_ngrok>"
+        port, // e.g., 6789
+        projects: selectedProjects, // e.g., ["autobooks"]
         num_use_cases: selectedUseCases.length,
         use_cases: selectedUseCases.map((uc) =>
           uc.toUpperCase().replace(/\s+/g, "_")
-        ),
-        runs: numRuns,
+        ), // e.g., ["LOGIN_BOOK"]
+        runs: numRuns, // e.g., 1
         timeout: 120,
-        id: Date.now().toString(),
-        name: "TestAgent",
         should_record_gif: false,
-        save_results_json: false,
-        plot_results: false,
       };
 
-      const response = await fetch(
-        "http://84.247.180.192:5050/test-your-agent",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
+      const res = await fetch(TEST_AGENT_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+      const data = await res.json();
+      setShowResults(data);
+
+      // we don't care about response — just fire & succeed
+      // const data = await res.json(); // optional
+      toast.success(
+        <Text as="b" className="font-semibold">
+          Benchmark request sent successfully.
+        </Text>
       );
-
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Transform API response to our TestResult format
-      const transformedResults: TestResult[] = [];
-
-      if (data.results && Array.isArray(data.results)) {
-        data.results.forEach((result: any) => {
-          transformedResults.push({
-            project: result.project || result.website || "Unknown",
-            useCase: result.use_case || result.useCase || "Unknown",
-            success: result.success === true || result.status === "success",
-            score: result.score || (result.success ? 100 : 0),
-            duration: result.duration || result.time || 0,
-          });
-        });
-      } else {
-        // If API doesn't return expected format, create results from selected items
-        selectedProjects.forEach((project) => {
-          selectedUseCases.forEach((useCase) => {
-            for (let i = 0; i < numRuns; i++) {
-              transformedResults.push({
-                project: project,
-                useCase: useCase,
-                success: data.success === true,
-                score: data.score || 0,
-                duration: data.duration || 0,
-              });
-            }
-          });
-        });
-      }
-
-      setResults(transformedResults);
-      setShowResults(true);
-    } catch (error) {
-      console.error("Benchmark error:", error);
-      alert(
-        `Failed to run benchmark: ${error instanceof Error ? error.message : "Unknown error"}`
+    } catch (err) {
+      toast.error(
+        `Failed to call benchmark API: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
       );
     } finally {
       setIsRunning(false);
@@ -557,140 +526,209 @@ export default function TestAgent() {
           </div>
         </div>
 
-        {showResults && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <div className="relative text-center p-6 rounded-2xl border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/30 backdrop-blur-sm group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
-                <div className="relative">
-                  <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-bold">
-                    Success Rate
-                  </Text>
-                  <Title
-                    as="h3"
-                    className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
-                  >
-                    {calculateSuccessRate()}%
-                  </Title>
-                </div>
-              </div>
-              <div className="relative text-center p-6 rounded-2xl border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:border-yellow-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/30 backdrop-blur-sm group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
-                <div className="relative">
-                  <Text className="text-sm text-yellow-300 mb-2 uppercase tracking-wide font-bold">
-                    Average Score
-                  </Text>
-                  <Title
-                    as="h3"
-                    className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent"
-                  >
-                    {calculateAggregateScore()}
-                  </Title>
-                </div>
-              </div>
-              <div className="relative text-center p-6 rounded-2xl border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/30 backdrop-blur-sm group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
-                <div className="relative">
-                  <Text className="text-sm text-purple-300 mb-2 uppercase tracking-wide font-bold">
-                    Total Tests
-                  </Text>
-                  <Title
-                    as="h3"
-                    className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent"
-                  >
-                    {results.length}
-                  </Title>
-                </div>
-              </div>
-            </div>
+        {showResults &&
+          createPortal(
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-fade-in">
+              <div className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl border-2 border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-xl shadow-2xl animate-scale-in">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
-            <div
-              className={cn(
-                "relative mb-8 p-6 sm:p-8 rounded-lg bg-black overflow-hidden",
-                "border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5",
-                "hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/50"
-              )}
-            >
-              {/* Background Effects */}
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+                {/* Modal Header */}
+                <div className="relative flex items-center justify-between p-6 sm:p-8 border-b border-cyan-400/30">
+                  <div className="flex items-center gap-3">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg">
+                      <PiSparkle className="h-6 w-6 text-white" />
+                    </div>
+                    <Title
+                      as="h2"
+                      className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent"
+                    >
+                      Benchmark Results
+                    </Title>
+                  </div>
+                  <button
+                    onClick={() => setShowResults(false)}
+                    className="p-2 hover:bg-red-500/20 rounded-lg transition-all duration-300 group"
+                  >
+                    <PiXBold className="h-6 w-6 text-gray-400 group-hover:text-red-400 transition-colors" />
+                  </button>
+                </div>
 
-              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                <Title
-                  as="h2"
-                  className="text-2xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(0,255,255,1)]"
-                >
-                  Detailed Results
-                </Title>
-                <Button
-                  onClick={downloadResults}
-                  variant="outline"
-                  className={cn(
-                    "border-2 border-yellow-500/50 text-yellow-300 hover:text-white font-semibold",
-                    "hover:border-yellow-400 hover:bg-yellow-500/20 transition-all duration-300",
-                    "hover:shadow-lg hover:shadow-yellow-500/30"
-                  )}
-                >
-                  Download Results (JSON)
-                </Button>
-              </div>
-              <div className="relative overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2 border-cyan-500/30">
-                      <th className="text-left py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
-                        Project
-                      </th>
-                      <th className="text-left py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
-                        Use Case
-                      </th>
-                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
-                        Status
-                      </th>
-                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
-                        Score
-                      </th>
-                      <th className="text-center py-3 px-4 text-cyan-400 font-semibold font-mono drop-shadow-[0_0_8px_rgba(0,255,255,1)]">
-                        Duration
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                {/* Modal Body */}
+                <div className="relative overflow-y-auto max-h-[calc(90vh-180px)] p-6 sm:p-8">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                    <div className="relative text-center p-6 rounded-2xl border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/30 backdrop-blur-sm group overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                      <div className="relative">
+                        <Text className="text-sm text-cyan-300 mb-2 uppercase tracking-wide font-bold">
+                          Success Rate
+                        </Text>
+                        <Title
+                          as="h3"
+                          className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+                        >
+                          {calculateSuccessRate()}%
+                        </Title>
+                      </div>
+                    </div>
+                    <div className="relative text-center p-6 rounded-2xl border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:border-yellow-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/30 backdrop-blur-sm group overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                      <div className="relative">
+                        <Text className="text-sm text-yellow-300 mb-2 uppercase tracking-wide font-bold">
+                          Average Score
+                        </Text>
+                        <Title
+                          as="h3"
+                          className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent"
+                        >
+                          {calculateAggregateScore()}
+                        </Title>
+                      </div>
+                    </div>
+                    <div className="relative text-center p-6 rounded-2xl border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/30 backdrop-blur-sm group overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                      <div className="relative">
+                        <Text className="text-sm text-purple-300 mb-2 uppercase tracking-wide font-bold">
+                          Total Tests
+                        </Text>
+                        <Title
+                          as="h3"
+                          className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent"
+                        >
+                          {results.length}
+                        </Title>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Results Cards */}
+                  <div className="space-y-4">
                     {results.map((result, index) => (
-                      <tr
+                      <div
                         key={index}
-                        className={cn(
-                          "border-b border-cyan-500/20 hover:bg-cyan-500/10",
-                          "transition-all duration-300"
-                        )}
+                        className="relative rounded-xl overflow-hidden backdrop-blur-sm border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                        style={{
+                          borderColor: result.success
+                            ? "rgba(6, 182, 212, 0.3)"
+                            : "rgba(239, 68, 68, 0.3)",
+                          backgroundColor: result.success
+                            ? "rgba(6, 182, 212, 0.05)"
+                            : "rgba(239, 68, 68, 0.05)",
+                        }}
                       >
-                        <td className="py-3 px-4 capitalize text-cyan-300 font-mono">
-                          {result.project}
-                        </td>
-                        <td className="py-3 px-4 text-cyan-300 font-mono">
-                          {result.useCase}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {result.success ? (
-                            <CiCircleCheck className="inline h-6 w-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,1)]" />
-                          ) : (
-                            <GoXCircle className="inline h-6 w-6 text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,1)]" />
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center font-semibold text-yellow-400 font-mono drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
-                          {result.score}
-                        </td>
-                        <td className="py-3 px-4 text-center text-cyan-300 font-mono">
-                          {result.duration.toFixed(2)}s
-                        </td>
-                      </tr>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
+                        <div className="relative p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={cn(
+                                    "inline-flex items-center justify-center w-8 h-8 rounded-lg",
+                                    result.success
+                                      ? "bg-gradient-to-br from-cyan-400 to-blue-500"
+                                      : "bg-gradient-to-br from-red-400 to-orange-500"
+                                  )}
+                                >
+                                  {result.success ? (
+                                    <PiCheckCircleDuotone className="h-5 w-5 text-white" />
+                                  ) : (
+                                    <PiXCircleDuotone className="h-5 w-5 text-white" />
+                                  )}
+                                </div>
+                                <div>
+                                  <Text className="text-base sm:text-lg font-bold text-white capitalize">
+                                    {result.project}
+                                  </Text>
+                                  <Text className="text-sm text-gray-400">
+                                    {result.useCase}
+                                  </Text>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 sm:gap-6">
+                              <div className="text-center">
+                                <Text className="text-xs text-gray-400 mb-1">
+                                  Score
+                                </Text>
+                                <Text className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                                  {result.score}
+                                </Text>
+                              </div>
+                              <div className="text-center">
+                                <Text className="text-xs text-gray-400 mb-1">
+                                  Time
+                                </Text>
+                                <Text className="text-lg sm:text-xl font-bold text-cyan-300">
+                                  {result.duration.toFixed(2)}s
+                                </Text>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 p-6 sm:p-8 border-t border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
+                  <Text className="text-sm text-gray-300">
+                    Completed {results.length} test
+                    {results.length !== 1 ? "s" : ""} • Success Rate:{" "}
+                    {calculateSuccessRate()}%
+                  </Text>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={downloadResults}
+                      className="px-6 py-3 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-yellow-500/30"
+                    >
+                      <PiDownloadDuotone className="h-5 w-5 group-hover:animate-bounce" />
+                      DOWNLOAD
+                    </button>
+                    <button
+                      onClick={() => setShowResults(false)}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-600/60 to-gray-700/60 border-2 border-gray-600/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-gray-600 hover:to-gray-700 hover:border-gray-600 hover:scale-105"
+                    >
+                      CLOSE
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </div>,
+            document.body
+          )}
       </div>
+
+      <style jsx global>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
