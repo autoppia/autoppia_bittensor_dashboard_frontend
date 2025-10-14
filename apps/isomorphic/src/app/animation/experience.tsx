@@ -598,7 +598,7 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
       const clipPathId = `clip-${minerId}-${index}`;
 
       return (
-        <g>
+        <g key={`${minerId}-${index}`}>
           <defs>
             <clipPath id={clipPathId}>
               <circle cx={cx} cy={cy} r={imageRadius} />

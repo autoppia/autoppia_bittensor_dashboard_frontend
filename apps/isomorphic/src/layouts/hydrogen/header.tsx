@@ -49,14 +49,16 @@ export default function Header() {
     return "healthy";
   })();
 
-  const statusLabel =
+  const displayStatusText =
     normalizedStatus === "loading"
-      ? "● LOAD"
+      ? "Load"
       : normalizedStatus === "healthy"
-        ? "● LIVE"
+        ? "Live"
         : normalizedStatus === "degraded"
-          ? "● WARN"
-          : "● DOWN";
+          ? "Warn"
+          : "Down";
+
+  const statusLabel = `● ${displayStatusText.toUpperCase()}`;
 
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10 max-w-full overflow-hidden">
@@ -168,8 +170,19 @@ export default function Header() {
                 <FaDiscord className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
               </a>
             </Tooltip>
-            <Tooltip content={`Network Status: ${networkStatus?.status || 'Unknown'}`} placement="bottom">
-              <div className="relative flex items-center group overflow-hidden max-w-[96px] sm:max-w-[120px] flex-shrink-0">
+            <Tooltip
+              content={
+                normalizedStatus === "healthy"
+                  ? `Network Status: ${displayStatusText}`
+                  : normalizedStatus === "loading"
+                    ? "Network Status: Loading…"
+                    : networkStatus?.message
+                      ? networkStatus.message
+                      : `Network Status: ${displayStatusText}`
+              }
+              placement="bottom"
+            >
+              <div className="relative ms-2 sm:ms-3 flex items-center group overflow-hidden max-w-[96px] sm:max-w-[120px] flex-shrink-0">
                 {/* Dynamic glowing background based on status */}
                 <div className={cn(
                   "absolute inset-0 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300",

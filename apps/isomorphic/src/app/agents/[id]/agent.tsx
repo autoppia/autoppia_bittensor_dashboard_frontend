@@ -8,6 +8,7 @@ import AgentScoreAnalytics from "./agent-score-analytics";
 import AgentValidators from "./agent-validators";
 import { Text } from "rizzui";
 import { useMinerDetails } from "@/services/hooks/useAgents";
+import cn from "@core/utils/class-names";
 import { useMemo } from "react";
 import { AgentHeaderPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type { ScoreRoundDataPoint } from "@/services/api/types/agents";
@@ -28,6 +29,10 @@ export default function Agent() {
   // Extract agent and scoreRoundData from the new API format
   const agent = agentData?.agent;
   const apiScoreRoundData = agentData?.scoreRoundData;
+  const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
+  const taoStatsAvailable = Boolean(
+    !agent?.isSota && (agent?.taostatsUrl || agent?.hotkey)
+  );
 
   // Transform score round data only when API data changes
   const normalizeScore = (value?: number | null): number | null => {
@@ -105,14 +110,19 @@ export default function Agent() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold text-gray-900">{agent.name}</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                agent.status === 'active' 
-                  ? 'bg-green-100 text-green-700' 
-                  : agent.status === 'maintenance'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-gray-100 text-gray-700'
-              }`}>
-                {agent.status}
+              <span
+                className={cn(
+                  "px-2 py-1 rounded-full text-xs font-semibold",
+                  agent.isSota
+                    ? "bg-purple-100 text-purple-700"
+                    : agent.status === "active"
+                      ? "bg-green-100 text-green-700"
+                      : agent.status === "maintenance"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-700"
+                )}
+              >
+                {agent.isSota ? "SOTA" : agent.status}
               </span>
             </div>
             {/* UID and Hotkey */}
@@ -153,34 +163,78 @@ export default function Agent() {
         </div>
         
         {/* Top right icons */}
-        <div className="flex items-center gap-2">
-          {agent.githubUrl && (
-            <a 
-              href={agent.githubUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
-              title="View GitHub repository"
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "text-xs font-semibold uppercase tracking-wide",
+                githubAvailable ? "text-gray-600" : "text-gray-400"
+              )}
             >
-              <PiGithubLogoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
-            </a>
-          )}
-          {(agent.taostatsUrl || (!agent.isSota && agent.hotkey)) && (
-            <a
-              href={
-                agent.taostatsUrl ||
-                (agent.hotkey
-                  ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}`
-                  : "#")
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 group"
-              title="View on TaoStats"
+              Code • Open Source
+            </span>
+            <div
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200",
+                githubAvailable
+                  ? "bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                  : "bg-gray-200 cursor-not-allowed opacity-60"
+            )}
+            title={
+              agent.isSota
+                ? "GitHub repository not available for SOTA benchmarks"
+                : agent.githubUrl
+                  ? "View GitHub repository"
+                  : "GitHub repository not available"
+            }
             >
-              <PiInfoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
-            </a>
-          )}
+              {githubAvailable ? (
+              <a
+                href={agent.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-full w-full items-center justify-center group"
+              >
+                <PiGithubLogoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+              </a>
+            ) : (
+              <PiGithubLogoDuotone className="w-5 h-5 text-gray-400" />
+            )}
+            </div>
+          </div>
+          <div
+            className={cn(
+              "flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200",
+              taoStatsAvailable
+                ? "bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                : "bg-gray-200 cursor-not-allowed opacity-60"
+            )}
+            title={
+              agent.isSota
+                ? "On-chain explorer is not available for SOTA benchmarks"
+                : agent.taostatsUrl || agent.hotkey
+                  ? "View on TaoStats"
+                  : "TaoStats link not available"
+            }
+          >
+            {taoStatsAvailable ? (
+              <a
+                href={
+                  agent.taostatsUrl ||
+                  (agent.hotkey
+                    ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}`
+                    : "#")
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-full w-full items-center justify-center group"
+              >
+                <PiInfoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+              </a>
+            ) : (
+              <PiInfoDuotone className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
         </div>
       </div>
       <AgentStats />
