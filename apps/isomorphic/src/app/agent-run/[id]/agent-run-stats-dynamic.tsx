@@ -2,8 +2,22 @@
 
 import { useParams } from "next/navigation";
 import { useAgentRunStats } from "@/services/hooks/useAgentRun";
-import LoadingScreen, { ProgressBarLoading } from "@/app/shared/loading-screen";
-import Placeholder, { ProgressBarPlaceholder } from "@/app/shared/placeholder";
+import { ProgressBarLoading } from "@/app/shared/loading-screen";
+import { ProgressBarPlaceholder } from "@/app/shared/placeholder";
+
+const formatPercentage = (value: number | null | undefined) => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "0%";
+  }
+  return `${value.toFixed(1)}%`;
+};
+
+const formatNumber = (value: number | null | undefined) => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "0";
+  }
+  return value.toLocaleString();
+};
 
 export default function AgentRunStatsDynamic() {
   const { id } = useParams();
@@ -24,7 +38,7 @@ export default function AgentRunStatsDynamic() {
         {/* Overall Score - Prominent on mobile */}
         <div className="flex flex-col items-center justify-center">
           <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {Math.round(stats.overallScore)}%
+            {formatPercentage(stats.overallScore)}
           </div>
           <div className="text-xs sm:text-sm text-gray-700 mt-1">
             Overall evaluation score
@@ -35,25 +49,25 @@ export default function AgentRunStatsDynamic() {
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-blue-400">
-              {stats.totalTasks}
+              {formatNumber(stats.totalTasks)}
             </div>
             <div className="text-xs sm:text-sm text-gray-700">Total Tasks</div>
           </div>
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-orange-400">
-              {stats.websites}
+              {formatNumber(stats.websites)}
             </div>
             <div className="text-xs sm:text-sm text-gray-700">Websites</div>
           </div>
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-green-400">
-              {stats.successfulTasks}
+              {formatNumber(stats.successfulTasks)}
             </div>
             <div className="text-xs sm:text-sm text-gray-700">Successful</div>
           </div>
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-red-400">
-              {stats.failedTasks}
+              {formatNumber(stats.failedTasks)}
             </div>
             <div className="text-xs sm:text-sm text-gray-700">Failed</div>
           </div>
@@ -65,7 +79,7 @@ export default function AgentRunStatsDynamic() {
         {/* Overall Score */}
         <div className="flex flex-col items-center">
           <div className="text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {Math.round(stats.overallScore)}%
+            {formatPercentage(stats.overallScore)}
           </div>
           <div className="text-sm text-gray-700">Overall Score</div>
         </div>
@@ -74,31 +88,31 @@ export default function AgentRunStatsDynamic() {
         <div className="flex items-center space-x-8">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-400">
-              {stats.totalTasks}
+              {formatNumber(stats.totalTasks)}
             </div>
             <div className="text-sm text-gray-700">Total Tasks</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-400">
-              {stats.websites}
+              {formatNumber(stats.websites)}
             </div>
             <div className="text-sm text-gray-700">Websites</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">
-              {stats.successfulTasks}
+              {formatNumber(stats.successfulTasks)}
             </div>
             <div className="text-sm text-gray-700">Successful</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-400">
-              {stats.failedTasks}
+              {formatNumber(stats.failedTasks)}
             </div>
             <div className="text-sm text-gray-700">Failed</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-400">
-              {Math.round(stats.averageTaskDuration)}s
+              {formatNumber(Number(stats.averageTaskDuration?.toFixed?.(1) ?? stats.averageTaskDuration))}s
             </div>
             <div className="text-sm text-gray-700">Avg Duration</div>
           </div>
@@ -107,7 +121,7 @@ export default function AgentRunStatsDynamic() {
         {/* Success Rate */}
         <div className="flex flex-col items-center">
           <div className="text-2xl font-bold text-emerald-400">
-            {Math.round(stats.successRate)}%
+            {formatPercentage(stats.successRate)}
           </div>
           <div className="text-sm text-gray-700">Success Rate</div>
         </div>
@@ -115,34 +129,34 @@ export default function AgentRunStatsDynamic() {
 
       {/* Score Distribution */}
       <div className="mt-6 pt-6 border-t border-gray-200/20">
-        <div className="text-sm font-medium text-gray-700 mb-3">Score Distribution</div>
-        <div className="grid grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-lg font-bold text-green-500">
-              {stats.scoreDistribution.excellent}
+          <div className="text-sm font-medium text-gray-700 mb-3">Score Distribution</div>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-500">
+                {formatNumber(stats.scoreDistribution.excellent)}
+              </div>
+              <div className="text-xs text-gray-600">Excellent (90-100%)</div>
             </div>
-            <div className="text-xs text-gray-600">Excellent (90-100%)</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-blue-500">
-              {stats.scoreDistribution.good}
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-500">
+                {formatNumber(stats.scoreDistribution.good)}
+              </div>
+              <div className="text-xs text-gray-600">Good (70-89%)</div>
             </div>
-            <div className="text-xs text-gray-600">Good (70-89%)</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-yellow-500">
-              {stats.scoreDistribution.average}
+            <div className="text-center">
+              <div className="text-lg font-bold text-yellow-500">
+                {formatNumber(stats.scoreDistribution.average)}
+              </div>
+              <div className="text-xs text-gray-600">Average (50-69%)</div>
             </div>
-            <div className="text-xs text-gray-600">Average (50-69%)</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-red-500">
-              {stats.scoreDistribution.poor}
+            <div className="text-center">
+              <div className="text-lg font-bold text-red-500">
+                {formatNumber(stats.scoreDistribution.poor)}
+              </div>
+              <div className="text-xs text-gray-600">Poor (0-49%)</div>
             </div>
-            <div className="text-xs text-gray-600">Poor (0-49%)</div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
