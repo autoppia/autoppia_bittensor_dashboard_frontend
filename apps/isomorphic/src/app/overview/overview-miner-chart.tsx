@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
@@ -20,7 +20,16 @@ import {
 import { useLeaderboard } from "@/services/hooks/useOverview";
 import type { LeaderboardData } from "@/services/api/types/overview";
 
-const filterOptions = ["7D", "15D", "All"];
+const filterOptions = ["7D", "15D", "All"] as const;
+type FilterOption = (typeof filterOptions)[number];
+
+const fallbackLeaderboard: LeaderboardData[] = [
+  { round: 38, subnet36: 0.85, openai_cua: 0.79, anthropic_cua: 0.81, browser_use: 0.84, timestamp: new Date().toISOString() },
+  { round: 39, subnet36: 0.87, openai_cua: 0.81, anthropic_cua: 0.83, browser_use: 0.86, timestamp: new Date().toISOString() },
+  { round: 40, subnet36: 0.89, openai_cua: 0.83, anthropic_cua: 0.85, browser_use: 0.88, timestamp: new Date().toISOString() },
+  { round: 41, subnet36: 0.92, openai_cua: 0.85, anthropic_cua: 0.87, browser_use: 0.90, timestamp: new Date().toISOString() },
+  { round: 42, subnet36: 0.95, openai_cua: 0.87, anthropic_cua: 0.89, browser_use: 0.92, timestamp: new Date().toISOString() },
+];
 const sotaAgents = [
   {
     label: "OpenAI CUA",
@@ -47,34 +56,32 @@ interface MinerChartProps {
 }
 
 export default function MinerChart({ className }: MinerChartProps) {
+  const [timeRange, setTimeRange] = useState<FilterOption>("7D");
   // Get leaderboard data from API
-  const { data: leaderboardData, loading, error } = useLeaderboard({ timeRange: '7D' });
-  
-  // Static data for testing - fallback when API fails
-  const staticData = [
-    { round: 42, subnet36: 0.95, openai_cua: 0.87, anthropic_cua: 0.89, browser_use: 0.92, timestamp: new Date().toISOString() },
-    { round: 41, subnet36: 0.92, openai_cua: 0.85, anthropic_cua: 0.87, browser_use: 0.90, timestamp: new Date().toISOString() },
-    { round: 40, subnet36: 0.89, openai_cua: 0.83, anthropic_cua: 0.85, browser_use: 0.88, timestamp: new Date().toISOString() },
-    { round: 39, subnet36: 0.87, openai_cua: 0.81, anthropic_cua: 0.83, browser_use: 0.86, timestamp: new Date().toISOString() },
-    { round: 38, subnet36: 0.85, openai_cua: 0.79, anthropic_cua: 0.81, browser_use: 0.84, timestamp: new Date().toISOString() },
-  ];
+  const apiTimeRange = timeRange === "All" ? "all" : timeRange;
+  const { data: leaderboardData, loading, error } = useLeaderboard({ timeRange: apiTimeRange });
   
   // Memoize chart data to prevent infinite re-renders
   const chartData = useMemo(() => {
-    return leaderboardData?.data?.leaderboard || staticData;
+    const data = leaderboardData?.data?.leaderboard || fallbackLeaderboard;
+    return [...data].sort((a, b) => a.round - b.round);
   }, [leaderboardData?.data?.leaderboard]);
   
-  const [filteredData, setFilteredData] = useState<LeaderboardData[]>(chartData);
   const [compareWith, setCompareWith] = useState<string[]>(["openai_cua", "anthropic_cua", "browser_use"]);
-  const [currentFilter, setCurrentFilter] = useState<string>("All");
 
-  // Update filtered data when chart data changes
-  useEffect(() => {
-    setFilteredData(chartData);
-  }, [chartData]);
+  const filteredData = useMemo(() => {
+    if (!chartData.length) return [];
+    if (timeRange === "All") {
+      return chartData;
+    }
+    const totalDays = timeRange === "7D" ? 7 : timeRange === "15D" ? 15 : chartData.length;
+    return chartData.slice(-totalDays);
+  }, [chartData, timeRange]);
 
   function handleFilterBy(option: string) {
-    setCurrentFilter(option);
+    if (filterOptions.includes(option as FilterOption)) {
+      setTimeRange(option as FilterOption);
+    }
   }
 
   // Show loading state

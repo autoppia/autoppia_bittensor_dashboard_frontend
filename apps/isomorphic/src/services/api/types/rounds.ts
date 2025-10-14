@@ -6,6 +6,7 @@
 // ===== ROUND DATA =====
 export interface RoundData {
   id: number;
+  roundKey: string;
   startBlock: number;
   endBlock: number;
   current: boolean;
@@ -19,6 +20,9 @@ export interface RoundData {
   currentBlock?: number;
   blocksRemaining?: number;
   progress?: number;
+  validatorUid?: number;
+  validatorHotkey?: string;
+  validatorName?: string;
 }
 
 // ===== ROUND STATISTICS =====
@@ -53,6 +57,14 @@ export interface MinerPerformance {
   lastSeen: string;
   validatorId?: string;
   isSota?: boolean;
+  provider?: string;
+  imageUrl?: string;
+}
+
+export interface BenchmarkPerformance {
+  id: string;
+  name: string;
+  score: number;
   provider?: string;
   imageUrl?: string;
 }
@@ -133,6 +145,7 @@ export interface RoundStatisticsResponse {
 export interface RoundMinersResponse {
   data: {
     miners: MinerPerformance[];
+    benchmarks?: BenchmarkPerformance[];
     total: number;
     page: number;
     limit: number;

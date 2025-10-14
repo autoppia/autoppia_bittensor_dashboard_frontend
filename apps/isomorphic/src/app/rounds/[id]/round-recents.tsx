@@ -6,16 +6,17 @@ import { Button } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
-import { LuBox, LuCircleCheckBig, LuActivity } from "react-icons/lu";
+import { LuCircleCheckBig, LuActivity } from "react-icons/lu";
 import { useRounds } from "@/services/hooks/useRounds";
+import type { RoundData } from "@/services/api/types/rounds";
 import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundRecents() {
   const { id } = useParams();
   
   // Get rounds data from API - ordered from higher to lower (descending)
-  const { data: roundsData, loading, error } = useRounds({ limit: 10, sortBy: 'id', sortOrder: 'desc' });
-  
+  const { data: roundsData, loading, error } = useRounds({ limit: 40, sortBy: 'id', sortOrder: 'desc' });
+
   const {
     sliderEl,
     sliderPrevBtn,
@@ -58,6 +59,38 @@ export default function RoundRecents() {
     );
   }
 
+  const rawRounds = roundsData?.data?.rounds ?? [];
+  const uniqueRoundsMap = rawRounds.reduce<Map<number, RoundData>>((map, round) => {
+    const existingRound = map.get(round.id);
+    if (!existingRound) {
+      map.set(round.id, round);
+      return map;
+    }
+
+    const shouldReplace =
+      (round.current && !existingRound.current) ||
+      round.startBlock > existingRound.startBlock;
+
+    if (shouldReplace) {
+      map.set(round.id, round);
+    }
+    return map;
+  }, new Map<number, RoundData>());
+
+  const roundsList = Array.from(uniqueRoundsMap.values())
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 10);
+
+  if (roundsList.length === 0) {
+    return (
+      <div className="mb-3">
+        <div className="rounded-lg border border-gray-200 px-6 py-5 text-sm text-gray-500">
+          No recent rounds available.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex w-auto items-center overflow-hidden mb-3">
       <Button
@@ -74,61 +107,61 @@ export default function RoundRecents() {
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
-          {roundsData?.data?.rounds
-            ?.map((round, index: number) => {
-              const isActive = round.id === parseInt(id as string);
-              const isCurrent = round.current;
-              const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
-              
-              return (
-                <Link key={`round-${index}`} href={`/rounds/${round.id}`}>
-                  <div
-                    className={cn(
-                      "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
-                      // Current round always has yellow styling
-                      isCurrent && "bg-gradient-to-br from-yellow-500/15 via-amber-400/15 to-yellow-600/15 border-yellow-400/40 hover:border-yellow-400/60",
-                      // Selected style (enhanced highlight) when clicked
-                      isActive && !isCurrent && "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/60 hover:border-blue-400/80 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30",
-                      // Past rounds styling
-                      !isCurrent && !isActive && "border-muted hover:border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-400/10 to-green-600/10 hover:bg-gradient-to-br hover:from-green-500/15 hover:via-emerald-400/15 hover:to-green-600/15"
-                    )}
-                  >
-                    <div className="mb-4 flex items-center gap-4">
-                      <span
-                        className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110",
-                          isCurrent 
-                            ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-gray-900"
-                            : isActive
-                            ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white"
-                            : "bg-gradient-to-br from-green-400 to-emerald-600 text-white"
-                        )}
-                      >
-                        <RoundIcon className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
-                      </span>
-                      <span
-                        className={cn(
-                          "text-[20px] font-bold uppercase tracking-wide",
-                          isCurrent ? "text-yellow-500" : isActive ? "text-blue-400" : "text-gray-700"
-                        )}
-                      >
-                        Round {round.id}
-                      </span>
-                    </div>
+          {roundsList.map((round, index: number) => {
+            const isActive = round.id === parseInt(id as string);
+            const isCurrent = round.current;
+            const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
+            const roundKey = round.roundKey ?? `round-${round.id}-${index}`;
+            
+            return (
+              <Link key={roundKey} href={`/rounds/${round.id}`}>
+                <div
+                  className={cn(
+                    "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
+                    // Current round always has yellow styling
+                    isCurrent && "bg-gradient-to-br from-yellow-500/15 via-amber-400/15 to-yellow-600/15 border-yellow-400/40 hover:border-yellow-400/60",
+                    // Selected style (enhanced highlight) when clicked
+                    isActive && !isCurrent && "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/60 hover:border-blue-400/80 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30",
+                    // Past rounds styling
+                    !isCurrent && !isActive && "border-muted hover:border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-400/10 to-green-600/10 hover:bg-gradient-to-br hover:from-green-500/15 hover:via-emerald-400/15 hover:to-green-600/15"
+                  )}
+                >
+                  <div className="mb-4 flex items-center gap-4">
                     <span
-                        className={cn(
-                          "flex items-center space-x-1 text-xs font-medium uppercase tracking-wide",
-                          isCurrent ? "text-yellow-600" : isActive ? "text-blue-200" : "text-gray-500"
-                        )}
+                      className={cn(
+                        "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110",
+                        isCurrent 
+                          ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-gray-900"
+                          : isActive
+                          ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white"
+                          : "bg-gradient-to-br from-green-400 to-emerald-600 text-white"
+                      )}
                     >
-                      <span>{round.startBlock}</span>
-                      <span>-</span>
-                      <span>{round.endBlock}</span>
+                      <RoundIcon className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[20px] font-bold uppercase tracking-wide",
+                        isCurrent ? "text-yellow-500" : isActive ? "text-blue-400" : "text-gray-700"
+                      )}
+                    >
+                      Round {round.id}
                     </span>
                   </div>
-                </Link>
-              );
-            })}
+                  <span
+                      className={cn(
+                        "flex items-center space-x-1 text-xs font-medium uppercase tracking-wide",
+                        isCurrent ? "text-yellow-600" : isActive ? "text-blue-200" : "text-gray-500"
+                      )}
+                  >
+                    <span>{round.startBlock}</span>
+                    <span>-</span>
+                    <span>{round.endBlock}</span>
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
       <Button

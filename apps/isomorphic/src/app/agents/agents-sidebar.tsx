@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -15,7 +15,7 @@ import type { MinimalAgentData } from "@/services/api/types/agents";
 export default function AgentsSidebar() {
   const { id } = useParams();
   const [query, setQuery] = useState<string>("");
-  const [includeSota, setIncludeSota] = useState<boolean>(true);
+  const [includeSota, setIncludeSota] = useState<boolean>(false);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
   // Fetch miners data using optimized endpoint
@@ -60,6 +60,18 @@ export default function AgentsSidebar() {
     
     setFilteredAgents(filtered);
   };
+
+  const nonSotaRankByUid = useMemo(() => {
+    const rankMap = new Map<number, number>();
+    let rank = 1;
+    filteredAgents.forEach((agent) => {
+      if (!agent.isSota) {
+        rankMap.set(agent.uid, rank);
+        rank += 1;
+      }
+    });
+    return rankMap;
+  }, [filteredAgents]);
 
   // Show loading placeholder
   if (loading) {
@@ -107,18 +119,35 @@ export default function AgentsSidebar() {
                   }
                 }}
               />
-              <div className="flex items-center gap-2">
+              <div className="flex">
                 <Checkbox
+                  id="show-sota-agents"
                   checked={includeSota}
                   onChange={(e) => setIncludeSota(e.target.checked)}
-                  className="text-xs"
+                  label="Show SOTA agents"
+                  labelPlacement="right"
+                  labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white !flex-1"
+                  className={cn(
+                    "!flex !w-full !flex-row !items-center !justify-between !gap-3 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border !border-black/40 !shadow-inner",
+                    includeSota ? "!opacity-100" : "!opacity-70"
+                  )}
+                  inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
+                  iconClassName="!text-black"
                 />
-                <Text className="text-xs text-gray-600">Include SOTA benchmarks</Text>
               </div>
             </div>
-            {filteredAgents.map((miner, index) => {
+            {filteredAgents.map((miner) => {
               const isActive = miner.uid.toString() === id;
-              const isTopRanked = miner.ranking === 1; // Top ranked miner
+              const firstNonSotaUid = filteredAgents.find((agent) => !agent.isSota)?.uid;
+              const isTopRanked = miner.ranking === 1;
+              const showCrown = includeSota
+                ? isTopRanked
+                : firstNonSotaUid === miner.uid;
+              const highlightTop =
+                (!includeSota && firstNonSotaUid === miner.uid) ||
+                (includeSota && isTopRanked);
+              const displayRank = nonSotaRankByUid.get(miner.uid);
+              const showRankBadge = typeof displayRank === "number";
 
               return (
                 <Link
@@ -130,13 +159,13 @@ export default function AgentsSidebar() {
                       "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
                         ? "bg-emerald-500/20 border border-emerald-500/40 text-white shadow-lg"
-                        : isTopRanked
+                        : highlightTop
                         ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
                         : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
                     )}
                   >
                     {/* Crown badge for top agent - positioned at top-left corner */}
-                    {isTopRanked && (
+                    {showCrown && (
                       <div className="absolute -top-2 -right-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
                         <FaCrown className="w-3 h-3 text-white drop-shadow-sm" />
                       </div>
@@ -153,35 +182,61 @@ export default function AgentsSidebar() {
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "text-sm font-semibold truncate",
-                          isActive ? "text-white" : isTopRanked ? "text-white" : "text-gray-300 group-hover:text-white"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm font-semibold truncate",
+                            isActive
+                              ? "text-white"
+                              : highlightTop
+                                ? "text-white"
+                                : "text-gray-300 group-hover:text-white"
+                          )}
+                        >
                           {miner.name}
                         </span>
                         {miner.isSota && (
                           <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs font-semibold rounded-full border border-yellow-500/30">
-                            SOTA
+                            (SOTA)
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
+                        {showRankBadge && (
+                          <span
+                            className={cn(
+                              "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
+                              isActive
+                                ? "bg-emerald-500/20 text-emerald-200"
+                                : highlightTop
+                                  ? "bg-orange-500/20 text-orange-200"
+                                  : "bg-gray-700/40 text-gray-300"
+                            )}
+                          >
+                            #{displayRank}
+                          </span>
+                        )}
                         <span
                           className={cn(
                             "text-xs font-medium",
                             isActive
                               ? "text-emerald-200"
-                              : isTopRanked
+                              : highlightTop
                                 ? "text-orange-200"
                                 : "text-gray-400 group-hover:text-gray-200"
                           )}
                         >
                           Score: {miner.score.toFixed(1)}%
                         </span>
-                        <span className={cn(
-                          "text-xs font-mono",
-                          isActive ? "text-emerald-300" : isTopRanked ? "text-orange-300" : "text-gray-500 group-hover:text-gray-300"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs font-mono",
+                            isActive
+                              ? "text-emerald-300"
+                              : highlightTop
+                                ? "text-orange-300"
+                                : "text-gray-500 group-hover:text-gray-300"
+                          )}
+                        >
                           UID: {miner.uid}
                         </span>
                       </div>

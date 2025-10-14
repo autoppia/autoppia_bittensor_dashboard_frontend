@@ -8,6 +8,7 @@ import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundMiners } from "@/services/hooks/useRounds";
+import type { BenchmarkPerformance } from "@/services/api/types/rounds";
 import {
   ComposedChart,
   Bar,
@@ -68,8 +69,9 @@ export default function RoundMinerScores({
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
 
-    return minersData.data.miners
-      .map((miner) => {
+    const benchmarks: BenchmarkPerformance[] = minersData.data.benchmarks || [];
+
+    const minerEntries = minersData.data.miners.map((miner) => {
         const score = normalizeScore(miner.score);
         const isSota = Boolean(miner.isSota);
         const label =
@@ -99,8 +101,34 @@ export default function RoundMinerScores({
           color,
           provider: miner.provider,
         };
-      })
-      .sort((a, b) => b.score - a.score);
+      });
+
+    const benchmarkEntries = benchmarks.map((benchmark) => {
+      const score = normalizeScore(benchmark.score);
+      const label = benchmark.name;
+      const slug = benchmark.provider ? slugify(benchmark.provider) : slugify(label);
+      let color = BENCHMARK_COLORS[slug];
+      if (!color) {
+        if (benchmarkColorCache.has(slug)) {
+          color = benchmarkColorCache.get(slug)!;
+        } else {
+          color = DEFAULT_BENCHMARK_COLORS[fallbackColorIndex % DEFAULT_BENCHMARK_COLORS.length];
+          benchmarkColorCache.set(slug, color);
+          fallbackColorIndex += 1;
+        }
+      }
+
+      return {
+        name: label,
+        score,
+        isSota: true,
+        uid: `benchmark-${benchmark.id}`,
+        color,
+        provider: benchmark.provider,
+      };
+    });
+
+    return [...minerEntries, ...benchmarkEntries].sort((a, b) => b.score - a.score);
   }, [minersData]);
 
   const legendItems = React.useMemo(() => {

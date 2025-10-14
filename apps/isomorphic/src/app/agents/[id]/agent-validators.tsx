@@ -304,6 +304,11 @@ export default function AgentValidators() {
           const avgResponseTime = (latestRun.duration / 60).toFixed(1); // Convert to minutes
           const tasksCompleted = latestRun.completedTasks;
 
+          const validatorName =
+            latestRun.validatorName || `Validator ${validatorId.slice(0, 6)}...`;
+          const validatorImage =
+            latestRun.validatorImage || "/validators/default.png";
+
           const secondaryStats = [
             {
               title: "Round",
@@ -341,14 +346,18 @@ export default function AgentValidators() {
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="relative aspect-square w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <Text className="text-gray-600 font-bold text-sm">
-                          {validatorId.slice(0, 2).toUpperCase()}
-                        </Text>
+                      <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
+                        <Image
+                          src={validatorImage}
+                          alt={validatorName}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <Text className="font-bold text-gray-900">
-                          Validator {validatorId}
+                          {validatorName}
                         </Text>
                         <Text className="text-xs text-gray-500 tracking-wide font-mono truncate">
                           {validatorId.slice(0, 8)}...{validatorId.slice(-8)}
