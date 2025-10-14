@@ -74,9 +74,6 @@ export default function Websites() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg">
-                <PiRocketLaunchDuotone className="w-6 h-6 text-white" />
-              </div>
               <Title
                 as="h2"
                 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent"

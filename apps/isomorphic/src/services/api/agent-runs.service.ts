@@ -4,7 +4,6 @@
  */
 
 import { apiClient } from './client';
-import { mockAgentRunRecords } from './mock-agent-runs';
 import type {
   AgentRunData,
   AgentRunStats,
@@ -51,13 +50,6 @@ export class AgentRunsService {
       );
       return response.data.data.personas;
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.personas;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -73,15 +65,15 @@ export class AgentRunsService {
       const response = await apiClient.get<AgentRunStatsResponse>(
         `${this.baseEndpoint}/${runId}/stats`
       );
-      return response.data.data.stats;
+      const payload: any = response.data.data;
+      const rawStats = payload?.stats ?? payload?.statistics;
+
+      if (!rawStats) {
+        throw new Error('Agent run statistics response was empty');
+      }
+
+      return this.normalizeStats(rawStats as AgentRunStats);
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.stats;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -97,15 +89,8 @@ export class AgentRunsService {
       const response = await apiClient.get<AgentRunSummaryResponse>(
         `${this.baseEndpoint}/${runId}/summary`
       );
-      return response.data.data.summary;
+      return this.normalizeSummary(response.data.data.summary);
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.summary;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -130,25 +115,19 @@ export class AgentRunsService {
         `${this.baseEndpoint}/${runId}/tasks`,
         params
       );
+      const payload = response.data.data;
+      const tasks = payload.tasks ?? [];
+      const total = payload.total ?? tasks.length;
+      const page = payload.page ?? params?.page ?? 1;
+      const limit = payload.limit ?? params?.limit ?? (tasks.length || 1);
+
       return {
-        tasks: response.data.data.tasks,
-        total: response.data.data.total,
-        page: response.data.data.page,
-        limit: response.data.data.limit,
+        tasks,
+        total,
+        page,
+        limit,
       };
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.tasks;
-      if (fallback) {
-        return {
-          tasks: fallback.tasks,
-          total: fallback.total,
-          page: fallback.page,
-          limit: fallback.limit,
-        };
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -208,7 +187,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/agents/${agentId}/runs`, params);
+    }>(`${this.baseEndpoint}/agents/${agentId}/runs`, params);
     return response.data.data;
   }
 
@@ -238,7 +217,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/rounds/${roundId}/agent-runs`, params);
+    }>(`${this.baseEndpoint}/rounds/${roundId}/agent-runs`, params);
     return response.data.data;
   }
 
@@ -268,7 +247,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/validators/${validatorId}/agent-runs`, params);
+    }>(`${this.baseEndpoint}/validators/${validatorId}/agent-runs`, params);
     return response.data.data;
   }
 
@@ -455,6 +434,77 @@ export class AgentRunsService {
       };
     }>(`${this.baseEndpoint}/${runId}/metrics`);
     return response.data.data;
+  }
+
+  private normalizePercentage(value: number | null | undefined, decimals: number = 1): number {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 0;
+    }
+    const scaled = value > 1 ? value : value * 100;
+    const factor = Math.pow(10, decimals);
+    return Math.round(scaled * factor) / factor;
+  }
+
+  private roundTo(value: number | null | undefined, decimals: number = 1): number {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 0;
+    }
+    const factor = Math.pow(10, decimals);
+    return Math.round(value * factor) / factor;
+  }
+
+  private normalizeStats(stats: AgentRunStats): AgentRunStats {
+    return {
+      ...stats,
+      overallScore: this.normalizePercentage(stats.overallScore),
+      totalTasks: stats.totalTasks ?? 0,
+      successfulTasks: stats.successfulTasks ?? 0,
+      failedTasks: stats.failedTasks ?? 0,
+      websites: stats.websites ?? 0,
+      averageTaskDuration: this.roundTo(stats.averageTaskDuration),
+      successRate: this.normalizePercentage(stats.successRate),
+      performanceByWebsite: Array.isArray(stats.performanceByWebsite)
+        ? stats.performanceByWebsite.map((entry) => ({
+            ...entry,
+            averageScore: this.normalizePercentage(entry.averageScore),
+            averageDuration: this.roundTo(entry.averageDuration),
+          }))
+        : [],
+      performanceByUseCase: Array.isArray(stats.performanceByUseCase)
+        ? stats.performanceByUseCase.map((entry) => ({
+            ...entry,
+            averageScore: this.normalizePercentage(entry.averageScore),
+            averageDuration: this.roundTo(entry.averageDuration),
+          }))
+        : [],
+    };
+  }
+
+  private normalizeSummary(summary: AgentRunSummary): AgentRunSummary {
+    const normalizedTopWebsite = summary.topPerformingWebsite
+      ? {
+          ...summary.topPerformingWebsite,
+          score: this.normalizePercentage(summary.topPerformingWebsite.score),
+        }
+      : summary.topPerformingWebsite;
+
+    const normalizedTopUseCase = summary.topPerformingUseCase
+      ? {
+          ...summary.topPerformingUseCase,
+          score: this.normalizePercentage(summary.topPerformingUseCase.score),
+        }
+      : summary.topPerformingUseCase;
+
+    return {
+      ...summary,
+      overallScore: this.normalizePercentage(summary.overallScore),
+      totalTasks: summary.totalTasks ?? 0,
+      successfulTasks: summary.successfulTasks ?? 0,
+      failedTasks: summary.failedTasks ?? 0,
+      duration: Math.max(summary.duration ?? 0, 0),
+      topPerformingWebsite: normalizedTopWebsite,
+      topPerformingUseCase: normalizedTopUseCase,
+    };
   }
 }
 

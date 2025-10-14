@@ -76,6 +76,7 @@ export interface AgentRunTaskData {
   actions: TaskAction[];
   screenshots?: string[];
   logs?: string[];
+  extras?: Record<string, any>;
 }
 
 // ===== TASK ACTION =====
@@ -212,8 +213,8 @@ export interface AgentRunTasksResponse {
   data: {
     tasks: AgentRunTaskData[];
     total: number;
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
   };
 }
 

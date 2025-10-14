@@ -32,6 +32,14 @@ export interface ValidatorData {
   emission: number;
 }
 
+export interface ValidatorFilterItem {
+  id: string;
+  name: string;
+  hotkey?: string | null;
+  icon?: string | null;
+  status?: string | null;
+}
+
 // ===== ROUND DATA =====
 export interface OverviewRoundData {
   id: number;
@@ -94,6 +102,12 @@ export interface ValidatorsResponse {
     total: number;
     page: number;
     limit: number;
+  };
+}
+
+export interface ValidatorFilterResponse {
+  data: {
+    validators: ValidatorFilterItem[];
   };
 }
 

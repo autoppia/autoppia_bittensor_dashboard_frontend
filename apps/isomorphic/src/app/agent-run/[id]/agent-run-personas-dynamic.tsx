@@ -8,8 +8,25 @@ import {
   PiGithubLogoDuotone,
 } from "react-icons/pi";
 import { useAgentRunPersonas } from "@/services/hooks/useAgentRun";
-import LoadingScreen, { CardLoadingSkeleton } from "@/app/shared/loading-screen";
+import { CardLoadingSkeleton } from "@/app/shared/loading-screen";
 import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
+
+function resolveImageSrc(src?: string | null, fallback: string = "/images/autoppia-logo.png") {
+  if (!src || typeof src !== "string") {
+    return fallback;
+  }
+
+  const trimmed = src.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  return `/${trimmed.replace(/^\/+/, "")}`;
+}
 
 export default function AgentRunPersonasDynamic() {
   const { id } = useParams();
@@ -53,7 +70,10 @@ export default function AgentRunPersonasDynamic() {
         <div className="text-center h-full flex flex-col justify-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
             <Image
-              src={personas.validator.image}
+              src={resolveImageSrc(
+                personas.validator.image,
+                "/validators/Other.png"
+              )}
               alt={personas.validator.name}
               width={32}
               height={32}
@@ -94,7 +114,10 @@ export default function AgentRunPersonasDynamic() {
         <div className="text-center h-full flex flex-col justify-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
             <Image
-              src={personas.agent.image}
+              src={resolveImageSrc(
+                personas.agent.image,
+                "/images/autoppia-logo.png"
+              )}
               alt={personas.agent.name}
               width={32}
               height={32}

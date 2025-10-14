@@ -10,10 +10,12 @@ import {
   RoundsResponse,
   LeaderboardResponse,
   SubnetStatisticsResponse,
+  ValidatorFilterResponse,
   ValidatorsQueryParams,
   LeaderboardQueryParams,
   RoundsQueryParams,
   ValidatorData,
+  ValidatorFilterItem,
   OverviewRoundData,
   LeaderboardData,
   OverviewMetrics,
@@ -22,6 +24,7 @@ import {
 
 export class OverviewService {
   private readonly baseEndpoint = '/api/v1/overview';
+  private readonly validatorsFilterEndpoint = `${this.baseEndpoint}/validators/filter`;
 
   /**
    * Get overview metrics (top score, total websites, validators, miners, etc.)
@@ -88,6 +91,36 @@ export class OverviewService {
       `${this.baseEndpoint}/validators/${id}`
     );
     return response.data.validator;
+  }
+
+  /**
+   * Get lightweight validator list for filters
+   */
+  async getValidatorFilters(): Promise<{ validators: ValidatorFilterItem[] }> {
+    try {
+      const response = await apiClient.get<ValidatorFilterResponse>(
+        this.validatorsFilterEndpoint
+      );
+
+      if (response.data?.data?.validators) {
+        return { validators: response.data.data.validators };
+      }
+
+      if (Array.isArray((response.data as any)?.validators)) {
+        return { validators: (response.data as any).validators as ValidatorFilterItem[] };
+      }
+
+      return { validators: [] };
+    } catch (error: any) {
+      if (error?.status === 404) {
+        // Endpoint not available yet – fall back to empty list
+        return { validators: [] };
+      }
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Failed to fetch validator filter options');
+    }
   }
 
   /**
