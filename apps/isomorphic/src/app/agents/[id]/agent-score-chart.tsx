@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
@@ -15,55 +15,155 @@ import {
   XAxis,
   YAxis,
   Area,
+  Line,
 } from "recharts";
 import { useMinerDetails } from "@/services/hooks/useAgents";
 import { AgentScoreChartPlaceholder } from "@/components/placeholders/agent-placeholders";
-import { ScoreRoundDataPoint } from "@/services/api/types/agents";
+import type { ScoreRoundDataPoint } from "@/services/api/types/agents";
 
 const filterOptions = ["7D", "15D", "All"];
 
-// SOTA agent color definitions
-const sotaAgents = [
-  {
-    label: "OpenAI CUA",
-    value: "openai_cua",
-    stroke: "#2196F3",
-    fill: "rgba(33, 150, 243, 0.1)",
-  },
-  {
-    label: "Anthropic CUA", 
-    value: "anthropic_cua",
-    stroke: "#FF8C00",
-    fill: "rgba(255, 140, 0, 0.1)",
-  },
-  {
-    label: "Browser Use",
-    value: "browser_use", 
-    stroke: "#FFFFFF",
-    fill: "rgba(255, 255, 255, 0.1)",
-  },
-];
+const BENCHMARK_COLORS: Record<string, string> = {
+  openai: "#2563EB",
+  anthropic: "#F97316",
+  browser: "#8B5CF6",
+  "browser-use": "#8B5CF6",
+  browser_use: "#8B5CF6",
+  claude: "#F97316",
+};
+
+const BENCHMARK_COLOR_PALETTE = ["#2563EB", "#F97316", "#8B5CF6", "#14B8A6", "#F472B6", "#EC4899"];
 
 interface AgentScoreChartProps {
   className?: string;
   scoreRoundData?: ScoreRoundDataPoint[];
 }
 
-export default function AgentScoreChart({ className, scoreRoundData = [] }: AgentScoreChartProps) {
+const normalizeScore = (value?: number | null): number | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (Number.isNaN(value)) {
+    return null;
+  }
+  return value > 1 ? value / 100 : value;
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+export default function AgentScoreChart({
+  className,
+  scoreRoundData = [],
+}: AgentScoreChartProps) {
   const { id } = useParams();
   const uid = parseInt(id as string, 10);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('90d');
-  
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("90d");
+
   const { data: agent, loading, error } = useMinerDetails(uid);
 
+  const { processedRows, benchmarkSeries } = useMemo(() => {
+    const seriesMap = new Map<
+      string,
+      {
+        label: string;
+        color: string;
+      }
+    >();
+
+    const rows = scoreRoundData
+      .map((point) => {
+        const row: Record<string, number | string | null> = {
+          round: point.round_id,
+          score: normalizeScore(point.score) ?? 0,
+          rank: point.rank ?? null,
+          reward: point.reward ?? null,
+          timestamp: point.timestamp,
+        };
+
+        const topScore = normalizeScore(point.topScore);
+        if (topScore !== null) {
+          row.topBenchmarkScore = topScore;
+        }
+
+        if (Array.isArray(point.benchmarks) && point.benchmarks.length > 0) {
+          point.benchmarks.forEach((benchmark, idx) => {
+            const rawId = benchmark.provider || benchmark.name || `benchmark-${idx}`;
+            const slug = slugify(rawId);
+            const key = `benchmark_${slug || idx}`;
+            const normalized = normalizeScore(benchmark.score);
+
+            if (!seriesMap.has(key)) {
+              const color =
+                BENCHMARK_COLORS[slug] ||
+                BENCHMARK_COLOR_PALETTE[seriesMap.size % BENCHMARK_COLOR_PALETTE.length];
+
+              seriesMap.set(key, {
+                label: benchmark.name || benchmark.provider || "Benchmark",
+                color,
+              });
+            }
+
+            row[key] = normalized;
+          });
+        }
+
+        return row;
+      })
+      .sort((a, b) => {
+        const roundA = typeof a.round === "number" ? a.round : Number(a.round);
+        const roundB = typeof b.round === "number" ? b.round : Number(b.round);
+        return roundA - roundB;
+      });
+
+    return {
+      processedRows: rows,
+      benchmarkSeries: Array.from(seriesMap.entries()).map(([key, meta]) => ({
+        key,
+        label: meta.label,
+        color: meta.color,
+      })),
+    };
+  }, [scoreRoundData]);
+
+  const isUsingFallbackData = processedRows.length === 0;
+
+  const fallbackData = useMemo(() => {
+    if (!isUsingFallbackData || !agent) {
+      return [];
+    }
+
+    const data: Array<Record<string, number | string | null>> = [];
+    const baseScore =
+      typeof (agent as any)?.currentScore === "number"
+        ? normalizeScore((agent as any).currentScore)
+        : 0.85;
+
+    for (let i = 1; i <= 20; i += 1) {
+      const variation = (Math.random() - 0.5) * 0.1;
+      const score = Math.max(0.6, Math.min(1, (baseScore ?? 0.85) + variation));
+
+      data.push({
+        round: i,
+        score,
+        rank: Math.floor(Math.random() * 50) + 1,
+        reward: Math.random() * 10,
+        timestamp: new Date(Date.now() - (20 - i) * 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
+    return data;
+  }, [agent, isUsingFallbackData]);
 
   function handleFilterBy(option: string) {
     if (option === "7D") {
-      setTimeRange('7d');
+      setTimeRange("7d");
     } else if (option === "15D") {
-      setTimeRange('30d'); // Use 30d for 15D filter (15 rounds)
+      setTimeRange("30d"); // Use 30d for 15D filter (15 rounds)
     } else {
-      setTimeRange('90d'); // All rounds
+      setTimeRange("90d"); // All rounds
     }
   }
 
@@ -87,109 +187,84 @@ export default function AgentScoreChart({ className, scoreRoundData = [] }: Agen
         rounded="xl"
         className={className}
       >
-        <div className="flex items-center justify-center h-[273px] text-red-500">
+        <div className="flex h-[273px] items-center justify-center text-red-500">
           <div className="text-center">
             <p className="text-lg font-semibold">Error loading performance data</p>
-            <p className="text-sm mt-2">{error}</p>
+            <p className="mt-2 text-sm">{error}</p>
           </div>
         </div>
       </WidgetCard>
     );
   }
 
-  // Transform the score vs round data for the chart
-  const chartData = scoreRoundData
-    .map((point) => ({
-      round: point.round_id,
-      score: point.score,
-      rank: point.rank,
-      reward: point.reward,
-      timestamp: point.timestamp,
-    }))
-    .sort((a, b) => a.round - b.round); // Sort by round number
-
-  // If no real data, generate some sample data
-  const isUsingFallbackData = chartData.length === 0;
-  const fallbackData = [];
-  
-  if (isUsingFallbackData && agent) {
-    // Generate sample data for demonstration
-    for (let i = 1; i <= 20; i++) {
-      const baseScore = (agent as any)?.currentScore || 70; // New API returns percentage
-      const variation = (Math.random() - 0.5) * 10; // ±5% variation
-      const score = Math.max(70, Math.min(100, baseScore + variation)) / 100; // Convert to decimal for chart
-      
-      fallbackData.push({
-        round: i,
-        score: score,
-        rank: Math.floor(Math.random() * 50) + 1,
-        reward: Math.random() * 10,
-        timestamp: new Date(Date.now() - (20 - i) * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
-  }
-
   // Apply time range filtering (1 round = 1 day)
   const getFilteredData = (data: any[]) => {
     if (data.length === 0) return data;
-    
-    // Get the highest round number (most recent)
-    const maxRound = Math.max(...data.map(d => d.round));
-    
-    // Calculate how many rounds to show based on time range
+
+    const maxRound = Math.max(...data.map((d) => d.round));
     let roundsToShow: number;
+
     switch (timeRange) {
-      case '7d':
-        roundsToShow = 7; // 7 rounds = 7 days
+      case "7d":
+        roundsToShow = 7;
         break;
-      case '30d':
-        roundsToShow = 15; // 15 rounds = 15 days (closest to 15D filter)
+      case "30d":
+        roundsToShow = 15;
         break;
-      case '90d':
-        roundsToShow = Math.min(90, data.length); // All rounds up to 90 days
-        break;
+      case "90d":
       default:
-        roundsToShow = data.length;
+        roundsToShow = Math.min(90, data.length);
+        break;
     }
-    
-    // Filter to show only the most recent rounds
+
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
-    return data.filter(d => d.round >= minRound);
+    return data.filter((d) => d.round >= minRound);
   };
 
-  const baseData = isUsingFallbackData ? fallbackData : chartData;
-  const displayData = getFilteredData(baseData);
+  const baseData = isUsingFallbackData ? fallbackData : processedRows;
+  const displayData = getFilteredData(baseData).map((entry: any) => {
+    const scaled: Record<string, number | string | null> = {
+      ...entry,
+      score: entry.score != null ? Number(entry.score) * 100 : entry.score,
+      topBenchmarkScore:
+        entry.topBenchmarkScore != null ? Number(entry.topBenchmarkScore) * 100 : entry.topBenchmarkScore,
+    };
+
+    benchmarkSeries.forEach((series) => {
+      if (scaled[series.key] != null) {
+        scaled[series.key] = Number(scaled[series.key]) * 100;
+      }
+    });
+
+    return scaled;
+  });
+  const hasTopBenchmark = displayData.some(
+    (entry) => typeof entry.topBenchmarkScore === "number"
+  );
+
+  const legendItems = [
+    { label: "Agent score", color: "#10B981" },
+    ...(hasTopBenchmark ? [{ label: "Top benchmark", color: "#FACC15" }] : []),
+    ...benchmarkSeries.map((series) => ({ label: series.label, color: series.color })),
+  ];
 
   return (
     <WidgetCard
       title="Score Over Time"
       action={
-        <ButtonGroupAction
-          options={filterOptions}
-          onChange={(option) => handleFilterBy(option)}
-        />
+        <ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />
       }
       headerClassName="flex-row items-start space-between"
       rounded="xl"
       className={cn("flex flex-col min-h-[180px]", className)}
     >
       {isUsingFallbackData && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-700">
-                <strong>Simulated Data:</strong> Historical performance data is not available from the API. Showing realistic simulated data based on current performance metrics.
-              </p>
-            </div>
-          </div>
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+          <strong>Simulated Data:</strong> Historical performance data is not available from the API.
+          Showing realistic simulated data based on current performance metrics.
         </div>
       )}
-      <div className="custom-scrollbar overflow-x-auto scroll-smooth flex-1">
+      <div className="custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
         <div className={cn("h-full w-full pt-2")}>
           <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
@@ -201,58 +276,79 @@ export default function AgentScoreChart({ className, scoreRoundData = [] }: Agen
             >
               <defs>
                 <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor="#10b981"
-                    stopOpacity={0.2}
-                  />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="successRateArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="round" 
-                axisLine={true} 
-                tickLine={false}
-                tickFormatter={(value) => `${value}`}
-              />
+              <XAxis dataKey="round" axisLine tickLine={false} tickFormatter={(value) => `${value}`} />
               <YAxis
-                axisLine={true}
+                axisLine
                 tickLine={false}
-                domain={[0, 1]}
-                tick={<CustomYAxisTick />}
-                tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                domain={[0, 100]}
+                tick={<CustomYAxisTick postfix="%" />}
               />
-              <Tooltip 
+              <Tooltip
                 content={<CustomTooltip />}
-                formatter={(value: number, name: string, props: any) => {
-                  if (name === 'score') {
-                    return [`${(value * 100).toFixed(1)}%`, 'Score'];
+                formatter={(value: number | null, name: string) => {
+                  if (value === null || value === undefined) {
+                    return ["—", name];
                   }
-                  return [value, name];
+                  return [`${Number(value).toFixed(1)}%`, name];
                 }}
                 labelFormatter={(value, payload) => {
                   const data = payload?.[0]?.payload;
-                  return `${value}${data?.rank ? ` (Rank #${data.rank})` : ''}`;
+                  return `${value}${data?.rank ? ` (Rank #${data.rank})` : ""}`;
                 }}
               />
-              {/* Score area */}
               <Area
                 type="monotone"
                 dataKey="score"
-                stroke="#10b981"
+                stroke="#10B981"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#scoreArea)"
+                name="Agent score"
               />
+              {hasTopBenchmark && (
+                <Line
+                  type="monotone"
+                  dataKey="topBenchmarkScore"
+                  stroke="#FACC15"
+                  strokeWidth={2}
+                  dot={false}
+                  strokeDasharray="6 4"
+                  name="Top benchmark"
+                />
+              )}
+              {benchmarkSeries.map((series) => (
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  stroke={series.color}
+                  strokeWidth={1.75}
+                  dot={false}
+                  name={series.label}
+                />
+              ))}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
+      {legendItems.length > 1 && (
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-500">
+          {legendItems.map((item) => (
+            <span key={item.label} className="inline-flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.label}
+            </span>
+          ))}
+        </div>
+      )}
     </WidgetCard>
   );
 }

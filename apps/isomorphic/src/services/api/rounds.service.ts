@@ -27,6 +27,101 @@ export class RoundsService {
   private readonly baseEndpoint = '/api/v1/rounds';
 
   /**
+   * Normalize round payloads coming from the API into the RoundData shape expected by the UI.
+   * Handles both camelCase and snake_case responses as well as string-based round identifiers.
+   */
+  private normalizeRoundData(rawRound: any, fallbackId?: number): RoundData {
+    if (!rawRound || typeof rawRound !== 'object') {
+      throw new Error('Round data not found in API response');
+    }
+
+    const extractNumericId = (): number => {
+      if (typeof rawRound.id === 'number') {
+        return rawRound.id;
+      }
+      if (typeof rawRound.roundId === 'number') {
+        return rawRound.roundId;
+      }
+      if (typeof rawRound.round_id === 'number') {
+        return rawRound.round_id;
+      }
+      if (typeof rawRound.round_id === 'string') {
+        const match = rawRound.round_id.match(/\d+/);
+        if (match) {
+          return parseInt(match[0], 10);
+        }
+      }
+      if (typeof fallbackId === 'number' && !Number.isNaN(fallbackId)) {
+        return fallbackId;
+      }
+      throw new Error('Unable to determine round id from API response');
+    };
+
+    const startBlock = rawRound.startBlock ?? rawRound.start_block;
+    const endBlock = rawRound.endBlock ?? rawRound.end_block;
+    let currentBlock = rawRound.currentBlock ?? rawRound.current_block;
+    const status = (rawRound.status ??
+      (rawRound.current ? 'active' : 'completed')) as RoundData['status'];
+
+    if (
+      (currentBlock === undefined || currentBlock === null) &&
+      status === 'completed' &&
+      typeof endBlock === 'number'
+    ) {
+      currentBlock = endBlock;
+    }
+
+    const blocksRemaining =
+      rawRound.blocksRemaining ??
+      rawRound.blocks_remaining ??
+      (typeof endBlock === 'number' && typeof currentBlock === 'number'
+        ? Math.max(endBlock - currentBlock, 0)
+        : undefined);
+
+    const computedProgress =
+      rawRound.progress ??
+      rawRound.progress_percent ??
+      (typeof startBlock === 'number' &&
+        typeof endBlock === 'number' &&
+        typeof currentBlock === 'number' &&
+        endBlock !== startBlock
+        ? Math.min(
+            Math.max((currentBlock - startBlock) / (endBlock - startBlock), 0),
+            1
+          )
+        : status === 'completed'
+        ? 1
+        : undefined);
+
+    return {
+      id: extractNumericId(),
+      startBlock: startBlock ?? 0,
+      endBlock: endBlock ?? 0,
+      current: rawRound.current ?? status === 'active',
+      startTime:
+        rawRound.startTime ?? rawRound.started_at ?? rawRound.start_time ?? '',
+      endTime: rawRound.endTime ?? rawRound.ended_at ?? rawRound.end_time,
+      status,
+      totalTasks:
+        rawRound.totalTasks ?? rawRound.n_tasks ?? rawRound.tasks?.length ?? 0,
+      completedTasks:
+        rawRound.completedTasks ??
+        rawRound.completed_tasks ??
+        rawRound.tasks?.filter((task: any) => task?.status === 'completed')
+          ?.length ??
+        rawRound.n_winners ??
+        0,
+      averageScore: rawRound.averageScore ?? rawRound.average_score ?? 0,
+      topScore: rawRound.topScore ?? rawRound.top_score ?? 0,
+      currentBlock:
+        currentBlock ??
+        (status === 'completed' ? (endBlock ?? undefined) : undefined),
+      blocksRemaining,
+      progress: computedProgress,
+    };
+  }
+
+  /**
    * Get list of all rounds with optional filtering and pagination
    */
   async getRounds(params?: RoundsListQueryParams): Promise<RoundsListResponse> {
@@ -41,20 +136,18 @@ export class RoundsService {
    * Get details for a specific round by ID
    */
   async getRound(id: number): Promise<RoundData> {
-    const response = await apiClient.get<RoundDetailsResponse>(
-      `${this.baseEndpoint}/${id}`
-    );
-    return response.data.data.round;
+    const response = await apiClient.get<any>(`${this.baseEndpoint}/${id}`);
+    const payload = response.data?.data?.round ?? response.data?.round ?? response.data;
+    return this.normalizeRoundData(payload, id);
   }
 
   /**
    * Get current round information
    */
   async getCurrentRound(): Promise<RoundData> {
-    const response = await apiClient.get<RoundDetailsResponse>(
-      `${this.baseEndpoint}/current`
-    );
-    return response.data.data.round;
+    const response = await apiClient.get<any>(`${this.baseEndpoint}/current`);
+    const payload = response.data?.data?.round ?? response.data?.round ?? response.data;
+    return this.normalizeRoundData(payload);
   }
 
   /**

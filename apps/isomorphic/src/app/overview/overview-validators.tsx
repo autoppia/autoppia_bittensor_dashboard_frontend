@@ -162,8 +162,10 @@ export default function OverviewValidators() {
                         <Text className="font-bold text-gray-900">
                           {validator.name}
                         </Text>
-                        <Text className="text-xs text-gray-500 tracking-wide font-mono truncate">
-                          {validator.hotkey.slice(0, 8)}...{validator.hotkey.slice(-8)}
+                        <Text className="text-xs font-mono tracking-wide text-gray-500 truncate">
+                          {validator.hotkey
+                            ? `${validator.hotkey.slice(0, 8)}...${validator.hotkey.slice(-8)}`
+                            : "No hotkey"}
                         </Text>
                       </div>
                     </div>

@@ -101,9 +101,9 @@ export default function MinerChart({ className }: MinerChartProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap mt-4">
+          <div className="flex flex-wrap items-center gap-4 text-white mt-4">
             <span className="ms-4">Compare with:</span>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               {sotaAgents.map((agent) => (
                 <div key={agent.value} className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -164,7 +164,7 @@ export default function MinerChart({ className }: MinerChartProps) {
               </div>
             </div>
           ) : (
-          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
+          <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={filteredData}
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
@@ -216,12 +216,12 @@ export default function MinerChart({ className }: MinerChartProps) {
           </ResponsiveContainer>
           )}
         </div>
-        <div className="flex items-center min-w-[600px] gap-4 text-white flex-wrap">
+        <div className="flex flex-wrap items-center gap-4 text-white">
           <span className="ms-4">Compare with:</span>
           <CheckboxGroup
             values={compareWith}
             setValues={setCompareWith}
-            className="flex items-center gap-4"
+            className="flex flex-wrap items-center gap-4"
           >
             {sotaAgents.map((agent) => (
               <Checkbox

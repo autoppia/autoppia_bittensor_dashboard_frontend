@@ -15,7 +15,7 @@ import type { MinimalAgentData } from "@/services/api/types/agents";
 export default function AgentsSidebar() {
   const { id } = useParams();
   const [query, setQuery] = useState<string>("");
-  const [showSotaOnly, setShowSotaOnly] = useState<boolean>(false);
+  const [includeSota, setIncludeSota] = useState<boolean>(true);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
   // Fetch miners data using optimized endpoint
@@ -28,15 +28,14 @@ export default function AgentsSidebar() {
     if (minersData?.miners) {
       let filtered = minersData.miners;
       
-      // Apply SOTA filter - when checked, show SOTA agents + all miners
-      // when unchecked, show only miners (exclude SOTA agents)
-      if (!showSotaOnly) {
-        filtered = filtered.filter(miner => !miner.isSota);
+      // Optionally exclude SOTA benchmarks when toggled off
+      if (!includeSota) {
+        filtered = filtered.filter((miner) => !miner.isSota);
       }
       
       setFilteredAgents(filtered);
     }
-  }, [minersData, showSotaOnly]);
+  }, [minersData, includeSota]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
@@ -46,10 +45,9 @@ export default function AgentsSidebar() {
 
     let filtered = minersData.miners;
     
-    // Apply SOTA filter - when checked, show SOTA agents + all miners
-    // when unchecked, show only miners (exclude SOTA agents)
-    if (!showSotaOnly) {
-      filtered = filtered.filter(miner => !miner.isSota);
+    // Optionally exclude SOTA benchmarks when toggled off
+    if (!includeSota) {
+      filtered = filtered.filter((miner) => !miner.isSota);
     }
     
     // Then apply search filter
@@ -88,7 +86,7 @@ export default function AgentsSidebar() {
         <Text className="sticky top-0 px-6 py-4 text-2xl font-bold text-gray-900 border-b">
           All Miners
         </Text>
-        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-4 pr-2 mt-3 scroll-smooth">
+        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-4 pr-2 mt-3 pt-4 pb-4 scroll-smooth">
           <div className="flex flex-col gap-1">
             <div className="mb-2 space-y-2">
               <Input
@@ -101,9 +99,9 @@ export default function AgentsSidebar() {
                   setQuery("");
                   if (minersData?.miners) {
                     let filtered = minersData.miners;
-                    // Apply SOTA filter - when unchecked, show only miners (exclude SOTA agents)
-                    if (!showSotaOnly) {
-                      filtered = filtered.filter(miner => !miner.isSota);
+                    // Optionally exclude SOTA benchmarks when toggled off
+                    if (!includeSota) {
+                      filtered = filtered.filter((miner) => !miner.isSota);
                     }
                     setFilteredAgents(filtered);
                   }
@@ -111,11 +109,11 @@ export default function AgentsSidebar() {
               />
               <div className="flex items-center gap-2">
                 <Checkbox
-                  checked={showSotaOnly}
-                  onChange={(e) => setShowSotaOnly(e.target.checked)}
+                  checked={includeSota}
+                  onChange={(e) => setIncludeSota(e.target.checked)}
                   className="text-xs"
                 />
-                <Text className="text-xs text-gray-600">Show SOTA agents</Text>
+                <Text className="text-xs text-gray-600">Include SOTA benchmarks</Text>
               </div>
             </div>
             {filteredAgents.map((miner, index) => {
@@ -129,7 +127,7 @@ export default function AgentsSidebar() {
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                      "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
                         ? "bg-emerald-500/20 border border-emerald-500/40 text-white shadow-lg"
                         : isTopRanked
@@ -139,7 +137,7 @@ export default function AgentsSidebar() {
                   >
                     {/* Crown badge for top agent - positioned at top-left corner */}
                     {isTopRanked && (
-                      <div className="absolute -top-2 -left-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
+                      <div className="absolute -top-2 -right-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
                         <FaCrown className="w-3 h-3 text-white drop-shadow-sm" />
                       </div>
                     )}
@@ -168,11 +166,17 @@ export default function AgentsSidebar() {
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={cn(
-                          "text-xs font-medium",
-                          isActive ? "text-emerald-200" : isTopRanked ? "text-orange-200" : "text-gray-400 group-hover:text-gray-200"
-                        )}>
-                          Score: {(miner.score * 100).toFixed(1)}%
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            isActive
+                              ? "text-emerald-200"
+                              : isTopRanked
+                                ? "text-orange-200"
+                                : "text-gray-400 group-hover:text-gray-200"
+                          )}
+                        >
+                          Score: {miner.score.toFixed(1)}%
                         </span>
                         <span className={cn(
                           "text-xs font-mono",
