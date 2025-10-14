@@ -41,41 +41,41 @@ export default function Overview() {
       )}
 
       {/* Content - always render components, let them handle their own loading states */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-[calc(100%-460px)]">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col lg:flex-row gap-6 min-w-0">
+        <div className="w-full lg:w-[calc(100%-460px)] min-w-0">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
             <Title
               as="h2"
-              className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold"
+              className="text-[22px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
             >
               Subnet 36 - Web Agents
             </Title>
             <button
               onClick={handleOpenTimeline}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
             >
               <FaPlay className="h-3.5 w-3.5 text-black" />
               Replay
             </button>
           </div>
-          <OverviewMinerChart className="w-full" />
+          <OverviewMinerChart className="w-full min-w-0" />
         </div>
-        <div className="w-full lg:w-[460px]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-500 font-medium">
+        <div className="w-full lg:w-[460px] min-w-0">
+          <div className="mb-4 flex items-center justify-between gap-3 min-w-0">
+            <span className="text-sm text-gray-500 font-medium min-w-0">
               IM Version 1.0.0
             </span>
             <Link
               href="https://github.com/autoppia/autoppia_bittensor_dashboard_frontend"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300"
+              className="group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300 flex-shrink-0"
               title="View Subnet Repository"
             >
               <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
             </Link>
           </div>
-          <OverviewMetrics className="w-full" />
+          <OverviewMetrics className="w-full min-w-0" />
         </div>
       </div>
       <OverviewValidators />

@@ -167,8 +167,9 @@ export default function RoundValidators({
                           isActive ? "text-black" : "text-gray-500"
                         )}
                       >
-                        {validator.hotkey.slice(0, 6)}...
-                        {validator.hotkey.slice(-6)}
+                        {validator.hotkey
+                          ? `${validator.hotkey.slice(0, 6)}...${validator.hotkey.slice(-6)}`
+                          : "No hotkey"}
                       </span>
                     </div>
                   </div>

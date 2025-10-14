@@ -40,7 +40,8 @@ export interface RoundStatistics {
 // ===== MINER PERFORMANCE =====
 export interface MinerPerformance {
   uid: number;
-  hotkey: string;
+  name?: string;
+  hotkey?: string | null;
   success: boolean;
   score: number;
   duration: number;
@@ -51,6 +52,9 @@ export interface MinerPerformance {
   emission: number;
   lastSeen: string;
   validatorId?: string;
+  isSota?: boolean;
+  provider?: string;
+  imageUrl?: string;
 }
 
 // ===== VALIDATOR PERFORMANCE =====

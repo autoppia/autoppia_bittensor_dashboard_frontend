@@ -580,16 +580,14 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
 
   const renderDot =
     (minerId: string) => {
-      const DotComponent = (props: any) => {
+    const DotComponent = (props: any) => {
       const { cx = 0, cy = 0, stroke, index } = props;
       if (!activeData.length || index !== activeData.length - 1) {
-        return <g />;
+        return null;
       }
 
       const strokeColor =
-        stroke ??
-        MINER_META_MAP.get(minerId)?.color ??
-        "#0F172A";
+        stroke ?? MINER_META_MAP.get(minerId)?.color ?? "#0F172A";
       const isLeader = topMinerId === minerId;
       const minerData =
         latestSnapshot.find((snapshot) => snapshot.id === minerId) ??
@@ -597,10 +595,10 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
       const imageHref = minerData?.image ?? "/miners/1.svg";
       const imageRadius = isLeader ? 12 : 10;
       const haloRadius = imageRadius + (isLeader ? 5 : 4);
-      const clipPathId = `clip-${minerId}`;
+      const clipPathId = `clip-${minerId}-${index}`;
 
       return (
-        <g key={`dot-${minerId}`}>
+        <g>
           <defs>
             <clipPath id={clipPathId}>
               <circle cx={cx} cy={cy} r={imageRadius} />
@@ -628,7 +626,6 @@ export function MinerAnimationExperience({ condensed = false }: MinerAnimationEx
             width={imageRadius * 2}
             height={imageRadius * 2}
             href={imageHref}
-            xlinkHref={imageHref}
             clipPath={`url(#${clipPathId})`}
             preserveAspectRatio="xMidYMid slice"
           />
