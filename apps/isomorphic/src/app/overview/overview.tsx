@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
@@ -8,12 +9,44 @@ import Link from "next/link";
 import { PiGithubLogoDuotone } from "react-icons/pi";
 import { FaPlay } from "react-icons/fa";
 import MinerAnimationModal from "@/app/shared/modal-views/miner-animation-modal";
+import OverviewAnnouncementModal from "@/app/shared/modal-views/overview-announcement-modal";
 import { useModal } from "@/app/shared/modal-views/use-modal";
 import { useOverviewData } from "@/services/hooks/useOverview";
+
+const ANNOUNCEMENT_STORAGE_KEY = "overview-announcement-seen";
 
 export default function Overview() {
   const { loading, error, refetch } = useOverviewData();
   const { openModal } = useModal();
+  const hasOpenedAnnouncement = useRef(false);
+
+  useEffect(() => {
+    if (hasOpenedAnnouncement.current) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      try {
+        const hasSeen = window.localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
+        if (hasSeen) {
+          hasOpenedAnnouncement.current = true;
+          return;
+        }
+      } catch {
+        // ignore storage read errors and proceed to show the modal once
+      }
+
+      openModal({ view: <OverviewAnnouncementModal />, size: "md" });
+      hasOpenedAnnouncement.current = true;
+      try {
+        window.localStorage.setItem(ANNOUNCEMENT_STORAGE_KEY, "true");
+      } catch {
+        // ignore storage write errors; modal has already been shown
+      }
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [openModal]);
 
   function handleOpenTimeline() {
     openModal({ view: <MinerAnimationModal />, customSize: 1260, size: "xl" });

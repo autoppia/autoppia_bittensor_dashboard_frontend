@@ -128,7 +128,7 @@ export default function Header() {
             </Tooltip>
             <Tooltip content="View Documentation" placement="bottom">
               <a
-                href="https://luxit.gitbook.io/autoppia-docs"
+                href="https://documentation.autoppia.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300 flex-shrink-0"
