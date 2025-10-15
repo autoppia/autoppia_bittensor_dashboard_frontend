@@ -1,41 +1,9 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import cn from "@core/utils/class-names";
-import { getAgentExtendedData } from "@/data/query";
 import { Select } from "rizzui";
+import type { AgentRunDetailData } from "./agent-run-types";
 
-// Define interfaces for data structures
-interface UseCase {
-  id: number;
-  name: string;
-}
-
-interface Result {
-  useCaseId: number;
-  successRate: number;
-  total: number;
-  successCount: number;
-  avgSolutionTime: number;
-}
-
-interface Website {
-  name: string;
-  useCases: UseCase[];
-  results: Result[];
-  overall: {
-    successRate: number;
-    total: number;
-    successCount: number;
-    avgSolutionTime: number;
-  };
-}
-
-interface AgentExtendedData {
-  websites: Website[];
-}
-
-// Rainbow colors starting with red using hex values
 const PROGRESS_COLORS = [
   "#EF4444", // red-500
   "#F97316", // orange-500
@@ -56,7 +24,10 @@ const PROGRESS_COLORS = [
 ];
 
 // Utility function to format use case names
-function formatUseCaseName(name: string): string {
+function formatUseCaseName(name?: string | null): string {
+  if (!name) {
+    return "Use Case";
+  }
   return name
     .toLowerCase()
     .split("_")
@@ -70,6 +41,7 @@ interface AgentRunDetailProps {
   setSelectedWebsite: (value: string | null) => void;
   period: string | null;
   setPeriod: (value: string | null) => void;
+  data?: AgentRunDetailData | null;
 }
 
 export default function AgentRunDetail({
@@ -78,16 +50,16 @@ export default function AgentRunDetail({
   setSelectedWebsite,
   period,
   setPeriod,
+  data,
 }: AgentRunDetailProps) {
-  const { id } = useParams();
-  const agentDetailsData: AgentExtendedData =
-    getAgentExtendedData("openai-cua");
+  const agentDetailsData: AgentRunDetailData = data ?? { websites: [] };
+  const hasWebsites = agentDetailsData.websites.length > 0;
 
   const websiteOptions = [
     { value: "__all__", label: "All Websites" },
-    ...agentDetailsData.websites.map((web) => ({
-      value: web.name,
-      label: web.name,
+    ...agentDetailsData.websites.map((web, index) => ({
+      value: web.name ?? `Website ${index + 1}`,
+      label: web.name ?? `Website ${index + 1}`,
     })),
   ];
 
@@ -106,10 +78,12 @@ export default function AgentRunDetail({
           return (
             selectedWeb?.results.map((result, idx) => ({
               website: formatUseCaseName(
-                selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)
+                selectedWeb.useCases.find(
+                  (uc) => String(uc.id) === String(result.useCaseId)
+                )
                   ?.name || `Use Case ${result.useCaseId}`
               ),
-              average: Number(result.successRate.toFixed(3)),
+              average: Number((result.successRate ?? 0).toFixed(3)),
               total: result.total,
               successCount: result.successCount,
               avgSolutionTime: result.avgSolutionTime,
@@ -119,21 +93,32 @@ export default function AgentRunDetail({
         })()
       : agentDetailsData.websites.map((web, idx) => ({
           website: web.name,
-          average: Number(web.overall.successRate.toFixed(3)),
-          total: web.overall.total,
-          successCount: web.overall.successCount,
-          avgSolutionTime: web.overall.avgSolutionTime,
+          average: Number((web.overall.successRate ?? 0).toFixed(3)),
+          total: web.overall.total ?? 0,
+          successCount: web.overall.successCount ?? 0,
+          avgSolutionTime: web.overall.avgSolutionTime ?? 0,
           colorIndex: idx,
         }));
 
   return (
     <div
-      className={cn("bg-gray-50 border border-muted rounded-xl p-6", className)}
+      className={cn(
+        "relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl",
+        className
+      )}
     >
+      <div className="pointer-events-none absolute -left-24 top-10 h-56 w-56 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute right-0 -bottom-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/10 via-emerald-500/5 to-transparent blur-[120px]" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">Success Rate</h2>
-        <div className="flex items-center space-x-2">
+      <div className="relative mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-white">Success Rate</h2>
+          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
+            All vs selected filters
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           <Select
             options={periodOptions}
             value={periodOptions.find(
@@ -142,7 +127,7 @@ export default function AgentRunDetail({
             onChange={(option: { label: string; value: string }) =>
               setPeriod(option.value === "__all__" ? null : option.value)
             }
-            className="w-[80px]"
+            className="w-[80px] text-xs"
           />
           <Select
             options={websiteOptions}
@@ -154,39 +139,45 @@ export default function AgentRunDetail({
                 option.value === "__all__" ? null : option.value
               )
             }
-            className="w-[150px]"
+            className="w-[150px] text-xs"
           />
         </div>
       </div>
 
-      <div className="space-y-6">
-        {chartData.map((item, index) => {
-          const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
-          return (
-            <div key={`${item.website}-${index}`} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">
-                  {item.website}
-                </span>
-                <span className="text-sm font-bold text-gray-700">
-                  {item.average.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="h-4 rounded-full flex justify-end"
-                  style={{
-                    width: `${item.average}%`,
-                    backgroundColor: colorClass,
-                  }}
-                >
-                  <span className="mt-1 mr-1 w-2 h-2 rounded-full bg-gray-900" />
+      {hasWebsites ? (
+        <div className="relative space-y-6 text-slate-200">
+          {chartData.map((item, index) => {
+            const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
+            return (
+              <div key={`${item.website}-${index}`} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-300">
+                    {item.website}
+                  </span>
+                  <span className="text-sm font-semibold text-white">
+                    {item.average.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="h-3.5 w-full rounded-full bg-slate-800/80">
+                  <div
+                    className="flex h-3.5 items-center justify-end rounded-full"
+                    style={{
+                      width: `${Math.max(0, Math.min(item.average, 100))}%`,
+                      backgroundColor: colorClass,
+                    }}
+                  >
+                    <span className="mr-1 h-1.5 w-1.5 rounded-full bg-white/80" />
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="relative text-sm text-slate-400">
+          Performance metrics are not available for this run yet.
+        </div>
+      )}
     </div>
   );
 }

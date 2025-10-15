@@ -1,6 +1,6 @@
 "use client";
 
-import { isEmpty } from "lodash";
+import isEmpty from "lodash/isEmpty";
 import { Fragment } from "react";
 import cn from "@core/utils/class-names";
 import { Box, Empty, Loader, Table, Text, Title } from "rizzui";

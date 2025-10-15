@@ -1,58 +1,16 @@
 "use client";
 
-import WidgetCard from "@core/components/cards/widget-card";
 import {
   PieChart,
   Pie,
   Cell,
   ResponsiveContainer,
   Label,
-  Tooltip,
 } from "recharts";
-import { useParams } from "next/navigation";
-import { getAgentExtendedData, getAgentSummaryData } from "@/data/query";
-import { agentsData } from "@/data/agents-data";
-
-// Define interfaces for data structures
-interface UseCase {
-  id: number;
-  name: string;
-}
-
-interface Result {
-  useCaseId: number;
-  successRate: number;
-  total: number;
-  successCount: number;
-  avgSolutionTime: number;
-}
-
-interface Website {
-  name: string;
-  useCases: UseCase[];
-  results: Result[];
-  overall: {
-    successRate: number;
-    total: number;
-    successCount: number;
-    avgSolutionTime: number;
-  };
-}
-
-interface AgentExtendedData {
-  websites: Website[];
-}
-
-interface AgentSummaryData {
-  usecases: number[];
-  total: number;
-}
-
-interface Agent {
-  id: string;
-  name: string;
-  successRate?: number;
-}
+import type {
+  AgentRunDetailData,
+  AgentRunSummaryChartData,
+} from "./agent-run-types";
 
 // Rainbow colors starting with red using hex values
 const PROGRESS_COLORS = [
@@ -77,6 +35,8 @@ const PROGRESS_COLORS = [
 export interface AgentRunSummaryProps {
   className?: string;
   selectedWebsite?: string | null;
+  data?: AgentRunDetailData | null;
+  summaryData?: AgentRunSummaryChartData | null;
 }
 
 interface DisplayDataItem {
@@ -88,7 +48,10 @@ interface DisplayDataItem {
 }
 
 // Utility function to format use case names
-function formatUseCaseName(name: string): string {
+function formatUseCaseName(name?: string | null): string {
+  if (!name) {
+    return "Use Case";
+  }
   return name
     .toLowerCase()
     .split("_")
@@ -99,15 +62,16 @@ function formatUseCaseName(name: string): string {
 export default function AgentRunSummary({
   className,
   selectedWebsite,
+  data,
+  summaryData,
 }: AgentRunSummaryProps) {
-  const { id } = useParams();
-  const agentData: AgentExtendedData = getAgentExtendedData("openai-cua");
-  const { usecases, total }: AgentSummaryData = getAgentSummaryData(
-    "openai-cua"
-  ) || { usecases: [], total: 0 };
-  const agent: Agent | undefined = agentsData.find(
-    (agent) => agent.id === "openai-cua"
-  );
+  const agentData: AgentRunDetailData = data ?? { websites: [] };
+  const hasWebsites = agentData.websites.length > 0;
+
+  const fallbackSummary: AgentRunSummaryChartData = summaryData ?? {
+    usecases: [],
+    total: 0,
+  };
 
   let successRate: number;
   let totalRequests: number;
@@ -135,7 +99,7 @@ export default function AgentRunSummary({
       websiteAverages.length > 0
         ? websiteAverages.reduce((sum, w) => sum + w.overall.successRate, 0) /
           websiteAverages.length
-        : agent?.successRate || total || 0;
+        : fallbackSummary.total || 0;
     totalRequests = websiteAverages.reduce(
       (sum, w) => sum + w.overall.total,
       0
@@ -162,8 +126,9 @@ export default function AgentRunSummary({
     if (selectedWeb) {
       displayData = selectedWeb.results.map((result, idx) => ({
         label: formatUseCaseName(
-          selectedWeb.useCases.find((uc) => uc.id === result.useCaseId)?.name ||
-            `Use Case ${result.useCaseId}`
+          selectedWeb.useCases.find(
+            (uc) => String(uc.id) === String(result.useCaseId)
+          )?.name || `Use Case ${result.useCaseId}`
         ),
         value: result.successRate,
         total: result.total,
@@ -172,8 +137,8 @@ export default function AgentRunSummary({
       }));
     }
   } else {
-    displayData = agentData.websites.map((web) => ({
-      label: web.name,
+    displayData = agentData.websites.map((web, idx) => ({
+      label: web.name ?? `Website ${idx + 1}`,
       value: web.overall.successRate,
       total: web.overall.total,
       successCount: web.overall.successCount,
@@ -191,7 +156,7 @@ export default function AgentRunSummary({
         const sortedResults = [...selectedWeb.results]
           .map((result) => {
             const useCase = selectedWeb.useCases.find(
-              (uc) => uc.id === result.useCaseId
+              (uc) => String(uc.id) === String(result.useCaseId)
             );
             const label = formatUseCaseName(
               useCase?.name || `Use Case ${result.useCaseId}`
@@ -231,7 +196,7 @@ export default function AgentRunSummary({
         });
       })()
     : agentData.websites.map((web, idx) => ({
-        label: web.name,
+        label: web.name ?? `Website ${idx + 1}`,
         value: web.overall.successRate * web.overall.total, // Use success rate scaled by total
         average: web.overall.successRate,
         total: web.overall.total,
@@ -243,15 +208,20 @@ export default function AgentRunSummary({
 
   return (
     <div
-      className={`bg-gray-50 border border-muted rounded-xl p-6 ${className}`}
+      className={`relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl ${className ?? ""}`}
     >
+      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/20 via-emerald-500/5 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-gradient-to-br from-sky-500/10 via-sky-400/5 to-transparent blur-[100px]" />
       {/* Header */}
-      <div className="mb-2">
-        <h2 className="text-xl font-semibold">Summary</h2>
+      <div className="relative mb-4">
+        <h2 className="text-xl font-semibold text-white">Summary</h2>
+        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+          Performance Breakdown
+        </p>
       </div>
 
       {/* Content */}
-      <div>
+      <div className="relative text-slate-200">
         <div className="h-[240px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>              
@@ -288,39 +258,44 @@ export default function AgentRunSummary({
             </PieChart>
           </ResponsiveContainer>
         </div>
-
-        <div className="flex flex-col">
-          {displayData.map((item, idx) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0"
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    backgroundColor:
-                      PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-                  }}
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  {item.label}
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-gray-700">
-                  {item.value.toFixed(1)}%
+        {hasWebsites ? (
+          <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
+            {displayData.map((item, idx) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between gap-3 py-3 px-2 last:border-b-0"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{
+                      backgroundColor:
+                        PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
+                    }}
+                  />
+                  <span className="text-sm font-medium text-slate-200">
+                    {item.label}
+                  </span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {item.total} requests, {item.successCount} successes
-                  {selectedWebsite && (
-                    <span>, {item.avgSolutionTime.toFixed(2)}s avg</span>
-                  )}
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-white">
+                    {item.value.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {item.total} requests, {item.successCount} successes
+                    {selectedWebsite && (
+                      <span>, {item.avgSolutionTime.toFixed(2)}s avg</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-slate-400">
+            Summary metrics are not available for this run yet.
+          </div>
+        )}
       </div>
     </div>
   );

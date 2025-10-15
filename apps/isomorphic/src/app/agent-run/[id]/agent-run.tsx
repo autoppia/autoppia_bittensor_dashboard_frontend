@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
 import AgentRunPersonasDynamic from "./agent-run-personas-dynamic";
@@ -12,6 +13,8 @@ import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 export default function AgentRun() {
   const { id } = useParams();
+  const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
+  const [period, setPeriod] = useState<string | null>(null);
 
   // Use the partial loading hook with progressive data fetching
   const { data, error, refetch, isAnyLoading } = useAgentRun(
@@ -65,12 +68,19 @@ export default function AgentRun() {
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         {/* Agent Run Detail - Left Column */}
         <div className="xl:col-span-8">
-          <AgentRunDetailDynamic />
+          <AgentRunDetailDynamic
+            selectedWebsite={selectedWebsite}
+            setSelectedWebsite={setSelectedWebsite}
+            period={period}
+            setPeriod={setPeriod}
+          />
         </div>
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic />
+          <AgentRunSummaryDynamic
+            selectedWebsite={selectedWebsite}
+          />
         </div>
       </div>
 

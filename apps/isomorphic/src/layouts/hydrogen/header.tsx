@@ -17,6 +17,7 @@ import { useNetworkStatus } from "@/services/hooks/useOverview";
 
 export default function Header() {
   const pathname = usePathname();
+  const isLanding = pathname === "/landing";
   const { data: networkStatus, loading: statusLoading } = useNetworkStatus();
   const normalizedStatus = (() => {
     if (statusLoading) return "loading";
@@ -59,6 +60,10 @@ export default function Header() {
           : "Down";
 
   const statusLabel = `● ${displayStatusText.toUpperCase()}`;
+
+  if (isLanding) {
+    return null;
+  }
 
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10 max-w-full overflow-hidden">
