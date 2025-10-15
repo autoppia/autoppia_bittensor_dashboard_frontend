@@ -453,58 +453,159 @@ export class AgentRunsService {
     return Math.round(value * factor) / factor;
   }
 
-  private normalizeStats(stats: AgentRunStats): AgentRunStats {
+  private getNumberWithFallback(
+    source: Record<string, any>,
+    keys: string[],
+    defaultValue = 0
+  ): number {
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value;
+      }
+    }
+    return defaultValue;
+  }
+
+  private normalizeStats(stats: AgentRunStats | Record<string, any>): AgentRunStats {
+    const raw = stats as Record<string, any>;
+    const rawScoreDistribution =
+      raw.scoreDistribution ?? raw.score_distribution ?? {};
+
+    const performanceByWebsiteSource =
+      raw.performanceByWebsite ?? raw.performance_by_website ?? [];
+    const performanceByUseCaseSource =
+      raw.performanceByUseCase ?? raw.performance_by_use_case ?? raw.use_case_performance ?? [];
+
+    const normalizedWebsites = Array.isArray(performanceByWebsiteSource)
+      ? performanceByWebsiteSource.map((entry: Record<string, any>) => ({
+          website: entry.website ?? entry.name ?? '',
+          tasks: this.getNumberWithFallback(entry, ['tasks', 'total_tasks', 'total'], 0),
+          successful: this.getNumberWithFallback(entry, ['successful', 'successful_tasks', 'successes'], 0),
+          failed: this.getNumberWithFallback(entry, ['failed', 'failed_tasks', 'failures'], 0),
+          averageScore: this.normalizePercentage(
+            this.getNumberWithFallback(entry, ['averageScore', 'average_score', 'score', 'success_rate'], 0)
+          ),
+          averageDuration: this.roundTo(
+            this.getNumberWithFallback(entry, ['averageDuration', 'average_duration', 'duration', 'avg_duration'], 1),
+            1
+          ),
+        }))
+      : [];
+
+    const normalizedUseCases = Array.isArray(performanceByUseCaseSource)
+      ? performanceByUseCaseSource.map((entry: Record<string, any>) => ({
+          useCase: entry.useCase ?? entry.use_case ?? entry.name ?? '',
+          tasks: this.getNumberWithFallback(entry, ['tasks', 'total_tasks', 'total'], 0),
+          successful: this.getNumberWithFallback(entry, ['successful', 'successful_tasks', 'successes'], 0),
+          failed: this.getNumberWithFallback(entry, ['failed', 'failed_tasks', 'failures'], 0),
+          averageScore: this.normalizePercentage(
+            this.getNumberWithFallback(entry, ['averageScore', 'average_score', 'score', 'success_rate'], 0)
+          ),
+          averageDuration: this.roundTo(
+            this.getNumberWithFallback(entry, ['averageDuration', 'average_duration', 'duration', 'avg_duration'], 1),
+            1
+          ),
+        }))
+      : [];
+
+    const normalizedScoreDistribution = {
+      excellent: this.getNumberWithFallback(rawScoreDistribution, ['excellent', 'excellent_count'], 0),
+      good: this.getNumberWithFallback(rawScoreDistribution, ['good', 'good_count'], 0),
+      average: this.getNumberWithFallback(rawScoreDistribution, ['average', 'average_count'], 0),
+      poor: this.getNumberWithFallback(rawScoreDistribution, ['poor', 'poor_count'], 0),
+    };
+
     return {
-      ...stats,
-      overallScore: this.normalizePercentage(stats.overallScore),
-      totalTasks: stats.totalTasks ?? 0,
-      successfulTasks: stats.successfulTasks ?? 0,
-      failedTasks: stats.failedTasks ?? 0,
-      websites: stats.websites ?? 0,
-      averageTaskDuration: this.roundTo(stats.averageTaskDuration),
-      successRate: this.normalizePercentage(stats.successRate),
-      performanceByWebsite: Array.isArray(stats.performanceByWebsite)
-        ? stats.performanceByWebsite.map((entry) => ({
-            ...entry,
-            averageScore: this.normalizePercentage(entry.averageScore),
-            averageDuration: this.roundTo(entry.averageDuration),
-          }))
-        : [],
-      performanceByUseCase: Array.isArray(stats.performanceByUseCase)
-        ? stats.performanceByUseCase.map((entry) => ({
-            ...entry,
-            averageScore: this.normalizePercentage(entry.averageScore),
-            averageDuration: this.roundTo(entry.averageDuration),
-          }))
-        : [],
+      runId: raw.runId ?? raw.run_id ?? '',
+      overallScore: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['overallScore', 'overall_score', 'score'], 0)
+      ),
+      totalTasks: this.getNumberWithFallback(raw, ['totalTasks', 'total_tasks', 'total'], 0),
+      successfulTasks: this.getNumberWithFallback(raw, ['successfulTasks', 'successful_tasks', 'successes'], 0),
+      failedTasks: this.getNumberWithFallback(raw, ['failedTasks', 'failed_tasks', 'failures'], 0),
+      websites:
+        this.getNumberWithFallback(raw, ['websites', 'websiteCount', 'website_count'], 0) ||
+        normalizedWebsites.length,
+      averageTaskDuration: this.roundTo(
+        this.getNumberWithFallback(raw, ['averageTaskDuration', 'average_task_duration', 'avg_task_duration'], 1),
+        1
+      ),
+      successRate: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['successRate', 'success_rate'], 0)
+      ),
+      scoreDistribution: normalizedScoreDistribution,
+      performanceByWebsite: normalizedWebsites,
+      performanceByUseCase: normalizedUseCases,
     };
   }
 
-  private normalizeSummary(summary: AgentRunSummary): AgentRunSummary {
-    const normalizedTopWebsite = summary.topPerformingWebsite
-      ? {
-          ...summary.topPerformingWebsite,
-          score: this.normalizePercentage(summary.topPerformingWebsite.score),
-        }
-      : summary.topPerformingWebsite;
+  private normalizeSummary(summary: AgentRunSummary | Record<string, any>): AgentRunSummary {
+    const raw = summary as Record<string, any>;
+    const rawTopWebsite =
+      raw.topPerformingWebsite ?? raw.top_performing_website ?? raw.best_website;
+    const rawTopUseCase =
+      raw.topPerformingUseCase ?? raw.top_performing_use_case ?? raw.best_use_case;
 
-    const normalizedTopUseCase = summary.topPerformingUseCase
+    const normalizedTopWebsite = rawTopWebsite
       ? {
-          ...summary.topPerformingUseCase,
-          score: this.normalizePercentage(summary.topPerformingUseCase.score),
+          website: rawTopWebsite.website ?? rawTopWebsite.name ?? '',
+          score: this.normalizePercentage(
+            this.getNumberWithFallback(rawTopWebsite, ['score', 'success_rate', 'averageScore', 'average_score'], 0)
+          ),
+          tasks: this.getNumberWithFallback(rawTopWebsite, ['tasks', 'total_tasks', 'total'], 0),
         }
-      : summary.topPerformingUseCase;
+      : {
+          website: '',
+          score: 0,
+          tasks: 0,
+        };
 
-    return {
-      ...summary,
-      overallScore: this.normalizePercentage(summary.overallScore),
-      totalTasks: summary.totalTasks ?? 0,
-      successfulTasks: summary.successfulTasks ?? 0,
-      failedTasks: summary.failedTasks ?? 0,
-      duration: Math.max(summary.duration ?? 0, 0),
+    const normalizedTopUseCase = rawTopUseCase
+      ? {
+          useCase: rawTopUseCase.useCase ?? rawTopUseCase.use_case ?? rawTopUseCase.name ?? '',
+          score: this.normalizePercentage(
+            this.getNumberWithFallback(rawTopUseCase, ['score', 'success_rate', 'averageScore', 'average_score'], 0)
+          ),
+          tasks: this.getNumberWithFallback(rawTopUseCase, ['tasks', 'total_tasks', 'total'], 0),
+        }
+      : {
+          useCase: '',
+          score: 0,
+          tasks: 0,
+        };
+
+    const recentActivity = raw.recentActivity ?? raw.recent_activity;
+    const rankingValue = this.getNumberWithFallback(raw, ['ranking', 'rank'], Number.NaN);
+
+    const baseSummary: AgentRunSummary = {
+      runId: raw.runId ?? raw.run_id ?? '',
+      agentId: raw.agentId ?? raw.agent_id ?? '',
+      roundId: this.getNumberWithFallback(raw, ['roundId', 'round_id'], 0),
+      validatorId: raw.validatorId ?? raw.validator_id ?? '',
+      startTime: raw.startTime ?? raw.start_time ?? '',
+      endTime: raw.endTime ?? raw.end_time,
+      status: raw.status ?? '',
+      overallScore: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['overallScore', 'overall_score', 'score'], 0)
+      ),
+      totalTasks: this.getNumberWithFallback(raw, ['totalTasks', 'total_tasks', 'total'], 0),
+      successfulTasks: this.getNumberWithFallback(raw, ['successfulTasks', 'successful_tasks', 'successes'], 0),
+      failedTasks: this.getNumberWithFallback(raw, ['failedTasks', 'failed_tasks', 'failures'], 0),
+      duration: Math.max(
+        this.getNumberWithFallback(raw, ['duration', 'total_duration', 'run_duration'], 0),
+        0
+      ),
       topPerformingWebsite: normalizedTopWebsite,
       topPerformingUseCase: normalizedTopUseCase,
+      recentActivity: Array.isArray(recentActivity) ? recentActivity : [],
     };
+
+    if (!Number.isNaN(rankingValue)) {
+      baseSummary.ranking = rankingValue;
+    }
+
+    return baseSummary;
   }
 }
 

@@ -12,7 +12,7 @@ import { useUploadThing } from "../../utils/uploadthing";
 import { Button, Text, FieldError } from "rizzui";
 import cn from "../../utils/class-names";
 import UploadIcon from "../../components/shape/upload";
-import { endsWith } from "lodash";
+import endsWith from "lodash/endsWith";
 import { FileWithPath } from "react-dropzone";
 import { ClientUploadedFileData } from "uploadthing/types";
 

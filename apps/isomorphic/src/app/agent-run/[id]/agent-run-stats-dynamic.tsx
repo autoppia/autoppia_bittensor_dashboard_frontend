@@ -2,161 +2,171 @@
 
 import { useParams } from "next/navigation";
 import { useAgentRunStats } from "@/services/hooks/useAgentRun";
-import { ProgressBarLoading } from "@/app/shared/loading-screen";
-import { ProgressBarPlaceholder } from "@/app/shared/placeholder";
+import Placeholder from "@/app/shared/placeholder";
+import {
+  PiXCircleDuotone,
+  PiTimerDuotone,
+  PiTrophyDuotone,
+} from "react-icons/pi";
 
-const formatPercentage = (value: number | null | undefined) => {
+const numberFormatter = new Intl.NumberFormat("en-US");
+const oneDecimalFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const clampPercentage = (value: number | null | undefined) => {
   if (typeof value !== "number" || Number.isNaN(value)) {
-    return "0%";
+    return 0;
   }
-  return `${value.toFixed(1)}%`;
+  return Math.max(0, Math.min(100, value));
 };
 
-const formatNumber = (value: number | null | undefined) => {
+const clampNonNegative = (value: number | null | undefined) => {
   if (typeof value !== "number" || Number.isNaN(value)) {
-    return "0";
+    return 0;
   }
-  return value.toLocaleString();
+  return Math.max(0, value);
 };
+
+const formatPercentageLabel = (value: number) =>
+  `${oneDecimalFormatter.format(value)}%`;
+
+const formatCount = (value: number) => numberFormatter.format(Math.round(value));
+
+const formatDuration = (value: number) =>
+  value > 0 ? `${oneDecimalFormatter.format(value)}s` : "—";
 
 export default function AgentRunStatsDynamic() {
   const { id } = useParams();
   const { stats, isLoading, error } = useAgentRunStats(id as string);
 
-  if (isLoading) {
-    return <ProgressBarLoading className="mb-6" />;
+  if (isLoading || error || !stats) {
+    return (
+      <div className="mb-6 rounded-3xl border border-slate-800/80 bg-slate-950/80 p-6 shadow-xl">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="flex min-h-[180px] flex-col justify-between gap-4 rounded-3xl border border-emerald-400/30 bg-slate-900/80 px-6 py-6 shadow">
+            <Placeholder
+              variant="circular"
+              width={90}
+              height={90}
+              className="bg-slate-700"
+            />
+            <div className="flex-1 space-y-1.5">
+              <Placeholder height="1.1rem" width="55%" className="bg-slate-700" />
+              <Placeholder height="0.8rem" width="40%" className="bg-slate-700" />
+            </div>
+          </div>
+          {Array.from({ length: 5 }, (_, index) => (
+            <div
+              key={index}
+              className="flex min-h-[140px] flex-col justify-between gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/80 px-5 py-5 shadow"
+            >
+              <Placeholder height="0.9rem" width="45%" className="bg-slate-700" />
+              <Placeholder height="0.8rem" width="35%" className="bg-slate-700" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  if (error || !stats) {
-    return <ProgressBarPlaceholder className="mb-6" />;
-  }
+  const overallScore = clampPercentage(stats.overallScore);
+  const successRate = clampPercentage(stats.successRate);
+  const totalTasks = clampNonNegative(stats.totalTasks);
+  const successfulTasks = clampNonNegative(stats.successfulTasks);
+  const failedTasks = clampNonNegative(stats.failedTasks);
+  const averageDuration = clampNonNegative(stats.averageTaskDuration);
+  const averageProgress = Math.min(100, overallScore);
+  const progressStyle = {
+    background: `conic-gradient(#34d399 ${averageProgress * 3.6}deg, rgba(13, 148, 136, 0.15) 0deg)`
+  };
+
+  const summaryCards = [
+    {
+      label: "Successful Tasks",
+      value: formatCount(successfulTasks),
+      icon: PiTrophyDuotone,
+      iconColor: "text-emerald-100",
+      valueClass: "text-emerald-200",
+      unitClass: "text-emerald-200/80",
+    },
+    {
+      label: "Failed Tasks",
+      value: formatCount(failedTasks),
+      icon: PiXCircleDuotone,
+      iconColor: "text-rose-400",
+      valueClass: "text-rose-300",
+      unitClass: "text-rose-300/80",
+    },
+  ];
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-6 mb-6 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
-      {/* Mobile Layout - Stacked */}
-      <div className="flex flex-col space-y-6 md:hidden">
-        {/* Overall Score - Prominent on mobile */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {formatPercentage(stats.overallScore)}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-700 mt-1">
-            Overall evaluation score
-          </div>
-        </div>
-
-        {/* Stats Grid - 2x2 on mobile */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-blue-400">
-              {formatNumber(stats.totalTasks)}
+    <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="relative overflow-hidden rounded-3xl border border-blue-400/40 bg-gradient-to-br from-sky-500/30 via-slate-950/80 to-slate-950 px-5 py-6 shadow-lg">
+        <div className="relative flex flex-col gap-4 text-blue-50">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100/80">
+                Score
+                </p>
+                <p className="text-sm text-blue-100/70">
+                  {formatCount(totalTasks)} tasks evaluated in this run
+                </p>
+              </div>
+              <div className="relative h-24 w-24">
+                <div className="absolute inset-0 rounded-full bg-blue-500/5 blur-2xl" />
+                <div
+                  className="absolute inset-[2%] rounded-full border border-blue-500/30 bg-slate-950/60 shadow-[0_0_30px_rgba(59,130,246,0.35)]"
+                />
+                <div
+                  className="absolute inset-[2%] rounded-full [mask-image:radial-gradient(circle,rgba(0,0,0,0)_64%,rgba(0,0,0,1)_67%)]"
+                  style={progressStyle}
+                />
+                <div className="absolute inset-[26%] flex flex-col items-center justify-center rounded-full border border-blue-400/40 bg-slate-950/95 shadow-inner">
+                  <span className="text-lg font-semibold text-white/95">
+                    {formatPercentageLabel(overallScore)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="text-xs sm:text-sm text-gray-700">Total Tasks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-orange-400">
-              {formatNumber(stats.websites)}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-700">Websites</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-green-400">
-              {formatNumber(stats.successfulTasks)}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-700">Successful</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-red-400">
-              {formatNumber(stats.failedTasks)}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-700">Failed</div>
+            <div className="relative flex items-center gap-3 rounded-2xl bg-transparent px-4 py-3 text-blue-50">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-950/70">
+                <PiTimerDuotone className="h-5 w-5 text-blue-100" />
+              </div>
+              <div className="relative">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-100/70">
+                  Avg Response Time
+                </p>
+                <p className="text-sm font-semibold text-white/95">
+                  {formatDuration(averageDuration)}
+                </p>
+              </div>
           </div>
         </div>
       </div>
 
-      {/* Desktop Layout - Horizontal */}
-      <div className="hidden md:flex items-center justify-between">
-        {/* Overall Score */}
-        <div className="flex flex-col items-center">
-          <div className="text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {formatPercentage(stats.overallScore)}
-          </div>
-          <div className="text-sm text-gray-700">Overall Score</div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="flex items-center space-x-8">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-400">
-              {formatNumber(stats.totalTasks)}
+      {summaryCards.map(({ label, value, icon: Icon, iconColor, valueClass, unitClass }) => (
+        <div
+          key={label}
+          className="relative overflow-hidden rounded-3xl border border-blue-400/40 bg-gradient-to-br from-sky-500/30 via-slate-950/80 to-slate-950 px-5 py-6 shadow-lg"
+        >
+          <div className="relative flex h-full flex-col justify-between gap-4 text-blue-50">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-50/80">
+                {label}
+              </span>
+              <Icon className={`h-6 w-6 ${iconColor}`} />
             </div>
-            <div className="text-sm text-gray-700">Total Tasks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-400">
-              {formatNumber(stats.websites)}
-            </div>
-            <div className="text-sm text-gray-700">Websites</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-400">
-              {formatNumber(stats.successfulTasks)}
-            </div>
-            <div className="text-sm text-gray-700">Successful</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-400">
-              {formatNumber(stats.failedTasks)}
-            </div>
-            <div className="text-sm text-gray-700">Failed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-400">
-              {formatNumber(Number(stats.averageTaskDuration?.toFixed?.(1) ?? stats.averageTaskDuration))}s
-            </div>
-            <div className="text-sm text-gray-700">Avg Duration</div>
+            <p className={`text-3xl font-semibold text-white/95 ${valueClass ?? ""}`}>
+              {value}
+              <span className={`ml-1 text-base font-normal ${unitClass ?? "text-blue-100/70"}`}>
+                tasks
+              </span>
+            </p>
           </div>
         </div>
-
-        {/* Success Rate */}
-        <div className="flex flex-col items-center">
-          <div className="text-2xl font-bold text-emerald-400">
-            {formatPercentage(stats.successRate)}
-          </div>
-          <div className="text-sm text-gray-700">Success Rate</div>
-        </div>
-      </div>
-
-      {/* Score Distribution */}
-      <div className="mt-6 pt-6 border-t border-gray-200/20">
-          <div className="text-sm font-medium text-gray-700 mb-3">Score Distribution</div>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-lg font-bold text-green-500">
-                {formatNumber(stats.scoreDistribution.excellent)}
-              </div>
-              <div className="text-xs text-gray-600">Excellent (90-100%)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-blue-500">
-                {formatNumber(stats.scoreDistribution.good)}
-              </div>
-              <div className="text-xs text-gray-600">Good (70-89%)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-yellow-500">
-                {formatNumber(stats.scoreDistribution.average)}
-              </div>
-              <div className="text-xs text-gray-600">Average (50-69%)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-red-500">
-                {formatNumber(stats.scoreDistribution.poor)}
-              </div>
-              <div className="text-xs text-gray-600">Poor (0-49%)</div>
-            </div>
-          </div>
-        </div>
+      ))}
     </div>
   );
 }

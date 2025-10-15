@@ -26,13 +26,14 @@ export default function AgentRunTasksTable() {
   });
 
   return (
-    <div className="bg-gray-50 border border-muted rounded-xl p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-700">All Tasks</h2>
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+      <div className="pointer-events-none absolute -right-24 top-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
 
-        {/* Search Input */}
-        <div className="relative">
+      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-white">All Tasks</h2>
+
+        <div className="relative w-full max-w-[240px]">
           <Input
             type="search"
             clearable={true}
@@ -40,7 +41,7 @@ export default function AgentRunTasksTable() {
             onClear={() => table.setGlobalFilter("")}
             value={table.getState().globalFilter ?? ""}
             prefix={
-              <PiMagnifyingGlassBold className="size-4 text-gray-500" />
+              <PiMagnifyingGlassBold className="size-4 text-slate-400" />
             }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             className="w-full xs:max-w-60"
@@ -48,20 +49,18 @@ export default function AgentRunTasksTable() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="mb-2">
+      <div className="relative mb-2">
         <Table
           table={table}
           variant="modern"
           classNames={{
             container:
-              "border border-muted rounded-lg overflow-x-auto custom-scrollbar scroll-smooth",
+              "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-800/70 bg-slate-950/60",
           }}
         />
       </div>
 
-      {/* Pagination */}
-      <TablePagination table={table} className="py-4" />
+      <TablePagination table={table} className="relative py-4 text-slate-300" />
     </div>
   );
 }
