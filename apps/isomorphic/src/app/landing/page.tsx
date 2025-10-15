@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import type { IconType } from "react-icons";
-import { LuArrowUpRight, LuGithub, LuBookOpen, LuGlobe, LuTrophy } from "react-icons/lu";
+import { LuArrowUpRight, LuGithub, LuBookOpen, LuGlobe, LuTrophy, LuUser, LuCode, LuPlay } from "react-icons/lu";
 import { FaTwitter, FaDiscord, FaTelegram } from "react-icons/fa6";
 import EcosystemOrbit from "@/components/landing/ecosystem-orbit";
 
@@ -18,16 +18,16 @@ const navItems = [
     href: "https://infinitewebarena.autoppia.com",
   },
   {
-    label: "Studio",
-    href: "https://studio.autoppia.com",
-  },
-  {
     label: "Automata",
     href: "https://automata.autoppia.com",
   },
   {
     label: "Autoppia SDK",
     href: "https://github.com/autoppia/autoppia_sdk",
+  },
+  {
+    label: "Studio",
+    href: "https://studio.autoppia.com",
   },
 ];
 
@@ -103,37 +103,13 @@ const productCards: ProductCard[] = [
         icon: LuArrowUpRight,
       },
       {
-        label: "API Docs",
-        href: "https://api-automata.autoppia.com/docs/",
-        icon: LuBookOpen,
-      },
-      {
         label: "Docs",
         href: "https://documentation.autoppia.com",
         icon: LuBookOpen,
       },
-    ],
-  },
-  {
-    title: "Studio",
-    description: "Deploy and orchestrate your AI Worker teams.",
-    href: "https://studio.autoppia.com",
-    accent: "from-amber-400/60 via-orange-400/60 to-rose-400/60",
-    badge: "🎨",
-    actions: [
       {
-        label: "User",
-        href: "https://studio.autoppia.com/login",
-        icon: LuArrowUpRight,
-      },
-      {
-        label: "Marketplace",
-        href: "https://marketplace.autoppia.com",
-        icon: LuArrowUpRight,
-      },
-      {
-        label: "Developer",
-        href: "https://documentation.autoppia.com",
+        label: "API Docs",
+        href: "https://api-automata.autoppia.com/docs/",
         icon: LuBookOpen,
       },
     ],
@@ -154,6 +130,30 @@ const productCards: ProductCard[] = [
         label: "Docs",
         href: "https://documentation.autoppia.com",
         icon: LuBookOpen,
+      },
+    ],
+  },
+  {
+    title: "Studio",
+    description: "Deploy and orchestrate your AI Worker teams.",
+    href: "https://studio.autoppia.com",
+    accent: "from-amber-400/60 via-orange-400/60 to-rose-400/60",
+    badge: "🎨",
+    actions: [
+      {
+        label: "User",
+        href: "https://app.autoppia.com",
+        icon: LuUser,
+      },
+      {
+        label: "Developers",
+        href: "https://app.autoppia.com/developers/dashboard",
+        icon: LuCode,
+      },
+      {
+        label: "Playground",
+        href: "https://playground.autoppia.com",
+        icon: LuPlay,
       },
     ],
   },
@@ -269,14 +269,19 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    Evaluated by Infinite Web Arena
+                    Autoppia Web Operator
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    Powered by Bittensor Subnet 36
-                  </span>
+                  <Link
+                    href="https://taostats.io/subnets/36/chart"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 transition-colors duration-200 hover:border-white/20 hover:text-white"
+                  >
+                    Bittensor Subnet 36
+                  </Link>
                 </div>
               </div>
-              <div className="hidden justify-start lg:flex">
+              <div className="hidden justify-start lg:flex lg:ml-16 xl:ml-24 2xl:ml-32">
                 <EcosystemOrbit />
               </div>
             </div>
