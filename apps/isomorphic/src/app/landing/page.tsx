@@ -185,7 +185,7 @@ const footerLinks: FooterLink[] = [
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-[100svh] flex-col overflow-hidden text-white -mx-4 -mt-2 -mb-6 md:-mx-5 lg:-mx-6 lg:-mb-8 3xl:-mx-8 3xl:-mt-4 4xl:-mx-10 4xl:-mb-9">
+    <div className="relative flex h-[100svh] flex-col overflow-hidden text-white -mx-4 -mt-2 -mb-6 md:-mx-5 lg:-mx-6 lg:-mb-8 3xl:-mx-8 3xl:-mt-4 4xl:-mx-10 4xl:-mb-9">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_55%)]" />
         <div className="absolute inset-y-0 right-[-20%] w-[60%] bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.14),transparent_60%)] blur-3xl" />
@@ -247,7 +247,7 @@ export default function LandingPage() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col justify-between px-6 py-12 sm:px-12 sm:py-14 md:px-16 md:py-16">
+        <main className="flex flex-1 flex-col justify-between px-6 py-12 overflow-hidden sm:px-12 sm:py-14 md:px-16 md:py-16">
           <div className="flex flex-col gap-10 sm:gap-12 lg:gap-14">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,0.58fr)_minmax(0,0.42fr)] lg:items-center lg:gap-10">
               <div className="flex flex-col gap-6 md:max-w-3xl">
