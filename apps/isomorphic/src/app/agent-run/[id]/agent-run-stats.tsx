@@ -1,6 +1,6 @@
 "use client";
 
-import { PiTrophy, PiCheckCircle, PiXCircle, PiClock, PiGlobe } from "react-icons/pi";
+import { PiCheckCircle, PiXCircle, PiClock, PiGlobe } from "react-icons/pi";
 
 interface AgentRunStatsProps {
   stats?: any;
@@ -82,13 +82,8 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
           </div>
         </div>
         <div className="flex flex-col items-center justify-center mx-8">
-          <div className="relative">
-            <div className="text-5xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-              {overallScore}%
-            </div>
-            <div className="absolute -top-2 -right-2">
-              <PiTrophy className="w-6 h-6 text-yellow-400" />
-            </div>
+          <div className="text-5xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+            {overallScore}%
           </div>
           <div className="text-sm text-slate-400 mt-2 font-medium">
             Overall evaluation score
