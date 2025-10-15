@@ -213,8 +213,16 @@ export default function AgentRunSummary({
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/20 via-emerald-500/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-gradient-to-br from-sky-500/10 via-sky-400/5 to-transparent blur-[100px]" />
       {/* Header */}
-      <div className="relative mb-4">
-        <h2 className="text-xl font-semibold text-white">Summary</h2>
+      <div className="relative mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl shadow-lg">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+              <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white">Summary</h2>
+        </div>
         <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
           Performance Breakdown
         </p>

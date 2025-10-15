@@ -56,7 +56,9 @@ export default function Agent() {
       rank: point.rank,
       reward: point.reward ?? 0,
       timestamp: point.timestamp,
-      topScore: normalizeScore(point.topScore ?? point.bestScore),
+      topScore: normalizeScore(
+        point.topScore ?? point.top_score ?? point.bestScore
+      ),
       benchmarks: Array.isArray(point.benchmarks)
         ? point.benchmarks.map((benchmark: any) => ({
             name: benchmark.name ?? benchmark.provider ?? "Benchmark",

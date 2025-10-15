@@ -73,7 +73,13 @@ export default function RoundMinerScores({
 
     const minerEntries = minersData.data.miners.map((miner) => {
         const score = normalizeScore(miner.score);
-        const isSota = Boolean(miner.isSota);
+        const rawIsSota =
+          miner.isSota ??
+          miner.is_sota ??
+          miner.isBenchmark ??
+          miner.is_benchmark ??
+          (typeof miner.type === "string" && miner.type.toLowerCase() === "benchmark");
+        const isSota = Boolean(rawIsSota);
         const label =
           miner.name ||
           miner.provider ||

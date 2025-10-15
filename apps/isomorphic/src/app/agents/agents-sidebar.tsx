@@ -81,7 +81,7 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-5">
+      <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
         <div className="h-full border rounded-xl bg-gray-50 pb-4 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 text-sm">Error loading agents</div>
@@ -93,12 +93,12 @@ export default function AgentsSidebar() {
   }
 
   return (
-    <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-5">
-      <div className="h-full border rounded-xl bg-gray-50 pb-4">
-        <Text className="sticky top-0 px-6 py-4 text-2xl font-bold text-gray-900 border-b">
+    <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
+      <div className="h-full border rounded-xl bg-gray-50 pb-3">
+        <Text className="sticky top-0 px-5 py-3 text-2xl font-bold text-gray-900 border-b">
           All Miners
         </Text>
-        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-4 pr-2 mt-3 pt-4 pb-4 scroll-smooth">
+        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-2 mt-2.5 pt-3 pb-3 scroll-smooth">
           <div className="flex flex-col gap-1">
             <div className="mb-2 space-y-2">
               <Input
@@ -148,6 +148,18 @@ export default function AgentsSidebar() {
                 (includeSota && isTopRanked);
               const displayRank = nonSotaRankByUid.get(miner.uid);
               const showRankBadge = typeof displayRank === "number";
+              const rankBadgePalette = (() => {
+                switch (displayRank) {
+                  case 1:
+                    return "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-gray-900 shadow-sm";
+                  case 2:
+                    return "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-gray-800 shadow-sm";
+                  case 3:
+                    return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-gray-900 shadow-sm";
+                  default:
+                    return "bg-white/80 text-gray-700 border border-gray-200";
+                }
+              })();
 
               return (
                 <Link
@@ -205,11 +217,12 @@ export default function AgentsSidebar() {
                           <span
                             className={cn(
                               "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
-                              isActive
-                                ? "bg-emerald-500/20 text-emerald-200"
-                                : highlightTop
-                                  ? "bg-orange-500/20 text-orange-200"
-                                  : "bg-gray-700/40 text-gray-300"
+                              rankBadgePalette,
+                              isActive && displayRank
+                                ? "ring-1 ring-emerald-300/60"
+                                : highlightTop && displayRank
+                                  ? "ring-1 ring-orange-300/60"
+                                  : ""
                             )}
                           >
                             #{displayRank}
