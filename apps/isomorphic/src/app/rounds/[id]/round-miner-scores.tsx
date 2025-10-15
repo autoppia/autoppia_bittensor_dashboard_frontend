@@ -8,6 +8,7 @@ import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundMiners } from "@/services/hooks/useRounds";
+import type { BenchmarkPerformance } from "@/services/api/types/rounds";
 import {
   ComposedChart,
   Bar,
@@ -19,6 +20,29 @@ import {
   Cell,
 } from "recharts";
 
+const BENCHMARK_COLORS: Record<string, string> = {
+  openai: "#2563EB",
+  anthropic: "#F97316",
+  "browser-use": "#8B5CF6",
+  browser_use: "#8B5CF6",
+  browser: "#8B5CF6",
+};
+
+const DEFAULT_BENCHMARK_COLORS = ["#2563EB", "#F97316", "#8B5CF6", "#14B8A6", "#F472B6"];
+
+const normalizeScore = (value?: number | null): number => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 0;
+  }
+  return value > 1 ? value / 100 : value;
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 export default function RoundMinerScores({
   className,
 }: {
@@ -26,47 +50,105 @@ export default function RoundMinerScores({
 }) {
   const { id } = useParams();
   const roundId = parseInt(id as string);
-  
+
   // Get miners data from API
-  const { data: minersData, loading, error } = useRoundMiners(roundId, { 
-    limit: 25, 
-    sortBy: 'score', 
-    sortOrder: 'desc' 
+  const { data: minersData, loading, error } = useRoundMiners(roundId, {
+    limit: 40,
+    sortBy: "score",
+    sortOrder: "desc",
   });
 
   const isSmallScreen = useMedia("(max-width: 767px)", false);
-  const isMediumScreen = useMedia(
-    "(min-width: 768px) and (max-width: 1023px)",
-    false
-  );
+  const isMediumScreen = useMedia("(min-width: 768px) and (max-width: 1023px)", false);
   const barSize = isSmallScreen ? 16 : isMediumScreen ? 22 : 25;
   const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
 
-  // Prepare chart data with SOTA agents
   const chartData = React.useMemo(() => {
     if (!minersData?.data?.miners) return [];
-    
-    const miners = minersData.data.miners.slice(0, 22); // Take 22 miners to leave space for SOTA agents
-    
-    // Add SOTA agents with fixed scores
-    const sotaAgents = [
-      { uid: 'OpenAI', score: 0.95, isSota: true },
-      { uid: 'Claude', score: 0.92, isSota: true },
-      { uid: 'Browser-User', score: 0.88, isSota: true },
-    ];
-    
-    // Combine miners and SOTA agents, sort by score
-    const allData = [...miners, ...sotaAgents]
-      .sort((a, b) => b.score - a.score)
-      .map((item: any, index) => ({
-        name: item.isSota ? item.uid : `Miner ${item.uid}`,
-        score: item.score,
-        isSota: item.isSota || false,
-        uid: item.uid,
-      }));
-    
-    return allData;
+
+    const benchmarkColorCache = new Map<string, string>();
+    let fallbackColorIndex = 0;
+
+    const benchmarks: BenchmarkPerformance[] = minersData.data.benchmarks || [];
+
+    const minerEntries = minersData.data.miners.map((miner) => {
+        const score = normalizeScore(miner.score);
+        const rawIsSota =
+          miner.isSota ??
+          miner.is_sota ??
+          miner.isBenchmark ??
+          miner.is_benchmark ??
+          (typeof miner.type === "string" && miner.type.toLowerCase() === "benchmark");
+        const isSota = Boolean(rawIsSota);
+        const label =
+          miner.name ||
+          miner.provider ||
+          (isSota ? `Benchmark ${miner.uid}` : `Miner ${miner.uid}`);
+        const slug = miner.provider ? slugify(miner.provider) : slugify(label);
+
+        let color = "#10B981";
+        if (isSota) {
+          if (BENCHMARK_COLORS[slug]) {
+            color = BENCHMARK_COLORS[slug];
+          } else if (benchmarkColorCache.has(slug)) {
+            color = benchmarkColorCache.get(slug)!;
+          } else {
+            color = DEFAULT_BENCHMARK_COLORS[fallbackColorIndex % DEFAULT_BENCHMARK_COLORS.length];
+            benchmarkColorCache.set(slug, color);
+            fallbackColorIndex += 1;
+          }
+        }
+
+        return {
+          name: label,
+          score,
+          isSota,
+          uid: miner.uid,
+          color,
+          provider: miner.provider,
+        };
+      });
+
+    const benchmarkEntries = benchmarks.map((benchmark) => {
+      const score = normalizeScore(benchmark.score);
+      const label = benchmark.name;
+      const slug = benchmark.provider ? slugify(benchmark.provider) : slugify(label);
+      let color = BENCHMARK_COLORS[slug];
+      if (!color) {
+        if (benchmarkColorCache.has(slug)) {
+          color = benchmarkColorCache.get(slug)!;
+        } else {
+          color = DEFAULT_BENCHMARK_COLORS[fallbackColorIndex % DEFAULT_BENCHMARK_COLORS.length];
+          benchmarkColorCache.set(slug, color);
+          fallbackColorIndex += 1;
+        }
+      }
+
+      return {
+        name: label,
+        score,
+        isSota: true,
+        uid: `benchmark-${benchmark.id}`,
+        color,
+        provider: benchmark.provider,
+      };
+    });
+
+    return [...minerEntries, ...benchmarkEntries].sort((a, b) => b.score - a.score);
   }, [minersData]);
+
+  const legendItems = React.useMemo(() => {
+    const sotaEntries = new Map<string, string>();
+    chartData.forEach((entry) => {
+      if (entry.isSota) {
+        sotaEntries.set(entry.name, entry.color);
+      }
+    });
+    return [
+      { label: "Miners", color: "#10B981" },
+      ...Array.from(sotaEntries.entries()).map(([label, color]) => ({ label, color })),
+    ];
+  }, [chartData]);
 
   // Show loading state
   if (loading) {
@@ -89,10 +171,10 @@ export default function RoundMinerScores({
   if (error) {
     return (
       <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
-        <div className="mt-5 w-full h-[350px] lg:mt-7 flex items-center justify-center">
+        <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
           <div className="text-center text-red-600">
             <p className="text-lg font-semibold">Failed to load miner scores</p>
-            <p className="text-sm mt-2">Please try again later</p>
+            <p className="mt-2 text-sm">Please try again later</p>
           </div>
         </div>
       </WidgetCard>
@@ -101,7 +183,7 @@ export default function RoundMinerScores({
 
   return (
     <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
-      <div className="mt-5 w-full h-[350px] lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-5 h-[350px] w-full lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
@@ -110,106 +192,47 @@ export default function RoundMinerScores({
             }}
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
-            <defs>
-              <linearGradient
-                id="minerScore"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="100%"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#10B981" />
-                <stop offset="40%" stopColor="#10B981" />
-                <stop offset="1" stopColor="#3B82F6" />
-              </linearGradient>
-              <linearGradient
-                id="openaiScore"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="100%"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#3B82F6" />
-                <stop offset="100%" stopColor="#1D4ED8" />
-              </linearGradient>
-              <linearGradient
-                id="claudeScore"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="100%"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#EF4444" />
-                <stop offset="100%" stopColor="#DC2626" />
-              </linearGradient>
-              <linearGradient
-                id="browserUserScore"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="100%"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#8B5CF6" />
-                <stop offset="100%" stopColor="#7C3AED" />
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="score"
-              fill="url(#minerScore)"
-              stroke="#10B981"
+              fill="#10B981"
               strokeWidth={0}
               radius={[4, 4, 0, 0]}
               barSize={barSize}
             >
-              {chartData.map((entry, index) => {
-                let fillColor = 'url(#minerScore)';
-                if (entry.isSota) {
-                  switch (entry.uid) {
-                    case 'OpenAI': fillColor = 'url(#openaiScore)'; break;
-                    case 'Claude': fillColor = 'url(#claudeScore)'; break;
-                    case 'Browser-User': fillColor = 'url(#browserUserScore)'; break;
-                  }
-                }
-                return <Cell key={`cell-${index}`} fill={fillColor} />;
-              })}
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${entry.uid}-${index}`} fill={entry.color} />
+              ))}
             </Bar>
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      
+
       {/* Legend */}
-      <div className="mt-4 flex justify-center gap-6 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }}></div>
-          <Text className="text-gray-600">Miners</Text>
+      {legendItems.length > 0 && (
+        <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm">
+          {legendItems.map((item) => (
+            <div key={item.label} className="flex items-center gap-2">
+              <div
+                className="h-3 w-3 rounded"
+                style={{
+                  backgroundColor: item.color,
+                }}
+              ></div>
+              <Text className="text-gray-600">{item.label}</Text>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3B82F6' }}></div>
-          <Text className="text-gray-600">OpenAI</Text>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#EF4444' }}></div>
-          <Text className="text-gray-600">Claude</Text>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#8B5CF6' }}></div>
-          <Text className="text-gray-600">Browser-User</Text>
-        </div>
-      </div>
+      )}
     </WidgetCard>
   );
 }
 
 export function CustomTooltip({ label, active, payload, className }: any) {
-  if (!active) return null;
+  if (!active || !payload?.length) return null;
 
   return (
     <div
@@ -219,29 +242,23 @@ export function CustomTooltip({ label, active, payload, className }: any) {
       )}
     >
       <Text className="label mb-0.5 block bg-gray-100 p-2 px-2.5 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
-        Round {label}
+        {payload[0]?.payload?.name}
       </Text>
       <div className="px-3 py-1.5 text-xs">
-        {payload?.map((item: any, index: number) => (
-          <div
-            key={item.dataKey + index}
-            className="chart-tooltip-item flex items-center py-1.5"
-          >
+        {payload.map((item: any, index: number) => (
+          <div key={item.dataKey + index} className="chart-tooltip-item flex items-center py-1.5">
             <span
               className="me-1.5 h-2 w-2 rounded-full"
               style={{
-                backgroundColor: "#10B981",
+                backgroundColor: item.payload?.color || item.fill || "#10B981",
               }}
             />
             <Text>
               <Text as="span" className="capitalize">
                 Score:
               </Text>{" "}
-              <Text
-                as="span"
-                className="font-medium text-gray-900 dark:text-gray-700"
-              >
-                {item.value}
+              <Text as="span" className="font-medium text-gray-900 dark:text-gray-700">
+                {(Number(item.value) * 100).toFixed(2)}%
               </Text>
             </Text>
           </div>

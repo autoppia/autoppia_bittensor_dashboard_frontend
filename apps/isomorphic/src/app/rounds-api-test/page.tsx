@@ -87,7 +87,7 @@ function RoundsListTest() {
         <h3 className="font-medium">Recent Rounds:</h3>
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {data?.rounds?.data.rounds.slice(0, 5).map((round) => (
-            <div key={round.id} className="bg-gray-50 p-2 rounded text-sm">
+            <div key={round.roundKey ?? round.id} className="bg-gray-50 p-2 rounded text-sm">
               <div className="flex justify-between">
                 <span>Round {round.id}</span>
                 <span className={round.current ? 'text-green-600' : 'text-gray-600'}>

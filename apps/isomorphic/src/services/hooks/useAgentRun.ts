@@ -263,6 +263,16 @@ export function useAgentRunTasks(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const serializedParams = useMemo(
+    () => JSON.stringify(params ?? {}),
+    [params]
+  );
+
+  const stableParams = useMemo(
+    () => JSON.parse(serializedParams) as typeof params,
+    [serializedParams]
+  );
+
   const fetchTasks = useCallback(async () => {
     if (!runId) return;
 
@@ -270,7 +280,7 @@ export function useAgentRunTasks(
       setIsLoading(true);
       setError(null);
       const result = await agentRunsService.getAgentRunTasks(runId, {
-        ...params,
+        ...stableParams,
         page,
         limit,
       });
@@ -281,7 +291,7 @@ export function useAgentRunTasks(
     } finally {
       setIsLoading(false);
     }
-  }, [runId, page, limit, params]);
+  }, [runId, page, limit, stableParams]);
 
   useEffect(() => {
     fetchTasks();

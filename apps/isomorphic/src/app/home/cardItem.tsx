@@ -4,11 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Text } from "rizzui";
 import { WebsiteDataType } from "@/data/websites-data";
-import {
-  PiEyeDuotone,
-  PiClockDuotone,
-  PiCheckCircleDuotone,
-} from "react-icons/pi";
+import { PiClockDuotone, PiCheckCircleDuotone } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 
 interface WebsiteItemProps {
@@ -128,13 +124,12 @@ export function WebsiteItem({ website }: WebsiteItemProps) {
             {!isComingSoon && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
                 <div
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white backdrop-blur-sm border-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-xl"
+                  className="flex items-center px-6 py-3 rounded-xl font-bold text-white backdrop-blur-sm border-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-xl"
                   style={{
                     backgroundColor: colorWithOpacity,
                     borderColor: website.color,
                   }}
                 >
-                  <PiEyeDuotone className="w-5 h-5" />
                   <span>Explore</span>
                 </div>
               </div>

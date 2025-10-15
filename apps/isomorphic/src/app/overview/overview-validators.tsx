@@ -90,8 +90,8 @@ export default function OverviewValidators() {
     );
   }
 
-  // Show error state
-  if (validatorsError || roundError) {
+  // Show error state - only show validator error if validators actually failed
+  if (validatorsError) {
     return (
       <>
         <PageHeader title={"What's happening on the subnet"} className="mt-12">
@@ -102,7 +102,7 @@ export default function OverviewValidators() {
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
           <p className="text-red-400 font-medium">Error loading validators</p>
           <p className="text-red-300 text-sm mt-1">
-            {validatorsError || roundError}
+            {validatorsError}
           </p>
         </div>
       </>
@@ -162,8 +162,10 @@ export default function OverviewValidators() {
                         <Text className="font-bold text-gray-900">
                           {validator.name}
                         </Text>
-                        <Text className="text-xs text-gray-500 tracking-wide font-mono truncate">
-                          {validator.hotkey.slice(0, 8)}...{validator.hotkey.slice(-8)}
+                        <Text className="text-xs font-mono tracking-wide text-gray-500 truncate">
+                          {validator.hotkey
+                            ? `${validator.hotkey.slice(0, 8)}...${validator.hotkey.slice(-8)}`
+                            : "No hotkey"}
                         </Text>
                       </div>
                     </div>
@@ -200,7 +202,6 @@ export default function OverviewValidators() {
                           {validator.status}
                         </span>
                       </span>
-                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   </div>
                 </div>

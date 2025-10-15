@@ -232,7 +232,7 @@ export class AgentsService {
     params?: AgentRunsQueryParams
   ): Promise<AgentRunsResponse> {
     const response = await apiClient.get<AgentRunsResponse>(
-      `${this.baseEndpoint}/${id}/runs`,
+      `/api/v1/agent-runs/agents/${id}/runs`,
       params
     );
     return response.data;
@@ -243,7 +243,7 @@ export class AgentsService {
    */
   async getAgentRun(agentId: string, runId: string): Promise<AgentRunData> {
     const response = await apiClient.get<AgentRunDetailsResponse>(
-      `${this.baseEndpoint}/${agentId}/runs/${runId}`
+      `/api/v1/agent-runs/${runId}`
     );
     return response.data.data.run;
   }

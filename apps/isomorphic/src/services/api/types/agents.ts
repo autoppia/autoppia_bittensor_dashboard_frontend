@@ -11,6 +11,8 @@ export interface MinimalAgentData {
   score: number; // Average score (renamed from averageScore for consistency with API)
   isSota: boolean; // Whether this is a SOTA agent
   imageUrl: string;
+  slug?: string;
+  provider?: string;
 }
 
 // ===== FULL AGENT DATA (for details) =====
@@ -18,11 +20,14 @@ export interface AgentData {
   id: string; // Keep for backward compatibility, but now represents UID as string
   uid: number; // Miner UID
   name: string;
-  hotkey: string; // Miner hotkey
+  slug?: string;
+  hotkey?: string | null; // Miner hotkey (absent for SOTA benchmarks)
   type: string; // Agent type (e.g., "autoppia")
   imageUrl: string;
   githubUrl?: string; // GitHub repository URL
-  taostatsUrl: string; // TaoStats URL
+  taostatsUrl?: string | null; // TaoStats URL (not available for SOTA agents)
+  provider?: string; // Provider / benchmark origin (e.g., openai, anthropic)
+  category?: string; // Optional grouping/category label
   isSota: boolean; // Whether this is a SOTA agent
   status: 'active' | 'inactive' | 'maintenance';
   description?: string; // Miner description
@@ -50,6 +55,12 @@ export interface ScoreRoundDataPoint {
   rank: number | null;
   reward: number;
   timestamp: string;
+  topScore?: number; // Highest benchmark/miner score for the round
+  benchmarks?: {
+    name: string;
+    score: number;
+    provider?: string;
+  }[];
 }
 
 // ===== AGENT PERFORMANCE METRICS =====

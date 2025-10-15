@@ -4,7 +4,6 @@
  */
 
 import { apiClient } from './client';
-import { mockAgentRunRecords } from './mock-agent-runs';
 import type {
   AgentRunData,
   AgentRunStats,
@@ -51,13 +50,6 @@ export class AgentRunsService {
       );
       return response.data.data.personas;
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.personas;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -73,15 +65,15 @@ export class AgentRunsService {
       const response = await apiClient.get<AgentRunStatsResponse>(
         `${this.baseEndpoint}/${runId}/stats`
       );
-      return response.data.data.stats;
+      const payload: any = response.data.data;
+      const rawStats = payload?.stats ?? payload?.statistics;
+
+      if (!rawStats) {
+        throw new Error('Agent run statistics response was empty');
+      }
+
+      return this.normalizeStats(rawStats as AgentRunStats);
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.stats;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -97,15 +89,8 @@ export class AgentRunsService {
       const response = await apiClient.get<AgentRunSummaryResponse>(
         `${this.baseEndpoint}/${runId}/summary`
       );
-      return response.data.data.summary;
+      return this.normalizeSummary(response.data.data.summary);
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.summary;
-      if (fallback) {
-        return fallback;
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -130,25 +115,19 @@ export class AgentRunsService {
         `${this.baseEndpoint}/${runId}/tasks`,
         params
       );
+      const payload = response.data.data;
+      const tasks = payload.tasks ?? [];
+      const total = payload.total ?? tasks.length;
+      const page = payload.page ?? params?.page ?? 1;
+      const limit = payload.limit ?? params?.limit ?? (tasks.length || 1);
+
       return {
-        tasks: response.data.data.tasks,
-        total: response.data.data.total,
-        page: response.data.data.page,
-        limit: response.data.data.limit,
+        tasks,
+        total,
+        page,
+        limit,
       };
     } catch (error: any) {
-      const fallback = mockAgentRunRecords[runId]?.tasks;
-      if (fallback) {
-        return {
-          tasks: fallback.tasks,
-          total: fallback.total,
-          page: fallback.page,
-          limit: fallback.limit,
-        };
-      }
-      if (error.code === 'AGENT_RUN_NOT_FOUND') {
-        throw new Error(`Agent run '${runId}' not found. Available runs: run-001, run-002`);
-      }
       if (error instanceof Error) {
         throw error;
       }
@@ -208,7 +187,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/agents/${agentId}/runs`, params);
+    }>(`${this.baseEndpoint}/agents/${agentId}/runs`, params);
     return response.data.data;
   }
 
@@ -238,7 +217,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/rounds/${roundId}/agent-runs`, params);
+    }>(`${this.baseEndpoint}/rounds/${roundId}/agent-runs`, params);
     return response.data.data;
   }
 
@@ -268,7 +247,7 @@ export class AgentRunsService {
         page: number;
         limit: number;
       };
-    }>(`/api/v1/validators/${validatorId}/agent-runs`, params);
+    }>(`${this.baseEndpoint}/validators/${validatorId}/agent-runs`, params);
     return response.data.data;
   }
 
@@ -455,6 +434,178 @@ export class AgentRunsService {
       };
     }>(`${this.baseEndpoint}/${runId}/metrics`);
     return response.data.data;
+  }
+
+  private normalizePercentage(value: number | null | undefined, decimals: number = 1): number {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 0;
+    }
+    const scaled = value > 1 ? value : value * 100;
+    const factor = Math.pow(10, decimals);
+    return Math.round(scaled * factor) / factor;
+  }
+
+  private roundTo(value: number | null | undefined, decimals: number = 1): number {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 0;
+    }
+    const factor = Math.pow(10, decimals);
+    return Math.round(value * factor) / factor;
+  }
+
+  private getNumberWithFallback(
+    source: Record<string, any>,
+    keys: string[],
+    defaultValue = 0
+  ): number {
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value;
+      }
+    }
+    return defaultValue;
+  }
+
+  private normalizeStats(stats: AgentRunStats | Record<string, any>): AgentRunStats {
+    const raw = stats as Record<string, any>;
+    const rawScoreDistribution =
+      raw.scoreDistribution ?? raw.score_distribution ?? {};
+
+    const performanceByWebsiteSource =
+      raw.performanceByWebsite ?? raw.performance_by_website ?? [];
+    const performanceByUseCaseSource =
+      raw.performanceByUseCase ?? raw.performance_by_use_case ?? raw.use_case_performance ?? [];
+
+    const normalizedWebsites = Array.isArray(performanceByWebsiteSource)
+      ? performanceByWebsiteSource.map((entry: Record<string, any>) => ({
+          website: entry.website ?? entry.name ?? '',
+          tasks: this.getNumberWithFallback(entry, ['tasks', 'total_tasks', 'total'], 0),
+          successful: this.getNumberWithFallback(entry, ['successful', 'successful_tasks', 'successes'], 0),
+          failed: this.getNumberWithFallback(entry, ['failed', 'failed_tasks', 'failures'], 0),
+          averageScore: this.normalizePercentage(
+            this.getNumberWithFallback(entry, ['averageScore', 'average_score', 'score', 'success_rate'], 0)
+          ),
+          averageDuration: this.roundTo(
+            this.getNumberWithFallback(entry, ['averageDuration', 'average_duration', 'duration', 'avg_duration'], 1),
+            1
+          ),
+        }))
+      : [];
+
+    const normalizedUseCases = Array.isArray(performanceByUseCaseSource)
+      ? performanceByUseCaseSource.map((entry: Record<string, any>) => ({
+          useCase: entry.useCase ?? entry.use_case ?? entry.name ?? '',
+          tasks: this.getNumberWithFallback(entry, ['tasks', 'total_tasks', 'total'], 0),
+          successful: this.getNumberWithFallback(entry, ['successful', 'successful_tasks', 'successes'], 0),
+          failed: this.getNumberWithFallback(entry, ['failed', 'failed_tasks', 'failures'], 0),
+          averageScore: this.normalizePercentage(
+            this.getNumberWithFallback(entry, ['averageScore', 'average_score', 'score', 'success_rate'], 0)
+          ),
+          averageDuration: this.roundTo(
+            this.getNumberWithFallback(entry, ['averageDuration', 'average_duration', 'duration', 'avg_duration'], 1),
+            1
+          ),
+        }))
+      : [];
+
+    const normalizedScoreDistribution = {
+      excellent: this.getNumberWithFallback(rawScoreDistribution, ['excellent', 'excellent_count'], 0),
+      good: this.getNumberWithFallback(rawScoreDistribution, ['good', 'good_count'], 0),
+      average: this.getNumberWithFallback(rawScoreDistribution, ['average', 'average_count'], 0),
+      poor: this.getNumberWithFallback(rawScoreDistribution, ['poor', 'poor_count'], 0),
+    };
+
+    return {
+      runId: raw.runId ?? raw.run_id ?? '',
+      overallScore: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['overallScore', 'overall_score', 'score'], 0)
+      ),
+      totalTasks: this.getNumberWithFallback(raw, ['totalTasks', 'total_tasks', 'total'], 0),
+      successfulTasks: this.getNumberWithFallback(raw, ['successfulTasks', 'successful_tasks', 'successes'], 0),
+      failedTasks: this.getNumberWithFallback(raw, ['failedTasks', 'failed_tasks', 'failures'], 0),
+      websites:
+        this.getNumberWithFallback(raw, ['websites', 'websiteCount', 'website_count'], 0) ||
+        normalizedWebsites.length,
+      averageTaskDuration: this.roundTo(
+        this.getNumberWithFallback(raw, ['averageTaskDuration', 'average_task_duration', 'avg_task_duration'], 1),
+        1
+      ),
+      successRate: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['successRate', 'success_rate'], 0)
+      ),
+      scoreDistribution: normalizedScoreDistribution,
+      performanceByWebsite: normalizedWebsites,
+      performanceByUseCase: normalizedUseCases,
+    };
+  }
+
+  private normalizeSummary(summary: AgentRunSummary | Record<string, any>): AgentRunSummary {
+    const raw = summary as Record<string, any>;
+    const rawTopWebsite =
+      raw.topPerformingWebsite ?? raw.top_performing_website ?? raw.best_website;
+    const rawTopUseCase =
+      raw.topPerformingUseCase ?? raw.top_performing_use_case ?? raw.best_use_case;
+
+    const normalizedTopWebsite = rawTopWebsite
+      ? {
+          website: rawTopWebsite.website ?? rawTopWebsite.name ?? '',
+          score: this.normalizePercentage(
+            this.getNumberWithFallback(rawTopWebsite, ['score', 'success_rate', 'averageScore', 'average_score'], 0)
+          ),
+          tasks: this.getNumberWithFallback(rawTopWebsite, ['tasks', 'total_tasks', 'total'], 0),
+        }
+      : {
+          website: '',
+          score: 0,
+          tasks: 0,
+        };
+
+    const normalizedTopUseCase = rawTopUseCase
+      ? {
+          useCase: rawTopUseCase.useCase ?? rawTopUseCase.use_case ?? rawTopUseCase.name ?? '',
+          score: this.normalizePercentage(
+            this.getNumberWithFallback(rawTopUseCase, ['score', 'success_rate', 'averageScore', 'average_score'], 0)
+          ),
+          tasks: this.getNumberWithFallback(rawTopUseCase, ['tasks', 'total_tasks', 'total'], 0),
+        }
+      : {
+          useCase: '',
+          score: 0,
+          tasks: 0,
+        };
+
+    const recentActivity = raw.recentActivity ?? raw.recent_activity;
+    const rankingValue = this.getNumberWithFallback(raw, ['ranking', 'rank'], Number.NaN);
+
+    const baseSummary: AgentRunSummary = {
+      runId: raw.runId ?? raw.run_id ?? '',
+      agentId: raw.agentId ?? raw.agent_id ?? '',
+      roundId: this.getNumberWithFallback(raw, ['roundId', 'round_id'], 0),
+      validatorId: raw.validatorId ?? raw.validator_id ?? '',
+      startTime: raw.startTime ?? raw.start_time ?? '',
+      endTime: raw.endTime ?? raw.end_time,
+      status: raw.status ?? '',
+      overallScore: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ['overallScore', 'overall_score', 'score'], 0)
+      ),
+      totalTasks: this.getNumberWithFallback(raw, ['totalTasks', 'total_tasks', 'total'], 0),
+      successfulTasks: this.getNumberWithFallback(raw, ['successfulTasks', 'successful_tasks', 'successes'], 0),
+      failedTasks: this.getNumberWithFallback(raw, ['failedTasks', 'failed_tasks', 'failures'], 0),
+      duration: Math.max(
+        this.getNumberWithFallback(raw, ['duration', 'total_duration', 'run_duration'], 0),
+        0
+      ),
+      topPerformingWebsite: normalizedTopWebsite,
+      topPerformingUseCase: normalizedTopUseCase,
+      recentActivity: Array.isArray(recentActivity) ? recentActivity : [],
+    };
+
+    if (!Number.isNaN(rankingValue)) {
+      baseSummary.ranking = rankingValue;
+    }
+
+    return baseSummary;
   }
 }
 

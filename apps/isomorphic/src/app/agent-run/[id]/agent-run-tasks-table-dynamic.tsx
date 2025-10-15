@@ -4,6 +4,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { useAgentRunTasks } from "@/services/hooks/useAgentRun";
 import { createColumnHelper } from "@tanstack/react-table";
+import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input } from "rizzui";
 import Link from "next/link";
@@ -28,7 +29,9 @@ const agentRunTasksColumns = [
     size: 400,
     enableSorting: false,
     cell: ({ row }) => (
-      <Text className="font-medium text-gray-700">{row.original.prompt}</Text>
+      <Text className="font-medium text-gray-700 break-words whitespace-pre-wrap max-w-[320px]">
+        {row.original.prompt}
+      </Text>
     ),
   }),
   columnHelper.accessor("website", {
@@ -37,9 +40,7 @@ const agentRunTasksColumns = [
     header: "Website",
     enableSorting: false,
     cell: ({ row }) => (
-      <span className="inline-flex items-center rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-        {row.original.website}
-      </span>
+      <BannerText color="blue" text={row.original.website} />
     ),
   }),
   columnHelper.accessor("useCase", {
@@ -127,7 +128,7 @@ export default function AgentRunTasksTableDynamic() {
     changeLimit 
   } = useAgentRunTasks(id as string, {
     page: 1,
-    limit: 20,
+    limit: 10,
   });
 
   const { table, setData } = useTanStackTable<AgentRunTaskData>({
@@ -136,13 +137,13 @@ export default function AgentRunTasksTableDynamic() {
     options: {
       initialState: {
         pagination: {
-          pageIndex: (page || 1) - 1,
-          pageSize: limit || 20,
+          pageIndex: page - 1,
+          pageSize: limit,
         },
       },
       enableColumnResizing: false,
       manualPagination: true,
-      pageCount: Math.ceil((total || 0) / (limit || 20)),
+      pageCount: Math.ceil(total / limit),
     },
   });
 
@@ -153,27 +154,21 @@ export default function AgentRunTasksTableDynamic() {
     }
   }, [tasks, setData]);
 
-  // Update pagination when page/limit change
-  React.useEffect(() => {
-    if (page && limit) {
-      table.setPageIndex(page - 1);
-      table.setPageSize(limit);
-    }
-  }, [page, limit, table]);
-
 
   // Show loading state
   if (isLoading && !tasks) {
     return (
-      <div className="bg-gray-50 border border-muted rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <Placeholder height="1.5rem" width="6rem" />
-          <Placeholder height="2.5rem" width="15rem" />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+        <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-gradient-to-br from-violet-500/10 via-violet-400/5 to-transparent blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-0 left-4 h-48 w-48 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
+        <div className="relative mb-6 flex items-center justify-between">
+          <Placeholder height="1.4rem" width="6rem" />
+          <Placeholder height="2.3rem" width="15rem" />
         </div>
-        <div className="mb-2">
-          <div className="border border-muted rounded-lg overflow-hidden">
+        <div className="relative mb-3">
+          <div className="overflow-hidden rounded-2xl border border-slate-800/70">
             <table className="w-full">
-              <thead className="bg-gray-100">
+              <thead className="bg-slate-900/60">
                 <tr>
                   {Array.from({ length: 6 }, (_, index) => (
                     <th key={index} className="px-4 py-3 text-left">
@@ -190,9 +185,9 @@ export default function AgentRunTasksTableDynamic() {
             </table>
           </div>
         </div>
-        <div className="flex items-center justify-between py-4">
+        <div className="relative flex items-center justify-between py-4">
           <Placeholder height="1rem" width="8rem" />
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Placeholder height="2rem" width="6rem" />
             <Placeholder height="2rem" width="4rem" />
             <Placeholder height="2rem" width="6rem" />
@@ -205,18 +200,19 @@ export default function AgentRunTasksTableDynamic() {
   // Show error state
   if (error && !tasks) {
     return (
-      <div className="bg-gray-50 border border-muted rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-700">All Tasks</h2>
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+        <div className="pointer-events-none absolute -top-20 right-0 h-56 w-56 rounded-full bg-gradient-to-br from-rose-500/15 via-rose-400/5 to-transparent blur-[110px]" />
+        <div className="relative mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-white">All Tasks</h2>
         </div>
-        <div className="text-center py-8">
-          <div className="text-red-600 text-lg font-semibold mb-2">
+        <div className="relative py-8 text-center">
+          <div className="mb-2 text-lg font-semibold text-red-400">
             Failed to Load Tasks Data
           </div>
-          <div className="text-red-500 text-sm mb-4">{error}</div>
+          <div className="mb-4 text-sm text-red-300">{error}</div>
           <button
             onClick={refetch}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Retry
           </button>
@@ -226,20 +222,21 @@ export default function AgentRunTasksTableDynamic() {
   }
 
   return (
-    <div className="bg-gray-50 border border-muted rounded-xl p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-700">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+      <div className="pointer-events-none absolute -right-24 top-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
+
+      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-white">
           All Tasks
           {total > 0 && (
-            <span className="text-sm font-normal text-gray-500 ml-2">
+            <span className="ml-2 text-sm font-normal text-slate-300">
               ({total} total)
             </span>
           )}
         </h2>
 
-        {/* Search Input */}
-        <div className="relative">
+        <div className="relative w-full max-w-[240px]">
           <Input
             type="search"
             clearable={true}
@@ -247,7 +244,7 @@ export default function AgentRunTasksTableDynamic() {
             onClear={() => table.setGlobalFilter("")}
             value={table.getState().globalFilter ?? ""}
             prefix={
-              <PiMagnifyingGlassBold className="size-4 text-gray-500" />
+              <PiMagnifyingGlassBold className="size-4 text-slate-400" />
             }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             className="w-full xs:max-w-60"
@@ -255,42 +252,39 @@ export default function AgentRunTasksTableDynamic() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="mb-2">
+      <div className="relative mb-2">
         {tasks && tasks.length > 0 ? (
           <Table
             table={table}
             variant="modern"
             classNames={{
               container:
-                "border border-muted rounded-lg overflow-x-auto custom-scrollbar scroll-smooth",
+                "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-800/70 bg-slate-950/60",
             }}
           />
         ) : (
-          <div className="border border-muted rounded-lg p-8 text-center">
-            <div className="text-gray-500 text-lg font-medium mb-2">
+          <div className="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-8 text-center">
+            <div className="mb-2 text-lg font-medium text-slate-200">
               No Tasks Found
             </div>
-            <div className="text-gray-400 text-sm">
+            <div className="text-sm text-slate-400">
               No tasks are available for this agent run.
             </div>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
       {tasks && tasks.length > 0 && (
         <TablePagination 
           table={table} 
-          className="py-4"
+          className="relative py-4 text-slate-300"
         />
       )}
 
-      {/* Loading indicator for pagination */}
       {isLoading && tasks && (
-        <div className="flex items-center justify-center py-4">
-          <div className="flex items-center gap-2 text-gray-500">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="relative flex items-center justify-center py-4">
+          <div className="flex items-center gap-2 text-slate-400">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
             <span className="text-sm">Loading more tasks...</span>
           </div>
         </div>
