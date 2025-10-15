@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import type { IconType } from "react-icons";
-import { LuArrowUpRight, LuGithub, LuBookOpen, LuGlobe, LuTrophy, LuUser, LuCode, LuPlay } from "react-icons/lu";
+import { LuArrowUpRight, LuGithub, LuBookOpen, LuTrophy, LuUser, LuCode, LuPlay } from "react-icons/lu";
 import { FaTwitter, FaDiscord, FaTelegram } from "react-icons/fa6";
 import EcosystemOrbit from "@/components/landing/ecosystem-orbit";
 
@@ -42,11 +42,6 @@ const resourceLinks: ResourceLink[] = [
     label: "Docs",
     href: "https://documentation.autoppia.com",
     icon: LuBookOpen,
-  },
-  {
-    label: "Whitepaper",
-    href: "https://docs.google.com/document/d/1nUIFPzloz6hO6PvxwnuSyz8BfaLbtq-B0kldN2xHB-E/edit?usp=sharing",
-    icon: LuGlobe,
   },
   {
     label: "GitHub",
@@ -217,7 +212,7 @@ export default function LandingPage() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="whitespace-nowrap transition-colors duration-200 hover:text-white"
+                  className="whitespace-nowrap py-1.5 transition-colors duration-200 hover:text-white"
                 >
                   {item.label}
                 </Link>
@@ -233,7 +228,7 @@ export default function LandingPage() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors duration-200 hover:text-white sm:text-[11px]"
+                  className="inline-flex items-center gap-2 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors duration-200 hover:text-white sm:text-[11px]"
                 >
                   {Icon ? <Icon className="h-4 w-4" /> : null}
                   {link.label}
@@ -260,7 +255,7 @@ export default function LandingPage() {
                   Autoppia
                 </span>
                 <h1 className="text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">
-                  Building Autonomous Companies
+                  BUILDING AUTONOMOUS COMPANIES
                 </h1>
                 <p className="max-w-2xl text-base text-white/70 sm:text-lg">
                   We orchestrate specialized AI Workers to automate operations across
@@ -268,9 +263,6 @@ export default function LandingPage() {
                   and beyond.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    Autoppia Web Operator
-                  </span>
                   <Link
                     href="https://taostats.io/subnets/36/chart"
                     target="_blank"
@@ -279,6 +271,9 @@ export default function LandingPage() {
                   >
                     Bittensor Subnet 36
                   </Link>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                    Autoppia Web Operator
+                  </span>
                 </div>
               </div>
               <div className="hidden justify-start lg:flex lg:ml-16 xl:ml-24 2xl:ml-32">
