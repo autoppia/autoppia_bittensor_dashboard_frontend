@@ -23,12 +23,14 @@ export type {
   SubnetStatistics,
   OverviewMetricsResponse,
   ValidatorsResponse,
+  ValidatorFilterResponse,
   RoundsResponse,
   LeaderboardResponse,
   SubnetStatisticsResponse,
   ValidatorsQueryParams,
   LeaderboardQueryParams,
   RoundsQueryParams,
+  ValidatorFilterItem,
 } from './types/overview';
 
 // Rounds types

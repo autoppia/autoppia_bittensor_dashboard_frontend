@@ -146,7 +146,9 @@ export default function RoundResult() {
                   {selectedValidator.name}
                 </div>
                 <div className="text-xs text-amber-200">
-                  {selectedValidator.hotkey.slice(0, 6)}...{selectedValidator.hotkey.slice(-6)}
+                  {selectedValidator.hotkey
+                    ? `${selectedValidator.hotkey.slice(0, 6)}...${selectedValidator.hotkey.slice(-6)}`
+                    : "No hotkey"}
                 </div>
               </div>
             </div>

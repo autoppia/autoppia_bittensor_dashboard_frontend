@@ -11,14 +11,13 @@ import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
 import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
-
 export default function AgentRun() {
   const { id } = useParams();
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [period, setPeriod] = useState<string | null>(null);
 
   // Use the partial loading hook with progressive data fetching
-  const { data, isLoading, error, refetch, isAnyLoading } = useAgentRun(
+  const { data, error, refetch, isAnyLoading } = useAgentRun(
     id as string,
     {
       includePersonas: true,
@@ -30,61 +29,11 @@ export default function AgentRun() {
     }
   );
 
-  // Show error state if there's a critical error
-  if (error && !data.personas && !data.stats && !data.summary) {
-    const isNotFoundError = error.includes('not found') || error.includes('AGENT_RUN_NOT_FOUND');
-    
-    return (
-      <div className="w-full max-w-[1600px] mx-auto">
-        <PageHeader
-          title="Agent Run Details"
-          description={`Run ID: ${id}`}
-          className="mt-4"
-        >
-          <Link
-            href="/agents"
-            className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
-          >
-            <PiArrowLeftLight className="w-4 h-4" />
-            <span className="ms-1">Back to Agents</span>
-          </Link>
-        </PageHeader>
-        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
-          <div className="text-red-400 text-lg font-semibold mb-2">
-            {isNotFoundError ? 'Agent Run Not Found' : 'Failed to Load Agent Run Data'}
-          </div>
-          <div className="text-red-300 text-sm mb-4">
-            {isNotFoundError 
-              ? `The agent run with ID '${id}' does not exist. Please check the URL or try a different run ID.`
-              : error
-            }
-          </div>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={refetch}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Retry
-            </button>
-            {isNotFoundError && (
-              <Link
-                href="/agent-run"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Browse Available Runs
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-[1600px] mx-auto">
+    <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={`Run ID: ${id}`}
+        description={`Agent Run ID: ${id}`}
         className="mt-4"
       >
         <Link
@@ -95,6 +44,19 @@ export default function AgentRun() {
           <span className="ms-1">Back to Agents</span>
         </Link>
       </PageHeader>
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+          Failed to refresh some sections. You can{" "}
+          <button
+            onClick={refetch}
+            className="font-semibold underline underline-offset-2 hover:text-yellow-900"
+          >
+            retry
+          </button>{" "}
+          or wait a moment while data loads.
+        </div>
+      )}
 
       {/* Personas Section - Loads first */}
       <AgentRunPersonasDynamic />
@@ -128,7 +90,7 @@ export default function AgentRun() {
       </div>
 
       {/* Loading Indicator for Partial Updates */}
-      {(isLoading || isAnyLoading) && (
+      {isAnyLoading && (
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm">Updating data...</span>
@@ -137,22 +99,22 @@ export default function AgentRun() {
 
       {/* Error Indicators for Individual Sections */}
       {data.errors.personas && (
-        <div className="fixed top-4 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load personas data</div>
         </div>
       )}
       {data.errors.stats && (
-        <div className="fixed top-16 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-16 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load stats data</div>
         </div>
       )}
       {data.errors.summary && (
-        <div className="fixed top-28 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-28 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load summary data</div>
         </div>
       )}
       {data.errors.tasks && (
-        <div className="fixed top-40 right-4 bg-yellow-900/20 border border-yellow-600/50 text-yellow-400 px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed top-40 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
           <div className="text-sm">Failed to load tasks data</div>
         </div>
       )}

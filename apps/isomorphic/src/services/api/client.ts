@@ -16,11 +16,19 @@ export interface ApiError {
   code?: string;
 }
 
+const resolveBaseUrl = () => {
+  return (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:8080"
+  );
+};
+
 export class ApiClient {
   private baseUrl: string;
   private defaultHeaders: Record<string, string>;
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') {
+  constructor(baseUrl: string = resolveBaseUrl()) {
     this.baseUrl = baseUrl;
     this.defaultHeaders = {
       'Content-Type': 'application/json',

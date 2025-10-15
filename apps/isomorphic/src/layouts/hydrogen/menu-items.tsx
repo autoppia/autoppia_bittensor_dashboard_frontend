@@ -6,6 +6,7 @@ import {
   LuPackageCheck,
   LuBoxes,
   LuGlobe,
+  LuTrophy,
 } from "react-icons/lu";
 import { PiFlaskDuotone } from "react-icons/pi";
 import { FaHome } from "react-icons/fa";
@@ -17,7 +18,11 @@ export const menuItems = [
     href: routes.home,
     icon: <FaHome />,
   },
-  // label end
+  {
+    name: "Leaderboard",
+    href: routes.leaderboard,
+    icon: <LuTrophy />,
+  },
   {
     name: "Overview",
     href: routes.overview,
@@ -51,6 +56,6 @@ export const menuItems = [
   {
     name: "Test Agent",
     href: routes.testAgent,
-    icon: <PiFlaskDuotone />
-  }
+    icon: <PiFlaskDuotone />,
+  },
 ];

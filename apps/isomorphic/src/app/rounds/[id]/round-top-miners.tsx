@@ -108,7 +108,9 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                           index === 0 && "text-yellow-500"
                         )}
                       >
-                        Miner {miner.uid}
+                        {miner.isSota && miner.name
+                          ? miner.name
+                          : `Miner ${miner.uid}`}
                       </Text>
                       <div className="relative ms-2 text-xl">
                         {index === 0 && (
@@ -120,7 +122,9 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                       </div>
                     </div>
                     <Text className="text-gray-500 group-hover:text-gray-600">
-                      {miner.hotkey.slice(0, 6)}...{miner.hotkey.slice(-6)}
+                      {miner.hotkey
+                        ? `${miner.hotkey.slice(0, 6)}...${miner.hotkey.slice(-6)}`
+                        : "No hotkey"}
                     </Text>
                   </div>
                   <div className="flex items-center gap-3">

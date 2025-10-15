@@ -154,13 +154,13 @@ export default function OverviewMetrics({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4", className)}
+      className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
     >
       {dynamicMetricsData.map((metric) => {
         const Icon = metric.icon;
         const metricCard = (
-          <div className={cn("rounded-2xl p-5", metric.bgColor)}>
-            <div className="flex space-x-4 mb-3">
+          <div className={cn("rounded-2xl p-5 min-w-0", metric.bgColor)}>
+            <div className="flex space-x-4 mb-3 min-w-0">
               <div
                 className={cn(
                   "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg flex-shrink-0",
@@ -174,19 +174,19 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               <div className="flex-1 min-w-0">
                 <h3
                   className={cn(
-                    "text-xs font-medium uppercase tracking-wide mb-1",
+                    "text-xs font-medium uppercase tracking-wide mb-1 truncate",
                     metric.descriptionClassName
                   )}
                 >
                   {metric.title}
                 </h3>
-                <div className={cn("", metric.metricClassName)}>
+                <div className={cn("truncate", metric.metricClassName)}>
                   {metric.value}
                 </div>
               </div>
             </div>
-            <div className="text-center">
-              <div className={cn("text-xs", metric.descriptionClassName)}>
+            <div className="text-center min-w-0">
+              <div className={cn("text-xs truncate", metric.descriptionClassName)}>
                 {metric.id === "score-to-win" && "Current target score"}
                 {metric.id === "total-validators" && "Active validators"}
                 {metric.id === "total-miners" && "Registered miners"}

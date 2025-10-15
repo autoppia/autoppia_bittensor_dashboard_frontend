@@ -7,7 +7,7 @@
     "lint": "next lint",
     "build": "next build",
     "type:check": "tsc --noEmit",
-    "start": "next start -p 7000",
+    "start": "next start -p 3000",
     "clean": "rm -rf node_modules .next .cache .turbo",
     "cache:clean": "rm -rf .next .cache .turbo"
   },

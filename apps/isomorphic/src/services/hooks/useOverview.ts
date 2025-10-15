@@ -66,6 +66,20 @@ export function useValidator(id: string) {
   );
 }
 
+// Hook for validator filter options
+export function useValidatorFilterOptions() {
+  const { data, loading, error, refetch } = useApiCall(
+    () => overviewService.getValidatorFilters()
+  );
+
+  return {
+    validators: data?.validators ?? [],
+    isLoading: loading,
+    error,
+    refetch,
+  };
+}
+
 // Hook for current round
 export function useCurrentRound() {
   return useApiCall(() => overviewService.getCurrentRound());
@@ -135,9 +149,9 @@ export function useOverviewData() {
                   leaderboard.loading || statistics.loading || networkStatus.loading || 
                   recentActivity.loading;
 
-  const error = metrics.error || validators.error || currentRound.error || 
-                leaderboard.error || statistics.error || networkStatus.error || 
-                recentActivity.error;
+  // Only consider critical endpoints as errors - currentRound is not critical for basic overview
+  const error = metrics.error || validators.error || 
+                leaderboard.error || statistics.error || networkStatus.error;
 
   const refetch = useCallback(() => {
     metrics.refetch();
