@@ -193,7 +193,7 @@ export default function Leaderboard() {
   );
 
   return (
-    <div className="w-full min-h-screen pb-12 relative overflow-hidden bg-[#0A0F1C]">
+    <div className="w-full min-h-screen pb-12 relative overflow-hidden">
       {/* soft texture */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.05] [background-image:radial-gradient(1px_1px_at_2px_2px,#fff_50%,transparent_51%)] [background-size:18px_18px]" />
 
@@ -253,101 +253,74 @@ export default function Leaderboard() {
             </div>
 
             {/* CHART */}
-            <div>
-              <div className="mb-3 sm:mb-4 flex items-center justify-between gap-3">
-                <Title
-                  as="h3"
-                  className="text-lg sm:text-2xl font-bold text-white"
+            <div className="rounded-3xl border-2 border-cyan-400/30 bg-slate-950/60 backdrop-blur-2xl p-8 shadow-[0_35px_100px_-35px_rgba(0,0,0,0.7)]">
+              <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-4">
+                IWA Performance Score
+              </h3>
+              <ResponsiveContainer width="100%" height={chartHeight}>
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 8, right: 40, left: 0, bottom: 8 }}
+                  barSize={barSize}
+                  barCategoryGap={isMobile ? "24%" : "18%"}
                 >
-                  IWA Score
-                </Title>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#0B1220] p-2 sm:p-4">
-                <ResponsiveContainer width="100%" height={chartHeight}>
-                  <BarChart
-                    data={chartData}
-                    layout="vertical"
-                    margin={{ top: 8, right: 32, left: 0, bottom: 8 }}
-                    barSize={barSize}
-                    barCategoryGap={isMobile ? "28%" : "22%"}
-                  >
-                    <defs>
-                      {/* COOL + ACCESSIBLE: Blue → Sky, high contrast on dark */}
-                      <linearGradient
-                        id="barBlueSky"
-                        x1="0"
-                        y1="0"
-                        x2="1"
-                        y2="0"
-                      >
-                        <stop offset="0%" stopColor="#3B82F6" />{" "}
-                        {/* blue-500 */}
-                        <stop offset="100%" stopColor="#0EA5E9" />{" "}
-                        {/* sky-500 */}
-                      </linearGradient>
-                    </defs>
-
-                    <CartesianGrid horizontal={false} stroke="#1F2B40" />
-
-                    <XAxis
-                      type="number"
-                      domain={[0, 100]}
-                      ticks={[0, 25, 50, 75, 100]}
-                      tick={{ fill: "#BFD4EA", fontSize: isMobile ? 11 : 12 }}
-                      axisLine={{ stroke: "#2A3B58" }}
-                      tickLine={{ stroke: "#2A3B58" }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="label"
-                      width={yAxisWidth}
-                      interval={0}
-                      tick={{ fill: "#F3F6FB", fontSize: isMobile ? 11 : 12 }}
-                      axisLine={{ stroke: "#22324C" }}
-                      tickLine={{ stroke: "#22324C" }}
-                    />
-
-                    <Tooltip
-                      cursor={{ fill: "rgba(62,126,247,0.10)" }}
-                      content={<ScoreTooltip />}
-                      wrapperStyle={{ outline: "none" }}
-                    />
-
-                    <ReferenceLine
-                      x={avg}
-                      stroke="#22D3EE"
-                      strokeDasharray="5 5"
-                      label={{
-                        value: "Avg",
-                        position: "insideTopRight",
-                        fill: "#22D3EE",
-                        fontSize: 11,
-                      }}
-                    />
-
-                    <Bar
-                      dataKey="score"
-                      radius={[0, 12, 12, 0]}
-                      fill="url(#barBlueSky)"
-                      isAnimationActive
-                      animationDuration={800}
-                      animationBegin={120}
+                  <defs>
+                    <linearGradient
+                      id="barGradient"
+                      x1="0"
+                      y1="0"
+                      x2="1"
+                      y2="0"
                     >
-                      <LabelList
-                        dataKey="score"
-                        position="right"
-                        content={<EndPillLabel />}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                      <stop offset="0%" stopColor="#22D3EE" />
+                      <stop offset="40%" stopColor="#3B82F6" />
+                      <stop offset="70%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#A855F7" />
+                    </linearGradient>
+                  </defs>
 
-                <div className="mt-2 text-center text-[11px] sm:text-xs text-slate-400">
-                  Long names are shortened on mobile — hover/tap for the full
-                  label.
-                </div>
-              </div>
+                  <CartesianGrid
+                    horizontal={false}
+                    stroke="#1E293B"
+                    strokeWidth={1.5}
+                  />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tick={{ fill: "#E2E8F0", fontWeight: 700 }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="label"
+                    width={yAxisWidth}
+                    tick={{ fill: "#FFF", fontWeight: 900 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(34,211,238,0.15)" }}
+                    content={<ScoreTooltip />}
+                    wrapperStyle={{ outline: "none" }}
+                  />
+                  <ReferenceLine
+                    x={avg}
+                    stroke="#22D3EE"
+                    strokeWidth={2}
+                    strokeDasharray="6 6"
+                    label={{
+                      value: `Avg: ${avg}%`,
+                      fill: "#22D3EE",
+                      fontWeight: 800,
+                    }}
+                  />
+                  <Bar dataKey="score" fill="url(#barGradient)">
+                    <LabelList
+                      dataKey="score"
+                      position="right"
+                      content={<EndPillLabel />}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             {/* /CHART */}
           </div>
