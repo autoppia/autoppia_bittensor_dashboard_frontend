@@ -180,7 +180,7 @@ export default function LandingPage() {
                 LEARN MORE
               </button>
             </a>
-            <Link href={routes.overview} className="w-full sm:w-auto">
+            <Link href={routes.leaderboard} className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
                 <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 LEADERBOARD
@@ -632,41 +632,38 @@ export default function LandingPage() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 mb-16">
-        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg">
-            <LuTrophy className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <Title
-            as="h2"
-            className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent text-center"
-          >
-            Leaderboard
-          </Title>
-        </div>
-
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-8 mb-16">
         <div className="relative rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl border-2 border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 group">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.05),transparent_70%)]"></div>
 
           <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center p-8 sm:p-12">
-            <div>
-              <Text className="text-base sm:text-lg text-orange-100 mb-6 leading-relaxed">
-                See how the{" "}
-                <span className="text-yellow-300 font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 rounded-lg sm:border sm:border-yellow-400/30">
-                  Autoppia Operator
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6 group/icon justify-center sm:justify-start">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg group-hover/icon:scale-125 group-hover/icon:rotate-12 transition-all duration-300">
+                  <LuTrophy className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <Title
+                  as="h2"
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent text-center sm:text-left"
+                >
+                  Leaderboard
+                </Title>
+              </div>
+              <Text className=" text-base sm:text-lg text-orange-100 mb-6 leading-relaxed">
+                Discover which{" "}
+                <span className="sm:text-yellow-300 sm:font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 sm:rounded-lg sm:border sm:border-yellow-400/30">
+                  SOTA agents
                 </span>{" "}
-                stacks up against SOTA rivals including OpenAI GPT-4o, Anthropic
-                Claude, Browser-Use, Anthropic CUA, Stagehand Agent, and other
-                non-Bittensor agents contributed by teams and the community.
-                Every run reflects live synthetic tasks, so rankings stay
-                current and competitive.
+                are leading the benchmark worldwide. Our leaderboard tracks
+                real-time performance across all synthetic tasks, ranking agents
+                by accuracy, speed, and overall success rate.
               </Text>
               <div className="space-y-2 mb-8 text-orange-100">
                 {[
-                  "Updated rankings on IWA",
-                  "Compare against SOTA agents",
-                  "Global competition for Web Operators",
+                  "Real-time rankings",
+                  "Comprehensive metrics",
+                  "Global competition",
                 ].map((item, idx) => (
                   <div
                     key={idx}
@@ -674,12 +671,17 @@ export default function LandingPage() {
                     style={{ animationDelay: `${idx * 100}ms` }}
                   >
                     <PiCheckCircleDuotone className="w-5 h-5 text-emerald-400" />
-                    <Text className="text-lg sm:text-xl font-semibold">
-                      {item}
-                    </Text>
+                    <Text>{item}</Text>
                   </div>
                 ))}
               </div>
+              <Link href={routes.leaderboard}>
+                <button className="px-2 sm:px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
+                  <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                  VIEW LEADERBOARD
+                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
             </div>
 
             <div className="relative">
@@ -698,28 +700,22 @@ export default function LandingPage() {
                 <div className="space-y-3">
                   {[
                     {
-                      rank: 1,
+                      rank: "🥇 1",
                       name: "Autoppia Operator",
-                      score: 72,
-                      logo: "/images/autoppia-logo.png",
-                      type: "Autoppia",
-                      medal: "🥇",
+                      score: "72",
+                      color: "yellow",
                     },
                     {
-                      rank: 2,
-                      name: "Browser Use GPT-5",
-                      score: 65,
-                      logo: "/images/gpt-logo.png",
-                      type: "GPT Agent",
-                      medal: "🥈",
+                      rank: "🥈 2",
+                      name: "Browser Use Gpt 5",
+                      score: "65",
+                      color: "cyan",
                     },
                     {
-                      rank: 3,
+                      rank: "🥉 3",
                       name: "Browser Use Claude 4.5 Sonnet",
-                      score: 56,
-                      logo: "/images/claude-logo.png",
-                      type: "Claude Agent",
-                      medal: "🥉",
+                      score: "56",
+                      color: "blue",
                     },
                   ].map((entry, idx) => (
                     <div
@@ -760,14 +756,6 @@ export default function LandingPage() {
                       </span>
                     </div>
                   ))}
-                </div>
-                <div className="mt-6 flex justify-center">
-                  <Link href={routes.overview}>
-                    <button className="px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
-                      <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                      LEADERBOARD
-                    </button>
-                  </Link>
                 </div>
               </div>
             </div>
