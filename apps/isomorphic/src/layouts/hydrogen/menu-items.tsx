@@ -54,7 +54,7 @@ export const menuItems = [
     icon: <LuGlobe />,
   },
   {
-    name: "Test Agent",
+    name: "Join the arena",
     href: routes.testAgent,
     icon: <PiFlaskDuotone />,
   },
