@@ -26,6 +26,9 @@ type TestResult = {
   success: boolean;
   score: number;
   duration: number;
+  prompt?: string;
+  actions?: any[];
+  gif?: string | null;
 };
 const TEST_AGENT_API = "http://84.247.180.192:5050/test-your-agent";
 
@@ -37,6 +40,7 @@ export default function TestAgent() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [apiResponse, setApiResponse] = useState<any>(null);
   const [isProjectsDropdownOpen, setIsProjectsDropdownOpen] = useState(false);
   const [isUseCasesDropdownOpen, setIsUseCasesDropdownOpen] = useState(false);
   const [projectsButtonRect, setProjectsButtonRect] = useState<DOMRect | null>(
@@ -51,21 +55,14 @@ export default function TestAgent() {
 
   const availableProjects = websitesData
     .filter((w) => !w.isComingSoon)
-    .map((w) => ({ value: w.name.toLowerCase(), label: w.name }));
+    .map((w) => ({ value: w.slug.toLowerCase(), label: w.name }));
 
   const getAvailableUseCases = () => {
     if (selectedProjects.length === 0) return [];
 
     const allUseCases: { value: string; label: string }[] = [];
     selectedProjects.forEach((project) => {
-      const key =
-        project === "autozone"
-          ? "autozone"
-          : project === "autobooks"
-            ? "books"
-            : project === "autocinema"
-              ? "cinema"
-              : "autozone";
+      const key = project;
 
       const cases = useCaseCatalogues[key] || [];
       cases.forEach((uc) => {
@@ -178,6 +175,7 @@ export default function TestAgent() {
         ip, // "<your_public_ip_or_ngrok>"
         port, // e.g., 6789
         projects: selectedProjects, // e.g., ["autobooks"]
+        // projects: ["autobooks"],
         num_use_cases: selectedUseCases.length,
         use_cases: selectedUseCases.map((uc) =>
           uc.toUpperCase().replace(/\s+/g, "_")
@@ -197,13 +195,49 @@ export default function TestAgent() {
         throw new Error(`Request failed: ${res.status}`);
       }
       const data = await res.json();
-      setShowResults(data);
+      setApiResponse(data);
 
-      // we don't care about response — just fire & succeed
-      // const data = await res.json(); // optional
+      // Parse the nested structure: Project -> AgentRun -> use_cases -> UseCase -> TaskId -> details
+      const parsedResults: any[] = [];
+
+      Object.keys(data).forEach((projectName) => {
+        const projectData = data[projectName];
+
+        Object.keys(projectData).forEach((agentRunId) => {
+          const runData = projectData[agentRunId];
+
+          if (runData.use_cases) {
+            Object.keys(runData.use_cases).forEach((useCaseName) => {
+              const useCaseData = runData.use_cases[useCaseName];
+
+              // Get all task IDs for this use case
+              const taskIds = Object.keys(useCaseData);
+
+              taskIds.forEach((taskId) => {
+                const taskData = useCaseData[taskId];
+
+                parsedResults.push({
+                  project: projectName,
+                  useCase: useCaseName,
+                  success: taskData.success > 0,
+                  score: Math.round(taskData.success * 100),
+                  duration: taskData.time || 0,
+                  prompt: taskData.prompt || "",
+                  actions: taskData.actions || [],
+                  gif: taskData.base64_gif || null,
+                });
+              });
+            });
+          }
+        });
+      });
+
+      setResults(parsedResults);
+      setShowResults(true);
+
       toast.success(
         <Text as="b" className="font-semibold">
-          Benchmark request sent successfully.
+          Benchmark completed! {parsedResults.length} test(s) executed.
         </Text>
       );
     } catch (err) {
@@ -557,7 +591,7 @@ export default function TestAgent() {
                 {/* Modal Body */}
                 <div className="relative overflow-y-auto max-h-[calc(90vh-180px)] p-6 sm:p-8">
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                  {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
                     <div className="relative text-center p-6 rounded-2xl border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/30 backdrop-blur-sm group overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
                       <div className="relative">
@@ -600,69 +634,134 @@ export default function TestAgent() {
                         </Title>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
-                  {/* Results Cards */}
+                  {/* API Response */}
+                  {apiResponse && (
+                    <div className="mb-6 relative rounded-xl border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-pink-500/5 overflow-hidden">
+                      <div className="p-3 bg-purple-500/10 border-b border-purple-400/30">
+                        <Text className="text-sm font-bold text-purple-300">
+                          API Response
+                        </Text>
+                      </div>
+                      <pre className="p-4 text-xs text-cyan-200 overflow-x-auto max-h-80 scrollbar-thin">
+                        {JSON.stringify(apiResponse, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Results Per Use Case */}
                   <div className="space-y-4">
                     {results.map((result, index) => (
                       <div
                         key={index}
-                        className="relative rounded-xl overflow-hidden backdrop-blur-sm border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                        className="relative rounded-xl border-2 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 overflow-hidden"
                         style={{
                           borderColor: result.success
-                            ? "rgba(6, 182, 212, 0.3)"
-                            : "rgba(239, 68, 68, 0.3)",
-                          backgroundColor: result.success
-                            ? "rgba(6, 182, 212, 0.05)"
-                            : "rgba(239, 68, 68, 0.05)",
+                            ? "rgba(6,182,212,0.3)"
+                            : "rgba(239,68,68,0.3)",
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
-                        <div className="relative p-4 sm:p-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={cn(
-                                    "inline-flex items-center justify-center w-8 h-8 rounded-lg",
-                                    result.success
-                                      ? "bg-gradient-to-br from-cyan-400 to-blue-500"
-                                      : "bg-gradient-to-br from-red-400 to-orange-500"
-                                  )}
-                                >
-                                  {result.success ? (
-                                    <PiCheckCircleDuotone className="h-5 w-5 text-white" />
-                                  ) : (
-                                    <PiXCircleDuotone className="h-5 w-5 text-white" />
-                                  )}
-                                </div>
-                                <div>
-                                  <Text className="text-base sm:text-lg font-bold text-white capitalize">
-                                    {result.project}
-                                  </Text>
-                                  <Text className="text-sm text-gray-400">
-                                    {result.useCase}
-                                  </Text>
-                                </div>
-                              </div>
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center",
+                                result.success
+                                  ? "bg-gradient-to-br from-cyan-400 to-blue-500"
+                                  : "bg-gradient-to-br from-red-400 to-orange-500"
+                              )}
+                            >
+                              {result.success ? (
+                                <PiCheckCircleDuotone className="h-5 w-5 text-white" />
+                              ) : (
+                                <PiXCircleDuotone className="h-5 w-5 text-white" />
+                              )}
                             </div>
-                            <div className="flex items-center gap-4 sm:gap-6">
-                              <div className="text-center">
-                                <Text className="text-xs text-gray-400 mb-1">
-                                  Score
-                                </Text>
-                                <Text className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                                  {result.score}
-                                </Text>
+                            <div className="flex-1">
+                              <Text className="font-bold text-white capitalize">
+                                {result.project} - {result.useCase}
+                              </Text>
+                            </div>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="text-cyan-300 font-bold">
+                                Prompt:
+                              </span>{" "}
+                              <span className="text-gray-700">
+                                {result.prompt || "N/A"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-cyan-300 font-bold">
+                                Success:
+                              </span>{" "}
+                              <span
+                                className={
+                                  result.success
+                                    ? "text-green-400"
+                                    : "text-red-400"
+                                }
+                              >
+                                {result.success ? "True" : "False"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-cyan-300 font-bold">
+                                Time:
+                              </span>{" "}
+                              <span className="text-yellow-300">
+                                {result.duration.toFixed(2)}s
+                              </span>
+                            </div>
+                            <div className="pt-2 border-t border-cyan-500/20">
+                              <div className="text-cyan-300 font-bold mb-2">
+                                Actions:
                               </div>
-                              <div className="text-center">
-                                <Text className="text-xs text-gray-400 mb-1">
-                                  Time
-                                </Text>
-                                <Text className="text-lg sm:text-xl font-bold text-cyan-300">
-                                  {result.duration.toFixed(2)}s
-                                </Text>
-                              </div>
+                              {result.actions && result.actions.length > 0 ? (
+                                <div className="space-y-1 max-h-40 overflow-y-auto">
+                                  {result.actions.map(
+                                    (action: any, idx: number) => (
+                                      <div
+                                        key={idx}
+                                        className="text-xs bg-cyan-500/10 border border-cyan-500/20 rounded p-2"
+                                      >
+                                        <div className="text-cyan-400 font-bold">
+                                          {action.type}
+                                        </div>
+                                        {action.text && (
+                                          <div className="text-gray-700 mt-1">
+                                            Text: "{action.text}"
+                                          </div>
+                                        )}
+                                        {action.url && (
+                                          <div className="text-blue-400 mt-1 truncate">
+                                            URL: {action.url}
+                                          </div>
+                                        )}
+                                        {action.selector?.value && (
+                                          <div className="text-gray-400 mt-1 text-xs truncate">
+                                            Selector: {action.selector.value}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-xs text-gray-600">
+                                  No actions recorded
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <span className="text-cyan-300 font-bold">
+                                GIF:
+                              </span>{" "}
+                              <span className="text-gray-500 italic">
+                                {result.gif ? "Available" : "Coming soon"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -672,8 +771,8 @@ export default function TestAgent() {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 p-6 sm:p-8 border-t border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
-                  <Text className="text-sm text-gray-300">
+                <div className="relative flex flex-col sm:flex-row items-center justify-between px-4 py-2 gap-4 border-t border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
+                  <Text className="text-sm text-gray-700">
                     Completed {results.length} test
                     {results.length !== 1 ? "s" : ""} • Success Rate:{" "}
                     {calculateSuccessRate()}%

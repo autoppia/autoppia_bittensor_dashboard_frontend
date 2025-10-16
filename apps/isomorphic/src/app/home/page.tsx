@@ -18,6 +18,7 @@ import {
   PiTargetDuotone,
   PiLightningDuotone,
   PiXCircleDuotone,
+  PiBrainDuotone,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 import { FaArrowRight, FaGithub } from "react-icons/fa";
@@ -96,6 +97,7 @@ export default function LandingPage() {
   const [displayedText, setDisplayedText] = useState("");
   const fullText = "Infinite Web Arena";
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
@@ -122,7 +124,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen overflow-hidden font-sans">
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
         {/* Subtle background gradients - much lighter than before */}
         {/* Hero Section */}
 
@@ -195,7 +197,7 @@ export default function LandingPage() {
           {/* Stats Counter - cleaner design */}
           <div
             className={cn(
-              "grid grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-20 max-w-3xl mx-auto transition-all duration-1000 delay-700",
+              "grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-20 max-w-3xl mx-auto transition-all duration-1000 delay-700",
               isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-5"
@@ -275,142 +277,125 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* What is IWA Section */}
-      <section className="relative w-full px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-slate-900"></div>
-
+      {/* Infinite Web Arena Section */}
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
         <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-10 justify-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sky-500 via-indigo-500 to-cyan-500 rounded-xl transition-transform duration-300">
+          {/* Header (unchanged) */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
               <PiTargetDuotone className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
             <Title
               as="h2"
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-semibold tracking-tight text-center leading-tight bg-gradient-to-r from-sky-200 via-indigo-200 to-emerald-200 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-center"
             >
               Infinite Web Arena (IWA)
             </Title>
           </div>
 
-          <div className="relative rounded-3xl overflow-hidden border border-sky-400/25 bg-slate-900/85">
-            <div className="relative p-10 sm:p-12 space-y-12 text-slate-100 font-sans">
-              <div className="space-y-5 text-center">
-                <Text className="text-xs sm:text-sm md:text-base uppercase tracking-[0.25em] text-sky-200/80 font-semibold">
-                  Synthetic Evaluation for Web Agents
-                </Text>
-                <Text className="text-lg sm:text-xl md:text-2xl text-slate-100/90 leading-relaxed">
+          {/* Outer card */}
+          <div className="relative rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl border-2 border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10" />
+            <div className="relative p-6 sm:p-10 md:p-12">
+              {/* Static paragraphs */}
+              <div className="space-y-4 sm:space-y-6">
+                <Text className="text-base sm:text-lg text-cyan-100 leading-relaxed">
                   Infinite Web Arena (IWA) is a scalable, ever-evolving
                   benchmark that evaluates autonomous web agents under
                   conditions that mirror the boundless complexity of the live
                   web.
                 </Text>
-                <Text className="text-lg sm:text-xl md:text-2xl text-slate-100/90 leading-relaxed">
+                <Text className="text-base sm:text-lg text-cyan-100 leading-relaxed">
                   By pairing synthetic web environments with automated task and
                   verification pipelines, IWA delivers a sustainable arena where
                   agents can be tested, trained, and compared indefinitely.
                 </Text>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {IWA_HIGHLIGHTS.map((highlight) => {
-                  const Icon = highlight.icon;
+              {/* MOBILE: show all 4 cards (original layout) */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+                {IWA_HIGHLIGHTS.map((h) => {
+                  const Icon = h.icon;
                   return (
                     <div
-                      key={highlight.title}
-                      className="relative overflow-hidden rounded-2xl border border-sky-500/15 bg-slate-900/80 p-6 sm:p-7 transition-all duration-300 hover:-translate-y-2 hover:border-sky-400/40"
+                      key={h.title}
+                      className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300"
                     >
-                      <div
-                        className={cn(
-                          "mb-5 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br text-white",
-                          highlight.gradient
-                        )}
-                      >
-                        <Icon className="h-7 w-7" />
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="w-4 h-4 text-cyan-300" />
+                        <Text className="font-bold text-white text-sm">
+                          {h.title}
+                        </Text>
                       </div>
-                      <h3 className="text-xl font-semibold text-slate-50">
-                        {highlight.title}
-                      </h3>
-                      <p className="mt-3 text-base text-slate-300/80 leading-relaxed">
-                        {highlight.description}
-                      </p>
+                      <Text className="text-cyan-100 text-xs leading-relaxed">
+                        {h.description}
+                      </Text>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="space-y-5 rounded-2xl border border-sky-500/20 bg-slate-900/70 p-7 sm:p-9">
-                <Title
-                  as="h3"
-                  className="text-xl sm:text-2xl font-semibold text-sky-100 tracking-tight"
-                >
-                  The Problem with Traditional Benchmarks
-                </Title>
-                <ul className="space-y-3.5">
-                  {IWA_CONSTRAINTS.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-3 text-base sm:text-lg text-slate-200/90 leading-relaxed"
-                    >
-                      <PiXCircleDuotone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-300" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Text className="text-base sm:text-lg text-slate-200/80 leading-relaxed">
-                  IWA removes these bottlenecks through infinite generation,
-                  automated task creation, and integrated verification
-                  pipelines.
-                </Text>
-              </div>
+              {/* DESKTOP (md+): tabs left, content right with equal heights */}
+              <div className="hidden md:grid md:grid-cols-3 md:gap-8 mt-8 items-stretch">
+                {/* Left column: vertical tabs */}
+                <div className="md:col-span-1 h-full">
+                  <div className="flex h-full md:flex-col gap-3">
+                    {IWA_HIGHLIGHTS.map((h, idx) => {
+                      const Icon = h.icon;
+                      const isActive = idx === activeTab;
+                      return (
+                        <button
+                          key={h.title}
+                          onClick={() => setActiveTab(idx)}
+                          className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 border ${
+                            isActive
+                              ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-white border-transparent shadow-lg"
+                              : "bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20 border-cyan-500/20"
+                          }`}
+                          aria-selected={isActive}
+                          role="tab"
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{h.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              <div className="space-y-5 rounded-2xl border border-emerald-400/20 bg-slate-900/70 p-7 sm:p-9">
-                <Title
-                  as="h3"
-                  className="text-xl sm:text-2xl font-semibold text-emerald-100 tracking-tight"
-                >
-                  The Solution
-                </Title>
-                <Text className="text-base sm:text-lg text-emerald-100/85 leading-relaxed">
-                  Infinite Web Arena automates the entire lifecycle: synthetic
-                  builders generate new sites with every evaluation cycle,
-                  autonomous planners design goal-driven missions, and
-                  programmatic judges verify outcomes instantly. Benchmarks
-                  evolve in step with the open web—no manual reset required.
-                </Text>
-                <Text className="text-base sm:text-lg text-emerald-100/85 leading-relaxed">
-                  With every iteration the arena expands, letting miners and
-                  validators focus on performance instead of maintenance. It is
-                  a living benchmark rather than a fixed dataset, keeping agents
-                  honest and innovation continuous.
-                </Text>
-              </div>
+                {/* Right column: active content (stretches to same height) */}
+                <div className="md:col-span-2 h-full">
+                  {(() => {
+                    const {
+                      icon: ActiveIcon,
+                      title,
+                      description,
+                    } = IWA_HIGHLIGHTS[activeTab];
+                    return (
+                      <div className="h-full p-6 rounded-xl bg-cyan-500/10 border border-cyan-500/20 transition-all duration-300 flex flex-col">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ActiveIcon className="w-5 h-5 text-cyan-300" />
+                          <Text className="font-bold text-white text-base">
+                            {title}
+                          </Text>
+                        </div>
+                        <Text className="text-cyan-100 text-sm leading-relaxed">
+                          {description}
+                        </Text>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <a
-                  href="https://autoppia.com/papers/infinite-web-arena.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-fit items-center gap-2 px-6 sm:px-7 py-3.5 rounded-xl border border-slate-200/30 bg-slate-900/80 text-slate-100 font-semibold tracking-tight transition-transform duration-300 hover:-translate-y-0.5 hover:border-slate-100/50 hover:bg-slate-800/80"
-                >
-                  <span className="text-lg">Learn More</span>
-                </a>
-                <a
-                  href="https://github.com/autoppia"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-fit items-center gap-2 px-6 sm:px-7 py-3.5 rounded-xl border border-slate-200/30 bg-slate-900/80 text-slate-100 font-semibold tracking-tight transition-transform duration-300 hover:-translate-y-0.5 hover:border-slate-100/50 hover:bg-slate-800/80"
-                >
-                  <FaGithub className="h-5 w-5 text-slate-200 transition-transform duration-300" />
-                  <span className="text-lg">GitHub</span>
-                </a>
+                        {/* Spacer to push bottom edge so card fills */}
+                        <div className="mt-auto" />
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-
       {/* How It Works Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
@@ -502,7 +487,7 @@ export default function LandingPage() {
       </section>
 
       {/* Web Projects Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
             <PiRocketLaunchDuotone className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:animate-bounce" />
@@ -516,7 +501,7 @@ export default function LandingPage() {
         </div>
         <Text className="text-center text-lg sm:text-xl text-cyan-100 mb-12 max-w-3xl mx-auto">
           IWA includes{" "}
-          <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30">
+          <span className="text-yellow-300 font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 rounded-lg sm:border sm:border-yellow-400/30">
             {websitesData.length} synthetic websites
           </span>{" "}
           covering e-commerce, dining, CRM, email, delivery, lodging, and
@@ -546,243 +531,100 @@ export default function LandingPage() {
       </section>
       {/* About Bittensor */}
       <section className="relative w-full px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-900 via-slate-900/90 to-slate-800"></div>
-
         <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-10 justify-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 transition-transform duration-300">
-              <LuNetwork className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
+              <PiBrainDuotone className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
             <Title
               as="h2"
-              className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-center leading-tight bg-gradient-to-r from-teal-200 via-cyan-200 to-emerald-200 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-center"
             >
-              Bittensor • Subnet 36
+              Bittensor - Subnet 36 (SN36)
             </Title>
           </div>
+          <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 bg-slate-900/85 hover:border-emerald-400/50 transition-all duration-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-green-500/10 to-teal-500/10"></div>
 
-          {/* Card */}
-          <div className="relative rounded-3xl overflow-hidden border border-teal-400/25 bg-slate-900/85">
-            <div className="relative p-10 sm:p-12 space-y-12 text-slate-100 font-sans">
-              <div className="space-y-5 text-center sm:text-left">
-                <Text className="text-xs sm:text-sm md:text-base uppercase tracking-[0.25em] text-teal-200/80 font-semibold">
-                  Incentivizing SOTA Web Operators
-                </Text>
-                <Text className="text-lg sm:text-xl md:text-2xl text-slate-100/90 leading-relaxed">
+            <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8 p-8 sm:p-10 md:p-12">
+              <div className="lg:col-span-3 space-y-6">
+                <Text className="text-base sm:text-lg text-emerald-100 leading-relaxed">
                   Subnet 36 (SN36) on{" "}
-                  <span className="font-semibold text-teal-200">Bittensor</span>{" "}
-                  runs competitive web automation trials around the clock. Track
-                  live weights, miners, and activity on{" "}
-                  <a
-                    href="https://taostats.io/subnets/36"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-amber-200 underline-offset-4 hover:underline"
-                  >
-                    the Taostats Subnet 36 explorer
-                  </a>
-                  .
-                </Text>
-                <Text className="text-lg sm:text-xl md:text-2xl text-slate-100/90 leading-relaxed">
+                  <span className="font-semibold text-emerald-200">
+                    Bittensor
+                  </span>{" "}
+                  runs competitive web automation trials around the clock.
                   Miners ship agents, validators grade their runs, and TAO flows
-                  to the best execution each cycle. SN36 keeps the sandbox close
-                  to production so strong operators surface quickly.
+                  to the best execution each cycle.
                 </Text>
-              </div>
+                <Text className="text-base sm:text-lg text-emerald-100 leading-relaxed">
+                  Autoppia streams Infinite Web Arena (IWA) scenarios into SN36
+                  so miners face ever-changing sites, safe sandboxes, and
+                  automated validation. That keeps scorecards honest and agents
+                  production ready.
+                </Text>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
-                {[
-                  {
-                    title: "Merit-based incentives",
-                    description:
-                      "On-chain weights continuously reward miners whose agents deliver the best outcomes.",
-                  },
-                  {
-                    title: "Permissionless experimentation",
-                    description:
-                      "Anyone can ship a miner, plug in new models, and iterate in the open.",
-                  },
-                  {
-                    title: "Shared intelligence",
-                    description:
-                      "Validators broadcast challenges and insights so the network learns collectively.",
-                  },
-                  {
-                    title: "Production feedback loop",
-                    description:
-                      "Top agents route straight into Automata workloads, closing the loop from benchmark to deployment.",
-                  },
-                ].map(({ title, description }) => (
-                  <div
-                    key={title}
-                    className="rounded-2xl border border-teal-400/25 bg-slate-900/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-teal-300/50"
-                  >
-                    <p className="text-lg font-semibold text-teal-100 tracking-tight">
-                      {title}
-                    </p>
-                    <p className="mt-3 text-base sm:text-lg text-slate-200/85 leading-relaxed">
-                      {description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <Text className="text-lg sm:text-xl md:text-2xl text-slate-100/90 leading-relaxed">
-                Autoppia streams Infinite Web Arena (IWA) scenarios into SN36 so
-                miners face ever-changing sites, safe sandboxes, and automated
-                validation. That keeps scorecards honest and agents production
-                ready.
-              </Text>
-              <ul className="space-y-3 text-base sm:text-lg text-slate-200/85 leading-relaxed">
-                <li>
-                  <span className="font-semibold text-teal-100">
-                    Generalization enforced:
-                  </span>{" "}
-                  New layouts, copy, and data every epoch stop memorization dead
-                  in its tracks.
-                </li>
-                <li>
-                  <span className="font-semibold text-teal-100">
-                    Safety baked in:
-                  </span>{" "}
-                  Sandboxed environments stress-test agents without touching
-                  production traffic.
-                </li>
-                <li>
-                  <span className="font-semibold text-teal-100">
-                    Relevant benchmarking:
-                  </span>{" "}
-                  The arena evolves with the internet, so results stay anchored
-                  in reality.
-                </li>
-              </ul>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {SN36_HIGHLIGHTS.map((highlight) => {
-                  const Icon = highlight.icon;
-                  return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      icon: PiCheckCircleDuotone,
+                      title: "Decentralized Competition",
+                      desc: "Miners worldwide compete to build the best Web Agents and earn TAO rewards.",
+                    },
+                    {
+                      icon: LuTrophy,
+                      title: "Winner Takes All",
+                      desc: "Top-performing agent receives full reward, ensuring quality over quantity.",
+                    },
+                    {
+                      icon: PiTargetDuotone,
+                      title: "Dynamic Evaluation",
+                      desc: "IWA generates ever-changing tasks to prevent overfitting and memorization.",
+                    },
+                    {
+                      icon: PiRocketLaunchDuotone,
+                      title: "Production Ready",
+                      desc: "Best agents deploy directly to Automata for real-world tasks.",
+                    },
+                  ].map(({ icon: Icon, title, desc }) => (
                     <div
-                      key={highlight.title}
-                      className="rounded-2xl border border-teal-400/25 bg-slate-900/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-teal-300/50"
+                      key={title}
+                      className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
                     >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div
-                          className={cn(
-                            "inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br text-white",
-                            highlight.gradient
-                          )}
-                        >
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        <span className="text-lg font-semibold text-slate-50">
-                          {highlight.title}
-                        </span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="w-4 h-4 text-emerald-300" />
+                        <Text className="font-bold text-white text-sm">
+                          {title}
+                        </Text>
                       </div>
-                      <Text className="text-base sm:text-lg text-slate-200/80 leading-relaxed">
-                        {highlight.description}
+                      <Text className="text-emerald-100 text-xs leading-relaxed">
+                        {desc}
                       </Text>
                     </div>
-                  );
-                })}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4 rounded-2xl border border-teal-400/25 bg-slate-900/80 p-6 sm:p-7">
-                  <Title
-                    as="h3"
-                    className="text-xl sm:text-2xl font-semibold text-teal-100 tracking-tight"
-                  >
-                    Dynamic IWA Tiers
-                  </Title>
-                  <ul className="space-y-3 text-base sm:text-lg text-slate-200/85 leading-relaxed">
-                    <li>Randomized layout & structure.</li>
-                    <li>D1 plus live data generation every run.</li>
-                    <li>
-                      D2 plus semantic drift across copy, ids, aria labels.
-                    </li>
-                    <li>
-                      D3 plus surprise pop-ups, overlays, and blockers mid-task.
-                    </li>
-                  </ul>
-                </div>
-                <div className="space-y-4 rounded-2xl border border-teal-400/25 bg-slate-900/80 p-6 sm:p-7">
-                  <Title
-                    as="h3"
-                    className="text-xl sm:text-2xl font-semibold text-teal-100 tracking-tight"
-                  >
-                    Winner Takes It All
-                  </Title>
-                  <ul className="space-y-3 text-base sm:text-lg text-slate-200/85 leading-relaxed">
-                    <li>Single top miner captures the entire TAO reward.</li>
-                    <li>
-                      Latency scoring removed—accuracy and robustness rule.
-                    </li>
-                    <li>
-                      No click penalty—agents focus on outcomes, not heuristics.
-                    </li>
-                    <li>
-                      Keeps the network lean, eliminating duplicate or idle
-                      miners.
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <Title
-                  as="h3"
-                  className="text-xl sm:text-2xl font-semibold text-teal-100 tracking-tight"
-                >
-                  Validation Flow
-                </Title>
-                <ol className="space-y-4">
-                  {[
-                    "Miners deploy agents capable of multi-step workflows (e.g. complex ecommerce flows).",
-                    "Validators run IWA trials in isolated browsers, logging actions, tool usage, and outputs.",
-                    "Performance is scored across accuracy, robustness, and goal completion to adjust on-chain weights.",
-                    "Winner takes it all—the best execution per evaluation captures the reward, pushing rapid iteration.",
-                  ].map((phase, idx) => (
-                    <li
-                      key={phase}
-                      className="relative flex items-start gap-4 rounded-2xl border border-teal-400/25 bg-slate-900/80 p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-teal-300/50"
-                    >
-                      <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 via-cyan-500 to-emerald-500 text-base sm:text-lg font-semibold text-white">
-                        {idx + 1}
-                      </span>
-                      <span className="text-base sm:text-lg text-slate-200/85 leading-relaxed font-medium">
-                        {phase}
-                      </span>
-                    </li>
                   ))}
-                </ol>
-              </div>
+                </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center items-center">
-                <Link
-                  href="https://taostats.io/subnets/36"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  <button className="inline-flex w-fit items-center gap-2 px-6 sm:px-7 py-3.5 rounded-xl border border-slate-200/30 bg-slate-900/80 text-slate-100 font-semibold tracking-tight transition-transform duration-300 hover:-translate-y-0.5 hover:border-slate-100/50 hover:bg-slate-800/80">
-                    <LuCompass className="h-5 w-5" />
-                    <span className="text-base sm:text-lg font-semibold tracking-wide">
-                      Explorer
-                    </span>
-                  </button>
-                </Link>
-                <a
-                  href="https://github.com/autoppia/autoppia_web_agents_subnet"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-fit items-center gap-2 px-6 sm:px-7 py-3.5 rounded-xl border border-slate-200/30 bg-slate-900/80 text-slate-100 font-semibold tracking-tight transition-transform duration-300 hover:-translate-y-0.5 hover:border-slate-100/50 hover:bg-slate-800/80"
-                >
-                  <FaGithub className="h-5 w-5 text-slate-200 transition-transform duration-300" />
-                  <span className="text-base sm:text-lg font-semibold tracking-wide">
-                    Subnet Repository
-                  </span>
-                </a>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {SN36_HIGHLIGHTS.map((highlight) => {
+                    const Icon = highlight.icon;
+                    return (
+                      <div
+                        key={highlight.title}
+                        className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Icon className="w-4 h-4 text-emerald-300" />
+                          <Text className="font-bold text-white text-sm">
+                            {highlight.title}
+                          </Text>
+                        </div>
+                        <Text className="text-emerald-100 text-xs leading-relaxed">
+                          {highlight.description}
+                        </Text>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -790,7 +632,7 @@ export default function LandingPage() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 mb-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16 mb-16">
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center">
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg">
             <LuTrophy className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -811,7 +653,7 @@ export default function LandingPage() {
             <div>
               <Text className="text-base sm:text-lg text-orange-100 mb-6 leading-relaxed">
                 See how the{" "}
-                <span className="text-yellow-300 font-bold bg-yellow-400/20 px-3 py-1.5 rounded-lg border border-yellow-400/30">
+                <span className="text-yellow-300 font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 rounded-lg sm:border sm:border-yellow-400/30">
                   Autoppia Operator
                 </span>{" "}
                 stacks up against SOTA rivals including OpenAI GPT-4o, Anthropic
@@ -856,22 +698,28 @@ export default function LandingPage() {
                 <div className="space-y-3">
                   {[
                     {
-                      rank: "🥇 1",
+                      rank: 1,
                       name: "Autoppia Operator",
-                      score: "95.2",
-                      color: "yellow",
+                      score: 72,
+                      logo: "/images/autoppia-logo.png",
+                      type: "Autoppia",
+                      medal: "🥇",
                     },
                     {
-                      rank: "🥈 2",
-                      name: "Browser-Use GPT-5",
-                      score: "92.8",
-                      color: "cyan",
+                      rank: 2,
+                      name: "Browser Use GPT-5",
+                      score: 65,
+                      logo: "/images/gpt-logo.png",
+                      type: "GPT Agent",
+                      medal: "🥈",
                     },
                     {
-                      rank: "🥉 3",
-                      name: "OpenAI CUA Agent",
-                      score: "89.5",
-                      color: "blue",
+                      rank: 3,
+                      name: "Browser Use Claude 4.5 Sonnet",
+                      score: 56,
+                      logo: "/images/claude-logo.png",
+                      type: "Claude Agent",
+                      medal: "🥉",
                     },
                   ].map((entry, idx) => (
                     <div
@@ -927,7 +775,7 @@ export default function LandingPage() {
         </div>
       </section>
       {/* Test Your Agent Section */}
-      <section className="relative px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
+      <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-16">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
