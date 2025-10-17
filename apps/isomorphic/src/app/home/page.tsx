@@ -300,15 +300,21 @@ export default function LandingPage() {
               {/* Static paragraphs */}
               <div className="space-y-4 sm:space-y-6">
                 <Text className="text-base sm:text-lg text-cyan-100 leading-relaxed">
-                  Infinite Web Arena (IWA) is a scalable, ever-evolving
-                  benchmark that evaluates autonomous web agents under
-                  conditions that mirror the boundless complexity of the live
-                  web.
+                  <span className="text-cyan-300 font-bold sm:bg-cyan-500/10 sm:px-3 sm:py-1.5 rounded-lg animate-glow sm:border border-cyan-400/30">
+                    Infinite Web Arena (IWA)
+                  </span>{" "}
+                  is a scalable, ever-evolving benchmark that evaluates
+                  autonomous web agents under conditions that mirror the
+                  boundless complexity of the live web.
                 </Text>
                 <Text className="text-base sm:text-lg text-cyan-100 leading-relaxed">
-                  By pairing synthetic web environments with automated task and
-                  verification pipelines, IWA delivers a sustainable arena where
-                  agents can be tested, trained, and compared indefinitely.
+                  By pairing{" "}
+                  <span className="text-cyan-300 font-bold sm:bg-cyan-500/10 sm:px-3 sm:py-1.5 rounded-lg animate-glow sm:border border-cyan-400/30">
+                    synthetic
+                  </span>{" "}
+                  web environments with automated task and verification
+                  pipelines, IWA delivers a sustainable arena where agents can
+                  be tested, trained, and compared indefinitely.
                 </Text>
               </div>
 
@@ -533,12 +539,12 @@ export default function LandingPage() {
       <section className="relative w-full px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto py-16 md:py-24 overflow-hidden">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 justify-center group">
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 group-hover:rotate-12">
               <PiBrainDuotone className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
             <Title
               as="h2"
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-center"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-emerald-200 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-center"
             >
               Bittensor - Subnet 36 (SN36)
             </Title>
@@ -550,7 +556,7 @@ export default function LandingPage() {
               <div className="lg:col-span-3 space-y-6">
                 <Text className="text-base sm:text-lg text-emerald-100 leading-relaxed">
                   Subnet 36 (SN36) on{" "}
-                  <span className="font-semibold text-emerald-200">
+                  <span className="text-emerald-200 font-bold sm:bg-emerald-500/10 sm:px-3 sm:py-1.5 rounded-lg animate-glow sm:border border-cyan-400/30">
                     Bittensor
                   </span>{" "}
                   runs competitive web automation trials around the clock.
@@ -558,10 +564,13 @@ export default function LandingPage() {
                   to the best execution each cycle.
                 </Text>
                 <Text className="text-base sm:text-lg text-emerald-100 leading-relaxed">
-                  Autoppia streams Infinite Web Arena (IWA) scenarios into SN36
-                  so miners face ever-changing sites, safe sandboxes, and
-                  automated validation. That keeps scorecards honest and agents
-                  production ready.
+                  Autoppia streams{" "}
+                  <span className="text-emerald-200 font-bold sm:bg-emerald-500/10 sm:px-3 sm:py-1.5 rounded-lg animate-glow sm:border border-cyan-400/30">
+                    Infinite Web Arena (IWA)
+                  </span>{" "}
+                  scenarios into SN36 so miners face ever-changing sites, safe
+                  sandboxes, and automated validation. That keeps scorecards
+                  honest and agents production ready.
                 </Text>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -583,7 +592,7 @@ export default function LandingPage() {
                     },
                     {
                       icon: PiRocketLaunchDuotone,
-                      title: "Production Ready",
+                      title: "Top Miner will be Automata",
                       desc: "Best agents deploy directly to Automata for real-world tasks.",
                     },
                   ].map(({ icon: Icon, title, desc }) => (
