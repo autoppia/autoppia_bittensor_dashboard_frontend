@@ -82,17 +82,12 @@ export default function Header() {
               style={{ width: "auto", maxWidth: "100%" }}
             />
           </Link>
-          <div className="hidden xl:flex items-center min-w-0 max-w-full overflow-hidden">
+          <div className="hidden xl:flex items-center min-w-0 max-w-full">
             {menuItems.map((item, index) => {
               const href = item?.href as string;
               const isActive =
                 pathname === href ||
                 (href !== "/" && pathname.startsWith(href));
-
-              // Check if we need to add a separator
-              const prevItem = index > 0 ? menuItems[index - 1] : null;
-              const needsSeparator =
-                prevItem && prevItem.section !== item.section;
 
               return (
                 <Fragment key={item.name + "-" + index}>
