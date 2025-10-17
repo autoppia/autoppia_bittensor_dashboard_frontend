@@ -83,30 +83,32 @@ export default function Overview() {
             >
               Subnet 36 - Web Agents
             </Title>
-            <button
-              onClick={handleOpenTimeline}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
-            >
-              <FaPlay className="h-3.5 w-3.5 text-black" />
-              Replay
-            </button>
           </div>
           <OverviewMinerChart className="w-full min-w-0" />
         </div>
         <div className="w-full lg:w-[460px] min-w-0">
           <div className="mb-4 flex items-center justify-between gap-3 min-w-0">
-            <span className="text-sm text-gray-500 font-medium min-w-0">
-              IM Version 1.0.0
+            <span className="inline-flex items-center rounded-md bg-sky-500/10 px-3 py-1 text-sm font-semibold text-sky-500 min-w-0">
+              IM: Dynamic Zero V1
             </span>
-            <Link
-              href="https://github.com/autoppia/autoppia_bittensor_dashboard_frontend"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-500/10 rounded-lg transition-all duration-300 flex-shrink-0"
-              title="View Subnet Repository"
-            >
-              <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleOpenTimeline}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
+              >
+                <FaPlay className="h-3.5 w-3.5 text-black" />
+                Replay
+              </button>
+              <Link
+                href="https://github.com/autoppia/autoppia_web_agents_subnet"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
+                title="View Subnet Repository"
+              >
+                <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+              </Link>
+            </div>
           </div>
           <OverviewMetrics className="w-full min-w-0" />
         </div>

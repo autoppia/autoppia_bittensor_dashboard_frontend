@@ -80,7 +80,7 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl",
+        "relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl",
         className
       )}
     >
@@ -90,24 +90,24 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
       <div className="relative mb-8">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+            <div className="rounded-xl border border-slate-700/20 bg-slate-800/20 p-3">
               <Placeholder
                 variant="circular"
                 width={28}
                 height={28}
-                className="bg-slate-700"
+                className="bg-slate-700/30"
               />
             </div>
             <div className="space-y-2">
               <Placeholder
                 height="1.5rem"
                 width="14rem"
-                className="bg-slate-700/80"
+                className="bg-slate-700/30"
               />
               <Placeholder
                 height="1rem"
                 width="18rem"
-                className="bg-slate-800/80"
+                className="bg-slate-800/30"
               />
             </div>
           </div>
@@ -116,18 +116,18 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
             <Placeholder
               height="1rem"
               width="4rem"
-              className="hidden rounded-full bg-slate-800/70 md:block"
+              className="hidden rounded-full bg-slate-700/25 md:block"
             />
             <div className="flex items-center gap-2">
               <Placeholder
                 height="2.25rem"
                 width="5.5rem"
-                className="rounded-lg bg-slate-800/70"
+                className="rounded-lg bg-slate-700/25"
               />
               <Placeholder
                 height="2.25rem"
                 width="7.5rem"
-                className="rounded-lg bg-slate-800/70"
+                className="rounded-lg bg-slate-700/25"
               />
             </div>
           </div>
@@ -138,7 +138,7 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
         {progressWidths.map((progressWidth, index) => (
           <div
             key={`placeholder-card-${index}`}
-            className="relative rounded-xl border border-slate-700/50 bg-slate-900/60 p-5"
+            className="relative rounded-xl border border-slate-700/20 bg-slate-800/20 p-5"
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -146,39 +146,39 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
                   variant="circular"
                   width={12}
                   height={12}
-                  className="bg-slate-600"
+                  className="bg-slate-600/40"
                 />
                 <Placeholder
                   height="1.1rem"
                   width="8rem"
-                  className="bg-slate-700/80"
+                  className="bg-slate-700/30"
                 />
                 <Placeholder
                   height="1.1rem"
                   width="5rem"
-                  className="rounded-full bg-slate-800/60"
+                  className="rounded-full bg-slate-700/25"
                 />
               </div>
               <div className="space-y-2 text-right">
                 <Placeholder
                   height="1.75rem"
                   width="3.5rem"
-                  className="bg-slate-700/70"
+                  className="bg-slate-700/30"
                 />
                 <Placeholder
                   height="1rem"
                   width="10rem"
-                  className="bg-slate-800/60"
+                  className="bg-slate-800/25"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
+              <div className="h-4 w-full overflow-hidden rounded-full bg-slate-700/25">
                 <Placeholder
                   height="100%"
                   width={progressWidth}
-                  className="bg-slate-700/80"
+                  className="bg-slate-700/30"
                 />
               </div>
               <div className="flex justify-between">
@@ -187,7 +187,7 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
                     key={`marker-${markerIndex}`}
                     height="0.75rem"
                     width="2.25rem"
-                    className="bg-slate-800/60"
+                    className="bg-slate-800/20"
                   />
                 ))}
               </div>
@@ -197,17 +197,17 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
               {Array.from({ length: 2 }, (_, metricIndex) => (
                 <div
                   key={`metric-${metricIndex}`}
-                  className="rounded-lg border border-slate-700/50 bg-slate-800/50 p-3"
+                  className="rounded-lg border border-slate-700/20 bg-slate-800/20 p-3"
                 >
                   <Placeholder
                     height="0.85rem"
                     width="70%"
-                    className="mb-2 bg-slate-700/70"
+                    className="mb-2 bg-slate-700/25"
                   />
                   <Placeholder
                     height="1.4rem"
                     width="50%"
-                    className="bg-slate-600/70"
+                    className="bg-slate-600/35"
                   />
                 </div>
               ))}

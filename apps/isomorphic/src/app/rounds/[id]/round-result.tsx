@@ -1,33 +1,61 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import RoundStats from "./round-stats";
 import RoundValidators from "./round-validators";
 import RoundMinerScores from "./round-miner-scores";
 import RoundTopMiners from "./round-top-miners";
-import PageHeader from "@/app/shared/page-header";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
 import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiXCircleDuotone, PiCodeDuotone } from "react-icons/pi";
 import { useRoundValidators, useTopMiners, useRoundStatistics } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
+import type { ValidatorPerformance, MinerPerformance } from "@/services/api/types/rounds";
 
 export default function RoundResult() {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
+  const roundDisplay = roundKey?.match(/\d+/);
+  const roundLabel = roundDisplay ? parseInt(roundDisplay[0], 10) : roundKey;
   
   // Get data from API
-  const { data: validatorsData, loading: validatorsLoading } = useRoundValidators(roundId);
-  const { data: topMiners, loading: minersLoading } = useTopMiners(roundId, 1);
-  const { data: statistics, loading: statsLoading } = useRoundStatistics(roundId);
+  const { data: validatorsData, loading: validatorsLoading } = useRoundValidators(roundKey);
+  const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
+  const { data: statistics, loading: statsLoading } = useRoundStatistics(roundKey);
   
   const loading = validatorsLoading || minersLoading || statsLoading;
   
+  const topMiner: MinerPerformance | null = useMemo(() => {
+    if (!Array.isArray(topMiners) || topMiners.length === 0) {
+      return null;
+    }
+    return topMiners[0] ?? null;
+  }, [topMiners]);
+
+  const topMinerValidator = useMemo(() => {
+    if (!topMiner || !validatorsData) {
+      return null;
+    }
+    return validatorsData.find((validator) => validator.id === topMiner.validatorId) ?? null;
+  }, [topMiner, validatorsData]);
+
+  const winnerName = topMiner?.name && topMiner.name.trim().length > 0 ? topMiner.name : topMiner ? `Miner ${topMiner.uid}` : "No winner yet";
+  const winnerHotkey = topMiner?.hotkey
+    ? `${topMiner.hotkey.slice(0, 6)}...${topMiner.hotkey.slice(-6)}`
+    : topMiner
+      ? `UID ${topMiner.uid}`
+      : "No hotkey";
+  const winnerScore = topMiner ? (topMiner.score * 100).toFixed(1) : null;
+  const winnerTasksCompleted = topMiner?.tasksCompleted ?? 0;
+  const winnerTasksTotal = topMiner?.tasksTotal ?? 0;
+  const winnerValidatorName = topMinerValidator?.name ?? (topMiner?.validatorId ? topMiner.validatorId.replace("validator-", "Validator ") : null);
+  
   // State for selected validator
-  const [selectedValidator, setSelectedValidator] = React.useState<any>(null);
+  const [selectedValidator, setSelectedValidator] = React.useState<ValidatorPerformance | null>(null);
   
   // Handle validator selection
-  const handleValidatorSelect = (validator: any) => {
+  const handleValidatorSelect = (validator: ValidatorPerformance) => {
     setSelectedValidator(validator);
   };
 
@@ -48,36 +76,12 @@ export default function RoundResult() {
           <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-100/80 to-blue-50/80 rounded-2xl border-2 border-blue-300/60 shadow-lg backdrop-blur-sm">
             <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-pulse shadow-md"></div>
             <Text className="text-lg font-bold text-blue-700 tracking-wide">
-              Round {roundId}
+              Round {roundLabel ?? ""}
             </Text>
           </div>
           <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"></div>
         </div>
       </div>
-
-      {/* Round X Info */}
-      <div className="mt-8 mb-6 p-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20">
-            <PiInfoDuotone className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="flex-1">
-            <Text className="text-sm font-medium text-gray-700">
-              Round {roundId}
-            </Text>
-            <Text className="text-xs text-gray-500 mt-1">
-              Key metrics and performance indicators for this round
-            </Text>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <Text className="text-xs text-blue-600 font-medium">
-              Round Data
-            </Text>
-          </div>
-        </div>
-      </div>
-
 
       {/* Aggregated Metrics Section */}
       <div className="mt-8 mb-4">
@@ -122,7 +126,7 @@ export default function RoundResult() {
 
 
       {/* Improved Metrics Cards - Matching Style */}
-      {loading || !statistics || !topMiners || !validatorsData || !selectedValidator ? (
+      {loading || !statistics || !Array.isArray(topMiners) || !validatorsData || !selectedValidator ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
           {Array.from({ length: 4 }, (_, index) => (
             <StatsCardPlaceholder key={index} />
@@ -143,21 +147,28 @@ export default function RoundResult() {
             <div className="flex-1 flex flex-col justify-center">
               <div className="text-center mb-2">
                 <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                  {selectedValidator.name}
+                  {winnerName}
                 </div>
-                <div className="text-xs text-amber-200">
-                  {selectedValidator.hotkey
-                    ? `${selectedValidator.hotkey.slice(0, 6)}...${selectedValidator.hotkey.slice(-6)}`
-                    : "No hotkey"}
-                </div>
+                <div className="text-xs text-amber-200">{winnerHotkey}</div>
+                {winnerValidatorName && (
+                  <div className="mt-1 text-[11px] uppercase tracking-wide text-amber-300">
+                    Validator: {winnerValidatorName}
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="bg-amber-500/20 rounded-lg p-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-amber-200">Average Score</span>
+                <span className="text-xs text-amber-200">Winning Score</span>
                 <span className="text-sm font-bold text-white">
-                  {(selectedValidator.averageScore * 100).toFixed(1)}%
+                  {winnerScore ? `${winnerScore}%` : "N/A"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-2 text-xs text-amber-200">
+                <span>Tasks Completed</span>
+                <span className="text-sm font-semibold text-white">
+                  {winnerTasksTotal ? `${winnerTasksCompleted}/${winnerTasksTotal}` : winnerTasksCompleted}
                 </span>
               </div>
             </div>
@@ -177,9 +188,9 @@ export default function RoundResult() {
             <div className="flex-1 flex flex-col justify-center">
               <div className="text-center mb-2">
                 <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-                  {(selectedValidator.averageScore * 100).toFixed(1)}%
+                  {(((selectedValidator.topScore ?? selectedValidator.averageScore) || 0) * 100).toFixed(1)}%
                 </div>
-                <div className="text-xs text-emerald-200">Validator Score</div>
+                <div className="text-xs text-emerald-200">Top Miner Score</div>
               </div>
             </div>
 
@@ -260,8 +271,14 @@ export default function RoundResult() {
       )}
 
       <div className="flex flex-col xl:flex-row gap-6 mt-6">
-        <RoundMinerScores className="w-full xl:w-[calc(100%-400px)]" />
-        <RoundTopMiners className="w-full xl:w-[400px]" />
+        <RoundMinerScores
+          className="w-full xl:w-[calc(100%-400px)]"
+          selectedValidatorId={selectedValidator?.id}
+        />
+        <RoundTopMiners
+          className="w-full xl:w-[400px]"
+          selectedValidatorId={selectedValidator?.id}
+        />
       </div>
     </>
   );

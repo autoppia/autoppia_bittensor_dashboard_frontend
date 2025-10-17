@@ -50,23 +50,36 @@ export default function Agent() {
       return [];
     }
 
-    return apiScoreRoundData.map((point: any) => ({
-      round_id: point.round_id,
-      score: normalizeScore(point.score) ?? 0,
-      rank: point.rank,
-      reward: point.reward ?? 0,
-      timestamp: point.timestamp,
-      topScore: normalizeScore(
-        point.topScore ?? point.top_score ?? point.bestScore
-      ),
-      benchmarks: Array.isArray(point.benchmarks)
-        ? point.benchmarks.map((benchmark: any) => ({
-            name: benchmark.name ?? benchmark.provider ?? "Benchmark",
-            provider: benchmark.provider,
-            score: normalizeScore(benchmark.score) ?? 0,
-          }))
-        : undefined,
-    }));
+    return apiScoreRoundData.map((point: any) => {
+      const roundId =
+        point.round_id ??
+        point.validator_round_id ??
+        point.roundId ??
+        point.validatorRoundId ??
+        point.round ??
+        0;
+
+      return {
+        round_id: Number(roundId),
+        score: normalizeScore(point.score) ?? 0,
+        rank: point.rank ?? point.position ?? null,
+        reward: point.reward ?? 0,
+        timestamp:
+          typeof point.timestamp === "string"
+            ? point.timestamp
+            : point.timestamp?.toString() ?? "",
+        topScore: normalizeScore(
+          point.topScore ?? point.top_score ?? point.bestScore
+        ),
+        benchmarks: Array.isArray(point.benchmarks)
+          ? point.benchmarks.map((benchmark: any) => ({
+              name: benchmark.name ?? benchmark.provider ?? "Benchmark",
+              provider: benchmark.provider,
+              score: normalizeScore(benchmark.score) ?? 0,
+            }))
+          : undefined,
+      };
+    });
   }, [apiScoreRoundData]);
 
   // Show loading state
@@ -98,12 +111,16 @@ export default function Agent() {
     );
   }
 
+  const defaultAvatar = `/miners/${Math.abs((agent.uid ?? 0) % 50)}.svg`;
+  const agentImageSrc =
+    (agent.imageUrl && agent.imageUrl.trim() !== "") ? agent.imageUrl : defaultAvatar;
+
   return (
     <>
       <div className="flex items-center justify-between mt-2 mb-6">
         <div className="flex items-center gap-6">
           <Image
-            src={`/miners/${agent.uid % 50}.svg`}
+            src={agentImageSrc}
             alt={agent.name}
             width={56}
             height={56}

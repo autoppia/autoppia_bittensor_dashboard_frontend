@@ -16,11 +16,11 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
-  async function resolveCurrentRoundId() {
+  async function resolveCurrentRoundIdentifier() {
     try {
       const metrics = await overviewService.getMetrics();
       if (metrics?.currentRound) {
-        return metrics.currentRound;
+        return String(metrics.currentRound);
       }
     } catch (error) {
       console.warn("Failed to load overview metrics for current round resolution:", error);
@@ -30,13 +30,19 @@ export default async function Page({ params }: PageProps) {
       const roundsResponse: any = await overviewService.getRounds({ limit: 1, includeCurrent: true });
       const roundsArray = roundsResponse?.data?.rounds || roundsResponse?.rounds;
       if (Array.isArray(roundsArray) && roundsArray.length > 0) {
-        return roundsArray[0].id;
+        return roundsArray[0].roundKey ?? String(roundsArray[0].id);
+      }
+      if (roundsResponse?.data?.currentRound?.roundKey) {
+        return roundsResponse.data.currentRound.roundKey;
       }
       if (roundsResponse?.data?.currentRound?.id) {
-        return roundsResponse.data.currentRound.id;
+        return String(roundsResponse.data.currentRound.id);
+      }
+      if (roundsResponse?.currentRound?.roundKey) {
+        return roundsResponse.currentRound.roundKey;
       }
       if (roundsResponse?.currentRound?.id) {
-        return roundsResponse.currentRound.id;
+        return String(roundsResponse.currentRound.id);
       }
     } catch (error) {
       console.warn("Failed to load rounds list for current round resolution:", error);
@@ -46,10 +52,10 @@ export default async function Page({ params }: PageProps) {
   }
 
   if (id === "current") {
-    const currentRoundId = await resolveCurrentRoundId();
+    const currentRoundId = await resolveCurrentRoundIdentifier();
 
     if (currentRoundId) {
-      redirect(`/rounds/${currentRoundId}`);
+      redirect(`/rounds/${encodeURIComponent(currentRoundId)}`);
     }
 
     notFound();

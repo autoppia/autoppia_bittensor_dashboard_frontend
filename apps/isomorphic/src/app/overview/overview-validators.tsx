@@ -14,6 +14,7 @@ import {
   PiChartLineUpFill,
   PiHourglassMediumFill,
   PiSpinnerGapBold,
+  PiCheckCircleFill,
 } from "react-icons/pi";
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
@@ -118,6 +119,9 @@ export default function OverviewValidators() {
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {(validatorsData?.data?.validators || []).map((validator, index) => {
+          const iconSrc = validator.icon && validator.icon.trim().length > 0
+            ? validator.icon
+            : "/validators/Other.png";
           const secondaryStats = [
             {
               title: "Stake",
@@ -151,7 +155,7 @@ export default function OverviewValidators() {
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="relative aspect-square w-10 h-10">
                         <Image
-                          src={validator.icon}
+                          src={iconSrc}
                           alt={validator.name}
                           fill
                           sizes="(max-width: 768px) 100vw"
@@ -179,7 +183,9 @@ export default function OverviewValidators() {
                             ? "bg-orange-500/20 text-orange-500"
                             : validator.status === "Waiting"
                               ? "bg-blue-500/20 text-blue-500"
-                              : "bg-yellow-500/20 text-yellow-500"
+                              : validator.status === "Finished"
+                                ? "bg-emerald-600/15 text-emerald-600"
+                                : "bg-yellow-500/20 text-yellow-500"
                       )}
                     >
                       {validator.status === "Sending Tasks" && (
@@ -191,9 +197,13 @@ export default function OverviewValidators() {
                       {validator.status === "Waiting" && (
                         <PiHourglassMediumFill className="w-3.5 h-3.5 animate-pulse" />
                       )}
+                      {validator.status === "Finished" && (
+                        <PiCheckCircleFill className="w-3.5 h-3.5" />
+                      )}
                       {validator.status !== "Sending Tasks" && 
                        validator.status !== "Evaluating" && 
-                       validator.status !== "Waiting" && (
+                       validator.status !== "Waiting" &&
+                       validator.status !== "Finished" && (
                         <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
                       )}
                       <span className="relative">

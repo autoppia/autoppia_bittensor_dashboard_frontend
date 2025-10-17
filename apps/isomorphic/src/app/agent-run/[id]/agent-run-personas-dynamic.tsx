@@ -8,29 +8,6 @@ import {
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunPersonas from "./agent-run-personas";
 
-function resolveImageSrc(
-  src?: string | null,
-  fallback: string = "/images/autoppia-logo.png"
-) {
-  if (!src || typeof src !== "string") return fallback;
-  const trimmed = src.trim();
-  if (!trimmed) return fallback;
-  if (
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("/")
-  ) {
-    return trimmed;
-  }
-  return `/${trimmed.replace(/^\/+/, "")}`;
-}
-
-function truncateMiddle(value?: string | null, visible: number = 6) {
-  if (!value) return "—";
-  if (value.length <= visible * 2) return value;
-  return `${value.slice(0, visible)}…${value.slice(-visible)}`;
-}
-
 export default function AgentRunPersonasDynamic() {
   const { id } = useParams();
   const { personas, isLoading, error } = useAgentRunPersonas(id as string);
@@ -45,22 +22,22 @@ export default function AgentRunPersonasDynamic() {
 
   if (isLoading || error || !personas) {
     return (
-      <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {Array.from({ length: 3 }, (_, index) => (
           <div
             key={index}
-            className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl"
+            className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl"
           >
-            <div className="flex min-h-[150px] items-center gap-5">
+            <div className="flex min-h-[132px] items-center gap-4">
               <Placeholder
                 variant="circular"
-                width={56}
-                height={56}
-                className="bg-slate-700"
+                width={48}
+                height={48}
+                className="bg-slate-700/30"
               />
               <div className="flex-1 space-y-2">
-                <Placeholder height="1.25rem" width="60%" className="bg-slate-700" />
-                <Placeholder height="0.9rem" width="40%" className="bg-slate-700" />
+                <Placeholder height="1.1rem" width="55%" className="bg-slate-700/30" />
+                <Placeholder height="0.85rem" width="38%" className="bg-slate-800/25" />
               </div>
             </div>
           </div>

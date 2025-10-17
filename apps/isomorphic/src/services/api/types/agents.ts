@@ -40,7 +40,7 @@ export interface AgentData {
   bestRankEver: number; // NEW FIELD
   roundsParticipated: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
-  averageDuration: number;
+  averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
   lastSeen: string;
@@ -76,7 +76,7 @@ export interface AgentPerformanceMetrics {
   currentScore: number; // RENAMED from averageScore
   currentTopScore: number; // RENAMED from bestScore
   worstScore: number;
-  averageDuration: number;
+  averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
   taskCompletionRate: number;
@@ -89,6 +89,7 @@ export interface AgentPerformanceMetrics {
   performanceTrend: {
     round: number;
     score: number;
+    responseTime?: number;
   }[];
 }
 
@@ -98,34 +99,51 @@ export interface AgentRunData {
   agentId: string;
   roundId: number;
   validatorId: string;
+  validatorName: string;
+  validatorImage: string;
   startTime: string;
-  endTime?: string;
+  endTime?: string | null;
   status: 'running' | 'completed' | 'failed' | 'timeout';
   totalTasks: number;
   completedTasks: number;
+  successfulTasks: number;
+  failedTasks: number;
   score: number;
+  overallScore: number;
   duration: number;
   ranking?: number;
-  tasks: {
-    taskId: string;
+  websites: {
     website: string;
-    useCase: string;
-    status: 'pending' | 'running' | 'completed' | 'failed';
+    tasks: number;
+    successful: number;
+    failed: number;
     score: number;
-    duration: number;
-    startTime: string;
-    endTime?: string;
-    error?: string;
   }[];
-  metadata: {
-    environment: string;
-    version: string;
-    resources: {
-      cpu: number;
-      memory: number;
-      storage: number;
-    };
-  };
+  tasks: AgentRunTaskData[];
+  metadata: Record<string, any>;
+}
+
+export interface AgentRunOverview {
+  runId: string;
+  agentId: string;
+  roundId: number;
+  validatorId: string;
+  validatorName: string;
+  validatorImage: string;
+  status: string;
+  startTime: string | null;
+  endTime?: string | null;
+  totalTasks: number;
+  completedTasks: number;
+  successfulTasks: number;
+  failedTasks: number;
+  averageScore: number;
+  score: number;
+  successRate: number;
+  overallScore: number;
+  overallScoreRaw?: number;
+  ranking: number;
+  duration: number;
 }
 
 // ===== AGENT COMPARISON =====
@@ -136,7 +154,7 @@ export interface AgentComparison {
     metrics: {
       currentScore: number; // RENAMED from averageScore
       currentTopScore: number; // RENAMED from bestScore
-      averageDuration: number;
+      averageResponseTime: number;
       totalRuns: number;
       currentRank: number; // RENAMED from ranking
     };
@@ -207,6 +225,7 @@ export interface MinimalAgentsListResponse {
 }
 
 export interface AgentsListResponse {
+  success: boolean;
   data: {
     agents: AgentData[];
     total: number;
@@ -216,6 +235,7 @@ export interface AgentsListResponse {
 }
 
 export interface AgentDetailsResponse {
+  success: boolean;
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
@@ -223,6 +243,7 @@ export interface AgentDetailsResponse {
 }
 
 export interface MinerDetailsResponse {
+  success: boolean;
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
@@ -230,39 +251,47 @@ export interface MinerDetailsResponse {
 }
 
 export interface AgentPerformanceResponse {
+  success: boolean;
   data: {
     metrics: AgentPerformanceMetrics;
   };
 }
 
 export interface AgentRunsResponse {
+  success: boolean;
   data: {
-    runs: AgentRunData[];
+    runs: AgentRunOverview[];
     total: number;
     page: number;
     limit: number;
+    availableRounds?: number[];
+    selectedRound?: number | null;
   };
 }
 
 export interface AgentRunDetailsResponse {
+  success: boolean;
   data: {
     run: AgentRunData;
   };
 }
 
 export interface AgentComparisonResponse {
+  success: boolean;
   data: {
     comparison: AgentComparison;
   };
 }
 
 export interface AgentStatisticsResponse {
+  success: boolean;
   data: {
     statistics: AgentStatistics;
   };
 }
 
 export interface AgentActivityResponse {
+  success: boolean;
   data: {
     activities: AgentActivity[];
     total: number;
@@ -297,6 +326,7 @@ export interface AgentRunsQueryParams {
   sortOrder?: 'asc' | 'desc';
   startDate?: string;
   endDate?: string;
+  agentId?: string;
 }
 
 export interface AgentPerformanceQueryParams {

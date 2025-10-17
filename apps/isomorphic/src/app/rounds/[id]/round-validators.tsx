@@ -7,21 +7,23 @@ import { Button, Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundValidators } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
-import { PiCaretLeftBold, PiCaretRightBold, PiShieldCheckFill, PiInfoDuotone } from "react-icons/pi";
+import { PiCaretLeftBold, PiCaretRightBold, PiInfoDuotone } from "react-icons/pi";
+import type { ValidatorPerformance } from "@/services/api/types/rounds";
 
 export default function RoundValidators({ 
   className, 
   onValidatorSelect 
 }: { 
   className?: string;
-  onValidatorSelect?: (validator: any) => void;
+  onValidatorSelect?: (validator: ValidatorPerformance) => void;
 }) {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
   
   // Get validators data from API
-  const { data: validatorsData, loading, error } = useRoundValidators(roundId);
+  const { data: validatorsData, loading, error } = useRoundValidators(roundKey);
   
   const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(null);
 
@@ -42,7 +44,7 @@ export default function RoundValidators({
       }
       // Always notify parent with current selection
       const currentValidator = validatorsData.find(v => v.id === selectedValidatorId) || validatorsData[0];
-      if (onValidatorSelect) {
+      if (onValidatorSelect && currentValidator) {
         onValidatorSelect(currentValidator);
       }
     }
@@ -118,6 +120,9 @@ export default function RoundValidators({
 
             {/* Individual Validator Cards */}
             {validatorsData?.map((validator) => {
+              const iconSrc = validator.icon && validator.icon.trim().length > 0
+                ? validator.icon
+                : "/validators/Other.png";
               const isActive = selectedValidatorId === validator.id;
 
               return (
@@ -130,8 +135,8 @@ export default function RoundValidators({
                     className={cn(
                       "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
-                        ? "bg-white border-gray-300 hover:border-gray-400 hover:shadow-xl hover:shadow-gray-500/25"
-                        : "border-muted hover:border-blue-500 bg-gray-50 hover:bg-gray-100"
+                        ? "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-blue-400/60 hover:border-blue-400/80 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30"
+                        : "border-muted hover:border-blue-500/60 bg-gray-50 hover:bg-gray-100"
                     )}
                   >
                     {/* Validator Content */}
@@ -143,20 +148,20 @@ export default function RoundValidators({
                         )}
                       >
                         <Image
-                          src={validator.icon}
+                          src={iconSrc}
                           alt={validator.name}
                           fill
                           sizes="(max-width: 768px) 100vw"
                           className={cn(
                             "h-full w-full rounded-full object-contain transition-all duration-300",
-                            isActive && "ring-2 ring-gray-400/50 ring-offset-2 shadow-lg shadow-gray-500/50"
+                            isActive && "ring-2 ring-blue-300/60 ring-offset-2 shadow-lg shadow-blue-500/40"
                           )}
                         />
                       </div>
                       <span
                         className={cn(
                           "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                          isActive ? "text-black" : "text-gray-700"
+                          isActive ? "text-blue-400" : "text-gray-700"
                         )}
                       >
                         {validator.name}
@@ -164,7 +169,7 @@ export default function RoundValidators({
                       <span
                         className={cn(
                           "mt-1.5 text-xs font-medium tracking-wide font-mono transition-colors duration-300 truncate max-w-full",
-                          isActive ? "text-black" : "text-gray-500"
+                          isActive ? "text-blue-200" : "text-gray-500"
                         )}
                       >
                         {validator.hotkey

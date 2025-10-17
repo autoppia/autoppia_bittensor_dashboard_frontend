@@ -11,19 +11,21 @@ import {
 } from "react-icons/pi";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundStatistics, useTopMiners } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 
 export default function RoundStats() {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
   
   // Get statistics and top miners from API
-  const { data: statistics, loading: statsLoading, error: statsError } = useRoundStatistics(roundId);
-  const { data: topMiners, loading: minersLoading, error: minersError } = useTopMiners(roundId, 1);
-  
+  const { data: statistics, loading: statsLoading, error: statsError } = useRoundStatistics(roundKey);
+  const { data: topMiners, loading: minersLoading, error: minersError } = useTopMiners(roundKey, 1);
+
   const loading = statsLoading || minersLoading;
   const error = statsError || minersError;
-  
+  const topMiner = topMiners?.[0];
+
   // Show loading state or when any required data is not available
   if (loading || !statistics || !topMiners) {
     return (
@@ -47,7 +49,13 @@ export default function RoundStats() {
       </div>
     );
   }
-  
+
+  const consensusRaw = statistics?.successRate ?? 0;
+  const consensusPercentage =
+    Math.min(100, consensusRaw > 1 ? consensusRaw : consensusRaw * 100);
+  const consensusDisplay = `${Math.round(consensusPercentage)}%`;
+  const hasConsensusData = statistics?.successRate != null;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       {/* Winner Card */}
@@ -71,10 +79,12 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                Miner {topMiners[0].uid}
+                {topMiner ? `Miner ${topMiner.uid}` : "Top miner pending"}
               </div>
               <div className="text-xs text-amber-200">
-                {topMiners[0].hotkey ? `${topMiners[0].hotkey.slice(0, 6)}...${topMiners[0].hotkey.slice(-6)}` : 'No hotkey'}
+                {topMiner?.hotkey
+                  ? `${topMiner.hotkey.slice(0, 6)}...${topMiner.hotkey.slice(-6)}`
+                  : 'No hotkey'}
               </div>
             </div>
           </div>
@@ -83,7 +93,7 @@ export default function RoundStats() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-200">Top Score</span>
               <span className="text-sm font-bold text-white">
-                {topMiners[0].score ? `${(topMiners[0].score * 100).toFixed(1)}%` : '0.0%'}
+                {topMiner?.score ? `${(topMiner.score * 100).toFixed(1)}%` : '0.0%'}
               </span>
             </div>
           </div>
@@ -111,17 +121,17 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-                {statistics.topScore ? `${(statistics.topScore * 100).toFixed(1)}%` : '0.0%'}
+                {statistics.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : '0.0%'}
               </div>
-              <div className="text-xs text-emerald-200">Top performance</div>
+              <div className="text-xs text-emerald-200">Avg across validator winners</div>
             </div>
           </div>
 
           <div className="bg-emerald-500/20 rounded-lg p-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-emerald-200">Average Score</span>
+              <span className="text-xs text-emerald-200">Highest Score</span>
               <span className="text-sm font-bold text-white">
-                {statistics.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : '0.0%'}
+                {statistics.topScore ? `${(statistics.topScore * 100).toFixed(1)}%` : '0.0%'}
               </span>
             </div>
           </div>
@@ -143,7 +153,7 @@ export default function RoundStats() {
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
               <PiUsersDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <h3 className="text-xs font-medium text-violet-300">AVERAGE TOTAL MINERS</h3>
+            <h3 className="text-xs font-medium text-violet-300">AVERAGE MINERS EVALUATED</h3>
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
@@ -151,7 +161,7 @@ export default function RoundStats() {
               <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
                 {statistics.totalMiners || 0}
               </div>
-              <div className="text-xs text-violet-200">Total participants</div>
+              <div className="text-xs text-violet-200">Miners evaluated</div>
             </div>
           </div>
 
@@ -190,19 +200,25 @@ export default function RoundStats() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
               <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                {statistics.successRate ? (statistics.successRate >= 0.8 ? 'Yes' : 'Partial') : 'No'}
+                {hasConsensusData
+                  ? consensusPercentage >= 80
+                    ? 'Yes'
+                    : consensusPercentage >= 50
+                      ? 'Partial'
+                      : 'No'
+                  : 'No'}
               </div>
               <div className="text-xs text-green-200 mt-1">
-                {statistics.successRate ? `${(statistics.successRate * 100).toFixed(1)}% success rate` : 'No data'}
+                {hasConsensusData ? `${consensusDisplay} consensus` : 'No data'}
               </div>
             </div>
           </div>
 
           <div className="bg-green-500/20 rounded-lg p-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-green-200">Success Rate</span>
+              <span className="text-xs text-green-200">Consensus</span>
               <span className="text-sm font-bold text-white">
-                {statistics.successRate ? `${(statistics.successRate * 100).toFixed(1)}%` : '0.0%'}
+                {hasConsensusData ? consensusDisplay : '0%'}
               </span>
             </div>
           </div>
@@ -211,4 +227,3 @@ export default function RoundStats() {
     </div>
   );
 }
-

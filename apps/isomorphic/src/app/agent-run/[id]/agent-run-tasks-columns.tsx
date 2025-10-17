@@ -32,8 +32,17 @@ export const agentRunTasksColumns = [
     header: "Website",
     enableSorting: false,
     cell: ({ row }) => {
-      const color = websitesDataMap[row.original.website].color;
-      return <BannerText color={color} text={row.original.website} />;
+      const website = row.original.website;
+      const color = websitesDataMap[website]?.color;
+      return (
+        <BannerText
+          color={color}
+          text={website}
+          className="!bg-transparent"
+          textClassName="text-white hover:text-emerald-200"
+          textColor="#ffffff"
+        />
+      );
     },
   }),
   columnHelper.accessor("use_case", {
@@ -92,12 +101,12 @@ export const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`/tasks/${row.original.id}`}
-        className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
+        className="flex items-center text-slate-200 transition-colors duration-200"
       >
         <Button 
           variant="outline" 
           size="sm"
-          className="border-gray-700 text-gray-700 hover:bg-white hover:text-black"
+          className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >
           <PiEyeBold className="me-1.5 size-4" />
           <span>Inspect</span>

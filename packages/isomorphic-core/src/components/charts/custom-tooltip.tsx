@@ -19,6 +19,8 @@ export interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
   postfix?: string;
   className?: string;
   formattedNumber?: boolean;
+  decimals?: number;
+  valueFormatter?: (value: number) => string;
 }
 
 export function CustomTooltip({
@@ -29,8 +31,26 @@ export function CustomTooltip({
   payload,
   className,
   formattedNumber,
+  decimals,
+  valueFormatter,
 }: CustomTooltipProps) {
   if (!active) return null;
+
+  const renderValue = (value: ValueType) => {
+    if (typeof value === "number") {
+      if (typeof valueFormatter === "function") {
+        return valueFormatter(value);
+      }
+      if (typeof decimals === "number") {
+        return value.toFixed(decimals);
+      }
+      if (formattedNumber) {
+        return formatNumber(value);
+      }
+      return value;
+    }
+    return value;
+  };
 
   return (
     <div
@@ -67,7 +87,7 @@ export function CustomTooltip({
                 className="font-medium text-gray-900 dark:text-gray-700"
               >
                 {prefix && prefix}
-                {formattedNumber ? formatNumber(item.value) : item.value}
+                {renderValue(item.value)}
                 {postfix && postfix}
               </Text>
             </Text>

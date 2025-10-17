@@ -87,10 +87,20 @@ export class OverviewService {
    * Get a specific validator by ID
    */
   async getValidator(id: string): Promise<ValidatorData> {
-    const response = await apiClient.get<{ validator: ValidatorData }>(
+    const response = await apiClient.get<{
+      success?: boolean;
+      data?: { validator: ValidatorData };
+      validator?: ValidatorData;
+    }>(
       `${this.baseEndpoint}/validators/${id}`
     );
-    return response.data.validator;
+    if (response.data?.data?.validator) {
+      return response.data.data.validator;
+    }
+    if (response.data?.validator) {
+      return response.data.validator;
+    }
+    throw new Error(`Validator ${id} not found in API response`);
   }
 
   /**
@@ -197,13 +207,13 @@ export class OverviewService {
     const response = await apiClient.get<SubnetStatisticsResponse>(
       `${this.baseEndpoint}/statistics`
     );
-    // Handle both nested and flat response structures
-    if (response.data?.statistics) {
-      return response.data.statistics;
-    } else {
-      // Fallback to direct data structure
-      return response.data as SubnetStatistics;
+    if (response.data?.data?.statistics) {
+      return response.data.data.statistics;
     }
+    if ((response.data as any)?.statistics) {
+      return (response.data as any).statistics as SubnetStatistics;
+    }
+    throw new Error('Subnet statistics not found in API response');
   }
 
   /**
@@ -254,16 +264,39 @@ export class OverviewService {
     total: number;
   }> {
     const response = await apiClient.get<{
-      activities: Array<{
+      success?: boolean;
+      data?: {
+        activities: Array<{
+          id: string;
+          type: 'task_completed' | 'validator_joined' | 'round_started' | 'round_ended' | 'miner_registered';
+          message: string;
+          timestamp: string;
+          metadata?: Record<string, any>;
+        }>;
+        total: number;
+      };
+      activities?: Array<{
         id: string;
         type: 'task_completed' | 'validator_joined' | 'round_started' | 'round_ended' | 'miner_registered';
         message: string;
         timestamp: string;
         metadata?: Record<string, any>;
       }>;
-      total: number;
+      total?: number;
     }>(`${this.baseEndpoint}/recent-activity`, { limit });
-    return response.data;
+
+    if (response.data?.data) {
+      return response.data.data;
+    }
+
+    if (Array.isArray(response.data?.activities)) {
+      return {
+        activities: response.data.activities,
+        total: response.data.total ?? response.data.activities.length,
+      };
+    }
+
+    return { activities: [], total: 0 };
   }
 
   /**
@@ -280,16 +313,39 @@ export class OverviewService {
     period: string;
   }> {
     const response = await apiClient.get<{
-      trends: Array<{
+      success?: boolean;
+      data?: {
+        trends: Array<{
+          date: string;
+          averageScore: number;
+          totalTasks: number;
+          activeValidators: number;
+          networkUptime: number;
+        }>;
+        period: string;
+      };
+      trends?: Array<{
         date: string;
         averageScore: number;
         totalTasks: number;
         activeValidators: number;
         networkUptime: number;
       }>;
-      period: string;
+      period?: string;
     }>(`${this.baseEndpoint}/performance-trends`, { days });
-    return response.data;
+
+    if (response.data?.data) {
+      return response.data.data;
+    }
+
+    if (Array.isArray(response.data?.trends)) {
+      return {
+        trends: response.data.trends,
+        period: response.data.period ?? `${days} days`,
+      };
+    }
+
+    return { trends: [], period: `${days} days` };
   }
 }
 

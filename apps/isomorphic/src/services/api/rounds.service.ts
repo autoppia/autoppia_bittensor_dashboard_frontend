@@ -26,6 +26,23 @@ import {
 export class RoundsService {
   private readonly baseEndpoint = '/api/v1/rounds';
 
+  private buildRoundPath(identifier: string | number): {
+    path: string;
+    fallbackId?: number;
+  } {
+    const raw = String(identifier ?? '').trim();
+    if (!raw) {
+      throw new Error('Round identifier is required');
+    }
+    const match = raw.match(/\d+/);
+    const parsed = match ? Number.parseInt(match[0], 10) : undefined;
+    const fallbackId = typeof parsed === 'number' && !Number.isNaN(parsed) ? parsed : undefined;
+    return {
+      path: encodeURIComponent(raw),
+      fallbackId,
+    };
+  }
+
   /**
    * Normalize round payloads coming from the API into the RoundData shape expected by the UI.
    * Handles both camelCase and snake_case responses as well as string-based round identifiers.
@@ -35,185 +52,158 @@ export class RoundsService {
       throw new Error('Round data not found in API response');
     }
 
-    const extractNumericId = (): number => {
-      if (typeof rawRound.id === 'number') {
-        return rawRound.id;
+    const resolveNumber = (value: unknown): number | undefined => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
       }
-      if (typeof rawRound.roundId === 'number') {
-        return rawRound.roundId;
-      }
-      if (typeof rawRound.round_id === 'number') {
-        return rawRound.round_id;
-      }
-      if (typeof rawRound.round_id === 'string') {
-        const match = rawRound.round_id.match(/\d+/);
+      if (typeof value === 'string') {
+        const match = value.match(/\d+/);
         if (match) {
-          return parseInt(match[0], 10);
+          return Number.parseInt(match[0], 10);
         }
       }
-      if (typeof fallbackId === 'number' && !Number.isNaN(fallbackId)) {
-        return fallbackId;
-      }
-      throw new Error('Unable to determine round id from API response');
+      return undefined;
     };
-    const id = extractNumericId();
 
-    const validatorUid =
-      rawRound.validatorUid ??
-      rawRound.validator_uid ??
-      rawRound.validatorId ??
-      rawRound.validator_id ??
-      rawRound.validator?.uid ??
-      (typeof rawRound.validator === 'number' ? rawRound.validator : undefined);
+    const id =
+      resolveNumber(rawRound.round) ??
+      resolveNumber(rawRound.roundNumber) ??
+      resolveNumber(rawRound.id) ??
+      resolveNumber(rawRound.roundId) ??
+      resolveNumber(rawRound.round_id) ??
+      (typeof fallbackId === 'number' ? fallbackId : undefined);
 
-    const validatorHotkey =
-      rawRound.validatorHotkey ??
-      rawRound.validator_hotkey ??
-      rawRound.validator?.hotkey;
-
-    const validatorName =
-      rawRound.validatorName ??
-      rawRound.validator_name ??
-      rawRound.validator?.name;
-
-    const startTimeValue =
-      rawRound.startTime ??
-      rawRound.started_at ??
-      rawRound.start_time ??
-      rawRound.startedAt ??
-      rawRound.start_at ??
-      '';
-
-    const endTimeValue =
-      rawRound.endTime ??
-      rawRound.ended_at ??
-      rawRound.end_time ??
-      rawRound.endedAt ??
-      rawRound.end_at;
-
-    const rawRoundIdentifier =
-      rawRound.roundKey ??
-      rawRound.round_key ??
-      rawRound.roundUid ??
-      rawRound.round_uid ??
-      rawRound.roundId ??
-      rawRound.round_id ??
-      rawRound.id;
-
-    let roundKey: string | undefined;
-    if (
-      typeof rawRoundIdentifier === 'string' &&
-      rawRoundIdentifier.trim() &&
-      rawRoundIdentifier.trim() !== String(id)
-    ) {
-      roundKey = rawRoundIdentifier.trim();
-    } else if (
-      typeof rawRoundIdentifier === 'number' &&
-      !Number.isNaN(rawRoundIdentifier) &&
-      rawRoundIdentifier !== id
-    ) {
-      roundKey = String(rawRoundIdentifier);
+    if (id === undefined) {
+      throw new Error('Unable to determine round id from API response');
     }
 
-    if (!roundKey) {
-      const uniqueDescriptors = [
-        validatorUid !== undefined ? `uid:${validatorUid}` : null,
-        validatorHotkey ? `hotkey:${validatorHotkey}` : null,
-        validatorName ? `name:${validatorName}` : null,
-        startTimeValue ? `start:${startTimeValue}` : null,
-        endTimeValue ? `end:${endTimeValue}` : null,
-        rawRound.averageScore !== undefined
-          ? `avg:${rawRound.averageScore}`
-          : null,
-        rawRound.topScore !== undefined ? `top:${rawRound.topScore}` : null,
-        rawRound.totalTasks !== undefined
-          ? `tasks:${rawRound.totalTasks}`
-          : null,
-        rawRound.completedTasks !== undefined
-          ? `completed:${rawRound.completedTasks}`
-          : null,
-      ]
-        .filter((descriptor): descriptor is string => Boolean(descriptor))
-        .join('|');
+    const startBlock = rawRound.startBlock ?? rawRound.start_block ?? 0;
+    const endBlock = rawRound.endBlock ?? rawRound.end_block ?? startBlock;
+    const currentBlock = rawRound.currentBlock ?? rawRound.current_block;
+    const status = (rawRound.status ?? (rawRound.current ? 'active' : 'completed')) as RoundData['status'];
 
-      const fingerprintSource =
-        uniqueDescriptors ||
-        (typeof rawRound === 'object' ? JSON.stringify(rawRound) : String(id));
-
-      let hash = 0;
-      for (let index = 0; index < fingerprintSource.length; index += 1) {
-        const charCode = fingerprintSource.charCodeAt(index);
-        hash = (hash << 5) - hash + charCode;
-        hash |= 0;
+    const ensureIso = (value?: string | null): string | undefined => {
+      if (!value) {
+        return undefined;
       }
-      const encodedHash = Math.abs(hash).toString(36);
-      roundKey = `${id}-${encodedHash}`;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toISOString();
+    };
+
+    const validatorRounds: ValidatorRoundData[] = Array.isArray(rawRound.validatorRounds)
+      ? rawRound.validatorRounds.map((validator: any) => ({
+          validatorRoundId:
+            validator.validatorRoundId ??
+            validator.validator_round_id ??
+            validator.roundKey ??
+            validator.round_key ??
+            validator.id,
+          validatorUid:
+            validator.validatorUid ??
+            validator.validator_uid ??
+            validator.uid,
+          validatorName:
+            validator.validatorName ??
+            validator.validator_name ??
+            validator.name,
+          validatorHotkey:
+            validator.validatorHotkey ??
+            validator.validator_hotkey ??
+            validator.hotkey,
+          status: (validator.status ?? (validator.current ? 'active' : 'completed')) as ValidatorRoundData['status'],
+          startTime:
+            ensureIso(
+              validator.startTime ??
+                validator.started_at ??
+                validator.start_time ??
+                validator.startAt ??
+                validator.start_at
+            ) ?? '',
+          endTime: ensureIso(
+            validator.endTime ??
+              validator.ended_at ??
+              validator.end_time ??
+              validator.endedAt ??
+              validator.end_at
+          ),
+          averageScore:
+            validator.averageScore ??
+            validator.average_score ??
+            validator.score ??
+            0,
+          topScore: validator.topScore ?? validator.top_score ?? 0,
+          totalTasks:
+            validator.totalTasks ??
+            validator.total_tasks ??
+            validator.tasks ??
+            0,
+          completedTasks:
+            validator.completedTasks ??
+            validator.completed_tasks ??
+            validator.completed ??
+            0,
+          icon: validator.icon,
+          agentEvaluationRuns: validator.agentEvaluationRuns ?? [],
+          roundData: validator.roundData ?? validator,
+        }))
+      : [];
+
+    const totalTasks =
+      rawRound.totalTasks ??
+      rawRound.n_tasks ??
+      rawRound.tasks?.length ??
+      validatorRounds.reduce((sum, validator) => sum + (validator.totalTasks ?? 0), 0);
+
+    const completedTasks =
+      rawRound.completedTasks ??
+      rawRound.completed_tasks ??
+      validatorRounds.reduce((sum, validator) => sum + (validator.completedTasks ?? 0), 0);
+
+    let progress = rawRound.progress;
+    if (progress === undefined && typeof startBlock === 'number' && typeof endBlock === 'number') {
+      const effectiveCurrentBlock =
+        currentBlock !== undefined ? currentBlock : status === 'completed' ? endBlock : startBlock;
+      const range = endBlock - startBlock;
+      progress = range > 0 ? (effectiveCurrentBlock - startBlock) / range : undefined;
     }
-
-    const startBlock = rawRound.startBlock ?? rawRound.start_block;
-    const endBlock = rawRound.endBlock ?? rawRound.end_block;
-    let currentBlock = rawRound.currentBlock ?? rawRound.current_block;
-    const status = (rawRound.status ??
-      (rawRound.current ? 'active' : 'completed')) as RoundData['status'];
-
-    if (
-      (currentBlock === undefined || currentBlock === null) &&
-      status === 'completed' &&
-      typeof endBlock === 'number'
-    ) {
-      currentBlock = endBlock;
-    }
-
-    const blocksRemaining =
-      rawRound.blocksRemaining ??
-      rawRound.blocks_remaining ??
-      (typeof endBlock === 'number' && typeof currentBlock === 'number'
-        ? Math.max(endBlock - currentBlock, 0)
-        : undefined);
-
-    const computedProgress =
-      rawRound.progress ??
-      rawRound.progress_percent ??
-      (typeof startBlock === 'number' &&
-        typeof endBlock === 'number' &&
-        typeof currentBlock === 'number' &&
-        endBlock !== startBlock
-        ? Math.min(
-            Math.max((currentBlock - startBlock) / (endBlock - startBlock), 0),
-            1
-          )
-        : status === 'completed'
-        ? 1
-        : undefined);
 
     return {
       id,
-      roundKey,
-      startBlock: startBlock ?? 0,
-      endBlock: endBlock ?? 0,
-      current: rawRound.current ?? status === 'active',
-      startTime: startTimeValue,
-      endTime: endTimeValue,
+      round: rawRound.round ?? id,
+      roundNumber: rawRound.roundNumber ?? rawRound.round ?? id,
+      roundKey: rawRound.roundKey ?? `round_${id}`,
+      startBlock,
+      endBlock,
+      current: Boolean(rawRound.current ?? status === 'active'),
+      startTime:
+        ensureIso(
+          rawRound.startTime ??
+            rawRound.started_at ??
+            rawRound.start_time ??
+            rawRound.startedAt ??
+            rawRound.start_at
+        ) ?? '',
+      endTime: ensureIso(
+        rawRound.endTime ??
+          rawRound.ended_at ??
+          rawRound.end_time ??
+          rawRound.endedAt ??
+          rawRound.end_at
+      ),
       status,
-      totalTasks:
-        rawRound.totalTasks ?? rawRound.n_tasks ?? rawRound.tasks?.length ?? 0,
-      completedTasks:
-        rawRound.completedTasks ??
-        rawRound.completed_tasks ??
-        rawRound.tasks?.filter((task: any) => task?.status === 'completed')
-          ?.length ??
-        rawRound.n_winners ??
-        0,
+      totalTasks,
+      completedTasks,
       averageScore: rawRound.averageScore ?? rawRound.average_score ?? 0,
       topScore: rawRound.topScore ?? rawRound.top_score ?? 0,
-      currentBlock:
-        currentBlock ??
-        (status === 'completed' ? (endBlock ?? undefined) : undefined),
-      blocksRemaining,
-      progress: computedProgress,
-      validatorUid,
-      validatorHotkey,
-      validatorName,
+      currentBlock: currentBlock ?? (status === 'completed' ? endBlock : undefined),
+      blocksRemaining:
+        rawRound.blocksRemaining ??
+        rawRound.blocks_remaining ??
+        (typeof endBlock === 'number' && typeof currentBlock === 'number'
+          ? Math.max(endBlock - currentBlock, 0)
+          : undefined),
+      progress,
+      validatorRounds,
     };
   }
 
@@ -238,49 +228,10 @@ export class RoundsService {
       this.normalizeRoundData(round)
     );
 
-    const uniqueRoundsMap = new Map<number, RoundData>();
-
-    const getTimestamp = (value?: string): number => {
-      if (!value) {
-        return Number.NaN;
-      }
-      const timestamp = Date.parse(value);
-      return Number.isNaN(timestamp) ? Number.NaN : timestamp;
-    };
-
-    normalizedRounds.forEach((round) => {
-      const existing = uniqueRoundsMap.get(round.id);
-      if (!existing) {
-        uniqueRoundsMap.set(round.id, round);
-        return;
-      }
-
-      const existingTimestamp = getTimestamp(existing.startTime);
-      const candidateTimestamp = getTimestamp(round.startTime);
-
-      if (
-        Number.isNaN(existingTimestamp) &&
-        !Number.isNaN(candidateTimestamp)
-      ) {
-        uniqueRoundsMap.set(round.id, round);
-        return;
-      }
-
-      if (
-        !Number.isNaN(existingTimestamp) &&
-        !Number.isNaN(candidateTimestamp) &&
-        candidateTimestamp > existingTimestamp
-      ) {
-        uniqueRoundsMap.set(round.id, round);
-      }
-    });
-
-    const uniqueRounds = Array.from(uniqueRoundsMap.values());
-
     const total =
       responseData.total ??
       response.data?.total ??
-      uniqueRounds.length;
+      normalizedRounds.length;
     const page =
       responseData.page ??
       response.data?.page ??
@@ -290,14 +241,23 @@ export class RoundsService {
       responseData.limit ??
       response.data?.limit ??
       params?.limit ??
-      uniqueRounds.length;
+      normalizedRounds.length;
+
+    const currentRoundRaw =
+      responseData.currentRound ??
+      response.data?.currentRound;
+
+    const currentRound = currentRoundRaw
+      ? this.normalizeRoundData(currentRoundRaw)
+      : undefined;
 
     return {
       data: {
-        rounds: uniqueRounds,
+        rounds: normalizedRounds,
         total,
         page,
         limit,
+        ...(currentRound ? { currentRound } : {}),
       },
     };
   }
@@ -305,8 +265,9 @@ export class RoundsService {
   /**
    * Get details for a specific round by ID
    */
-  async getRound(id: number): Promise<RoundData> {
-    const response = await apiClient.get<any>(`${this.baseEndpoint}/${id}`);
+  async getRound(identifier: string | number): Promise<RoundData> {
+    const { path, fallbackId } = this.buildRoundPath(identifier);
+    const response = await apiClient.get<any>(`${this.baseEndpoint}/${path}`);
     const raw = response.data;
     const payloadCandidates = [
       raw?.data?.round,
@@ -324,7 +285,7 @@ export class RoundsService {
           !Array.isArray(candidate)
       ) ?? {};
 
-    return this.normalizeRoundData(payload, id);
+    return this.normalizeRoundData(payload, fallbackId);
   }
 
   /**
@@ -355,9 +316,10 @@ export class RoundsService {
   /**
    * Get round statistics and performance metrics
    */
-  async getRoundStatistics(roundId: number): Promise<RoundStatistics> {
+  async getRoundStatistics(identifier: string | number): Promise<RoundStatistics> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundStatisticsResponse>(
-      `${this.baseEndpoint}/${roundId}/statistics`
+      `${this.baseEndpoint}/${path}/statistics`
     );
     return response.data.data.statistics;
   }
@@ -365,9 +327,10 @@ export class RoundsService {
   /**
    * Get miners performance for a specific round
    */
-  async getRoundMiners(roundId: number, params?: RoundMinersQueryParams): Promise<RoundMinersResponse> {
+  async getRoundMiners(identifier: string | number, params?: RoundMinersQueryParams): Promise<RoundMinersResponse> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundMinersResponse>(
-      `${this.baseEndpoint}/${roundId}/miners`,
+      `${this.baseEndpoint}/${path}/miners`,
       params
     );
     return response.data;
@@ -376,19 +339,24 @@ export class RoundsService {
   /**
    * Get validators performance for a specific round
    */
-  async getRoundValidators(roundId: number): Promise<ValidatorPerformance[]> {
+  async getRoundValidators(identifier: string | number): Promise<ValidatorPerformance[]> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundValidatorsResponse>(
-      `${this.baseEndpoint}/${roundId}/validators`
+      `${this.baseEndpoint}/${path}/validators`
     );
-    return response.data.data.validators;
+    return response.data.data.validators.map((validator: ValidatorPerformance & { top_score?: number }) => ({
+      ...validator,
+      topScore: validator.topScore ?? validator.top_score ?? validator.averageScore ?? 0,
+    }));
   }
 
   /**
    * Get recent activity for a specific round
    */
-  async getRoundActivity(roundId: number, params?: RoundActivityQueryParams): Promise<RoundActivity[]> {
+  async getRoundActivity(identifier: string | number, params?: RoundActivityQueryParams): Promise<RoundActivity[]> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundActivityResponse>(
-      `${this.baseEndpoint}/${roundId}/activity`,
+      `${this.baseEndpoint}/${path}/activity`,
       params
     );
     return response.data.data.activities;
@@ -397,9 +365,10 @@ export class RoundsService {
   /**
    * Get round progress information
    */
-  async getRoundProgress(roundId: number): Promise<RoundProgress> {
+  async getRoundProgress(identifier: string | number): Promise<RoundProgress> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundProgressResponse>(
-      `${this.baseEndpoint}/${roundId}/progress`
+      `${this.baseEndpoint}/${path}/progress`
     );
     return response.data.data.progress;
   }
@@ -407,9 +376,10 @@ export class RoundsService {
   /**
    * Get top performing miners for a round
    */
-  async getTopMiners(roundId: number, limit: number = 10): Promise<MinerPerformance[]> {
+  async getTopMiners(identifier: string | number, limit: number = 10): Promise<MinerPerformance[]> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<RoundMinersResponse>(
-      `${this.baseEndpoint}/${roundId}/miners/top`,
+      `${this.baseEndpoint}/${path}/miners/top`,
       { limit, sortBy: 'score', sortOrder: 'desc' }
     );
     return response.data.data.miners;
@@ -418,9 +388,10 @@ export class RoundsService {
   /**
    * Get miner details for a specific round
    */
-  async getMinerPerformance(roundId: number, minerUid: number): Promise<MinerPerformance> {
+  async getMinerPerformance(identifier: string | number, minerUid: number): Promise<MinerPerformance> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<{ data: { miner: MinerPerformance } }>(
-      `${this.baseEndpoint}/${roundId}/miners/${minerUid}`
+      `${this.baseEndpoint}/${path}/miners/${minerUid}`
     );
     return response.data.data.miner;
   }
@@ -428,9 +399,10 @@ export class RoundsService {
   /**
    * Get validator details for a specific round
    */
-  async getValidatorPerformance(roundId: number, validatorId: string): Promise<ValidatorPerformance> {
+  async getValidatorPerformance(identifier: string | number, validatorId: string): Promise<ValidatorPerformance> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<{ data: { validator: ValidatorPerformance } }>(
-      `${this.baseEndpoint}/${roundId}/validators/${validatorId}`
+      `${this.baseEndpoint}/${path}/validators/${validatorId}`
     );
     return response.data.data.validator;
   }
@@ -460,7 +432,7 @@ export class RoundsService {
   /**
    * Get round timeline (progress over time)
    */
-  async getRoundTimeline(roundId: number): Promise<{
+  async getRoundTimeline(identifier: string | number): Promise<{
     timeline: Array<{
       timestamp: string;
       block: number;
@@ -469,6 +441,7 @@ export class RoundsService {
       activeMiners: number;
     }>;
   }> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<{
       data: {
         timeline: Array<{
@@ -479,14 +452,14 @@ export class RoundsService {
           activeMiners: number;
         }>;
       };
-    }>(`${this.baseEndpoint}/${roundId}/timeline`);
+    }>(`${this.baseEndpoint}/${path}/timeline`);
     return response.data.data;
   }
 
   /**
    * Get round summary (quick stats)
    */
-  async getRoundSummary(roundId: number): Promise<{
+  async getRoundSummary(identifier: string | number): Promise<{
     roundId: number;
     status: string;
     progress: number;
@@ -495,6 +468,7 @@ export class RoundsService {
     topScore: number;
     timeRemaining?: string;
   }> {
+    const { path } = this.buildRoundPath(identifier);
     const response = await apiClient.get<{
       data: {
         roundId: number;
@@ -505,7 +479,7 @@ export class RoundsService {
         topScore: number;
         timeRemaining?: string;
       };
-    }>(`${this.baseEndpoint}/${roundId}/summary`);
+    }>(`${this.baseEndpoint}/${path}/summary`);
     return response.data.data;
   }
 }

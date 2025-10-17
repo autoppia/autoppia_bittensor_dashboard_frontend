@@ -90,23 +90,23 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
           variant="circular"
           width={200}
           height={200}
-          className="border border-slate-800/70 bg-slate-900/80"
+          className="border border-slate-700/25 bg-slate-800/20"
         />
         <div className="absolute flex flex-col items-center gap-2">
           <Placeholder
             height="2.25rem"
             width="4rem"
-            className="rounded-lg bg-slate-700/80"
+            className="rounded-lg bg-slate-700/30"
           />
           <Placeholder
             height="0.9rem"
             width="7.5rem"
-            className="rounded bg-slate-800/80"
+            className="rounded bg-slate-800/25"
           />
           <Placeholder
             height="0.9rem"
             width="6.5rem"
-            className="rounded bg-slate-800/80"
+            className="rounded bg-slate-800/25"
           />
         </div>
       </div>
@@ -116,7 +116,7 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl",
+        "relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl",
         className
       )}
     >
@@ -125,24 +125,24 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
 
       <div className="relative mb-6">
         <div className="mb-2 flex items-center gap-3">
-          <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-2">
+          <div className="rounded-xl border border-slate-700/20 bg-slate-800/20 p-2">
             <Placeholder
               variant="circular"
               width={24}
               height={24}
-              className="bg-slate-700"
+              className="bg-slate-700/30"
             />
           </div>
           <Placeholder
             height="1.35rem"
             width="6rem"
-            className="bg-slate-700/80"
+            className="bg-slate-700/30"
           />
         </div>
         <Placeholder
           height="0.75rem"
           width="10rem"
-          className="bg-slate-800/80"
+          className="bg-slate-800/25"
         />
       </div>
 
@@ -159,24 +159,24 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
                   variant="circular"
                   width={12}
                   height={12}
-                  className="bg-slate-500/60"
+                  className="bg-slate-500/40"
                 />
                 <Placeholder
                   height="0.85rem"
                   width="7rem"
-                  className="bg-slate-700/70"
+                  className="bg-slate-700/30"
                 />
               </div>
               <div className="space-y-2 text-right">
                 <Placeholder
                   height="1rem"
                   width="3.75rem"
-                  className="bg-slate-700/70"
+                  className="bg-slate-700/30"
                 />
                 <Placeholder
                   height="0.75rem"
                   width="8rem"
-                  className="bg-slate-800/70"
+                  className="bg-slate-800/25"
                 />
               </div>
             </div>

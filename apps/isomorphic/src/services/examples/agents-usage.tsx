@@ -135,8 +135,8 @@ export function AgentDetailsExample({ agentId }: { agentId: string }) {
               {performance.totalRuns}
             </div>
             <div>
-              <strong>Avg Duration:</strong><br />
-              {performance.averageDuration.toFixed(1)}s
+              <strong>Avg Response Time:</strong><br />
+              {performance.averageResponseTime.toFixed(1)}s
             </div>
           </div>
         </div>
@@ -381,7 +381,7 @@ export function AgentComparisonExample() {
                   <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.name}</td>
                   <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.metrics.averageScore.toFixed(2)}</td>
                   <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.metrics.successRate.toFixed(1)}%</td>
-                  <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.metrics.averageDuration.toFixed(1)}s</td>
+                  <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.metrics.averageResponseTime.toFixed(1)}s</td>
                   <td style={{ border: '1px solid #ccc', padding: '10px' }}>{agent.metrics.totalRuns}</td>
                   <td style={{ border: '1px solid #ccc', padding: '10px' }}>#{agent.metrics.ranking}</td>
                 </tr>

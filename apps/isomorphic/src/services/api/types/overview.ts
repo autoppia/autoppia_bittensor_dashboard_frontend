@@ -91,12 +91,14 @@ export interface SubnetStatistics {
 
 // ===== API RESPONSE TYPES =====
 export interface OverviewMetricsResponse {
+  success: boolean;
   data: {
     metrics: OverviewMetrics;
   };
 }
 
 export interface ValidatorsResponse {
+  success: boolean;
   data: {
     validators: ValidatorData[];
     total: number;
@@ -106,18 +108,25 @@ export interface ValidatorsResponse {
 }
 
 export interface ValidatorFilterResponse {
+  success: boolean;
   data: {
     validators: ValidatorFilterItem[];
   };
 }
 
 export interface RoundsResponse {
-  rounds: OverviewRoundData[];
-  currentRound: OverviewRoundData;
-  total: number;
+  success: boolean;
+  data: {
+    rounds: OverviewRoundData[];
+    currentRound?: OverviewRoundData;
+    total: number;
+    page: number;
+    limit: number;
+  };
 }
 
 export interface LeaderboardResponse {
+  success: boolean;
   data: {
     leaderboard: LeaderboardData[];
     total: number;
@@ -129,7 +138,10 @@ export interface LeaderboardResponse {
 }
 
 export interface SubnetStatisticsResponse {
-  statistics: SubnetStatistics;
+  success: boolean;
+  data: {
+    statistics: SubnetStatistics;
+  };
 }
 
 // ===== QUERY PARAMETERS =====

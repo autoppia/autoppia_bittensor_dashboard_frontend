@@ -180,15 +180,16 @@ export class AgentRunsService {
     page: number;
     limit: number;
   }> {
-    const response = await apiClient.get<{
-      data: {
-        runs: AgentRunData[];
-        total: number;
-        page: number;
-        limit: number;
-      };
-    }>(`${this.baseEndpoint}/agents/${agentId}/runs`, params);
-    return response.data.data;
+    const response = await apiClient.get<AgentRunsListResponse>(
+      this.baseEndpoint,
+      { ...(params ?? {}), agentId }
+    );
+    return {
+      runs: response.data.data.runs,
+      total: response.data.data.total,
+      page: response.data.data.page,
+      limit: response.data.data.limit,
+    };
   }
 
   /**

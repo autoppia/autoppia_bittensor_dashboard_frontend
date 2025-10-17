@@ -8,13 +8,14 @@ import RoundRecents from "./round-recents";
 import RoundResult from "./round-result";
 import { LuCirclePlay, LuCircleCheckBig } from "react-icons/lu";
 import { useRound } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 
 export default function Round() {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
-  
+  const roundKey = extractRoundIdentifier(id);
+
   // Get round data from API only
-  const { data: round, loading, error } = useRound(roundId);
+  const { data: round, loading, error } = useRound(roundKey);
   
   return (
     <div className="w-full max-w-[1600px] mx-auto">

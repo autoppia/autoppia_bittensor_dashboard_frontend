@@ -17,7 +17,7 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
   const failedTasks = stats?.failedTasks || 127;
   const averageDuration = stats?.averageTaskDuration || 8.3;
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl mb-6">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl mb-6">
       {/* Background effects */}
       <div className="pointer-events-none absolute -left-24 top-10 h-56 w-56 rounded-full bg-gradient-to-br from-emerald-500/15 via-emerald-400/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute right-0 -bottom-24 h-64 w-64 rounded-full bg-gradient-to-br from-blue-400/10 via-blue-500/5 to-transparent blur-[120px]" />
@@ -36,28 +36,28 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
 
         {/* Stats Grid - 2x2 on mobile */}
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiClock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
             <div className="text-2xl sm:text-3xl font-bold text-blue-400">
               {totalTasks}
             </div>
             <div className="text-sm text-slate-400 font-medium">Total Tasks</div>
           </div>
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiGlobe className="w-6 h-6 text-orange-400 mx-auto mb-2" />
             <div className="text-2xl sm:text-3xl font-bold text-orange-400">
               3
             </div>
             <div className="text-sm text-slate-400 font-medium">Websites</div>
           </div>
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiCheckCircle className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
             <div className="text-2xl sm:text-3xl font-bold text-emerald-400">
               {successfulTasks}
             </div>
             <div className="text-sm text-slate-400 font-medium">Successful</div>
           </div>
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiXCircle className="w-6 h-6 text-red-400 mx-auto mb-2" />
             <div className="text-2xl sm:text-3xl font-bold text-red-400">
               {failedTasks}
@@ -70,12 +70,12 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
       {/* Desktop Layout - Horizontal */}
       <div className="hidden md:flex items-center justify-between relative">
         <div className="grid grid-cols-2 gap-6">
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiClock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
             <div className="text-3xl font-bold text-blue-400">{totalTasks}</div>
             <div className="text-sm text-slate-400 font-medium">Total Tasks</div>
           </div>
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiGlobe className="w-6 h-6 text-orange-400 mx-auto mb-2" />
             <div className="text-3xl font-bold text-orange-400">3</div>
             <div className="text-sm text-slate-400 font-medium">Websites</div>
@@ -90,12 +90,12 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiCheckCircle className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
             <div className="text-3xl font-bold text-emerald-400">{successfulTasks}</div>
             <div className="text-sm text-slate-400 font-medium">Successful</div>
           </div>
-          <div className="text-center bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="text-center bg-slate-800/20 rounded-xl p-4 border border-slate-700/25">
             <PiXCircle className="w-6 h-6 text-red-400 mx-auto mb-2" />
             <div className="text-3xl font-bold text-red-400">{failedTasks}</div>
             <div className="text-sm text-slate-400 font-medium">Failed</div>

@@ -94,7 +94,7 @@ type TimelinePoint = {
   miners: MinerSnapshot[];
 };
 
-type ProcessedTimeline = {
+export type ProcessedTimeline = {
   roster: MinerProfile[];
   timeline: TimelinePoint[];
   subnetId: string;
@@ -113,6 +113,7 @@ interface MinerAnimationExperienceProps {
   condensed?: boolean;
   subnetId?: string;
   rounds?: number;
+  mockTimeline?: ProcessedTimeline | null;
 }
 
 const DEFAULT_SUBNET_ID = "subnet36";
@@ -135,6 +136,17 @@ function hexToRgba(hex: string, alpha: number) {
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function normalizeScore(value: number | null | undefined): number {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return 0;
+  }
+  return numeric <= 1 ? Number((numeric * 10).toFixed(3)) : numeric;
 }
 
 function transformTimelineResponse(
@@ -173,11 +185,11 @@ function transformTimelineResponse(
 
         return {
           ...baseProfile,
-          score: snapshot.score,
+          score: normalizeScore(snapshot.score),
           rank: snapshot.rank,
           previousRank: previousRankValue,
           rankChange: computedRankChange,
-          scoreChange: snapshot.score_change ?? 0,
+          scoreChange: normalizeScore(snapshot.score_change ?? 0),
         };
       })
       .sort((a, b) => a.rank - b.rank);
@@ -194,6 +206,21 @@ function transformTimelineResponse(
     timeline,
     subnetId: payload.subnet_id,
     meta: payload.meta,
+  };
+}
+
+function cloneProcessedTimeline(source: ProcessedTimeline): ProcessedTimeline {
+  return {
+    ...source,
+    roster: source.roster.map((miner) => ({ ...miner })),
+    timeline: source.timeline.map((point) => ({
+      ...point,
+      miners: point.miners.map((miner) => ({ ...miner })),
+    })),
+    meta: {
+      ...source.meta,
+      query: { ...source.meta.query },
+    },
   };
 }
 
@@ -314,8 +341,8 @@ function ScoreTooltip({ active, payload }: TooltipProps<number, string>) {
             return null;
           }
 
-          const percentageValue = Number(entry.value).toFixed(1);
-          const labelText = `${miner.name} · ${percentageValue}%`;
+          const scoreValue = Number(entry.value).toFixed(2);
+          const labelText = `${miner.name} · ${scoreValue}`;
 
           return (
             <div
@@ -339,7 +366,7 @@ function ScoreTooltip({ active, payload }: TooltipProps<number, string>) {
                 </div>
               </div>
               <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gray-400">
-                Rank #{miner.rank.toString().padStart(2, "0")}
+                Rank {miner.rank.toString().padStart(2, "0")}
               </span>
             </div>
           );
@@ -359,6 +386,7 @@ export function MinerAnimationExperience({
   condensed = false,
   subnetId = DEFAULT_SUBNET_ID,
   rounds = DEFAULT_ROUND_COUNT,
+  mockTimeline = null,
 }: MinerAnimationExperienceProps) {
   const [data, setData] = useState<ProcessedTimeline | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -371,6 +399,7 @@ export function MinerAnimationExperience({
 
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
+  const shouldUseMock = Boolean(mockTimeline);
 
   const timeline = useMemo(() => data?.timeline ?? [], [data]);
   const roster = useMemo(() => data?.roster ?? [], [data]);
@@ -391,7 +420,7 @@ export function MinerAnimationExperience({
 
       try {
         const response = await apiClient.get<SubnetTimelineResponse>(
-          `/subnets/${encodeURIComponent(subnetId)}/timeline`,
+          `/api/v1/subnets/${encodeURIComponent(subnetId)}/timeline`,
           { rounds: Math.max(1, Math.floor(rounds)) }
         );
         const processed = transformTimelineResponse(response.data);
@@ -420,16 +449,41 @@ export function MinerAnimationExperience({
   );
 
   useEffect(() => {
+    if (shouldUseMock) {
+      const nextData = mockTimeline ? cloneProcessedTimeline(mockTimeline) : null;
+
+      setData(nextData);
+      setError(nextData ? null : "Mock timeline unavailable");
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+      setProgress(0);
+      setIsPlaying((nextData?.timeline.length ?? 0) > 1);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      lastTimestampRef.current = null;
+      return;
+    }
+
     fetchTimeline(true);
-  }, [fetchTimeline]);
+  }, [
+    fetchTimeline,
+    mockTimeline,
+    shouldUseMock,
+  ]);
 
   useEffect(() => {
+    if (shouldUseMock) {
+      return;
+    }
+
     const interval = setInterval(() => {
       fetchTimeline(false);
     }, REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [fetchTimeline]);
+  }, [fetchTimeline, shouldUseMock]);
 
   useEffect(() => {
     if (totalSnapshots === 0) {
@@ -553,11 +607,15 @@ export function MinerAnimationExperience({
   const currentDateLabel = interpolatedPoint
     ? DATE_LABEL_FORMATTER.format(new Date(interpolatedPoint.date))
     : "--";
-  const topMiners = latestSnapshot.slice(0, 3);
+  const topMinerDisplayCount = condensed ? 3 : 6;
+  const topMiners = latestSnapshot.slice(
+    0,
+    Math.min(latestSnapshot.length, topMinerDisplayCount)
+  );
 
   const [minScore, maxScore] = useMemo(() => {
     if (!activeData.length) {
-      return [0, 100];
+      return [0, 10];
     }
     let min = Number.POSITIVE_INFINITY;
     let max = Number.NEGATIVE_INFINITY;
@@ -578,17 +636,17 @@ export function MinerAnimationExperience({
     });
 
     if (!Number.isFinite(min) || !Number.isFinite(max)) {
-      return [0, 100];
+      return [0, 10];
     }
 
-    const span = Math.max(max - min, 6);
-    const padding = Math.max(1.2, span * 0.12);
+    const span = Math.max(max - min, 1.5);
+    const padding = Math.max(0.4, span * 0.18);
     const lower = Math.max(0, min - padding);
-    const upper = Math.min(100, max + padding);
+    const upper = Math.min(10, max + padding);
 
     return [
       Math.max(0, Math.floor(lower * 10) / 10),
-      Math.min(100, Math.ceil(upper * 10) / 10),
+      Math.min(10, Math.ceil(upper * 10) / 10),
     ];
   }, [activeData, roster]);
 
@@ -726,7 +784,7 @@ export function MinerAnimationExperience({
       const isAscending = miner.rankChange > 0;
       const trendSymbol =
         miner.rankChange > 0 ? "▲" : miner.rankChange < 0 ? "▼" : "•";
-      const labelText = `${miner.name} ${trendSymbol} ${miner.score.toFixed(1)}%`;
+      const labelText = `${miner.name} ${trendSymbol} ${miner.score.toFixed(2)}`;
       const widthEstimate = Math.max(110, labelText.length * (isAscending ? 7 : 6.1));
       const backgroundFill = isAscending
         ? hexToRgba(miner.color, 0.55)
@@ -829,7 +887,7 @@ export function MinerAnimationExperience({
                       </p>
                       <p className="text-sm font-semibold text-black">{miner.name}</p>
                       <p className="text-xs font-semibold text-black">
-                        Score: {miner.score.toFixed(1)}%
+                        Score: {miner.score.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -847,7 +905,7 @@ export function MinerAnimationExperience({
                 Current Round
               </p>
               <p className="text-xl font-bold text-gray-900">
-                {currentRound !== null ? `#${currentRound}` : "--"}
+                {`Current Round : ${currentRound !== null ? currentRound : "--"}`}
               </p>
               <p className="text-xs font-medium text-gray-500">{currentDateLabel}</p>
             </div>

@@ -32,7 +32,7 @@ export default function AgentScoreAnalytics({
   const agentStats = [
     {
       title: "Current Score",
-      metric: (agent?.currentScore ?? 0).toFixed(1) + '%',
+      metric: `${((agent?.currentScore ?? 0) * 100).toFixed(1)}%`,
       description: "Miner Score in last round",
       icon: LuStar,
       className:
@@ -43,7 +43,7 @@ export default function AgentScoreAnalytics({
     },
     {
       title: "Current Top Score",
-      metric: (agent?.currentTopScore ?? 0).toFixed(1) + '%',
+      metric: `${((agent?.currentTopScore ?? 0) * 100).toFixed(1)}%`,
       description: "Top Score in last round",
       icon: LuCrown,
       className:

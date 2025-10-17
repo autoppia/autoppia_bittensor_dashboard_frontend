@@ -25,6 +25,7 @@ import {
   MinimalAgentData,
   AgentPerformanceMetrics,
   AgentRunData,
+  AgentRunOverview,
   AgentComparison,
   AgentStatistics,
   ScoreRoundDataPoint,
@@ -50,10 +51,25 @@ export class AgentsService {
    * Get details for a specific miner by UID (optimized endpoint)
    */
   async getMinerDetails(uid: number): Promise<{ agent: AgentData; scoreRoundData: ScoreRoundDataPoint[] }> {
-    const response = await apiClient.get<MinerDetailsResponse>(
-      `${this.baseEndpoint}/${uid}`
-    );
-    return response.data.data;
+    const candidateIds = [`agent-${uid}`, String(uid)];
+
+    for (const candidate of candidateIds) {
+      try {
+        const response = await apiClient.get<MinerDetailsResponse>(
+          `${this.baseEndpoint}/${candidate}`
+        );
+        if (response.data?.data) {
+          return response.data.data;
+        }
+      } catch (error: any) {
+        if (error?.status && error.status !== 404) {
+          throw error;
+        }
+        // Continue to next candidate when 404
+      }
+    }
+
+    throw new Error(`Miner ${uid} not found in API response`);
   }
 
   /**
@@ -65,66 +81,72 @@ export class AgentsService {
     params?: { timeRange?: '7d' | '30d' | '90d'; granularity?: 'hour' | 'day' }
   ): Promise<AgentPerformanceMetrics> {
     try {
-      console.log('Making API call to:', `/api/v1/miners/${uid}/performance`, 'with params:', params);
-      
       const response = await apiClient.get<{
-        success: boolean;
-        data: {
-          performanceTrend: {
+        success?: boolean;
+        data?: {
+          uid: number;
+          timeRange: { start: string; end: string };
+          totalRuns: number;
+          successfulRuns: number;
+          failedRuns: number;
+          averageScore: number;
+          bestScore: number;
+          worstScore: number;
+          successRate: number;
+          averageResponseTime: number;
+          totalTasks: number;
+          completedTasks: number;
+          taskCompletionRate: number;
+          scoreDistribution: {
+            excellent: number;
+            good: number;
+            average: number;
+            poor: number;
+          };
+          performanceTrend: Array<{
             period: string;
             score: number;
             successRate: number;
-            duration: number;
-          }[];
+            responseTime: number;
+          }>;
         };
       }>(
         `/api/v1/miners/${uid}/performance`,
         params
       );
-      
-      console.log('API Response:', response);
-      
-      // Check if we got real data
-      if (response.data.data.performanceTrend && response.data.data.performanceTrend.length > 0) {
-        // Transform the response to match AgentPerformanceMetrics interface
-        const trendData = response.data.data.performanceTrend;
-        const scores = trendData.map(item => item.score);
-        
+
+      const payload = response.data?.data;
+      if (payload) {
+        const trendData = Array.isArray(payload.performanceTrend) ? payload.performanceTrend : [];
         return {
           agentId: uid.toString(),
-          timeRange: {
-            start: trendData[0]?.period || '',
-            end: trendData[trendData.length - 1]?.period || ''
-          },
-          totalRuns: trendData.length,
-          successfulRuns: trendData.filter(item => item.successRate > 0).length,
-          failedRuns: trendData.filter(item => item.successRate === 0).length,
-          currentScore: scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0,
-          currentTopScore: Math.max(...scores),
-          worstScore: Math.min(...scores),
-          averageDuration: trendData.reduce((sum, item) => sum + item.duration, 0) / trendData.length,
-          totalTasks: 0,
-          completedTasks: 0,
-          taskCompletionRate: 0,
-          scoreDistribution: {
-            excellent: scores.filter(s => s >= 0.9).length,
-            good: scores.filter(s => s >= 0.7 && s < 0.9).length,
-            average: scores.filter(s => s >= 0.5 && s < 0.7).length,
-            poor: scores.filter(s => s < 0.5).length
+          timeRange: payload.timeRange ?? { start: '', end: '' },
+          totalRuns: payload.totalRuns ?? trendData.length,
+          successfulRuns: payload.successfulRuns ?? 0,
+          failedRuns: payload.failedRuns ?? Math.max((payload.totalRuns ?? 0) - (payload.successfulRuns ?? 0), 0),
+          currentScore: payload.averageScore ?? 0,
+          currentTopScore: payload.bestScore ?? 0,
+          worstScore: payload.worstScore ?? 0,
+          averageResponseTime: payload.averageResponseTime ?? 0,
+          totalTasks: payload.totalTasks ?? 0,
+          completedTasks: payload.completedTasks ?? 0,
+          taskCompletionRate: payload.taskCompletionRate ?? 0,
+          scoreDistribution: payload.scoreDistribution ?? {
+            excellent: 0,
+            good: 0,
+            average: 0,
+            poor: 0,
           },
           performanceTrend: trendData.map((item, index) => ({
             round: index + 1,
-            score: item.score
-          }))
+            score: item.score ?? 0,
+            responseTime: item.responseTime ?? 0,
+          })),
         };
-      } else {
-        // Fallback: Generate realistic historical data based on current miner stats
-        console.log('No performance trend data available, generating fallback data');
-        return this.generateFallbackPerformanceData(uid, params);
       }
+
+      return this.generateFallbackPerformanceData(uid, params);
     } catch (error) {
-      console.error('Error calling miners performance API, using fallback:', error);
-      // Fallback: Generate realistic historical data
       return this.generateFallbackPerformanceData(uid, params);
     }
   }
@@ -153,10 +175,12 @@ export class AgentsService {
       // Generate realistic variations
       const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
       const score = Math.max(0.7, Math.min(1, currentScore + variation));
+      const responseTime = Math.max(5, 25 + (Math.random() - 0.5) * 10);
       
       performanceTrend.push({
         round: roundNumber,
-        score: score
+        score,
+        responseTime
       });
     }
     
@@ -172,7 +196,7 @@ export class AgentsService {
       currentScore: currentScore,
       currentTopScore: 0.98,
       worstScore: 0.7,
-      averageDuration: 30,
+      averageResponseTime: 30,
       totalTasks: 0,
       completedTasks: 0,
       taskCompletionRate: 0,
@@ -217,11 +241,34 @@ export class AgentsService {
     id: string,
     params?: AgentPerformanceQueryParams
   ): Promise<AgentPerformanceMetrics> {
-    const response = await apiClient.get<AgentPerformanceResponse>(
-      `${this.baseEndpoint}/${id}/performance`,
-      params
-    );
-    return response.data.data.metrics;
+    const candidates = /^\d+$/.test(id)
+      ? [`agent-${id}`, id]
+      : [id, id.replace(/^agent-/, '')];
+
+    let capturedError: any = null;
+    for (const candidate of Array.from(new Set(candidates)).filter(Boolean)) {
+      try {
+        const response = await apiClient.get<AgentPerformanceResponse>(
+          `${this.baseEndpoint}/${candidate}/performance`,
+          params
+        );
+        const metrics = response.data?.data?.metrics;
+        if (metrics) {
+          return metrics;
+        }
+      } catch (error: any) {
+        capturedError = error;
+        if (!error?.status || error.status !== 404) {
+          throw error;
+        }
+      }
+    }
+
+    if (capturedError) {
+      throw capturedError;
+    }
+
+    throw new Error(`Agent performance metrics for ${id} not found`);
   }
 
   /**
@@ -232,8 +279,8 @@ export class AgentsService {
     params?: AgentRunsQueryParams
   ): Promise<AgentRunsResponse> {
     const response = await apiClient.get<AgentRunsResponse>(
-      `/api/v1/agent-runs/agents/${id}/runs`,
-      params
+      `/api/v1/agent-runs`,
+      { ...params, agentId: id }
     );
     return response.data;
   }
@@ -376,7 +423,7 @@ export class AgentsService {
     page: number = 1,
     limit: number = 20
   ): Promise<{
-    runs: AgentRunData[];
+    runs: AgentRunOverview[];
     total: number;
     page: number;
     limit: number;
@@ -401,7 +448,7 @@ export class AgentsService {
   async getAgentSummary(id: string): Promise<{
     agent: AgentData;
     recentPerformance: AgentPerformanceMetrics;
-    recentRuns: AgentRunData[];
+    recentRuns: AgentRunOverview[];
     activity: AgentActivity[];
   }> {
     const [agent, performance, runs, activity] = await Promise.all([

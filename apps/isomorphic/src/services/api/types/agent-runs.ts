@@ -186,30 +186,35 @@ export interface AgentRunPersonas {
 
 // ===== API RESPONSE TYPES =====
 export interface AgentRunDetailsResponse {
+  success: boolean;
   data: {
     run: AgentRunData;
   };
 }
 
 export interface AgentRunStatsResponse {
+  success: boolean;
   data: {
     stats: AgentRunStats;
   };
 }
 
 export interface AgentRunSummaryResponse {
+  success: boolean;
   data: {
     summary: AgentRunSummary;
   };
 }
 
 export interface AgentRunPersonasResponse {
+  success: boolean;
   data: {
     personas: AgentRunPersonas;
   };
 }
 
 export interface AgentRunTasksResponse {
+  success: boolean;
   data: {
     tasks: AgentRunTaskData[];
     total: number;
@@ -219,6 +224,7 @@ export interface AgentRunTasksResponse {
 }
 
 export interface AgentRunsListResponse {
+  success: boolean;
   data: {
     runs: AgentRunListItem[];
     total: number;

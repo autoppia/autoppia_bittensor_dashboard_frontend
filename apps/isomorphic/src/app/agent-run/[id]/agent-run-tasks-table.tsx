@@ -26,7 +26,7 @@ export default function AgentRunTasksTable() {
   });
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
       <div className="pointer-events-none absolute -right-24 top-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
 
@@ -55,8 +55,12 @@ export default function AgentRunTasksTable() {
           variant="modern"
           classNames={{
             container:
-              "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-800/70 bg-slate-950/60",
-          }}
+              "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-slate-800/20",
+            headerClassName:
+              "bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 text-slate-200",
+            rowClassName:
+              "border-b border-slate-700/25 transition-colors duration-200 hover:bg-slate-900/40",
+            }}
         />
       </div>
 
