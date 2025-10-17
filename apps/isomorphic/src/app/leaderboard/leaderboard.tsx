@@ -22,6 +22,7 @@ import {
   ReferenceLine,
   LabelList,
 } from "recharts";
+import { Text, Title } from "rizzui/typography";
 
 /* -------------------- DATA -------------------- */
 const leaderboardData = [
@@ -448,7 +449,7 @@ export default function App() {
 
   const displayedTasks = showAllTasks
     ? benchmarkTasks
-    : benchmarkTasks.slice(0, 12);
+    : benchmarkTasks.slice(0, 6);
 
   const downloadTasks = () => {
     const tasksText = benchmarkTasks
@@ -473,78 +474,28 @@ export default function App() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10 sm:mb-14"
-        >
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 shadow-2xl mb-6">
-            <FaTrophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-cyan-100 mb-4">
-            Infinite Web Arena
-          </h1>
-          <p className="text-base sm:text-lg text-slate-300 font-medium">
-            Official Performance Leaderboard
-          </p>
-        </motion.div>
 
-        {/* Agent Logos Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mb-8 sm:mb-12"
-        >
-          <div className="relative">
-            <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border border-slate-700/50 rounded-3xl p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <FaStar className="w-6 h-6 text-cyan-400" />
-                <h3 className="text-xl sm:text-2xl font-black text-white">
-                  Competing AI Agents
-                </h3>
+        <div className="relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-3xl p-8 sm:p-12 mb-12 backdrop-blur-sm transition-all duration-300 shadow-xl overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+
+          <div className="relative z-10 text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
+                <FaTrophy className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-                {leaderboardData.map((agent) => (
-                  <motion.div
-                    key={agent.rank}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: agent.rank * 0.05 }}
-                    className="relative group"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 blur-lg rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative bg-slate-800/80 backdrop-blur border border-slate-700/50 rounded-xl p-4 hover:border-cyan-500/50 transition-all">
-                      <div className="flex flex-col items-center gap-2">
-                        <div
-                          className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${agent.rank <= 3 ? "border-amber-400" : "border-blue-400/50"} shadow-lg`}
-                        >
-                          <img
-                            src={agent.logoUrl}
-                            alt={agent.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        {agent.rank <= 3 && (
-                          <div className="text-xl">{agent.medal}</div>
-                        )}
-                        <div className="text-center">
-                          <p className="text-xs font-black text-white truncate w-full">
-                            {agent.name.split(" ")[0]}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {agent.score}%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <Title
+                as="h1"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+              >
+                Infinite Web Arena Leaderboard
+              </Title>
             </div>
+            <Text className="text-base sm:text-lg text-cyan-300 max-w-3xl mx-auto mb-6">
+              Top performing web agents ranked by IWA Score
+            </Text>
           </div>
-        </motion.div>
-
+        </div>
         {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -801,7 +752,7 @@ export default function App() {
                   />
                   <div className="relative flex h-full flex-col p-4 sm:p-5">
                     {/* Project */}
-                    <div className="mb-3 flex items-start gap-3">
+                    <div className="mb-3 flex items-center gap-3">
                       <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-md">
                         <FaMedal className="h-5 w-5 text-white opacity-90" />
                       </div>
