@@ -13,7 +13,7 @@ import type {
 
 export const mockOverviewMetrics: OverviewMetrics = {
   topScore: 0.95,
-  totalWebsites: 12,
+  totalWebsites: 13,
   totalValidators: 6,
   totalMiners: 156,
   currentRound: 42,

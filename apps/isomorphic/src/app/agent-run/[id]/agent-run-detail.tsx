@@ -104,7 +104,7 @@ export default function AgentRunDetail({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl",
+        "relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl",
         className
       )}
     >
@@ -169,7 +169,7 @@ export default function AgentRunDetail({
             return (
               <div 
                 key={`${item.website}-${index}`} 
-                className="group relative bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 hover:border-slate-600/70 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/20"
+                className="group relative bg-slate-800/20 backdrop-blur-sm rounded-xl p-5 border border-slate-700/25 hover:border-slate-600/45 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/15"
               >
                 {/* Performance Indicator */}
                 <div className="flex items-center justify-between mb-3">
@@ -213,7 +213,7 @@ export default function AgentRunDetail({
                 
                 {/* Enhanced Progress Bar */}
                 <div className="relative">
-                  <div className="h-4 w-full rounded-full bg-slate-800/80 overflow-hidden">
+                  <div className="h-4 w-full rounded-full bg-slate-700/30 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                       style={{
@@ -244,13 +244,13 @@ export default function AgentRunDetail({
                 
                 {/* Additional metrics */}
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                  <div className="bg-slate-800/15 rounded-lg p-3 border border-slate-700/20">
                     <div className="text-slate-400 mb-1">Avg Solution Time</div>
                     <div className="font-semibold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
                     </div>
                   </div>
-                  <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                  <div className="bg-slate-800/15 rounded-lg p-3 border border-slate-700/20">
                     <div className="text-slate-400 mb-1">Success Rate</div>
                     <div className="font-semibold text-white">
                       {((item.successCount / item.total) * 100).toFixed(1)}%
@@ -263,7 +263,7 @@ export default function AgentRunDetail({
         </div>
       ) : (
         <div className="relative text-center py-12">
-          <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/50">
+          <div className="w-16 h-16 bg-slate-800/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/25">
             <PiChartBar className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">

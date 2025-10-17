@@ -188,30 +188,35 @@ export interface TaskStatistics {
 
 // ===== API RESPONSE TYPES =====
 export interface TaskDetailsResponse {
+  success: boolean;
   data: {
     task: TaskData;
   };
 }
 
 export interface TaskResultsResponse {
+  success: boolean;
   data: {
     results: TaskResults;
   };
 }
 
 export interface TaskPersonasResponse {
+  success: boolean;
   data: {
     personas: TaskPersonas;
   };
 }
 
 export interface TaskStatisticsResponse {
+  success: boolean;
   data: {
     statistics: TaskStatistics;
   };
 }
 
 export interface TasksListResponse {
+  success: boolean;
   data: {
     tasks: TaskData[];
     total: number;
@@ -287,6 +292,7 @@ export interface TaskSearchParams {
 }
 
 export interface TaskSearchResponse {
+  success: boolean;
   data: {
     tasks: TaskData[];
     total: number;

@@ -9,7 +9,7 @@ import type {
   AgentData,
   MinimalAgentData,
   AgentPerformanceMetrics,
-  AgentRunData,
+  AgentRunOverview,
   AgentComparison,
   AgentStatistics,
   AgentActivity,
@@ -90,9 +90,14 @@ export function useAgents(params?: AgentsListQueryParams) {
 }
 
 // Hook for specific agent details
-export function useAgent(id: string) {
-  return useApiCall(
-    () => agentsService.getAgent(id),
+export function useAgent(id?: string | null) {
+  return useApiCall<{ agent: AgentData | null; scoreRoundData: ScoreRoundDataPoint[] }>(
+    () => {
+      if (!id) {
+        return Promise.resolve({ agent: null, scoreRoundData: [] });
+      }
+      return agentsService.getAgent(id);
+    },
     [id]
   );
 }
@@ -237,7 +242,7 @@ export function useAgentRealtime(id: string, interval: number = 30000) {
   const [data, setData] = useState<{
     agent: AgentData | null;
     performance: AgentPerformanceMetrics | null;
-    recentRuns: AgentRunData[];
+    recentRuns: AgentRunOverview[];
     activity: AgentActivity[];
   }>({
     agent: null,

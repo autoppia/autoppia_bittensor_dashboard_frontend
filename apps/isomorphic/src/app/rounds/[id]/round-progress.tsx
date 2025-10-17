@@ -6,15 +6,16 @@ import { useMedia } from "@core/hooks/use-media";
 import cn from "@core/utils/class-names";
 import { PiCubeDuotone, PiClockDuotone, PiHourglassSimpleDuotone } from "react-icons/pi";
 import { useRoundProgress, useRound } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundProgress() {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
   
   // Get data from API only
-  const { data: progressData, loading: progressLoading, error: progressError } = useRoundProgress(roundId);
-  const { data: roundData, loading: roundLoading, error: roundError } = useRound(roundId);
+  const { data: progressData, loading: progressLoading, error: progressError } = useRoundProgress(roundKey);
+  const { data: roundData, loading: roundLoading, error: roundError } = useRound(roundKey);
   
   const round = roundData;
   const progress = progressData;

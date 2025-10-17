@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -8,15 +9,51 @@ import cn from "@core/utils/class-names";
 import { Text } from "rizzui/typography";
 import { Skeleton } from "@core/ui/skeleton";
 import { PiCrownFill } from "react-icons/pi";
-import { useTopMiners } from "@/services/hooks/useRounds";
-import Eye from "@core/components/icons/eye";
+import { useRoundMiners } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 
-export default function RoundTopMiners({ className }: { className?: string }) {
+export default function RoundTopMiners({
+  className,
+  selectedValidatorId,
+}: {
+  className?: string;
+  selectedValidatorId?: string;
+}) {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
   
   // Get top miners data from API
-  const { data: topMinersData, loading, error } = useTopMiners(roundId, 10);
+  const minersQuery = React.useMemo(
+    () => ({
+      page: 1,
+      limit: 100,
+      sortBy: "score" as const,
+      sortOrder: "desc" as const,
+    }),
+    [],
+  );
+
+  const {
+    data: roundMinersData,
+    loading,
+    error,
+  } = useRoundMiners(roundKey, minersQuery);
+
+  const topMinersList = React.useMemo(() => {
+    const miners =
+      roundMinersData?.data?.miners && Array.isArray(roundMinersData.data.miners)
+        ? roundMinersData.data.miners
+        : [];
+
+    if (!selectedValidatorId) {
+      return miners.slice(0, 10);
+    }
+
+    const filtered = miners.filter(
+      (miner) => miner.validatorId === selectedValidatorId,
+    );
+    return filtered.length > 0 ? filtered : [];
+  }, [roundMinersData, selectedValidatorId]);
 
   // Show loading state
   if (loading) {
@@ -68,7 +105,26 @@ export default function RoundTopMiners({ className }: { className?: string }) {
     );
   }
 
-  const topMinersList = topMinersData || [];
+  if (!topMinersList.length) {
+    return (
+      <WidgetCard
+        title="Top Miners"
+        className={cn("h-[520px] px-2 lg:px-4 w-full rounded-xl", className)}
+        headerClassName="px-3 pb-2"
+      >
+        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <p className="text-lg font-semibold">No miners ranked yet</p>
+            <p className="text-sm mt-2">
+              {selectedValidatorId
+                ? "Select another validator or check back once evaluations complete."
+                : "No miner leaderboard data is available for this round."}
+            </p>
+          </div>
+        </div>
+      </WidgetCard>
+    );
+  }
 
   return (
     <WidgetCard
@@ -121,11 +177,20 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                         )}
                       </div>
                     </div>
-                    <Text className="text-gray-500 group-hover:text-gray-600">
-                      {miner.hotkey
-                        ? `${miner.hotkey.slice(0, 6)}...${miner.hotkey.slice(-6)}`
-                        : "No hotkey"}
-                    </Text>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-gray-500 group-hover:text-gray-600">
+                      <span className="uppercase tracking-wide">
+                        UID {miner.uid}
+                      </span>
+                      <span
+                        className="truncate max-w-[180px] text-[11px] font-normal uppercase tracking-wide text-gray-400 group-hover:text-gray-500"
+                        title={miner.hotkey ?? "Hotkey unavailable"}
+                      >
+                        Hotkey{" "}
+                        {miner.hotkey
+                          ? `${miner.hotkey.slice(0, 6)}...${miner.hotkey.slice(-6)}`
+                          : "N/A"}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
@@ -138,7 +203,7 @@ export default function RoundTopMiners({ className }: { className?: string }) {
                           index === 0 ? "text-yellow-500" : "text-emerald-500"
                         )}
                       >
-                        {miner.score.toFixed(2)}
+                        {(miner.score * 100).toFixed(1)}%
                       </div>
                     </div>
                     <div className="text-gray-400 group-hover:text-gray-600 transition-colors duration-200">

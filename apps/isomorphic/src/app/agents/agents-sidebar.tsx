@@ -98,7 +98,7 @@ export default function AgentsSidebar() {
         <Text className="sticky top-0 px-5 py-3 text-2xl font-bold text-gray-900 border-b">
           All Miners
         </Text>
-        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-2 mt-2.5 pt-3 pb-3 scroll-smooth">
+        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-1.5 mt-2.5 pt-3 pb-3 scroll-smooth">
           <div className="flex flex-col gap-1">
             <div className="mb-2 space-y-2">
               <Input
@@ -151,13 +151,13 @@ export default function AgentsSidebar() {
               const rankBadgePalette = (() => {
                 switch (displayRank) {
                   case 1:
-                    return "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-gray-900 shadow-sm";
+                    return "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-black shadow-sm";
                   case 2:
-                    return "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-gray-800 shadow-sm";
+                    return "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-black shadow-sm";
                   case 3:
-                    return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-gray-900 shadow-sm";
+                    return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-black shadow-sm";
                   default:
-                    return "bg-white/80 text-gray-700 border border-gray-200";
+                    return "bg-white/80 text-black border border-gray-200";
                 }
               })();
 
@@ -168,7 +168,7 @@ export default function AgentsSidebar() {
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 group overflow-visible",
+                      "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
                         ? "bg-emerald-500/20 border border-emerald-500/40 text-white shadow-lg"
                         : highlightTop
@@ -238,7 +238,7 @@ export default function AgentsSidebar() {
                                 : "text-gray-400 group-hover:text-gray-200"
                           )}
                         >
-                          Score: {miner.score.toFixed(1)}%
+                          Score: {(miner.score * 100).toFixed(1)}%
                         </span>
                         <span
                           className={cn(

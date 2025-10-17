@@ -40,7 +40,11 @@ const agentRunTasksColumns = [
     header: "Website",
     enableSorting: false,
     cell: ({ row }) => (
-      <BannerText color="blue" text={row.original.website} />
+      <BannerText
+        color="blue"
+        text={row.original.website}
+        textColor="#ffffff"
+      />
     ),
   }),
   columnHelper.accessor("useCase", {
@@ -99,12 +103,12 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`/tasks/${row.original.taskId}`}
-        className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
+        className="flex items-center text-slate-200 transition-colors duration-200"
       >
         <Button 
           variant="outline" 
           size="sm"
-          className="border-gray-700 text-gray-700 hover:bg-white hover:text-black"
+          className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >
           <PiEyeBold className="me-1.5 size-4" />
           <span>Inspect</span>
@@ -158,7 +162,7 @@ export default function AgentRunTasksTableDynamic() {
   // Show loading state
   if (isLoading && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-gradient-to-br from-violet-500/10 via-violet-400/5 to-transparent blur-[120px]" />
         <div className="pointer-events-none absolute bottom-0 left-4 h-48 w-48 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
         <div className="relative mb-6 flex items-center justify-between">
@@ -166,9 +170,9 @@ export default function AgentRunTasksTableDynamic() {
           <Placeholder height="2.3rem" width="15rem" />
         </div>
         <div className="relative mb-3">
-          <div className="overflow-hidden rounded-2xl border border-slate-800/70">
+          <div className="overflow-hidden rounded-2xl border border-slate-700/25">
             <table className="w-full">
-              <thead className="bg-slate-900/60">
+              <thead className="bg-slate-800/20">
                 <tr>
                   {Array.from({ length: 6 }, (_, index) => (
                     <th key={index} className="px-4 py-3 text-left">
@@ -200,7 +204,7 @@ export default function AgentRunTasksTableDynamic() {
   // Show error state
   if (error && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-20 right-0 h-56 w-56 rounded-full bg-gradient-to-br from-rose-500/15 via-rose-400/5 to-transparent blur-[110px]" />
         <div className="relative mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">All Tasks</h2>
@@ -222,7 +226,7 @@ export default function AgentRunTasksTableDynamic() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
       <div className="pointer-events-none absolute -right-24 top-0 h-60 w-60 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/15 via-emerald-500/5 to-transparent blur-[100px]" />
 
@@ -259,11 +263,15 @@ export default function AgentRunTasksTableDynamic() {
             variant="modern"
             classNames={{
               container:
-                "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-800/70 bg-slate-950/60",
+                "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-slate-800/20",
+              headerClassName:
+                "bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 text-slate-200",
+              rowClassName:
+                "border-b border-slate-700/25 transition-colors duration-200 hover:bg-slate-900/40",
             }}
           />
         ) : (
-          <div className="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-8 text-center">
+          <div className="rounded-2xl border border-slate-700/25 bg-slate-800/20 p-8 text-center">
             <div className="mb-2 text-lg font-medium text-slate-200">
               No Tasks Found
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMinersList } from "@/services/hooks/useAgents";
 import {
@@ -13,23 +13,32 @@ import {
 
 export default function Page() {
   const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
   const { data: minersData, loading } = useMinersList({
     limit: 100,
   });
 
   useEffect(() => {
-    if (minersData?.miners && minersData.miners.length > 0) {
-      const topMiner = minersData.miners.find((miner) => miner.ranking === 1);
-
-      if (topMiner) {
-        router.push(`/agents/${topMiner.uid}`);
-      } else {
-        router.push(`/agents/${minersData.miners[0].uid}`);
-      }
+    if (redirecting) {
+      return;
     }
-  }, [minersData, router]);
 
-  if (loading || !minersData?.miners?.length) {
+    const miners = minersData?.miners;
+    if (!miners || miners.length === 0) {
+      return;
+    }
+
+    const topMiner = miners.find((miner) => miner.ranking === 1) ?? miners[0];
+    setRedirecting(true);
+    try {
+      router.push(`/agents/${topMiner.uid}`);
+    } catch (error) {
+      console.error("Failed to redirect to agent profile:", error);
+      setRedirecting(false);
+    }
+  }, [minersData, redirecting, router]);
+
+  if (loading || redirecting || !minersData?.miners?.length) {
     return (
       <div className="space-y-6">
         <AgentHeaderPlaceholder />

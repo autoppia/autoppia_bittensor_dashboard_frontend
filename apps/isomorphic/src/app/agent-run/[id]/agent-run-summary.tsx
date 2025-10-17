@@ -208,7 +208,7 @@ export default function AgentRunSummary({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/80 p-6 shadow-2xl ${className ?? ""}`}
+      className={`relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl ${className ?? ""}`}
     >
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/20 via-emerald-500/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-gradient-to-br from-sky-500/10 via-sky-400/5 to-transparent blur-[100px]" />

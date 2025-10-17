@@ -7,12 +7,16 @@ interface BannerTextProps {
     color: string;
     text: string;
     className?: string;
+    textClassName?: string;
+    textColor?: string;
 }
 
-export default function BannerText({ 
-    color, 
-    text, 
-    className 
+export default function BannerText({
+    color,
+    text,
+    className,
+    textClassName,
+    textColor,
 }: BannerTextProps) {
     return (
         <div className={cn("flex items-center", className)}>
@@ -21,8 +25,8 @@ export default function BannerText({
                 style={{ backgroundColor: color }}
             />
             <Text
-                className="ms-2 font-medium"
-                style={{ color: color }}
+                className={cn("ms-2 font-medium", textClassName)}
+                style={{ color: textColor ?? color }}
             >
                 {text}
             </Text>

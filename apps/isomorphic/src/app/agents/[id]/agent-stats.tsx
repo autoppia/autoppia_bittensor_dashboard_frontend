@@ -37,10 +37,16 @@ export default function AgentStats() {
     return null;
   }
 
+  const formattedCurrentRank =
+    agent.currentRank && agent.currentRank > 0 ? `#${agent.currentRank}` : "N/A";
+  const formattedBestRank =
+    agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
+  const formattedCurrentScore = `${((agent.currentScore ?? 0) * 100).toFixed(1)}%`;
+
   const agentStats = [
     {
       title: "Current Rank",
-      metric: `#${agent?.currentRank || 'N/A'}`,
+      metric: formattedCurrentRank,
       description: "Current ranking position",
       icon: LuAward,
       className:
@@ -51,7 +57,7 @@ export default function AgentStats() {
     },
     {
       title: "Best Rank Ever",
-      metric: `#${agent?.bestRankEver || 'N/A'}`,
+      metric: formattedBestRank,
       description: "Highest ranking achieved",
       icon: LuTrophy,
       className:
@@ -62,7 +68,7 @@ export default function AgentStats() {
     },
     {
       title: "Current Score",
-      metric: (agent?.currentScore ?? 0).toFixed(1) + '%',
+      metric: formattedCurrentScore,
       description: "Current performance score",
       icon: LuTarget,
       className:

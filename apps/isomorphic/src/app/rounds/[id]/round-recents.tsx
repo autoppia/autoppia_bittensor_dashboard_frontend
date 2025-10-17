@@ -8,14 +8,22 @@ import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
 import { LuCircleCheckBig, LuActivity } from "react-icons/lu";
 import { useRounds } from "@/services/hooks/useRounds";
-import type { RoundData } from "@/services/api/types/rounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundRecents() {
   const { id } = useParams();
+  const currentRoundKey = extractRoundIdentifier(id);
+  const currentRoundNumberMatch = currentRoundKey?.match(/\d+/);
+  const currentRoundNumber = currentRoundNumberMatch ? Number.parseInt(currentRoundNumberMatch[0], 10) : undefined;
   
   // Get rounds data from API - ordered from higher to lower (descending)
-  const { data: roundsData, loading, error } = useRounds({ limit: 40, sortBy: 'id', sortOrder: 'desc' });
+  const { data: roundsData, loading, error } = useRounds({
+    page: 1,
+    limit: 10,
+    sortBy: "round",
+    sortOrder: "desc",
+  });
 
   const {
     sliderEl,
@@ -59,27 +67,8 @@ export default function RoundRecents() {
     );
   }
 
-  const rawRounds = roundsData?.data?.rounds ?? [];
-  const uniqueRoundsMap = rawRounds.reduce<Map<number, RoundData>>((map, round) => {
-    const existingRound = map.get(round.id);
-    if (!existingRound) {
-      map.set(round.id, round);
-      return map;
-    }
-
-    const shouldReplace =
-      (round.current && !existingRound.current) ||
-      round.startBlock > existingRound.startBlock;
-
-    if (shouldReplace) {
-      map.set(round.id, round);
-    }
-    return map;
-  }, new Map<number, RoundData>());
-
-  const roundsList = Array.from(uniqueRoundsMap.values())
-    .sort((a, b) => b.id - a.id)
-    .slice(0, 10);
+  const roundsSource = roundsData?.data?.rounds ?? [];
+  const roundsList = roundsSource.slice(0, 10);
 
   if (roundsList.length === 0) {
     return (
@@ -108,13 +97,16 @@ export default function RoundRecents() {
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
           {roundsList.map((round, index: number) => {
-            const isActive = round.id === parseInt(id as string);
+            const roundKey = round.roundKey ?? `round-${round.id}-${index}`;
+            const baseNumber = round.roundNumber ?? round.id;
+            const isActive =
+              (currentRoundKey !== undefined && roundKey === currentRoundKey) ||
+              (currentRoundNumber !== undefined && baseNumber === currentRoundNumber);
             const isCurrent = round.current;
             const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
-            const roundKey = round.roundKey ?? `round-${round.id}-${index}`;
             
             return (
-              <Link key={roundKey} href={`/rounds/${round.id}`}>
+              <Link key={roundKey} href={`/rounds/${encodeURIComponent(roundKey)}`}>
                 <div
                   className={cn(
                     "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
@@ -145,15 +137,16 @@ export default function RoundRecents() {
                         isCurrent ? "text-yellow-500" : isActive ? "text-blue-400" : "text-gray-700"
                       )}
                     >
-                      Round {round.id}
+                      Round {baseNumber}
                     </span>
                   </div>
                   <span
-                      className={cn(
-                        "flex items-center space-x-1 text-xs font-medium uppercase tracking-wide",
-                        isCurrent ? "text-yellow-600" : isActive ? "text-blue-200" : "text-gray-500"
-                      )}
+                    className={cn(
+                      "flex items-center space-x-1 text-xs font-medium uppercase tracking-wide",
+                      isCurrent ? "text-yellow-600" : isActive ? "text-blue-200" : "text-gray-500"
+                    )}
                   >
+                    <span className="text-white">Epochs:</span>
                     <span>{round.startBlock}</span>
                     <span>-</span>
                     <span>{round.endBlock}</span>

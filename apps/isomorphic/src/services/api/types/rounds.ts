@@ -4,9 +4,28 @@
  */
 
 // ===== ROUND DATA =====
+export interface ValidatorRoundData {
+  validatorRoundId: string;
+  validatorUid?: number;
+  validatorName?: string;
+  validatorHotkey?: string;
+  status: 'active' | 'completed' | 'pending';
+  startTime: string;
+  endTime?: string;
+  averageScore: number;
+  topScore: number;
+  totalTasks: number;
+  completedTasks: number;
+  icon?: string;
+  agentEvaluationRuns?: any[];
+  roundData?: any;
+}
+
 export interface RoundData {
   id: number;
-  roundKey: string;
+  round?: number;
+  roundNumber?: number;
+  roundKey?: string;
   startBlock: number;
   endBlock: number;
   current: boolean;
@@ -20,9 +39,7 @@ export interface RoundData {
   currentBlock?: number;
   blocksRemaining?: number;
   progress?: number;
-  validatorUid?: number;
-  validatorHotkey?: string;
-  validatorName?: string;
+  validatorRounds: ValidatorRoundData[];
 }
 
 // ===== ROUND STATISTICS =====
@@ -79,6 +96,7 @@ export interface ValidatorPerformance {
   totalTasks: number;
   completedTasks: number;
   averageScore: number;
+  topScore: number;
   weight: number;
   trust: number;
   version: number;
@@ -122,6 +140,7 @@ export interface RoundProgress {
 
 // ===== API RESPONSE TYPES =====
 export interface RoundsListResponse {
+  success: boolean;
   data: {
     rounds: RoundData[];
     total: number;
@@ -131,18 +150,21 @@ export interface RoundsListResponse {
 }
 
 export interface RoundDetailsResponse {
+  success: boolean;
   data: {
     round: RoundData;
   };
 }
 
 export interface RoundStatisticsResponse {
+  success: boolean;
   data: {
     statistics: RoundStatistics;
   };
 }
 
 export interface RoundMinersResponse {
+  success: boolean;
   data: {
     miners: MinerPerformance[];
     benchmarks?: BenchmarkPerformance[];
@@ -153,6 +175,7 @@ export interface RoundMinersResponse {
 }
 
 export interface RoundValidatorsResponse {
+  success: boolean;
   data: {
     validators: ValidatorPerformance[];
     total: number;
@@ -160,6 +183,7 @@ export interface RoundValidatorsResponse {
 }
 
 export interface RoundActivityResponse {
+  success: boolean;
   data: {
     activities: RoundActivity[];
     total: number;
@@ -167,6 +191,7 @@ export interface RoundActivityResponse {
 }
 
 export interface RoundProgressResponse {
+  success: boolean;
   data: {
     progress: RoundProgress;
   };

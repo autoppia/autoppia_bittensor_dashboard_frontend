@@ -18,9 +18,10 @@ import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
 export default function TaskPersonasDynamic() {
   const { id } = useParams();
   const { personas, isLoading, error } = useTaskPersonas(id as string);
-  
-  // Fetch full agent data to get UID and hotkey
-  const { data: agentData } = useAgent(personas?.agent.id || '');
+
+  // Fetch full agent data to get UID and hotkey (when available)
+  const { data: agentDetail } = useAgent(personas?.agent.id);
+  const agentData = agentDetail?.agent;
 
   if (isLoading) {
     return <CardLoadingSkeleton count={4} className="mb-6" />;

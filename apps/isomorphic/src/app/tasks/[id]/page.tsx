@@ -1,10 +1,10 @@
 import { metaObject } from "@/config/site.config";
-import Task from "./task";
+import TaskDynamic from "./task-dynamic";
 
 export const metadata = {
   ...metaObject(),
 };
 
 export default function Page() {
-  return <Task />;
+  return <TaskDynamic />;
 }

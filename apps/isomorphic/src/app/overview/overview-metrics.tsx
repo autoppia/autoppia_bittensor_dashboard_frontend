@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
+import { websitesData } from "@/data/websites-data";
 
 const metricsData = [
   {
@@ -60,6 +62,23 @@ const metricsData = [
 
 export default function OverviewMetrics({ className }: { className?: string }) {
   const { data: metrics, loading, error } = useOverviewMetrics();
+  const activeWebsitesCount = useMemo(
+    () => websitesData.filter((website) => !website.isComingSoon).length,
+    []
+  );
+  const displayedWebsitesCount = 13;
+
+  const formatPercentage = (value?: number | null) => {
+    if (value === null || value === undefined) {
+      return "0.0%";
+    }
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return "0.0%";
+    }
+    const scaled = numeric <= 1 ? numeric * 100 : numeric;
+    return `${scaled.toFixed(1)}%`;
+  };
 
   // Show loading state
   if (loading) {
@@ -104,7 +123,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "score-to-win",
       title: "Top Score",
-      value: metrics?.topScore ?? 0,
+      value: formatPercentage(metrics?.topScore),
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -117,7 +136,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-websites",
       title: "Websites",
-      value: metrics?.totalWebsites ?? 0,
+      value: displayedWebsitesCount,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -189,7 +208,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               <div className={cn("text-xs truncate", metric.descriptionClassName)}>
                 {metric.id === "score-to-win" && "Current target score"}
                 {metric.id === "total-validators" && "Active validators"}
-                {metric.id === "total-miners" && "Registered miners"}
+                {metric.id === "total-miners" && "Miners in last round"}
                 {metric.id === "total-websites" && "Available websites"}
               </div>
             </div>
@@ -208,4 +227,3 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     </div>
   );
 }
-

@@ -61,7 +61,7 @@ export default function AgentScoreChart({
 }: AgentScoreChartProps) {
   const { id } = useParams();
   const uid = parseInt(id as string, 10);
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("90d");
+  const [timeRange, setTimeRange] = useState<"7d" | "15d" | "all">("all");
 
   const { data: agent, loading, error } = useMinerDetails(uid);
 
@@ -113,6 +113,13 @@ export default function AgentScoreChart({
 
         return row;
       })
+      .filter((entry) => {
+        const value = entry.round;
+        if (typeof value !== "number") {
+          return false;
+        }
+        return Number.isFinite(value) && value > 0;
+      })
       .sort((a, b) => {
         const roundA = typeof a.round === "number" ? a.round : Number(a.round);
         const roundB = typeof b.round === "number" ? b.round : Number(b.round);
@@ -129,41 +136,15 @@ export default function AgentScoreChart({
     };
   }, [scoreRoundData]);
 
-  const isUsingFallbackData = processedRows.length === 0;
-
-  const fallbackData = useMemo(() => {
-    if (!isUsingFallbackData || !agent) {
-      return [];
-    }
-
-    const data: Array<Record<string, number | string | null>> = [];
-    const baseScore =
-      typeof (agent as any)?.currentScore === "number"
-        ? normalizeScore((agent as any).currentScore)
-        : 0.85;
-
-    for (let i = 1; i <= 20; i += 1) {
-      const variation = (Math.random() - 0.5) * 0.1;
-      const score = Math.max(0.6, Math.min(1, (baseScore ?? 0.85) + variation));
-
-      data.push({
-        round: i,
-        score,
-        rank: Math.floor(Math.random() * 50) + 1,
-        reward: Math.random() * 10,
-        timestamp: new Date(Date.now() - (20 - i) * 24 * 60 * 60 * 1000).toISOString(),
-      });
-    }
-    return data;
-  }, [agent, isUsingFallbackData]);
+  const useSyntheticTrend = false;
 
   function handleFilterBy(option: string) {
     if (option === "7D") {
       setTimeRange("7d");
     } else if (option === "15D") {
-      setTimeRange("30d"); // Use 30d for 15D filter (15 rounds)
+      setTimeRange("15d");
     } else {
-      setTimeRange("90d"); // All rounds
+      setTimeRange("all");
     }
   }
 
@@ -199,30 +180,17 @@ export default function AgentScoreChart({
 
   // Apply time range filtering (1 round = 1 day)
   const getFilteredData = (data: any[]) => {
-    if (data.length === 0) return data;
-
-    const maxRound = Math.max(...data.map((d) => d.round));
-    let roundsToShow: number;
-
-    switch (timeRange) {
-      case "7d":
-        roundsToShow = 7;
-        break;
-      case "30d":
-        roundsToShow = 15;
-        break;
-      case "90d":
-      default:
-        roundsToShow = Math.min(90, data.length);
-        break;
+    if (data.length === 0 || timeRange === "all") {
+      return data;
     }
 
+    const maxRound = Math.max(...data.map((d) => d.round));
+    const roundsToShow = timeRange === "7d" ? 7 : 15;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
 
-  const baseData = isUsingFallbackData ? fallbackData : processedRows;
-  const displayData = getFilteredData(baseData).map((entry: any) => {
+  const displayData = getFilteredData(processedRows).map((entry: any) => {
     const scaled: Record<string, number | string | null> = {
       ...entry,
       score: entry.score != null ? Number(entry.score) * 100 : entry.score,
@@ -242,9 +210,42 @@ export default function AgentScoreChart({
     (entry) => typeof entry.topBenchmarkScore === "number"
   );
 
+  const scoreValues = displayData
+    .flatMap((entry) => {
+      const values: number[] = [];
+      if (typeof entry.score === "number") {
+        values.push(entry.score);
+      }
+      if (typeof entry.topBenchmarkScore === "number") {
+        values.push(entry.topBenchmarkScore);
+      }
+      benchmarkSeries.forEach((series) => {
+        if (typeof entry[series.key] === "number") {
+          values.push(entry[series.key] as number);
+        }
+      });
+      return values;
+    })
+    .filter((value) => Number.isFinite(value));
+
+  const computeDomain = () => {
+    if (!scoreValues.length) {
+      return [0, 100];
+    }
+    const minValue = Math.min(...scoreValues);
+    const maxValue = Math.max(...scoreValues);
+    const range = maxValue - minValue;
+    const padding = range > 0 ? range * 0.2 : Math.max(5, maxValue * 0.1 || 5);
+    const lowerBound = Math.max(0, minValue - padding);
+    const upperBound = Math.min(100, maxValue + padding);
+    return [Math.floor(lowerBound), Math.ceil(upperBound)];
+  };
+
+  const yAxisDomain = computeDomain();
+
   const legendItems = [
     { label: "Agent score", color: "#10B981" },
-    ...(hasTopBenchmark ? [{ label: "Top benchmark", color: "#FACC15" }] : []),
+    ...(hasTopBenchmark ? [{ label: "Top score", color: "#FACC15" }] : []),
     ...benchmarkSeries.map((series) => ({ label: series.label, color: series.color })),
   ];
 
@@ -258,10 +259,9 @@ export default function AgentScoreChart({
       rounded="xl"
       className={cn("flex flex-col min-h-[180px]", className)}
     >
-      {isUsingFallbackData && (
+      {processedRows.length === 0 && (
         <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
-          <strong>Simulated Data:</strong> Historical performance data is not available from the API.
-          Showing realistic simulated data based on current performance metrics.
+          <strong>No history yet:</strong> This agent has not completed any recorded rounds.
         </div>
       )}
       <div className="custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
@@ -285,7 +285,7 @@ export default function AgentScoreChart({
               <YAxis
                 axisLine
                 tickLine={false}
-                domain={[0, 100]}
+                domain={yAxisDomain}
                 tick={<CustomYAxisTick postfix="%" />}
               />
               <Tooltip
@@ -318,7 +318,7 @@ export default function AgentScoreChart({
                   strokeWidth={2}
                   dot={false}
                   strokeDasharray="6 4"
-                  name="Top benchmark"
+                  name="Top score"
                 />
               )}
               {benchmarkSeries.map((series) => (

@@ -2,6 +2,7 @@
 
 import { useModal } from "@/app/shared/modal-views/use-modal";
 import { MinerAnimationExperience } from "@/app/animation/experience";
+import { mockSubnetTimeline } from "@/app/animation/mock-data";
 import { ActionIcon } from "rizzui";
 import { Title, Text } from "rizzui/typography";
 import { PiXBold } from "react-icons/pi";
@@ -30,7 +31,7 @@ export default function MinerAnimationModal() {
         </ActionIcon>
       </div>
       <div className="max-h-[80vh] overflow-y-auto pr-1">
-        <MinerAnimationExperience condensed />
+        <MinerAnimationExperience condensed mockTimeline={mockSubnetTimeline} />
       </div>
     </div>
   );

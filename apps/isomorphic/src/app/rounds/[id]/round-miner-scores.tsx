@@ -8,6 +8,7 @@ import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundMiners } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier } from "./round-identifier";
 import type { BenchmarkPerformance } from "@/services/api/types/rounds";
 import {
   ComposedChart,
@@ -45,14 +46,16 @@ const slugify = (value: string) =>
 
 export default function RoundMinerScores({
   className,
+  selectedValidatorId,
 }: {
   className?: string;
+  selectedValidatorId?: string;
 }) {
   const { id } = useParams();
-  const roundId = parseInt(id as string);
+  const roundKey = extractRoundIdentifier(id);
 
   // Get miners data from API
-  const { data: minersData, loading, error } = useRoundMiners(roundId, {
+  const { data: minersData, loading, error } = useRoundMiners(roundKey, {
     limit: 40,
     sortBy: "score",
     sortOrder: "desc",
@@ -71,7 +74,13 @@ export default function RoundMinerScores({
 
     const benchmarks: BenchmarkPerformance[] = minersData.data.benchmarks || [];
 
-    const minerEntries = minersData.data.miners.map((miner) => {
+    const filteredMiners = selectedValidatorId
+      ? minersData.data.miners.filter(
+          (miner) => miner.validatorId === selectedValidatorId,
+        )
+      : minersData.data.miners;
+
+    const minerEntries = filteredMiners.map((miner) => {
         const score = normalizeScore(miner.score);
         const rawIsSota =
           miner.isSota ??
@@ -80,10 +89,15 @@ export default function RoundMinerScores({
           miner.is_benchmark ??
           (typeof miner.type === "string" && miner.type.toLowerCase() === "benchmark");
         const isSota = Boolean(rawIsSota);
-        const label =
-          miner.name ||
-          miner.provider ||
-          (isSota ? `Benchmark ${miner.uid}` : `Miner ${miner.uid}`);
+        const resolvedName = miner.name?.trim() || miner.provider?.trim() || "";
+        const uidLabel = miner.uid !== undefined && miner.uid !== null ? String(miner.uid) : "";
+        const label = isSota
+          ? resolvedName || `Benchmark ${uidLabel || "unknown"}`
+          : resolvedName
+            ? `${resolvedName} · ${uidLabel || "unknown"}`
+            : uidLabel
+              ? `Miner ${uidLabel}`
+              : "Miner";
         const slug = miner.provider ? slugify(miner.provider) : slugify(label);
 
         let color = "#10B981";
@@ -106,6 +120,7 @@ export default function RoundMinerScores({
           uid: miner.uid,
           color,
           provider: miner.provider,
+          xAxisLabel: isSota ? "" : uidLabel,
         };
       });
 
@@ -131,11 +146,12 @@ export default function RoundMinerScores({
         uid: `benchmark-${benchmark.id}`,
         color,
         provider: benchmark.provider,
+        xAxisLabel: "",
       };
     });
 
     return [...minerEntries, ...benchmarkEntries].sort((a, b) => b.score - a.score);
-  }, [minersData]);
+  }, [minersData, selectedValidatorId]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
@@ -181,6 +197,23 @@ export default function RoundMinerScores({
     );
   }
 
+  if (!chartData.length) {
+    return (
+      <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
+        <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
+          <div className="text-center text-gray-500">
+            <p className="text-lg font-semibold">No miners found</p>
+            <p className="mt-2 text-sm">
+              {selectedValidatorId
+                ? "This validator has no miners evaluated in this round yet."
+                : "No miner data is available for this round."}
+            </p>
+          </div>
+        </div>
+      </WidgetCard>
+    );
+  }
+
   return (
     <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
       <div className="mt-5 h-[350px] w-full lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
@@ -193,7 +226,7 @@ export default function RoundMinerScores({
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
+            <XAxis dataKey="xAxisLabel" />
             <YAxis tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
             <Tooltip content={<CustomTooltip />} />
             <Bar
