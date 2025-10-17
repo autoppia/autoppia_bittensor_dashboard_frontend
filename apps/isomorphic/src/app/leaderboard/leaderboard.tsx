@@ -32,8 +32,7 @@ const leaderboardData = [
     score: 72,
     type: "Autoppia",
     medal: "🥇",
-    logoUrl:
-      "https://images.unsplash.com/photo-1646583288948-24548aedffd8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlJTIwcm9ib3QlMjBsb2dvfGVufDF8fHx8MTc2MDYxNTE4OXww&ixlib=rb-4.1.0&q=80&w=1080",
+    logoUrl: "/images/icons/validators/Autoppia.png",
   },
   {
     rank: 2,
@@ -41,8 +40,7 @@ const leaderboardData = [
     score: 65,
     type: "GPT Agent",
     medal: "🥈",
-    logoUrl:
-      "https://images.unsplash.com/photo-1655196601100-8bfb26cf99e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicm93c2VyJTIwd2ViJTIwdGVjaG5vbG9neXxlbnwxfHx8fDE3NjA2MTUxOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    logoUrl: "/images/icons/validators/gpt5.png",
   },
   {
     rank: 3,
@@ -50,24 +48,21 @@ const leaderboardData = [
     score: 56,
     type: "Claude Agent",
     medal: "🥉",
-    logoUrl:
-      "https://images.unsplash.com/photo-1760037028517-e5cc6e3ebd3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHRlY2glMjBsb2dvJTIwYmx1ZXxlbnwxfHx8fDE3NjA2MTUxODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    logoUrl: "/images/icons/validators/claude.png",
   },
   {
     rank: 4,
     name: "Anthropic CUA",
     score: 55,
     type: "Anthropic",
-    logoUrl:
-      "https://images.unsplash.com/photo-1549925245-f20a1bac6454?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhaSUyMGJyYWluJTIwbmV1cmFsJTIwbmV0d29ya3xlbnwxfHx8fDE3NjA1OTQ1Njl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    logoUrl: "/images/icons/validators/ac.png",
   },
   {
     rank: 5,
     name: "OpenAI CUA",
     score: 50,
     type: "OpenAI",
-    logoUrl:
-      "https://images.unsplash.com/photo-1678483789105-2720201bee03?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvcGVuYWklMjB0ZWNobm9sb2d5JTIwbG9nb3xlbnwxfHx8fDE3NjA2MTUxODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    logoUrl: "/images/icons/validators/openai.png",
   },
   {
     rank: 6,
