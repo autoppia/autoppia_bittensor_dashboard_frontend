@@ -1,11 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { websitesData } from "@/data/websites-data";
 import Image from "next/image";
 import Link from "next/link";
 import { Title, Text, Button } from "rizzui";
-import cn from "@core/utils/class-names";
 import {
   PiArrowLeftBold,
   PiGlobeBold,
@@ -14,25 +14,19 @@ import {
   PiLightbulbDuotone,
 } from "react-icons/pi";
 import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
+import { FiRefreshCcw } from "react-icons/fi";
 
 export default function WebsiteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const websiteSlug = params?.name as string;
-
   const website = websitesData.find((w) => w.slug === websiteSlug);
 
-  if (!website) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-        <Title className="text-2xl mb-4">Website Not Found</Title>
-        <Button onClick={() => router.push("/websites")}>
-          <PiArrowLeftBold className="me-2" />
-          Back to Websites
-        </Button>
-      </div>
-    );
-  }
+  // ✅ Only show first 2 prompts initially
+  const [useCases, setUseCases] = useState(
+    website?.useCases?.slice(0, 2) || []
+  );
+  const [loading, setLoading] = useState(false);
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -45,10 +39,58 @@ export default function WebsiteDetailPage() {
       : { r: 0, g: 255, b: 255 };
   };
 
-  const rgb = hexToRgb(website.color);
+  const rgb = hexToRgb(website?.color || "#00FFFF");
   const colorWithOpacity10 = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`;
   const colorWithOpacity20 = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
   const colorBorder = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
+
+  // ✅ Call local API instead of direct server call
+  const handleRefresh = async () => {
+    if (!website) return;
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://84.247.180.192:5080/generate-tasks",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projects: [website.slug],
+            num_of_runs: 2,
+            selective_use_cases: [],
+            prompts_per_use_case: 1,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+      const key = Object.keys(data)[0];
+      const newUseCases = data[key] || [];
+
+      if (newUseCases.length > 0) {
+        setUseCases(newUseCases);
+      }
+    } catch (err) {
+      console.error("❌ Failed to refresh data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!website) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
+        <Title className="text-2xl mb-4">Website Not Found</Title>
+        <Button onClick={() => router.push("/websites")}>
+          <PiArrowLeftBold className="me-2" />
+          Back to Websites
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen pb-12">
@@ -190,30 +232,49 @@ export default function WebsiteDetailPage() {
           </div>
         </div>
 
+        {/* Use Cases */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div
-              className="inline-flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
-              style={{
-                background: `linear-gradient(135deg, ${website.color}, ${colorWithOpacity10})`,
-              }}
-            >
-              <PiRocketLaunchBold className="h-7 w-7 text-white" />
+          <div className="flex items-center gap-3 mb-8 w-full">
+            <div className="flex justify-between items-center w-full">
+              <div className="flex items-center gap-3">
+                <div
+                  className="inline-flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
+                  style={{
+                    background: `linear-gradient(135deg, ${website.color}, ${colorWithOpacity10})`,
+                  }}
+                >
+                  <PiRocketLaunchBold className="h-7 w-7 text-white" />
+                </div>
+                <Title
+                  as="h2"
+                  className="text-3xl sm:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: `linear-gradient(to right, ${website.color}, ${colorWithOpacity10})`,
+                  }}
+                >
+                  Use Cases
+                </Title>
+              </div>
+
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-white font-bold transition-all"
+                style={{
+                  backgroundImage: `linear-gradient(to right, ${website.color}, ${colorWithOpacity10})`,
+                }}
+              >
+                <FiRefreshCcw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Refreshing..." : "Refresh"}
+              </button>
             </div>
-            <Title
-              as="h2"
-              className="text-3xl sm:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
-              style={{
-                backgroundImage: `linear-gradient(to right, ${website.color}, ${colorWithOpacity10})`,
-              }}
-            >
-              Use Cases
-            </Title>
           </div>
 
-          {website.useCases && website.useCases.length > 0 ? (
+          {useCases.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {website.useCases.map((useCase, index) => (
+              {useCases.map((useCase, index) => (
                 <div
                   key={index}
                   className="group/card relative rounded-2xl border-2 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden"
@@ -221,215 +282,51 @@ export default function WebsiteDetailPage() {
                     backgroundColor: colorWithOpacity10,
                     borderColor: colorBorder,
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = website.color;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colorBorder;
-                  }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"
-                    style={{
-                      background: `radial-gradient(circle at 50% 50%, ${colorWithOpacity20}, transparent 70%)`,
-                    }}
-                  ></div>
-
-                  <div className="relative p-6 space-y-4">
+                  <div className="p-6 space-y-4">
                     <div className="flex items-start gap-3">
                       <div
-                        className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg group-hover/card:scale-110 transition-transform duration-300"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg"
                         style={{ backgroundColor: website.color }}
                       >
                         {index + 1}
                       </div>
-                      <div className="flex-1">
-                        <Title
-                          as="h3"
-                          className="text-xl font-bold text-gray-100 mb-1"
-                        >
-                          {useCase.name}
-                        </Title>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <PiLightbulbDuotone
-                          className="w-5 h-5"
-                          style={{ color: website.color }}
-                        />
-                        <Text className="text-sm font-semibold text-white">
-                          Example Prompts:
-                        </Text>
-                      </div>
-                      <div className="space-y-2">
-                        {useCase.examplePrompt.map((prompt, promptIndex) => (
-                          <div
-                            key={promptIndex}
-                            className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
-                            style={{
-                              backgroundColor: colorWithOpacity10,
-                              borderColor: colorBorder,
-                              color: "#D1D5DB",
-                            }}
-                          >
-                            {`"${prompt}"`}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div
-              className="p-12 rounded-2xl border-2 text-center backdrop-blur-sm"
-              style={{
-                backgroundColor: colorWithOpacity10,
-                borderColor: colorBorder,
-              }}
-            >
-              <Text className="text-white text-lg">
-                Use cases are being developed for this website. Check back soon!
-              </Text>
-            </div>
-          )}
-        </div>
-        {website?.taskExamples?.length ? (
-          <div className="mt-10 space-y-4">
-            <div className="flex items-center gap-3 mb-8">
-              <div
-                className="inline-flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
-                style={{
-                  background: `linear-gradient(135deg, ${website.color}, ${colorWithOpacity10})`,
-                }}
-              >
-                <PiCheckCircleDuotone className="h-7 w-7 text-white" />
-              </div>
-              <Title
-                as="h2"
-                className="text-3xl sm:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: `linear-gradient(to right, ${website.color}, ${colorWithOpacity10})`,
-                }}
-              >
-                Task Examples
-              </Title>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {website.taskExamples.map((ex, index) => (
-                <div
-                  key={ex.title}
-                  className="relative rounded-2xl border-2 p-4 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden"
-                  style={{
-                    backgroundColor: colorWithOpacity10,
-                    borderColor: colorBorder,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = website.color;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colorBorder;
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5" />
-                  <div
-                    className="absolute inset-0 opacity-0 transition-opacity duration-500"
-                    style={{
-                      background: `radial-gradient(circle at 50% 50%, ${colorWithOpacity20}, transparent 70%)`,
-                    }}
-                  />
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg group-hover/card:scale-110 transition-transform duration-300"
-                      style={{ backgroundColor: website.color }}
-                    >
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
                       <Title
                         as="h3"
                         className="text-xl font-bold text-gray-100 mb-1"
                       >
-                        {ex.title}
+                        {useCase.name}
                       </Title>
                     </div>
-                  </div>
-                  <div className="space-y-2 mt-4">
-                    <div className="flex items-center gap-2">
-                      <PiLightbulbDuotone
-                        className="w-5 h-5"
-                        style={{ color: website.color }}
-                      />
-                      <Text className="text-sm font-semibold text-white">
-                        Example Prompt:
+
+                    <div className="space-y-2">
+                      <Text className="text-sm font-semibold text-white flex items-center gap-2">
+                        <PiLightbulbDuotone className="w-5 h-5" />
+                        Example Prompts:
                       </Text>
-                    </div>
-                    <div
-                      className="p-4 rounded-xl text-sm italic leading-relaxed border backdrop-blur-sm"
-                      style={{
-                        backgroundColor: colorWithOpacity10,
-                        borderColor: colorBorder,
-                        color: "#D1D5DB",
-                      }}
-                    >
-                      {`"${ex.prompt}"`}
+
+                      {useCase.examplePrompt?.map((prompt, i) => (
+                        <div
+                          key={i}
+                          className="p-4 rounded-xl text-sm italic border backdrop-blur-sm"
+                          style={{
+                            backgroundColor: colorWithOpacity10,
+                            borderColor: colorBorder,
+                            color: "#D1D5DB",
+                          }}
+                        >
+                          "{prompt}"
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Coming soon note under Task Examples */}
-          </div>
-        ) : null}
-        {/* {!website.isComingSoon && website.href !== "#" && (
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
-            <Link
-              href={website.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/cta"
-            >
-              <Button
-                size="xl"
-                className="group-hover/cta:scale-105 transition-all duration-300 text-white shadow-2xl border-2 px-8 py-4"
-                style={{
-                  backgroundColor: website.color,
-                  borderColor: website.color,
-                }}
-              >
-                <PiGlobeBold className="me-3 h-6 w-6 group-hover/cta:rotate-12 transition-transform" />
-                <span className="text-lg font-bold">Launch {website.name}</span>
-                <FaExternalLinkAlt className="ms-3 h-5 w-5 transition-transform group-hover/cta:translate-x-1" />
-              </Button>
-            </Link>
-            <a
-              href="https://github.com/autoppia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/github-cta"
-              style={{
-                backgroundColor: website.color,
-                borderColor: website.color,
-              }}
-            >
-              <Button
-                size="xl"
-                className="bg-gradient-to-r from-gray-800 to-gray-900 text-white border-2 border-gray-700 hover:border-gray-500 hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-gray-500/50 px-8 py-4"
-              >
-                <FaGithub className="me-3 h-6 w-6 group-hover/github-cta:rotate-12 transition-transform" />
-                <span className="text-lg font-bold">View on GitHub</span>
-              </Button>
-            </a>
-          </div>
-        )} */}
+          ) : (
+            <Text className="text-white text-lg">No use cases found.</Text>
+          )}
+        </div>
       </div>
     </div>
   );
