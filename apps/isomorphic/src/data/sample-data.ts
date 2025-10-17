@@ -67,7 +67,7 @@ export const useCaseCatalogues: Record<string, UseCase[]> = {
     { id: 11, name: "VIEW_PROMOTIONS" },
     { id: 12, name: "APPLY_COUPON" },
   ],
-  books: [
+  autobooks: [
     { id: 1, name: "ADD_BOOK" },
     { id: 2, name: "ADD_COMMENT_BOOK" },
     { id: 3, name: "BOOK_DETAIL" },
@@ -81,7 +81,7 @@ export const useCaseCatalogues: Record<string, UseCase[]> = {
     { id: 11, name: "PURCHASE_BOOK" },
     { id: 12, name: "REGISTRATION_BOOK" },
   ],
-  cinema: [
+  autocinema: [
     { id: 1, name: "ADD_COMMENT" },
     { id: 2, name: "ADD_FILM" },
     { id: 3, name: "CONTACT" },
