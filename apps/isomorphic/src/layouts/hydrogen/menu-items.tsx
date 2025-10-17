@@ -9,48 +9,64 @@ import {
 } from "react-icons/lu";
 import { PiFlaskDuotone } from "react-icons/pi";
 import { FaHome } from "react-icons/fa";
+
+export type MenuItemType = {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+  section?: "general" | "leaderboard";
+};
+
 // Note: do not add href in the label object, it is rendering as label
-export const menuItems = [
-  // label start
+export const menuItems: MenuItemType[] = [
+  // General Section
   {
     name: "Home",
     href: routes.home,
     icon: <FaHome />,
-  },
-  // label end
-  {
-    name: "Overview",
-    href: routes.overview,
-    icon: <LuComponent />,
-  },
-  {
-    name: "Rounds",
-    href: routes.rounds,
-    icon: <LuCodesandbox />,
-  },
-  {
-    name: "Agents",
-    href: routes.agents,
-    icon: <LuBot />,
-  },
-  {
-    name: "Agent Run",
-    href: routes.agent_run,
-    icon: <LuPackageCheck />,
-  },
-  {
-    name: "Tasks",
-    href: routes.tasks,
-    icon: <LuBoxes />,
+    section: "general",
   },
   {
     name: "Websites",
     href: routes.websites,
     icon: <LuGlobe />,
+    section: "general",
   },
   {
     name: "Test Agent",
     href: routes.testAgent,
-    icon: <PiFlaskDuotone />
-  }
+    icon: <PiFlaskDuotone />,
+    section: "general",
+  },
+  // Leaderboard Section
+  {
+    name: "Overview",
+    href: routes.overview,
+    icon: <LuComponent />,
+    section: "leaderboard",
+  },
+  {
+    name: "Rounds",
+    href: routes.rounds,
+    icon: <LuCodesandbox />,
+    section: "leaderboard",
+  },
+  {
+    name: "Agents",
+    href: routes.agents,
+    icon: <LuBot />,
+    section: "leaderboard",
+  },
+  {
+    name: "Agent Run",
+    href: routes.agent_run,
+    icon: <LuPackageCheck />,
+    section: "leaderboard",
+  },
+  {
+    name: "Tasks",
+    href: routes.tasks,
+    icon: <LuBoxes />,
+    section: "leaderboard",
+  },
 ];

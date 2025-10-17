@@ -5,7 +5,21 @@ module.exports = {
   // Increase timeout for chunk loading
   experimental: {
     // Enable faster refresh
-    optimizePackageImports: ['@core/components', '@core/utils'],
+    optimizePackageImports: ["@core/components", "@core/utils"],
+    // Disable Turbopack development overlay
+    turbo: {
+      rules: {
+        "*.svg": {
+          loaders: ["@svgr/webpack"],
+          as: "*.js",
+        },
+      },
+    },
+  },
+  // Disable development overlay
+  devIndicators: {
+    buildActivity: false,
+    buildActivityPosition: "bottom-right",
   },
   typescript: {
     // !! WARN !!
@@ -22,7 +36,7 @@ module.exports = {
         fs: false,
       };
     }
-    
+
     // Ensure proper module resolution for react-icons
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -46,34 +60,34 @@ module.exports = {
         },
       };
     }
-    
+
     return config;
   },
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'taostats.io',
-        port: '',
-        pathname: '/favicon.ico',
+        protocol: "https",
+        hostname: "taostats.io",
+        port: "",
+        pathname: "/favicon.ico",
       },
       {
-        protocol: 'https',
-        hostname: 'example.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "example.com",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: '*.example.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "*.example.com",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: '**',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "**",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
