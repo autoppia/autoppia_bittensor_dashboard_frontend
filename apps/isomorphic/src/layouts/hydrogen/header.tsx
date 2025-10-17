@@ -82,16 +82,20 @@ export default function Header() {
               style={{ width: "auto", maxWidth: "100%" }}
             />
           </Link>
-          <div className="hidden xl:flex items-center min-w-0 max-w-full overflow-hidden">
+          <div className="hidden xl:flex items-center min-w-0 max-w-full">
             {menuItems.map((item, index) => {
               const href = item?.href as string;
               const isActive =
-                pathname === href || (href !== "/" && pathname.startsWith(href));
+                pathname === href ||
+                (href !== "/" && pathname.startsWith(href));
 
               return (
                 <Fragment key={item.name + "-" + index}>
                   {item?.href ? (
-                    <Link href={item?.href} className="mx-0.5 my-2 flex-shrink-0">
+                    <Link
+                      href={item?.href}
+                      className="mx-0.5 my-2 flex-shrink-0"
+                    >
                       <div
                         className={cn(
                           "px-2 xl:px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-2.5 text-xs xl:text-sm whitespace-nowrap",
@@ -189,51 +193,70 @@ export default function Header() {
             >
               <div className="relative ms-2 sm:ms-3 flex items-center group overflow-hidden max-w-[96px] sm:max-w-[120px] flex-shrink-0">
                 {/* Dynamic glowing background based on status */}
-                <div className={cn(
-                  "absolute inset-0 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300",
-                  normalizedStatus === 'healthy' ? "bg-green-500" :
-                  normalizedStatus === 'degraded' ? "bg-yellow-500" :
-                  normalizedStatus === 'loading' ? "bg-blue-500" :
-                  "bg-red-500"
-                )}></div>
+                <div
+                  className={cn(
+                    "absolute inset-0 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300",
+                    normalizedStatus === "healthy"
+                      ? "bg-green-500"
+                      : normalizedStatus === "degraded"
+                        ? "bg-yellow-500"
+                        : normalizedStatus === "loading"
+                          ? "bg-blue-500"
+                          : "bg-red-500"
+                  )}
+                ></div>
 
                 {/* Main container */}
-                <div className={cn(
-                  "relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-black/90 rounded-lg transition-all duration-300 whitespace-nowrap overflow-hidden max-w-full",
-                  normalizedStatus === 'healthy' ? "border border-green-500 hover:border-green-400" :
-                  normalizedStatus === 'degraded' ? "border border-yellow-500 hover:border-yellow-400" :
-                  normalizedStatus === 'loading' ? "border border-blue-500 hover:border-blue-400" :
-                  "border border-red-500 hover:border-red-400"
-                )}>
+                <div
+                  className={cn(
+                    "relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-black/90 rounded-lg transition-all duration-300 whitespace-nowrap overflow-hidden max-w-full",
+                    normalizedStatus === "healthy"
+                      ? "border border-green-500 hover:border-green-400"
+                      : normalizedStatus === "degraded"
+                        ? "border border-yellow-500 hover:border-yellow-400"
+                        : normalizedStatus === "loading"
+                          ? "border border-blue-500 hover:border-blue-400"
+                          : "border border-red-500 hover:border-red-400"
+                  )}
+                >
                   {/* Dynamic icon and animation based on status */}
                   <div className="relative">
-                    {normalizedStatus === 'down' ? (
-                      <LuMinus className={cn(
-                        "w-4 h-4 sm:w-5 sm:h-5",
-                        "text-red-500"
-                      )} />
+                    {normalizedStatus === "down" ? (
+                      <LuMinus
+                        className={cn("w-4 h-4 sm:w-5 sm:h-5", "text-red-500")}
+                      />
                     ) : (
-                      <LuActivity className={cn(
-                        "w-4 h-4 sm:w-5 sm:h-5 animate-pulse",
-                        normalizedStatus === 'healthy' ? "text-green-500" :
-                        normalizedStatus === 'degraded' ? "text-yellow-500" :
-                        normalizedStatus === 'loading' ? "text-blue-400" :
-                        "text-red-500"
-                      )} />
+                      <LuActivity
+                        className={cn(
+                          "w-4 h-4 sm:w-5 sm:h-5 animate-pulse",
+                          normalizedStatus === "healthy"
+                            ? "text-green-500"
+                            : normalizedStatus === "degraded"
+                              ? "text-yellow-500"
+                              : normalizedStatus === "loading"
+                                ? "text-blue-400"
+                                : "text-red-500"
+                        )}
+                      />
                     )}
-                    {normalizedStatus === 'healthy' && (
+                    {normalizedStatus === "healthy" && (
                       <div className="absolute -inset-1.5 border border-green-500 rounded-full animate-ping opacity-50"></div>
                     )}
                   </div>
 
                   {/* Dynamic status text */}
-                  <span className={cn(
-                    "text-[11px] sm:text-sm font-mono font-bold tracking-widest",
-                    normalizedStatus === 'healthy' ? "text-green-400" :
-                    normalizedStatus === 'degraded' ? "text-yellow-400" :
-                    normalizedStatus === 'loading' ? "text-blue-300" :
-                    "text-red-400"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[11px] sm:text-sm font-mono font-bold tracking-widest",
+                      normalizedStatus === "healthy"
+                        ? "text-green-400"
+                        : normalizedStatus === "degraded"
+                          ? "text-yellow-400"
+                          : normalizedStatus === "loading"
+                            ? "text-blue-300"
+                            : "text-red-400"
+                    )}
+                  >
                     {statusLabel}
                   </span>
                 </div>
