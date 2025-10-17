@@ -6,6 +6,7 @@ import {
   LuPackageCheck,
   LuBoxes,
   LuGlobe,
+  LuTrophy,
 } from "react-icons/lu";
 import { PiFlaskDuotone } from "react-icons/pi";
 import { FaHome } from "react-icons/fa";
@@ -27,18 +28,10 @@ export const menuItems: MenuItemType[] = [
     section: "general",
   },
   {
-    name: "Websites",
-    href: routes.websites,
-    icon: <LuGlobe />,
-    section: "general",
+    name: "Leaderboard",
+    href: routes.leaderboard,
+    icon: <LuTrophy />,
   },
-  {
-    name: "Test Agent",
-    href: routes.testAgent,
-    icon: <PiFlaskDuotone />,
-    section: "general",
-  },
-  // Leaderboard Section
   {
     name: "Overview",
     href: routes.overview,
@@ -68,5 +61,15 @@ export const menuItems: MenuItemType[] = [
     href: routes.tasks,
     icon: <LuBoxes />,
     section: "leaderboard",
+  },
+  {
+    name: "Websites",
+    href: routes.websites,
+    icon: <LuGlobe />,
+  },
+  {
+    name: "Join the arena",
+    href: routes.testAgent,
+    icon: <PiFlaskDuotone />,
   },
 ];
