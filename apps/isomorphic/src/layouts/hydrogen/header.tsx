@@ -68,7 +68,7 @@ export default function Header() {
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10 max-w-full overflow-hidden">
       <div className="flex w-full items-center justify-between min-w-0 max-w-full">
-        <div className="flex items-center min-w-0 flex-1 max-w-[60%]">
+        <div className="flex items-center min-w-0 flex-1 max-w-[75%]">
           <Link
             href={"/"}
             aria-label="Site Logo"
@@ -91,6 +91,18 @@ export default function Header() {
 
               return (
                 <Fragment key={item.name + "-" + index}>
+                  {/* Add separator between sections */}
+                  {needsSeparator && (
+                    <div className="flex items-center mx-3 flex-shrink-0">
+                      <div className="w-[2px] h-7 bg-gradient-to-b from-transparent via-gray-400 to-transparent mx-2"></div>
+                      <div className="px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-lg border-2 border-yellow-500/50 shadow-md hover:shadow-lg transition-all duration-300">
+                        <span className="text-sm font-extrabold text-yellow-600 tracking-widest whitespace-nowrap uppercase">
+                          Subnet 36
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {item?.href ? (
                     <Link
                       href={item?.href}
@@ -98,7 +110,7 @@ export default function Header() {
                     >
                       <div
                         className={cn(
-                          "px-2 xl:px-4 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-2.5 text-xs xl:text-sm whitespace-nowrap",
+                          "px-2 xl:px-3 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-2 text-xs xl:text-sm whitespace-nowrap",
                           isActive
                             ? "bg-white text-black"
                             : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
@@ -121,7 +133,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0 max-w-[40%] min-w-0">
+        <div className="flex items-center gap-1 flex-shrink-0 max-w-[25%] min-w-0">
           {/* Social Media Buttons */}
           <div className="hidden sm:flex items-center gap-0.5 min-w-0 overflow-hidden">
             <Tooltip content="Visit Autoppia Website" placement="bottom">
