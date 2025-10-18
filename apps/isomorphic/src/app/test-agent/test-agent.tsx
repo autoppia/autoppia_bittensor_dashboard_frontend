@@ -732,7 +732,7 @@ export default function TestAgent() {
                                         </div>
                                         {action.text && (
                                           <div className="text-gray-700 mt-1">
-                                            Text: "{action.text}"
+                                            Text: &quot;{action.text}&quot;
                                           </div>
                                         )}
                                         {action.url && (
