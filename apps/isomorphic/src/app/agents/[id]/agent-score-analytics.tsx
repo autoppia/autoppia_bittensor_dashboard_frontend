@@ -29,6 +29,12 @@ export default function AgentScoreAnalytics({
     return null;
   }
 
+  const topMinerScore =
+    statistics?.topPerformingAgent?.score ??
+    agent.currentTopScore ??
+    0;
+  const topMinerName = statistics?.topPerformingAgent?.name;
+
   const agentStats = [
     {
       title: "Current Score",
@@ -43,8 +49,10 @@ export default function AgentScoreAnalytics({
     },
     {
       title: "Current Top Score",
-      metric: `${((agent?.currentTopScore ?? 0) * 100).toFixed(1)}%`,
-      description: "Top Score in last round",
+      metric: `${(topMinerScore * 100).toFixed(1)}%`,
+      description: topMinerName
+        ? `Top miner score: ${topMinerName}`
+        : "Top score across miners in last round",
       icon: LuCrown,
       className:
         "relative overflow-hidden bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",

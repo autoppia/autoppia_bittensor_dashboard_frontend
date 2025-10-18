@@ -297,7 +297,6 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
               </div>
             </div>
             <div className="mt-3 self-end flex flex-wrap items-center justify-end gap-3 text-white">
-              <span className="text-sm text-white/80">Compare with:</span>
               <div className="flex flex-wrap items-center gap-3">
                 {sotaAgents.map((agent) => (
                   <div key={agent.value} className="flex items-center gap-2">
@@ -427,13 +426,7 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
           </ResponsiveContainer>
         )}
       </div>
-      {usingFallback && (
-        <div className="mt-3 text-[11px] uppercase tracking-wide text-gray-400 text-center">
-          Displaying sample miner data until live rounds accumulate
-        </div>
-      )}
       <div className="mt-3 self-end flex flex-wrap items-center justify-end gap-3 text-white">
-        <span className="text-sm text-white/80">Compare with:</span>
         <CheckboxGroup
           values={compareWith}
           setValues={setCompareWith}

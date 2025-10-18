@@ -201,7 +201,7 @@ export default function RoundValidators({
           <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-blue-300/50 to-transparent"></div>
           <div className="flex items-center gap-3 px-6 py-3 bg-blue-900/20 rounded-full border border-blue-700/50">
             <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-            <Text className="text-lg text-blue-600 font-bold">
+            <Text className="text-lg text-white font-bold">
               {selectedValidator?.name || "Selected Validator"}
             </Text>
           </div>

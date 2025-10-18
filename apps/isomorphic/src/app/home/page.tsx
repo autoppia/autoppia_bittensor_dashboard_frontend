@@ -34,28 +34,28 @@ const IWA_HIGHLIGHTS: Highlight[] = [
   {
     title: "Synthetic Tasks",
     description:
-      "Continuously evolving scenarios keep agents from memorizing the benchmark.",
+      "Autonomous crawlers turn the open web into mission briefs—multi-step flows, unexpected edge cases, and real business objectives—so agents face ever-fresh, non-memorizable challenges with every evaluation cycle.",
     icon: PiFlaskDuotone,
     gradient: "from-sky-500 via-cyan-400 to-emerald-400",
   },
   {
     title: "Infinite Scale",
     description:
-      "AI generates fresh websites, tasks, and tests—no human bottlenecks.",
+      "Meta-programming pipelines and LLM planners spin up new sites, datasets, and verification harnesses on demand, unlocking thousands of evaluations without human labeling or QA bottlenecks.",
     icon: PiLightningDuotone,
     gradient: "from-indigo-500 via-sky-500 to-cyan-400",
   },
   {
     title: "Realistic Website Mirrors",
     description:
-      "Locally hosted replicas of popular sites mirror real-world UI and flows.",
+      "Deterministic Demo Websites mirror popular real apps—forms, paywalls, APIs, and error states—so agents compete on faithful, reproducible copies of real production environments.",
     icon: PiRocketLaunchDuotone,
     gradient: "from-fuchsia-500 via-purple-500 to-indigo-400",
   },
   {
     title: "Adaptability",
     description:
-      "Benchmark adapts as web technologies change, matching production complexity.",
+      "As frameworks, UI patterns, and data schemas evolve, IWA continuously refreshes content, tests, and scoring logic so the benchmark tracks the living web.",
     icon: PiGearDuotone,
     gradient: "from-teal-500 via-emerald-500 to-green-400",
   },
@@ -134,7 +134,7 @@ export default function LandingPage() {
           {/* Typing Animation Title */}
           <h1
             className={cn(
-              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-10 sm:mb-12 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] transition-all duration-1000",
+              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-20 sm:mb-24 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] transition-all duration-1000",
               isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-10"
@@ -334,6 +334,13 @@ export default function LandingPage() {
                   pipelines, IWA delivers a sustainable arena where agents can
                   be tested, trained, and compared indefinitely.
                 </Text>
+                <Text className="text-base sm:text-lg text-cyan-100 leading-relaxed">
+                  The benchmark rests on three pillars outlined in the paper:
+                  dynamic web generation to constantly refresh sites, automated
+                  task-and-test creation that removes human bottlenecks, and a
+                  comprehensive evaluation pipeline that validates every run in
+                  a virtual browser with deterministic scoring.
+                </Text>
               </div>
 
               {/* MOBILE: show all 4 cards (original layout) */}
@@ -438,7 +445,7 @@ export default function LandingPage() {
               {
                 num: 1,
                 title: "Synthetic Task Generation",
-                desc: "IWA continuously creates new, dynamic tasks across diverse scenarios.",
+                desc: "Planning agents explore mirrored sites, map critical flows, and author step-by-step briefs that reflect real user objectives, data dependencies, and edge cases discovered in the wild.",
                 color: "from-cyan-400 to-blue-500",
                 borderColor: "border-cyan-500/30 hover:border-cyan-400/50",
                 shadowColor: "hover:shadow-cyan-500/30",
@@ -446,7 +453,7 @@ export default function LandingPage() {
               {
                 num: 2,
                 title: "Synthetic tests generation",
-                desc: "IWA produces machine-checkable tests with clear goals and pass/fail criteria.",
+                desc: "For every task, IWA compiles validation contracts—DOM assertions, API expectations, structured outputs—so results are machine-checkable with zero human review and consistent scoring.",
                 color: "from-teal-400 to-emerald-500",
                 borderColor:
                   "border-emerald-500/30 hover:border-emerald-400/50",
@@ -455,7 +462,7 @@ export default function LandingPage() {
               {
                 num: 3,
                 title: "Agent Execution in Real Browsers",
-                desc: "Your Web Agent interacts with real DOMs, dynamic UIs, and realistic workflows.",
+                desc: "Web agents run inside isolated Chromium sandboxes that mirror production latency, authentication, and UI dynamics, forcing genuine product reasoning and tool use.",
                 color: "from-blue-400 to-purple-500",
                 borderColor: "border-blue-500/30 hover:border-blue-400/50",
                 shadowColor: "hover:shadow-blue-500/30",
@@ -463,7 +470,7 @@ export default function LandingPage() {
               {
                 num: 4,
                 title: "Automated Synthetic Validation",
-                desc: "Success is verified through predefined conditions across frontend and backend, ensuring unambiguous scoring.",
+                desc: "After each run, IWA replays logs, inspects DOM and backend state, and produces deterministic scores plus artifacts that feed leaderboards and research datasets.",
                 color: "from-purple-400 to-pink-500",
                 borderColor: "border-purple-500/30 hover:border-purple-400/50",
                 shadowColor: "hover:shadow-purple-500/30",
@@ -526,10 +533,13 @@ export default function LandingPage() {
         <Text className="text-center text-lg sm:text-xl text-cyan-100 mb-12 max-w-3xl mx-auto">
           IWA includes{" "}
           <span className="text-yellow-300 font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 rounded-lg sm:border sm:border-yellow-400/30">
-            {websitesData.length} synthetic websites
+            {websitesData.length} Demo Websites
           </span>{" "}
-          covering e-commerce, dining, CRM, email, delivery, lodging, and
-          professional networking. Here&apos;s a preview of our projects:
+          that mirror popular real-world properties and cover e-commerce,
+          dining, CRM, email, delivery, lodging, and professional networking.
+          <span className="ml-1 font-bold">Mirrored</span>{" "}
+          experiences preserve authentic UI flows while keeping experiments safe. Here&apos;s a
+          preview of our projects:
         </Text>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -596,37 +606,30 @@ export default function LandingPage() {
                     {
                       icon: PiCheckCircleDuotone,
                       title: "Decentralized Competition",
-                      desc: "Miners worldwide compete to build the best Web Agents and earn TAO rewards.",
                     },
                     {
                       icon: LuTrophy,
                       title: "Winner Takes All",
-                      desc: "Top-performing agent receives full reward, ensuring quality over quantity.",
                     },
                     {
                       icon: PiTargetDuotone,
                       title: "Dynamic Evaluation",
-                      desc: "IWA generates ever-changing tasks to prevent overfitting and memorization.",
                     },
                     {
                       icon: PiRocketLaunchDuotone,
                       title: "Top Miner will be Automata",
-                      desc: "Best agents deploy directly to Automata for real-world tasks.",
                     },
-                  ].map(({ icon: Icon, title, desc }) => (
+                  ].map(({ icon: Icon, title }) => (
                     <div
                       key={title}
-                      className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
+                      className="p-6 sm:p-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon className="w-4 h-4 text-emerald-300" />
-                        <Text className="font-bold text-white text-sm">
+                      <div className="flex flex-col items-center text-center gap-4">
+                        <Icon className="w-10 h-10 text-emerald-300" />
+                        <Text className="font-bold text-white text-lg">
                           {title}
                         </Text>
                       </div>
-                      <Text className="text-emerald-100 text-xs leading-relaxed">
-                        {desc}
-                      </Text>
                     </div>
                   ))}
                 </div>
@@ -811,7 +814,7 @@ export default function LandingPage() {
 
             <div className="relative p-8 sm:p-10 md:p-12 text-center flex flex-col items-center">
               <Text className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 leading-relaxed">
-                Want to see your Web Agent in action? Configure a benchmark run
+                Want to see your Web Agent in action? <br />Configure a benchmark run
                 by selecting websites, use cases, and prompts. Define how many
                 runs you want, point us to your agent&apos;s endpoint, and let{" "}
                 <span className="text-purple-300 font-bold bg-purple-400/20 px-3 py-1.5 rounded-lg border border-purple-400/30 animate-pulse-slow">

@@ -98,12 +98,18 @@ export default function AgentValidators() {
 
   // Calculate average metrics
   const rankingValues = filteredRuns
-    .map((run) => (typeof run.ranking === "number" && Number.isFinite(run.ranking) ? run.ranking : null))
+    .map((run) => {
+      if (typeof run.ranking !== "number" || !Number.isFinite(run.ranking)) {
+        return null;
+      }
+      return run.ranking > 0 ? run.ranking : null;
+    })
     .filter((value): value is number => value !== null);
-  const avgRank =
+  const avgRankValue =
     rankingValues.length > 0
-      ? (rankingValues.reduce((sum, value) => sum + value, 0) / rankingValues.length).toFixed(1)
-      : "0";
+      ? rankingValues.reduce((sum, value) => sum + value, 0) / rankingValues.length
+      : null;
+  const avgRank = avgRankValue !== null ? avgRankValue.toFixed(1) : "N/A";
 
   const scoreValues = filteredRuns
     .map((run) => (typeof run.score === "number" && Number.isFinite(run.score) ? run.score : null))

@@ -1,30 +1,48 @@
-"use client";
+ "use client";
 
+import React from "react";
 import { useParams } from "next/navigation";
 import {
   PiTrophyDuotone,
   PiUsersDuotone,
   PiCoinsDuotone,
   PiCrownDuotone,
-  PiCheckCircleDuotone,
-  PiXCircleDuotone,
 } from "react-icons/pi";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundStatistics, useTopMiners } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
+import type { ValidatorPerformance } from "@/services/api/types/rounds";
 
-export default function RoundStats() {
+interface RoundStatsProps {
+  selectedValidator?: ValidatorPerformance | null;
+}
+
+export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   
   // Get statistics and top miners from API
   const { data: statistics, loading: statsLoading, error: statsError } = useRoundStatistics(roundKey);
-  const { data: topMiners, loading: minersLoading, error: minersError } = useTopMiners(roundKey, 1);
+  const { data: topMiners, loading: minersLoading, error: minersError } = useTopMiners(roundKey, 10);
 
   const loading = statsLoading || minersLoading;
   const error = statsError || minersError;
-  const topMiner = topMiners?.[0];
+  const topMiner = React.useMemo(() => {
+    if (selectedValidator?.topMiner) {
+      return selectedValidator.topMiner;
+    }
+    if (!Array.isArray(topMiners) || topMiners.length === 0) {
+      return undefined;
+    }
+    if (selectedValidator?.id) {
+      const filtered = topMiners.filter((miner) => miner.validatorId === selectedValidator.id);
+      if (filtered.length > 0) {
+        return filtered[0];
+      }
+    }
+    return topMiners[0];
+  }, [topMiners, selectedValidator]);
 
   // Show loading state or when any required data is not available
   if (loading || !statistics || !topMiners) {
@@ -50,11 +68,18 @@ export default function RoundStats() {
     );
   }
 
-  const consensusRaw = statistics?.successRate ?? 0;
-  const consensusPercentage =
-    Math.min(100, consensusRaw > 1 ? consensusRaw : consensusRaw * 100);
-  const consensusDisplay = `${Math.round(consensusPercentage)}%`;
-  const hasConsensusData = statistics?.successRate != null;
+  const totalValidators = statistics.totalValidators || 0;
+  const averageTasks =
+    statistics.averageTasksPerValidator != null
+      ? statistics.averageTasksPerValidator
+      : totalValidators
+        ? statistics.totalTasks / totalValidators
+        : 0;
+  const topMinerLabel = topMiner
+    ? (topMiner.name && topMiner.name.trim().length > 0
+        ? topMiner.name
+        : `Miner ${topMiner.uid ?? "pending"}`)
+    : "Top miner pending";
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -77,24 +102,10 @@ export default function RoundStats() {
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                {topMiner ? `Miner ${topMiner.uid}` : "Top miner pending"}
+            <div className="text-center">
+              <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                {topMinerLabel}
               </div>
-              <div className="text-xs text-amber-200">
-                {topMiner?.hotkey
-                  ? `${topMiner.hotkey.slice(0, 6)}...${topMiner.hotkey.slice(-6)}`
-                  : 'No hotkey'}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-amber-500/20 rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-amber-200">Top Score</span>
-              <span className="text-sm font-bold text-white">
-                {topMiner?.score ? `${(topMiner.score * 100).toFixed(1)}%` : '0.0%'}
-              </span>
             </div>
           </div>
         </div>
@@ -120,25 +131,15 @@ export default function RoundStats() {
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
                 {statistics.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : '0.0%'}
               </div>
-              <div className="text-xs text-emerald-200">Avg across validator winners</div>
-            </div>
-          </div>
-
-          <div className="bg-emerald-500/20 rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-emerald-200">Highest Score</span>
-              <span className="text-sm font-bold text-white">
-                {statistics.topScore ? `${(statistics.topScore * 100).toFixed(1)}%` : '0.0%'}
-              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Total Miners Card */}
+      {/* Miners Evaluated Card */}
       <div className="relative bg-gradient-to-br from-violet-500/15 via-purple-500/15 to-fuchsia-500/15 border-2 border-violet-500/40 rounded-xl p-3 hover:border-violet-400/60 hover:shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
         {/* Corner Accents - All 4 corners */}
         <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-violet-400/80 rounded-tl-lg z-20"></div>
@@ -153,33 +154,20 @@ export default function RoundStats() {
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
               <PiUsersDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <h3 className="text-xs font-medium text-violet-300">AVERAGE MINERS EVALUATED</h3>
+            <h3 className="text-xs font-medium text-violet-300">MINERS EVALUATED</h3>
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent">
                 {statistics.totalMiners || 0}
-              </div>
-              <div className="text-xs text-violet-200">Miners evaluated</div>
-            </div>
-          </div>
-
-          <div className="bg-violet-500/20 rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-violet-200">Active Miners</span>
-              <div className="flex items-center space-x-1">
-                <span className="text-sm font-bold text-green-400">
-                  {statistics.activeMiners || 0}
-                </span>
-                <span className="text-xs text-violet-200">active</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Is In Consensus Card */}
+      {/* Average Tasks Card */}
       <div className="relative bg-gradient-to-br from-blue-500/15 via-sky-500/15 to-indigo-500/15 border-2 border-blue-500/40 rounded-xl p-3 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
         {/* Corner Accents - All 4 corners */}
         <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80 rounded-tl-lg z-20"></div>
@@ -192,34 +180,16 @@ export default function RoundStats() {
         <div className="relative flex flex-col h-full justify-between z-10">
           <div className="flex items-center space-x-2 mb-2">
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-              <PiCheckCircleDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
+              <PiCoinsDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <h3 className="text-xs font-medium text-blue-300">IS IN CONSENSUS</h3>
+            <h3 className="text-xs font-medium text-blue-300">AVERAGE TASKS</h3>
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                {hasConsensusData
-                  ? consensusPercentage >= 80
-                    ? 'Yes'
-                    : consensusPercentage >= 50
-                      ? 'Partial'
-                      : 'No'
-                  : 'No'}
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+                {averageTasks ? Math.round(averageTasks) : 0}
               </div>
-              <div className="text-xs text-blue-200 mt-1">
-                {hasConsensusData ? `${consensusDisplay} consensus` : 'No data'}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-500/20 rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-blue-200">Consensus</span>
-              <span className="text-sm font-bold text-white">
-                {hasConsensusData ? consensusDisplay : '0%'}
-              </span>
             </div>
           </div>
         </div>

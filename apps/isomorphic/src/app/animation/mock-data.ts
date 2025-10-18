@@ -45,7 +45,7 @@ const roster = [
 
 const rawRounds: RawRound[] = [
   {
-    round: 4510,
+    round: 1,
     scores: {
       miner_alpha: 8.1,
       miner_beta: 7.6,
@@ -55,7 +55,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4511,
+    round: 2,
     scores: {
       miner_alpha: 8.05,
       miner_beta: 7.65,
@@ -65,7 +65,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4512,
+    round: 3,
     scores: {
       miner_alpha: 7.95,
       miner_beta: 7.4,
@@ -75,7 +75,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4513,
+    round: 4,
     scores: {
       miner_alpha: 8.2,
       miner_beta: 7.8,
@@ -85,7 +85,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4514,
+    round: 5,
     scores: {
       miner_alpha: 8.15,
       miner_beta: 7.88,
@@ -95,7 +95,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4515,
+    round: 6,
     scores: {
       miner_alpha: 8.0,
       miner_beta: 8.05,
@@ -105,7 +105,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4516,
+    round: 7,
     scores: {
       miner_alpha: 7.9,
       miner_beta: 8.1,
@@ -115,7 +115,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4517,
+    round: 8,
     scores: {
       miner_alpha: 8.05,
       miner_beta: 8.0,
@@ -125,7 +125,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4518,
+    round: 9,
     scores: {
       miner_alpha: 8.2,
       miner_beta: 7.95,
@@ -135,7 +135,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4519,
+    round: 10,
     scores: {
       miner_alpha: 8.25,
       miner_beta: 8.1,
@@ -145,7 +145,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4520,
+    round: 11,
     scores: {
       miner_alpha: 8.15,
       miner_beta: 8.2,
@@ -155,7 +155,7 @@ const rawRounds: RawRound[] = [
     },
   },
   {
-    round: 4521,
+    round: 12,
     scores: {
       miner_alpha: 8.05,
       miner_beta: 8.25,
@@ -249,4 +249,3 @@ export const mockSubnetTimeline: ProcessedTimeline = {
   subnetId: "subnet36",
   meta,
 };
-
