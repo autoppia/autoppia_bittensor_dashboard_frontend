@@ -223,7 +223,7 @@ export default function LandingPage() {
           >
             {[
               {
-                value: "+12",
+                value: "+13",
                 label: "Websites",
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
