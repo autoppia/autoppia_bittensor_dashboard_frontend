@@ -72,21 +72,22 @@ export default function Header() {
   const navItems = NAV_COLLECTIONS[activeNav];
 
   const updateNavSelection = React.useCallback(
-    (
-      next: MenuNamespace,
-      options?: { broadcast?: boolean; persist?: boolean }
-    ) => {
-      if (next === activeNav) {
-        return;
-      }
-      setActiveNav(next);
+    (next: MenuNamespace, options?: { broadcast?: boolean; persist?: boolean }) => {
+      let didChange = false;
+      setActiveNav((current) => {
+        if (current === next) {
+          return current;
+        }
+        didChange = true;
+        return next;
+      });
       if (typeof window === "undefined") {
         return;
       }
       if (options?.persist !== false) {
         window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
       }
-      if (options?.broadcast) {
+      if (options?.broadcast && didChange) {
         window.dispatchEvent(
           new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
             detail: next,
@@ -94,7 +95,7 @@ export default function Header() {
         );
       }
     },
-    [activeNav]
+    []
   );
 
   React.useEffect(() => {
@@ -107,7 +108,7 @@ export default function Header() {
     const handleExternalNav = (event: Event) => {
       const detail = (event as CustomEvent<MenuNamespace>).detail;
       if (detail === "subnet36" || detail === "iwa") {
-        setActiveNav(detail);
+        setActiveNav((current) => (current === detail ? current : detail));
       }
     };
 
