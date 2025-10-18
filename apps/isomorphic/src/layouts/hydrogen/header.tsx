@@ -69,25 +69,30 @@ export default function Header() {
 
   const [activeNav, setActiveNav] =
     React.useState<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const activeNavRef = React.useRef<MenuNamespace>(DEFAULT_NAV_COLLECTION);
   const navItems = NAV_COLLECTIONS[activeNav];
 
+  React.useEffect(() => {
+    activeNavRef.current = activeNav;
+  }, [activeNav]);
+
   const updateNavSelection = React.useCallback(
-    (next: MenuNamespace, options?: { broadcast?: boolean; persist?: boolean }) => {
-      let didChange = false;
-      setActiveNav((current) => {
-        if (current === next) {
-          return current;
-        }
-        didChange = true;
-        return next;
-      });
+    (
+      next: MenuNamespace,
+      options?: { broadcast?: boolean; persist?: boolean }
+    ) => {
+      const prev = activeNavRef.current;
+      if (prev !== next) {
+        setActiveNav(next);
+        activeNavRef.current = next;
+      }
       if (typeof window === "undefined") {
         return;
       }
       if (options?.persist !== false) {
         window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
       }
-      if (options?.broadcast && didChange) {
+      if (options?.broadcast && prev !== next) {
         window.dispatchEvent(
           new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
             detail: next,
@@ -102,13 +107,13 @@ export default function Header() {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
     if (stored === "subnet36" || stored === "iwa") {
-      setActiveNav(stored as MenuNamespace);
+      updateNavSelection(stored as MenuNamespace, { persist: false });
     }
 
     const handleExternalNav = (event: Event) => {
       const detail = (event as CustomEvent<MenuNamespace>).detail;
       if (detail === "subnet36" || detail === "iwa") {
-        setActiveNav((current) => (current === detail ? current : detail));
+        updateNavSelection(detail, { persist: false });
       }
     };
 
@@ -121,7 +126,7 @@ export default function Header() {
         NAV_COLLECTION_EVENT,
         handleExternalNav as EventListener
       );
-  }, []);
+  }, [updateNavSelection]);
 
   if (isLanding) {
     return null;
@@ -153,12 +158,14 @@ export default function Header() {
                   <button
                     key={key}
                     type="button"
-                    onClick={() =>
-                      updateNavSelection(key, {
-                        broadcast: true,
-                        persist: true,
-                      })
-                    }
+                    onClick={() => {
+                      if (!isActiveKey) {
+                        updateNavSelection(key, {
+                          broadcast: true,
+                          persist: true,
+                        });
+                      }
+                    }}
                     className={cn(
                       "px-3 py-1 text-xs font-semibold transition-all duration-200 rounded-full",
                       isActiveKey
