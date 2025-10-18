@@ -728,6 +728,24 @@ export default function App() {
                   </span>
                 </div>
               </div>
+              <dl className="flex flex-col items-end gap-2 text-right">
+                <div className="flex items-center gap-2">
+                  <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                    Last Update
+                  </dt>
+                  <dd className="text-xs sm:text-sm font-black text-white">
+                    {lastBenchmarkUpdate}
+                  </dd>
+                </div>
+                <div className="flex items-center gap-2">
+                  <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                    Tasks Evaluated
+                  </dt>
+                  <dd className="text-xs sm:text-sm font-black text-white">
+                    {evaluatedBenchmarks}
+                  </dd>
+                </div>
+              </dl>
             </div>
           </motion.div>
         ) : (

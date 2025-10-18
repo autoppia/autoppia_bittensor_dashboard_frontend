@@ -58,7 +58,7 @@ export default function Websites() {
               <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-full backdrop-blur-sm">
                 <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
                 <Text className="text-sm font-semibold text-emerald-300">
-                  {activeWebsites.length} Active
+                  {activeWebsites.length} Websites
                 </Text>
               </div>
               <div className="flex items-center gap-3 px-6 py-3 bg-purple-500/20 border border-purple-500/30 rounded-full backdrop-blur-sm">

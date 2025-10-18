@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
@@ -19,6 +19,8 @@ export default function Overview() {
   const { loading, error, refetch } = useOverviewData();
   const { openModal } = useModal();
   const hasOpenedAnnouncement = useRef(false);
+  const metricsColumnRef = useRef<HTMLDivElement | null>(null);
+  const [metricsHeight, setMetricsHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (hasOpenedAnnouncement.current) {
@@ -52,6 +54,30 @@ export default function Overview() {
     openModal({ view: <MinerAnimationModal />, customSize: 1260, size: "xl" });
   }
 
+  useEffect(() => {
+    const element = metricsColumnRef.current;
+    if (!element) {
+      return;
+    }
+
+    setMetricsHeight(element.getBoundingClientRect().height);
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries.at(0);
+      if (!entry) {
+        return;
+      }
+      setMetricsHeight(entry.contentRect.height);
+    });
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [loading]);
+
   return (
     <>
       {/* Global Error State */}
@@ -74,8 +100,8 @@ export default function Overview() {
       )}
 
       {/* Content - always render components, let them handle their own loading states */}
-      <div className="flex flex-col lg:flex-row gap-6 min-w-0">
-        <div className="w-full lg:w-[calc(100%-460px)] min-w-0">
+      <div className="flex flex-col lg:flex-row lg:items-stretch gap-6 min-w-0">
+        <div className="w-full lg:w-[calc(100%-460px)] min-w-0 flex flex-col">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
             <Title
               as="h2"
@@ -84,9 +110,12 @@ export default function Overview() {
               Subnet 36 - Web Agents
             </Title>
           </div>
-          <OverviewMinerChart className="w-full min-w-0" />
+          <OverviewMinerChart
+            className="w-full min-w-0 flex-1"
+            targetHeight={metricsHeight}
+          />
         </div>
-        <div className="w-full lg:w-[460px] min-w-0">
+        <div className="w-full lg:w-[460px] min-w-0" ref={metricsColumnRef}>
           <div className="mb-4 flex items-center justify-between gap-3 min-w-0">
             <span className="inline-flex items-center rounded-md bg-sky-500/10 px-3 py-1 text-sm font-semibold text-sky-500 min-w-0">
               IM: Dynamic Zero V1

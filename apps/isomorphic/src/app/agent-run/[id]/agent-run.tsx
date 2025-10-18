@@ -13,12 +13,13 @@ import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 export default function AgentRun() {
   const { id } = useParams();
+  const runId = Array.isArray(id) ? id[0] : id ?? "";
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [period, setPeriod] = useState<string | null>(null);
 
   // Use the partial loading hook with progressive data fetching
   const { data, error, refetch, isAnyLoading } = useAgentRun(
-    id as string,
+    runId,
     {
       includePersonas: true,
       includeStats: true,
@@ -33,7 +34,14 @@ export default function AgentRun() {
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={`Agent Run ID: ${id}`}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>Agent Run ID:</span>
+            <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-emerald-200">
+              {runId}
+            </span>
+          </span>
+        }
         className="mt-4"
       >
         <Link

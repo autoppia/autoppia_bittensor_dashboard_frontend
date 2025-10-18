@@ -28,7 +28,13 @@ export default function Page() {
       return;
     }
 
-    const topMiner = miners.find((miner) => miner.ranking === 1) ?? miners[0];
+    const sortedMiners = [...miners].sort(
+      (a, b) => (a.ranking ?? Number.MAX_SAFE_INTEGER) - (b.ranking ?? Number.MAX_SAFE_INTEGER)
+    );
+    const topMiner =
+      sortedMiners.find((miner) => !miner.isSota) ??
+      sortedMiners.find((miner) => miner.ranking === 1) ??
+      sortedMiners[0];
     setRedirecting(true);
     try {
       router.push(`/agents/${topMiner.uid}`);

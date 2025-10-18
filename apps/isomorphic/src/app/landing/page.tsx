@@ -27,7 +27,7 @@ const navItems = [
   },
   {
     label: "Studio",
-    href: "https://studio.autoppia.com",
+    href: "https://app.autoppia.com",
   },
 ];
 
@@ -131,7 +131,7 @@ const productCards: ProductCard[] = [
   {
     title: "Studio",
     description: "Deploy and orchestrate your AI Worker teams.",
-    href: "https://studio.autoppia.com",
+    href: "https://app.autoppia.com",
     accent: "from-amber-400/60 via-orange-400/60 to-rose-400/60",
     badge: "🎨",
     actions: [
@@ -219,7 +219,7 @@ export default function LandingPage() {
               ))}
             </nav>
           </div>
-          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 overflow-x-auto overflow-y-hidden">
             {resourceLinks.map((link) => {
               const Icon = link.icon;
               return (
@@ -236,7 +236,7 @@ export default function LandingPage() {
               );
             })}
             <Link
-              href="https://studio.autoppia.com/login"
+              href="https://app.autoppia.com/login"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white shadow-[0_10px_25px_-15px_rgba(251,146,60,0.6)] transition-transform duration-200 hover:-translate-y-0.5 sm:text-[12px]"

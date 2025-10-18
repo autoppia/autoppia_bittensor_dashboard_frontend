@@ -161,7 +161,7 @@ export default function RoundValidators({
                       <span
                         className={cn(
                           "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                          isActive ? "text-blue-400" : "text-gray-700"
+                          isActive ? "text-white" : "text-gray-700"
                         )}
                       >
                         {validator.name}
