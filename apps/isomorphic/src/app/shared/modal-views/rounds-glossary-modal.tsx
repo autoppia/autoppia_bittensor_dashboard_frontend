@@ -107,7 +107,7 @@ export default function RoundsGlossaryModal() {
       <div className="mt-6 flex justify-end">
         <Button
           onClick={() => closeModal()}
-          className="rounded-xl bg-white px-5 py-2 text-sm font-semibold text-black shadow-sm transition hover:bg-gray-100 hover:shadow-md"
+          className="rounded-xl bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-900 hover:shadow-md"
         >
           Got it
         </Button>

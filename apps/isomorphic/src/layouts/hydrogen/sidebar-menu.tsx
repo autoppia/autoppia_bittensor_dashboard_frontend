@@ -8,13 +8,72 @@ import {
   DEFAULT_NAV_COLLECTION,
   MenuNamespace,
   NAV_COLLECTIONS,
+  NAV_COLLECTION_EVENT,
+  NAV_COLLECTION_STORAGE_KEY,
 } from "@/layouts/hydrogen/menu-items";
 
 export function SidebarMenu() {
   const pathname = usePathname();
   const [activeNav, setActiveNav] =
     React.useState<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const activeNavRef = React.useRef<MenuNamespace>(DEFAULT_NAV_COLLECTION);
   const navItems = NAV_COLLECTIONS[activeNav];
+
+  React.useEffect(() => {
+    activeNavRef.current = activeNav;
+  }, [activeNav]);
+
+  const updateNavSelection = React.useCallback(
+    (
+      next: MenuNamespace,
+      options?: { broadcast?: boolean; persist?: boolean }
+    ) => {
+      const prev = activeNavRef.current;
+      if (prev !== next) {
+        setActiveNav(next);
+        activeNavRef.current = next;
+      }
+      if (typeof window === "undefined") {
+        return;
+      }
+      if (options?.persist !== false) {
+        window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
+      }
+      if (options?.broadcast && prev !== next) {
+        window.dispatchEvent(
+          new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
+            detail: next,
+          })
+        );
+      }
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
+    if (stored === "subnet36" || stored === "iwa") {
+      updateNavSelection(stored as MenuNamespace, { persist: false });
+    }
+
+    const handleExternalNav = (event: Event) => {
+      const detail = (event as CustomEvent<MenuNamespace>).detail;
+      if (detail === "subnet36" || detail === "iwa") {
+        updateNavSelection(detail, { persist: false });
+      }
+    };
+
+    window.addEventListener(
+      NAV_COLLECTION_EVENT,
+      handleExternalNav as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        NAV_COLLECTION_EVENT,
+        handleExternalNav as EventListener
+      );
+  }, [updateNavSelection]);
 
   return (
     <div className="mt-4 pb-3 3xl:mt-6">
@@ -27,7 +86,11 @@ export function SidebarMenu() {
               <button
                 key={key}
                 type="button"
-                onClick={() => setActiveNav(key)}
+                onClick={() => {
+                  if (!isActive) {
+                    updateNavSelection(key, { broadcast: true, persist: true });
+                  }
+                }}
                 className={cn(
                   "flex-1 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200",
                   isActive
