@@ -46,55 +46,58 @@ export default function RoundsGlossaryModal() {
   const { closeModal } = useModal();
 
   return (
-    <div className="m-auto w-full max-w-[620px] rounded-3xl border border-blue-500/30 bg-gradient-to-br from-[#071946]/95 via-[#0a1f5d]/95 to-[#112a74]/95 px-6 pb-7 pt-6 text-white shadow-2xl sm:px-8 sm:pt-7">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="m-auto w-full max-w-[1320px] rounded-2xl border border-black/10 bg-white px-12 pb-9 pt-6 text-black sm:px-14 sm:pt-7">
+      <div className="mb-6 flex items-start justify-between gap-4 border-b border-black/10 pb-4">
         <div>
           <Title
             as="h3"
-            className="text-xl font-semibold tracking-tight text-white"
+            className="inline-block rounded-full border border-black/10 bg-black px-3 py-1 text-lg font-semibold tracking-tight text-white"
           >
             Round Lifecycle Glossary
           </Title>
-          <Text className="mt-1 text-sm text-white/70">
-            Each term describes a layer in the pipeline that turns daily
-            validator submissions into the analytics you see on this page.
-          </Text>
         </div>
         <ActionIcon
           size="sm"
           variant="text"
           onClick={() => closeModal()}
-          className="p-0 text-white/50 transition hover:text-white"
+          className="p-0 text-gray-400 transition hover:text-gray-700"
         >
           <PiXBold className="h-[18px] w-[18px]" />
         </ActionIcon>
       </div>
 
-      <div className="space-y-4">
-        {glossaryItems.map((item) => (
-          <div
-            key={item.term}
-            className="rounded-2xl border border-white/10 bg-blue-900/40 px-5 py-4"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-200/90">
-                {item.term}
-              </Text>
-              <Text className="text-xs font-medium text-white/60">
-                {item.summary}
+      <div className="relative">
+        {glossaryItems.map((item, index) => (
+          <div key={item.term} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+            <div className="flex w-7 flex-col items-center">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-black bg-black text-[10px] font-semibold text-white">
+                {index + 1}
+              </span>
+              {index < glossaryItems.length - 1 && (
+                <span className="mt-1 h-full w-px flex-1 bg-black/15" />
+              )}
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <Text className="rounded-full border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-black">
+                  {item.term}
+                </Text>
+                <Text className="text-xs font-medium italic text-black">
+                  {item.summary}
+                </Text>
+              </div>
+              <Text className="text-sm leading-relaxed text-black">
+                {item.details}
               </Text>
             </div>
-            <Text className="mt-2 text-sm leading-relaxed text-white/80">
-              {item.details}
-            </Text>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+      <div className="mt-6 border-t border-black/10 pt-4 text-sm text-black">
         Validators follow the same flow every round:{" "}
-        <span className="font-semibold text-emerald-300">
-          start round → assign tasks → run miners → collect evaluations →
+        <span className="font-semibold text-black">
+          start round → assign tasks → collect solutions → run evaluations →
           submit final scores.
         </span>{" "}
         Understanding where a metric comes from makes debugging and comparing
@@ -104,7 +107,7 @@ export default function RoundsGlossaryModal() {
       <div className="mt-6 flex justify-end">
         <Button
           onClick={() => closeModal()}
-          className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 shadow hover:bg-slate-100"
+          className="rounded-xl bg-white px-5 py-2 text-sm font-semibold text-black shadow-sm transition hover:bg-gray-100 hover:shadow-md"
         >
           Got it
         </Button>

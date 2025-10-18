@@ -180,26 +180,26 @@ export default function RoundStats() {
       </div>
 
       {/* Is In Consensus Card */}
-      <div className="relative bg-gradient-to-br from-green-500/15 via-emerald-500/15 to-teal-500/15 border-2 border-green-500/40 rounded-xl p-3 hover:border-green-400/60 hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
+      <div className="relative bg-gradient-to-br from-blue-500/15 via-sky-500/15 to-indigo-500/15 border-2 border-blue-500/40 rounded-xl p-3 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
         {/* Corner Accents - All 4 corners */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-green-400/80 rounded-tl-lg z-20"></div>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-green-400/80 rounded-tr-lg z-20"></div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-green-400/80 rounded-bl-lg z-20"></div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-green-400/80 rounded-br-lg z-20"></div>
+        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80 rounded-tl-lg z-20"></div>
+        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80 rounded-tr-lg z-20"></div>
+        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/80 rounded-bl-lg z-20"></div>
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/80 rounded-br-lg z-20"></div>
         {/* Aggregated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-green-400/20 via-transparent to-emerald-500/20"></div>
-        <div className="absolute top-2 right-2 w-2 h-2 bg-green-400/30 rounded-full animate-pulse"></div>
+        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-blue-400/20 via-transparent to-indigo-500/20"></div>
+        <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400/30 rounded-full animate-pulse"></div>
         <div className="relative flex flex-col h-full justify-between z-10">
           <div className="flex items-center space-x-2 mb-2">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
+            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
               <PiCheckCircleDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <h3 className="text-xs font-medium text-green-300">IS IN CONSENSUS</h3>
+            <h3 className="text-xs font-medium text-blue-300">IS IN CONSENSUS</h3>
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-center mb-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+              <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
                 {hasConsensusData
                   ? consensusPercentage >= 80
                     ? 'Yes'
@@ -208,15 +208,15 @@ export default function RoundStats() {
                       : 'No'
                   : 'No'}
               </div>
-              <div className="text-xs text-green-200 mt-1">
+              <div className="text-xs text-blue-200 mt-1">
                 {hasConsensusData ? `${consensusDisplay} consensus` : 'No data'}
               </div>
             </div>
           </div>
 
-          <div className="bg-green-500/20 rounded-lg p-2">
+          <div className="bg-blue-500/20 rounded-lg p-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-green-200">Consensus</span>
+              <span className="text-xs text-blue-200">Consensus</span>
               <span className="text-sm font-bold text-white">
                 {hasConsensusData ? consensusDisplay : '0%'}
               </span>
