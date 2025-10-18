@@ -349,7 +349,7 @@ export default function WebsiteDetailPage() {
                             color: "#D1D5DB",
                           }}
                         >
-                          "{prompt}"
+                          &quot;{prompt}&quot;
                         </div>
                       ))}
                     </div>
