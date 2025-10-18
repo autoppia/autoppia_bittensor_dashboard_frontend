@@ -1220,6 +1220,148 @@ export const websitesData: WebsiteDataType[] = [
     ],
     comingSoonNote: "More task examples coming soon.",
   },
+  // Coming Soon Websites
+  {
+    name: "AutoFinance",
+    slug: "autofinance",
+    portValidator: "validator_125",
+    href: "http://autofinance.autoppia.com",
+    origin: "http://autofinance.autoppia.com",
+    totalTasks: [0, 0, 0],
+    image: "/images/web13.png",
+    isComingSoon: true,
+    color: "#10B981",
+    description:
+      "Personal finance management platform with budgeting, investments, and expense tracking.",
+    useCases: [
+      {
+        name: "Budget Planning",
+        examplePrompt: [
+          "Create a monthly budget for a family of 4 with $5000 income",
+          "Set up a budget tracker for student expenses",
+        ],
+      },
+      {
+        name: "Investment Tracking",
+        examplePrompt: [
+          "Track your stock portfolio performance",
+          "Analyze investment returns for the past year",
+        ],
+      },
+      {
+        name: "Expense Management",
+        examplePrompt: [
+          "Categorize and analyze monthly expenses",
+          "Set up automatic bill payments",
+        ],
+      },
+    ],
+    taskExamples: [
+      {
+        title: "Budget Creation",
+        prompt:
+          "Create a comprehensive monthly budget including all income sources and expense categories",
+      },
+    ],
+    comingSoonNote:
+      "Advanced financial analytics and AI-powered insights coming soon.",
+    avgDifficulty: 7.5,
+    completionRate: 0,
+  },
+  {
+    name: "AutoHealth",
+    slug: "autohealth",
+    portValidator: "validator_126",
+    href: "http://autohealth.autoppia.com",
+    origin: "http://autohealth.autoppia.com",
+    totalTasks: [0, 0, 0],
+    image: "/images/web14.png",
+    isComingSoon: true,
+    color: "#8B5CF6",
+    description:
+      "Healthcare management system with patient records, appointments, and medical analytics.",
+    useCases: [
+      {
+        name: "Patient Records",
+        examplePrompt: [
+          "Create a new patient profile with medical history",
+          "Update patient information and treatment notes",
+        ],
+      },
+      {
+        name: "Appointment Scheduling",
+        examplePrompt: [
+          "Schedule a follow-up appointment for next week",
+          "Reschedule an existing appointment to a different time",
+        ],
+      },
+      {
+        name: "Medical Analytics",
+        examplePrompt: [
+          "Generate a health report for the past 6 months",
+          "Analyze patient trends and demographics",
+        ],
+      },
+    ],
+    taskExamples: [
+      {
+        title: "Patient Management",
+        prompt:
+          "Set up a complete patient management workflow with appointment scheduling and record keeping",
+      },
+    ],
+    comingSoonNote:
+      "AI-powered health insights and telemedicine features coming soon.",
+    avgDifficulty: 8.0,
+    completionRate: 0,
+  },
+  {
+    name: "AutoDrive",
+    slug: "autodrive",
+    portValidator: "validator_127",
+    href: "http://autodrive.autoppia.com",
+    origin: "http://autodrive.autoppia.com",
+    totalTasks: [0, 0, 0],
+    image: "/images/web15.png",
+    isComingSoon: true,
+    color: "#F59E0B",
+    description:
+      "Vehicle management system with fleet tracking, maintenance scheduling, and driver analytics.",
+    useCases: [
+      {
+        name: "Fleet Management",
+        examplePrompt: [
+          "Add a new vehicle to the fleet with complete specifications",
+          "Update vehicle status and location in real-time",
+        ],
+      },
+      {
+        name: "Maintenance Tracking",
+        examplePrompt: [
+          "Schedule routine maintenance for all vehicles",
+          "Track maintenance history and upcoming service dates",
+        ],
+      },
+      {
+        name: "Driver Analytics",
+        examplePrompt: [
+          "Generate driver performance reports for the month",
+          "Analyze fuel consumption and efficiency metrics",
+        ],
+      },
+    ],
+    taskExamples: [
+      {
+        title: "Vehicle Registration",
+        prompt:
+          "Register a new vehicle in the fleet management system with all required documentation",
+      },
+    ],
+    comingSoonNote:
+      "Advanced GPS tracking and AI-powered route optimization coming soon.",
+    avgDifficulty: 7.0,
+    completionRate: 0,
+  },
 ];
 
 export const websitesDataMap = websitesData.reduce(
