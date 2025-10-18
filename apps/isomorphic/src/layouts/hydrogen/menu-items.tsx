@@ -8,7 +8,7 @@ import {
   LuGlobe,
   LuTrophy,
 } from "react-icons/lu";
-import { PiFlaskDuotone } from "react-icons/pi";
+import { TbTournament } from "react-icons/tb";
 import { FaHome } from "react-icons/fa";
 
 export type MenuItemType = {
@@ -31,6 +31,19 @@ export const menuItems: MenuItemType[] = [
     name: "Leaderboard",
     href: routes.leaderboard,
     icon: <LuTrophy />,
+    section: "general",
+  },
+  {
+    name: "Websites",
+    href: routes.websites,
+    icon: <LuGlobe />,
+    section: "general",
+  },
+  {
+    name: "Join",
+    href: routes.testAgent,
+    icon: <TbTournament />,
+    section: "general",
   },
   {
     name: "Overview",
@@ -61,15 +74,5 @@ export const menuItems: MenuItemType[] = [
     href: routes.tasks,
     icon: <LuBoxes />,
     section: "leaderboard",
-  },
-  {
-    name: "Websites",
-    href: routes.websites,
-    icon: <LuGlobe />,
-  },
-  {
-    name: "Join the arena",
-    href: routes.testAgent,
-    icon: <PiFlaskDuotone />,
   },
 ];

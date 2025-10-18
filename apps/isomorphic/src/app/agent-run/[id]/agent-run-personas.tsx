@@ -35,6 +35,22 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
+function extractUidNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const match = value.match(/-?\d+/);
+    if (match) {
+      const parsed = Number.parseInt(match[0], 10);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
 export default function AgentRunPersonas({ personas, summary }: AgentRunPersonasProps) {
   const roundData =
     personas?.round || {
@@ -70,6 +86,23 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
 
   const agentUid = agentData.id || summary?.agentId;
   const agentHotkey = summary?.agentId || agentData.id;
+
+  const fallbackMinerImage = (() => {
+    const uidFromSummary =
+      extractUidNumber(summary?.agentUid) ??
+      extractUidNumber(summary?.minerUid) ??
+      extractUidNumber(summary?.agentId);
+    const uidFromAgent =
+      extractUidNumber(agentData.uid) ?? extractUidNumber(agentData.id);
+    const uidCandidate = uidFromSummary ?? uidFromAgent;
+    if (uidCandidate === null) {
+      return "/images/autoppia-logo.png";
+    }
+    const normalized = Math.abs(uidCandidate % 50);
+    return `/miners/${normalized}.svg`;
+  })();
+
+  const minerImageSrc = resolveImageSrc(agentData.image, fallbackMinerImage);
 
   const toEpochSeconds = (value?: string | null) => {
     if (!value) return null;
@@ -122,13 +155,14 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
       <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700/20 bg-slate-800/20">
+            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/20 bg-slate-800/20">
               <Image
                 alt={validatorData.name}
                 src={resolveImageSrc(validatorData.image)}
-                width={44}
-                height={44}
-                className="rounded-lg object-cover"
+                width={56}
+                height={56}
+                unoptimized
+                className="h-full w-full object-cover"
               />
             </div>
             <div>
@@ -167,13 +201,14 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
       <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700/20 bg-slate-800/20">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-slate-700/30 bg-slate-900/40 shadow-inner shadow-slate-900/40">
               <Image
                 alt={agentData.name}
-                src={resolveImageSrc(agentData.image)}
-                width={44}
-                height={44}
-                className="rounded-lg object-cover"
+                src={minerImageSrc}
+                width={64}
+                height={64}
+                unoptimized
+                className="h-14 w-14 rounded-full border border-slate-700/40 object-cover"
               />
             </div>
             <div>

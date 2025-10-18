@@ -31,8 +31,7 @@ export class ApiClient {
   constructor(baseUrl: string = resolveBaseUrl()) {
     this.baseUrl = baseUrl;
     this.defaultHeaders = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: "application/json",
     };
   }
 
@@ -112,7 +111,7 @@ export class ApiClient {
       }
 
       const response = await fetch(url.toString(), {
-        method: 'GET',
+        method: "GET",
         headers: this.defaultHeaders,
       });
 
@@ -125,8 +124,11 @@ export class ApiClient {
 
   async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: this.defaultHeaders,
+      method: "POST",
+      headers: {
+        ...this.defaultHeaders,
+        "Content-Type": "application/json",
+      },
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -135,8 +137,11 @@ export class ApiClient {
 
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers: this.defaultHeaders,
+      method: "PUT",
+      headers: {
+        ...this.defaultHeaders,
+        "Content-Type": "application/json",
+      },
       body: data ? JSON.stringify(data) : undefined,
     });
 

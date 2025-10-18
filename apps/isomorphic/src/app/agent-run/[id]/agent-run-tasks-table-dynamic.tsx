@@ -267,7 +267,7 @@ export default function AgentRunTasksTableDynamic() {
               headerClassName:
                 "bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 text-slate-200",
               rowClassName:
-                "border-b border-slate-700/25 transition-colors duration-200 hover:bg-slate-900/40",
+                "border-b border-slate-700/25 transition-colors duration-200 hover:bg-emerald-500/15 hover:border-emerald-400/40 hover:shadow-[0_12px_28px_rgba(16,185,129,0.12)]",
             }}
           />
         ) : (

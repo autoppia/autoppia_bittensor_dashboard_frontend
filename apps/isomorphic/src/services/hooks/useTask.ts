@@ -341,6 +341,7 @@ export function useTaskLogs(
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const paramsKey = params ? JSON.stringify(params) : undefined;
 
   useEffect(() => {
     if (!taskId) return;
@@ -360,7 +361,7 @@ export function useTaskLogs(
     };
 
     fetchLogs();
-  }, [taskId, params]);
+  }, [taskId, paramsKey]);
 
   return { logs, total, isLoading, error };
 }

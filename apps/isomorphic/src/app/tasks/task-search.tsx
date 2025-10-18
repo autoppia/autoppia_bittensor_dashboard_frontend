@@ -100,6 +100,7 @@ export default function TaskSearch() {
     setHasSearched(true);
     setIsSearching(true);
     setSearchError(null);
+    setResults([]);
 
     try {
       const response = await tasksService.searchTasks({
@@ -355,22 +356,47 @@ export default function TaskSearch() {
           </div>
         </div>
       </div>
-
       {hasSearched && isSearching && (
-        <div className="mt-6 text-center relative z-0">
-          <div className="relative bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-cyan-900/10"></div>
-            <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg mx-auto mb-4">
-                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <div className="mt-6 relative z-0">
+          <div className="text-center mb-6">
+            <div className="h-7 w-48 mx-auto rounded-full bg-purple-500/20 animate-pulse" />
+            <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={`task-skeleton-${index}`}
+                className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
+              >
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/30" />
+                    <div className="space-y-2">
+                      <div className="h-3 w-24 rounded-full bg-purple-500/30" />
+                      <div className="h-2.5 w-32 rounded-full bg-purple-500/20" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-28 rounded-full bg-purple-500/20" />
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-6 w-24 rounded-full bg-blue-500/20" />
+                  <div className="h-5 w-12 rounded-full bg-emerald-500/30" />
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
+                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
+                  <div className="h-3 w-5/6 rounded-full bg-purple-500/15" />
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
+                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
+                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
+                </div>
               </div>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-2">
-                LOADING TASKS
-              </h3>
-              <p className="text-blue-200 text-sm">
-                Fetching tasks from the API...
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       )}

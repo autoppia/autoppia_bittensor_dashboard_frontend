@@ -24,21 +24,51 @@ import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
 export default function OverviewValidators() {
   const { data: validatorsData, loading: validatorsLoading, error: validatorsError } = useValidators({ limit: 6 });
   const { data: currentRound, loading: roundLoading, error: roundError } = useCurrentRound();
+  const roundNumber = currentRound?.id ?? null;
+  const isRoundActive =
+    !!currentRound &&
+    (currentRound.current ||
+      currentRound.status === "active" ||
+      currentRound.status === "pending");
+
+  const headerTitle = "What's happening on the subnet";
+  const headerDescription =
+    "Below are a list of validators currently running - click on any to see full details";
+
+  const runningRoundBadge = roundLoading ? (
+    <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-200">
+      <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin" />
+      Loading round…
+    </span>
+  ) : roundNumber ? (
+    <span
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]",
+        isRoundActive
+          ? "border border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+          : "border border-slate-400/60 bg-slate-500/10 text-slate-200"
+      )}
+    >
+      {isRoundActive ? (
+        <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <PiCheckCircleFill className="h-3.5 w-3.5 text-emerald-300" />
+      )}
+      <span className="flex items-center gap-1">
+        {isRoundActive ? "Running" : "Last"} Round
+        <span className="ml-1 font-semibold text-white">
+          {roundNumber}
+        </span>
+      </span>
+    </span>
+  ) : null;
 
   // Show loading state
   if (validatorsLoading || roundLoading) {
     return (
       <>
-        <PageHeader title={"What's happening on the subnet"} className="mt-12">
-          <div className="flex items-center space-x-3">
-            <div className="text-sm text-gray-600">
-              Below are a list of validators currently running - click on any to see full details
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-xs text-blue-600">Loading...</span>
-            </div>
-          </div>
+        <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+          {runningRoundBadge}
         </PageHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -95,10 +125,8 @@ export default function OverviewValidators() {
   if (validatorsError) {
     return (
       <>
-        <PageHeader title={"What's happening on the subnet"} className="mt-12">
-          <div className="text-sm text-gray-600 mt-2">
-            Below are a list of validators currently running - click on any to see full details
-          </div>
+        <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+          {runningRoundBadge}
         </PageHeader>
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
           <p className="text-red-400 font-medium">Error loading validators</p>
@@ -112,10 +140,8 @@ export default function OverviewValidators() {
 
   return (
     <>
-      <PageHeader title={"What's happening on the subnet"} className="mt-12">
-        <div className="text-sm text-gray-600 mt-2">
-          Below are a list of validators currently running - click on any to see full details
-        </div>
+      <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+        {runningRoundBadge}
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {(validatorsData?.data?.validators || []).map((validator, index) => {

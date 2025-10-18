@@ -82,31 +82,36 @@ export default function Header() {
               style={{ width: "auto", maxWidth: "100%" }}
             />
           </Link>
-          <div className="hidden xl:flex items-center min-w-0 max-w-full">
+          <div className="hidden xl:flex items-center min-w-0 max-w-full gap-3">
             {menuItems.map((item, index) => {
               const href = item?.href as string;
               const isActive =
                 pathname === href ||
                 (href !== "/" && pathname.startsWith(href));
+              const previousSection =
+                index > 0 ? menuItems[index - 1]?.section : undefined;
+              const needsSeparator =
+                index > 0 &&
+                Boolean(item.section) &&
+                item.section !== previousSection;
 
               return (
                 <Fragment key={item.name + "-" + index}>
                   {/* Add separator between sections */}
                   {needsSeparator && (
-                    <div className="flex items-center mx-3 flex-shrink-0">
-                      <div className="w-[2px] h-7 bg-gradient-to-b from-transparent via-gray-400 to-transparent mx-2"></div>
-                      <div className="px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-lg border-2 border-yellow-500/50 shadow-md hover:shadow-lg transition-all duration-300">
-                        <span className="text-sm font-extrabold text-yellow-600 tracking-widest whitespace-nowrap uppercase">
-                          Subnet 36
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-4 flex-shrink-0 pl-4 pr-3">
+                      <span className="h-6 w-px rounded-full bg-white/60" />
+                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
+                        Subnet 36
+                      </span>
                     </div>
                   )}
 
                   {item?.href ? (
                     <Link
                       href={item?.href}
-                      className="mx-0.5 my-2 flex-shrink-0"
+                      className="flex-shrink-0"
                     >
                       <div
                         className={cn(
