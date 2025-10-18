@@ -10,12 +10,20 @@ import { PiArrowLeftLight } from "react-icons/pi";
 
 export default function Task() {
   const { id } = useParams();
+  const taskId = Array.isArray(id) ? id[0] : id ?? "";
 
   return (
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Task Details"
-        description={`Task ID: ${id}`}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>Task ID:</span>
+            <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-emerald-200">
+              {taskId}
+            </span>
+          </span>
+        }
         className="mt-4"
       >
         <Link

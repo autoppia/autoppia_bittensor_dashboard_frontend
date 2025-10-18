@@ -22,10 +22,8 @@ export default function WebsiteDetailPage() {
   const websiteSlug = params?.name as string;
   const website = websitesData.find((w) => w.slug === websiteSlug);
 
-  // ✅ Only show first 2 prompts initially
-  const [useCases, setUseCases] = useState(
-    website?.useCases?.slice(0, 2) || []
-  );
+  // ✅ Show all use cases initially
+  const [useCases, setUseCases] = useState(website?.useCases || []);
   const [loading, setLoading] = useState(false);
 
   const hexToRgb = (hex: string) => {
@@ -44,7 +42,7 @@ export default function WebsiteDetailPage() {
   const colorWithOpacity20 = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
   const colorBorder = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
 
-  // ✅ Call local API instead of direct server call
+  // ✅ Refresh tasks from API and update useCases state
   const handleRefresh = async () => {
     if (!website) return;
     setLoading(true);
@@ -67,11 +65,47 @@ export default function WebsiteDetailPage() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
-      const key = Object.keys(data)[0];
-      const newUseCases = data[key] || [];
+      console.log("API Response:", data); // Debug log
 
-      if (newUseCases.length > 0) {
+      // Handle the API response structure
+      let projectData;
+      if (data.generated_tasks && Array.isArray(data.generated_tasks)) {
+        // API returns { generated_tasks: [...] }
+        projectData = data.generated_tasks.find(
+          (item: any) => item.project_id === website.slug
+        );
+      } else if (Array.isArray(data)) {
+        // Direct array response
+        projectData = data.find(
+          (item: any) => item.project_id === website.slug
+        );
+      } else if (data && typeof data === "object") {
+        // Single object response
+        projectData = data;
+      }
+
+      console.log("Project Data:", projectData); // Debug log
+
+      if (projectData && projectData.tasks) {
+        console.log("Tasks found:", projectData.tasks); // Debug log
+
+        // Convert API response to useCases format
+        const newUseCases = Object.entries(projectData.tasks).map(
+          ([useCaseName, prompts]) => ({
+            name: useCaseName
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            examplePrompt: Array.isArray(prompts) ? prompts : [prompts],
+          })
+        );
+
+        console.log("New Use Cases:", newUseCases); // Debug log
+
+        // Update all use cases from API
         setUseCases(newUseCases);
+        console.log("Updated use cases to:", newUseCases); // Debug log
+      } else {
+        console.log("No project data or tasks found"); // Debug log
       }
     } catch (err) {
       console.error("❌ Failed to refresh data:", err);
@@ -315,7 +349,7 @@ export default function WebsiteDetailPage() {
                             color: "#D1D5DB",
                           }}
                         >
-                          "{prompt}"
+                          &quot;{prompt}&quot;
                         </div>
                       ))}
                     </div>

@@ -1,11 +1,12 @@
 "use client";
 
-import { Title, Text } from 'rizzui/typography';
-import cn from '@core/utils/class-names';
+import type { ReactNode } from "react";
+import { Title, Text } from "rizzui/typography";
+import cn from "@core/utils/class-names";
 
 export type PageHeaderProps = {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   className?: string;
 };
 
@@ -16,8 +17,8 @@ export default function PageHeader({
   children,
 }: React.PropsWithChildren<PageHeaderProps>) {
   return (
-    <header className={cn('mb-6', className)}>
-      <div className="flex items-center justify-between">
+    <header className={cn("mb-6", className)}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Title
             as="h2"
@@ -25,7 +26,11 @@ export default function PageHeader({
           >
             {title}
           </Title>
-          <Text className="mt-1 text-md lg:text-lg text-gray-500">{description}</Text>
+          {description ? (
+            <Text className="mt-1 text-md lg:text-lg text-gray-500">
+              {description}
+            </Text>
+          ) : null}
         </div>
         {children}
       </div>

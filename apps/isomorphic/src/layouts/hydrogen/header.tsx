@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Fragment } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
 import cn from "@core/utils/class-names";
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
 import { LuActivity, LuMinus } from "react-icons/lu";
-import { menuItems } from "@/layouts/hydrogen/menu-items";
+import {
+  DEFAULT_NAV_COLLECTION,
+  MenuNamespace,
+  NAV_COLLECTIONS,
+  NAV_COLLECTION_EVENT,
+  NAV_COLLECTION_STORAGE_KEY,
+} from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
 import { Tooltip } from "rizzui";
@@ -61,6 +67,67 @@ export default function Header() {
 
   const statusLabel = `● ${displayStatusText.toUpperCase()}`;
 
+  const [activeNav, setActiveNav] =
+    React.useState<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const activeNavRef = React.useRef<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const navItems = NAV_COLLECTIONS[activeNav];
+
+  React.useEffect(() => {
+    activeNavRef.current = activeNav;
+  }, [activeNav]);
+
+  const updateNavSelection = React.useCallback(
+    (
+      next: MenuNamespace,
+      options?: { broadcast?: boolean; persist?: boolean }
+    ) => {
+      const prev = activeNavRef.current;
+      if (prev !== next) {
+        setActiveNav(next);
+        activeNavRef.current = next;
+      }
+      if (typeof window === "undefined") {
+        return;
+      }
+      if (options?.persist !== false) {
+        window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
+      }
+      if (options?.broadcast && prev !== next) {
+        window.dispatchEvent(
+          new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
+            detail: next,
+          })
+        );
+      }
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
+    if (stored === "subnet36" || stored === "iwa") {
+      updateNavSelection(stored as MenuNamespace, { persist: false });
+    }
+
+    const handleExternalNav = (event: Event) => {
+      const detail = (event as CustomEvent<MenuNamespace>).detail;
+      if (detail === "subnet36" || detail === "iwa") {
+        updateNavSelection(detail, { persist: false });
+      }
+    };
+
+    window.addEventListener(
+      NAV_COLLECTION_EVENT,
+      handleExternalNav as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        NAV_COLLECTION_EVENT,
+        handleExternalNav as EventListener
+      );
+  }, [updateNavSelection]);
+
   if (isLanding) {
     return null;
   }
@@ -82,52 +149,59 @@ export default function Header() {
               style={{ width: "auto", maxWidth: "100%" }}
             />
           </Link>
-          <div className="hidden xl:flex items-center min-w-0 max-w-full">
-            {menuItems.map((item, index) => {
-              const href = item?.href as string;
+          <div className="hidden xl:flex items-center min-w-0 max-w-full gap-3">
+            <div className="flex items-center rounded-full border border-black/10 bg-white p-1 shadow-sm">
+              {(["iwa", "subnet36"] as MenuNamespace[]).map((key) => {
+                const isActiveKey = activeNav === key;
+                const label = key === "subnet36" ? "Subnet 36" : "IWA";
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      if (!isActiveKey) {
+                        updateNavSelection(key, {
+                          broadcast: true,
+                          persist: true,
+                        });
+                      }
+                    }}
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold transition-all duration-200 rounded-full",
+                      isActiveKey
+                        ? "bg-black text-white shadow-sm"
+                        : "text-gray-600 hover:text-black"
+                    )}
+                    aria-pressed={isActiveKey}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {navItems.map((item) => {
+              const href = item.href;
               const isActive =
                 pathname === href ||
                 (href !== "/" && pathname.startsWith(href));
 
               return (
-                <Fragment key={item.name + "-" + index}>
-                  {/* Add separator between sections */}
-                  {needsSeparator && (
-                    <div className="flex items-center mx-3 flex-shrink-0">
-                      <div className="w-[2px] h-7 bg-gradient-to-b from-transparent via-gray-400 to-transparent mx-2"></div>
-                      <div className="px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-lg border-2 border-yellow-500/50 shadow-md hover:shadow-lg transition-all duration-300">
-                        <span className="text-sm font-extrabold text-yellow-600 tracking-widest whitespace-nowrap uppercase">
-                          Subnet 36
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {item?.href ? (
-                    <Link
-                      href={item?.href}
-                      className="mx-0.5 my-2 flex-shrink-0"
-                    >
-                      <div
-                        className={cn(
-                          "px-2 xl:px-3 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-2 text-xs xl:text-sm whitespace-nowrap",
-                          isActive
-                            ? "bg-white text-black"
-                            : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
-                        )}
-                      >
-                        {item.icon && (
-                          <span className="text-sm xl:text-base">
-                            {item.icon}
-                          </span>
-                        )}
-                        <span className="hidden 2xl:inline">{item.name}</span>
-                      </div>
-                    </Link>
-                  ) : (
-                    <></>
-                  )}
-                </Fragment>
+                <Link key={item.name} href={href} className="flex-shrink-0">
+                  <div
+                    className={cn(
+                      "px-2 xl:px-2.5 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-1.5 text-xs xl:text-sm whitespace-nowrap",
+                      isActive
+                        ? "bg-white text-black"
+                        : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
+                    )}
+                  >
+                    {item.icon && (
+                      <span className="text-sm xl:text-base">{item.icon}</span>
+                    )}
+                    <span className="hidden 2xl:inline">{item.name}</span>
+                  </div>
+                </Link>
               );
             })}
           </div>

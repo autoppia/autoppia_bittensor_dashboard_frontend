@@ -95,7 +95,9 @@ const SN36_HIGHLIGHTS: Highlight[] = [
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Infinite Web Arena";
+  const fullText = "Infinite Web Arena Platform";
+  const highlightWord = "Platform";
+  const highlightStart = fullText.indexOf(highlightWord);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState(0);
 
@@ -132,13 +134,29 @@ export default function LandingPage() {
           {/* Typing Animation Title */}
           <h1
             className={cn(
-              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-8 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] transition-all duration-1000",
+              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-10 sm:mb-12 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent min-h-[1.2em] transition-all duration-1000",
               isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-10"
             )}
           >
-            {displayedText}
+            {highlightStart >= 0 ? (
+              <>
+                <span>
+                  {displayedText.slice(
+                    0,
+                    Math.min(displayedText.length, highlightStart)
+                  )}
+                </span>
+                <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                  {displayedText.length > highlightStart
+                    ? displayedText.slice(highlightStart)
+                    : ""}
+                </span>
+              </>
+            ) : (
+              displayedText
+            )}
             <span className="animate-pulse">|</span>
           </h1>
 
@@ -205,7 +223,7 @@ export default function LandingPage() {
           >
             {[
               {
-                value: "+12",
+                value: "+13",
                 label: "Websites",
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
