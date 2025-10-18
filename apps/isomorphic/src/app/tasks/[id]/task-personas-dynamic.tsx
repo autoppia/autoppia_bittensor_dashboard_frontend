@@ -3,25 +3,70 @@
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import {
-  PiClockDuotone,
   PiArrowSquareOutDuotone,
-  PiGithubLogoDuotone,
-  PiHashDuotone,
-  PiKeyDuotone,
+  PiClock,
   PiCopyDuotone,
+  PiGithubLogoDuotone,
+  PiHash,
+  PiKey,
+  PiTarget,
 } from "react-icons/pi";
 import { useTaskPersonas } from "@/services/hooks/useTask";
 import { useAgent } from "@/services/hooks/useAgents";
-import LoadingScreen, { CardLoadingSkeleton } from "@/app/shared/loading-screen";
 import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
+import { CardLoadingSkeleton } from "@/app/shared/loading-screen";
+
+function resolveImageSrc(src?: string | null, fallback: string = "/images/autoppia-logo.png") {
+  if (!src) {
+    return fallback;
+  }
+  const trimmed = src.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+    return trimmed;
+  }
+  return `/${trimmed.replace(/^\/+/, "")}`;
+}
+
+function truncateMiddle(value?: string | null, visible: number = 6) {
+  if (!value) {
+    return "—";
+  }
+  if (value.length <= visible * 2) {
+    return value;
+  }
+  return `${value.slice(0, visible)}…${value.slice(-visible)}`;
+}
+
+function formatStatus(value: string) {
+  if (!value) return "Unknown";
+  return value.replace(/_/g, " ").replace(/^\w/, (char) => char.toUpperCase());
+}
+
+function formatUseCase(value?: string | null) {
+  if (!value) return "Unknown use case";
+  return value
+    .toString()
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export default function TaskPersonasDynamic() {
   const { id } = useParams();
-  const { personas, isLoading, error } = useTaskPersonas(id as string);
+  const taskId = Array.isArray(id) ? id[0] : id ?? "";
+  const { personas, isLoading, error } = useTaskPersonas(taskId);
 
   // Fetch full agent data to get UID and hotkey (when available)
   const { data: agentDetail } = useAgent(personas?.agent.id);
   const agentData = agentDetail?.agent;
+  const canCopyHotkey =
+    typeof navigator !== "undefined" && typeof navigator.clipboard !== "undefined";
 
   if (isLoading) {
     return <CardLoadingSkeleton count={4} className="mb-6" />;
@@ -29,7 +74,7 @@ export default function TaskPersonasDynamic() {
 
   if (error || !personas) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 mb-6">
         {Array.from({ length: 4 }, (_, index) => (
           <StatsCardPlaceholder key={index} />
         ))}
@@ -37,127 +82,187 @@ export default function TaskPersonasDynamic() {
     );
   }
 
+  const roundStatusLabel = formatStatus(personas.round.status);
+  const validatorImage = resolveImageSrc(personas.validator.image);
+  const agentImage = resolveImageSrc(personas.agent.image);
+  const agentUid = agentData?.uid != null ? `UID ${agentData.uid}` : "UID unavailable";
+  const agentHotkey = agentData?.hotkey;
+  const taskUseCase = formatUseCase(personas.task.useCase);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 mb-6">
       {/* Round Card */}
-      <div className="bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 rounded-2xl p-5 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-        <div className="text-center h-full flex flex-col justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
-            <PiClockDuotone className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
+      <section className="relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+        <div className="pointer-events-none absolute -left-10 top-8 h-32 w-32 rounded-full bg-amber-400/10 blur-3xl" />
+        <header className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-amber-300">
+              <PiClock className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-400">Round</p>
+              <p className="text-3xl font-semibold text-white leading-tight">
+                #{personas.round.id}
+              </p>
+            </div>
           </div>
-          <h3 className="text-sm font-medium text-amber-300 mb-2">ROUND</h3>
-          <div className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-            #{personas.round.id}
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200 capitalize">
+            {roundStatusLabel}
+          </span>
+        </header>
+        <dl className="relative mt-4 space-y-2 text-xs text-slate-300">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">Starts</p>
+            <p className="font-mono text-sm text-white">
+              {personas.round.startTime ? new Date(personas.round.startTime).toLocaleString() : "—"}
+            </p>
           </div>
-          <div className="text-xs text-amber-200 mt-2">
-            {personas.round.status === 'active' ? 'Current evaluation round' : 
-             personas.round.status === 'completed' ? 'Completed round' : 'Upcoming round'}
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">Ends</p>
+            <p className="font-mono text-sm text-white">
+              {personas.round.endTime ? new Date(personas.round.endTime).toLocaleString() : "—"}
+            </p>
           </div>
-        </div>
-      </div>
+        </dl>
+      </section>
 
       {/* Validator Card */}
-      <div className="bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-purple-500/15 border-2 border-blue-500/40 rounded-2xl p-5 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-        <div className="text-center h-full flex flex-col justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
+      <section className="relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+        <div className="pointer-events-none absolute right-0 top-0 h-36 w-36 rounded-full bg-sky-500/10 blur-[110px]" />
+        <header className="relative flex items-center gap-3">
+          <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-700/20 bg-slate-800/20">
             <Image
-              src={personas.validator.image}
+              src={validatorImage}
               alt={personas.validator.name}
-              width={32}
-              height={32}
-              className="rounded-lg"
+              width={48}
+              height={48}
+              unoptimized
+              className="h-full w-full object-cover"
             />
           </div>
-          <h3 className="text-sm font-medium text-blue-300 mb-2">VALIDATOR</h3>
-          <div className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-1">
-            {personas.validator.name}
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Validator</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {personas.validator.name}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              {truncateMiddle(personas.validator.id)}
+            </p>
           </div>
-          <div className="text-xs text-blue-200 mt-2 flex items-center justify-center gap-2">
-            {personas.validator.website && (
-              <a
-                href={personas.validator.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-100 transition-colors"
-              >
-                <PiArrowSquareOutDuotone className="w-3 h-3" />
-              </a>
-            )}
-            {personas.validator.github && (
-              <a
-                href={personas.validator.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-100 transition-colors"
-              >
-                <PiGithubLogoDuotone className="w-3 h-3" />
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
+          {(personas.validator.website || personas.validator.github) && (
+            <div className="ml-auto flex items-center gap-2">
+              {personas.validator.website && (
+                <a
+                  href={personas.validator.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-200 transition hover:border-sky-300"
+                  title="Open website"
+                >
+                  <PiArrowSquareOutDuotone className="h-4 w-4" />
+                </a>
+              )}
+              {personas.validator.github && (
+                <a
+                  href={personas.validator.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-indigo-400/30 bg-indigo-500/15 text-indigo-200 transition hover:border-indigo-300"
+                  title="Open GitHub"
+                >
+                  <PiGithubLogoDuotone className="h-4 w-4" />
+                </a>
+              )}
+            </div>
+          )}
+        </header>
+      </section>
 
       {/* Agent Card */}
-      <div className="bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-teal-500/15 border-2 border-emerald-500/40 rounded-2xl p-5 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-        <div className="text-center h-full flex flex-col justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
+      <section className="relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+        <div className="pointer-events-none absolute -right-8 bottom-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-3xl" />
+        <header className="relative flex items-center gap-3">
+          <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-700/20 bg-slate-800/20">
             <Image
-              src={personas.agent.image}
+              src={agentImage}
               alt={personas.agent.name}
-              width={32}
-              height={32}
-              className="rounded-lg"
+              width={48}
+              height={48}
+              unoptimized
+              className="h-full w-full object-cover"
             />
           </div>
-          <h3 className="text-sm font-medium text-emerald-300 mb-2">AGENT</h3>
-          <div className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-            {personas.agent.name}
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-slate-400 capitalize">
+              {personas.agent.type} agent
+            </p>
+            <p className="text-sm font-semibold text-white truncate">
+              {personas.agent.name}
+            </p>
+            <p className="text-[11px] text-slate-400">{agentUid}</p>
           </div>
-          {/* UID and Hotkey under agent name */}
-          <div className="flex items-center justify-center gap-3 text-xs text-emerald-200 mt-1">
-            <div className="flex items-center gap-1">
-              <PiHashDuotone className="w-3 h-3" />
-              <span className="font-mono">UID: {agentData?.uid || 'unknown'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <PiKeyDuotone className="w-3 h-3" />
-              <span className="font-mono text-xs">
-                {agentData?.hotkey ? `${agentData.hotkey.slice(0, 6)}...${agentData.hotkey.slice(-6)}` : 'unknown'}
+        </header>
+        <div className="relative mt-4 rounded-lg border border-slate-700/20 bg-slate-800/30 px-3 py-2 text-xs text-slate-300">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1 text-slate-400">
+              <PiKey className="h-3.5 w-3.5" />
+              Hotkey
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-white">
+                {truncateMiddle(agentHotkey)}
               </span>
-              {agentData?.hotkey && (
-                <button 
-                  onClick={() => navigator.clipboard.writeText(agentData.hotkey)}
-                  className="p-0.5 hover:bg-emerald-500/20 rounded transition-colors"
+              {agentHotkey && canCopyHotkey && (
+                <button
+                  onClick={() => navigator.clipboard.writeText(agentHotkey)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 transition hover:border-emerald-300"
                   title="Copy hotkey"
+                  type="button"
                 >
-                  <PiCopyDuotone className="w-2.5 h-2.5" />
+                  <PiCopyDuotone className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
           </div>
-          <div className="text-xs text-emerald-200 mt-2 capitalize">
-            {personas.agent.type} agent
-          </div>
         </div>
-      </div>
+      </section>
 
       {/* Task Card */}
-      <div className="bg-gradient-to-br from-violet-500/15 via-purple-500/15 to-fuchsia-500/15 border-2 border-violet-500/40 rounded-2xl p-5 hover:border-violet-400/60 hover:shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-        <div className="text-center h-full flex flex-col justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-xl mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 mx-auto">
-            <div className="text-2xl font-bold text-white">
-              {personas.task.id.slice(-2)}
-            </div>
+      <section className="relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+        <div className="pointer-events-none absolute left-0 bottom-0 h-32 w-32 rounded-full bg-violet-500/10 blur-3xl" />
+        <header className="relative flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/15 text-violet-200">
+            <PiTarget className="h-6 w-6" />
           </div>
-          <h3 className="text-sm font-medium text-violet-300 mb-2">TASK</h3>
-          <div className="text-lg font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
-            {personas.task.website}
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Task</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {personas.task.website || "Unknown website"}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              {truncateMiddle(personas.task.id)}
+            </p>
           </div>
-          <div className="text-xs text-violet-200 mt-2">
-            {personas.task.useCase} • {Math.round(personas.task.score * 100)}%
+        </header>
+        <dl className="relative mt-4 space-y-2 text-xs text-slate-300">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">
+              Use Case
+            </p>
+            <p className="text-sm font-medium text-white">
+              {taskUseCase}
+            </p>
           </div>
-        </div>
-      </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">
+              Score
+            </p>
+            <p className="text-sm font-semibold text-emerald-300">
+              {(personas.task.score * 100).toFixed(1)}%
+            </p>
+          </div>
+        </dl>
+      </section>
     </div>
   );
 }

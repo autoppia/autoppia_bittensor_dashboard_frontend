@@ -66,6 +66,7 @@ export interface TaskDetails {
   actions: TaskAction[];
   screenshots: string[];
   logs: string[];
+  relationships: TaskRelationships;
   performance: {
     totalActions: number;
     successfulActions: number;
@@ -88,6 +89,82 @@ export interface TaskDetails {
       network: number;
     };
   };
+}
+
+export interface TaskRoundSummary {
+  validatorRoundId: string;
+  roundNumber?: number | null;
+  status: string;
+  startedAt: string;
+  endedAt?: string | null;
+  startEpoch?: number | null;
+  endEpoch?: number | null;
+}
+
+export interface TaskValidatorSummary {
+  uid: number;
+  hotkey: string;
+  coldkey?: string | null;
+  name?: string | null;
+  stake: number;
+  vtrust: number;
+  version?: string | null;
+}
+
+export interface TaskMinerSummary {
+  uid?: number | null;
+  hotkey?: string | null;
+  name: string;
+  github?: string | null;
+  provider?: string | null;
+  image?: string | null;
+  isSota: boolean;
+}
+
+export interface TaskAgentRunSummary {
+  agentRunId: string;
+  validatorUid: number;
+  minerUid?: number | null;
+  isSota: boolean;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  duration?: number | null;
+  taskCount?: number | null;
+  completedTasks?: number | null;
+  failedTasks?: number | null;
+  averageScore?: number | null;
+}
+
+export interface TaskEvaluationSummary {
+  evaluationId: string;
+  finalScore: number;
+  rawScore: number;
+  evaluationTime: number;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  validatorUid: number;
+  minerUid?: number | null;
+  webAgentId?: string | null;
+  hasFeedback: boolean;
+  hasRecording: boolean;
+}
+
+export interface TaskSolutionSummary {
+  solutionId: string;
+  agentRunId: string;
+  minerUid?: number | null;
+  validatorUid: number;
+  actionsCount: number;
+  webAgentId?: string | null;
+  hasRecording: boolean;
+}
+
+export interface TaskRelationships {
+  round: TaskRoundSummary;
+  validator: TaskValidatorSummary;
+  miner: TaskMinerSummary;
+  agentRun: TaskAgentRunSummary;
+  evaluation?: TaskEvaluationSummary | null;
+  solution?: TaskSolutionSummary | null;
 }
 
 // ===== TASK RESULTS =====

@@ -21,6 +21,22 @@ import { overviewService } from "@/services/api/overview.service";
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
 
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 function normalizePercentage(value: number | null | undefined) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return 0;
@@ -105,6 +121,18 @@ export default function AgentRunSearch() {
   const [manualLoading, setManualLoading] = useState(false);
 
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
+
+  const debouncedFilters = useDebouncedValue(
+    useMemo(
+      () => ({
+        round: roundInput.trim(),
+        validator: selectedValidator.trim(),
+        agent: agentInput.trim(),
+      }),
+      [roundInput, selectedValidator, agentInput]
+    ),
+    400
+  );
 
   const [queryParams, setQueryParams] = useState<AgentRunsListQueryParams>({
     page: 1,
@@ -302,6 +330,84 @@ export default function AgentRunSearch() {
   const effectiveNotFound =
     manualResults !== null && manualResults.length === 0 && !manualError;
 
+  useEffect(() => {
+    if (
+      !searchTerm.trim() &&
+      isManualSearchActive &&
+      !manualLoading
+    ) {
+      setManualResults(null);
+      setManualError(null);
+    }
+  }, [searchTerm, isManualSearchActive, manualLoading]);
+
+  useEffect(() => {
+    if (
+      searchTerm.trim() !== "" ||
+      (isManualSearchActive && manualResults !== null)
+    ) {
+      return;
+    }
+
+    const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
+    const roundIdParam = debouncedFilters.round
+      ? Number(debouncedFilters.round)
+      : undefined;
+    const normalizedRound = Number.isFinite(roundIdParam)
+      ? Number(roundIdParam)
+      : undefined;
+    const normalizedValidator = debouncedFilters.validator || undefined;
+    const normalizedAgent = debouncedFilters.agent || undefined;
+
+    const filtersAreInSync =
+      queryParams.roundId === normalizedRound &&
+      queryParams.validatorId === normalizedValidator &&
+      queryParams.agentId === normalizedAgent;
+
+    if (filtersAreInSync) {
+      return;
+    }
+
+    const nextQuery: AgentRunsListQueryParams = {
+      page: 1,
+      limit: resolvedLimit,
+    };
+
+    if (normalizedRound !== undefined) {
+      nextQuery.roundId = normalizedRound;
+    }
+    if (normalizedValidator) {
+      nextQuery.validatorId = normalizedValidator;
+    }
+    if (normalizedAgent) {
+      nextQuery.agentId = normalizedAgent;
+    }
+
+    setManualResults(null);
+    setManualError(null);
+    setManualLoading(false);
+    setHasSearched(true);
+    setQueryParams(nextQuery);
+  }, [
+    debouncedFilters,
+    queryParams.agentId,
+    queryParams.limit,
+    queryParams.roundId,
+    queryParams.validatorId,
+    searchTerm,
+    isManualSearchActive,
+    manualResults,
+  ]);
+
+  useEffect(() => {
+    if (hasSearched) {
+      return;
+    }
+    if (!isLoading && (runs.length > 0 || error)) {
+      setHasSearched(true);
+    }
+  }, [hasSearched, isLoading, runs, error]);
+
   const mapRunDetailToListItem = (run: AgentRunData): AgentRunListItem => {
     const totalTasks = run.totalTasks ?? run.tasks?.length ?? 0;
     const completedTasks = run.completedTasks ?? run.successfulTasks ?? 0;
@@ -391,7 +497,6 @@ export default function AgentRunSearch() {
     setRoundInput("");
     setSelectedValidator("");
     setAgentInput("");
-    setHasSearched(false);
     setIsValidatorDropdownOpen(false);
     setManualResults(null);
     setManualError(null);
@@ -420,6 +525,7 @@ export default function AgentRunSearch() {
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
+    setHasSearched(true);
     setQueryParams((prev) => ({
       ...prev,
       page: nextPage,
@@ -434,6 +540,7 @@ export default function AgentRunSearch() {
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
+    setHasSearched(true);
     setQueryParams((prev) => ({
       ...prev,
       page: 1,
@@ -745,66 +852,74 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {displayedRuns.map((run) => (
-              <div
-                key={run.runId}
-                onClick={() => router.push(`/agent-run/${run.runId}`)}
-                className="bg-gradient-to-br from-purple-500/15 via-violet-500/15 to-indigo-500/15 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="text-[11px] uppercase tracking-wide text-purple-200/80">
-                      Run
-                    </div>
-                    <div className="text-sm font-semibold text-white truncate">
-                      {run.runId}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[11px] uppercase tracking-wide text-purple-200/80">
-                      Score
-                    </div>
-                    <div className="text-lg font-bold text-white">
-                      {formatPercentage(run.overallScore)}
-                    </div>
-                  </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {displayedRuns.map((run) => (
+          <div
+            key={run.runId}
+            onClick={() => router.push(`/agent-run/${run.runId}`)}
+            className="group relative rounded-xl border border-purple-500/30 bg-slate-900/30 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:border-purple-300/60 hover:shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 space-y-1">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-200">
+                  Run ID
+                </span>
+                <p className="font-mono text-sm text-white/90 group-hover:text-white break-words leading-snug">
+                  {run.runId}
+                </p>
+              </div>
+              <div className="text-right space-y-1">
+                <span className="text-[11px] uppercase tracking-wide text-purple-200/80">
+                  Score
+                </span>
+                <div className="text-xl font-bold text-white">
+                  {formatPercentage(run.overallScore)}
                 </div>
-                <div className="mt-3 space-y-2 text-xs text-purple-200">
-                  <div>
-                    {formatValidatorLabel(run.validatorId, run.validatorName)} •{" "}
-                    {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Success Rate</span>
-                    <span className="text-purple-100 font-semibold">
-                      {formatPercentage(run.successRate ?? 0)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Tasks Completed</span>
-                    <span className="text-purple-100 font-semibold">
-                      {(run.successfulTasks ??
-                        run.completedTasks ??
-                        0).toLocaleString()}
-                      /{Number(run.totalTasks ?? 0).toLocaleString()}
-                    </span>
-                  </div>
-                  {typeof run.ranking === "number" && run.ranking > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span>Ranking</span>
-                      <span className="text-purple-100 font-semibold">
-                        #{run.ranking}
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-[11px] text-purple-300/90">
-                    Started {formatDate(run.startTime)}
-                  </div>
+                <div className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/15 px-2 py-0.5 text-[11px] font-medium text-purple-100">
+                  Success {formatPercentage(run.successRate ?? 0)}
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-purple-100/90">
+              <span className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/10 px-2 py-0.5">
+                {formatValidatorLabel(run.validatorId, run.validatorName)}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/40 bg-slate-800/60 px-2 py-0.5 text-slate-200">
+                {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
+              </span>
+              {typeof run.ranking === "number" && run.ranking > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-amber-200">
+                  #{run.ranking} ranking
+                </span>
+              )}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-purple-100/80">
+              <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                  Tasks Completed
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {(run.successfulTasks ?? run.completedTasks ?? 0).toLocaleString()}
+                  <span className="text-slate-400">
+                    /{Number(run.totalTasks ?? 0).toLocaleString()}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                  Started
+                </p>
+                <p className="mt-1 text-sm font-medium text-white/90">
+                  {formatDate(run.startTime)}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 text-[11px] uppercase tracking-wide text-purple-200/70">
+              Tap to inspect run →
+            </div>
           </div>
+        ))}
+      </div>
 
           {!isManualSearchActive &&
             totalPages > 1 &&

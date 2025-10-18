@@ -33,9 +33,9 @@ export default function GlobalDrawer() {
       isOpen={isOpen}
       onClose={closeDrawer}
       placement={placement}
-      overlayClassName="dark:bg-opacity-40 dark:backdrop-blur-md"
+      overlayClassName="bg-[#020617]/80 backdrop-blur-sm"
       containerClassName={cn(
-        "dark:bg-gray-100 min-w-0",
+        "!bg-transparent !shadow-none min-w-0",
         getDrawerWidth(),
         containerClassName
       )}

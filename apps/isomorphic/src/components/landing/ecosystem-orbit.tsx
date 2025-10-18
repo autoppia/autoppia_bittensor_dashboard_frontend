@@ -31,7 +31,7 @@ const ORBIT_ITEMS: OrbitItemConfig[] = [
   },
   {
     label: "Studio Control",
-    href: "https://studio.autoppia.com",
+    href: "https://app.autoppia.com",
     icon: LuAppWindow,
     accent: "from-amber-400 to-orange-500",
     delay: "-8s",
