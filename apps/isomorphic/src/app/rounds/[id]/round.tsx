@@ -49,7 +49,7 @@ export default function Round() {
     openModal({
       view: <RoundsGlossaryModal />,
       size: "lg",
-      customSize: 640,
+      customSize: 1400,
     });
   
   return (

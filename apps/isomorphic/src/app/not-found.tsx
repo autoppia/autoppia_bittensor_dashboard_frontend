@@ -24,14 +24,14 @@ export default function NotFound() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href={routes.home}
-            className="group inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-500/40"
+            className="group inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-black/30 transition-all duration-200 hover:bg-slate-800"
           >
             <FiHome className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
             Back to Dashboard
           </Link>
           <Link
             href={routes.rounds}
-            className="group inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:border-white/40 hover:bg-white/10 hover:text-white/90"
+            className="group inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-semibold text-black shadow-[0_15px_35px_rgba(15,23,42,0.18)] transition-all duration-200 hover:border-black/20 hover:bg-white/90"
           >
             <FiArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
             Browse Rounds

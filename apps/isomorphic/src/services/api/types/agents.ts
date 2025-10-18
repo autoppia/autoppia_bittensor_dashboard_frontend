@@ -73,6 +73,7 @@ export interface AgentPerformanceMetrics {
   totalRuns: number;
   successfulRuns: number;
   failedRuns: number;
+  successRate: number;
   currentScore: number; // RENAMED from averageScore
   currentTopScore: number; // RENAMED from bestScore
   worstScore: number;
@@ -90,6 +91,7 @@ export interface AgentPerformanceMetrics {
     round: number;
     score: number;
     responseTime?: number;
+    successRate?: number;
   }[];
 }
 
@@ -154,6 +156,7 @@ export interface AgentComparison {
     metrics: {
       currentScore: number; // RENAMED from averageScore
       currentTopScore: number; // RENAMED from bestScore
+      successRate: number;
       averageResponseTime: number;
       totalRuns: number;
       currentRank: number; // RENAMED from ranking

@@ -49,6 +49,8 @@ export interface RoundStatistics {
   activeMiners: number;
   totalTasks: number;
   completedTasks: number;
+  totalValidators: number;
+  averageTasksPerValidator: number;
   averageScore: number;
   topScore: number;
   successRate: number;
@@ -95,6 +97,8 @@ export interface ValidatorPerformance {
   status: 'active' | 'inactive' | 'offline';
   totalTasks: number;
   completedTasks: number;
+  totalMiners: number;
+  activeMiners: number;
   averageScore: number;
   topScore: number;
   weight: number;
@@ -104,6 +108,7 @@ export interface ValidatorPerformance {
   emission: number;
   lastSeen: string;
   uptime: number;
+  topMiner?: MinerPerformance;
 }
 
 // ===== ROUND RECENT ACTIVITY =====

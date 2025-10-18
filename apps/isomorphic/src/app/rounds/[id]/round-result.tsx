@@ -7,7 +7,7 @@ import RoundMinerScores from "./round-miner-scores";
 import RoundTopMiners from "./round-top-miners";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
-import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiXCircleDuotone, PiCodeDuotone } from "react-icons/pi";
+import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCoinsDuotone, PiCheckCircleDuotone } from "react-icons/pi";
 import { useRoundValidators, useTopMiners, useRoundStatistics } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
@@ -25,34 +25,38 @@ export default function RoundResult() {
   const { data: statistics, loading: statsLoading } = useRoundStatistics(roundKey);
   
   const loading = validatorsLoading || minersLoading || statsLoading;
-  
-  const topMiner: MinerPerformance | null = useMemo(() => {
+
+  const [selectedValidator, setSelectedValidator] = React.useState<ValidatorPerformance | null>(null);
+
+  const aggregatedTopMiner: MinerPerformance | null = useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) {
       return null;
     }
     return topMiners[0] ?? null;
   }, [topMiners]);
 
-  const topMinerValidator = useMemo(() => {
-    if (!topMiner || !validatorsData) {
+  const selectedTopMiner: MinerPerformance | null = useMemo(() => {
+    if (selectedValidator?.topMiner) {
+      return selectedValidator.topMiner;
+    }
+    if (!Array.isArray(topMiners) || topMiners.length === 0) {
       return null;
     }
-    return validatorsData.find((validator) => validator.id === topMiner.validatorId) ?? null;
-  }, [topMiner, validatorsData]);
+    if (!selectedValidator?.id) {
+      return aggregatedTopMiner;
+    }
+    const filtered = topMiners.filter((miner) => miner.validatorId === selectedValidator.id);
+    if (filtered.length > 0) {
+      return filtered[0];
+    }
+    return aggregatedTopMiner;
+  }, [topMiners, selectedValidator?.id, aggregatedTopMiner]);
 
-  const winnerName = topMiner?.name && topMiner.name.trim().length > 0 ? topMiner.name : topMiner ? `Miner ${topMiner.uid}` : "No winner yet";
-  const winnerHotkey = topMiner?.hotkey
-    ? `${topMiner.hotkey.slice(0, 6)}...${topMiner.hotkey.slice(-6)}`
-    : topMiner
-      ? `UID ${topMiner.uid}`
-      : "No hotkey";
-  const winnerScore = topMiner ? (topMiner.score * 100).toFixed(1) : null;
-  const winnerTasksCompleted = topMiner?.tasksCompleted ?? 0;
-  const winnerTasksTotal = topMiner?.tasksTotal ?? 0;
-  const winnerValidatorName = topMinerValidator?.name ?? (topMiner?.validatorId ? topMiner.validatorId.replace("validator-", "Validator ") : null);
-  
-  // State for selected validator
-  const [selectedValidator, setSelectedValidator] = React.useState<ValidatorPerformance | null>(null);
+  const winnerLabel = selectedTopMiner
+    ? (selectedTopMiner.name && selectedTopMiner.name.trim().length > 0
+        ? selectedTopMiner.name
+        : `Miner ${selectedTopMiner.uid ?? "unknown"}`)
+    : "No winner yet";
   
   // Handle validator selection
   const handleValidatorSelect = (validator: ValidatorPerformance) => {
@@ -96,7 +100,7 @@ export default function RoundResult() {
             Across all validators
           </Text>
         </div>
-        <RoundStats />
+        <RoundStats selectedValidator={selectedValidator} />
       </div>
 
       {/* Validators Info Card */}
@@ -145,31 +149,10 @@ export default function RoundResult() {
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-              <div className="text-center mb-2">
-                <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                  {winnerName}
+              <div className="text-center">
+                <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                  {winnerLabel}
                 </div>
-                <div className="text-xs text-amber-200">{winnerHotkey}</div>
-                {winnerValidatorName && (
-                  <div className="mt-1 text-[11px] uppercase tracking-wide text-amber-300">
-                    Validator: {winnerValidatorName}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-amber-500/20 rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-amber-200">Winning Score</span>
-                <span className="text-sm font-bold text-white">
-                  {winnerScore ? `${winnerScore}%` : "N/A"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-amber-200">
-                <span>Tasks Completed</span>
-                <span className="text-sm font-semibold text-white">
-                  {winnerTasksTotal ? `${winnerTasksCompleted}/${winnerTasksTotal}` : winnerTasksCompleted}
-                </span>
               </div>
             </div>
           </div>
@@ -186,22 +169,13 @@ export default function RoundResult() {
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-              <div className="text-center mb-2">
-                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-                  {(((selectedValidator.topScore ?? selectedValidator.averageScore) || 0) * 100).toFixed(1)}%
-                </div>
-                <div className="text-xs text-emerald-200">Top Miner Score</div>
+            <div className="text-center mb-2">
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
+                {(((selectedValidator.topScore ?? selectedValidator.averageScore) || 0) * 100).toFixed(1)}%
               </div>
+            </div>
             </div>
 
-            <div className="bg-emerald-500/20 rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-emerald-200">Task Completion</span>
-                <span className="text-sm font-bold text-white">
-                  {selectedValidator.completedTasks}/{selectedValidator.totalTasks}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -216,55 +190,34 @@ export default function RoundResult() {
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-              <div className="text-center mb-2">
-                <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
-                  {selectedValidator.totalTasks}
-                </div>
-                <div className="text-xs text-violet-200">Total Tasks</div>
+            <div className="text-center mb-2">
+              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
+                {selectedValidator.totalMiners ?? 0}
               </div>
+            </div>
             </div>
 
-            <div className="bg-violet-500/20 rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-violet-200">Completed Tasks</span>
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm font-bold text-green-400">
-                    {selectedValidator.completedTasks}
-                  </span>
-                  <span className="text-xs text-violet-200">completed</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Version Card */}
+        {/* Tasks Card */}
         <div className="bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-purple-500/15 border-2 border-blue-500/40 rounded-xl p-3 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
           <div className="flex flex-col h-full justify-between">
             <div className="flex items-center space-x-2 mb-2">
               <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiCodeDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
+                <PiCoinsDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <h3 className="text-xs font-medium text-blue-300">VERSION</h3>
+              <h3 className="text-xs font-medium text-blue-300">TASKS</h3>
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-              <div className="text-center mb-2">
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
-                  v{selectedValidator.version}
-                </div>
-                <div className="text-xs text-blue-200">Validator version</div>
+            <div className="text-center mb-2">
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
+                {selectedValidator.totalTasks}
               </div>
+            </div>
             </div>
 
-            <div className="bg-blue-500/20 rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-blue-200">Uptime</span>
-                <span className="text-sm font-bold text-white">
-                  {selectedValidator.uptime}%
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

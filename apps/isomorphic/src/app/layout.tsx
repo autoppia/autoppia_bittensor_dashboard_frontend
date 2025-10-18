@@ -11,7 +11,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Leaderboard - Bittensor Subnet 36",
+  title: "IWA Platform",
   description: "The Bittensor Subnet 36 Leaderboard",
 };
 

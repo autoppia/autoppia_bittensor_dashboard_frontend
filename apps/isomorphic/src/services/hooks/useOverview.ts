@@ -149,9 +149,23 @@ export function useOverviewData() {
                   leaderboard.loading || statistics.loading || networkStatus.loading || 
                   recentActivity.loading;
 
-  // Only consider critical endpoints as errors - currentRound is not critical for basic overview
-  const error = metrics.error || validators.error || 
-                leaderboard.error || statistics.error || networkStatus.error;
+  // Only mark core overview endpoints as critical failures
+  const error = metrics.error || validators.error || leaderboard.error;
+  const optionalErrors = [
+    currentRound.error,
+    statistics.error,
+    networkStatus.error,
+    recentActivity.error,
+  ].filter((message): message is string => typeof message === 'string' && message.length > 0);
+
+  const optionalErrorsSignature = optionalErrors.join(' | ');
+
+  useEffect(() => {
+    if (!optionalErrorsSignature) {
+      return;
+    }
+    console.warn(`[Overview] Non-critical data fetch failed: ${optionalErrorsSignature}`);
+  }, [optionalErrorsSignature]);
 
   const refetch = useCallback(() => {
     metrics.refetch();
@@ -175,6 +189,7 @@ export function useOverviewData() {
     },
     loading,
     error,
+    warnings: optionalErrors,
     refetch,
   };
 }

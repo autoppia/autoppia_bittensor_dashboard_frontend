@@ -22,7 +22,7 @@ export interface TaskData {
   actions: TaskAction[];
   screenshots?: string[];
   logs?: string[];
-  metadata: {
+  metadata?: {
     environment: string;
     browser: string;
     viewport: {
@@ -30,7 +30,7 @@ export interface TaskData {
       height: number;
     };
     userAgent: string;
-  };
+  } | null;
 }
 
 // ===== TASK ACTION =====

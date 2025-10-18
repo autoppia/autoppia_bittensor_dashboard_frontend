@@ -19,7 +19,7 @@ module.exports = {
   // Disable development overlay
   devIndicators: {
     buildActivity: false,
-    buildActivityPosition: "bottom-right",
+    position: "bottom-right",
   },
   typescript: {
     // !! WARN !!
