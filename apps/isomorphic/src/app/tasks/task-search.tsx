@@ -452,14 +452,20 @@ export default function TaskSearch() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
+                <div className="mb-3">
                   <span className="inline-flex items-center gap-2 px-3 py-1 border border-blue-500/40 rounded-full text-xs text-blue-100 bg-blue-500/20">
                     <PiGlobeDuotone className="w-3.5 h-3.5" />
                     {formatLabel(task.website)}
                   </span>
-                  <span className="text-lg font-bold text-emerald-300">
+                </div>
+
+                <div className="mb-3 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-center">
+                  <p className="text-[11px] uppercase tracking-wide text-emerald-200/80">
+                    Score
+                  </p>
+                  <p className="text-xl font-bold text-emerald-300">
                     {Math.round((task.score ?? 0) * 100)}%
-                  </span>
+                  </p>
                 </div>
 
                 <p className="text-xs text-purple-100/80 leading-relaxed mb-4 line-clamp-3">

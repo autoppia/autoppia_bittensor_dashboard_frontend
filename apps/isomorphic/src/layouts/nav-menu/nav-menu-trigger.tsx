@@ -67,7 +67,7 @@ export function NavMenuTriggerWrapper({
 
   return (
     <menu
-      className={cn('nav-menu-trigger-wrapper flex gap-5', menuClassName)}
+      className={cn('nav-menu-trigger-wrapper flex gap-3', menuClassName)}
       ref={wrapperRef}
     >
       {items.map((item, index: number) => {
