@@ -7,72 +7,65 @@ import {
   LuBoxes,
   LuGlobe,
   LuTrophy,
+  LuShield,
 } from "react-icons/lu";
-import { TbTournament } from "react-icons/tb";
-import { FaHome } from "react-icons/fa";
 
 export type MenuItemType = {
   name: string;
   href: string;
   icon: React.ReactNode;
-  section?: "general" | "leaderboard";
 };
 
-// Note: do not add href in the label object, it is rendering as label
-export const menuItems: MenuItemType[] = [
-  // General Section
-  {
-    name: "Home",
-    href: routes.home,
-    icon: <FaHome />,
-    section: "general",
-  },
-  {
-    name: "Leaderboard",
-    href: routes.leaderboard,
-    icon: <LuTrophy />,
-    section: "general",
-  },
-  {
-    name: "Websites",
-    href: routes.websites,
-    icon: <LuGlobe />,
-    section: "general",
-  },
-  {
-    name: "Join",
-    href: routes.testAgent,
-    icon: <TbTournament />,
-    section: "general",
-  },
-  {
-    name: "Overview",
-    href: routes.overview,
-    icon: <LuComponent />,
-    section: "leaderboard",
-  },
-  {
-    name: "Rounds",
-    href: routes.rounds,
-    icon: <LuCodesandbox />,
-    section: "leaderboard",
-  },
-  {
-    name: "Agents",
-    href: routes.agents,
-    icon: <LuBot />,
-    section: "leaderboard",
-  },
-  {
-    name: "Agent Run",
-    href: routes.agent_run,
-    icon: <LuPackageCheck />,
-    section: "leaderboard",
-  },
-  {
-    name: "Tasks",
-    href: routes.tasks,
-    icon: <LuBoxes />,
-    section: "leaderboard",
-  },
-];
+export type MenuNamespace = "subnet36" | "iwa";
+
+export const NAV_COLLECTION_STORAGE_KEY = "autoppia.navCollection";
+export const NAV_COLLECTION_EVENT = "autoppia:nav-collection-change";
+
+export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
+  subnet36: [
+    {
+      name: "Overview",
+      href: routes.overview,
+      icon: <LuComponent />,
+    },
+    {
+      name: "Rounds",
+      href: routes.rounds,
+      icon: <LuCodesandbox />,
+    },
+    {
+      name: "Agents",
+      href: routes.agents,
+      icon: <LuBot />,
+    },
+    {
+      name: "Agent Run",
+      href: routes.agent_run,
+      icon: <LuPackageCheck />,
+    },
+    {
+      name: "Tasks",
+      href: routes.tasks,
+      icon: <LuBoxes />,
+    },
+  ],
+  iwa: [
+    {
+      name: "Leaderboard",
+      href: routes.leaderboard,
+      icon: <LuTrophy />,
+    },
+    {
+      name: "Websites",
+      href: routes.websites,
+      icon: <LuGlobe />,
+    },
+    {
+      name: "Join the Arena",
+      href: routes.testAgent,
+      icon: <LuShield />,
+    },
+  ],
+};
+
+export const DEFAULT_NAV_COLLECTION: MenuNamespace = "subnet36";

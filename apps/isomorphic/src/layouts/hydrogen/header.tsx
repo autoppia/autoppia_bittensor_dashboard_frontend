@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Fragment } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
 import cn from "@core/utils/class-names";
 import HamburgerButton from "@/layouts/hamburger-button";
 import Sidebar from "@/layouts/hydrogen/sidebar";
 import StickyHeader from "@/layouts/sticky-header";
 import { LuActivity, LuMinus } from "react-icons/lu";
-import { menuItems } from "@/layouts/hydrogen/menu-items";
+import {
+  DEFAULT_NAV_COLLECTION,
+  MenuNamespace,
+  NAV_COLLECTIONS,
+  NAV_COLLECTION_EVENT,
+  NAV_COLLECTION_STORAGE_KEY,
+} from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
 import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
 import { Tooltip } from "rizzui";
@@ -61,6 +67,61 @@ export default function Header() {
 
   const statusLabel = `● ${displayStatusText.toUpperCase()}`;
 
+  const [activeNav, setActiveNav] =
+    React.useState<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const navItems = NAV_COLLECTIONS[activeNav];
+
+  const updateNavSelection = React.useCallback(
+    (
+      next: MenuNamespace,
+      options?: { broadcast?: boolean; persist?: boolean }
+    ) => {
+      if (next === activeNav) {
+        return;
+      }
+      setActiveNav(next);
+      if (typeof window === "undefined") {
+        return;
+      }
+      if (options?.persist !== false) {
+        window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
+      }
+      if (options?.broadcast) {
+        window.dispatchEvent(
+          new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
+            detail: next,
+          })
+        );
+      }
+    },
+    [activeNav]
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
+    if (stored === "subnet36" || stored === "iwa") {
+      setActiveNav(stored as MenuNamespace);
+    }
+
+    const handleExternalNav = (event: Event) => {
+      const detail = (event as CustomEvent<MenuNamespace>).detail;
+      if (detail === "subnet36" || detail === "iwa") {
+        setActiveNav(detail);
+      }
+    };
+
+    window.addEventListener(
+      NAV_COLLECTION_EVENT,
+      handleExternalNav as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        NAV_COLLECTION_EVENT,
+        handleExternalNav as EventListener
+      );
+  }, []);
+
   if (isLanding) {
     return null;
   }
@@ -83,56 +144,56 @@ export default function Header() {
             />
           </Link>
           <div className="hidden xl:flex items-center min-w-0 max-w-full gap-3">
-            {menuItems.map((item, index) => {
-              const href = item?.href as string;
+            <div className="flex items-center rounded-full border border-black/10 bg-white p-1 shadow-sm">
+              {(["iwa", "subnet36"] as MenuNamespace[]).map((key) => {
+                const isActiveKey = activeNav === key;
+                const label = key === "subnet36" ? "Subnet 36" : "IWA";
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      updateNavSelection(key, {
+                        broadcast: true,
+                        persist: true,
+                      })
+                    }
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold transition-all duration-200 rounded-full",
+                      isActiveKey
+                        ? "bg-black text-white shadow-sm"
+                        : "text-gray-600 hover:text-black"
+                    )}
+                    aria-pressed={isActiveKey}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {navItems.map((item) => {
+              const href = item.href;
               const isActive =
                 pathname === href ||
                 (href !== "/" && pathname.startsWith(href));
-              const previousSection =
-                index > 0 ? menuItems[index - 1]?.section : undefined;
-              const needsSeparator =
-                index > 0 &&
-                Boolean(item.section) &&
-                item.section !== previousSection;
 
               return (
-                <Fragment key={item.name + "-" + index}>
-                  {/* Add separator between sections */}
-                  {needsSeparator && (
-                    <div className="flex items-center gap-4 flex-shrink-0 pl-4 pr-3">
-                      <span className="h-6 w-px rounded-full bg-white/60" />
-                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-300">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
-                        Subnet 36
-                      </span>
-                    </div>
-                  )}
-
-                  {item?.href ? (
-                    <Link
-                      href={item?.href}
-                      className="flex-shrink-0"
-                    >
-                      <div
-                        className={cn(
-                          "px-2 xl:px-3 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-2 text-xs xl:text-sm whitespace-nowrap",
-                          isActive
-                            ? "bg-white text-black"
-                            : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
-                        )}
-                      >
-                        {item.icon && (
-                          <span className="text-sm xl:text-base">
-                            {item.icon}
-                          </span>
-                        )}
-                        <span className="hidden 2xl:inline">{item.name}</span>
-                      </div>
-                    </Link>
-                  ) : (
-                    <></>
-                  )}
-                </Fragment>
+                <Link key={item.name} href={href} className="flex-shrink-0">
+                  <div
+                    className={cn(
+                      "px-2 xl:px-2.5 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-1.5 text-xs xl:text-sm whitespace-nowrap",
+                      isActive
+                        ? "bg-white text-black"
+                        : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
+                    )}
+                  >
+                    {item.icon && (
+                      <span className="text-sm xl:text-base">{item.icon}</span>
+                    )}
+                    <span className="hidden 2xl:inline">{item.name}</span>
+                  </div>
+                </Link>
               );
             })}
           </div>
