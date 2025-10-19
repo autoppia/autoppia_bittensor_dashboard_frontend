@@ -25,13 +25,6 @@ type FilterOption = (typeof filterOptions)[number];
 const CHART_HEIGHT = 200;
 const MAX_CHART_HEIGHT = 460;
 
-const fallbackLeaderboard: LeaderboardData[] = [
-  { round: 38, subnet36: 0.85, openai_cua: 0.79, anthropic_cua: 0.81, browser_use: 0.84, timestamp: new Date().toISOString() },
-  { round: 39, subnet36: 0.87, openai_cua: 0.81, anthropic_cua: 0.83, browser_use: 0.86, timestamp: new Date().toISOString() },
-  { round: 40, subnet36: 0.89, openai_cua: 0.83, anthropic_cua: 0.85, browser_use: 0.88, timestamp: new Date().toISOString() },
-  { round: 41, subnet36: 0.92, openai_cua: 0.85, anthropic_cua: 0.87, browser_use: 0.9, timestamp: new Date().toISOString() },
-  { round: 42, subnet36: 0.95, openai_cua: 0.87, anthropic_cua: 0.89, browser_use: 0.92, timestamp: new Date().toISOString() },
-];
 const sotaAgents = [
   {
     label: "OpenAI CUA",
@@ -115,30 +108,36 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
   );
   
   // Memoize chart data to prevent infinite re-renders
-  const { chartData: rawChartData, usingFallback } = useMemo(() => {
+  const rawChartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     const apiLeaderboard = leaderboardData?.data?.leaderboard;
-    const hasSufficientApiData = Array.isArray(apiLeaderboard) && apiLeaderboard.length >= 2;
-    const source = (hasSufficientApiData ? apiLeaderboard! : fallbackLeaderboard) as LeaderboardSource[];
+    if (!Array.isArray(apiLeaderboard)) {
+      return [];
+    }
 
-    const normalized: NormalizedLeaderboardDatum[] = source
+    return apiLeaderboard
       .map((entry, index) => {
         const normalizedRound =
           resolveRoundNumber(entry.round) ??
           resolveRoundNumber(entry.roundNumber) ??
-          resolveRoundNumber(entry.round_id) ??
-          resolveRoundNumber(entry.roundId) ??
-          resolveRoundNumber(entry.id) ??
-          index +
-            1;
+          resolveRoundNumber((entry as LeaderboardSource).round_id) ??
+          resolveRoundNumber((entry as LeaderboardSource).roundId) ??
+          resolveRoundNumber((entry as LeaderboardSource).id) ??
+          (Number.isFinite(index) ? index + 1 : undefined);
+
+        if (normalizedRound === undefined) {
+          return null;
+        }
+
+        const source = entry as LeaderboardSource;
         const labelSource =
-          entry.roundLabel ??
-          entry.roundDisplay ??
-          entry.roundText ??
-          entry.roundTitle ??
+          source.roundLabel ??
+          source.roundDisplay ??
+          source.roundText ??
+          source.roundTitle ??
           entry.round ??
           entry.roundNumber ??
-          entry.round_id ??
-          entry.roundId;
+          source.round_id ??
+          source.roundId;
 
         return {
           ...entry,
@@ -146,13 +145,9 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
           roundLabel: deriveRoundLabel(labelSource, normalizedRound),
         };
       })
+      .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
       // Sort after normalization so the x-axis stays in ascending order.
       .sort((a, b) => a.round - b.round);
-
-    return {
-      chartData: normalized,
-      usingFallback: !hasSufficientApiData,
-    };
   }, [leaderboardData?.data?.leaderboard]);
 
   const scaleScoreValue = (value?: number | null) => {
