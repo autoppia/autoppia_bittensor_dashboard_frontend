@@ -5,14 +5,15 @@ import { useParams } from "next/navigation";
 import {
   PiTrophyDuotone,
   PiUsersDuotone,
-  PiCoinsDuotone,
   PiCrownDuotone,
+  PiListChecksDuotone,
 } from "react-icons/pi";
 import { Skeleton } from "@core/ui/skeleton";
 import { useRoundStatistics, useTopMiners } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 import type { ValidatorPerformance } from "@/services/api/types/rounds";
+import cn from "@core/utils/class-names";
 
 interface RoundStatsProps {
   selectedValidator?: ValidatorPerformance | null;
@@ -81,119 +82,111 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
         : `Miner ${topMiner.uid ?? "pending"}`)
     : "Top miner pending";
 
+  const formatNumber = (value: number | undefined | null, digits = 0) => {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      return "0";
+    }
+    return Number(value).toLocaleString(undefined, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  };
+
+  const aggregatedCards = [
+    {
+      key: "winner",
+      title: "Winner",
+      value: topMinerLabel,
+      helper: topMiner ? "Latest champion across validators" : "Awaiting validator results",
+      icon: PiCrownDuotone,
+      gradient: "from-amber-500/20 via-orange-500/15 to-yellow-500/20",
+      border: "border-amber-500/40",
+      iconGradient: "from-amber-400 to-orange-500",
+      valueClass: "text-2xl",
+    },
+    {
+      key: "networkScore",
+      title: "Network Average Score",
+      value: `${formatNumber((statistics.averageScore ?? 0) * 100, 1)}%`,
+      helper: "Aggregate performance of all validators",
+      icon: PiTrophyDuotone,
+      gradient: "from-emerald-500/20 via-green-500/15 to-teal-500/20",
+      border: "border-emerald-500/40",
+      iconGradient: "from-emerald-400 to-teal-500",
+      valueClass: "text-4xl",
+    },
+    {
+      key: "miners",
+      title: "Miners Evaluated",
+      value: formatNumber(statistics.totalMiners ?? 0),
+      helper: "Unique miners participating this round",
+      icon: PiUsersDuotone,
+      gradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/20",
+      border: "border-violet-500/40",
+      iconGradient: "from-violet-400 to-fuchsia-500",
+      valueClass: "text-4xl",
+    },
+    {
+      key: "tasks",
+      title: "Average Tasks",
+      value: formatNumber(averageTasks, 1),
+      helper: "Tasks completed per validator",
+      icon: PiListChecksDuotone,
+      gradient: "from-blue-500/20 via-indigo-500/15 to-cyan-500/20",
+      border: "border-blue-500/40",
+      iconGradient: "from-blue-400 to-indigo-500",
+      valueClass: "text-4xl",
+    },
+  ];
+
+  const renderMetricCard = (card: (typeof aggregatedCards)[number]) => {
+    const Icon = card.icon;
+    return (
+      <div
+        key={card.key}
+        className={cn(
+          "group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
+          "bg-slate-900/45",
+          card.border,
+        )}
+      >
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 opacity-90 transition-opacity duration-500 group-hover:opacity-100",
+            "bg-gradient-to-br",
+            card.gradient,
+          )}
+        />
+        <div className="relative flex h-full flex-col gap-6">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className={cn(
+                "relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/15 shadow-xl transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1",
+                "bg-gradient-to-br",
+                card.iconGradient,
+              )}
+            >
+              <Icon className="h-8 w-8 text-white drop-shadow-[0_6px_14px_rgba(255,255,255,0.28)]" />
+              <div className="absolute inset-0 rounded-2xl bg-white/15 opacity-0 transition-opacity duration-500 group-hover:opacity-30" />
+            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70">
+              {card.title}
+            </span>
+          </div>
+          <div className="mt-auto space-y-2">
+            <div className={cn("font-black text-white", card.valueClass)}>{card.value}</div>
+            {card.helper ? (
+              <p className="text-sm font-medium text-white/70">{card.helper}</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      {/* Winner Card */}
-      <div className="relative bg-gradient-to-br from-amber-500/15 via-orange-500/15 to-yellow-500/15 border-2 border-amber-500/40 rounded-xl p-3 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
-        {/* Corner Accents - All 4 corners */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-amber-400/80 rounded-tl-lg z-20"></div>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-amber-400/80 rounded-tr-lg z-20"></div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-amber-400/80 rounded-bl-lg z-20"></div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-amber-400/80 rounded-br-lg z-20"></div>
-        {/* Aggregated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-amber-400/20 via-transparent to-orange-500/20"></div>
-        <div className="absolute top-2 right-2 w-2 h-2 bg-amber-400/30 rounded-full animate-pulse"></div>
-        <div className="relative flex flex-col h-full justify-between z-10">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-              <PiCrownDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <h3 className="text-xs font-medium text-amber-300">WINNER</h3>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                {topMinerLabel}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Score Card */}
-      <div className="relative bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-teal-500/15 border-2 border-emerald-500/40 rounded-xl p-3 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
-        {/* Corner Accents - All 4 corners */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-emerald-400/80 rounded-tl-lg z-20"></div>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-emerald-400/80 rounded-tr-lg z-20"></div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-emerald-400/80 rounded-bl-lg z-20"></div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-emerald-400/80 rounded-br-lg z-20"></div>
-        {/* Aggregated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-emerald-400/20 via-transparent to-teal-500/20"></div>
-        <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400/30 rounded-full animate-pulse"></div>
-        <div className="relative flex flex-col h-full justify-between z-10">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-              <PiTrophyDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <h3 className="text-xs font-medium text-emerald-300">AVERAGE TOP SCORE</h3>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
-                {statistics.averageScore ? `${(statistics.averageScore * 100).toFixed(1)}%` : '0.0%'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Miners Evaluated Card */}
-      <div className="relative bg-gradient-to-br from-violet-500/15 via-purple-500/15 to-fuchsia-500/15 border-2 border-violet-500/40 rounded-xl p-3 hover:border-violet-400/60 hover:shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
-        {/* Corner Accents - All 4 corners */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-violet-400/80 rounded-tl-lg z-20"></div>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-violet-400/80 rounded-tr-lg z-20"></div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-violet-400/80 rounded-bl-lg z-20"></div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-violet-400/80 rounded-br-lg z-20"></div>
-        {/* Aggregated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-violet-400/20 via-transparent to-fuchsia-500/20"></div>
-        <div className="absolute top-2 right-2 w-2 h-2 bg-violet-400/30 rounded-full animate-pulse"></div>
-        <div className="relative flex flex-col h-full justify-between z-10">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-              <PiUsersDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <h3 className="text-xs font-medium text-violet-300">MINERS EVALUATED</h3>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent">
-                {statistics.totalMiners || 0}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Average Tasks Card */}
-      <div className="relative bg-gradient-to-br from-blue-500/15 via-sky-500/15 to-indigo-500/15 border-2 border-blue-500/40 rounded-xl p-3 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md overflow-hidden">
-        {/* Corner Accents - All 4 corners */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80 rounded-tl-lg z-20"></div>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80 rounded-tr-lg z-20"></div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/80 rounded-bl-lg z-20"></div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/80 rounded-br-lg z-20"></div>
-        {/* Aggregated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-blue-400/20 via-transparent to-indigo-500/20"></div>
-        <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400/30 rounded-full animate-pulse"></div>
-        <div className="relative flex flex-col h-full justify-between z-10">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-              <PiCoinsDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <h3 className="text-xs font-medium text-blue-300">AVERAGE TASKS</h3>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                {averageTasks ? Math.round(averageTasks) : 0}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {aggregatedCards.map(renderMetricCard)}
     </div>
   );
 }
