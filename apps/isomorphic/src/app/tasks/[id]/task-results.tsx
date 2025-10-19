@@ -302,14 +302,14 @@ export default function TaskResults() {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1 text-sm rounded border border-slate-700/50 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald-400/50 hover:text-emerald-200 transition-colors"
+                className="px-3 py-1 text-sm rounded border border-sky-500/40 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-sky-400/60 hover:text-sky-100 transition-colors"
               >
                 Previous
               </button>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 text-sm rounded border border-slate-700/50 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald-400/50 hover:text-emerald-200 transition-colors"
+                className="px-3 py-1 text-sm rounded border border-sky-500/40 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-sky-400/60 hover:text-sky-100 transition-colors"
               >
                 Next
               </button>

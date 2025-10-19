@@ -8,8 +8,8 @@ import RoundTopMiners from "./round-top-miners";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Text } from "rizzui";
 import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiListChecksDuotone } from "react-icons/pi";
-import { useRoundValidators, useTopMiners, useRoundStatistics } from "@/services/hooks/useRounds";
-import { extractRoundIdentifier } from "./round-identifier";
+import { useRoundValidators, useTopMiners, useRoundStatistics, useRound } from "@/services/hooks/useRounds";
+import { extractRoundIdentifier, extractRoundNumber } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 import type { ValidatorPerformance, MinerPerformance } from "@/services/api/types/rounds";
 import cn from "@core/utils/class-names";
@@ -20,15 +20,15 @@ export default function RoundResult() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const roundKey = extractRoundIdentifier(id);
-  const roundDisplay = roundKey?.match(/\d+/);
-  const roundLabel = roundDisplay ? parseInt(roundDisplay[0], 10) : roundKey;
+  const requestedValidatorId = searchParams?.get("validator") ?? null;
   
   // Get data from API
+  const { data: round, loading: roundLoading } = useRound(roundKey);
   const { data: validatorsData, loading: validatorsLoading } = useRoundValidators(roundKey);
   const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
   const { data: statistics, loading: statsLoading } = useRoundStatistics(roundKey);
   
-  const loading = validatorsLoading || minersLoading || statsLoading;
+  const loading = validatorsLoading || minersLoading || statsLoading || roundLoading;
 
   const [selectedValidator, setSelectedValidator] = React.useState<ValidatorPerformance | null>(null);
 
@@ -126,6 +126,23 @@ export default function RoundResult() {
       ]
     : [];
 
+  const roundNumberFromData =
+    typeof round?.roundNumber === "number"
+      ? round.roundNumber
+      : typeof round?.round === "number"
+      ? round.round
+      : typeof round?.id === "number"
+      ? round.id
+      : undefined;
+
+  const roundNumberFromKey = React.useMemo(
+    () => extractRoundNumber(roundKey),
+    [roundKey]
+  );
+
+  const roundNumberForLinks = roundNumberFromData ?? roundNumberFromKey;
+  const roundLabel = roundNumberForLinks ?? roundKey;
+
   const renderValidatorMetricCard = (card: (typeof selectedValidatorCards)[number]) => {
     const Icon = card.icon;
     return (
@@ -172,15 +189,29 @@ export default function RoundResult() {
   };
   
   // Handle validator selection
-  const handleValidatorSelect = (validator: ValidatorPerformance) => {
-    setSelectedValidator(validator);
-    if (!pathname) {
-      return;
-    }
-    const params = new URLSearchParams(searchParams?.toString() ?? "");
-    params.set("validator", validator.id);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+  const handleValidatorSelect = React.useCallback(
+    (validator: ValidatorPerformance) => {
+      setSelectedValidator((prev) => {
+        if (prev?.id === validator.id) {
+          return prev;
+        }
+        return validator;
+      });
+
+      if (!pathname) {
+        return;
+      }
+
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      if ((requestedValidatorId ?? params.get("validator")) === validator.id) {
+        return;
+      }
+
+      params.set("validator", validator.id);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams, requestedValidatorId]
+  );
 
   // Sync selection with query parameter or default to first validator
   React.useEffect(() => {
@@ -188,7 +219,6 @@ export default function RoundResult() {
       return;
     }
 
-    const requestedValidatorId = searchParams?.get("validator");
     if (requestedValidatorId) {
       const match = validatorsData.find((validator) => validator.id === requestedValidatorId);
       if (match && selectedValidator?.id !== match.id) {
@@ -204,11 +234,13 @@ export default function RoundResult() {
       setSelectedValidator(fallback);
       if (pathname) {
         const params = new URLSearchParams(searchParams?.toString() ?? "");
-        params.set("validator", fallback.id);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        if ((requestedValidatorId ?? params.get("validator")) !== fallback.id) {
+          params.set("validator", fallback.id);
+          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        }
       }
     }
-  }, [validatorsData, selectedValidator, searchParams, pathname, router]);
+  }, [validatorsData, selectedValidator, requestedValidatorId, searchParams, pathname, router]);
   
 
   return (
@@ -269,6 +301,7 @@ export default function RoundResult() {
       <RoundValidators
         onValidatorSelect={handleValidatorSelect}
         selectedValidatorId={selectedValidator?.id ?? null}
+        requestedValidatorId={requestedValidatorId}
       />
 
 
@@ -293,6 +326,7 @@ export default function RoundResult() {
         <RoundTopMiners
           className="w-full xl:w-[400px]"
           selectedValidatorId={selectedValidator?.id}
+          roundNumber={roundNumberForLinks}
         />
       </div>
     </>

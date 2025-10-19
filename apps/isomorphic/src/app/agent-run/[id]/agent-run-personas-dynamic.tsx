@@ -13,13 +13,6 @@ export default function AgentRunPersonasDynamic() {
   const { personas, isLoading, error } = useAgentRunPersonas(id as string);
   const { summary } = useAgentRunSummary(id as string);
 
-  // Debug: Log the data loading state
-  console.log("AgentRunPersonasDynamic - id:", id);
-  console.log("AgentRunPersonasDynamic - personas:", personas);
-  console.log("AgentRunPersonasDynamic - isLoading:", isLoading);
-  console.log("AgentRunPersonasDynamic - error:", error);
-  console.log("AgentRunPersonasDynamic - summary:", summary);
-
   if (isLoading || error || !personas) {
     return (
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

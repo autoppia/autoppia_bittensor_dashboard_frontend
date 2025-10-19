@@ -16,11 +16,12 @@ import { useOverviewData } from "@/services/hooks/useOverview";
 const ANNOUNCEMENT_STORAGE_KEY = "overview-announcement-seen";
 
 export default function Overview() {
-  const { loading, error, refetch } = useOverviewData();
+  const { loading, error, refetch, data: overviewData } = useOverviewData();
   const { openModal } = useModal();
   const hasOpenedAnnouncement = useRef(false);
   const metricsColumnRef = useRef<HTMLDivElement | null>(null);
   const [metricsHeight, setMetricsHeight] = useState<number | undefined>(undefined);
+  const metricsRound = overviewData?.metrics?.metricsRound ?? null;
 
   const openAnnouncementModal = useCallback(() => {
     openModal({ view: <OverviewAnnouncementModal />, size: "md" });
@@ -123,7 +124,15 @@ export default function Overview() {
           />
         </div>
         <div className="w-full lg:w-[460px] min-w-0" ref={metricsColumnRef}>
-          <div className="mb-4 flex items-center justify-end gap-2 min-w-0">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              Latest completed round:
+              <span className="font-bold text-white">
+                {metricsRound ?? "—"}
+              </span>
+            </span>
+            <div className="flex items-center justify-end gap-2 min-w-0">
             <button
               onClick={handleOpenTimeline}
               className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
@@ -140,6 +149,7 @@ export default function Overview() {
             >
               <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
             </Link>
+            </div>
           </div>
           <OverviewMetrics className="w-full min-w-0" />
         </div>

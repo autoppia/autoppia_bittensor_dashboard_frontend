@@ -430,54 +430,67 @@ export default function TaskSearch() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {results.map((task) => (
-              <div
-                key={task.taskId}
-                onClick={() => router.push(`/tasks/${task.taskId}`)}
-                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/30 hover:border-sky-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:-translate-y-1"
-              >
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg shadow-lg group-hover:shadow-xl">
-                      <PiPlayDuotone className="w-6 h-6 text-white" />
+            {results.map((task) => {
+              const websiteLabel = formatLabel(task.website);
+              const useCaseLabel = formatLabel(task.useCase);
+              const scorePercent = Math.round((task.score ?? 0) * 100);
+              const statusLabel =
+                task.status === "completed"
+                  ? "Completed"
+                  : task.status === "failed"
+                    ? "Failed"
+                    : task.status.toUpperCase();
+
+              return (
+                <div
+                  key={task.taskId}
+                  onClick={() => router.push(`/tasks/${task.taskId}`)}
+                  className="relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Task
+                      </p>
+                      <p className="text-sm font-semibold text-white truncate">
+                        #{task.taskId}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate">
+                        Run {task.agentRunId}
+                      </p>
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-white">Task #{task.taskId}</div>
-                      <div className="text-xs text-purple-200">Run ID: {task.agentRunId}</div>
+                    <div className="text-right space-y-1">
+                      <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
+                        Score
+                      </span>
+                      <div className="text-2xl font-bold text-white">
+                        {scorePercent}%
+                      </div>
+                      <div className="text-[11px] text-slate-300">
+                        {statusLabel}
+                      </div>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-2 px-3 py-1 border border-purple-500/40 rounded-full text-xs text-purple-100 bg-purple-500/20">
-                    <PiCodeDuotone className="w-3.5 h-3.5" />
-                    {formatLabel(task.useCase)}
-                  </span>
-                </div>
-
-                <div className="mb-3">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 border border-blue-500/40 rounded-full text-xs text-blue-100 bg-blue-500/20">
-                    <PiGlobeDuotone className="w-3.5 h-3.5" />
-                    {formatLabel(task.website)}
-                  </span>
-                </div>
-
-                <div className="mb-3 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-center">
-                  <p className="text-[11px] uppercase tracking-wide text-emerald-200/80">
-                    Score
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
+                      <PiGlobeDuotone className="h-3 w-3" />
+                      {websiteLabel}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/15 px-2 py-0.5 text-purple-100">
+                      <PiCodeDuotone className="h-3 w-3" />
+                      {useCaseLabel}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-300 line-clamp-3">
+                    {task.prompt}
                   </p>
-                  <p className="text-xl font-bold text-emerald-300">
-                    {Math.round((task.score ?? 0) * 100)}%
-                  </p>
+                  <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Duration: {task.duration}s</span>
+                    <span>Actions: {task.actions ? task.actions.length : "—"}</span>
+                  </div>
                 </div>
-
-                <p className="text-xs text-purple-100/80 leading-relaxed mb-4 line-clamp-3">
-                  {task.prompt}
-                </p>
-
-                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
-                  <span>Duration: {task.duration}s</span>
-                  <span>Actions: {task.actions ? task.actions.length : "—"}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

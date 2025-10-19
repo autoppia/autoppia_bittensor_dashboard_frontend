@@ -21,3 +21,32 @@ export function extractRoundIdentifier(
     return text;
   }
 }
+
+export function extractRoundNumber(
+  value: string | string[] | undefined
+): number | undefined {
+  const identifier = extractRoundIdentifier(value);
+  if (!identifier) {
+    return undefined;
+  }
+
+  const normalized = identifier.toLowerCase();
+  const roundPatternMatch = normalized.match(/round[-_]?(\d+)/);
+  if (roundPatternMatch?.[1]) {
+    const parsed = Number.parseInt(roundPatternMatch[1], 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  const digitMatches = normalized.match(/\d+/g);
+  if (digitMatches && digitMatches.length > 0) {
+    const lastSegment = digitMatches[digitMatches.length - 1];
+    const parsed = Number.parseInt(lastSegment, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
