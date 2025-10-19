@@ -34,8 +34,8 @@ const resolveBaseUrl = () => {
     return envBaseUrl;
   }
 
-  // FastAPI defaults to port 8000 in local development; fall back to that if no env vars are provided.
-  return "http://localhost:8000";
+  // Default to production API when no explicit base URL is configured.
+  return "https://api-leaderboard.autoppia.com";
 };
 
 export class ApiClient {

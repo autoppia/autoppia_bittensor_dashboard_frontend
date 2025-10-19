@@ -7,11 +7,12 @@ import RoundMinerScores from "./round-miner-scores";
 import RoundTopMiners from "./round-top-miners";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
-import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCoinsDuotone, PiCheckCircleDuotone } from "react-icons/pi";
+import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiListChecksDuotone } from "react-icons/pi";
 import { useRoundValidators, useTopMiners, useRoundStatistics } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
 import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 import type { ValidatorPerformance, MinerPerformance } from "@/services/api/types/rounds";
+import cn from "@core/utils/class-names";
 
 export default function RoundResult() {
   const { id } = useParams();
@@ -57,6 +58,115 @@ export default function RoundResult() {
         ? selectedTopMiner.name
         : `Miner ${selectedTopMiner.uid ?? "unknown"}`)
     : "No winner yet";
+
+  const formatNumber = (value: number | undefined | null, digits = 0) => {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      return "0";
+    }
+    return Number(value).toLocaleString(undefined, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  };
+
+  const selectedValidatorCards = selectedValidator
+    ? [
+        {
+          key: "winner",
+          title: "Validator Winner",
+          value: winnerLabel,
+          helper: selectedValidator.name
+            ? `${selectedValidator.name} latest champion`
+            : "Champion for this validator",
+          icon: PiCrownDuotone,
+          gradient: "from-amber-500/22 via-orange-500/16 to-yellow-500/22",
+          border: "border-amber-500/40",
+          iconGradient: "from-amber-400 to-orange-500",
+          valueClass: "text-2xl",
+        },
+        {
+          key: "score",
+          title: "Top Score",
+          value: `${formatNumber(
+            ((selectedValidator.topScore ?? selectedValidator.averageScore) ?? 0) * 100,
+            1,
+          )}%`,
+          helper: "Best run recorded by this validator",
+          icon: PiTrophyDuotone,
+          gradient: "from-emerald-500/22 via-green-500/16 to-teal-500/22",
+          border: "border-emerald-500/40",
+          iconGradient: "from-emerald-400 to-teal-500",
+          valueClass: "text-4xl",
+        },
+        {
+          key: "miners",
+          title: "Miners Evaluated",
+          value: formatNumber(selectedValidator.totalMiners ?? 0),
+          helper: "Unique miners assessed this round",
+          icon: PiUsersThreeDuotone,
+          gradient: "from-violet-500/22 via-purple-500/16 to-fuchsia-500/22",
+          border: "border-violet-500/40",
+          iconGradient: "from-violet-400 to-fuchsia-500",
+          valueClass: "text-4xl",
+        },
+        {
+          key: "tasks",
+          title: "Tasks",
+          value: formatNumber(selectedValidator.totalTasks ?? 0),
+          helper: "Total tasks executed by this validator",
+          icon: PiListChecksDuotone,
+          gradient: "from-blue-500/22 via-indigo-500/16 to-cyan-500/22",
+          border: "border-blue-500/40",
+          iconGradient: "from-blue-400 to-indigo-500",
+          valueClass: "text-4xl",
+        },
+      ]
+    : [];
+
+  const renderValidatorMetricCard = (card: (typeof selectedValidatorCards)[number]) => {
+    const Icon = card.icon;
+    return (
+      <div
+        key={card.key}
+        className={cn(
+          "group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
+          "bg-slate-900/45",
+          card.border,
+        )}
+      >
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 opacity-90 transition-opacity duration-500 group-hover:opacity-100",
+            "bg-gradient-to-br",
+            card.gradient,
+          )}
+        />
+        <div className="relative flex h-full flex-col gap-6">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className={cn(
+                "relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/15 shadow-xl transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1",
+                "bg-gradient-to-br",
+                card.iconGradient,
+              )}
+            >
+              <Icon className="h-8 w-8 text-white drop-shadow-[0_6px_14px_rgba(255,255,255,0.28)]" />
+              <div className="absolute inset-0 rounded-2xl bg-white/15 opacity-0 transition-opacity duration-500 group-hover:opacity-30" />
+            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70">
+              {card.title}
+            </span>
+          </div>
+          <div className="mt-auto space-y-2">
+            <div className={cn("font-black text-white", card.valueClass)}>{card.value}</div>
+            {card.helper ? (
+              <p className="text-sm font-medium text-white/70">{card.helper}</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   // Handle validator selection
   const handleValidatorSelect = (validator: ValidatorPerformance) => {
@@ -138,89 +248,8 @@ export default function RoundResult() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-        {/* Winner Card */}
-        <div className="bg-gradient-to-br from-amber-500/15 via-orange-500/15 to-yellow-500/15 border-2 border-amber-500/40 rounded-xl p-3 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiCrownDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xs font-medium text-amber-300">WINNER</h3>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                  {winnerLabel}
-                </div>
-              </div>
-            </div>
-          </div>
+          {selectedValidatorCards.map(renderValidatorMetricCard)}
         </div>
-
-        {/* Average Top Score Card */}
-        <div className="bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-teal-500/15 border-2 border-emerald-500/40 rounded-xl p-3 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiTrophyDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xs font-medium text-emerald-300">TOP SCORE</h3>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent mb-1">
-                {(((selectedValidator.topScore ?? selectedValidator.averageScore) || 0) * 100).toFixed(1)}%
-              </div>
-            </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Miners Evaluated Card */}
-        <div className="bg-gradient-to-br from-violet-500/15 via-purple-500/15 to-fuchsia-500/15 border-2 border-violet-500/40 rounded-xl p-3 hover:border-violet-400/60 hover:shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiUsersThreeDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xs font-medium text-violet-300">MINERS EVALUATED</h3>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent mb-1">
-                {selectedValidator.totalMiners ?? 0}
-              </div>
-            </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Tasks Card */}
-        <div className="bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-purple-500/15 border-2 border-blue-500/40 rounded-xl p-3 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiCoinsDuotone className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xs font-medium text-blue-300">TASKS</h3>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center">
-            <div className="text-center mb-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
-                {selectedValidator.totalTasks}
-              </div>
-            </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
       )}
 
       <div className="flex flex-col xl:flex-row gap-6 mt-6">
