@@ -187,21 +187,24 @@ export default function LandingPage() {
                 : "opacity-0 translate-y-5"
             )}
           >
-            <a
-              href="https://documentation.autoppia.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25">
-                <LuFileText className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                LEARN MORE
-              </button>
-            </a>
             <Link href={routes.leaderboard} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
+              <button
+                className="w-full sm:w-auto px-8 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-pink-500/25"
+                style={{
+                  background: "linear-gradient(90deg, #E91E63, #F06292)",
+                  ":hover": {
+                    background: "linear-gradient(90deg, #C2185B, #E91E63)",
+                  },
+                }}
+              >
                 <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 LEADERBOARD
+              </button>
+            </Link>
+            <Link href={routes.overview} className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
+                <LuNetwork className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                SUBNET 36
               </button>
             </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
