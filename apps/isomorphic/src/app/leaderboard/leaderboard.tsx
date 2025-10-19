@@ -929,16 +929,16 @@ export default function App() {
           className="relative mb-8 sm:mb-12"
         >
           <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border border-slate-700/50 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl">
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-center justify-between mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
                   <FaFire className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
+                  <h2 className="text-2xl text-center sm:text-left sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
                     Benchmark Tasks
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">
+                  <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
                     Web project and its benchmark prompt
                   </p>
                 </div>
@@ -948,7 +948,7 @@ export default function App() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
               >
                 <FaDownload className="w-4 h-4" />
-                <span className="hidden sm:inline">Download</span>
+                <span>Download</span>
               </button>
             </div>
 
