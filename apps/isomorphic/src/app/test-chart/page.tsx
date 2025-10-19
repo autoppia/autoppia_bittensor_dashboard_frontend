@@ -1,6 +1,6 @@
 "use client";
 
-import MinerChart from "../overview/overview-miner-chart";
+import MinerChart from "../subnet36/overview/overview-miner-chart";
 
 export default function TestChartPage() {
   return (
