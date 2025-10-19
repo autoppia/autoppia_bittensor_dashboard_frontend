@@ -90,6 +90,16 @@ function formatValidatorLabel(validatorId: string, validatorName?: string | null
   return validatorId;
 }
 
+function formatAgentLabel(run: AgentRunListItem): string {
+  if (run.agentName) {
+    return run.agentName;
+  }
+  if (run.agentHotkey) {
+    return run.agentHotkey;
+  }
+  return run.agentId;
+}
+
 const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
   const totalTasks = run.totalTasks ?? 0;
   const completed = run.successfulTasks ?? run.completedTasks ?? 0;
@@ -861,52 +871,52 @@ export default function AgentRunSearch() {
             run.validatorImage,
             resolveAssetUrl("/validators/Other.png")
           );
+          const agentLabel = formatAgentLabel(run);
+          const completedTasks = run.successfulTasks ?? run.completedTasks ?? 0;
+          const totalTasks = run.totalTasks ?? 0;
 
           return (
             <div
               key={run.runId}
               onClick={() => router.push(`/agent-run/${run.runId}`)}
-              className="group relative rounded-2xl border-2 border-sky-500/30 bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-2xl"
+              className="group relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
             >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-sky-500/15 via-transparent to-indigo-700/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="relative flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-sky-500/40 bg-slate-900/40">
-                    <Image
-                      src={validatorImageSrc}
-                      alt={validatorLabel}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
-                  </div>
+                  <Image
+                    src={validatorImageSrc}
+                    alt={validatorLabel}
+                    width={48}
+                    height={48}
+                    sizes="48px"
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
                   <div className="min-w-0 space-y-1">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-100">
-                      Run ID
-                    </span>
-                    <p className="font-mono text-sm text-white break-words leading-snug">
-                      {run.runId}
+                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                      Validator
                     </p>
-                    <p className="text-xs text-sky-100/80 font-medium truncate">
+                    <p className="text-sm font-semibold text-white truncate">
                       {validatorLabel}
+                    </p>
+                    <p className="text-xs text-slate-400 truncate">
+                      Agent {agentLabel}
                     </p>
                   </div>
                 </div>
                 <div className="text-right space-y-1">
-                  <span className="text-[11px] uppercase tracking-wide text-sky-100/70">
+                  <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
                     Score
                   </span>
-                  <div className="text-xl font-bold text-white">
+                  <div className="text-2xl font-bold text-white">
                     {formatPercentage(run.overallScore)}
                   </div>
-                  <div className="inline-flex items-center gap-1 rounded-full border border-sky-400/40 bg-sky-500/20 px-2 py-0.5 text-[11px] font-medium text-sky-100">
+                  <div className="text-[11px] text-slate-300">
                     Success {formatPercentage(run.successRate ?? 0)}
                   </div>
                 </div>
               </div>
-              <div className="relative mt-4 flex flex-wrap items-center gap-2 text-xs text-sky-100/90">
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/30 bg-sky-500/15 px-2 py-0.5">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
                   {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
                 </span>
                 {typeof run.ranking === "number" && run.ranking > 0 && (
@@ -915,29 +925,17 @@ export default function AgentRunSearch() {
                   </span>
                 )}
               </div>
-              <div className="relative mt-4 grid grid-cols-2 gap-3 text-xs text-slate-100">
-                <div className="rounded-lg border border-slate-500/40 bg-slate-900/40 p-3">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-300">
-                    Tasks Completed
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {(run.successfulTasks ?? run.completedTasks ?? 0).toLocaleString()}
-                    <span className="text-slate-400">
-                      /{Number(run.totalTasks ?? 0).toLocaleString()}
-                    </span>
-                  </p>
-                </div>
-                <div className="rounded-lg border border-slate-500/40 bg-slate-900/40 p-3">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-300">
-                    Started
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-white/90">
-                    {formatDate(run.startTime)}
-                  </p>
-                </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                <span>Started {formatDate(run.startTime)}</span>
+                <span>
+                  Tasks {completedTasks.toLocaleString()}
+                  <span className="text-slate-500">
+                    /{Number(totalTasks).toLocaleString()}
+                  </span>
+                </span>
               </div>
-              <div className="relative mt-4 text-[11px] uppercase tracking-wide text-sky-100/80">
-                Tap to inspect run →
+              <div className="mt-4 flex text-[11px] text-slate-400">
+                <span className="truncate">Run ID: {run.runId}</span>
               </div>
             </div>
           );
@@ -947,20 +945,20 @@ export default function AgentRunSearch() {
           {!isManualSearchActive &&
             totalPages > 1 &&
             displayedRuns.length > 0 && (
-              <div className="mt-6 flex items-center justify-center gap-4 text-sm text-purple-200">
+              <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
                 <button
                   type="button"
                   onClick={() => handlePageChange(resolvedPage - 1)}
                   disabled={!canGoPrev}
                   className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
                     canGoPrev
-                      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-100"
-                      : "border-purple-500/20 bg-purple-500/5 text-purple-400 cursor-not-allowed"
+                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   Previous
                 </button>
-                <span className="text-purple-100">
+                <span className="text-sky-100">
                   Page {resolvedPage} of {totalPages}
                 </span>
                 <button
@@ -969,8 +967,8 @@ export default function AgentRunSearch() {
                   disabled={!canGoNext}
                   className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
                     canGoNext
-                      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-100"
-                      : "border-purple-500/20 bg-purple-500/5 text-purple-400 cursor-not-allowed"
+                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   Next

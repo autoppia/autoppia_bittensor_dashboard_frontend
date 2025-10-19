@@ -81,7 +81,8 @@ export default function AgentsSidebar() {
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
-  const roundSelectValue = roundOptions.find((option) => option.value === effectiveRound);
+  const roundSelectValue =
+    roundOptions.find((option) => option.value === effectiveRound) ?? null;
 
   useEffect(() => {
     if (roundReady || defaultRound === undefined) {
@@ -95,7 +96,10 @@ export default function AgentsSidebar() {
     router.replace(`${pathname}?${params.toString()}`);
   }, [defaultRound, id, pathname, roundReady, router, searchParamsString]);
 
-  const handleRoundChange = (option: SelectOption) => {
+  const handleRoundChange = (option: SelectOption | null) => {
+    if (!option) {
+      return;
+    }
     const value = typeof option.value === "number"
       ? option.value
       : Number.parseInt(String(option.value), 10);
@@ -115,11 +119,12 @@ export default function AgentsSidebar() {
 
   // Fetch miners data using optimized endpoint
   const minersParams = useMemo(() => {
-    if (roundReady && typeof selectedRound === "number") {
-      return { limit: 100, round: selectedRound };
+    const params: MinimalAgentsListQueryParams = { limit: 100 };
+    if (typeof effectiveRound === "number" && Number.isFinite(effectiveRound)) {
+      params.round = effectiveRound;
     }
-    return { limit: 100 } as MinimalAgentsListQueryParams;
-  }, [roundReady, selectedRound]);
+    return params;
+  }, [effectiveRound]);
 
   const { data: minersData, loading, error } = useMinersList(minersParams);
 
@@ -160,18 +165,6 @@ export default function AgentsSidebar() {
     
     setFilteredAgents(filtered);
   };
-
-  const nonSotaRankByUid = useMemo(() => {
-    const rankMap = new Map<number, number>();
-    let rank = 1;
-    filteredAgents.forEach((agent) => {
-      if (!agent.isSota) {
-        rankMap.set(agent.uid, rank);
-        rank += 1;
-      }
-    });
-    return rankMap;
-  }, [filteredAgents]);
 
   // Show loading placeholder
   if (loading || (!roundReady && roundOptions.length === 0)) {
@@ -265,7 +258,7 @@ export default function AgentsSidebar() {
               const highlightTop =
                 (!includeSota && firstNonSotaUid === miner.uid) ||
                 (includeSota && isTopRanked);
-              const displayRank = nonSotaRankByUid.get(miner.uid);
+              const displayRank = Number.isFinite(miner.ranking) ? miner.ranking : undefined;
               const showRankBadge = typeof displayRank === "number";
               const rankBadgePalette = (() => {
                 switch (displayRank) {

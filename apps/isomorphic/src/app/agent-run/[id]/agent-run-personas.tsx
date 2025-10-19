@@ -56,6 +56,8 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
       name: "Benchmark Agent",
       image: "/images/autoppia-logo.png",
       id: "—",
+      uid: null,
+      hotkey: null,
       provider: "—",
       github: null,
       successRate: null,
@@ -68,17 +70,21 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
     ? `https://taostats.io/validators/${validatorHotkey}`
     : null;
 
-  const agentUid = agentData.id || summary?.agentId;
-  const agentHotkey = summary?.agentId || agentData.id;
+  const agentUid =
+    (typeof agentData.uid === "number" ? agentData.uid : null) ??
+    (typeof summary?.agentUid === "number" ? summary?.agentUid : null) ??
+    extractUidNumber(agentData.id) ??
+    extractUidNumber(summary?.agentId);
+  const agentHotkey =
+    agentData.hotkey ??
+    summary?.agentHotkey ??
+    agentData.id ??
+    summary?.agentId;
 
   const fallbackMinerImage = (() => {
-    const uidFromSummary =
-      extractUidNumber(summary?.agentUid) ??
-      extractUidNumber(summary?.minerUid) ??
-      extractUidNumber(summary?.agentId);
-    const uidFromAgent =
-      extractUidNumber(agentData.uid) ?? extractUidNumber(agentData.id);
-    const uidCandidate = uidFromSummary ?? uidFromAgent;
+    const uidCandidate =
+      agentUid ??
+      extractUidNumber(summary?.minerUid);
     if (uidCandidate === null) {
       return "/images/autoppia-logo.png";
     }
@@ -225,7 +231,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
                 UID
               </p>
               <p className="font-mono text-sm text-white">
-                {agentUid || "—"}
+                {agentUid ?? "—"}
               </p>
             </div>
             <div className="flex-1 min-w-[140px]">

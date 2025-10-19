@@ -66,7 +66,6 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     () => websitesData.filter((website) => !website.isComingSoon).length,
     []
   );
-  const metricsRound = metrics?.metricsRound;
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
@@ -172,18 +171,9 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   ];
 
   return (
-    <div className="w-full min-w-0">
-      {metricsRound ? (
-        <div className="mb-3 flex justify-end">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
-            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            Latest completed round: <span className="font-bold text-white">{metricsRound}</span>
-          </span>
-        </div>
-      ) : null}
-      <div
-        className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
-      >
+    <div
+      className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
+    >
       {dynamicMetricsData.map((metric) => {
         const Icon = metric.icon;
         const metricCard = (
@@ -233,7 +223,6 @@ export default function OverviewMetrics({ className }: { className?: string }) {
           </div>
         );
       })}
-      </div>
     </div>
   );
 }

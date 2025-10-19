@@ -5,43 +5,9 @@ import { useAgentRunStats } from "@/services/hooks/useAgentRun";
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunStats from "./agent-run-stats";
 
-const numberFormatter = new Intl.NumberFormat("en-US");
-const oneDecimalFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
-
-const clampPercentage = (value: number | null | undefined) => {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return 0;
-  }
-  return Math.max(0, Math.min(100, value));
-};
-
-const clampNonNegative = (value: number | null | undefined) => {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return 0;
-  }
-  return Math.max(0, value);
-};
-
-const formatPercentageLabel = (value: number) =>
-  `${oneDecimalFormatter.format(value)}%`;
-
-const formatCount = (value: number) => numberFormatter.format(Math.round(value));
-
-const formatDuration = (value: number) =>
-  value > 0 ? `${oneDecimalFormatter.format(value)}s` : "—";
-
 export default function AgentRunStatsDynamic() {
   const { id } = useParams();
   const { stats, isLoading, error } = useAgentRunStats(id as string);
-
-  // Debug: Log the data loading state
-  console.log("AgentRunStatsDynamic - id:", id);
-  console.log("AgentRunStatsDynamic - stats:", stats);
-  console.log("AgentRunStatsDynamic - isLoading:", isLoading);
-  console.log("AgentRunStatsDynamic - error:", error);
 
   if (isLoading || error || !stats) {
     return (

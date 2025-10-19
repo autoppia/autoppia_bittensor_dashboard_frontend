@@ -18,11 +18,12 @@ export interface OverviewMetrics {
 // ===== VALIDATOR DATA =====
 export interface ValidatorData {
   id: string;
+  validatorUid?: number | null;
   name: string;
   hotkey: string;
   icon: string;
   currentTask: string;
-  status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline';
+  status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline' | 'Finished' | 'Starting' | 'Not Started';
   totalTasks: number;
   weight: number;
   trust: number;
@@ -31,6 +32,8 @@ export interface ValidatorData {
   uptime: number; // percentage
   stake: number;
   emission: number;
+  validatorRoundId?: string | null;
+  roundNumber?: number | null;
 }
 
 export interface ValidatorFilterItem {

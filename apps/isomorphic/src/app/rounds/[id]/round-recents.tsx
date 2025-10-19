@@ -8,20 +8,19 @@ import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
 import { LuCircleCheckBig, LuActivity } from "react-icons/lu";
 import { useRounds } from "@/services/hooks/useRounds";
-import { extractRoundIdentifier } from "./round-identifier";
+import { extractRoundIdentifier, extractRoundNumber } from "./round-identifier";
 import { Skeleton } from "@core/ui/skeleton";
 
 export default function RoundRecents() {
   const { id } = useParams();
   const currentRoundKey = extractRoundIdentifier(id);
-  const currentRoundNumberMatch = currentRoundKey?.match(/\d+/);
-  const currentRoundNumber = currentRoundNumberMatch ? Number.parseInt(currentRoundNumberMatch[0], 10) : undefined;
+  const currentRoundNumber = extractRoundNumber(currentRoundKey);
   
   // Get rounds data from API - ordered from higher to lower (descending)
   const { data: roundsData, loading, error } = useRounds({
     page: 1,
     limit: 10,
-    sortBy: "round",
+    sortBy: "startTime",
     sortOrder: "desc",
   });
 

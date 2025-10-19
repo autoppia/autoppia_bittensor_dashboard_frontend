@@ -8,6 +8,7 @@ import {
   PiOpenAiLogoDuotone,
   PiCurrencyDollarDuotone,
   PiClockDuotone,
+  PiFingerprintDuotone,
   PiArrowClockwiseDuotone,
   PiHashDuotone,
   PiPaperPlaneRightFill,
@@ -91,7 +92,7 @@ export default function OverviewValidators() {
                   <div className="h-3 bg-gray-200 rounded mb-2"></div>
                   <div className="h-16 bg-gray-200 rounded"></div>
                 </div>
-                <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div className="flex flex-wrap items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 md:justify-around">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-gray-200 rounded-lg"></div>
                     <div className="flex flex-col min-w-0">
@@ -152,6 +153,12 @@ export default function OverviewValidators() {
           );
           const secondaryStats = [
             {
+              title: "UID",
+              metric: validator.validatorUid != null ? validator.validatorUid : "—",
+              icon: PiFingerprintDuotone,
+              iconClassName: "bg-gradient-to-br from-emerald-500 to-teal-600",
+            },
+            {
               title: "Stake",
               metric: `${(validator.weight / 1000).toFixed(0)}K`,
               icon: PiCurrencyDollarDuotone,
@@ -171,18 +178,31 @@ export default function OverviewValidators() {
             },
           ];
 
-          const displayStatus =
+          const normalizedStatus =
             validator.status === "Evaluating"
               ? "Evaluating..."
               : validator.status === "Finished"
               ? "Finished"
+              : validator.status === "Not Started"
+              ? "Not Started"
               : validator.status;
 
-          const showCurrentTask =
-            validator.status !== "Finished" && validator.currentTask?.trim();
+          const showCurrentTask = validator.currentTask?.trim();
 
-          const roundsLink = currentRound?.id
-            ? `/rounds/${currentRound.id}?validator=${validator.id}`
+          const resolvedRoundNumber =
+            typeof validator.roundNumber === "number"
+              ? validator.roundNumber
+              : typeof currentRound?.id === "number"
+              ? currentRound.id
+              : undefined;
+          const validatorParam =
+            validator.validatorUid != null
+              ? `validator-${validator.validatorUid}`
+              : validator.id;
+          const roundsLink = validator.validatorRoundId
+            ? `/rounds/${encodeURIComponent(
+                validator.validatorRoundId
+              )}?validator=${encodeURIComponent(validatorParam)}`
             : undefined;
 
           return roundsLink ? (
@@ -242,16 +262,20 @@ export default function OverviewValidators() {
                       {validator.status === "Finished" && (
                         <PiCheckCircleFill className="w-3.5 h-3.5" />
                       )}
-                      {validator.status !== "Sending Tasks" && 
-                       validator.status !== "Evaluating" && 
+                      {validator.status !== "Sending Tasks" &&
+                       validator.status !== "Evaluating" &&
                        validator.status !== "Waiting" &&
-                       validator.status !== "Finished" && (
+                       validator.status !== "Finished" &&
+                       validator.status !== "Not Started" && (
                         <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
                       )}
+                      {validator.status === "Not Started" && (
+                        <PiArrowClockwiseDuotone className="w-3.5 h-3.5" />
+                      )}
                       <span className="relative">
-                        {displayStatus}
+                        {normalizedStatus}
                         <span className="absolute inset-0 blur-sm opacity-50 group-hover/status:opacity-75 transition-opacity">
-                          {displayStatus}
+                          {normalizedStatus}
                         </span>
                       </span>
                     </div>
@@ -281,14 +305,14 @@ export default function OverviewValidators() {
                       </div>
                     ) : (
                       <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
-                        Round completed
+                        {normalizedStatus === "Finished" ? "Round completed" : "Awaiting activity"}
                       </div>
                     )}
                   </div>
 
                   {/* Secondary Stats - Compact Horizontal */}
-                  <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    {secondaryStats.map((stat, idx) => {
+                  <div className="flex flex-wrap items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 md:justify-around">
+                    {secondaryStats.map((stat) => {
                       const Icon = stat.icon;
                       return (
                         <div key={stat.title} className="flex items-center gap-2">
@@ -310,6 +334,10 @@ export default function OverviewValidators() {
                       );
                     })}
                   </div>
+                  <div className="text-right text-[11px] text-gray-400">
+                    Last seen round{" "}
+                    {resolvedRoundNumber != null ? `#${resolvedRoundNumber}` : "—"}
+                  </div>
                 </div>
               </div>
             </Link>
@@ -318,8 +346,6 @@ export default function OverviewValidators() {
               key={`validator-${validator.id}`}
               className="bg-gray-50 border-2 border-muted rounded-xl overflow-hidden cursor-default"
             >
-              {/* Similar content without Link */}
-              {/* Duplicate content but non-interactive */}
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -348,16 +374,18 @@ export default function OverviewValidators() {
                       "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300",
                       validator.status === "Sending Tasks"
                         ? "bg-emerald-500/20 text-emerald-500"
-                      : validator.status === "Evaluating"
+                        : validator.status === "Evaluating"
                         ? "bg-orange-500/20 text-orange-500"
                         : validator.status === "Waiting"
-                          ? "bg-blue-500/20 text-blue-500"
-                          : validator.status === "Finished"
-                            ? "bg-emerald-600/15 text-emerald-600"
-                            : "bg-yellow-500/20 text-yellow-500"
+                        ? "bg-blue-500/20 text-blue-500"
+                        : validator.status === "Finished"
+                        ? "bg-emerald-600/15 text-emerald-600"
+                        : validator.status === "Not Started"
+                        ? "bg-slate-500/15 text-slate-500"
+                        : "bg-yellow-500/20 text-yellow-500"
                     )}
                   >
-                    {displayStatus}
+                    {normalizedStatus}
                   </div>
                 </div>
               </div>
@@ -371,12 +399,18 @@ export default function OverviewValidators() {
                       Current Task
                     </Text>
                   </div>
-                  <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
-                    {showCurrentTask ? validator.currentTask : "Round completed"}
-                  </div>
+                  {showCurrentTask ? (
+                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900">
+                      {validator.currentTask}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
+                      {normalizedStatus === "Finished" ? "Round completed" : "Awaiting activity"}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  {secondaryStats.map((stat, idx) => {
+                <div className="flex flex-wrap items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 md:justify-around">
+                  {secondaryStats.map((stat) => {
                     const Icon = stat.icon;
                     return (
                       <div key={stat.title} className="flex items-center gap-2">
@@ -397,6 +431,10 @@ export default function OverviewValidators() {
                       </div>
                     );
                   })}
+                </div>
+                <div className="text-right text-[11px] text-gray-400">
+                  Last seen round{" "}
+                  {resolvedRoundNumber != null ? `#${resolvedRoundNumber}` : "—"}
                 </div>
               </div>
             </div>

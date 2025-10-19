@@ -17,10 +17,12 @@ export default function RoundValidators({
   className,
   onValidatorSelect,
   selectedValidatorId: externalSelectedId = null,
+  requestedValidatorId = null,
 }: {
   className?: string;
   onValidatorSelect?: (validator: ValidatorPerformance) => void;
   selectedValidatorId?: string | null;
+  requestedValidatorId?: string | null;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -29,14 +31,19 @@ export default function RoundValidators({
   const { data: validatorsData, loading, error } = useRoundValidators(roundKey);
   
   const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(
-    externalSelectedId
+    requestedValidatorId ?? externalSelectedId
   );
+  const lastNotifiedValidator = React.useRef<string | null>(null);
 
   React.useEffect(() => {
+    if (requestedValidatorId && requestedValidatorId !== selectedValidatorId) {
+      setSelectedValidatorId(requestedValidatorId);
+      return;
+    }
     if (externalSelectedId && externalSelectedId !== selectedValidatorId) {
       setSelectedValidatorId(externalSelectedId);
     }
-  }, [externalSelectedId, selectedValidatorId]);
+  }, [externalSelectedId, requestedValidatorId, selectedValidatorId]);
 
   const {
     sliderEl,
@@ -52,26 +59,34 @@ export default function RoundValidators({
       return;
     }
 
-    if (!selectedValidatorId) {
-      const fallbackId = externalSelectedId ?? validatorsData[0].id;
-      setSelectedValidatorId(fallbackId);
-      if (onValidatorSelect) {
-        const fallbackValidator =
-          validatorsData.find((validator) => validator.id === fallbackId) ?? validatorsData[0];
-        if (fallbackValidator) {
-          onValidatorSelect(fallbackValidator);
-        }
-      }
+    const resolveValidatorById = (candidateId: string | null | undefined) =>
+      candidateId
+        ? validatorsData.find((validator) => validator.id === candidateId) ?? null
+        : null;
+
+    const requested = resolveValidatorById(requestedValidatorId);
+    const currentExternal = resolveValidatorById(externalSelectedId);
+    const currentSelected = resolveValidatorById(selectedValidatorId);
+
+    if (requestedValidatorId && !requested) {
+      // Wait for the requested validator to show up in the dataset.
       return;
     }
 
-    const currentValidator =
-      validatorsData.find((validator) => validator.id === selectedValidatorId) ??
-      validatorsData[0];
-    if (onValidatorSelect && currentValidator) {
-      onValidatorSelect(currentValidator);
+    const nextValidator = requested ?? currentExternal ?? currentSelected ?? validatorsData[0];
+    if (!nextValidator) {
+      return;
     }
-  }, [validatorsData, selectedValidatorId, externalSelectedId, onValidatorSelect]);
+
+    if (selectedValidatorId !== nextValidator.id) {
+      setSelectedValidatorId(nextValidator.id);
+    }
+
+    if (onValidatorSelect && lastNotifiedValidator.current !== nextValidator.id) {
+      onValidatorSelect(nextValidator);
+      lastNotifiedValidator.current = nextValidator.id;
+    }
+  }, [validatorsData, selectedValidatorId, externalSelectedId, requestedValidatorId, onValidatorSelect]);
 
   const selectedValidator = validatorsData?.find(v => v.id === selectedValidatorId);
 
@@ -153,7 +168,11 @@ export default function RoundValidators({
                 <div
                   key={`validator-${validator.id}`}
                   onClick={() => {
+                    if (validator.id === selectedValidatorId) {
+                      return;
+                    }
                     setSelectedValidatorId(validator.id);
+                    lastNotifiedValidator.current = validator.id;
                     onValidatorSelect?.(validator);
                   }}
                   className="cursor-pointer"

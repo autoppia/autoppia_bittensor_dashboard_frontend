@@ -320,6 +320,36 @@ export default function TaskDetails() {
     : "—";
   const evaluationStatusLabel = formatLabel(evaluationInfo?.status ?? taskData.status);
   const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId;
+  const quickInfoItems = [
+    {
+      label: "Round",
+      value:
+        roundInfo?.roundNumber != null
+          ? `#${roundInfo.roundNumber}`
+          : roundInfo?.validatorRoundId
+          ? truncateMiddle(roundInfo.validatorRoundId, 6)
+          : "—",
+      href: roundInfo?.validatorRoundId
+        ? `/rounds/${encodeURIComponent(roundInfo.validatorRoundId)}`
+        : undefined,
+    },
+    {
+      label: "Validator",
+      value: validatorInfo?.name ?? truncateMiddle(validatorInfo?.hotkey),
+      subValue: validatorInfo?.hotkey ? truncateMiddle(validatorInfo.hotkey) : undefined,
+    },
+    {
+      label: minerInfo?.isSota ? "SOTA Agent" : "Miner",
+      value: minerInfo?.name ?? "—",
+      subValue: minerInfo?.hotkey ? truncateMiddle(minerInfo.hotkey) : undefined,
+    },
+    {
+      label: "Evaluation",
+      value: evaluationInfo?.evaluationId
+        ? truncateMiddle(evaluationInfo.evaluationId, 6)
+        : "—",
+    },
+  ];
 
   const primaryCards: StatCardConfig[] = [
     {
@@ -438,164 +468,192 @@ export default function TaskDetails() {
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 opacity-90" />
       <div className="relative space-y-6 px-6 pb-6 pt-4 md:px-8 md:pb-8 md:pt-6">
         {relationships ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            <ContextCard
-              title="Round"
-              Icon={PiClockCountdown}
-              gradient="from-emerald-500/15 via-emerald-500/10 to-teal-500/20"
-            >
-              <div>
-                <div className="text-lg font-semibold text-white">
-                  #{roundInfo?.roundNumber ?? roundInfo?.validatorRoundId ?? "—"}
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <ContextCard
+                title="Round"
+                Icon={PiClockCountdown}
+                gradient="from-emerald-500/15 via-emerald-500/10 to-teal-500/20"
+              >
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    #{roundInfo?.roundNumber ?? roundInfo?.validatorRoundId ?? "—"}
+                  </div>
+                  <div className="mt-1 inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
+                    {formatLabel(roundInfo?.status)}
+                  </div>
                 </div>
-                <div className="mt-1 inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
-                  {formatLabel(roundInfo?.status)}
+                <div className="space-y-1.5 pt-1">
+                  <InfoRow label="Started" value={formatDateTime(roundInfo?.startedAt)} />
+                  <InfoRow label="Ended" value={formatDateTime(roundInfo?.endedAt)} />
+                  <InfoRow
+                    label="Epoch"
+                    value={
+                      roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
+                        ? `${roundInfo.startEpoch} → ${roundInfo.endEpoch ?? "—"}`
+                        : "—"
+                    }
+                  />
                 </div>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <InfoRow label="Started" value={formatDateTime(roundInfo?.startedAt)} />
-                <InfoRow label="Ended" value={formatDateTime(roundInfo?.endedAt)} />
-                <InfoRow
-                  label="Epoch"
-                  value={
-                    roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
-                      ? `${roundInfo.startEpoch} → ${roundInfo.endEpoch ?? "—"}`
-                      : "—"
-                  }
-                />
-              </div>
-            </ContextCard>
-
-            <ContextCard
-              title="Validator"
-              Icon={PiShieldCheck}
-              gradient="from-blue-500/15 via-blue-500/10 to-indigo-500/20"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-lg font-semibold text-white line-clamp-1">
-                  {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
-                </span>
-                <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/70">
-                  UID {validatorInfo?.uid ?? "—"}
-                </span>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
-                <InfoRow
-                  label="Stake"
-                  value={
-                    validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
-                      ? `${formatNumber(validatorInfo.stake)} TAO`
-                      : "—"
-                  }
-                />
-                <InfoRow
-                  label="vTrust"
-                  value={
-                    validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
-                      ? formatNumber(validatorInfo.vtrust)
-                      : "—"
-                  }
-                />
-                <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
-              </div>
-            </ContextCard>
-
-            <ContextCard
-              title={minerInfo?.isSota ? "SOTA Agent" : "Miner"}
-              Icon={PiUserCircle}
-              gradient="from-purple-500/15 via-purple-500/10 to-pink-500/20"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-white line-clamp-1">
-                  {minerInfo?.name ?? "—"}
-                </span>
-                {minerInfo?.isSota ? (
-                  <span className="rounded-full border border-amber-400/40 bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-                    SOTA
+              </ContextCard>
+              <ContextCard
+                title="Validator"
+                Icon={PiShieldCheck}
+                gradient="from-blue-500/15 via-blue-500/10 to-indigo-500/20"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-lg font-semibold text-white line-clamp-1">
+                    {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
                   </span>
-                ) : null}
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <InfoRow label="UID" value={minerInfo?.uid ?? "—"} />
-                <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
-                <InfoRow label="Provider" value={minerInfo?.provider ?? "—"} />
-                <InfoRow
-                  label="GitHub"
-                  value={
-                    minerInfo?.github ? (
-                      <a
-                        href={minerInfo.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-end gap-1 text-emerald-200 hover:text-emerald-100"
-                      >
-                        <PiLinkSimple className="h-3 w-3" />
-                        Repo
-                      </a>
-                    ) : (
-                      "—"
-                    )
-                  }
-                />
-              </div>
-            </ContextCard>
-
-            <ContextCard
-              title="Agent Run"
-              Icon={PiPlay}
-              gradient="from-cyan-500/15 via-cyan-500/10 to-sky-500/20"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <Link
-                  href={`/agent-run/${agentRunLinkId}`}
-                  className="font-mono text-sm text-white/90 transition-colors duration-200 hover:text-white"
-                >
-                  {truncateMiddle(agentRunLinkId, 6)}
-                </Link>
-                <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
-                  {agentRunInfo?.isSota ? "SOTA" : "Miner"}
-                </span>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <InfoRow label="Duration" value={agentRunDuration} />
-                <InfoRow label="Tasks" value={agentRunInfo?.taskCount ?? "—"} />
-                <InfoRow label="Completed" value={agentRunInfo?.completedTasks ?? "—"} />
-                <InfoRow label="Failed" value={agentRunInfo?.failedTasks ?? "—"} />
-                <InfoRow label="Avg Score" value={agentRunAverageScore} />
-              </div>
-            </ContextCard>
-
-            <ContextCard
-              title="Evaluation"
-              Icon={PiChartBar}
-              gradient="from-amber-500/15 via-amber-500/10 to-orange-500/20"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-semibold text-white">{evaluationScore}</span>
-                <span
-                  className={`inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${evaluationStyles.valueClassName ?? ""}`}
-                >
-                  {evaluationStatusLabel}
-                </span>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <InfoRow
-                  label="Evaluation ID"
-                  value={truncateMiddle(evaluationInfo?.evaluationId)}
-                  valueClassName="font-mono text-xs text-white/80"
-                />
-                <InfoRow label="Duration" value={evaluationDuration} />
-                <InfoRow
-                  label="Web Agent"
-                  value={evaluationInfo?.webAgentId ?? solutionInfo?.webAgentId ?? "—"}
-                />
-                <InfoRow label="Artifacts" value={artifactSummary} />
-                <InfoRow label="Solution" value={solutionSummary} valueClassName="text-white/80" />
-              </div>
-            </ContextCard>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                    UID {validatorInfo?.uid ?? "—"}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
+                  <InfoRow
+                    label="Stake"
+                    value={
+                      validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
+                        ? `${formatNumber(validatorInfo.stake)} TAO`
+                        : "—"
+                    }
+                  />
+                  <InfoRow
+                    label="vTrust"
+                    value={
+                      validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
+                        ? formatNumber(validatorInfo.vtrust)
+                        : "—"
+                    }
+                  />
+                  <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
+                </div>
+              </ContextCard>
+              <ContextCard
+                title={minerInfo?.isSota ? "SOTA Agent" : "Miner"}
+                Icon={PiUserCircle}
+                gradient="from-purple-500/15 via-purple-500/10 to-pink-500/20"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold text-white line-clamp-1">
+                    {minerInfo?.name ?? "—"}
+                  </span>
+                  {minerInfo?.isSota ? (
+                    <span className="rounded-full border border-amber-400/40 bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                      SOTA
+                    </span>
+                  ) : null}
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <InfoRow label="UID" value={minerInfo?.uid ?? "—"} />
+                  <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
+                  <InfoRow label="Provider" value={minerInfo?.provider ?? "—"} />
+                  <InfoRow
+                    label="GitHub"
+                    value={
+                      minerInfo?.github ? (
+                        <a
+                          href={minerInfo.github}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-end gap-1 text-emerald-200 hover:text-emerald-100"
+                        >
+                          <PiLinkSimple className="h-3 w-3" />
+                          Repo
+                        </a>
+                      ) : (
+                        "—"
+                      )
+                    }
+                  />
+                </div>
+              </ContextCard>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <ContextCard
+                title="Agent Run"
+                Icon={PiPlay}
+                gradient="from-cyan-500/15 via-cyan-500/10 to-sky-500/20"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Link
+                    href={`/agent-run/${agentRunLinkId}`}
+                    className="font-mono text-sm text-white/90 transition-colors duration-200 hover:text-white"
+                  >
+                    {truncateMiddle(agentRunLinkId, 6)}
+                  </Link>
+                  <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
+                    {agentRunInfo?.isSota ? "SOTA" : "Miner"}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <InfoRow label="Duration" value={agentRunDuration} />
+                  <InfoRow label="Tasks" value={agentRunInfo?.taskCount ?? "—"} />
+                  <InfoRow label="Completed" value={agentRunInfo?.completedTasks ?? "—"} />
+                  <InfoRow label="Failed" value={agentRunInfo?.failedTasks ?? "—"} />
+                  <InfoRow label="Avg Score" value={agentRunAverageScore} />
+                </div>
+              </ContextCard>
+              <ContextCard
+                title="Evaluation"
+                Icon={PiChartBar}
+                gradient="from-amber-500/15 via-amber-500/10 to-orange-500/20"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-semibold text-white">{evaluationScore}</span>
+                  <span
+                    className={`inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${evaluationStyles.valueClassName ?? ""}`}
+                  >
+                    {evaluationStatusLabel}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <InfoRow
+                    label="Evaluation ID"
+                    value={truncateMiddle(evaluationInfo?.evaluationId)}
+                    valueClassName="font-mono text-xs text-white/80"
+                  />
+                  <InfoRow label="Duration" value={evaluationDuration} />
+                  <InfoRow
+                    label="Web Agent"
+                    value={evaluationInfo?.webAgentId ?? solutionInfo?.webAgentId ?? "—"}
+                  />
+                  <InfoRow label="Artifacts" value={artifactSummary} />
+                  <InfoRow label="Solution" value={solutionSummary} valueClassName="text-white/80" />
+                </div>
+              </ContextCard>
+            </div>
           </div>
         ) : null}
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {quickInfoItems.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 shadow-md"
+            >
+              <span className="text-[11px] uppercase tracking-wide text-white/60">
+                {item.label}
+              </span>
+              {item.href ? (
+                <Link
+                  href={item.href}
+                  className="mt-1 block font-mono text-sm font-semibold text-sky-200 hover:text-sky-100"
+                >
+                  {item.value}
+                </Link>
+              ) : (
+                <span className="mt-1 block font-mono text-sm font-semibold text-white">
+                  {item.value}
+                </span>
+              )}
+              {item.subValue ? (
+                <span className="block text-xs text-white/60">{item.subValue}</span>
+              ) : null}
+            </div>
+          ))}
+        </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           {primaryCards.map((card) => (

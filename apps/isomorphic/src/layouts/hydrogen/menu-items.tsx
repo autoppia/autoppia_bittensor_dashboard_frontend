@@ -7,8 +7,8 @@ import {
   LuBoxes,
   LuGlobe,
   LuTrophy,
-  LuShield,
 } from "react-icons/lu";
+import { PiFlaskDuotone } from "react-icons/pi";
 
 export type MenuItemType = {
   name: string;
@@ -61,9 +61,9 @@ export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
       icon: <LuGlobe />,
     },
     {
-      name: "Join the Arena",
+      name: "Test",
       href: routes.testAgent,
-      icon: <LuShield />,
+      icon: <PiFlaskDuotone />,
     },
   ],
 };
