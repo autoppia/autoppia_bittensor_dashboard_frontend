@@ -16,6 +16,31 @@ import {
 import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 import { FiRefreshCcw } from "react-icons/fi";
 
+// Mapeo correcto de nombres de websites a directorios de GitHub
+const getGitHubUrl = (websiteName: string): string => {
+  const websiteToGitHubMap: Record<string, string> = {
+    "Autoppia Cinema": "web_1_demo_movies",
+    "Autoppia Books": "web_2_demo_books",
+    Autozone: "web_3_autozone",
+    AutoDining: "web_4_autodining",
+    AutoCRM: "web_5_autocrm",
+    AutoMail: "web_6_automail",
+    AutoDelivery: "web_7_autodelivery",
+    AutoLodge: "web_8_autolodge",
+    AutoConnect: "web_9_autoconnect",
+    AutoWork: "web_10_autowork",
+    AutoCalendar: "web_11_autocalendar",
+    AutoList: "web_12_autolist",
+    AutoDrive: "web_13_autodrive",
+    AutoHealth: "web_14_autohealth",
+    AutoFinance: "web_15_autofinance",
+  };
+
+  const githubDirectory =
+    websiteToGitHubMap[websiteName] || "autoppia_webs_demo";
+  return `https://github.com/autoppia/autoppia_webs_demo/tree/main/${githubDirectory}`;
+};
+
 export default function WebsiteDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -216,7 +241,7 @@ export default function WebsiteDetailPage() {
                     </Button>
                   </Link>
                   <a
-                    href={`https://github.com/autoppia/${website.name.toLocaleLowerCase()}_webs_demo`}
+                    href={getGitHubUrl(website.name)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group/github"
