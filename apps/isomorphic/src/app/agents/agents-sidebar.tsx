@@ -3,25 +3,124 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import cn from "@core/utils/class-names";
-import { Text, Input, Checkbox } from "rizzui";
+import { Text, Input, Checkbox, Select, type SelectOption } from "rizzui";
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { useMinersList } from "@/services/hooks/useAgents";
+import { useRounds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
-import type { MinimalAgentData } from "@/services/api/types/agents";
+import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParamsString = searchParams.toString();
   const [query, setQuery] = useState<string>("");
   const [includeSota, setIncludeSota] = useState<boolean>(false);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
-  // Fetch miners data using optimized endpoint
-  const { data: minersData, loading, error } = useMinersList({
-    limit: 100,
+  const roundParam = searchParams.get("round");
+  const selectedRound = useMemo(() => {
+    if (!roundParam) return undefined;
+    const parsed = Number.parseInt(roundParam, 10);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }, [roundParam]);
+  const roundReady = typeof selectedRound === "number" && Number.isFinite(selectedRound);
+
+  const { data: roundsData } = useRounds({
+    limit: 50,
+    sortBy: "roundNumber",
+    sortOrder: "desc",
   });
+
+  const roundOptions: SelectOption[] = useMemo(() => {
+    const numbers = new Set<number>();
+    const rounds = roundsData?.data?.rounds ?? [];
+    rounds.forEach((round) => {
+      if (!round) {
+        return;
+      }
+      const candidate =
+        (round as any).roundNumber ??
+        (round as any).round ??
+        (round as any).id;
+      const validatorCount =
+        (round as any).validatorRoundCount ??
+        (round as any).validator_round_count ??
+        undefined;
+
+      const hasCompletedValidator = (() => {
+        if (typeof validatorCount === "number" && validatorCount > 0) {
+          return true;
+        }
+        const validatorRounds = (round as any).validatorRounds ?? (round as any).validator_rounds;
+        if (Array.isArray(validatorRounds)) {
+          return validatorRounds.some((entry: any) => {
+            const status = (entry?.status ?? entry?.roundStatus ?? "").toString().toLowerCase();
+            return status === "completed";
+          });
+        }
+        return false;
+      })();
+
+      if (typeof candidate === "number" && Number.isFinite(candidate) && hasCompletedValidator) {
+        numbers.add(candidate);
+      }
+    });
+    const values = Array.from(numbers).sort((a, b) => b - a);
+    return values.map((value) => ({
+      label: `Round ${value}`,
+      value,
+    }));
+  }, [roundsData]);
+
+  const defaultRound = roundOptions[0]?.value;
+  const effectiveRound = selectedRound ?? defaultRound;
+  const roundSelectValue = roundOptions.find((option) => option.value === effectiveRound);
+
+  useEffect(() => {
+    if (roundReady || defaultRound === undefined) {
+      return;
+    }
+    const params = new URLSearchParams(searchParamsString);
+    params.set("round", String(defaultRound));
+    if (!params.get("agent") && id) {
+      params.set("agent", String(id));
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [defaultRound, id, pathname, roundReady, router, searchParamsString]);
+
+  const handleRoundChange = (option: SelectOption) => {
+    const value = typeof option.value === "number"
+      ? option.value
+      : Number.parseInt(String(option.value), 10);
+
+    if (!Number.isFinite(value) || value === selectedRound) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParamsString);
+    params.set("round", String(value));
+    const agentParam = searchParams.get("agent") ?? (id ? String(id) : undefined);
+    if (agentParam) {
+      params.set("agent", agentParam);
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  // Fetch miners data using optimized endpoint
+  const minersParams = useMemo(() => {
+    if (roundReady && typeof selectedRound === "number") {
+      return { limit: 100, round: selectedRound };
+    }
+    return { limit: 100 } as MinimalAgentsListQueryParams;
+  }, [roundReady, selectedRound]);
+
+  const { data: minersData, loading, error } = useMinersList(minersParams);
 
   // Update filtered agents when data changes
   useEffect(() => {
@@ -74,7 +173,7 @@ export default function AgentsSidebar() {
   }, [filteredAgents]);
 
   // Show loading placeholder
-  if (loading) {
+  if (loading || (!roundReady && roundOptions.length === 0)) {
     return <AgentSidebarPlaceholder />;
   }
 
@@ -101,6 +200,19 @@ export default function AgentsSidebar() {
         <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-1.5 mt-2.5 pt-3 pb-3 scroll-smooth">
           <div className="flex flex-col gap-1">
             <div className="mb-2 space-y-2">
+              <div className="flex flex-col gap-1">
+                <Text className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Round
+                </Text>
+                <Select
+                  options={roundOptions}
+                  value={roundSelectValue}
+                  onChange={handleRoundChange}
+                  disabled={!roundOptions.length}
+                  placeholder="Select round"
+                  className="w-full"
+                />
+              </div>
               <Input
                 prefix={<LuSearch className="w-4" />}
                 placeholder="Search miners..."
@@ -164,7 +276,11 @@ export default function AgentsSidebar() {
               return (
                 <Link
                   key={`miner-menu-${miner.uid}`}
-                  href={`/agents/${miner.uid}`}
+                  href={
+                    typeof effectiveRound === "number"
+                      ? `/agents/${miner.uid}?round=${effectiveRound}&agent=${miner.uid}`
+                      : `/agents/${miner.uid}`
+                  }
                 >
                   <div
                     className={cn(
