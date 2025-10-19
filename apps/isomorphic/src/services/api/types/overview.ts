@@ -63,9 +63,9 @@ export interface OverviewRoundData {
 export interface LeaderboardData {
   round: number;
   subnet36: number;
-  openai_cua: number;
-  anthropic_cua: number;
-  browser_use: number;
+  openai_cua?: number | null;
+  anthropic_cua?: number | null;
+  browser_use?: number | null;
   timestamp: string;
 }
 

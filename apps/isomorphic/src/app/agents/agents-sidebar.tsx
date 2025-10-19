@@ -38,6 +38,14 @@ export default function AgentsSidebar() {
     sortOrder: "desc",
   });
 
+  const loadingRoundOption = useMemo<SelectOption>(
+    () => ({
+      label: "Loading rounds...",
+      value: "__loading__",
+    }),
+    []
+  );
+
   const roundOptions: SelectOption[] = useMemo(() => {
     const numbers = new Set<number>();
     const rounds = roundsData?.data?.rounds ?? [];
@@ -81,8 +89,26 @@ export default function AgentsSidebar() {
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
-  const roundSelectValue =
-    roundOptions.find((option) => option.value === effectiveRound) ?? null;
+  const selectOptions =
+    roundOptions.length > 0 ? roundOptions : [loadingRoundOption];
+  const [roundSelectValue, setRoundSelectValue] = useState<SelectOption>(
+    selectOptions[0]
+  );
+
+  useEffect(() => {
+    if (!roundOptions.length) {
+      setRoundSelectValue(loadingRoundOption);
+      return;
+    }
+
+    const nextOption =
+      roundOptions.find((option) => option.value === effectiveRound) ??
+      roundOptions[0];
+
+    setRoundSelectValue((current) =>
+      current?.value === nextOption.value ? current : nextOption
+    );
+  }, [effectiveRound, loadingRoundOption, roundOptions]);
 
   useEffect(() => {
     if (roundReady || defaultRound === undefined) {
@@ -97,7 +123,7 @@ export default function AgentsSidebar() {
   }, [defaultRound, id, pathname, roundReady, router, searchParamsString]);
 
   const handleRoundChange = (option: SelectOption | null) => {
-    if (!option) {
+    if (!option || option.value === loadingRoundOption.value) {
       return;
     }
     const value = typeof option.value === "number"
@@ -114,6 +140,7 @@ export default function AgentsSidebar() {
     if (agentParam) {
       params.set("agent", agentParam);
     }
+    setRoundSelectValue(option);
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -190,7 +217,7 @@ export default function AgentsSidebar() {
       <div className="h-full border rounded-xl bg-gray-50 pb-3">
         <div className="sticky top-0 border-b bg-gray-50 agents-round-select">
           <Select
-            options={roundOptions}
+            options={selectOptions}
             value={roundSelectValue}
             onChange={handleRoundChange}
             disabled={!roundOptions.length}
