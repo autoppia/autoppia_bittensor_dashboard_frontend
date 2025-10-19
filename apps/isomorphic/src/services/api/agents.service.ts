@@ -30,6 +30,7 @@ import {
   AgentStatistics,
   ScoreRoundDataPoint,
   AgentActivity,
+  AgentRoundMetrics,
 } from './types/agents';
 
 export class AgentsService {
@@ -50,13 +51,22 @@ export class AgentsService {
   /**
    * Get details for a specific miner by UID (optimized endpoint)
    */
-  async getMinerDetails(uid: number): Promise<{ agent: AgentData; scoreRoundData: ScoreRoundDataPoint[] }> {
+  async getMinerDetails(
+    uid: number,
+    params?: { round?: number }
+  ): Promise<{
+    agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
+  }> {
     const candidateIds = [`agent-${uid}`, String(uid)];
 
     for (const candidate of candidateIds) {
       try {
         const response = await apiClient.get<MinerDetailsResponse>(
-          `${this.baseEndpoint}/${candidate}`
+          `${this.baseEndpoint}/${candidate}`,
+          params
         );
         if (response.data?.data) {
           return response.data.data;
@@ -202,13 +212,24 @@ export class AgentsService {
   /**
    * Get details for a specific agent by ID
    */
-  async getAgent(id: string): Promise<{ agent: AgentData; scoreRoundData: any[] }> {
+  async getAgent(
+    id: string,
+    params?: { round?: number }
+  ): Promise<{
+    agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
+  }> {
     const response = await apiClient.get<AgentDetailsResponse>(
-      `${this.baseEndpoint}/${id}`
+      `${this.baseEndpoint}/${id}`,
+      params
     );
     return {
       agent: response.data.data.agent,
-      scoreRoundData: response.data.data.scoreRoundData
+      scoreRoundData: response.data.data.scoreRoundData,
+      availableRounds: response.data.data.availableRounds,
+      roundMetrics: response.data.data.roundMetrics,
     };
   }
 

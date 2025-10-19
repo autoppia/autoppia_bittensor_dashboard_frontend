@@ -1,15 +1,19 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { Button, Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
 import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget, LuCoins } from "react-icons/lu";
-import { useMinerDetails, useAgentPerformance } from "@/services/hooks/useAgents";
 import { AgentStatsPlaceholder } from "@/components/placeholders/agent-placeholders";
+import type { AgentData, AgentRoundMetrics } from "@/services/api/types/agents";
 
-export default function AgentStats() {
+interface AgentStatsProps {
+  agent?: AgentData | null;
+  roundMetrics?: AgentRoundMetrics | null;
+}
+
+export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
   const {
     sliderEl,
     sliderPrevBtn,
@@ -18,90 +22,93 @@ export default function AgentStats() {
     scrollToTheLeft,
   } = useScrollableSlider();
 
-  const { id } = useParams();
-  const uid = parseInt(id as string, 10);
-  const { data: agentData, loading: agentLoading } = useMinerDetails(uid);
-  const agent = agentData?.agent;
-  const { data: performance, loading: performanceLoading } = useAgentPerformance(id as string, {
-    timeRange: '7d'
-  });
-
-  const loading = agentLoading || performanceLoading;
-
-  // Show loading placeholder
-  if (loading) {
+  if (!agent) {
     return <AgentStatsPlaceholder />;
   }
 
-  if (!agent) {
-    return null;
-  }
+  const currentRankValue =
+    roundMetrics?.rank && roundMetrics.rank > 0
+      ? `#${roundMetrics.rank}`
+      : agent.currentRank && agent.currentRank > 0
+        ? `#${agent.currentRank}`
+        : "N/A";
 
-  const formattedCurrentRank =
-    agent.currentRank && agent.currentRank > 0 ? `#${agent.currentRank}` : "N/A";
-  const formattedBestRank =
+  const bestRankEver =
     agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
-  const formattedCurrentScore = `${((agent.currentScore ?? 0) * 100).toFixed(1)}%`;
 
-  const agentStats = [
+  const currentScorePercentage = `${(
+    (roundMetrics?.score ?? agent.currentScore ?? 0) * 100
+  ).toFixed(1)}%`;
+
+  const roundsParticipated = (agent.roundsParticipated || agent.totalRuns).toLocaleString();
+  const alphaWon = `${(agent.alphaWonInPrizes || 0).toFixed(2)} α`;
+
+  const stats = [
     {
-      title: "Current Rank",
-      metric: formattedCurrentRank,
-      description: "Current ranking position",
+      title: "Round Rank",
+      metric: currentRankValue,
+      description: "Ranking within the selected round",
       icon: LuAward,
       className:
         "relative overflow-visible bg-gradient-to-br from-amber-500/20 via-amber-400/15 to-amber-600/25 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-amber-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-amber-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-amber-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName:
+        "relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-amber-100/80",
     },
     {
       title: "Best Rank Ever",
-      metric: formattedBestRank,
+      metric: bestRankEver,
       description: "Highest ranking achieved",
       icon: LuTrophy,
       className:
         "relative overflow-visible bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-yellow-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName:
+        "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-yellow-100/80",
     },
     {
       title: "Current Score",
-      metric: formattedCurrentScore,
-      description: "Current performance score",
+      metric: currentScorePercentage,
+      description: "Round average score",
       icon: LuTarget,
       className:
         "relative overflow-visible bg-gradient-to-br from-green-500/20 via-green-400/15 to-green-600/25 border border-green-500/30 hover:border-green-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-green-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-green-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-green-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-green-400 via-green-500 to-green-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName:
+        "relative bg-gradient-to-br from-green-400 via-green-500 to-green-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-green-100/80",
     },
     {
       title: "Rounds Participated",
-      metric: (agent.roundsParticipated || agent.totalRuns).toLocaleString(),
-      description: "Total rounds participated in",
+      metric: roundsParticipated,
+      description: "Total rounds with records",
       icon: LuCircleCheckBig,
-      className: "relative overflow-visible bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      className:
+        "relative overflow-visible bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-blue-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName:
+        "relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-blue-100/80",
     },
     {
       title: "Alpha Won in Prizes",
-      metric: (agent.alphaWonInPrizes || 0).toFixed(2) + ' α',
-      description: "Total alpha tokens earned",
+      metric: alphaWon,
+      description: "Cumulative alpha rewards",
       icon: LuCoins,
-      className: "relative overflow-visible bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-purple-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      className:
+        "relative overflow-visible bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-purple-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
       metricClassName: "text-purple-500 drop-shadow-sm",
-      iconClassName: "relative bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
+      iconClassName:
+        "relative bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-purple-100/80",
     },
   ];
 
   const visibleStats = agent.isSota
-    ? agentStats.filter((stat) => stat.title !== "Alpha Won in Prizes")
-    : agentStats;
+    ? stats.filter((stat) => stat.title !== "Alpha Won in Prizes")
+    : stats;
 
   return (
     <div className="relative flex w-auto items-center overflow-visible">
@@ -122,19 +129,17 @@ export default function AgentStats() {
           {visibleStats.map((stat) => {
             const Icon = stat.icon;
             return (
-            <div
-              key={stat.title}
-              className={cn(
-                "relative p-4 rounded-xl min-w-[200px] cursor-pointer",
-                stat.className
-              )}
-            >
-                {/* Background Pattern */}
+              <div
+                key={stat.title}
+                className={cn(
+                  "relative p-4 rounded-xl min-w-[200px] cursor-pointer",
+                  stat.className
+                )}
+              >
                 <div className="absolute inset-0 opacity-5">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl" />
                 </div>
-                
-                {/* Content */}
+
                 <div className="relative z-10">
                   <div className="flex items-center gap-4">
                     <div
@@ -157,6 +162,9 @@ export default function AgentStats() {
                       >
                         {stat.metric}
                       </Text>
+                      <Text className={cn("text-xs mt-1", stat.descriptionClassName)}>
+                        {stat.description}
+                      </Text>
                     </div>
                   </div>
                 </div>
@@ -170,7 +178,7 @@ export default function AgentStats() {
         variant="text"
         ref={sliderNextBtn}
         onClick={() => scrollToTheRight()}
-        className="dark: !absolute -right-2 top-0 z-10 !h-full w-20 !justify-end rounded-none bg-gradient-to-l from-gray-0 via-gray-0/70 to-transparent px-0 pe-2 text-gray-500 hover:text-gray-900 dark:from-gray-50 dark:via-gray-50/70 3xl:hidden"
+        className="!absolute -right-2 top-0 z-10 !h-full w-20 !justify-end rounded-none bg-gradient-to-l from-gray-0 via-gray-0/70 to-transparent px-0 pe-2 text-gray-500 hover:text-gray-900 dark:from-gray-50 dark:via-gray-50/70 3xl:hidden"
       >
         <PiCaretRightBold className="h-5 w-5" />
       </Button>

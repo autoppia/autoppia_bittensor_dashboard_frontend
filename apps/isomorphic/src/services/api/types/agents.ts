@@ -63,6 +63,26 @@ export interface ScoreRoundDataPoint {
   }[];
 }
 
+export interface AgentRoundMetrics {
+  roundId: number;
+  score: number;
+  topScore: number;
+  rank?: number | null;
+  totalRuns: number;
+  totalValidators: number;
+  validatorUids: number[];
+  validators: Array<{
+    uid: number | null;
+    hotkey?: string | null;
+    name?: string | null;
+  }>;
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  successRate: number;
+  averageResponseTime: number;
+}
+
 // ===== AGENT PERFORMANCE METRICS =====
 export interface AgentPerformanceMetrics {
   agentId: string;
@@ -242,6 +262,8 @@ export interface AgentDetailsResponse {
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
   };
 }
 
@@ -250,6 +272,8 @@ export interface MinerDetailsResponse {
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
   };
 }
 
@@ -307,6 +331,7 @@ export interface MinimalAgentsListQueryParams {
   limit?: number;
   isSota?: boolean; // Filter by SOTA status
   search?: string; // Search by miner name or UID
+  round?: number; // Filter results by round
 }
 
 export interface AgentsListQueryParams {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,14 +21,13 @@ import {
   PiXCircleDuotone,
   PiSpinnerGapBold,
 } from "react-icons/pi";
-import { Text, Select, SelectOption } from "rizzui";
+import { Text } from "rizzui";
 import { useAgentRuns } from "@/services/hooks/useAgents";
 import { AgentValidatorsPlaceholder } from "@/components/placeholders/agent-placeholders";
 import cn from "@core/utils/class-names";
 
-export default function AgentValidators() {
+export default function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
   const { id } = useParams();
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   const queryParams = useMemo(
@@ -43,15 +42,6 @@ export default function AgentValidators() {
 
   const { data: runsData, loading } = useAgentRuns(id as string, queryParams);
   const availableRounds = runsData?.data?.availableRounds ?? [];
-
-  useEffect(() => {
-    if (!availableRounds.length) {
-      return;
-    }
-    if (selectedRound === null || !availableRounds.includes(selectedRound)) {
-      setSelectedRound(availableRounds[0]);
-    }
-  }, [availableRounds, selectedRound]);
 
   // Show loading placeholder
   if (loading) {
@@ -68,23 +58,13 @@ export default function AgentValidators() {
     );
   }
 
-  const roundOptionsSource =
-    availableRounds.length > 0
-      ? availableRounds
-      : Array.from(new Set(runsData.data.runs.map((run) => run.roundId))).sort((a, b) => b - a);
-
-  const roundOptions: SelectOption[] = roundOptionsSource.map((roundId) => ({
-    label: `Round ${roundId}`,
-    value: roundId,
-  }));
-
-  const currentRound =
+  const effectiveRound =
     selectedRound ??
     runsData.data.selectedRound ??
-    (roundOptions.length > 0 ? (roundOptions[0].value as number) : null);
+    (availableRounds.length > 0 ? availableRounds[0] : null);
 
-  const filteredRuns = currentRound != null
-    ? (runsData.data.runs ?? []).filter((run) => run.roundId === currentRound)
+  const filteredRuns = effectiveRound != null
+    ? (runsData.data.runs ?? []).filter((run) => run.roundId === effectiveRound)
     : runsData.data.runs ?? [];
 
   // Group filtered runs by validator
@@ -162,18 +142,11 @@ export default function AgentValidators() {
             </div>
           </button>
         </div>
-        <Select
-          options={roundOptions}
-          value={
-            currentRound != null
-              ? roundOptions.find((option) => option.value === currentRound)
-              : undefined
-          }
-          onChange={(option: SelectOption) => {
-            setSelectedRound(option.value as number);
-          }}
-          className="w-44"
-        />
+        {effectiveRound != null && (
+          <Text className="text-sm font-semibold text-gray-500">
+            Showing results for round {effectiveRound}
+          </Text>
+        )}
       </div>
 
       {/* Expandable Info Card */}
