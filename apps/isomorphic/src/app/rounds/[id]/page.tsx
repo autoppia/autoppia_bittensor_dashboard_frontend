@@ -4,6 +4,8 @@ import Round from "./round";
 import { overviewService } from "@/services/api/overview.service";
 import { roundsService } from "@/services/api/rounds.service";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   ...metaObject(),
 };
