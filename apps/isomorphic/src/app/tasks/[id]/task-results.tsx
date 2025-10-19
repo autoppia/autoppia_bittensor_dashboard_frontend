@@ -42,6 +42,42 @@ const ACTION_TYPE_META: Record<
     badgeBg: "bg-emerald-500/15",
     badgeText: "text-emerald-300",
   },
+  input: {
+    label: "Input",
+    icon: PiKeyboard,
+    badgeBg: "bg-emerald-500/15",
+    badgeText: "text-emerald-300",
+  },
+  search: {
+    label: "Search",
+    icon: PiArrowRight,
+    badgeBg: "bg-sky-500/15",
+    badgeText: "text-sky-300",
+  },
+  extract: {
+    label: "Extract",
+    icon: PiArrowRight,
+    badgeBg: "bg-indigo-500/15",
+    badgeText: "text-indigo-300",
+  },
+  submit: {
+    label: "Submit",
+    icon: PiArrowRight,
+    badgeBg: "bg-fuchsia-500/15",
+    badgeText: "text-fuchsia-300",
+  },
+  open_tab: {
+    label: "Open Tab",
+    icon: PiArrowRight,
+    badgeBg: "bg-blue-500/15",
+    badgeText: "text-blue-300",
+  },
+  close_tab: {
+    label: "Close Tab",
+    icon: PiXCircle,
+    badgeBg: "bg-rose-500/15",
+    badgeText: "text-rose-300",
+  },
   wait: {
     label: "Wait",
     icon: PiClock,

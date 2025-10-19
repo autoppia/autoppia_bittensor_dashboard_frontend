@@ -517,7 +517,7 @@ export default function App() {
             </Text>
             <div className="flex justify-center">
               <Link
-                href="http://localhost:3000/test-agent"
+                href="/join-the-arena"
                 className="group relative inline-flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold text-white uppercase tracking-[0.24em] rounded-full transition-transform duration-300 hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
                 <span className="absolute inset-0 rounded-full bg-cyan-400/20 group-hover:bg-cyan-400/30 transition-colors duration-300" />

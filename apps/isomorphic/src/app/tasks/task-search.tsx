@@ -363,11 +363,11 @@ export default function TaskSearch() {
             <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={`task-skeleton-${index}`}
-                className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
+                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
               >
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-3">
@@ -429,12 +429,12 @@ export default function TaskSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {results.map((task) => (
               <div
                 key={task.taskId}
                 onClick={() => router.push(`/tasks/${task.taskId}`)}
-                className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:scale-105"
+                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/30 hover:border-sky-400/50 rounded-xl p-4 transition-all duration-300 shadow-lg group backdrop-blur-md cursor-pointer hover:shadow-2xl hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-3">

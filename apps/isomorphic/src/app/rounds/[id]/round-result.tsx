@@ -5,7 +5,7 @@ import RoundStats from "./round-stats";
 import RoundValidators from "./round-validators";
 import RoundMinerScores from "./round-miner-scores";
 import RoundTopMiners from "./round-top-miners";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Text } from "rizzui";
 import { PiInfoDuotone, PiCrownDuotone, PiTrophyDuotone, PiUsersThreeDuotone, PiCheckCircleDuotone, PiListChecksDuotone } from "react-icons/pi";
 import { useRoundValidators, useTopMiners, useRoundStatistics } from "@/services/hooks/useRounds";
@@ -16,6 +16,9 @@ import cn from "@core/utils/class-names";
 
 export default function RoundResult() {
   const { id } = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const roundKey = extractRoundIdentifier(id);
   const roundDisplay = roundKey?.match(/\d+/);
   const roundLabel = roundDisplay ? parseInt(roundDisplay[0], 10) : roundKey;
@@ -171,14 +174,41 @@ export default function RoundResult() {
   // Handle validator selection
   const handleValidatorSelect = (validator: ValidatorPerformance) => {
     setSelectedValidator(validator);
+    if (!pathname) {
+      return;
+    }
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.set("validator", validator.id);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  // Auto-select first validator when validators data loads
+  // Sync selection with query parameter or default to first validator
   React.useEffect(() => {
-    if (validatorsData && validatorsData.length > 0 && !selectedValidator) {
-      setSelectedValidator(validatorsData[0]);
+    if (!Array.isArray(validatorsData) || validatorsData.length === 0) {
+      return;
     }
-  }, [validatorsData, selectedValidator]);
+
+    const requestedValidatorId = searchParams?.get("validator");
+    if (requestedValidatorId) {
+      const match = validatorsData.find((validator) => validator.id === requestedValidatorId);
+      if (match && selectedValidator?.id !== match.id) {
+        setSelectedValidator(match);
+      }
+      if (match) {
+        return;
+      }
+    }
+
+    if (!selectedValidator) {
+      const fallback = validatorsData[0];
+      setSelectedValidator(fallback);
+      if (pathname) {
+        const params = new URLSearchParams(searchParams?.toString() ?? "");
+        params.set("validator", fallback.id);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      }
+    }
+  }, [validatorsData, selectedValidator, searchParams, pathname, router]);
   
 
   return (
@@ -236,7 +266,10 @@ export default function RoundResult() {
         </div>
       </div>
 
-      <RoundValidators onValidatorSelect={handleValidatorSelect} />
+      <RoundValidators
+        onValidatorSelect={handleValidatorSelect}
+        selectedValidatorId={selectedValidator?.id ?? null}
+      />
 
 
       {/* Improved Metrics Cards - Matching Style */}

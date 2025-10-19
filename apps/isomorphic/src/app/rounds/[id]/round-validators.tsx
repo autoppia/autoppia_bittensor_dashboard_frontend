@@ -11,13 +11,16 @@ import { extractRoundIdentifier } from "./round-identifier";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold, PiInfoDuotone } from "react-icons/pi";
 import type { ValidatorPerformance } from "@/services/api/types/rounds";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
-export default function RoundValidators({ 
-  className, 
-  onValidatorSelect 
-}: { 
+export default function RoundValidators({
+  className,
+  onValidatorSelect,
+  selectedValidatorId: externalSelectedId = null,
+}: {
   className?: string;
   onValidatorSelect?: (validator: ValidatorPerformance) => void;
+  selectedValidatorId?: string | null;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -25,7 +28,15 @@ export default function RoundValidators({
   // Get validators data from API
   const { data: validatorsData, loading, error } = useRoundValidators(roundKey);
   
-  const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(null);
+  const [selectedValidatorId, setSelectedValidatorId] = useState<string | null>(
+    externalSelectedId
+  );
+
+  React.useEffect(() => {
+    if (externalSelectedId && externalSelectedId !== selectedValidatorId) {
+      setSelectedValidatorId(externalSelectedId);
+    }
+  }, [externalSelectedId, selectedValidatorId]);
 
   const {
     sliderEl,
@@ -37,18 +48,30 @@ export default function RoundValidators({
 
   // Set first validator as selected when data loads and notify parent
   React.useEffect(() => {
-    if (validatorsData && validatorsData.length > 0) {
-      if (!selectedValidatorId) {
-        // Auto-select first validator
-        setSelectedValidatorId(validatorsData[0].id);
-      }
-      // Always notify parent with current selection
-      const currentValidator = validatorsData.find(v => v.id === selectedValidatorId) || validatorsData[0];
-      if (onValidatorSelect && currentValidator) {
-        onValidatorSelect(currentValidator);
-      }
+    if (!validatorsData || validatorsData.length === 0) {
+      return;
     }
-  }, [validatorsData, selectedValidatorId, onValidatorSelect]);
+
+    if (!selectedValidatorId) {
+      const fallbackId = externalSelectedId ?? validatorsData[0].id;
+      setSelectedValidatorId(fallbackId);
+      if (onValidatorSelect) {
+        const fallbackValidator =
+          validatorsData.find((validator) => validator.id === fallbackId) ?? validatorsData[0];
+        if (fallbackValidator) {
+          onValidatorSelect(fallbackValidator);
+        }
+      }
+      return;
+    }
+
+    const currentValidator =
+      validatorsData.find((validator) => validator.id === selectedValidatorId) ??
+      validatorsData[0];
+    if (onValidatorSelect && currentValidator) {
+      onValidatorSelect(currentValidator);
+    }
+  }, [validatorsData, selectedValidatorId, externalSelectedId, onValidatorSelect]);
 
   const selectedValidator = validatorsData?.find(v => v.id === selectedValidatorId);
 
@@ -120,15 +143,19 @@ export default function RoundValidators({
 
             {/* Individual Validator Cards */}
             {validatorsData?.map((validator) => {
-              const iconSrc = validator.icon && validator.icon.trim().length > 0
-                ? validator.icon
-                : "/validators/Other.png";
+              const iconSrc = resolveAssetUrl(
+                validator.icon,
+                resolveAssetUrl("/validators/Other.png")
+              );
               const isActive = selectedValidatorId === validator.id;
 
               return (
                 <div
                   key={`validator-${validator.id}`}
-                  onClick={() => setSelectedValidatorId(validator.id)}
+                  onClick={() => {
+                    setSelectedValidatorId(validator.id);
+                    onValidatorSelect?.(validator);
+                  }}
                   className="cursor-pointer"
                 >
                   <div

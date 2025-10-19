@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAgentRunsList } from "@/services/hooks/useAgentRun";
 import type {
@@ -17,6 +18,7 @@ import {
   PiCaretDownDuotone,
 } from "react-icons/pi";
 import { overviewService } from "@/services/api/overview.service";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -853,72 +855,93 @@ export default function AgentRunSearch() {
           </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {displayedRuns.map((run) => (
-          <div
-            key={run.runId}
-            onClick={() => router.push(`/agent-run/${run.runId}`)}
-            className="group relative rounded-xl border border-purple-500/30 bg-slate-900/30 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:border-purple-300/60 hover:shadow-2xl"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 space-y-1">
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-200">
-                  Run ID
-                </span>
-                <p className="font-mono text-sm text-white/90 group-hover:text-white break-words leading-snug">
-                  {run.runId}
-                </p>
-              </div>
-              <div className="text-right space-y-1">
-                <span className="text-[11px] uppercase tracking-wide text-purple-200/80">
-                  Score
-                </span>
-                <div className="text-xl font-bold text-white">
-                  {formatPercentage(run.overallScore)}
+        {displayedRuns.map((run) => {
+          const validatorLabel = formatValidatorLabel(run.validatorId, run.validatorName);
+          const validatorImageSrc = resolveAssetUrl(
+            run.validatorImage,
+            resolveAssetUrl("/validators/Other.png")
+          );
+
+          return (
+            <div
+              key={run.runId}
+              onClick={() => router.push(`/agent-run/${run.runId}`)}
+              className="group relative rounded-2xl border-2 border-sky-500/30 bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-2xl"
+            >
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-sky-500/15 via-transparent to-indigo-700/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-sky-500/40 bg-slate-900/40">
+                    <Image
+                      src={validatorImageSrc}
+                      alt={validatorLabel}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-100">
+                      Run ID
+                    </span>
+                    <p className="font-mono text-sm text-white break-words leading-snug">
+                      {run.runId}
+                    </p>
+                    <p className="text-xs text-sky-100/80 font-medium truncate">
+                      {validatorLabel}
+                    </p>
+                  </div>
                 </div>
-                <div className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/15 px-2 py-0.5 text-[11px] font-medium text-purple-100">
-                  Success {formatPercentage(run.successRate ?? 0)}
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-purple-100/90">
-              <span className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/10 px-2 py-0.5">
-                {formatValidatorLabel(run.validatorId, run.validatorName)}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/40 bg-slate-800/60 px-2 py-0.5 text-slate-200">
-                {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
-              </span>
-              {typeof run.ranking === "number" && run.ranking > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-amber-200">
-                  #{run.ranking} ranking
-                </span>
-              )}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-purple-100/80">
-              <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Tasks Completed
-                </p>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {(run.successfulTasks ?? run.completedTasks ?? 0).toLocaleString()}
-                  <span className="text-slate-400">
-                    /{Number(run.totalTasks ?? 0).toLocaleString()}
+                <div className="text-right space-y-1">
+                  <span className="text-[11px] uppercase tracking-wide text-sky-100/70">
+                    Score
                   </span>
-                </p>
+                  <div className="text-xl font-bold text-white">
+                    {formatPercentage(run.overallScore)}
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded-full border border-sky-400/40 bg-sky-500/20 px-2 py-0.5 text-[11px] font-medium text-sky-100">
+                    Success {formatPercentage(run.successRate ?? 0)}
+                  </div>
+                </div>
               </div>
-              <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Started
-                </p>
-                <p className="mt-1 text-sm font-medium text-white/90">
-                  {formatDate(run.startTime)}
-                </p>
+              <div className="relative mt-4 flex flex-wrap items-center gap-2 text-xs text-sky-100/90">
+                <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/30 bg-sky-500/15 px-2 py-0.5">
+                  {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
+                </span>
+                {typeof run.ranking === "number" && run.ranking > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-100">
+                    #{run.ranking} ranking
+                  </span>
+                )}
+              </div>
+              <div className="relative mt-4 grid grid-cols-2 gap-3 text-xs text-slate-100">
+                <div className="rounded-lg border border-slate-500/40 bg-slate-900/40 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-300">
+                    Tasks Completed
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {(run.successfulTasks ?? run.completedTasks ?? 0).toLocaleString()}
+                    <span className="text-slate-400">
+                      /{Number(run.totalTasks ?? 0).toLocaleString()}
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-500/40 bg-slate-900/40 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-300">
+                    Started
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-white/90">
+                    {formatDate(run.startTime)}
+                  </p>
+                </div>
+              </div>
+              <div className="relative mt-4 text-[11px] uppercase tracking-wide text-sky-100/80">
+                Tap to inspect run →
               </div>
             </div>
-            <div className="mt-4 text-[11px] uppercase tracking-wide text-purple-200/70">
-              Tap to inspect run →
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
           {!isManualSearchActive &&

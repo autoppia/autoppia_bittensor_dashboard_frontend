@@ -66,7 +66,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     () => websitesData.filter((website) => !website.isComingSoon).length,
     []
   );
-  const displayedWebsitesCount = 13;
+  const metricsRound = metrics?.metricsRound;
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
@@ -136,7 +136,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-websites",
       title: "Websites",
-      value: displayedWebsitesCount,
+      value: metrics?.totalWebsites ?? activeWebsitesCount,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -172,9 +172,18 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   ];
 
   return (
-    <div
-      className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
-    >
+    <div className="w-full min-w-0">
+      {metricsRound ? (
+        <div className="mb-3 flex justify-end">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
+            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            Latest completed round: <span className="font-bold text-white">{metricsRound}</span>
+          </span>
+        </div>
+      ) : null}
+      <div
+        className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
+      >
       {dynamicMetricsData.map((metric) => {
         const Icon = metric.icon;
         const metricCard = (
@@ -224,6 +233,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

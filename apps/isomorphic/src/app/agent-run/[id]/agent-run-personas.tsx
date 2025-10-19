@@ -6,27 +6,11 @@ import {
   PiClock,
   PiGithubLogoDuotone,
 } from "react-icons/pi";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 interface AgentRunPersonasProps {
   personas?: any;
   summary?: any;
-}
-
-function resolveImageSrc(
-  src?: string | null,
-  fallback: string = "/images/autoppia-logo.png"
-) {
-  if (!src || typeof src !== "string") return fallback;
-  const trimmed = src.trim();
-  if (!trimmed) return fallback;
-  if (
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("/")
-  ) {
-    return trimmed;
-  }
-  return `/${trimmed.replace(/^\/+/, "")}`;
 }
 
 function truncateMiddle(value?: string | null, visible: number = 6) {
@@ -102,7 +86,12 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
     return `/miners/${normalized}.svg`;
   })();
 
-  const minerImageSrc = resolveImageSrc(agentData.image, fallbackMinerImage);
+  const minerImageSrc = agentData.image
+    ? resolveAssetUrl(agentData.image)
+    : resolveAssetUrl(fallbackMinerImage);
+  const validatorImageSrc = validatorData.image
+    ? resolveAssetUrl(validatorData.image)
+    : resolveAssetUrl("/validators/Other.png");
 
   const toEpochSeconds = (value?: string | null) => {
     if (!value) return null;
@@ -158,7 +147,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
             <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/20 bg-slate-800/20">
               <Image
                 alt={validatorData.name}
-                src={resolveImageSrc(validatorData.image)}
+                src={validatorImageSrc}
                 width={56}
                 height={56}
                 unoptimized

@@ -10,6 +10,7 @@ export interface OverviewMetrics {
   totalValidators: number;
   totalMiners: number;
   currentRound: number;
+  metricsRound: number;
   subnetVersion: string;
   lastUpdated: string;
 }

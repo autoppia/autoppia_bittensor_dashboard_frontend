@@ -5,9 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import cn from "@core/utils/class-names";
-import { Text, Input, Checkbox, Select, type SelectOption } from "rizzui";
+import { Text, Input, Checkbox, Select, Tooltip, type SelectOption } from "rizzui";
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
+import { BiInfoCircle } from "react-icons/bi";
 import { useMinersList } from "@/services/hooks/useAgents";
 import { useRounds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
@@ -194,25 +195,47 @@ export default function AgentsSidebar() {
   return (
     <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
       <div className="h-full border rounded-xl bg-gray-50 pb-3">
-        <Text className="sticky top-0 px-5 py-3 text-2xl font-bold text-gray-900 border-b">
-          All Miners
-        </Text>
-        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-1.5 mt-2.5 pt-3 pb-3 scroll-smooth">
+        <div className="sticky top-0 border-b bg-gray-50 agents-round-select">
+          <Select
+            options={roundOptions}
+            value={roundSelectValue}
+            onChange={handleRoundChange}
+            disabled={!roundOptions.length}
+            placeholder="Select round"
+            className="w-full !rounded-none !border-none !shadow-none !px-4 !py-4 !text-lg"
+          />
+        </div>
+        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-1.5 mt-0.5 pt-3 pb-3 scroll-smooth">
           <div className="flex flex-col gap-1">
-            <div className="mb-2 space-y-2">
-              <div className="flex flex-col gap-1">
-                <Text className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                  Round
-                </Text>
-                <Select
-                  options={roundOptions}
-                  value={roundSelectValue}
-                  onChange={handleRoundChange}
-                  disabled={!roundOptions.length}
-                  placeholder="Select round"
-                  className="w-full"
+            <div className="flex items-center gap-3 px-2">
+              <Text className="text-2xl font-bold text-gray-900">
+                All Miners
+              </Text>
+              <div className="flex-1 flex justify-end">
+                <Checkbox
+                  id="show-sota-agents"
+                  checked={includeSota}
+                  onChange={(e) => setIncludeSota(e.target.checked)}
+                  label={
+                    <span className="flex items-center gap-1">
+                      <Tooltip content="State of the art agents" placement="top">
+                        <BiInfoCircle className="h-3.5 w-3.5 text-white/70 hover:text-white" />
+                      </Tooltip>
+                      SOTA
+                    </span>
+                  }
+                  labelPlacement="left"
+                  labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
+                  className={cn(
+                    "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border !border-black/40 !shadow-inner",
+                    includeSota ? "!opacity-100" : "!opacity-70"
+                  )}
+                  inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
+                  iconClassName="!text-black"
                 />
               </div>
+            </div>
+            <div className="mb-2 mt-0.5 space-y-2 px-1">
               <Input
                 prefix={<LuSearch className="w-4" />}
                 placeholder="Search miners..."
@@ -231,22 +254,6 @@ export default function AgentsSidebar() {
                   }
                 }}
               />
-              <div className="flex">
-                <Checkbox
-                  id="show-sota-agents"
-                  checked={includeSota}
-                  onChange={(e) => setIncludeSota(e.target.checked)}
-                  label="Show SOTA agents"
-                  labelPlacement="right"
-                  labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white !flex-1"
-                  className={cn(
-                    "!flex !w-full !flex-row !items-center !justify-between !gap-3 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border !border-black/40 !shadow-inner",
-                    includeSota ? "!opacity-100" : "!opacity-70"
-                  )}
-                  inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
-                  iconClassName="!text-black"
-                />
-              </div>
             </div>
             {filteredAgents.map((miner) => {
               const isActive = miner.uid.toString() === id;
@@ -286,7 +293,7 @@ export default function AgentsSidebar() {
                     className={cn(
                       "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
-                        ? "bg-emerald-500/20 border border-emerald-500/40 text-white shadow-lg"
+                        ? "bg-white text-black border border-white/70 shadow-lg"
                         : highlightTop
                         ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
                         : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
@@ -314,7 +321,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-sm font-semibold truncate",
                             isActive
-                              ? "text-white"
+                              ? "text-black"
                               : highlightTop
                                 ? "text-white"
                                 : "text-gray-300 group-hover:text-white"
@@ -332,41 +339,41 @@ export default function AgentsSidebar() {
                         {showRankBadge && (
                           <span
                             className={cn(
-                              "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
-                              rankBadgePalette,
-                              isActive && displayRank
-                                ? "ring-1 ring-emerald-300/60"
+                            "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
+                            rankBadgePalette,
+                            isActive && displayRank
+                                ? "ring-1 ring-gray-300/80"
                                 : highlightTop && displayRank
                                   ? "ring-1 ring-orange-300/60"
                                   : ""
-                            )}
+                          )}
                           >
                             #{displayRank}
                           </span>
                         )}
                         <span
                           className={cn(
-                            "text-xs font-medium",
-                            isActive
-                              ? "text-emerald-200"
-                              : highlightTop
-                                ? "text-orange-200"
-                                : "text-gray-400 group-hover:text-gray-200"
-                          )}
-                        >
-                          Score: {(miner.score * 100).toFixed(1)}%
-                        </span>
-                        <span
-                          className={cn(
                             "text-xs font-mono",
                             isActive
-                              ? "text-emerald-300"
+                              ? "text-black"
                               : highlightTop
                                 ? "text-orange-300"
                                 : "text-gray-500 group-hover:text-gray-300"
                           )}
                         >
                           UID: {miner.uid}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            isActive
+                              ? "text-black"
+                              : highlightTop
+                                ? "text-orange-200"
+                                : "text-gray-400 group-hover:text-gray-200"
+                          )}
+                        >
+                          Score: {(miner.score * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
