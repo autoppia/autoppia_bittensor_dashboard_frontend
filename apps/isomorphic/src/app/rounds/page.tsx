@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { roundsService } from "@/services/api/rounds.service";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   async function resolveCurrentRoundIdentifier() {
     try {
