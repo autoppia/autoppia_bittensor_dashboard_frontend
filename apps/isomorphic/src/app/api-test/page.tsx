@@ -1,5 +1,5 @@
 import { metaObject } from '@/config/site.config';
-import ApiTest from '../overview/api-test';
+import ApiTest from '../subnet36/overview/api-test';
 
 export const metadata = {
   ...metaObject(),
