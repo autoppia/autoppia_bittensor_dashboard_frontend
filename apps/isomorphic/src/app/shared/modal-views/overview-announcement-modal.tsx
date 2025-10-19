@@ -50,7 +50,7 @@ export default function OverviewAnnouncementModal() {
           Got it
         </Button>
         <a
-          href="https://autoppia.com/dynamic-zero"
+          href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
           target="_blank"
           rel="noopener noreferrer"
         >

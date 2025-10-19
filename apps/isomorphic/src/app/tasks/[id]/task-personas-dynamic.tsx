@@ -15,20 +15,7 @@ import { useTaskPersonas } from "@/services/hooks/useTask";
 import { useAgent } from "@/services/hooks/useAgents";
 import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
 import { CardLoadingSkeleton } from "@/app/shared/loading-screen";
-
-function resolveImageSrc(src?: string | null, fallback: string = "/images/autoppia-logo.png") {
-  if (!src) {
-    return fallback;
-  }
-  const trimmed = src.trim();
-  if (!trimmed) {
-    return fallback;
-  }
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
-    return trimmed;
-  }
-  return `/${trimmed.replace(/^\/+/, "")}`;
-}
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 function truncateMiddle(value?: string | null, visible: number = 6) {
   if (!value) {
@@ -83,8 +70,12 @@ export default function TaskPersonasDynamic() {
   }
 
   const roundStatusLabel = formatStatus(personas.round.status);
-  const validatorImage = resolveImageSrc(personas.validator.image);
-  const agentImage = resolveImageSrc(personas.agent.image);
+  const validatorImage = personas.validator.image
+    ? resolveAssetUrl(personas.validator.image)
+    : resolveAssetUrl("/validators/Other.png");
+  const agentImage = personas.agent.image
+    ? resolveAssetUrl(personas.agent.image)
+    : "/images/autoppia-logo.png";
   const agentUid = agentData?.uid != null ? `UID ${agentData.uid}` : "UID unavailable";
   const agentHotkey = agentData?.hotkey;
   const taskUseCase = formatUseCase(personas.task.useCase);

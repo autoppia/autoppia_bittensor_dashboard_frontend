@@ -20,6 +20,7 @@ import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
 import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 export default function OverviewValidators() {
   const { data: validatorsData, loading: validatorsLoading, error: validatorsError } = useValidators({ limit: 6 });
@@ -145,9 +146,10 @@ export default function OverviewValidators() {
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {(validatorsData?.data?.validators || []).map((validator, index) => {
-          const iconSrc = validator.icon && validator.icon.trim().length > 0
-            ? validator.icon
-            : "/validators/Other.png";
+          const iconSrc = resolveAssetUrl(
+            validator.icon,
+            resolveAssetUrl("/validators/Other.png")
+          );
           const secondaryStats = [
             {
               title: "Stake",
@@ -169,10 +171,24 @@ export default function OverviewValidators() {
             },
           ];
 
-          return (
+          const displayStatus =
+            validator.status === "Evaluating"
+              ? "Evaluating..."
+              : validator.status === "Finished"
+              ? "Finished"
+              : validator.status;
+
+          const showCurrentTask =
+            validator.status !== "Finished" && validator.currentTask?.trim();
+
+          const roundsLink = currentRound?.id
+            ? `/rounds/${currentRound.id}?validator=${validator.id}`
+            : undefined;
+
+          return roundsLink ? (
             <Link
               key={`validator-${validator.id}`}
-              href={`/rounds/${currentRound?.id}/${validator.id}`}
+              href={roundsLink}
             >
               <div className="bg-gray-50 border-2 border-muted hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                 {/* Header - Validator Info & Status */}
@@ -199,12 +215,12 @@ export default function OverviewValidators() {
                         </Text>
                       </div>
                     </div>
-                    <div
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group/status",
-                        "hover:scale-105 hover:shadow-xl",
-                        validator.status === "Sending Tasks"
-                          ? "bg-emerald-500/20 text-emerald-500"
+                      <div
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group/status",
+                          "hover:scale-105 hover:shadow-xl",
+                          validator.status === "Sending Tasks"
+                            ? "bg-emerald-500/20 text-emerald-500"
                           : validator.status === "Evaluating"
                             ? "bg-orange-500/20 text-orange-500"
                             : validator.status === "Waiting"
@@ -233,9 +249,9 @@ export default function OverviewValidators() {
                         <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
                       )}
                       <span className="relative">
-                        {validator.status}
+                        {displayStatus}
                         <span className="absolute inset-0 blur-sm opacity-50 group-hover/status:opacity-75 transition-opacity">
-                          {validator.status}
+                          {displayStatus}
                         </span>
                       </span>
                     </div>
@@ -253,15 +269,21 @@ export default function OverviewValidators() {
                         Current Task
                       </Text>
                     </div>
-                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3">
-                      <MarqueeText
-                        text={validator.currentTask}
-                        className="text-sm text-gray-900 font-medium"
-                        containerClassName=""
-                        speed={50}
-                        pauseDuration={0.5}
-                      />
-                    </div>
+                    {showCurrentTask ? (
+                      <div className="bg-gray-900/5 border border-muted rounded-lg p-3">
+                        <MarqueeText
+                          text={validator.currentTask}
+                          className="text-sm text-gray-900 font-medium"
+                          containerClassName=""
+                          speed={50}
+                          pauseDuration={0.5}
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
+                        Round completed
+                      </div>
+                    )}
                   </div>
 
                   {/* Secondary Stats - Compact Horizontal */}
@@ -291,6 +313,93 @@ export default function OverviewValidators() {
                 </div>
               </div>
             </Link>
+          ) : (
+            <div
+              key={`validator-${validator.id}`}
+              className="bg-gray-50 border-2 border-muted rounded-xl overflow-hidden cursor-default"
+            >
+              {/* Similar content without Link */}
+              {/* Duplicate content but non-interactive */}
+              <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="relative aspect-square w-10 h-10">
+                      <Image
+                        src={iconSrc}
+                        alt={validator.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw"
+                        className="h-full w-full rounded-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Text className="font-bold text-gray-900">
+                        {validator.name}
+                      </Text>
+                      <Text className="text-xs font-mono tracking-wide text-gray-500 truncate">
+                        {validator.hotkey
+                          ? `${validator.hotkey.slice(0, 8)}...${validator.hotkey.slice(-8)}`
+                          : "No hotkey"}
+                      </Text>
+                    </div>
+                  </div>
+                  <div
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300",
+                      validator.status === "Sending Tasks"
+                        ? "bg-emerald-500/20 text-emerald-500"
+                      : validator.status === "Evaluating"
+                        ? "bg-orange-500/20 text-orange-500"
+                        : validator.status === "Waiting"
+                          ? "bg-blue-500/20 text-blue-500"
+                          : validator.status === "Finished"
+                            ? "bg-emerald-600/15 text-emerald-600"
+                            : "bg-yellow-500/20 text-yellow-500"
+                    )}
+                  >
+                    {displayStatus}
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="border border-muted rounded-lg p-3">
+                  <div className="flex items-center justify-center gap-2 mb-2.5">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
+                      <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
+                    </div>
+                    <Text className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                      Current Task
+                    </Text>
+                  </div>
+                  <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
+                    {showCurrentTask ? validator.currentTask : "Round completed"}
+                  </div>
+                </div>
+                <div className="flex items-center justify-around gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  {secondaryStats.map((stat, idx) => {
+                    const Icon = stat.icon;
+                    return (
+                      <div key={stat.title} className="flex items-center gap-2">
+                        <div className={cn(
+                          "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
+                          stat.iconClassName
+                        )}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <Text className="text-xs text-gray-600">
+                            {stat.title}
+                          </Text>
+                          <Text className="font-bold text-sm text-gray-900 truncate">
+                            {stat.metric}
+                          </Text>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>

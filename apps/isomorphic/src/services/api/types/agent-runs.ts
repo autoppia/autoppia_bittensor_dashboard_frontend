@@ -82,7 +82,20 @@ export interface AgentRunTaskData {
 // ===== TASK ACTION =====
 export interface TaskAction {
   id: string;
-  type: 'navigate' | 'click' | 'type' | 'wait' | 'scroll' | 'screenshot' | 'other';
+  type:
+    | 'navigate'
+    | 'click'
+    | 'type'
+    | 'input'
+    | 'search'
+    | 'extract'
+    | 'submit'
+    | 'open_tab'
+    | 'close_tab'
+    | 'wait'
+    | 'scroll'
+    | 'screenshot'
+    | 'other';
   selector?: string;
   value?: string;
   timestamp: string;

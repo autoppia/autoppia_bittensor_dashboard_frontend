@@ -65,9 +65,9 @@ export default function AgentRunDetail({
   ];
 
   const periodOptions = [
-    { value: "24h", label: "24H" },
-    { value: "7d", label: "7D" },
-    { value: "__all__", label: "ALL" },
+    { value: "24h", label: "Last 24h" },
+    { value: "7d", label: "Last 7d" },
+    { value: "__all__", label: "All time" },
   ];
 
   const chartData =
@@ -129,10 +129,10 @@ export default function AgentRunDetail({
           
           {/* Filter Controls */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <PiTarget className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-300">Filters:</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <PiTarget className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-300">Time range:</span>
+          </div>
             <Select
               options={periodOptions}
               value={periodOptions.find(
