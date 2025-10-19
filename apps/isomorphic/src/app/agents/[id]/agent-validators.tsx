@@ -100,7 +100,12 @@ export default function AgentValidators({ selectedRound }: { selectedRound?: num
       : "0";
 
   const durationValues = filteredRuns
-    .map((run) => (typeof run.duration === "number" && Number.isFinite(run.duration) ? run.duration : null))
+    .map((run) => {
+      if (typeof run.duration !== "number" || !Number.isFinite(run.duration)) {
+        return null;
+      }
+      return Math.abs(run.duration);
+    })
     .filter((value): value is number => value !== null);
   const avgResponseTime =
     durationValues.length > 0
@@ -326,7 +331,7 @@ export default function AgentValidators({ selectedRound }: { selectedRound?: num
             const rank = latestRun.ranking || 0;
             const responseTimeSeconds =
               typeof latestRun.duration === "number" && Number.isFinite(latestRun.duration)
-                ? latestRun.duration
+                ? Math.abs(latestRun.duration)
                 : 0;
             const tasksCompleted = latestRun.completedTasks;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useMemo, useCallback, type CSSProperties } from "react";
+import { useState, useMemo, useCallback, useEffect, type CSSProperties } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
@@ -168,7 +168,53 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
     }));
   }, [rawChartData]);
 
-  const [compareWith, setCompareWith] = useState<string[]>(["openai_cua", "anthropic_cua", "browser_use"]);
+  const availableSotaSeries = useMemo<string[]>(() => {
+    if (!chartData.length) {
+      return [];
+    }
+    const detected = new Set<string>();
+    chartData.forEach((entry) => {
+      sotaAgents.forEach((agent) => {
+        const value = (entry as Record<string, unknown>)[agent.value];
+        if (typeof value === "number" && Number.isFinite(value)) {
+          detected.add(agent.value);
+        }
+      });
+    });
+    return Array.from(detected);
+  }, [chartData]);
+
+  const [compareWith, setCompareWith] = useState<string[]>([]);
+  const [userTouchedSeries, setUserTouchedSeries] = useState(false);
+
+  useEffect(() => {
+    if (!availableSotaSeries.length) {
+      if (compareWith.length) {
+        setCompareWith([]);
+      }
+      if (userTouchedSeries) {
+        setUserTouchedSeries(false);
+      }
+      return;
+    }
+
+    if (!userTouchedSeries && compareWith.length === 0) {
+      setCompareWith(availableSotaSeries);
+      return;
+    }
+
+    const filtered = compareWith.filter((value) => availableSotaSeries.includes(value));
+    if (filtered.length !== compareWith.length) {
+      setCompareWith(filtered);
+    }
+  }, [availableSotaSeries, compareWith, userTouchedSeries]);
+
+  const availableSotaSet = useMemo(() => new Set(availableSotaSeries), [availableSotaSeries]);
+
+  const handleCompareChange = useCallback((values: string[]) => {
+    setUserTouchedSeries(true);
+    setCompareWith(values);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!chartData.length) return [];
@@ -424,7 +470,7 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
       <div className="mt-3 self-end flex flex-wrap items-center justify-end gap-3 text-white">
         <CheckboxGroup
           values={compareWith}
-          setValues={setCompareWith}
+          setValues={handleCompareChange}
           className="flex flex-wrap items-center gap-3"
         >
           {sotaAgents.map((agent) => (
@@ -442,15 +488,24 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
                   <span className="ms-1">{agent.label}</span>
                 </div>
               }
-              labelClassName="w-full"
+              labelClassName={cn(
+                "w-full",
+                !availableSotaSet.has(agent.value) && "text-gray-400"
+              )}
               labelPlacement="left"
               size="sm"
               iconClassName="top-0"
+              disabled={!availableSotaSet.has(agent.value)}
               name={agent.value}
               value={agent.value}
             />
           ))}
         </CheckboxGroup>
+        {availableSotaSeries.length === 0 && (
+          <div className="text-xs text-gray-400">
+            Benchmark agent data not available for this range.
+          </div>
+        )}
       </div>
     </WidgetCard>
   );
