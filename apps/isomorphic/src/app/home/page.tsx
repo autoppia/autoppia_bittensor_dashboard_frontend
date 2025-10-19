@@ -207,7 +207,7 @@ export default function LandingPage() {
             <Link href={routes.testAgent} className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25 backdrop-blur-sm">
                 <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                TEST YOUR AGENT
+                PLAYGROUND
               </button>
             </Link>
           </div>
@@ -537,8 +537,8 @@ export default function LandingPage() {
           </span>{" "}
           that mirror popular real-world properties and cover e-commerce,
           dining, CRM, email, delivery, lodging, and professional networking.
-          <span className="ml-1 font-bold">Mirrored</span>{" "}
-          experiences preserve authentic UI flows while keeping experiments safe. Here&apos;s a
+          <span className="ml-1 font-bold">Mirrored</span> experiences preserve
+          authentic UI flows while keeping experiments safe. Here&apos;s a
           preview of our projects:
         </Text>
 
@@ -814,9 +814,10 @@ export default function LandingPage() {
 
             <div className="relative p-8 sm:p-10 md:p-12 text-center flex flex-col items-center">
               <Text className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 leading-relaxed">
-                Want to see your Web Agent in action? <br />Configure a benchmark run
-                by selecting websites, use cases, and prompts. Define how many
-                runs you want, point us to your agent&apos;s endpoint, and let{" "}
+                Want to see your Web Agent in action? <br />
+                Configure a benchmark run by selecting websites, use cases, and
+                prompts. Define how many runs you want, point us to your
+                agent&apos;s endpoint, and let{" "}
                 <span className="text-purple-300 font-bold bg-purple-400/20 px-3 py-1.5 rounded-lg border border-purple-400/30 animate-pulse-slow">
                   IWA
                 </span>{" "}
