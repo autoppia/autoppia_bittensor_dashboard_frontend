@@ -191,9 +191,9 @@ export default function LandingPage() {
               <button
                 className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25"
                 style={{
-                  background: "linear-gradient(90deg, #FDE047, #F59E0B)",
+                  background: "linear-gradient(90deg, #EAB308, #F59E0B)",
                   ":hover": {
-                    background: "linear-gradient(90deg, #FACC15, #D97706)",
+                    background: "linear-gradient(90deg, #CA8A04, #D97706)",
                   },
                 }}
               >
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
                 white: true,
-                valueClass: "text-cyan-200",
+                valueClass: "text-amber-200",
               },
               {
                 value: "+1000",
@@ -259,7 +259,7 @@ export default function LandingPage() {
                 gradient: "from-yellow-400 to-orange-500",
                 glow: "group-hover:shadow-yellow-400/20",
                 white: true,
-                valueClass: "text-amber-200",
+                valueClass: "text-green-200",
               },
               {
                 value: (
