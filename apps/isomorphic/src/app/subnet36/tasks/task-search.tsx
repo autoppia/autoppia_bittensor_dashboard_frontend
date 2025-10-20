@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
 import type { TaskData } from "@/services/api/types/tasks";
+import { routes } from "@/config/routes";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -461,14 +462,7 @@ export default function TaskSearch() {
                         Run {task.agentRunId}
                       </p>
                     </div>
-<<<<<<< HEAD:apps/isomorphic/src/app/tasks/task-search.tsx
-                    <div>
-                      <div className="text-sm font-bold text-white">
-                        Task #{task.taskId}
-                      </div>
-                      <div className="text-xs text-purple-200">
-                        Run ID: {task.agentRunId}
-=======
+
                     <div className="text-right space-y-1">
                       <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
                         Score
@@ -478,7 +472,6 @@ export default function TaskSearch() {
                       </div>
                       <div className="text-[11px] text-slate-300">
                         {statusLabel}
->>>>>>> 6a12f74b71e0e61fdbd944a820a82ce74a524429:apps/isomorphic/src/app/subnet36/tasks/task-search.tsx
                       </div>
                     </div>
                   </div>
@@ -497,27 +490,13 @@ export default function TaskSearch() {
                   </p>
                   <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
                     <span>Duration: {task.duration}s</span>
-                    <span>Actions: {task.actions ? task.actions.length : "—"}</span>
+                    <span>
+                      Actions: {task.actions ? task.actions.length : "—"}
+                    </span>
                   </div>
                 </div>
-<<<<<<< HEAD:apps/isomorphic/src/app/tasks/task-search.tsx
-
-                <p className="text-xs text-purple-100/80 leading-relaxed mb-4 line-clamp-3">
-                  {task.prompt}
-                </p>
-
-                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
-                  <span>Duration: {task.duration}s</span>
-                  <span>
-                    Actions: {task.actions ? task.actions.length : "—"}
-                  </span>
-                </div>
-              </div>
-            ))}
-=======
               );
             })}
->>>>>>> 6a12f74b71e0e61fdbd944a820a82ce74a524429:apps/isomorphic/src/app/subnet36/tasks/task-search.tsx
           </div>
         </div>
       )}
@@ -543,4 +522,3 @@ export default function TaskSearch() {
     </div>
   );
 }
-import { routes } from "@/config/routes";
