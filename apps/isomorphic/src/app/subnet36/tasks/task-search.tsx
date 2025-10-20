@@ -52,12 +52,8 @@ export default function TaskSearch() {
         if (ignore) return;
         const facets = response.data?.facets;
         if (facets) {
-          setAvailableWebsites(
-            facets.websites.map((item) => item.name).sort()
-          );
-          setAvailableUseCases(
-            facets.useCases.map((item) => item.name).sort()
-          );
+          setAvailableWebsites(facets.websites.map((item) => item.name).sort());
+          setAvailableUseCases(facets.useCases.map((item) => item.name).sort());
         }
       } catch (error) {
         // ignore metadata errors – filters will populate after first search
@@ -155,18 +151,20 @@ export default function TaskSearch() {
     selectedUseCase !== "";
 
   const formattedWebsites = useMemo(
-    () => availableWebsites.map((website) => ({
-      value: website,
-      label: formatLabel(website),
-    })),
+    () =>
+      availableWebsites.map((website) => ({
+        value: website,
+        label: formatLabel(website),
+      })),
     [availableWebsites]
   );
 
   const formattedUseCases = useMemo(
-    () => availableUseCases.map((useCase) => ({
-      value: useCase,
-      label: formatLabel(useCase),
-    })),
+    () =>
+      availableUseCases.map((useCase) => ({
+        value: useCase,
+        label: formatLabel(useCase),
+      })),
     [availableUseCases]
   );
 
@@ -238,7 +236,9 @@ export default function TaskSearch() {
                 <div className="relative" ref={websiteDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)}
+                    onClick={() =>
+                      setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
+                    }
                     className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
@@ -288,7 +288,9 @@ export default function TaskSearch() {
                 <div className="relative" ref={useCaseDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)}
+                    onClick={() =>
+                      setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
+                    }
                     className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
@@ -333,7 +335,7 @@ export default function TaskSearch() {
             </div>
           </div>
 
-          <div className="flex gap-4 justify-center z-50">
+          <div className="flex gap-4 flex-col sm:flex-row justify-center z-50">
             <button
               onClick={handleSearch}
               className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
@@ -459,6 +461,14 @@ export default function TaskSearch() {
                         Run {task.agentRunId}
                       </p>
                     </div>
+<<<<<<< HEAD:apps/isomorphic/src/app/tasks/task-search.tsx
+                    <div>
+                      <div className="text-sm font-bold text-white">
+                        Task #{task.taskId}
+                      </div>
+                      <div className="text-xs text-purple-200">
+                        Run ID: {task.agentRunId}
+=======
                     <div className="text-right space-y-1">
                       <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
                         Score
@@ -468,6 +478,7 @@ export default function TaskSearch() {
                       </div>
                       <div className="text-[11px] text-slate-300">
                         {statusLabel}
+>>>>>>> 6a12f74b71e0e61fdbd944a820a82ce74a524429:apps/isomorphic/src/app/subnet36/tasks/task-search.tsx
                       </div>
                     </div>
                   </div>
@@ -489,8 +500,24 @@ export default function TaskSearch() {
                     <span>Actions: {task.actions ? task.actions.length : "—"}</span>
                   </div>
                 </div>
+<<<<<<< HEAD:apps/isomorphic/src/app/tasks/task-search.tsx
+
+                <p className="text-xs text-purple-100/80 leading-relaxed mb-4 line-clamp-3">
+                  {task.prompt}
+                </p>
+
+                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
+                  <span>Duration: {task.duration}s</span>
+                  <span>
+                    Actions: {task.actions ? task.actions.length : "—"}
+                  </span>
+                </div>
+              </div>
+            ))}
+=======
               );
             })}
+>>>>>>> 6a12f74b71e0e61fdbd944a820a82ce74a524429:apps/isomorphic/src/app/subnet36/tasks/task-search.tsx
           </div>
         </div>
       )}
@@ -513,7 +540,6 @@ export default function TaskSearch() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -73,7 +73,10 @@ function formatDate(value: string | null | undefined) {
   }).format(date);
 }
 
-function formatValidatorLabel(validatorId: string, validatorName?: string | null) {
+function formatValidatorLabel(
+  validatorId: string,
+  validatorName?: string | null
+) {
   if (validatorName) {
     return validatorName;
   }
@@ -108,8 +111,8 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
     run.successRate != null
       ? normalizePercentage(run.successRate)
       : totalTasks > 0
-      ? Math.round(((completed / totalTasks) * 100) * 10) / 10
-      : 0;
+        ? Math.round((completed / totalTasks) * 100 * 10) / 10
+        : 0;
 
   return {
     ...run,
@@ -127,9 +130,10 @@ export default function AgentRunSearch() {
   const [selectedValidator, setSelectedValidator] = useState<string>("");
   const [agentInput, setAgentInput] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
-  const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] =
-    useState(false);
-  const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(null);
+  const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
+  const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(
+    null
+  );
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualLoading, setManualLoading] = useState(false);
 
@@ -229,7 +233,9 @@ export default function AgentRunSearch() {
     return source.map(normalizeListItemValues);
   }, [manualResults, runs]);
 
-  const derivedValidatorOptions = useMemo<{ id: string; label: string }[]>(() => {
+  const derivedValidatorOptions = useMemo<
+    { id: string; label: string }[]
+  >(() => {
     if (facets?.validators?.length) {
       return facets.validators
         .map((validator) => ({
@@ -311,15 +317,15 @@ export default function AgentRunSearch() {
     displayedRuns.length === 0
       ? 0
       : isManualSearchActive
-      ? 1
-      : (resolvedPage - 1) * resolvedLimit + 1;
+        ? 1
+        : (resolvedPage - 1) * resolvedLimit + 1;
 
   const endIndex =
     displayedRuns.length === 0
       ? 0
       : isManualSearchActive
-      ? displayedRuns.length
-      : startIndex + displayedRuns.length - 1;
+        ? displayedRuns.length
+        : startIndex + displayedRuns.length - 1;
 
   const canGoPrev = !isManualSearchActive && resolvedPage > 1;
   const canGoNext = !isManualSearchActive && resolvedPage < totalPages;
@@ -338,17 +344,12 @@ export default function AgentRunSearch() {
 
   const effectiveLoading =
     manualLoading || (!isManualSearchActive && isLoading);
-  const effectiveError =
-    manualError || (!isManualSearchActive ? error : null);
+  const effectiveError = manualError || (!isManualSearchActive ? error : null);
   const effectiveNotFound =
     manualResults !== null && manualResults.length === 0 && !manualError;
 
   useEffect(() => {
-    if (
-      !searchTerm.trim() &&
-      isManualSearchActive &&
-      !manualLoading
-    ) {
+    if (!searchTerm.trim() && isManualSearchActive && !manualLoading) {
       setManualResults(null);
       setManualError(null);
     }
@@ -426,13 +427,11 @@ export default function AgentRunSearch() {
     const completedTasks = run.completedTasks ?? run.successfulTasks ?? 0;
     const successfulTasks = run.successfulTasks ?? completedTasks;
     const baseScore = normalizePercentage(
-      typeof run.overallScore === "number"
-        ? run.overallScore
-        : run.score
+      typeof run.overallScore === "number" ? run.overallScore : run.score
     );
     const successRate =
       totalTasks > 0
-        ? Math.round(((successfulTasks / totalTasks) * 100) * 10) / 10
+        ? Math.round((successfulTasks / totalTasks) * 100 * 10) / 10
         : 0;
 
     return {
@@ -653,9 +652,9 @@ export default function AgentRunSearch() {
                         {validatorLoading && validatorOptions.length === 0
                           ? "Loading validators..."
                           : selectedValidator === ""
-                          ? "All Validators"
-                          : selectedValidatorLabel ??
-                            formatValidatorLabel(selectedValidator)}
+                            ? "All Validators"
+                            : (selectedValidatorLabel ??
+                              formatValidatorLabel(selectedValidator))}
                       </span>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${
@@ -745,7 +744,11 @@ export default function AgentRunSearch() {
                       className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
                     >
                       {limitOptions.map((option) => (
-                        <option key={option} value={option} style={{ color: "#000" }}>
+                        <option
+                          key={option}
+                          value={option}
+                          style={{ color: "#000" }}
+                        >
                           {option}
                         </option>
                       ))}
@@ -757,10 +760,10 @@ export default function AgentRunSearch() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 flex-col sm:flex-row justify-center">
               <button
                 onClick={handleSearch}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center gap-2 backdrop-blur-md"
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 backdrop-blur-md"
               >
                 <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                 SEARCH
@@ -793,9 +796,7 @@ export default function AgentRunSearch() {
                 <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
                   FAILED TO LOAD AGENT RUNS
                 </h3>
-                <p className="text-red-200 text-sm mb-4">
-                  {effectiveError}
-                </p>
+                <p className="text-red-200 text-sm mb-4">{effectiveError}</p>
                 <button
                   onClick={handleRetry}
                   className="px-4 py-2 bg-red-500/70 border border-red-500/40 text-white rounded-lg hover:bg-red-500 transition-colors duration-200"
@@ -829,24 +830,27 @@ export default function AgentRunSearch() {
         )}
 
         {/* No Results */}
-        {hasSearched && !effectiveLoading && (!effectiveError || effectiveNotFound) && displayedRuns.length === 0 && (
-          <div className="mt-6 text-center relative z-0">
-            <div className="relative bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-2 border-purple-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"></div>
-              <div className="relative">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-500 rounded-xl shadow-lg mx-auto mb-4">
-                  <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+        {hasSearched &&
+          !effectiveLoading &&
+          (!effectiveError || effectiveNotFound) &&
+          displayedRuns.length === 0 && (
+            <div className="mt-6 text-center relative z-0">
+              <div className="relative bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-2 border-purple-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"></div>
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-500 rounded-xl shadow-lg mx-auto mb-4">
+                    <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
+                    NO RESULTS FOUND
+                  </h3>
+                  <p className="text-purple-200 text-sm">
+                    Try a different run ID or adjust your filters.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-                  NO RESULTS FOUND
-                </h3>
-                <p className="text-purple-200 text-sm">
-                  Try a different run ID or adjust your filters.
-                </p>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       {/* Search Results */}
@@ -865,6 +869,80 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
+<<<<<<< HEAD:apps/isomorphic/src/app/agent-run/agent-run-search.tsx
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayedRuns.map((run) => (
+              <div
+                key={run.runId}
+                onClick={() => router.push(`/agent-run/${run.runId}`)}
+                className="group relative rounded-xl border border-purple-500/30 bg-slate-900/30 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:border-purple-300/60 hover:shadow-2xl"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 space-y-1">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-200">
+                      Run ID
+                    </span>
+                    <p className="font-mono text-sm text-white/90 group-hover:text-white break-words leading-snug">
+                      {run.runId}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <span className="text-[11px] uppercase tracking-wide text-purple-200/80">
+                      Score
+                    </span>
+                    <div className="text-xl font-bold text-white">
+                      {formatPercentage(run.overallScore)}
+                    </div>
+                    <div className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/15 px-2 py-0.5 text-[11px] font-medium text-purple-100">
+                      Success {formatPercentage(run.successRate ?? 0)}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-purple-100/90">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-purple-400/30 bg-purple-500/10 px-2 py-0.5">
+                    {formatValidatorLabel(run.validatorId, run.validatorName)}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/40 bg-slate-800/60 px-2 py-0.5 text-slate-200">
+                    {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
+                  </span>
+                  {typeof run.ranking === "number" && run.ranking > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-amber-200">
+                      #{run.ranking} ranking
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-purple-100/80">
+                  <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                      Tasks Completed
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {(
+                        run.successfulTasks ??
+                        run.completedTasks ??
+                        0
+                      ).toLocaleString()}
+                      <span className="text-slate-400">
+                        /{Number(run.totalTasks ?? 0).toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-slate-600/40 bg-slate-900/40 p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                      Started
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-white/90">
+                      {formatDate(run.startTime)}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 text-[11px] uppercase tracking-wide text-purple-200/70">
+                  Tap to inspect run →
+                </div>
+              </div>
+            ))}
+          </div>
+=======
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayedRuns.map((run) => {
           const validatorLabel = formatValidatorLabel(run.validatorId, run.validatorName);
@@ -942,6 +1020,7 @@ export default function AgentRunSearch() {
           );
         })}
       </div>
+>>>>>>> 6a12f74b71e0e61fdbd944a820a82ce74a524429:apps/isomorphic/src/app/subnet36/agent-run/agent-run-search.tsx
 
           {!isManualSearchActive &&
             totalPages > 1 &&
@@ -984,25 +1063,25 @@ export default function AgentRunSearch() {
         displayedRuns.length === 0 &&
         (!effectiveError || effectiveNotFound) &&
         !effectiveLoading && (
-        <div className="w-full max-w-[1024px] mx-auto">
-          <div className="mt-6 text-center relative z-0">
-            <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
-              <div className="relative">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
-                  <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+          <div className="w-full max-w-[1024px] mx-auto">
+            <div className="mt-6 text-center relative z-0">
+              <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 hover:border-red-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
+                    <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
+                    NO RESULTS FOUND
+                  </h3>
+                  <p className="text-red-200 text-sm">
+                    Try adjusting your search criteria or filters
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
-                  NO RESULTS FOUND
-                </h3>
-                <p className="text-red-200 text-sm">
-                  Try adjusting your search criteria or filters
-                </p>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
