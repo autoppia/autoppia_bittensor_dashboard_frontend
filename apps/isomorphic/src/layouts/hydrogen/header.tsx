@@ -67,8 +67,9 @@ export default function Header() {
 
   const statusLabel = `● ${displayStatusText.toUpperCase()}`;
 
-  const [activeNav, setActiveNav] =
-    React.useState<MenuNamespace>(DEFAULT_NAV_COLLECTION);
+  const [activeNav, setActiveNav] = React.useState<MenuNamespace>(
+    DEFAULT_NAV_COLLECTION
+  );
   const activeNavRef = React.useRef<MenuNamespace>(DEFAULT_NAV_COLLECTION);
   const navItems = NAV_COLLECTIONS[activeNav];
 
@@ -221,17 +222,7 @@ export default function Header() {
                 <PiGlobeDuotone className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
               </a>
             </Tooltip>
-            <Tooltip content="View Documentation" placement="bottom">
-              <a
-                href="https://documentation.autoppia.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-gray-600 hover:bg-purple-500/10 rounded-lg transition-all duration-300 flex-shrink-0"
-                aria-label="View Documentation"
-              >
-                <PiBookOpenDuotone className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
-              </a>
-            </Tooltip>
+
             <Tooltip content="Explore our GitHub" placement="bottom">
               <a
                 href="https://github.com/autoppia"
