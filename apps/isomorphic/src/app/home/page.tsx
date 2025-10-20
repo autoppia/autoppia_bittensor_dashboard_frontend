@@ -189,11 +189,11 @@ export default function LandingPage() {
           >
             <Link href={routes.leaderboard} className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-auto px-8 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-pink-500/25"
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25"
                 style={{
-                  background: "linear-gradient(90deg, #E91E63, #F06292)",
+                  background: "linear-gradient(90deg, #F59E0B, #EA580C)",
                   ":hover": {
-                    background: "linear-gradient(90deg, #C2185B, #E91E63)",
+                    background: "linear-gradient(90deg, #D97706, #DC2626)",
                   },
                 }}
               >
@@ -202,13 +202,29 @@ export default function LandingPage() {
               </button>
             </Link>
             <Link href={routes.overview} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-green-500/25"
+                style={{
+                  background: "linear-gradient(90deg, #059669, #10B981)",
+                  ":hover": {
+                    background: "linear-gradient(90deg, #047857, #059669)",
+                  },
+                }}
+              >
                 <LuNetwork className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 SUBNET 36
               </button>
             </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25 backdrop-blur-sm">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25"
+                style={{
+                  background: "linear-gradient(90deg, #2563EB, #3B82F6)",
+                  ":hover": {
+                    background: "linear-gradient(90deg, #1D4ED8, #2563EB)",
+                  },
+                }}
+              >
                 <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 PLAYGROUND
               </button>
