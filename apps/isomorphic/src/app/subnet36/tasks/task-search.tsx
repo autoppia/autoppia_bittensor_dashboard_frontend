@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
 import type { TaskData } from "@/services/api/types/tasks";
 import { routes } from "@/config/routes";
+import { websitesData } from "@/data/websites-data";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -423,76 +424,162 @@ export default function TaskSearch() {
 
       {hasSearched && !isSearching && results.length > 0 && (
         <div className="mt-6 relative z-0">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              {results.length} TASKS FOUND
+          <div className="text-center mb-8">
+            <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
+              {results.length} {results.length === 1 ? "TASK" : "TASKS"} FOUND
             </h3>
-            <p className="text-purple-200 text-sm">
+            <p className="text-purple-200/80 text-sm">
               Showing tasks matching your criteria
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {results.map((task) => {
-              const websiteLabel = formatLabel(task.website);
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
-              const statusLabel =
-                task.status === "completed"
-                  ? "Completed"
-                  : task.status === "failed"
-                    ? "Failed"
-                    : task.status.toUpperCase();
+              const isPassed = scorePercent === 100;
+
+              // Extract URL from navigate action if available
+              const navigateAction = task.actions?.find(
+                (action) => action.type === "navigate"
+              );
+              const taskUrl =
+                navigateAction?.value ||
+                navigateAction?.metadata?.url ||
+                task.website;
+
+              // Extract port from URL to determine web project
+              const getWebProject = (url: string) => {
+                const portMatch = url.match(/:(\d+)/);
+                if (portMatch) {
+                  const port = portMatch[1];
+                  const website = websitesData.find(
+                    (w) => w.portValidator === port
+                  );
+                  return website
+                    ? {
+                        name: website.name,
+                        color: website.color,
+                        slug: website.slug,
+                      }
+                    : null;
+                }
+                return null;
+              };
+
+              const webProject = getWebProject(taskUrl);
 
               return (
                 <div
                   key={task.taskId}
                   onClick={() => router.push(`${routes.tasks}/${task.taskId}`)}
-                  className="relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
+                  className={`group relative rounded-xl border ${
+                    isPassed
+                      ? "border-emerald-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-emerald-400/50 hover:shadow-emerald-500/20"
+                      : "border-red-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-red-400/50 hover:shadow-red-500/20"
+                  } p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 space-y-1">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                        Task
-                      </p>
-                      <p className="text-sm font-semibold text-white truncate">
-                        #{task.taskId}
-                      </p>
-                      <p className="text-xs text-slate-400 truncate">
-                        Run {task.agentRunId}
-                      </p>
+                  {/* Web Project */}
+                  {webProject && (
+                    <div className="mb-3">
+                      <div
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-bold"
+                        style={{
+                          backgroundColor: `${webProject.color}`,
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        <PiGlobeDuotone className="w-5 h-5" />
+                        {webProject.name}
+                      </div>
                     </div>
+                  )}
 
-                    <div className="text-right space-y-1">
-                      <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
-                        Score
-                      </span>
-                      <div className="text-2xl font-bold text-white">
-                        {scorePercent}%
-                      </div>
-                      <div className="text-[11px] text-slate-300">
-                        {statusLabel}
-                      </div>
+                  {/* Use Case */}
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-slate-400 mb-1">
+                      Use Case
+                    </div>
+                    <div className="text-lg font-semibold text-white">
+                      {useCaseLabel}
                     </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
-                      <PiGlobeDuotone className="h-3 w-3" />
-                      {websiteLabel}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/15 px-2 py-0.5 text-purple-100">
-                      <PiCodeDuotone className="h-3 w-3" />
-                      {useCaseLabel}
-                    </span>
+
+                  {/* Task ID */}
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-slate-400 mb-1">
+                      Task ID
+                    </div>
+                    <div className="text-sm font-mono text-slate-300 truncate">
+                      {task.taskId}
+                    </div>
                   </div>
-                  <p className="mt-3 text-xs text-slate-300 line-clamp-3">
-                    {task.prompt}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Duration: {task.duration}s</span>
-                    <span>
-                      Actions: {task.actions ? task.actions.length : "—"}
-                    </span>
+
+                  {/* Agent Run ID */}
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-slate-400 mb-1">
+                      Agent Run
+                    </div>
+                    <div className="text-sm font-mono text-slate-300 truncate">
+                      {task.agentRunId}
+                    </div>
+                  </div>
+
+                  {/* URL */}
+                  {taskUrl && (
+                    <div className="mb-4">
+                      <div className="text-xs font-medium text-slate-400 mb-1">
+                        URL
+                      </div>
+                      <div className="p-2 rounded bg-slate-950/50 border border-slate-700/50">
+                        <p className="text-xs text-cyan-300 truncate font-mono">
+                          {taskUrl}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Prompt */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-slate-400 mb-1">
+                      Prompt
+                    </div>
+                    <p className="text-sm text-slate-200 leading-relaxed line-clamp-3">
+                      {task.prompt}
+                    </p>
+                  </div>
+
+                  {/* Footer Stats */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
+                    <div className="flex items-center gap-4">
+                      <div className="text-center">
+                        <div className="text-xs text-slate-400 mb-1">
+                          Duration
+                        </div>
+                        <div className="text-sm font-bold text-amber-300">
+                          {task.duration}s
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-slate-400 mb-1">
+                          Actions
+                        </div>
+                        <div className="text-sm font-bold text-indigo-300">
+                          {task.actions ? task.actions.length : 0}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg ${
+                          isPassed
+                            ? "bg-emerald-500 text-white"
+                            : "bg-red-500 text-white"
+                        }`}
+                      >
+                        {isPassed ? "SUCCESS" : "FAILED"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
