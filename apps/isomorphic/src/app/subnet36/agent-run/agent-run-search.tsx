@@ -579,7 +579,7 @@ export default function AgentRunSearch() {
           <div className="relative p-6 overflow-visible">
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                   <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
                 </div>
@@ -869,84 +869,89 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
- 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {displayedRuns.map((run) => {
-          const validatorLabel = formatValidatorLabel(run.validatorId, run.validatorName);
-          const validatorImageSrc = resolveAssetUrl(
-            run.validatorImage,
-            resolveAssetUrl("/validators/Other.png")
-          );
-          const agentLabel = formatAgentLabel(run);
-          const completedTasks = run.successfulTasks ?? run.completedTasks ?? 0;
-          const totalTasks = run.totalTasks ?? 0;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {displayedRuns.map((run) => {
+              const validatorLabel = formatValidatorLabel(
+                run.validatorId,
+                run.validatorName
+              );
+              const validatorImageSrc = resolveAssetUrl(
+                run.validatorImage,
+                resolveAssetUrl("/validators/Other.png")
+              );
+              const agentLabel = formatAgentLabel(run);
+              const completedTasks =
+                run.successfulTasks ?? run.completedTasks ?? 0;
+              const totalTasks = run.totalTasks ?? 0;
 
-          return (
-            <div
-              key={run.runId}
-              onClick={() => router.push(`${routes.agent_run}/${run.runId}`)}
-              className="group relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Image
-                    src={validatorImageSrc}
-                    alt={validatorLabel}
-                    width={48}
-                    height={48}
-                    sizes="48px"
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Validator
-                    </p>
-                    <p className="text-sm font-semibold text-white truncate">
-                      {validatorLabel}
-                    </p>
-                    <p className="text-xs text-slate-400 truncate">
-                      Agent {agentLabel}
-                    </p>
+              return (
+                <div
+                  key={run.runId}
+                  onClick={() =>
+                    router.push(`${routes.agent_run}/${run.runId}`)
+                  }
+                  className="group relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Image
+                        src={validatorImageSrc}
+                        alt={validatorLabel}
+                        width={48}
+                        height={48}
+                        sizes="48px"
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                          Validator
+                        </p>
+                        <p className="text-sm font-semibold text-white truncate">
+                          {validatorLabel}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">
+                          Agent {agentLabel}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
+                        Score
+                      </span>
+                      <div className="text-2xl font-bold text-white">
+                        {formatPercentage(run.overallScore)}
+                      </div>
+                      <div className="text-[11px] text-slate-300">
+                        Success {formatPercentage(run.successRate ?? 0)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
+                      {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
+                    </span>
+                    {typeof run.ranking === "number" && run.ranking > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-100">
+                        #{run.ranking} ranking
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                    <span>Started {formatDate(run.startTime)}</span>
+                    <span>
+                      Tasks {completedTasks.toLocaleString()}
+                      <span className="text-slate-500">
+                        /{Number(totalTasks).toLocaleString()}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mt-4 flex text-[11px] text-slate-400">
+                    <span className="truncate">Run ID: {run.runId}</span>
                   </div>
                 </div>
-                <div className="text-right space-y-1">
-                  <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
-                    Score
-                  </span>
-                  <div className="text-2xl font-bold text-white">
-                    {formatPercentage(run.overallScore)}
-                  </div>
-                  <div className="text-[11px] text-slate-300">
-                    Success {formatPercentage(run.successRate ?? 0)}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
-                  {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
-                </span>
-                {typeof run.ranking === "number" && run.ranking > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-100">
-                    #{run.ranking} ranking
-                  </span>
-                )}
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
-                <span>Started {formatDate(run.startTime)}</span>
-                <span>
-                  Tasks {completedTasks.toLocaleString()}
-                  <span className="text-slate-500">
-                    /{Number(totalTasks).toLocaleString()}
-                  </span>
-                </span>
-              </div>
-              <div className="mt-4 flex text-[11px] text-slate-400">
-                <span className="truncate">Run ID: {run.runId}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
 
           {!isManualSearchActive &&
             totalPages > 1 &&
