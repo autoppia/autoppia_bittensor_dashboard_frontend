@@ -12,33 +12,33 @@ const glossaryItems: Array<{
 }> = [
   {
     term: "Round",
-    summary: "One network day of activity.",
+    summary: "Time frame for validator submissions.",
     details:
-      "All validators submit during the same round number. Metrics roll up the entire day, so leaderboards and charts compare everyone on the same timeline.",
+      "A round is the exact time frame in which validators are allowed to submit their validator rounds. Each round lasts 20 epochs—roughly one day—so everyone evaluates miners against the same clock.",
   },
   {
     term: "Validator Round",
-    summary: "One validator’s submission for that round.",
+    summary: "One validator's complete scoring pass.",
     details:
-      "A validator opens a round, requests tasks, evaluates miners, and pushes its results. Each validator produces exactly one validator round per network round.",
-  },
-  {
-    term: "Agent Run",
-    summary: "A validator scoring one miner.",
-    details:
-      "Inside a validator round the validator spins up an agent run for each miner it tests. The agent run tracks the miner’s progress across every assigned task.",
+      "Within a network round the validator requests tasks, evaluates miners on each challenge, and sets weights from the results. Every validator publishes exactly one validator round per round.",
   },
   {
     term: "Task",
-    summary: "The unit of work the miner must solve.",
+    summary: "Challenge miners must solve.",
     details:
-      "Tasks describe real web automation goals (e.g. add to cart, submit a form). Validators dispatch the same task list to every miner to keep scoring fair.",
+      "Tasks define the goal that must be achieved in the website. Each validator distributes the same set of tasks so every miner is judged on identical challenges.",
+  },
+  {
+    term: "Task Solution",
+    summary: "Replayable steps that solve the task.",
+    details:
+      "A task solution captures the sequence of actions that, when executed in a browser, completes the task. Validators review these runs to confirm how the miner approached the challenge.",
   },
   {
     term: "Evaluation",
-    summary: "The verdict for a task attempt.",
+    summary: "Task + solution performance snapshot.",
     details:
-      "Each task attempt produces an evaluation with success state, score, timing, and any diagnostic notes. Aggregating evaluations forms the agent run and validator round scores.",
+      "An evaluation bundles the task, the submitted task solution, and the resulting metrics. It records the miner's score and response time, feeding into the validator's final weights.",
   },
 ];
 
@@ -46,7 +46,7 @@ export default function RoundsGlossaryModal() {
   const { closeModal } = useModal();
 
   return (
-    <div className="m-auto w-full max-w-[1320px] rounded-2xl border border-black/10 bg-white px-12 pb-9 pt-6 text-black sm:px-14 sm:pt-7">
+    <div className="m-auto w-full max-w-[95vw] rounded-2xl border border-black/10 bg-white px-12 pb-9 pt-6 text-black lg:max-w-[1600px] sm:px-14 sm:pt-7">
       <div className="mb-6 flex items-start justify-between gap-4 border-b border-black/10 pb-4">
         <div>
           <Title
@@ -78,7 +78,7 @@ export default function RoundsGlossaryModal() {
               )}
             </div>
             <div className="flex-1 space-y-2">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <Text className="rounded-full border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-black">
                   {item.term}
                 </Text>
@@ -97,8 +97,8 @@ export default function RoundsGlossaryModal() {
       <div className="mt-6 border-t border-black/10 pt-4 text-sm text-black">
         Validators follow the same flow every round:{" "}
         <span className="font-semibold text-black">
-          start round → assign tasks → collect solutions → run evaluations →
-          submit final scores.
+          start round → request tasks → collect task solutions → run
+          evaluations → publish weights.
         </span>{" "}
         Understanding where a metric comes from makes debugging and comparing
         miners much easier.

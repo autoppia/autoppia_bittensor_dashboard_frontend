@@ -22,7 +22,7 @@ export interface TaskData {
   actions: TaskAction[];
   screenshots?: string[];
   logs?: string[];
-  metadata: {
+  metadata?: {
     environment: string;
     browser: string;
     viewport: {
@@ -30,13 +30,26 @@ export interface TaskData {
       height: number;
     };
     userAgent: string;
-  };
+  } | null;
 }
 
 // ===== TASK ACTION =====
 export interface TaskAction {
   id: string;
-  type: 'navigate' | 'click' | 'type' | 'wait' | 'scroll' | 'screenshot' | 'other';
+  type:
+    | 'navigate'
+    | 'click'
+    | 'type'
+    | 'input'
+    | 'search'
+    | 'extract'
+    | 'submit'
+    | 'open_tab'
+    | 'close_tab'
+    | 'wait'
+    | 'scroll'
+    | 'screenshot'
+    | 'other';
   selector?: string;
   value?: string;
   timestamp: string;
@@ -184,6 +197,12 @@ export interface TaskResults {
       navigate: number;
       click: number;
       type: number;
+      input: number;
+      search: number;
+      extract: number;
+      submit: number;
+      open_tab: number;
+      close_tab: number;
       wait: number;
       scroll: number;
       screenshot: number;

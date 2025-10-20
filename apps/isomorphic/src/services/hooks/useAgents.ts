@@ -63,10 +63,10 @@ export function useMinersList(params?: MinimalAgentsListQueryParams) {
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
-export function useMinerDetails(uid: number) {
+export function useMinerDetails(uid: number, params?: { round?: number }) {
   return useApiCall(
-    () => agentsService.getMinerDetails(uid),
-    [uid]
+    () => agentsService.getMinerDetails(uid, params),
+    [uid, JSON.stringify(params)]
   );
 }
 
@@ -90,15 +90,15 @@ export function useAgents(params?: AgentsListQueryParams) {
 }
 
 // Hook for specific agent details
-export function useAgent(id?: string | null) {
+export function useAgent(id?: string | null, params?: { round?: number }) {
   return useApiCall<{ agent: AgentData | null; scoreRoundData: ScoreRoundDataPoint[] }>(
     () => {
       if (!id) {
         return Promise.resolve({ agent: null, scoreRoundData: [] });
       }
-      return agentsService.getAgent(id);
+      return agentsService.getAgent(id, params);
     },
-    [id]
+    [id, JSON.stringify(params)]
   );
 }
 

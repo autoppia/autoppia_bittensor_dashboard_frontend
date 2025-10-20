@@ -1,17 +1,17 @@
-import { z } from 'zod';
-import { createId } from '@paralleldrive/cuid2';
+import { z } from "zod";
+import { createId } from "@paralleldrive/cuid2";
 
 export const INVOICE_TABLE_DEFAULT_DATA = [
   {
     id: createId(),
-    title: 'Product 1',
+    title: "Product 1",
     quantity: 1,
     rate: 120,
     tax: 15,
   },
   {
     id: createId(),
-    title: 'Product 2',
+    title: "Product 2",
     quantity: 3,
     rate: 60,
     tax: 12,
@@ -19,53 +19,53 @@ export const INVOICE_TABLE_DEFAULT_DATA = [
 ];
 
 export const INVOICE_BUILDER_DEFAULT_VALUE = {
-  documentTitle: 'INVOICE',
+  documentTitle: "INVOICE",
   company: {
-    name: 'RedQ Tech',
+    name: "RedQ Tech",
   },
   client: {
-    name: 'Jhon Doe',
-    clientSectionLabel: 'Invoice To:',
-    contact: '+8801712345678',
-    email: 'admin@admin.com',
-    address: 'New York, USA',
+    name: "Jhon Doe",
+    clientSectionLabel: "Invoice To:",
+    contact: "+8801712345678",
+    email: "admin@admin.com",
+    address: "New York, USA",
   },
   invoice: {
-    number: 'INV-001-002-003',
+    number: "INV-001-002-003",
     date: new Date(),
-    InvoiceNumberLabel: 'Invoice No.',
-    InvoiceDateLabel: 'Invoice Date',
-    InvoiceDueDateLabel: 'Due Date',
+    InvoiceNumberLabel: "Invoice No.",
+    InvoiceDateLabel: "Invoice Date",
+    InvoiceDueDateLabel: "Due Date",
   },
   invoiceTableHeader: {
-    title: 'Item Description',
-    quantity: 'Qty',
-    rate: 'Rate',
-    tax: 'Tax',
-    amount: 'Amount',
+    title: "Item Description",
+    quantity: "Qty",
+    rate: "Rate",
+    tax: "Tax",
+    amount: "Amount",
   },
   invoiceTable: INVOICE_TABLE_DEFAULT_DATA,
   payments: {
-    label: 'Payment Method',
-    bankName: 'Bank Name: National Bank',
-    accountNo: 'Account No: 1234567890',
+    label: "Payment Method",
+    bankName: "Bank Name: National Bank",
+    accountNo: "Account No: 1234550000",
   },
   finalCalculations: {
-    subTotalLabel: 'Subtotal:',
-    taxLabel: 'Tax:',
-    totalLabel: 'Total:',
+    subTotalLabel: "Subtotal:",
+    taxLabel: "Tax:",
+    totalLabel: "Total:",
   },
   note: {
-    noteLabel: 'Note',
-    note: '',
+    noteLabel: "Note",
+    note: "",
   },
   terms: {
-    termsLabel: 'Terms & Conditions',
-    terms: '',
+    termsLabel: "Terms & Conditions",
+    terms: "",
   },
   signature: {
-    label: 'Administrator',
-    name: 'Jhon Doe',
+    label: "Administrator",
+    name: "Jhon Doe",
   },
 };
 

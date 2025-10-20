@@ -16,12 +16,26 @@ export interface ApiError {
   code?: string;
 }
 
+const normalizeBaseUrl = (value: string | undefined) => {
+  if (!value) {
+    return undefined;
+  }
+  return value.endsWith("/") ? value.slice(0, -1) : value;
+};
+
 const resolveBaseUrl = () => {
-  return (
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:8080"
-  );
+  const envBaseUrl =
+    normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ||
+    normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL) ||
+    normalizeBaseUrl(process.env.API_BASE_URL) ||
+    normalizeBaseUrl(process.env.API_URL);
+
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  // Default to production API when no explicit base URL is configured.
+  return "https://api-leaderboard.autoppia.com";
 };
 
 export class ApiClient {

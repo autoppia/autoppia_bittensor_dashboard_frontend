@@ -20,14 +20,16 @@ export default function OverviewAnnouncementModal() {
             <span className="rounded-md bg-yellow-100 px-2 py-1 font-semibold text-yellow-700">
               mock data
             </span>{" "}
-            while we get ready for the Dynamic Zero (IM) launch.
+            while we get ready for the Dynamic Zero (IM) launch. Mock data will
+            stay in place through <strong>23 October</strong> while we migrate
+            IM and make sure everything is stable.
           </Text>
           <div className="mt-5 rounded-xl border border-gray-900 bg-black px-4 py-3">
             <Text className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-300">
               Launch date
             </Text>
             <Title as="p" className="mt-1 text-4xl font-black !text-white">
-              21th October
+              21 October
             </Title>
           </div>
         </div>
@@ -48,7 +50,7 @@ export default function OverviewAnnouncementModal() {
           Got it
         </Button>
         <a
-          href="https://autoppia.com/dynamic-zero"
+          href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -168,6 +168,13 @@
     z-index: 9999 !important;
   }
 
+  .agents-round-select .rizzui-select__control {
+    min-height: 60px;
+    font-size: 1.05rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
   /* base style */
   html {
     @apply h-full antialiased;
