@@ -29,6 +29,7 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
 
   const loading = statsLoading || minersLoading;
   const error = statsError || minersError;
+  const winnerUid = statistics?.winnerMinerUid ?? null;
   const topMiner = React.useMemo(() => {
     if (selectedValidator?.topMiner) {
       return selectedValidator.topMiner;
@@ -42,8 +43,14 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
         return filtered[0];
       }
     }
+    if (winnerUid !== null) {
+      const winnerEntry = topMiners.find((miner) => miner.uid === winnerUid);
+      if (winnerEntry) {
+        return winnerEntry;
+      }
+    }
     return topMiners[0];
-  }, [topMiners, selectedValidator]);
+  }, [topMiners, selectedValidator, winnerUid]);
 
   // Show loading state or when any required data is not available
   if (loading || !statistics || !topMiners) {
@@ -92,6 +99,8 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
     });
   };
 
+  const winnerAverageScore = statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
+
   const aggregatedCards = [
     {
       key: "winner",
@@ -105,10 +114,10 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       valueClass: "text-2xl",
     },
     {
-      key: "networkScore",
-      title: "Network Average Score",
-      value: `${formatNumber((statistics.averageScore ?? 0) * 100, 1)}%`,
-      helper: "Aggregate performance of all validators",
+      key: "winnerAverageScore",
+      title: "Winner Average Score",
+      value: `${formatNumber(winnerAverageScore * 100, 1)}%`,
+      helper: "Average score achieved by the winning miner across validators",
       icon: PiTrophyDuotone,
       gradient: "from-emerald-500/20 via-green-500/15 to-teal-500/20",
       border: "border-emerald-500/40",

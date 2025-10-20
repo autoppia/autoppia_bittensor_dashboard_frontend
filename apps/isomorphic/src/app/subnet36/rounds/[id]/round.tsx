@@ -9,6 +9,7 @@ import { useRound } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
 import { useModal } from "@/app/shared/modal-views/use-modal";
 import RoundsGlossaryModal from "@/app/shared/modal-views/rounds-glossary-modal";
+import { PiCheckCircleFill } from "react-icons/pi";
 
 export default function Round() {
   const { id } = useParams();
@@ -34,8 +35,8 @@ export default function Round() {
         <span>Running</span>
       </div>
     ) : (
-      <div className="flex items-center gap-2 rounded-full border border-blue-400/50 bg-blue-500/10 px-3 py-1.5 text-sm font-semibold text-blue-500 shadow-sm shadow-blue-500/20">
-        <span className="h-2 w-2 rounded-full bg-blue-500" />
+      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/15 px-3 py-1.5 text-xs font-semibold text-emerald-600 shadow-lg shadow-emerald-500/30 sm:text-sm">
+        <PiCheckCircleFill className="h-4 w-4" />
         <span>Finished</span>
       </div>
     )
@@ -65,9 +66,8 @@ export default function Round() {
         </div>
       )}
       
-      {/* Always render components - they will handle their own loading states */}
-      <RoundRecents />
       <div className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {statusBadge}
         <button
           type="button"
           onClick={handleOpenGlossary}
@@ -76,7 +76,10 @@ export default function Round() {
           <LuInfo className="h-4 w-4" />
           Glossary
         </button>
-        {statusBadge}
+      </div>
+      {/* Always render components - they will handle their own loading states */}
+      <div className="mt-6">
+        <RoundRecents />
       </div>
       <RoundResult />
     </div>
