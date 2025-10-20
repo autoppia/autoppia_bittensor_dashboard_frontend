@@ -203,11 +203,13 @@ export default function LandingPage() {
             </Link>
             <Link href={routes.overview} className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-green-500/25"
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/25"
                 style={{
-                  background: "linear-gradient(90deg, #059669, #10B981)",
+                  background:
+                    "linear-gradient(90deg, #065F46, #059669, #10B981, #34D399)",
                   ":hover": {
-                    background: "linear-gradient(90deg, #047857, #059669)",
+                    background:
+                      "linear-gradient(90deg, #047857, #059669, #10B981, #6EE7B7)",
                   },
                 }}
               >
@@ -217,11 +219,13 @@ export default function LandingPage() {
             </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25"
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25"
                 style={{
-                  background: "linear-gradient(90deg, #2563EB, #3B82F6)",
+                  background:
+                    "linear-gradient(90deg, #0891B2, #06B6D4, #3B82F6)",
                   ":hover": {
-                    background: "linear-gradient(90deg, #1D4ED8, #2563EB)",
+                    background:
+                      "linear-gradient(90deg, #0E7490, #0891B2, #2563EB)",
                   },
                 }}
               >
