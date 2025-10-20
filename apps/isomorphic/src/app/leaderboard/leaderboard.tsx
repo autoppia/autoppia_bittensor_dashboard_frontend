@@ -322,9 +322,7 @@ function NameInsideBarLabel(props: any) {
         width={220}
         height={labelHeight}
       >
-        <div
-          className="flex h-full items-center justify-center text-sm sm:text-base font-semibold tracking-wide text-white"
-        >
+        <div className="flex h-full items-center justify-center text-sm sm:text-base font-semibold tracking-wide text-white">
           {d.label}
         </div>
       </foreignObject>
@@ -502,13 +500,13 @@ export default function App() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
           <div className="relative z-10 text-center">
-            <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-4 mb-4">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                 <FaTrophy className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <Title
                 as="h1"
-                className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                className="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
               >
                 Infinite Web Arena Leaderboard
               </Title>
@@ -536,7 +534,7 @@ export default function App() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
         >
           <div className="relative group h-full">
             <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
@@ -549,7 +547,7 @@ export default function App() {
                 </p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-2xl sm:text-[2.5rem] font-black text-white tracking-tight">
+                <span className="text-xl sm:text-[2.5rem] font-black text-white tracking-tight leading-9">
                   {leaderboardData[0].name}
                 </span>
                 <span className="inline-flex items-center gap-1 px-4 py-1.5 text-base sm:text-lg font-black tracking-widest text-amber-100 bg-amber-400/10 border border-amber-300/30 rounded-full">
@@ -572,7 +570,7 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl sm:text-[3.25rem] font-black text-white">
+                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
                   {leaderboardData[0].score}
                 </span>
                 <span className="text-2xl sm:text-[2rem] font-bold text-blue-400">
@@ -595,7 +593,7 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl sm:text-[3.25rem] font-black text-white">
+                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
                   {leaderboardData.length}
                 </span>
                 <span className="text-2xl sm:text-[2rem] font-bold text-purple-400">
@@ -607,180 +605,305 @@ export default function App() {
         </motion.div>
 
         {/* Chart Section (UPDATED with your chart code) */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative mb-6 sm:mb-10"
-        >
-          <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
 
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
+        {isMobile ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="relative mb-6 sm:mb-10"
+          >
+            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
 
-            <div className="relative z-10 flex items-center justify-between mb-6 sm:mb-8">
-              <div className="flex items-center gap-4">
-                <div className="relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
-                  <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
-                  <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
+
+              {/* Header */}
+              <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
+                    <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
+                    <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl text-center sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
+                      IWA Performance Score
+                    </h2>
+                    <p className="text-xs text-center sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
+                      Real-time rankings
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-2xl sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
-                    IWA Performance Score
-                  </h2>
-                  <p className="text-xs sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
-                    Real-time rankings
-                  </p>
-                </div>
+                <dl className="flex flex-col items-start xl:items-end gap-2 text-center sm:text-right">
+                  <div className="flex items-center gap-2">
+                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                      Last Update
+                    </dt>
+                    <dd className="text-xs sm:text-sm font-black text-white">
+                      {lastBenchmarkUpdate}
+                    </dd>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                      Tasks Evaluated
+                    </dt>
+                    <dd className="text-xs sm:text-sm font-black text-white">
+                      {evaluatedBenchmarks}
+                    </dd>
+                  </div>
+                </dl>
               </div>
-              <dl className="flex flex-col items-end gap-2 text-right">
-                <div className="flex items-center gap-2">
-                  <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                    Last Update
-                  </dt>
-                  <dd className="text-xs sm:text-sm font-black text-white">
-                    {lastBenchmarkUpdate}
-                  </dd>
+
+              {/* Mobile Leaderboard Chart */}
+              {isMobile ? (
+                <div className="relative z-10 grid grid-cols-1 gap-3">
+                  {chartData.map((item, index) => {
+                    // Medal for top 3
+                    const medal =
+                      index === 0
+                        ? "🥇"
+                        : index === 1
+                          ? "🥈"
+                          : index === 2
+                            ? "🥉"
+                            : index + 1;
+
+                    return (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-800/10 via-blue-800/10 to-emerald-800/10 rounded-xl border border-cyan-500/20 shadow-md"
+                      >
+                        <span className="text-lg">{medal}</span>
+                        <div className="flex-1 flex flex-col">
+                          <span className="text-white font-semibold truncate">
+                            {item.label}
+                          </span>
+                          <div className="w-full bg-slate-800 h-3 rounded-full mt-1 overflow-hidden">
+                            <div
+                              className="h-3 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-500"
+                              style={{ width: `${item.score}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-cyan-200 font-bold ml-2">
+                          {item.score}%
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center gap-2">
-                  <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                    Tasks Evaluated
-                  </dt>
-                  <dd className="text-xs sm:text-sm font-black text-white">
-                    {evaluatedBenchmarks}
-                  </dd>
+              ) : (
+                // Desktop chart stays as-is
+                <div className="relative z-10">
+                  <ResponsiveContainer width="100%" height={chartHeight}>
+                    <BarChart
+                      data={chartData}
+                      layout="vertical"
+                      margin={{
+                        top: 4,
+                        right: isMobile ? 20 : 40,
+                        left: 20,
+                        bottom: 4,
+                      }}
+                      barSize={isMobile ? 14 : barSize}
+                      barCategoryGap={isMobile ? "10%" : "16%"}
+                    >
+                      {/* ... your existing desktop chart code ... */}
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              </dl>
-            </div>
+              )}
 
-            <div className="relative z-10">
-              <ResponsiveContainer width="100%" height={chartHeight}>
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{
-                    top: 4,
-                    right: 70,
-                    left: isMobile ? 96 : 126,
-                    bottom: 4,
-                  }}
-                  barSize={barSize}
-                  barCategoryGap="16%"
-                >
-                <defs>
-                  <linearGradient id="coolBar" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#1d4ed8" />
-                    <stop offset="30%" stopColor="#0ea5e9" />
-                    <stop offset="65%" stopColor="#14b8a6" />
-                    <stop offset="100%" stopColor="#22d3ee" />
-                  </linearGradient>
-                  <filter
-                    id="barGlow"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="3.5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                <CartesianGrid
-                  horizontal
-                  vertical={false}
-                  stroke="#0f172a"
-                  strokeOpacity={0.6}
-                  strokeWidth={1}
-                />
-
-                <XAxis
-                  type="number"
-                  domain={[0, 100]}
-                  ticks={[0, 25, 50, 75, 100]}
-                  tick={{
-                    fill: "#8fb0d6",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.12em",
-                  }}
-                  axisLine={{ stroke: "#122135", strokeWidth: 1 }}
-                  tickLine={{ stroke: "#122135", strokeWidth: 1 }}
-                />
-
-                {/* logos only on Y axis */}
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={yAxisWidth}
-                  axisLine={false}
-                  tickLine={false}
-                  interval={0}
-                  tick={<LogoYAxisTick />}
-                />
-
-                <Tooltip
-                  cursor={{ fill: "rgba(6,182,212,0.08)" }}
-                  content={<FlatTooltip />}
-                  wrapperStyle={{ outline: "none" }}
-                />
-
-                <ReferenceLine
-                  x={avg}
-                  stroke="#22d3ee"
-                  strokeOpacity={0.6}
-                  strokeWidth={2}
-                  strokeDasharray="12 10"
-                  label={{
-                    value: `AVG • ${avg}%`,
-                    fill: "#bae6fd",
-                    fontWeight: 800,
-                    letterSpacing: "0.32em",
-                    position: "insideTopRight",
-                    fontSize: 12,
-                    dy: -12,
-                  }}
-                />
-
-                <Bar
-                  dataKey="score"
-                  fill="url(#coolBar)"
-                  radius={[16, 16, 16, 16]}
-                  filter="url(#barGlow)"
-                  isAnimationActive
-                  animationBegin={120}
-                  animationDuration={1600}
-                  animationEasing="ease"
-                >
-                  {/* name inside the bar (left) */}
-                  <LabelList content={<NameInsideBarLabel />} />
-                  {/* rank glyph + score pill at bar end (right) */}
-                  <LabelList dataKey="score" content={<ScorePillLabel />} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            </div>
-
-            <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-                  <span className="text-slate-400 font-medium">
-                    Live data • Updated real-time
+              {/* Footer */}
+              <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+                    <span className="text-slate-400 font-medium">
+                      Live data • Updated real-time
+                    </span>
+                  </div>
+                  <span className="text-slate-500 font-medium hidden sm:block">
+                    {isMobile ? "Names shortened" : "Full rankings displayed"}
                   </span>
                 </div>
-                <span className="text-slate-500 font-medium">
-                  {isMobile ? "Names shortened" : "Full rankings displayed"}
-                </span>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="relative mb-6 sm:mb-10"
+          >
+            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
 
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
+
+              <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
+                    <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
+                    <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
+                      IWA Performance Score
+                    </h2>
+                    <p className="text-xs sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
+                      Real-time rankings
+                    </p>
+                  </div>
+                </div>
+                <dl className="flex flex-col items-start xl:items-end gap-2 text-right">
+                  <div className="flex items-center gap-2">
+                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                      Last Update
+                    </dt>
+                    <dd className="text-xs sm:text-sm font-black text-white">
+                      {lastBenchmarkUpdate}
+                    </dd>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                      Tasks Evaluated
+                    </dt>
+                    <dd className="text-xs sm:text-sm font-black text-white">
+                      {evaluatedBenchmarks}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="relative z-10">
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{
+                      top: 4,
+                      right: isMobile ? 20 : 40, // reduce right margin for smaller screens
+                      left: 20, // small fixed left margin to remove empty space
+                      bottom: 4,
+                    }}
+                    barSize={isMobile ? 14 : barSize}
+                    barCategoryGap={isMobile ? "10%" : "16%"}
+                  >
+                    <defs>
+                      <linearGradient id="coolBar" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#1d4ed8" />
+                        <stop offset="30%" stopColor="#0ea5e9" />
+                        <stop offset="65%" stopColor="#14b8a6" />
+                        <stop offset="100%" stopColor="#22d3ee" />
+                      </linearGradient>
+                      <filter
+                        id="barGlow"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%"
+                      >
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    <CartesianGrid
+                      horizontal
+                      vertical={false}
+                      stroke="#0f172a"
+                      strokeOpacity={0.6}
+                      strokeWidth={1}
+                    />
+
+                    <XAxis
+                      type="number"
+                      domain={[0, 100]}
+                      ticks={[0, 25, 50, 75, 100]}
+                      tick={{
+                        fill: "#8fb0d6",
+                        fontSize: isMobile ? 10 : 12,
+                        fontWeight: 700,
+                        letterSpacing: "0.12em",
+                      }}
+                      axisLine={{ stroke: "#122135", strokeWidth: 1 }}
+                      tickLine={{ stroke: "#122135", strokeWidth: 1 }}
+                    />
+
+                    <YAxis
+                      type="category"
+                      dataKey="label"
+                      width={isMobile ? 90 : 120} // responsive width
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                      tick={<LogoYAxisTick />}
+                    />
+
+                    <Tooltip
+                      cursor={{ fill: "rgba(6,182,212,0.08)" }}
+                      content={<FlatTooltip />}
+                      wrapperStyle={{ outline: "none" }}
+                    />
+
+                    <ReferenceLine
+                      x={avg}
+                      stroke="#22d3ee"
+                      strokeOpacity={0.6}
+                      strokeWidth={2}
+                      strokeDasharray="12 10"
+                      label={{
+                        value: `AVG • ${avg}%`,
+                        fill: "#bae6fd",
+                        fontWeight: 800,
+                        letterSpacing: "0.32em",
+                        position: isMobile ? "insideTopLeft" : "insideTopRight",
+                        fontSize: isMobile ? 10 : 12,
+                        dx: isMobile ? -10 : 0,
+                        dy: -12,
+                      }}
+                    />
+
+                    <Bar
+                      dataKey="score"
+                      fill="url(#coolBar)"
+                      radius={[16, 16, 16, 16]}
+                      filter="url(#barGlow)"
+                      isAnimationActive
+                      animationBegin={120}
+                      animationDuration={1600}
+                      animationEasing="ease"
+                    >
+                      <LabelList content={<NameInsideBarLabel />} />
+                      <LabelList dataKey="score" content={<ScorePillLabel />} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+                    <span className="text-slate-400 font-medium">
+                      Live data • Updated real-time
+                    </span>
+                  </div>
+                  <span className="text-slate-500 font-medium">
+                    {isMobile ? "Names shortened" : "Full rankings displayed"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {/* Benchmark Tasks — ONLY Project + Prompt (Card Grid) */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -789,16 +912,16 @@ export default function App() {
           className="relative mb-8 sm:mb-12"
         >
           <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border border-slate-700/50 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl">
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-center justify-between mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
                   <FaFire className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
+                  <h2 className="text-2xl text-center sm:text-left sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
                     Benchmark Tasks
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">
+                  <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
                     Web project and its benchmark prompt
                   </p>
                 </div>
@@ -808,7 +931,7 @@ export default function App() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
               >
                 <FaDownload className="w-4 h-4" />
-                <span className="hidden sm:inline">Download</span>
+                <span>Download</span>
               </button>
             </div>
 
