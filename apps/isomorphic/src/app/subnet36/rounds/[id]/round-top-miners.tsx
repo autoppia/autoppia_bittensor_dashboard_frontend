@@ -11,6 +11,7 @@ import { Skeleton } from "@core/ui/skeleton";
 import { PiCrownFill } from "react-icons/pi";
 import { useRoundMiners } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier } from "./round-identifier";
+import { routes } from "@/config/routes";
 
 interface RoundTopMinersProps {
   className?: string;
@@ -132,8 +133,8 @@ export default function RoundTopMiners({
           {topMinersList.map((miner, index) => {
             const agentHref =
               typeof roundNumber === "number" && Number.isFinite(roundNumber)
-                ? `/agents/${miner.uid}?round=${roundNumber}&agent=${miner.uid}`
-                : `/agents/${miner.uid}`;
+                ? `${routes.agents}/${miner.uid}?round=${roundNumber}&agent=${miner.uid}`
+                : `${routes.agents}/${miner.uid}`;
 
             return (
               <Link
@@ -234,4 +235,3 @@ export default function RoundTopMiners({
     </WidgetCard>
   );
 }
-

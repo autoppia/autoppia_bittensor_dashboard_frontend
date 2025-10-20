@@ -124,7 +124,7 @@ export default function TaskSearch() {
       }
 
       if (data?.tasks?.length === 1) {
-        router.push(`/tasks/${data.tasks[0].taskId}`);
+        router.push(`${routes.tasks}/${data.tasks[0].taskId}`);
       }
     } catch (error) {
       setResults([]);
@@ -444,7 +444,7 @@ export default function TaskSearch() {
               return (
                 <div
                   key={task.taskId}
-                  onClick={() => router.push(`/tasks/${task.taskId}`)}
+                  onClick={() => router.push(`${routes.tasks}/${task.taskId}`)}
                   className="relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -517,3 +517,4 @@ export default function TaskSearch() {
     </div>
   );
 }
+import { routes } from "@/config/routes";

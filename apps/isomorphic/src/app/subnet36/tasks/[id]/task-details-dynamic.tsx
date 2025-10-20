@@ -19,6 +19,7 @@ import {
 } from "react-icons/pi";
 import type { TaskDetails } from "@/services/api/types/tasks";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { routes } from "@/config/routes";
 
 type StatCardConfig = {
   label: string;
@@ -338,7 +339,7 @@ export default function TaskDetailsDynamic({
     {
       label: "Agent Run",
       value: agentRunLinkId ? truncateMiddle(agentRunLinkId, 8) : "—",
-      href: agentRunLinkId ? `/agent-run/${agentRunLinkId}` : undefined,
+      href: agentRunLinkId ? `${routes.agent_run}/${agentRunLinkId}` : undefined,
     },
     {
       label: "Evaluation",

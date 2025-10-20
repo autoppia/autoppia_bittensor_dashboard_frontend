@@ -11,6 +11,7 @@ import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
 import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
+import { routes } from "@/config/routes";
 export default function AgentRun() {
   const { id } = useParams();
   const runId = Array.isArray(id) ? id[0] : id ?? "";
@@ -45,7 +46,7 @@ export default function AgentRun() {
         className="mt-4"
       >
         <Link
-          href="/agents"
+          href={routes.agents}
           className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
           <PiArrowLeftLight className="w-4 h-4" />

@@ -7,6 +7,7 @@ import TaskResults from "./task-results";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useTaskDetails } from "@/services/hooks/useTask";
 import TaskDetailsDynamic from "./task-details-dynamic";
+import { routes } from "@/config/routes";
 
 export default function TaskDynamic() {
   const { id } = useParams();
@@ -44,7 +45,7 @@ export default function TaskDynamic() {
         className="mt-4"
       >
         <Link
-          href="/agent-run"
+          href={routes.agent_run}
           className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
           <PiArrowLeftLight className="w-4 h-4" />

@@ -11,6 +11,15 @@ export function resolveAssetUrl(
     return fallback;
   }
 
+  // Rewrite common GitHub blob URLs to raw content URLs
+  // e.g., https://github.com/org/repo/blob/branch/path -> https://raw.githubusercontent.com/org/repo/branch/path
+  if (candidate.startsWith("https://github.com/") && candidate.includes("/blob/")) {
+    const rewritten = candidate
+      .replace("https://github.com/", "https://raw.githubusercontent.com/")
+      .replace("/blob/", "/");
+    return rewritten;
+  }
+
   if (
     candidate.startsWith("http://") ||
     candidate.startsWith("https://") ||

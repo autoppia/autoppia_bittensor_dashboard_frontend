@@ -16,7 +16,7 @@ export type AgentDataType = {
     {
       id: "subnet36-top",
       name: "Autoppia Bittensor",
-      href: "/agents/subnet36-top",
+      href: "/subnet36/agents/subnet36-top",
       imageUrl: "/icons/bittensor.webp",
       usecase1: 64,
       usecase2: 52,
@@ -26,7 +26,7 @@ export type AgentDataType = {
     {
       id: "openai-cua",
       name: "OpenAI CUA",
-      href: "/agents/openai-cua",
+      href: "/subnet36/agents/openai-cua",
       imageUrl: "/icons/openai.webp",
       usecase1: 85,
       usecase2: 72,
@@ -36,7 +36,7 @@ export type AgentDataType = {
     {
       id: "browser-gpt-o3",
       name: "Browser-Use GPT o3",
-      href: "/agents/browser-gpt-o3",
+      href: "/subnet36/agents/browser-gpt-o3",
       imageUrl: "/icons/browser-use.webp",
       usecase1: 68,
       usecase2: 56,
@@ -46,7 +46,7 @@ export type AgentDataType = {
     {
       id: "browser-sonnet4",
       name: "Browser-Use Sonnet 4",
-      href: "/agents/browser-sonnet4",
+      href: "/subnet36/agents/browser-sonnet4",
       imageUrl: "/icons/browser-use.webp",
       usecase1: 70,
       usecase2: 58,
@@ -56,7 +56,7 @@ export type AgentDataType = {
     {
       id: "anthropic-cua",
       name: "Anthropic CUA",
-      href: "/agents/anthropic-cua",
+      href: "/subnet36/agents/anthropic-cua",
       imageUrl: "/icons/anthropic.webp",
       usecase1: 78,
       usecase2: 66,

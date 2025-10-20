@@ -421,7 +421,7 @@ export default function TaskDetails() {
             {agentRunDuration} • {agentRunInfo?.taskCount ?? "—"} tasks • Avg {agentRunAverageScore}
           </span>
           <Link
-            href={`/agent-run/${agentRunLinkId}`}
+            href={`${routes.agent_run}/${agentRunLinkId}`}
             className="mt-1 inline-flex items-center gap-1 text-xs text-purple-100 transition-colors duration-200 hover:text-white"
           >
             View agent run
@@ -579,7 +579,7 @@ export default function TaskDetails() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <Link
-                    href={`/agent-run/${agentRunLinkId}`}
+                    href={`${routes.agent_run}/${agentRunLinkId}`}
                     className="font-mono text-sm text-white/90 transition-colors duration-200 hover:text-white"
                   >
                     {truncateMiddle(agentRunLinkId, 6)}
@@ -694,3 +694,4 @@ export default function TaskDetails() {
     </div>
   );
 }
+import { routes } from "@/config/routes";

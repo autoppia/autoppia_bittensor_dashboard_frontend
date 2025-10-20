@@ -7,6 +7,7 @@ import TaskPersonas from "./task-personas";
 import TaskDetails from "./task-details";
 import TaskResults from "./task-results";
 import { PiArrowLeftLight } from "react-icons/pi";
+import { routes } from "@/config/routes";
 
 export default function Task() {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export default function Task() {
         className="mt-4"
       >
         <Link
-          href="/agent-run"
+          href={routes.agent_run}
           className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
           <PiArrowLeftLight className="w-4 h-4" />

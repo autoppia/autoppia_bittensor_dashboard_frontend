@@ -7,6 +7,7 @@ import { PiArrowRightBold } from "react-icons/pi";
 import { Button, Progressbar, Text } from "rizzui";
 import { TasksDataType } from "./table";
 import { websitesDataMap } from "@/data/websites-data";
+import { routes } from "@/config/routes";
 
 const columnHelper = createColumnHelper<TasksDataType>();
 
@@ -76,7 +77,7 @@ export const taskColumns = [
     header: "Action",
     cell: ({ row }) => (
       <Link
-        href={`/tasks/${row.original.id}`}
+        href={`${routes.tasks}/${row.original.id}`}
         className="flex items-center text-white hover:text-gray-500"
       >
         <Button variant="outline" size="sm">

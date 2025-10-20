@@ -13,6 +13,7 @@ import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Tab
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
 import { AgentRunTaskData } from "@/services/api/types/agent-runs";
+import { routes } from "@/config/routes";
 
 const columnHelper = createColumnHelper<AgentRunTaskData>();
 
@@ -102,7 +103,7 @@ const agentRunTasksColumns = [
     header: "Action",
     cell: ({ row }) => (
       <Link
-        href={`/tasks/${row.original.taskId}`}
+        href={`${routes.tasks}/${row.original.taskId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
         <Button 

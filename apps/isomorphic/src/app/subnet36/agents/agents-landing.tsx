@@ -6,6 +6,7 @@ import { useRounds } from "@/services/hooks/useRounds";
 import { useMinersList } from "@/services/hooks/useAgents";
 import type { MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { AgentsPageFallback } from "./agents-fallback";
+import { routes } from "@/config/routes";
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -244,7 +245,7 @@ export default function AgentsLanding() {
     params.set("agent", targetAgentId);
 
     setLastRedirectKey(redirectKey);
-    router.replace(`/agents/${targetAgentId}?${params.toString()}`);
+    router.replace(`${routes.agents}/${targetAgentId}?${params.toString()}`);
   }, [
     agentParam,
     lastRedirectKey,
