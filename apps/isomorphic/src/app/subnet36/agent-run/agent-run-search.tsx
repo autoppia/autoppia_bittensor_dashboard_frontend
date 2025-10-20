@@ -869,7 +869,7 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             {displayedRuns.map((run) => {
               const validatorLabel = formatValidatorLabel(
                 run.validatorId,
@@ -883,6 +883,8 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
+              const scorePercent = Math.round((run.overallScore ?? 0) * 100);
+              const successPercent = Math.round((run.successRate ?? 0) * 100);
 
               return (
                 <div
@@ -890,63 +892,90 @@ export default function AgentRunSearch() {
                   onClick={() =>
                     router.push(`${routes.agent_run}/${run.runId}`)
                   }
-                  className="group relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
+                  className="group relative rounded-xl border border-indigo-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-indigo-400/50 p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl flex flex-col"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
+                  {/* Main Content - Grows to fill space */}
+                  <div className="flex-grow">
+                    {/* Validator with Image */}
+                    <div className="mb-4 flex items-center gap-3">
                       <Image
                         src={validatorImageSrc}
                         alt={validatorLabel}
-                        width={48}
-                        height={48}
-                        sizes="48px"
-                        className="h-12 w-12 rounded-full object-cover"
+                        width={56}
+                        height={56}
+                        sizes="56px"
+                        className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-500/50"
                       />
-                      <div className="min-w-0 space-y-1">
-                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-slate-500 mb-1">
                           Validator
-                        </p>
-                        <p className="text-sm font-semibold text-white truncate">
+                        </div>
+                        <div className="text-lg font-bold text-white truncate">
                           {validatorLabel}
-                        </p>
-                        <p className="text-xs text-slate-400 truncate">
-                          Agent {agentLabel}
-                        </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right space-y-1">
-                      <span className="text-[11px] uppercase tracking-wide text-sky-200/80">
-                        Score
-                      </span>
-                      <div className="text-2xl font-bold text-white">
-                        {formatPercentage(run.overallScore)}
+
+                    {/* Agent Name */}
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-emerald-400 mb-1">
+                        Agent
                       </div>
-                      <div className="text-[11px] text-slate-300">
-                        Success {formatPercentage(run.successRate ?? 0)}
+                      <div className="text-base font-semibold text-emerald-200 truncate">
+                        {agentLabel}
+                      </div>
+                    </div>
+
+                    {/* Round & Ranking */}
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/50 bg-sky-500/15 px-2.5 py-1 text-sm font-semibold text-sky-200">
+                        Round {run.roundId ?? "?"}
+                      </span>
+                      {typeof run.ranking === "number" && run.ranking > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/50 bg-amber-500/15 px-2.5 py-1 text-sm font-bold text-amber-200">
+                          #{run.ranking}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Run ID */}
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-violet-400 mb-1">
+                        Run ID
+                      </div>
+                      <div className="text-sm font-mono text-violet-200 truncate">
+                        {run.runId}
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-sky-100">
-                      {run.roundId ? `Round ${run.roundId}` : "Unknown round"}
-                    </span>
-                    {typeof run.ranking === "number" && run.ranking > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-100">
-                        #{run.ranking} ranking
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
-                    <span>Started {formatDate(run.startTime)}</span>
-                    <span>
-                      Tasks {completedTasks.toLocaleString()}
-                      <span className="text-slate-500">
-                        /{Number(totalTasks).toLocaleString()}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="mt-4 flex text-[11px] text-slate-400">
-                    <span className="truncate">Run ID: {run.runId}</span>
+
+                  {/* Footer Stats - Always at bottom */}
+                  <div className="pt-4 border-t border-slate-700/50">
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      <div className="text-center">
+                        <div className="text-xs text-slate-400 mb-1">Score</div>
+                        <div className="text-lg font-bold text-indigo-300">
+                          {scorePercent}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-slate-400 mb-1">
+                          Success
+                        </div>
+                        <div className="text-lg font-bold text-emerald-300">
+                          {successPercent}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-slate-400 mb-1">Tasks</div>
+                        <div className="text-lg font-bold text-amber-300">
+                          {completedTasks}/{totalTasks}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-400 text-center">
+                      {formatDate(run.startTime)}
+                    </div>
                   </div>
                 </div>
               );
