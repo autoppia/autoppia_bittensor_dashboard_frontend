@@ -13,6 +13,7 @@ import { useMinersList } from "@/services/hooks/useAgents";
 import { useRounds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
+import { routes } from "@/config/routes";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
@@ -305,8 +306,8 @@ export default function AgentsSidebar() {
                   key={`miner-menu-${miner.uid}`}
                   href={
                     typeof effectiveRound === "number"
-                      ? `/agents/${miner.uid}?round=${effectiveRound}&agent=${miner.uid}`
-                      : `/agents/${miner.uid}`
+                      ? `${routes.agents}/${miner.uid}?round=${effectiveRound}&agent=${miner.uid}`
+                      : `${routes.agents}/${miner.uid}`
                   }
                 >
                   <div

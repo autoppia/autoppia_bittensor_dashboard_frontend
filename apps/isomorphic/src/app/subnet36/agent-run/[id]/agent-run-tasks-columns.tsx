@@ -7,6 +7,7 @@ import { PiEyeBold } from "react-icons/pi";
 import { Button, Text } from "rizzui";
 import { TasksDataType } from "./agent-run-tasks-table";
 import { websitesDataMap } from "@/data/websites-data";
+import { routes } from "@/config/routes";
 
 const columnHelper = createColumnHelper<TasksDataType>();
 
@@ -100,7 +101,7 @@ export const agentRunTasksColumns = [
     header: "Action",
     cell: ({ row }) => (
       <Link
-        href={`/tasks/${row.original.id}`}
+        href={`${routes.tasks}/${row.original.id}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
         <Button 

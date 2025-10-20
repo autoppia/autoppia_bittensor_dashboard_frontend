@@ -25,6 +25,8 @@ import { Text } from "rizzui";
 import { useAgentRuns } from "@/services/hooks/useAgents";
 import { AgentValidatorsPlaceholder } from "@/components/placeholders/agent-placeholders";
 import cn from "@core/utils/class-names";
+import { routes } from "@/config/routes";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 export default function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
   const { id } = useParams();
@@ -337,8 +339,9 @@ export default function AgentValidators({ selectedRound }: { selectedRound?: num
 
             const validatorName =
               latestRun.validatorName || `Validator ${validatorId.slice(0, 6)}...`;
-            const validatorImage =
-              latestRun.validatorImage || "/validators/default.png";
+            const validatorImage = resolveAssetUrl(
+              latestRun.validatorImage || "/validators/default.png"
+            );
 
             const secondaryStats = [
               {
@@ -377,7 +380,7 @@ export default function AgentValidators({ selectedRound }: { selectedRound?: num
             return (
               <Link
                 key={`agent-run-${validatorId}`}
-                href={`/agent-run/${latestRun.runId}`}
+                href={`${routes.agent_run}/${latestRun.runId}`}
               >
                 <div className="bg-gray-50 border-2 border-muted hover:border-gray-700 transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                   {/* Header - Validator Info & Status */}

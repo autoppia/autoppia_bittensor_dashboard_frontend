@@ -13,6 +13,7 @@ import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 import LoadingScreen from "@/app/shared/loading-screen";
 import Placeholder from "@/app/shared/placeholder";
+import { routes } from "@/config/routes";
 
 export default function AgentRunDynamic() {
   const { id } = useParams();
@@ -42,7 +43,7 @@ export default function AgentRunDynamic() {
           className="mt-4"
         >
           <Link
-            href="/agents"
+            href={routes.agents}
             className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
           >
             <PiArrowLeftLight className="w-4 h-4" />
@@ -68,7 +69,7 @@ export default function AgentRunDynamic() {
           className="mt-4"
         >
           <Link
-            href="/agents"
+            href={routes.agents}
             className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
           >
             <PiArrowLeftLight className="w-4 h-4" />
@@ -99,7 +100,7 @@ export default function AgentRunDynamic() {
         className="mt-4"
       >
         <Link
-          href="/agents"
+          href={routes.agents}
           className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
           <PiArrowLeftLight className="w-4 h-4" />

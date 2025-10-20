@@ -19,6 +19,7 @@ import {
 } from "react-icons/pi";
 import { overviewService } from "@/services/api/overview.service";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { routes } from "@/config/routes";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -878,7 +879,7 @@ export default function AgentRunSearch() {
           return (
             <div
               key={run.runId}
-              onClick={() => router.push(`/agent-run/${run.runId}`)}
+              onClick={() => router.push(`${routes.agent_run}/${run.runId}`)}
               className="group relative rounded-2xl border border-sky-600/30 bg-slate-900/50 p-4 shadow-lg transition-all duration-300 backdrop-blur-md cursor-pointer hover:-translate-y-1 hover:border-sky-400/60 hover:shadow-xl"
             >
               <div className="flex items-start justify-between gap-4">
