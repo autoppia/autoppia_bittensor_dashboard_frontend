@@ -177,7 +177,7 @@ export default function TaskSearch() {
 
         <div className="relative p-6 overflow-visible">
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
               <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                 <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
@@ -336,7 +336,7 @@ export default function TaskSearch() {
             </div>
           </div>
 
-          <div className="flex gap-4 flex-col sm:flex-row justify-center z-50">
+          <div className="flex gap-4 flex-col sm:flex-row items-center justify-center z-50">
             <button
               onClick={handleSearch}
               className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"

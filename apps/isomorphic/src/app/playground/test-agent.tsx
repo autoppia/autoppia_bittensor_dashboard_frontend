@@ -469,11 +469,14 @@ export default function TestAgent() {
                       >
                         {displayLabel}
                         <button
-                          onClick={() =>
+                          onClick={() => {
+                            if (selectedProjects.length === 1) {
+                              setSelectedUseCases([]);
+                            }
                             setSelectedProjects(
                               selectedProjects.filter((p) => p !== project)
-                            )
-                          }
+                            );
+                          }}
                           className="hover:text-red-400 transition-colors text-lg"
                         >
                           ×
@@ -796,7 +799,7 @@ export default function TestAgent() {
                               <span className="text-cyan-300 font-bold">
                                 Prompt:
                               </span>{" "}
-                              <span className="text-gray-700">
+                              <span className="text-cyan-700">
                                 {result.prompt || "N/A"}
                               </span>
                             </div>
@@ -879,7 +882,7 @@ export default function TestAgent() {
 
                 {/* Modal Footer */}
                 <div className="relative flex flex-col sm:flex-row items-center justify-between px-4 py-2 gap-4 border-t border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
-                  <Text className="text-sm text-gray-700">
+                  <Text className="text-sm text-cyan-700">
                     Completed {results.length} test
                     {results.length !== 1 ? "s" : ""} • Success Rate:{" "}
                     {calculateSuccessRate()}%
