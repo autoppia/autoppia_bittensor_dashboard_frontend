@@ -54,10 +54,10 @@ export function RoundPageExample({ roundId }: { roundId: number }) {
         <h2>Validators</h2>
         {data.validators?.map((validator) => (
           <div key={validator.id}>
-            <h3>{validator.name}</h3>
+            <h3>{validator.name ?? "—"}</h3>
             <p>Status: {validator.status}</p>
-            <p>Trust: {validator.trust}</p>
-            <p>Weight: {validator.weight}</p>
+            <p>Trust: {validator.trust ?? "—"}</p>
+            <p>Weight: {validator.weight ?? "—"}</p>
           </div>
         ))}
       </div>

@@ -19,19 +19,19 @@ export interface OverviewMetrics {
 export interface ValidatorData {
   id: string;
   validatorUid?: number | null;
-  name: string;
-  hotkey: string;
+  name: string | null;
+  hotkey: string | null;
   icon: string;
   currentTask: string;
   status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline' | 'Finished' | 'Starting' | 'Not Started';
   totalTasks: number;
-  weight: number;
-  trust: number;
-  version: number;
+  weight: number | null;
+  trust: number | null;
+  version: number | null;
   lastSeen: string;
   uptime: number; // percentage
-  stake: number;
-  emission: number;
+  stake: number | null;
+  emission: number | null;
   validatorRoundId?: string | null;
   roundNumber?: number | null;
 }

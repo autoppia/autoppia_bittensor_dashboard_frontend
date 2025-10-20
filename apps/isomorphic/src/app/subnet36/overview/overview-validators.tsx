@@ -152,6 +152,14 @@ export default function OverviewValidators() {
             validator.icon,
             resolveAssetUrl("/validators/Other.png")
           );
+          const stakeMetric =
+            typeof validator.weight === "number"
+              ? `${(validator.weight / 1000).toFixed(0)}K`
+              : "—";
+          const trustMetric =
+            typeof validator.trust === "number" ? validator.trust.toFixed(2) : "—";
+          const versionMetric =
+            validator.version != null ? validator.version : "—";
           const secondaryStats = [
             {
               title: "UID",
@@ -161,19 +169,19 @@ export default function OverviewValidators() {
             },
             {
               title: "Stake",
-              metric: `${(validator.weight / 1000).toFixed(0)}K`,
+              metric: stakeMetric,
               icon: PiCurrencyDollarDuotone,
               iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
             },
             {
               title: "VTrust",
-              metric: validator.trust,
+              metric: trustMetric,
               icon: PiClockDuotone,
               iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
             },
             {
               title: "Version",
-              metric: validator.version,
+              metric: versionMetric,
               icon: PiHashDuotone,
               iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600",
             },
@@ -221,7 +229,7 @@ export default function OverviewValidators() {
                       <div className="relative aspect-square w-10 h-10">
                         <Image
                           src={iconSrc}
-                          alt={validator.name}
+                          alt={validator.name ?? "Validator avatar"}
                           fill
                           sizes="(max-width: 768px) 100vw"
                           className="h-full w-full rounded-full object-contain"
@@ -229,7 +237,7 @@ export default function OverviewValidators() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Text className="font-bold text-gray-900">
-                          {validator.name}
+                          {validator.name ?? "—"}
                         </Text>
                         <Text className="text-xs font-mono tracking-wide text-gray-500 truncate">
                           {validator.hotkey
@@ -355,7 +363,7 @@ export default function OverviewValidators() {
                     <div className="relative aspect-square w-10 h-10">
                       <Image
                         src={iconSrc}
-                        alt={validator.name}
+                        alt={validator.name ?? "Validator avatar"}
                         fill
                         sizes="(max-width: 768px) 100vw"
                         className="h-full w-full rounded-full object-contain"
@@ -363,7 +371,7 @@ export default function OverviewValidators() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <Text className="font-bold text-gray-900">
-                        {validator.name}
+                        {validator.name ?? "—"}
                       </Text>
                       <Text className="text-xs font-mono tracking-wide text-gray-500 truncate">
                         {validator.hotkey
