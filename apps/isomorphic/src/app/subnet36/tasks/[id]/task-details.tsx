@@ -330,9 +330,13 @@ export default function TaskDetails() {
           : roundInfo?.validatorRoundId
           ? truncateMiddle(roundInfo.validatorRoundId, 6)
           : "—",
-      href: roundInfo?.validatorRoundId
-        ? `${routes.rounds}/${encodeURIComponent(roundInfo.validatorRoundId)}`
-        : undefined,
+      href: ((): string | undefined => {
+        const key =
+          roundInfo?.roundNumber != null
+            ? `round_${roundInfo.roundNumber}`
+            : roundInfo?.validatorRoundId;
+        return key ? `${routes.rounds}/${encodeURIComponent(key)}` : undefined;
+      })(),
     },
     {
       label: "Validator",

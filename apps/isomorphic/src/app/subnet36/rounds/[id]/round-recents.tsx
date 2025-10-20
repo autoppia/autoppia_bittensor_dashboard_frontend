@@ -97,7 +97,7 @@ export default function RoundRecents() {
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
           {roundsList.map((round, index: number) => {
-            const roundKey = round.roundKey ?? `round-${round.id}-${index}`;
+            const roundKey = round.roundKey ?? (typeof round.id === "number" ? `round_${round.id}` : `round_${index + 1}`);
             const baseNumber = round.roundNumber ?? round.id;
             const isActive =
               (currentRoundKey !== undefined && roundKey === currentRoundKey) ||

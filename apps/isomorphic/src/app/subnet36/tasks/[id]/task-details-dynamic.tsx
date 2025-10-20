@@ -434,6 +434,7 @@ export default function TaskDetailsDynamic({
                       fill
                       sizes="48px"
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
                   <div className="min-w-0">
@@ -479,6 +480,7 @@ export default function TaskDetailsDynamic({
                       fill
                       sizes="48px"
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
                   <div className="min-w-0">
