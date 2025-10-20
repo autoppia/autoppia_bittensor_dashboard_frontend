@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { routes } from "@/config/routes";
 import { roundsService } from "@/services/api/rounds.service";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ export default async function Page() {
   const currentRoundId = await resolveCurrentRoundIdentifier();
 
   if (currentRoundId) {
-    redirect(`/rounds/${encodeURIComponent(currentRoundId)}`);
+    redirect(`${routes.rounds}/${encodeURIComponent(currentRoundId)}`);
   }
 
   notFound();

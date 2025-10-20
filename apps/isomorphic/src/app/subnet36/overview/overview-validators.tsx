@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
+import { routes } from "@/config/routes";
 import cn from "@core/utils/class-names";
 import {
   PiOpenAiLogoDuotone,
@@ -200,7 +201,7 @@ export default function OverviewValidators() {
               ? `validator-${validator.validatorUid}`
               : validator.id;
           const roundsLink = validator.validatorRoundId
-            ? `/rounds/${encodeURIComponent(
+            ? `${routes.rounds}/${encodeURIComponent(
                 validator.validatorRoundId
               )}?validator=${encodeURIComponent(validatorParam)}`
             : undefined;

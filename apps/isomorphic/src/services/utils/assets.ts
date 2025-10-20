@@ -1,6 +1,6 @@
 const DEFAULT_ASSET_BASE =
   process.env.NEXT_PUBLIC_ASSET_BASE_URL?.replace(/\/$/, "") ??
-  "https://dev-infinitewebarena.autoppia.com";
+  "https://leaderboard.autoppia.com";
 
 export function resolveAssetUrl(
   src?: string | null,
