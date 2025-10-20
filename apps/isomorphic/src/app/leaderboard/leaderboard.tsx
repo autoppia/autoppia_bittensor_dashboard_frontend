@@ -505,7 +505,7 @@ export default function App() {
               </div>
               <Title
                 as="h1"
-                className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                className="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
               >
                 Infinite Web Arena Leaderboard
               </Title>
@@ -546,7 +546,7 @@ export default function App() {
                 </p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-2xl sm:text-[2.5rem] font-black text-white tracking-tight leading-9">
+                <span className="text-xl sm:text-[2.5rem] font-black text-white tracking-tight leading-9">
                   {leaderboardData[0].name}
                 </span>
                 <span className="inline-flex items-center gap-1 px-4 py-1.5 text-base sm:text-lg font-black tracking-widest text-amber-100 bg-amber-400/10 border border-amber-300/30 rounded-full">
@@ -569,7 +569,7 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl sm:text-[3.25rem] font-black text-white">
+                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
                   {leaderboardData[0].score}
                 </span>
                 <span className="text-2xl sm:text-[2rem] font-bold text-blue-400">
@@ -592,7 +592,7 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl sm:text-[3.25rem] font-black text-white">
+                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
                   {leaderboardData.length}
                 </span>
                 <span className="text-2xl sm:text-[2rem] font-bold text-purple-400">
