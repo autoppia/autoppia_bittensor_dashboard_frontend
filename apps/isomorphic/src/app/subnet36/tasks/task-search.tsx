@@ -477,79 +477,82 @@ export default function TaskSearch() {
                     isPassed
                       ? "border-emerald-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-emerald-400/50 hover:shadow-emerald-500/20"
                       : "border-red-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-red-400/50 hover:shadow-red-500/20"
-                  } p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl`}
+                  } p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl flex flex-col`}
                 >
-                  {/* Web Project */}
-                  {webProject && (
+                  {/* Main Content - Grows to fill space */}
+                  <div className="flex-grow">
+                    {/* Web Project */}
+                    {webProject && (
+                      <div className="mb-3">
+                        <div
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-bold"
+                          style={{
+                            backgroundColor: `${webProject.color}`,
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          <PiGlobeDuotone className="w-5 h-5" />
+                          {webProject.name}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Use Case */}
                     <div className="mb-3">
-                      <div
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-bold"
-                        style={{
-                          backgroundColor: `${webProject.color}`,
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        <PiGlobeDuotone className="w-5 h-5" />
-                        {webProject.name}
+                      <div className="text-xs font-medium text-slate-500 mb-1">
+                        Use Case
+                      </div>
+                      <div className="text-lg font-semibold text-white">
+                        {useCaseLabel}
                       </div>
                     </div>
-                  )}
 
-                  {/* Use Case */}
-                  <div className="mb-3">
-                    <div className="text-xs font-medium text-slate-400 mb-1">
-                      Use Case
+                    {/* Task ID */}
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-cyan-400 mb-1">
+                        Task ID
+                      </div>
+                      <div className="text-sm font-mono text-cyan-200 truncate">
+                        {task.taskId}
+                      </div>
                     </div>
-                    <div className="text-lg font-semibold text-white">
-                      {useCaseLabel}
-                    </div>
-                  </div>
 
-                  {/* Task ID */}
-                  <div className="mb-3">
-                    <div className="text-xs font-medium text-slate-400 mb-1">
-                      Task ID
+                    {/* Agent Run ID */}
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-violet-400 mb-1">
+                        Agent Run
+                      </div>
+                      <div className="text-sm font-mono text-violet-200 truncate">
+                        {task.agentRunId}
+                      </div>
                     </div>
-                    <div className="text-sm font-mono text-slate-300 truncate">
-                      {task.taskId}
-                    </div>
-                  </div>
 
-                  {/* Agent Run ID */}
-                  <div className="mb-3">
-                    <div className="text-xs font-medium text-slate-400 mb-1">
-                      Agent Run
-                    </div>
-                    <div className="text-sm font-mono text-slate-300 truncate">
-                      {task.agentRunId}
-                    </div>
-                  </div>
+                    {/* URL */}
+                    {taskUrl && (
+                      <div className="mb-4">
+                        <div className="text-xs font-medium text-slate-400 mb-1">
+                          URL
+                        </div>
+                        <div className="p-2 rounded bg-slate-950/50 border border-slate-700/50">
+                          <p className="text-xs text-cyan-300 truncate font-mono">
+                            {taskUrl}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
-                  {/* URL */}
-                  {taskUrl && (
+                    {/* Prompt */}
                     <div className="mb-4">
                       <div className="text-xs font-medium text-slate-400 mb-1">
-                        URL
+                        Prompt
                       </div>
-                      <div className="p-2 rounded bg-slate-950/50 border border-slate-700/50">
-                        <p className="text-xs text-cyan-300 truncate font-mono">
-                          {taskUrl}
-                        </p>
-                      </div>
+                      <p className="text-sm text-slate-200 leading-relaxed line-clamp-3">
+                        {task.prompt}
+                      </p>
                     </div>
-                  )}
-
-                  {/* Prompt */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-slate-400 mb-1">
-                      Prompt
-                    </div>
-                    <p className="text-sm text-slate-200 leading-relaxed line-clamp-3">
-                      {task.prompt}
-                    </p>
                   </div>
 
-                  {/* Footer Stats */}
+                  {/* Footer Stats - Always at bottom */}
                   <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
                     <div className="flex items-center gap-4">
                       <div className="text-center">
