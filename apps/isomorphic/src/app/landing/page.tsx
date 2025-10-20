@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import type { IconType } from "react-icons";
-import { LuArrowUpRight, LuGithub, LuBookOpen, LuTrophy, LuUser, LuCode, LuPlay } from "react-icons/lu";
+import {
+  LuArrowUpRight,
+  LuGithub,
+  LuBookOpen,
+  LuTrophy,
+  LuUser,
+  LuCode,
+  LuPlay,
+} from "react-icons/lu";
 import { FaTwitter, FaDiscord, FaTelegram } from "react-icons/fa6";
 import EcosystemOrbit from "@/components/landing/ecosystem-orbit";
 
@@ -38,11 +46,6 @@ type ResourceLink = {
 };
 
 const resourceLinks: ResourceLink[] = [
-  {
-    label: "Docs",
-    href: "https://documentation.autoppia.com",
-    icon: LuBookOpen,
-  },
   {
     label: "GitHub",
     href: "https://github.com/autoppia",
@@ -97,11 +100,7 @@ const productCards: ProductCard[] = [
         href: "https://automata.autoppia.com",
         icon: LuArrowUpRight,
       },
-      {
-        label: "Docs",
-        href: "https://documentation.autoppia.com",
-        icon: LuBookOpen,
-      },
+
       {
         label: "API Docs",
         href: "https://api-automata.autoppia.com/docs/",
@@ -120,11 +119,6 @@ const productCards: ProductCard[] = [
         label: "GitHub",
         href: "https://github.com/autoppia/autoppia_sdk",
         icon: LuGithub,
-      },
-      {
-        label: "Docs",
-        href: "https://documentation.autoppia.com",
-        icon: LuBookOpen,
       },
     ],
   },
@@ -195,7 +189,11 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <header className="flex items-center justify-between gap-6 px-6 pt-6 sm:px-10 sm:pt-8">
           <div className="flex items-center gap-8">
-            <Link href="/landing" aria-label="Autoppia" className="w-[120px] sm:w-[155px]">
+            <Link
+              href="/landing"
+              aria-label="Autoppia"
+              className="w-[120px] sm:w-[155px]"
+            >
               <Image
                 src="/logo.webp"
                 alt="Autoppia Logo"
@@ -219,7 +217,7 @@ export default function LandingPage() {
               ))}
             </nav>
           </div>
-            <div className="flex items-center gap-4 overflow-x-auto overflow-y-hidden">
+          <div className="flex items-center gap-4 overflow-x-auto overflow-y-hidden">
             {resourceLinks.map((link) => {
               const Icon = link.icon;
               return (
@@ -258,9 +256,9 @@ export default function LandingPage() {
                   BUILDING AUTONOMOUS COMPANIES
                 </h1>
                 <p className="max-w-2xl text-base text-white/70 sm:text-lg">
-                  We orchestrate specialized AI Workers to automate operations across
-                  every business surface—from browsers and SaaS tools to email, APIs,
-                  and beyond.
+                  We orchestrate specialized AI Workers to automate operations
+                  across every business surface—from browsers and SaaS tools to
+                  email, APIs, and beyond.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
                   <Link
@@ -299,7 +297,9 @@ export default function LandingPage() {
                   <div
                     className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${card.accent}`} />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${card.accent}`}
+                    />
                   </div>
                   <div className="relative z-20 flex flex-col gap-4 pointer-events-none">
                     <div className="flex items-start justify-between gap-3">
@@ -342,7 +342,10 @@ export default function LandingPage() {
           </div>
 
           <footer className="mt-auto flex flex-col gap-4 pt-8 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between sm:pt-10 sm:text-sm">
-            <span>© {new Date().getFullYear()} Autoppia. Building autonomous companies.</span>
+            <span>
+              © {new Date().getFullYear()} Autoppia. Building autonomous
+              companies.
+            </span>
             <div className="flex flex-wrap items-center gap-3">
               {footerLinks.map((link) => {
                 const Icon = link.icon;

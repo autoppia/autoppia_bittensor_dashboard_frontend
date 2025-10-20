@@ -55,13 +55,14 @@ export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
       href: routes.leaderboard,
       icon: <LuTrophy />,
     },
+
     {
       name: "Websites",
       href: routes.websites,
       icon: <LuGlobe />,
     },
     {
-      name: "Test",
+      name: "Playground",
       href: routes.testAgent,
       icon: <PiFlaskDuotone />,
     },

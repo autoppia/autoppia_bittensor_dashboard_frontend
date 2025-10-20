@@ -187,27 +187,50 @@ export default function LandingPage() {
                 : "opacity-0 translate-y-5"
             )}
           >
-            <a
-              href="https://documentation.autoppia.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25">
-                <LuFileText className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                LEARN MORE
-              </button>
-            </a>
             <Link href={routes.leaderboard} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25"
+                style={{
+                  background: "linear-gradient(90deg, #EAB308, #F59E0B)",
+                  ":hover": {
+                    background: "linear-gradient(90deg, #CA8A04, #D97706)",
+                  },
+                }}
+              >
                 <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 LEADERBOARD
               </button>
             </Link>
+            <Link href={routes.overview} className="w-full sm:w-auto">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/25"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #065F46, #059669, #10B981, #34D399)",
+                  ":hover": {
+                    background:
+                      "linear-gradient(90deg, #047857, #059669, #10B981, #6EE7B7)",
+                  },
+                }}
+              >
+                <LuNetwork className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                SUBNET 36
+              </button>
+            </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-500/60 to-pink-500/60 border-2 border-purple-500/60 hover:from-purple-500 hover:to-pink-500 hover:border-purple-500 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25 backdrop-blur-sm">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #0891B2, #06B6D4, #3B82F6)",
+                  ":hover": {
+                    background:
+                      "linear-gradient(90deg, #0E7490, #0891B2, #2563EB)",
+                  },
+                }}
+              >
                 <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                TEST YOUR AGENT
+                PLAYGROUND
               </button>
             </Link>
           </div>
@@ -228,7 +251,7 @@ export default function LandingPage() {
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
                 white: true,
-                valueClass: "text-cyan-200",
+                valueClass: "text-amber-200",
               },
               {
                 value: "+1000",
@@ -236,7 +259,7 @@ export default function LandingPage() {
                 gradient: "from-yellow-400 to-orange-500",
                 glow: "group-hover:shadow-yellow-400/20",
                 white: true,
-                valueClass: "text-amber-200",
+                valueClass: "text-green-200",
               },
               {
                 value: (
@@ -537,8 +560,8 @@ export default function LandingPage() {
           </span>{" "}
           that mirror popular real-world properties and cover e-commerce,
           dining, CRM, email, delivery, lodging, and professional networking.
-          <span className="ml-1 font-bold">Mirrored</span>{" "}
-          experiences preserve authentic UI flows while keeping experiments safe. Here&apos;s a
+          <span className="ml-1 font-bold">Mirrored</span> experiences preserve
+          authentic UI flows while keeping experiments safe. Here&apos;s a
           preview of our projects:
         </Text>
 
@@ -814,9 +837,10 @@ export default function LandingPage() {
 
             <div className="relative p-8 sm:p-10 md:p-12 text-center flex flex-col items-center">
               <Text className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 leading-relaxed">
-                Want to see your Web Agent in action? <br />Configure a benchmark run
-                by selecting websites, use cases, and prompts. Define how many
-                runs you want, point us to your agent&apos;s endpoint, and let{" "}
+                Want to see your Web Agent in action? <br />
+                Configure a benchmark run by selecting websites, use cases, and
+                prompts. Define how many runs you want, point us to your
+                agent&apos;s endpoint, and let{" "}
                 <span className="text-purple-300 font-bold bg-purple-400/20 px-3 py-1.5 rounded-lg border border-purple-400/30 animate-pulse-slow">
                   IWA
                 </span>{" "}
