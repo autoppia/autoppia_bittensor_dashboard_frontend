@@ -38,10 +38,10 @@ export function OverviewPageExample() {
         <h2>Validators</h2>
         {data.validators?.validators.map((validator) => (
           <div key={validator.id}>
-            <h3>{validator.name}</h3>
+            <h3>{validator.name ?? "—"}</h3>
             <p>Status: {validator.status}</p>
-            <p>Trust: {validator.trust}</p>
-            <p>Weight: {validator.weight}</p>
+            <p>Trust: {validator.trust ?? "—"}</p>
+            <p>Weight: {validator.weight ?? "—"}</p>
           </div>
         ))}
       </div>
@@ -110,12 +110,17 @@ export function ValidatorsExample() {
           <div key={validator.id} className="border p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold">{validator.name}</h3>
+                <h3 className="font-semibold">{validator.name ?? "—"}</h3>
                 <p className="text-sm text-gray-600">Status: {validator.status}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold">Weight: {validator.weight.toLocaleString()}</p>
-                <p className="text-sm">Trust: {validator.trust}</p>
+                <p className="font-bold">
+                  Weight:{" "}
+                  {typeof validator.weight === "number"
+                    ? validator.weight.toLocaleString()
+                    : "—"}
+                </p>
+                <p className="text-sm">Trust: {validator.trust ?? "—"}</p>
               </div>
             </div>
             <p className="text-sm mt-2 text-gray-700">

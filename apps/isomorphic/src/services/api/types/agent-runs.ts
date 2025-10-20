@@ -25,6 +25,7 @@ export interface AgentRunData {
   ranking?: number;
   duration: number;
   overallScore: number;
+  averageEvaluationTime?: number | null;
   websites: {
     website: string;
     tasks: number;
@@ -64,6 +65,7 @@ export interface AgentRunListItem {
   overallScore: number;
   successRate?: number | null;
   ranking?: number;
+  averageEvaluationTime?: number | null;
 }
 
 // ===== AGENT RUN TASK DATA =====

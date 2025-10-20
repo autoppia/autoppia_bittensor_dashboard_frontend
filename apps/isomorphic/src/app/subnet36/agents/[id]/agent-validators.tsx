@@ -122,19 +122,25 @@ export default function AgentValidators({
         ).toFixed(1)
       : "0";
 
-  const durationValues = filteredRuns
+  const responseTimeValues = filteredRuns
     .map((run) => {
-      if (typeof run.duration !== "number" || !Number.isFinite(run.duration)) {
-        return null;
+      if (
+        typeof run.averageEvaluationTime === "number" &&
+        Number.isFinite(run.averageEvaluationTime)
+      ) {
+        return Math.abs(run.averageEvaluationTime);
       }
-      return Math.abs(run.duration);
+      if (typeof run.duration === "number" && Number.isFinite(run.duration)) {
+        return Math.abs(run.duration);
+      }
+      return null;
     })
     .filter((value): value is number => value !== null);
   const avgResponseTime =
-    durationValues.length > 0
+    responseTimeValues.length > 0
       ? (
-          durationValues.reduce((sum, value) => sum + value, 0) /
-          durationValues.length
+          responseTimeValues.reduce((sum, value) => sum + value, 0) /
+          responseTimeValues.length
         ).toFixed(1)
       : "0";
 
@@ -446,8 +452,11 @@ export default function AgentValidators({
             const score = (latestRun.score * 100).toFixed(1);
             const rank = latestRun.ranking || 0;
             const responseTimeSeconds =
-              typeof latestRun.duration === "number" &&
-              Number.isFinite(latestRun.duration)
+              typeof latestRun.averageEvaluationTime === "number" &&
+              Number.isFinite(latestRun.averageEvaluationTime)
+                ? Math.abs(latestRun.averageEvaluationTime)
+                : typeof latestRun.duration === "number" &&
+                  Number.isFinite(latestRun.duration)
                 ? Math.abs(latestRun.duration)
                 : 0;
             const tasksCompleted = latestRun.completedTasks;

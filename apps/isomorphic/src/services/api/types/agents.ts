@@ -134,6 +134,7 @@ export interface AgentRunData {
   overallScore: number;
   duration: number;
   ranking?: number;
+  averageEvaluationTime?: number | null;
   websites: {
     website: string;
     tasks: number;
@@ -166,6 +167,7 @@ export interface AgentRunOverview {
   overallScoreRaw?: number;
   ranking: number;
   duration: number;
+  averageEvaluationTime?: number | null;
 }
 
 // ===== AGENT COMPARISON =====
