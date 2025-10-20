@@ -7,6 +7,9 @@
 export interface AgentRunData {
   runId: string;
   agentId: string;
+  agentUid?: number | null;
+  agentHotkey?: string | null;
+  agentName?: string | null;
   roundId: number;
   validatorId: string;
   validatorName: string;
@@ -45,7 +48,9 @@ export interface AgentRunData {
 export interface AgentRunListItem {
   runId: string;
   agentId: string;
-  agentName?: string;
+  agentUid?: number | null;
+  agentHotkey?: string | null;
+  agentName?: string | null;
   roundId: number;
   validatorId: string;
   validatorName?: string;
@@ -82,7 +87,20 @@ export interface AgentRunTaskData {
 // ===== TASK ACTION =====
 export interface TaskAction {
   id: string;
-  type: 'navigate' | 'click' | 'type' | 'wait' | 'scroll' | 'screenshot' | 'other';
+  type:
+    | 'navigate'
+    | 'click'
+    | 'type'
+    | 'input'
+    | 'search'
+    | 'extract'
+    | 'submit'
+    | 'open_tab'
+    | 'close_tab'
+    | 'wait'
+    | 'scroll'
+    | 'screenshot'
+    | 'other';
   selector?: string;
   value?: string;
   timestamp: string;
@@ -130,6 +148,9 @@ export interface AgentRunStats {
 export interface AgentRunSummary {
   runId: string;
   agentId: string;
+  agentUid?: number | null;
+  agentHotkey?: string | null;
+  agentName?: string | null;
   roundId: number;
   validatorId: string;
   startTime: string;
@@ -177,6 +198,8 @@ export interface AgentRunPersonas {
   };
   agent: {
     id: string;
+    uid?: number | null;
+    hotkey?: string | null;
     name: string;
     type: string;
     image: string;

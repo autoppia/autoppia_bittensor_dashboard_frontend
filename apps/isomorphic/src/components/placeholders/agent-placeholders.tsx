@@ -6,6 +6,19 @@
 import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 
+const BAR_SKELETON_HEIGHTS = [
+  52,
+  28,
+  38,
+  31,
+  42,
+  48,
+  35,
+  62,
+  30,
+  57,
+];
+
 // ===== AGENT STATS PLACEHOLDER =====
 export function AgentStatsPlaceholder() {
   const stats = [
@@ -82,17 +95,20 @@ export function AgentScoreChartPlaceholder({ className }: { className?: string }
       
       <div className="h-[273px] w-full bg-gray-100/50 rounded-lg animate-pulse">
         <div className="flex items-end justify-between h-full p-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-gray-300/50 rounded-t animate-pulse"
-              style={{
-                height: `${Math.random() * 60 + 20}%`,
-                width: '8%',
-                animationDelay: `${i * 100}ms`
-              }}
-            ></div>
-          ))}
+          {Array.from({ length: 10 }).map((_, i) => {
+            const height = BAR_SKELETON_HEIGHTS[i % BAR_SKELETON_HEIGHTS.length];
+            return (
+              <div
+                key={i}
+                className="bg-gray-300/50 rounded-t animate-pulse"
+                style={{
+                  height: `${height}%`,
+                  width: "8%",
+                  animationDelay: `${i * 100}ms`,
+                }}
+              ></div>
+            );
+          })}
         </div>
       </div>
     </div>

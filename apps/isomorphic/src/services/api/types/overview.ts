@@ -10,6 +10,7 @@ export interface OverviewMetrics {
   totalValidators: number;
   totalMiners: number;
   currentRound: number;
+  metricsRound: number;
   subnetVersion: string;
   lastUpdated: string;
 }
@@ -17,11 +18,12 @@ export interface OverviewMetrics {
 // ===== VALIDATOR DATA =====
 export interface ValidatorData {
   id: string;
+  validatorUid?: number | null;
   name: string;
   hotkey: string;
   icon: string;
   currentTask: string;
-  status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline';
+  status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline' | 'Finished' | 'Starting' | 'Not Started';
   totalTasks: number;
   weight: number;
   trust: number;
@@ -30,6 +32,8 @@ export interface ValidatorData {
   uptime: number; // percentage
   stake: number;
   emission: number;
+  validatorRoundId?: string | null;
+  roundNumber?: number | null;
 }
 
 export interface ValidatorFilterItem {
@@ -59,9 +63,9 @@ export interface OverviewRoundData {
 export interface LeaderboardData {
   round: number;
   subnet36: number;
-  openai_cua: number;
-  anthropic_cua: number;
-  browser_use: number;
+  openai_cua?: number | null;
+  anthropic_cua?: number | null;
+  browser_use?: number | null;
   timestamp: string;
 }
 

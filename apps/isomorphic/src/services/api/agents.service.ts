@@ -30,6 +30,7 @@ import {
   AgentStatistics,
   ScoreRoundDataPoint,
   AgentActivity,
+  AgentRoundMetrics,
 } from './types/agents';
 
 export class AgentsService {
@@ -50,13 +51,22 @@ export class AgentsService {
   /**
    * Get details for a specific miner by UID (optimized endpoint)
    */
-  async getMinerDetails(uid: number): Promise<{ agent: AgentData; scoreRoundData: ScoreRoundDataPoint[] }> {
+  async getMinerDetails(
+    uid: number,
+    params?: { round?: number }
+  ): Promise<{
+    agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
+  }> {
     const candidateIds = [`agent-${uid}`, String(uid)];
 
     for (const candidate of candidateIds) {
       try {
         const response = await apiClient.get<MinerDetailsResponse>(
-          `${this.baseEndpoint}/${candidate}`
+          `${this.baseEndpoint}/${candidate}`,
+          params
         );
         if (response.data?.data) {
           return response.data.data;
@@ -118,12 +128,13 @@ export class AgentsService {
       const payload = response.data?.data;
       if (payload) {
         const trendData = Array.isArray(payload.performanceTrend) ? payload.performanceTrend : [];
-        return {
-          agentId: uid.toString(),
-          timeRange: payload.timeRange ?? { start: '', end: '' },
-          totalRuns: payload.totalRuns ?? trendData.length,
-          successfulRuns: payload.successfulRuns ?? 0,
-          failedRuns: payload.failedRuns ?? Math.max((payload.totalRuns ?? 0) - (payload.successfulRuns ?? 0), 0),
+       return {
+         agentId: uid.toString(),
+         timeRange: payload.timeRange ?? { start: '', end: '' },
+         totalRuns: payload.totalRuns ?? trendData.length,
+         successfulRuns: payload.successfulRuns ?? 0,
+         failedRuns: payload.failedRuns ?? Math.max((payload.totalRuns ?? 0) - (payload.successfulRuns ?? 0), 0),
+          successRate: payload.successRate ?? 0,
           currentScore: payload.averageScore ?? 0,
           currentTopScore: payload.bestScore ?? 0,
           worstScore: payload.worstScore ?? 0,
@@ -138,9 +149,10 @@ export class AgentsService {
             poor: 0,
           },
           performanceTrend: trendData.map((item, index) => ({
-            round: index + 1,
+            round: typeof (item as any).round === 'number' ? (item as any).round : index + 1,
             score: item.score ?? 0,
             responseTime: item.responseTime ?? 0,
+            successRate: item.successRate ?? 0,
           })),
         };
       }
@@ -158,45 +170,21 @@ export class AgentsService {
     uid: number,
     params?: { timeRange?: '7d' | '30d' | '90d'; granularity?: 'hour' | 'day' }
   ): AgentPerformanceMetrics {
-    const timeRange = params?.timeRange || '7d';
-    const rounds = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-    const performanceTrend = [];
-    
-    // Get current miner details to base the data on
-    const currentScore = 0.95; // Default high score for top miners
-    const currentSuccessRate = 76.6; // Default success rate
-    
-    // Start from a recent round number (assuming current round is around 25)
-    const currentRound = 25;
-    
-    for (let i = rounds - 1; i >= 0; i--) {
-      const roundNumber = currentRound - i;
-      
-      // Generate realistic variations
-      const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
-      const score = Math.max(0.7, Math.min(1, currentScore + variation));
-      const responseTime = Math.max(5, 25 + (Math.random() - 0.5) * 10);
-      
-      performanceTrend.push({
-        round: roundNumber,
-        score,
-        responseTime
-      });
-    }
-    
+    const timeRange = params?.timeRange ?? '7d';
     return {
       agentId: uid.toString(),
       timeRange: {
         start: '',
-        end: ''
+        end: '',
       },
       totalRuns: 0,
       successfulRuns: 0,
       failedRuns: 0,
-      currentScore: currentScore,
-      currentTopScore: 0.98,
-      worstScore: 0.7,
-      averageResponseTime: 30,
+      successRate: 0,
+      currentScore: 0,
+      currentTopScore: 0,
+      worstScore: 0,
+      averageResponseTime: 0,
       totalTasks: 0,
       completedTasks: 0,
       taskCompletionRate: 0,
@@ -204,9 +192,9 @@ export class AgentsService {
         excellent: 0,
         good: 0,
         average: 0,
-        poor: 0
+        poor: 0,
       },
-      performanceTrend: performanceTrend
+      performanceTrend: [],
     };
   }
 
@@ -224,13 +212,24 @@ export class AgentsService {
   /**
    * Get details for a specific agent by ID
    */
-  async getAgent(id: string): Promise<{ agent: AgentData; scoreRoundData: any[] }> {
+  async getAgent(
+    id: string,
+    params?: { round?: number }
+  ): Promise<{
+    agent: AgentData;
+    scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
+  }> {
     const response = await apiClient.get<AgentDetailsResponse>(
-      `${this.baseEndpoint}/${id}`
+      `${this.baseEndpoint}/${id}`,
+      params
     );
     return {
       agent: response.data.data.agent,
-      scoreRoundData: response.data.data.scoreRoundData
+      scoreRoundData: response.data.data.scoreRoundData,
+      availableRounds: response.data.data.availableRounds,
+      roundMetrics: response.data.data.roundMetrics,
     };
   }
 

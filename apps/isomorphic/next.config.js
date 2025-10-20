@@ -19,7 +19,7 @@ module.exports = {
   // Disable development overlay
   devIndicators: {
     buildActivity: false,
-    buildActivityPosition: "bottom-right",
+    position: "bottom-right",
   },
   typescript: {
     // !! WARN !!
@@ -101,6 +101,32 @@ module.exports = {
       {
         source: "/land",
         destination: "/home",
+        permanent: false,
+      },
+      // Legacy routes without /subnet36 prefix -> keep old links working
+      {
+        source: "/agents/:path*",
+        destination: "/subnet36/agents/:path*",
+        permanent: false,
+      },
+      {
+        source: "/agent-run/:path*",
+        destination: "/subnet36/agent-run/:path*",
+        permanent: false,
+      },
+      {
+        source: "/tasks/:path*",
+        destination: "/subnet36/tasks/:path*",
+        permanent: false,
+      },
+      {
+        source: "/rounds/:path*",
+        destination: "/subnet36/rounds/:path*",
+        permanent: false,
+      },
+      {
+        source: "/overview",
+        destination: "/subnet36/overview",
         permanent: false,
       },
     ];

@@ -63,6 +63,26 @@ export interface ScoreRoundDataPoint {
   }[];
 }
 
+export interface AgentRoundMetrics {
+  roundId: number;
+  score: number;
+  topScore: number;
+  rank?: number | null;
+  totalRuns: number;
+  totalValidators: number;
+  validatorUids: number[];
+  validators: Array<{
+    uid: number | null;
+    hotkey?: string | null;
+    name?: string | null;
+  }>;
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  successRate: number;
+  averageResponseTime: number;
+}
+
 // ===== AGENT PERFORMANCE METRICS =====
 export interface AgentPerformanceMetrics {
   agentId: string;
@@ -73,6 +93,7 @@ export interface AgentPerformanceMetrics {
   totalRuns: number;
   successfulRuns: number;
   failedRuns: number;
+  successRate: number;
   currentScore: number; // RENAMED from averageScore
   currentTopScore: number; // RENAMED from bestScore
   worstScore: number;
@@ -90,6 +111,7 @@ export interface AgentPerformanceMetrics {
     round: number;
     score: number;
     responseTime?: number;
+    successRate?: number;
   }[];
 }
 
@@ -154,6 +176,7 @@ export interface AgentComparison {
     metrics: {
       currentScore: number; // RENAMED from averageScore
       currentTopScore: number; // RENAMED from bestScore
+      successRate: number;
       averageResponseTime: number;
       totalRuns: number;
       currentRank: number; // RENAMED from ranking
@@ -222,6 +245,7 @@ export interface MinimalAgentsListResponse {
   total: number;
   page: number;
   limit: number;
+  round?: number;
 }
 
 export interface AgentsListResponse {
@@ -239,6 +263,8 @@ export interface AgentDetailsResponse {
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
   };
 }
 
@@ -247,6 +273,8 @@ export interface MinerDetailsResponse {
   data: {
     agent: AgentData;
     scoreRoundData: ScoreRoundDataPoint[];
+    availableRounds?: number[];
+    roundMetrics?: AgentRoundMetrics | null;
   };
 }
 
@@ -304,6 +332,7 @@ export interface MinimalAgentsListQueryParams {
   limit?: number;
   isSota?: boolean; // Filter by SOTA status
   search?: string; // Search by miner name or UID
+  round?: number; // Filter results by round
 }
 
 export interface AgentsListQueryParams {

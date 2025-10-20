@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { routes } from "@/config/routes";
 import {
   FaTrophy,
   FaMedal,
@@ -515,13 +516,13 @@ export default function App() {
             </Text>
             <div className="flex justify-center">
               <Link
-                href="http://localhost:3000/test-agent"
+                href={routes.testAgent}
                 className="group relative inline-flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold text-white uppercase tracking-[0.24em] rounded-full transition-transform duration-300 hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
                 <span className="absolute inset-0 rounded-full bg-cyan-400/20 group-hover:bg-cyan-400/30 transition-colors duration-300" />
                 <span className="relative z-10 flex items-center gap-2">
                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white/90 animate-ping" />
-                  Join the arena
+                  test your agent
                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white/90 animate-ping" />
                 </span>
               </Link>

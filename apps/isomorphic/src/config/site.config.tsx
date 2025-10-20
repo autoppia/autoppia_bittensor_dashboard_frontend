@@ -6,7 +6,7 @@ enum MODE {
 }
 
 export const siteConfig = {
-  title: "Leaderboard - Bittensor Subnet 36",
+  title: "IWA Platform",
   description: "The Bittensor Subnet 36 Leaderboard",
   mode: MODE.DARK,
   layout: LAYOUT_OPTIONS.HYDROGEN,
