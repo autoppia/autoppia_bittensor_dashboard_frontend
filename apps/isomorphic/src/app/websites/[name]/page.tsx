@@ -74,7 +74,7 @@ export default function WebsiteDetailPage() {
 
     try {
       const response = await fetch(
-        "http://84.247.180.192:5080/generate-tasks",
+        "https://api-benchmark.autoppia.com/generate-tasks",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

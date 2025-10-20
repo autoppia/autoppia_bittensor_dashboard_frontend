@@ -30,7 +30,7 @@ type TestResult = {
   actions?: any[];
   gif?: string | null;
 };
-const TEST_AGENT_API = "http://84.247.180.192:5050/test-your-agent";
+const TEST_AGENT_API = "https://api-benchmark.autoppia.com/test-your-agent";
 
 export default function TestAgent() {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
