@@ -38,7 +38,7 @@ export default function Websites() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
           <div className="relative z-10 text-center">
-            <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                 <PiGlobeDuotone className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
@@ -54,7 +54,7 @@ export default function Websites() {
               testing and validation
             </Text>
 
-            <div className="flex items-center justify-center gap-8 mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-6">
               <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-full backdrop-blur-sm">
                 <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
                 <Text className="text-sm font-semibold text-emerald-300">
@@ -72,7 +72,7 @@ export default function Websites() {
         </div>
 
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Title
                 as="h2"
