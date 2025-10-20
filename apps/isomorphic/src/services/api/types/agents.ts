@@ -245,6 +245,7 @@ export interface MinimalAgentsListResponse {
   total: number;
   page: number;
   limit: number;
+  round?: number;
 }
 
 export interface AgentsListResponse {
