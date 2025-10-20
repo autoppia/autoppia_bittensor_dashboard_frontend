@@ -197,13 +197,15 @@ export default function OverviewValidators() {
               ? currentRound.id
               : undefined;
           const validatorParam =
-            validator.validatorUid != null
-              ? `validator-${validator.validatorUid}`
-              : validator.id;
-          const roundsLink = validator.validatorRoundId
-            ? `${routes.rounds}/${encodeURIComponent(
-                validator.validatorRoundId
-              )}?validator=${encodeURIComponent(validatorParam)}`
+            validator.id || (validator.validatorUid != null ? `validator-${validator.validatorUid}` : "");
+          const roundKey =
+            typeof resolvedRoundNumber === "number"
+              ? `round_${resolvedRoundNumber}`
+              : currentRound?.id != null
+              ? `round_${currentRound.id}`
+              : validator.validatorRoundId ?? undefined;
+          const roundsLink = roundKey
+            ? `${routes.rounds}/${encodeURIComponent(roundKey)}${validatorParam ? `?validator=${encodeURIComponent(validatorParam)}` : ""}`
             : undefined;
 
           return roundsLink ? (
