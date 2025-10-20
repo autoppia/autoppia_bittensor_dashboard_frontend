@@ -92,6 +92,56 @@ export default function TestAgent() {
     return allUseCases;
   };
 
+  // Return use cases grouped by project (keep project label from availableProjects)
+  const getAvailableUseCasesByProject = () => {
+    if (selectedProjects.length === 0) return [];
+
+    return selectedProjects.map((project) => {
+      const key = project;
+      // find label for project (e.g., AutoCinema)
+      const proj = availableProjects.find((p) => p.value === key);
+      const projectLabel = proj ? proj.label : project;
+
+      const casesArr: { value: string; label: string }[] = [];
+
+      const cases = useCaseCatalogues[key];
+      if (Array.isArray(cases) && cases.length > 0) {
+        cases.forEach((uc) => {
+          if (!casesArr.find((existing) => existing.value === uc.name)) {
+            casesArr.push({ value: uc.name, label: uc.name });
+          }
+        });
+      } else {
+        const website = websitesData.find(
+          (w) => w.slug.toLowerCase() === key.toLowerCase()
+        );
+        if (website && Array.isArray(website.useCases)) {
+          website.useCases.forEach((uc) => {
+            const name =
+              typeof uc.name === "string" ? uc.name : String(uc.name);
+            if (!casesArr.find((existing) => existing.value === name)) {
+              casesArr.push({ value: name, label: name });
+            }
+          });
+        }
+      }
+
+      return { project: key, label: projectLabel, cases: casesArr };
+    });
+  };
+
+  const formatUseCaseLabel = (raw?: string) => {
+    if (!raw) return "";
+    return raw
+      .toString()
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   // Close dropdowns when clicking outside and update positions on scroll
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -402,28 +452,35 @@ export default function TestAgent() {
 
               {selectedProjects.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-4">
-                  {selectedProjects.map((project) => (
-                    <span
-                      key={project}
-                      className={cn(
-                        "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
-                        "bg-cyan-600/20 text-cyan-400 border border-cyan-500/50",
-                        "hover:border-cyan-400 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
-                      )}
-                    >
-                      {project}
-                      <button
-                        onClick={() =>
-                          setSelectedProjects(
-                            selectedProjects.filter((p) => p !== project)
-                          )
-                        }
-                        className="hover:text-red-400 transition-colors text-lg"
+                  {selectedProjects.map((project) => {
+                    const proj = availableProjects.find(
+                      (p) => p.value === project
+                    );
+                    const displayLabel = proj ? proj.label : project;
+
+                    return (
+                      <span
+                        key={project}
+                        className={cn(
+                          "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
+                          "bg-cyan-600/20 text-cyan-400 border border-cyan-500/50",
+                          "hover:border-cyan-400 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30"
+                        )}
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {displayLabel}
+                        <button
+                          onClick={() =>
+                            setSelectedProjects(
+                              selectedProjects.filter((p) => p !== project)
+                            )
+                          }
+                          className="hover:text-red-400 transition-colors text-lg"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -474,23 +531,57 @@ export default function TestAgent() {
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {getAvailableUseCases().map((useCase) => (
-                      <button
-                        key={useCase.value}
-                        type="button"
-                        onClick={() => {
-                          if (!selectedUseCases.includes(useCase.value)) {
-                            setSelectedUseCases([
-                              ...selectedUseCases,
-                              useCase.value,
-                            ]);
-                          }
-                          setIsUseCasesDropdownOpen(false);
-                        }}
-                        className="w-full px-3 py-2 text-left text-cyan-300 font-mono hover:bg-cyan-900/30 hover:text-cyan-200 transition-colors duration-200 border-b border-cyan-400/20 last:border-b-0"
+                    {getAvailableUseCasesByProject().map((group) => (
+                      <div
+                        key={group.project}
+                        className="border-b border-cyan-400/10 last:border-b-0"
                       >
-                        {useCase.label}
-                      </button>
+                        <div className="flex items-center justify-between px-3 py-2 bg-cyan-900/5">
+                          <div className="text-cyan-200 font-bold text-sm">
+                            {group.label}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // select all use cases for this project
+                              const allValues = group.cases.map((c) => c.value);
+                              const next = Array.from(
+                                new Set([...selectedUseCases, ...allValues])
+                              );
+                              setSelectedUseCases(next);
+                              setIsUseCasesDropdownOpen(false);
+                            }}
+                            className="text-xs text-cyan-300 underline"
+                          >
+                            Select all
+                          </button>
+                        </div>
+
+                        {group.cases.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-gray-400">
+                            No use cases
+                          </div>
+                        ) : (
+                          group.cases.map((useCase) => (
+                            <button
+                              key={`${group.project}-${useCase.value}`}
+                              type="button"
+                              onClick={() => {
+                                if (!selectedUseCases.includes(useCase.value)) {
+                                  setSelectedUseCases([
+                                    ...selectedUseCases,
+                                    useCase.value,
+                                  ]);
+                                }
+                                setIsUseCasesDropdownOpen(false);
+                              }}
+                              className="w-full px-3 py-2 text-left text-cyan-300 font-mono hover:bg-cyan-900/30 hover:text-cyan-200 transition-colors duration-200 border-t border-cyan-400/20 last:border-b-0"
+                            >
+                              {formatUseCaseLabel(useCase.label)}
+                            </button>
+                          ))
+                        )}
+                      </div>
                     ))}
                   </div>,
                   document.body
@@ -507,7 +598,7 @@ export default function TestAgent() {
                         "hover:border-yellow-400 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/30"
                       )}
                     >
-                      {useCase}
+                      {formatUseCaseLabel(useCase)}
                       <button
                         onClick={() =>
                           setSelectedUseCases(
