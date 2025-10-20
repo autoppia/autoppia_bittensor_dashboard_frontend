@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching overview data with loading states and error handling
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { overviewService } from '../api/overview.service';
 import type {
   OverviewMetrics,
@@ -30,23 +30,40 @@ function useApiCall<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pollIntervalMs = options?.pollIntervalMs;
+  const initialFetchRef = useRef(true);
+  const serializedDataRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
+      if (initialFetchRef.current) {
+        setLoading(true);
+      }
       setError(null);
       const result = await apiCall();
-      setData(result);
+      const serialized = JSON.stringify(result);
+      if (serializedDataRef.current !== serialized) {
+        serializedDataRef.current = serialized;
+        setData(result);
+      }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
-      setLoading(false);
+      if (initialFetchRef.current) {
+        initialFetchRef.current = false;
+        setLoading(false);
+      }
     }
   }, dependencies);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!initialFetchRef.current) {
+      setLoading(false);
+    }
+  }, [data]);
 
   useEffect(() => {
     if (!pollIntervalMs || pollIntervalMs <= 0) {
