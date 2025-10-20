@@ -1,5 +1,6 @@
 import { metaObject } from "@/config/site.config";
 import { notFound, redirect } from "next/navigation";
+import { routes } from "@/config/routes";
 import Round from "./round";
 import { overviewService } from "@/services/api/overview.service";
 import { roundsService } from "@/services/api/rounds.service";
@@ -116,7 +117,7 @@ export default async function Page({ params }: PageProps) {
     const currentRoundId = await resolveCurrentRoundIdentifier();
 
     if (currentRoundId) {
-      redirect(`/rounds/${encodeURIComponent(currentRoundId)}`);
+      redirect(`${routes.rounds}/${encodeURIComponent(currentRoundId)}`);
     }
 
     notFound();

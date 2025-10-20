@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
+import { routes } from "@/config/routes";
 import type { IconType } from "react-icons";
 import {
   PiChartBar,
@@ -330,7 +331,7 @@ export default function TaskDetails() {
           ? truncateMiddle(roundInfo.validatorRoundId, 6)
           : "—",
       href: roundInfo?.validatorRoundId
-        ? `/rounds/${encodeURIComponent(roundInfo.validatorRoundId)}`
+        ? `${routes.rounds}/${encodeURIComponent(roundInfo.validatorRoundId)}`
         : undefined,
     },
     {

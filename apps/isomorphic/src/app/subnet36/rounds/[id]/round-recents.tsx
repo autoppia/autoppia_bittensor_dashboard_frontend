@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { routes } from "@/config/routes";
 import { Button } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
@@ -105,7 +106,7 @@ export default function RoundRecents() {
             const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
             
             return (
-              <Link key={roundKey} href={`/rounds/${encodeURIComponent(roundKey)}`}>
+              <Link key={roundKey} href={`${routes.rounds}/${encodeURIComponent(roundKey)}`}>
                 <div
                   className={cn(
                     "w-full min-w-[250px] rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
