@@ -17,13 +17,19 @@ import type {
 } from '../api/types/overview';
 
 // Generic hook for API calls with loading and error states
+type UseApiCallOptions = {
+  pollIntervalMs?: number;
+};
+
 function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = []
+  dependencies: any[] = [],
+  options: UseApiCallOptions = {}
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pollIntervalMs = options?.pollIntervalMs;
 
   const fetchData = useCallback(async () => {
     try {
@@ -42,6 +48,22 @@ function useApiCall<T>(
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    if (!pollIntervalMs || pollIntervalMs <= 0) {
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      fetchData();
+    }, pollIntervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [fetchData, pollIntervalMs]);
+
   return { data, loading, error, refetch: fetchData };
 }
 
@@ -54,7 +76,8 @@ export function useOverviewMetrics() {
 export function useValidators(params?: ValidatorsQueryParams) {
   return useApiCall(
     () => overviewService.getValidators(params),
-    [JSON.stringify(params)]
+    [JSON.stringify(params)],
+    { pollIntervalMs: 3000 }
   );
 }
 
@@ -82,7 +105,7 @@ export function useValidatorFilterOptions() {
 
 // Hook for current round
 export function useCurrentRound() {
-  return useApiCall(() => overviewService.getCurrentRound());
+  return useApiCall(() => overviewService.getCurrentRound(), [], { pollIntervalMs: 3000 });
 }
 
 // Hook for rounds

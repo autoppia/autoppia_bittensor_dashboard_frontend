@@ -214,7 +214,7 @@ export default function RoundValidators({
                       </span>
                       <span
                         className={cn(
-                          "mt-1.5 text-xs font-medium tracking-wide font-mono transition-colors duration-300 truncate max-w-full",
+                          "mt-1.5 text-xs font-medium tracking-wide font-inter transition-colors duration-300 truncate max-w-full",
                           isActive ? "text-blue-200" : "text-gray-500"
                         )}
                       >

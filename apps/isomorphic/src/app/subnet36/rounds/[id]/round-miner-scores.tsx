@@ -11,6 +11,7 @@ import { useRoundMiners } from "@/services/hooks/useRounds";
 import { roundsService } from "@/services/api/rounds.service";
 import { extractRoundIdentifier } from "./round-identifier";
 import type { BenchmarkPerformance } from "@/services/api/types/rounds";
+import { roundGlassBackgroundClass } from "./round-style.config";
 import {
   ComposedChart,
   Bar,
@@ -54,6 +55,15 @@ export default function RoundMinerScores({
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
+  const cardClassName = React.useMemo(
+    () =>
+      cn(
+        roundGlassBackgroundClass,
+        "h-[520px] rounded-3xl text-white shadow-2xl backdrop-blur",
+        className
+      ),
+    [className]
+  );
 
   // Get miners data from API
   const { data: minersData, loading, error } = useRoundMiners(roundKey, {
@@ -247,7 +257,12 @@ export default function RoundMinerScores({
   // Show loading state
   if (loading) {
     return (
-      <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
+      <WidgetCard
+        title="Miner Scores"
+        className={cardClassName}
+        headerClassName="text-white"
+        titleClassName="text-white"
+      >
         <div className="mt-5 w-full h-[350px] lg:mt-7">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
@@ -264,11 +279,16 @@ export default function RoundMinerScores({
   // Show error state
   if (error) {
     return (
-      <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
+      <WidgetCard
+        title="Miner Scores"
+        className={cardClassName}
+        headerClassName="text-white"
+        titleClassName="text-white"
+      >
         <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
-          <div className="text-center text-red-600">
+          <div className="text-center text-rose-200">
             <p className="text-lg font-semibold">Failed to load miner scores</p>
-            <p className="mt-2 text-sm">Please try again later</p>
+            <p className="mt-2 text-sm text-white/80">Please try again later</p>
           </div>
         </div>
       </WidgetCard>
@@ -277,9 +297,14 @@ export default function RoundMinerScores({
 
   if (!chartData.length) {
     return (
-      <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
+      <WidgetCard
+        title="Miner Scores"
+        className={cardClassName}
+        headerClassName="text-white"
+        titleClassName="text-white"
+      >
         <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-white/70">
             <p className="text-lg font-semibold">No miners found</p>
             <p className="mt-2 text-sm">
               {selectedValidatorId
@@ -293,7 +318,12 @@ export default function RoundMinerScores({
   }
 
   return (
-    <WidgetCard title="Miner Scores" className={cn("h-[520px] rounded-xl", className)}>
+    <WidgetCard
+      title="Miner Scores"
+      className={cardClassName}
+      headerClassName="text-white"
+      titleClassName="text-white"
+    >
       <div className="mt-5 h-[350px] w-full lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
@@ -303,10 +333,28 @@ export default function RoundMinerScores({
             }}
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="xAxisLabel" />
-            <YAxis tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
-            <Tooltip content={<CustomTooltip />} />
+            <CartesianGrid stroke="rgba(148,163,184,0.18)" strokeDasharray="3 3" />
+            <XAxis
+              dataKey="xAxisLabel"
+              tick={{
+                fill: "rgba(226,232,240,0.86)",
+                fontSize: isSmallScreen ? 10 : 12,
+                fontFamily: "var(--font-inter)",
+              }}
+              axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.25)" }}
+            />
+            <YAxis
+              tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+              tick={{
+                fill: "rgba(226,232,240,0.86)",
+                fontSize: isSmallScreen ? 10 : 12,
+                fontFamily: "var(--font-inter)",
+              }}
+              axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.25)" }}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
             <Bar
               dataKey="score"
               fill="#10B981"
@@ -333,7 +381,7 @@ export default function RoundMinerScores({
                   backgroundColor: item.color,
                 }}
               ></div>
-              <Text className="text-gray-600">{item.label}</Text>
+              <Text className="text-white/80">{item.label}</Text>
             </div>
           ))}
         </div>
@@ -348,11 +396,11 @@ export function CustomTooltip({ label, active, payload, className }: any) {
   return (
     <div
       className={cn(
-        "rounded-md border border-gray-300 bg-gray-0 shadow-2xl dark:bg-gray-100",
+        "rounded-lg border border-white/15 bg-slate-900/95 text-white shadow-2xl backdrop-blur",
         className
       )}
     >
-      <Text className="label mb-0.5 block bg-gray-100 p-2 px-2.5 text-center font-lexend text-xs font-semibold capitalize text-gray-600 dark:bg-gray-200/60 dark:text-gray-700">
+      <Text className="label mb-0.5 block bg-white/10 p-2 px-2.5 text-center font-inter text-xs font-semibold capitalize text-white">
         {payload[0]?.payload?.name}
       </Text>
       <div className="px-3 py-1.5 text-xs">
@@ -365,10 +413,10 @@ export function CustomTooltip({ label, active, payload, className }: any) {
               }}
             />
             <Text>
-              <Text as="span" className="capitalize">
+              <Text as="span" className="capitalize text-white/80">
                 Score:
               </Text>{" "}
-              <Text as="span" className="font-medium text-gray-900 dark:text-gray-700">
+              <Text as="span" className="font-medium text-white">
                 {(Number(item.value) * 100).toFixed(2)}%
               </Text>
             </Text>

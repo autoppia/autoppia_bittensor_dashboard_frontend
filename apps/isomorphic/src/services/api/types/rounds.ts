@@ -52,6 +52,9 @@ export interface RoundStatistics {
   totalValidators: number;
   averageTasksPerValidator: number;
   averageScore: number;
+  winnerAverageScore?: number;
+  winnerMinerUid?: number;
+  validatorAverageTopScore?: number;
   topScore: number;
   successRate: number;
   averageDuration: number;
