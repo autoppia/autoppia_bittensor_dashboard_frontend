@@ -35,7 +35,7 @@ export type WebsiteDataType = {
 
 export const websitesData: WebsiteDataType[] = [
   {
-    name: "Autoppia Cinema",
+    name: "AutoCinema",
     slug: "autocinema",
     portValidator: "8000",
     href: "http://autocinema.autoppia.com",
@@ -135,7 +135,7 @@ export const websitesData: WebsiteDataType[] = [
     comingSoonNote: "More task examples coming soon.",
   },
   {
-    name: "Autoppia Books",
+    name: "AutoBooks",
     slug: "autobooks",
     portValidator: "8001",
     href: "http://autobooks.autoppia.com",

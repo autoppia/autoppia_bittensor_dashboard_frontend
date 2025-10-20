@@ -64,12 +64,29 @@ export default function TestAgent() {
     selectedProjects.forEach((project) => {
       const key = project;
 
-      const cases = useCaseCatalogues[key] || [];
-      cases.forEach((uc) => {
-        if (!allUseCases.find((existing) => existing.value === uc.name)) {
-          allUseCases.push({ value: uc.name, label: uc.name });
+      // Prefer catalogue from sample-data if available
+      const cases = useCaseCatalogues[key];
+      if (Array.isArray(cases) && cases.length > 0) {
+        cases.forEach((uc) => {
+          if (!allUseCases.find((existing) => existing.value === uc.name)) {
+            allUseCases.push({ value: uc.name, label: uc.name });
+          }
+        });
+      } else {
+        // Fallback: try to find use cases in websitesData (websites-data.ts)
+        const website = websitesData.find(
+          (w) => w.slug.toLowerCase() === key.toLowerCase()
+        );
+        if (website && Array.isArray(website.useCases)) {
+          website.useCases.forEach((uc) => {
+            const name =
+              typeof uc.name === "string" ? uc.name : String(uc.name);
+            if (!allUseCases.find((existing) => existing.value === name)) {
+              allUseCases.push({ value: name, label: name });
+            }
+          });
         }
-      });
+      }
     });
 
     return allUseCases;
@@ -148,7 +165,7 @@ export default function TestAgent() {
       return;
     }
 
-    // Parse IP and port from input like: 84.247.180.192:6789 or http://84.247.180.192:6789
+    // Parse IP and port from input like: 127.0.0.1:5000 or http://127.0.0.1:5000
     let ip = "";
     let port = 0;
 
@@ -173,7 +190,7 @@ export default function TestAgent() {
       // ✅ payload exactly like your curl (but built from UI)
       const payload = {
         ip, // "<your_public_ip_or_ngrok>"
-        port, // e.g., 6789
+        port, // e.g., 5000
         projects: selectedProjects, // e.g., ["autobooks"]
         // projects: ["autobooks"],
         num_use_cases: selectedUseCases.length,
@@ -532,12 +549,11 @@ export default function TestAgent() {
                   type="text"
                   value={agentEndpoint}
                   onChange={(e) => setAgentEndpoint(e.target.value)}
-                  placeholder="84.247.180.192:6789 or http://84.247.180.192:6789"
+                  placeholder="127.0.0.1:5000 or http://127.0.0.1:5000"
                   className="border-cyan-500/30 focus:border-cyan-400 bg-black/50 rounded-2xl text-cyan-300 px-4 py-3"
                 />
                 <Text className="text-xs text-gray-400 mt-2">
-                  {`Enter your agent's IP address and port (e.g.,
-                  84.247.180.192:6789)`}
+                  {`Enter your agent's IP address and port (e.g., 127.0.0.1:5000)`}
                 </Text>
               </div>
             </div>
