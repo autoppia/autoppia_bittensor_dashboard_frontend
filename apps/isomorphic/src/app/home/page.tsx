@@ -191,9 +191,9 @@ export default function LandingPage() {
               <button
                 className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25"
                 style={{
-                  background: "linear-gradient(90deg, #F59E0B, #EA580C)",
+                  background: "linear-gradient(90deg, #FDE047, #F59E0B)",
                   ":hover": {
-                    background: "linear-gradient(90deg, #D97706, #DC2626)",
+                    background: "linear-gradient(90deg, #FACC15, #D97706)",
                   },
                 }}
               >
