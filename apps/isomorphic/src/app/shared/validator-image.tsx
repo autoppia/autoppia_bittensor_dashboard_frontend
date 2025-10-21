@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import cn from "@core/utils/class-names";
 import { PiUserDuotone, PiWarningDuotone } from "react-icons/pi";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 interface ValidatorImageProps {
   src: string;
@@ -31,6 +32,7 @@ export function ValidatorImage({
   showErrorState = true,
 }: ValidatorImageProps) {
   const [imageError, setImageError] = useState(false);
+  const resolvedSrc = resolveAssetUrl(src, "/validators/Other.png");
 
   const handleImageError = () => {
     setImageError(true);
@@ -66,7 +68,7 @@ export function ValidatorImage({
   // Render the actual image directly without loading state
   return (
     <Image
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       width={width}
       height={height}

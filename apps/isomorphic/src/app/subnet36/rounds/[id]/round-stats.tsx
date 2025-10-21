@@ -109,7 +109,6 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       helper: topMiner ? "Latest champion across validators" : "Awaiting validator results",
       icon: PiCrownDuotone,
       gradient: "from-amber-500/20 via-orange-500/15 to-yellow-500/20",
-      border: "border-amber-500/40",
       iconGradient: "from-amber-400 to-orange-500",
       valueClass: "text-2xl",
     },
@@ -120,7 +119,6 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       helper: "Average score achieved by the winning miner across validators",
       icon: PiTrophyDuotone,
       gradient: "from-emerald-500/20 via-green-500/15 to-teal-500/20",
-      border: "border-emerald-500/40",
       iconGradient: "from-emerald-400 to-teal-500",
       valueClass: "text-4xl",
     },
@@ -131,7 +129,6 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       helper: "Unique miners participating this round",
       icon: PiUsersDuotone,
       gradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/20",
-      border: "border-violet-500/40",
       iconGradient: "from-violet-400 to-fuchsia-500",
       valueClass: "text-4xl",
     },
@@ -142,7 +139,6 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       helper: "Tasks completed per validator",
       icon: PiListChecksDuotone,
       gradient: "from-blue-500/20 via-indigo-500/15 to-cyan-500/20",
-      border: "border-blue-500/40",
       iconGradient: "from-blue-400 to-indigo-500",
       valueClass: "text-4xl",
     },
@@ -154,8 +150,8 @@ export default function RoundStats({ selectedValidator }: RoundStatsProps = {}) 
       <div
         key={card.key}
         className={cn(
-          "group relative overflow-hidden rounded-2xl border-2 p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20",
-          "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-blue-400/40",
+          "group relative overflow-hidden rounded-2xl p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-xl",
+          "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-lg hover:shadow-blue-500/30",
         )}
       >
         <div

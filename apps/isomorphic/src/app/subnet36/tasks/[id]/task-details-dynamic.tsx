@@ -121,8 +121,8 @@ function InfoRow({
   valueClassName?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-2 text-xs">
-      <span className="text-white/60 font-medium">{label}</span>
+    <div className="flex items-start justify-between gap-3 text-xs">
+      <span className="text-slate-500 font-medium">{label}</span>
       <span
         className={`flex-1 text-right text-white font-semibold leading-snug ${valueClassName ?? ""}`}
       >
@@ -132,23 +132,52 @@ function InfoRow({
   );
 }
 
+function StatPill({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${
+        className ?? ""
+      }`}
+    >
+      <span className="text-white/85">{label}</span>
+      <span className="font-mono text-white text-xs">{value}</span>
+    </span>
+  );
+}
+
 type ContextCardProps = {
   title: string;
   Icon: IconType;
   gradient: string;
   children: ReactNode;
+  header?: ReactNode; // override header content
 };
 
-function ContextCard({ title, Icon, gradient, children }: ContextCardProps) {
+function ContextCard({ title, Icon, gradient, children, header }: ContextCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-purple-400/30 bg-gradient-to-br from-purple-500/20 via-fuchsia-500/20 to-pink-500/20 p-5 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/30">
+    <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 text-white shadow-2xl backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20">
       <div className="relative flex flex-col gap-4">
-        <div className="flex items-center">
-          <span className="text-[11px] uppercase tracking-[0.28em] text-white font-semibold">
-            {title}
-          </span>
-        </div>
-        <div className="space-y-2 text-sm text-white/90">{children}</div>
+        {header ? (
+          <div>{header}</div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white shadow-md">
+              <Icon className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/80 font-bold">
+              {title}
+            </span>
+          </div>
+        )}
+        <div className="space-y-2.5 text-sm text-white">{children}</div>
       </div>
     </div>
   );
@@ -204,27 +233,25 @@ function StatCard({
   valueClassName,
 }: StatCardConfig) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-purple-400/30 bg-gradient-to-br from-purple-500/20 via-fuchsia-500/20 to-pink-500/20 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/30">
-      <div className="relative flex flex-col gap-4 p-5">
+    <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-2xl backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20">
+      <div className="relative flex flex-col gap-3 p-6">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">
+          <div className="flex-1">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/80 font-bold">
               {label}
             </span>
             <div
-              className={`mt-2 text-2xl font-bold text-white ${valueClassName ?? ""}`}
+              className={`mt-2 text-3xl font-bold text-white ${valueClassName ?? ""}`}
             >
               {value}
             </div>
           </div>
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-black shadow-lg transition-all duration-300"
-          >
-            <Icon className="h-6 w-6" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white shadow-md">
+            <Icon className="h-5 w-5" />
           </div>
         </div>
         {description ? (
-          <p className="text-xs leading-relaxed text-white/80">{description}</p>
+          <p className="text-xs leading-relaxed text-white/85">{description}</p>
         ) : null}
       </div>
     </div>
@@ -244,37 +271,31 @@ export default function TaskDetailsDynamic({
 }: TaskDetailsDynamicProps) {
   if (isLoading && !details) {
     return (
-      <div className="relative mb-6 overflow-hidden rounded-3xl border-2 border-purple-400/30 bg-gradient-to-br from-slate-900/80 via-slate-950/90 to-black p-6 backdrop-blur-lg shadow-2xl">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.15),transparent_60%)]" />
-        <div className="relative">
+      <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-sm">
+        <div className="relative space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             {Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={`task-loading-primary-${idx}`}
-                className="animate-pulse rounded-2xl border-2 border-purple-400/20 bg-gradient-to-br from-purple-500/15 via-fuchsia-500/15 to-pink-500/15 p-5"
+                className="animate-pulse rounded-xl border border-slate-700/50 bg-slate-800/40 p-5"
               >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-3">
-                    <div className="h-3 w-20 rounded-full bg-white/25" />
-                    <div className="h-6 w-24 rounded-full bg-white/35" />
-                  </div>
-                  <div className="h-12 w-12 rounded-xl bg-white/20" />
+                <div className="space-y-3">
+                  <div className="h-2.5 w-20 rounded bg-slate-700" />
+                  <div className="h-6 w-32 rounded bg-slate-700" />
                 </div>
-                <div className="mt-4 h-3 w-28 rounded-full bg-white/20" />
               </div>
             ))}
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, idx) => (
               <div
                 key={`task-loading-secondary-${idx}`}
-                className="animate-pulse rounded-2xl border-2 border-purple-400/20 bg-gradient-to-br from-purple-500/15 via-fuchsia-500/15 to-pink-500/15 p-5"
+                className="animate-pulse rounded-xl border border-slate-700/50 bg-slate-800/40 p-6"
               >
                 <div className="space-y-3">
-                  <div className="h-3 w-16 rounded-full bg-white/25" />
-                  <div className="h-6 w-20 rounded-full bg-white/35" />
+                  <div className="h-2.5 w-16 rounded bg-slate-700" />
+                  <div className="h-8 w-24 rounded bg-slate-700" />
                 </div>
-                <div className="mt-4 h-3 w-24 rounded-full bg-white/20" />
               </div>
             ))}
           </div>
@@ -352,31 +373,7 @@ export default function TaskDetailsDynamic({
   const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId;
   const evaluationStyles = getStatusStyles(evaluationInfo?.status ?? taskData.status);
 
-  const identifierChips: Array<{
-    label: string;
-    value: ReactNode;
-    fullValue: string;
-    href?: string;
-  }> = [
-    {
-      label: "Task",
-      value: truncateMiddle(taskData.taskId, 8),
-      fullValue: taskData.taskId,
-    },
-    {
-      label: "Agent Run",
-      value: agentRunLinkId ? truncateMiddle(agentRunLinkId, 8) : "—",
-      fullValue: agentRunLinkId ?? "",
-      href: agentRunLinkId ? `${routes.agent_run}/${agentRunLinkId}` : undefined,
-    },
-    {
-      label: "Evaluation",
-      value: evaluationInfo?.evaluationId
-        ? truncateMiddle(evaluationInfo.evaluationId, 8)
-        : "—",
-      fullValue: evaluationInfo?.evaluationId ?? "",
-    },
-  ];
+  // Removed identifier chips row in favor of compact header pills
 
   const primaryCards: StatCardConfig[] = [
     {
@@ -410,54 +407,8 @@ export default function TaskDetailsDynamic({
   const secondaryCards: StatCardConfig[] = [];
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-3xl border-2 border-purple-400/30 bg-gradient-to-br from-slate-900/80 via-slate-950/90 to-black shadow-2xl backdrop-blur-lg transition-all duration-500 hover:border-purple-400/50 hover:shadow-[0_24px_64px_rgba(168,85,247,0.25)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.15),transparent_60%)]" />
-      <div className="relative space-y-6 px-6 pb-6 pt-4 md:px-9 md:pb-9 md:pt-7">
-        <div className="grid gap-3 md:grid-cols-3">
-          {identifierChips.map((chip, index) => (
-            <div
-              key={chip.label}
-              className="group relative overflow-hidden rounded-xl border-2 border-purple-400/30 bg-gradient-to-br from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 p-4 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-xl hover:shadow-purple-500/20"
-              style={{
-                animationDelay: `${index * 100}ms`,
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              
-              <div className="relative space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-300/70">
-                    {chip.label}
-                  </span>
-                  {chip.fullValue && (
-                    <div className="opacity-60 transition-opacity duration-200 group-hover:opacity-100">
-                      <CopyButton text={chip.fullValue} />
-                    </div>
-                  )}
-                </div>
-                
-                {chip.href ? (
-                  <Link
-                    href={chip.href}
-                    className="block font-mono text-sm font-bold text-white transition-colors duration-200 hover:text-purple-300"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="truncate">{chip.value}</span>
-                      <PiLinkSimple className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="font-mono text-sm font-bold text-white/90">
-                    <span className="truncate">{chip.value}</span>
-                  </div>
-                )}
-                
-                <div className="h-px w-full bg-gradient-to-r from-purple-400/20 via-fuchsia-400/40 to-pink-400/20" />
-              </div>
-            </div>
-          ))}
-        </div>
-
+    <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/60 shadow-2xl backdrop-blur-sm">
+      <div className="relative space-y-6 p-8">
         {relationships ? (
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -465,116 +416,140 @@ export default function TaskDetailsDynamic({
                 title="Round"
                 Icon={PiClockCountdown}
                 gradient="bg-gradient-to-br from-emerald-500/12 via-slate-900/55 to-slate-950/80"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-black shadow-lg">
-                    <PiClockCountdown className="h-7 w-7" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold text-white">
-                      #{roundInfo?.roundNumber ?? roundInfo?.validatorRoundId ?? "—"}
+                header={
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 via-orange-400 to-orange-600 text-black shadow-lg ring-1 ring-amber-500/30">
+                      <PiClockCountdown className="h-6 w-6" />
                     </div>
-                    <div className="mt-1.5 inline-flex items-center rounded-full border-2 border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-100">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-white">Round {roundInfo?.roundNumber ?? "—"}</span>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="mt-2 inline-flex items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-400">
                       {formatLabel(roundInfo?.status)}
                     </div>
                   </div>
                 </div>
-                <div className="space-y-1.5 pt-3">
-                  <InfoRow
-                    label="Round ID"
-                    value={truncateMiddle(roundInfo?.validatorRoundId, 8)}
-                  />
-                  <InfoRow
-                    label="Epoch"
-                    value={
-                      roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
-                        ? roundInfo.startEpoch
-                        : "—"
-                    }
-                  />
+                <div className="pt-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatPill
+                      label="Round ID"
+                      value={truncateMiddle(roundInfo?.validatorRoundId, 6)}
+                      className="border-emerald-400/40 bg-gradient-to-br from-emerald-400/30 to-teal-500/30 backdrop-blur-sm"
+                    />
+                    <StatPill
+                      label="Epoch"
+                      value={
+                        roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
+                          ? roundInfo.startEpoch
+                          : "—"
+                      }
+                      className="border-blue-400/40 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 backdrop-blur-sm"
+                    />
+                  </div>
                 </div>
               </ContextCard>
               <ContextCard
                 title="Validator"
                 Icon={PiShieldCheck}
                 gradient="bg-gradient-to-br from-sky-500/12 via-slate-900/55 to-slate-950/80"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 border-white/20 bg-white/10 shadow-lg">
-                    <Image
-                      src={validatorImage}
-                      alt={validatorInfo?.name || "Validator"}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                      unoptimized
-                    />
+                header={
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-600/50 bg-slate-700/30 shadow-md">
+                      <Image
+                        src={validatorImage}
+                        alt={validatorInfo?.name || "Validator"}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="flex items-end gap-2 min-w-0">
+                      <p className="text-xl font-semibold text-white truncate">
+                        {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
+                      </p>
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-white/70">Validator</span>
+                    </div>
                   </div>
+                }
+              >
+                <div className="flex items-start gap-4">
                   <div className="min-w-0 flex-1">
-                    <p className="text-lg font-bold text-white line-clamp-1">
-                      {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
-                    </p>
-                    <p className="text-[11px] text-white/60 font-medium mt-0.5">
+                    <p className="text-xs text-slate-400 font-medium">
                       UID {validatorInfo?.uid ?? "—"}
                     </p>
                   </div>
                 </div>
-                <div className="space-y-1.5 pt-3">
-                  <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
-                  <InfoRow
-                    label="Stake"
-                    value={
-                      validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
-                        ? `${formatNumber(validatorInfo.stake)} TAO`
-                        : "—"
-                    }
-                  />
-                  <InfoRow
-                    label="vTrust"
-                    value={
-                      validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
-                        ? formatNumber(validatorInfo.vtrust)
-                        : "—"
-                    }
-                  />
-                  <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
+                <div className="pt-3 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatPill
+                      label="Stake"
+                      value={
+                        validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
+                          ? `${formatNumber(validatorInfo.stake)} TAO`
+                          : "—"
+                      }
+                      className="border-emerald-400/50 bg-gradient-to-br from-emerald-400/30 to-teal-500/30 backdrop-blur-sm"
+                    />
+                    <StatPill
+                      label="vTrust"
+                      value={
+                        validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
+                          ? formatNumber(validatorInfo.vtrust)
+                          : "—"
+                      }
+                      className="border-blue-400/40 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 backdrop-blur-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
+                    <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
+                  </div>
                 </div>
               </ContextCard>
               <ContextCard
                 title={minerInfo?.isSota ? "SOTA Agent" : "Miner"}
                 Icon={PiUserCircle}
                 gradient="bg-gradient-to-br from-purple-500/12 via-slate-900/55 to-slate-950/80"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 border-white/20 bg-white/10 shadow-lg">
-                    <Image
-                      src={minerImage}
-                      alt={minerInfo?.name ?? "Miner"}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start gap-2">
-                      <p className="text-lg font-bold text-white line-clamp-1 flex-1">
+                header={
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-600/50 bg-slate-700/30 shadow-md">
+                      <Image
+                        src={minerImage}
+                        alt={minerInfo?.name ?? "Miner"}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-xl font-semibold text-white truncate">
                         {minerInfo?.name ?? "—"}
                       </p>
                       {minerInfo?.isSota ? (
-                        <span className="rounded-full border-2 border-amber-400/50 bg-amber-500/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100 shadow-lg shrink-0">
+                        <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-400 shrink-0">
                           SOTA
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-[11px] text-white/60 font-medium mt-0.5">
+                  </div>
+                }
+              >
+                <div className="flex items-start gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-400 font-medium">
                       {minerInfo?.isSota ? "SOTA Agent" : "Miner"} • UID {minerInfo?.uid ?? "—"}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-1.5 pt-3">
                   <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
-                  <InfoRow label="Provider" value={minerInfo?.provider ?? "—"} />
                   <InfoRow
                     label="GitHub"
                     value={
@@ -583,7 +558,7 @@ export default function TaskDetailsDynamic({
                           href={minerInfo.github}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center justify-end gap-1 text-purple-300 hover:text-purple-100 font-bold transition-colors duration-200"
+                          className="inline-flex items-center justify-end gap-1 text-emerald-400 hover:text-emerald-300 font-bold transition-colors duration-200"
                         >
                           <PiLinkSimple className="h-3.5 w-3.5" />
                           Repo
@@ -605,16 +580,16 @@ export default function TaskDetailsDynamic({
           ))}
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl border-2 border-purple-400/30 bg-gradient-to-br from-purple-500/20 via-fuchsia-500/20 to-pink-500/20 p-5 shadow-xl backdrop-blur-md transition-all duration-300 hover:border-purple-400/50">
+        <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 text-white shadow-2xl backdrop-blur">
           <div className="relative flex flex-col gap-4 md:flex-row md:items-start">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-black shadow-lg">
-              <PiFileText className="h-6 w-6" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white shadow-md">
+              <PiFileText className="h-5 w-5" />
             </div>
             <div className="flex-1 space-y-2">
-              <Text className="text-lg font-semibold text-white">
+              <Text className="text-[10px] uppercase tracking-[0.25em] text-white/80 font-bold">
                 Task Prompt
               </Text>
-              <Text className="text-sm leading-relaxed text-white/90">
+              <Text className="text-sm leading-relaxed text-white">
                 {taskData.prompt || "Prompt not provided for this task."}
               </Text>
             </div>

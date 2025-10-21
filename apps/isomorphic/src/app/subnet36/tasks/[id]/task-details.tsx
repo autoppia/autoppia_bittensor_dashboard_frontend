@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
-import { routes } from "@/config/routes";
 import type { IconType } from "react-icons";
 import {
   PiChartBar,
@@ -21,6 +20,7 @@ import {
   PiTimer,
   PiUserCircle,
 } from "react-icons/pi";
+import { routes } from "@/config/routes";
 import { useTask } from "@/services/hooks/useTask";
 
 type StatCardConfig = {
@@ -29,8 +29,21 @@ type StatCardConfig = {
   Icon: IconType;
   gradient: string;
   iconWrapper: string;
+  iconColorClass?: string;
   description?: ReactNode;
   valueClassName?: string;
+};
+
+type QuickInfoItem = {
+  label: string;
+  value: ReactNode;
+  Icon: IconType;
+  href?: string;
+  subValue?: ReactNode;
+  valueClassName?: string;
+  accentBarClass: string;
+  iconWrapperClass: string;
+  iconColorClass: string;
 };
 
 const formatLabel = (value?: string) => {
@@ -93,13 +106,57 @@ function InfoRow({
   valueClassName?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-2 text-xs">
-      <span className="text-white/60">{label}</span>
+    <div className="flex items-center justify-between gap-3 text-xs">
+      <span className="text-white/55">{label}</span>
       <span
-        className={`flex-1 text-right text-white/90 font-medium leading-snug ${valueClassName ?? ""}`}
+        className={`text-right text-white/85 font-medium leading-snug ${valueClassName ?? ""}`}
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+function QuickInfoTile({
+  label,
+  value,
+  subValue,
+  href,
+  Icon,
+  valueClassName,
+  accentBarClass,
+  iconWrapperClass,
+  iconColorClass,
+}: QuickInfoItem) {
+  const baseClass = "mt-1 block text-sm font-semibold";
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#11162a]/95 p-4 text-slate-100 shadow-[0_14px_34px_rgba(5,8,20,0.65)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
+      <span className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 ${accentBarClass}`} />
+      <div className="relative flex items-start gap-3">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${iconWrapperClass} shadow-inner transition-all duration-300 group-hover:scale-105`}>
+          <Icon className={`h-5 w-5 ${iconColorClass}`} />
+        </div>
+        <div className="flex-1">
+          <span className="text-[11px] uppercase tracking-wide text-slate-200/80">
+            {label}
+          </span>
+          {href ? (
+            <Link
+              href={href}
+              className={`${baseClass} text-sky-200 transition-colors duration-200 hover:text-white ${valueClassName ?? ""}`}
+            >
+              {value}
+            </Link>
+          ) : (
+            <span className={`${baseClass} text-white/90 ${valueClassName ?? ""}`}>
+              {value}
+            </span>
+          )}
+          {subValue ? (
+            <span className="mt-0.5 block text-xs text-slate-200/70">{subValue}</span>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -113,16 +170,16 @@ type ContextCardProps = {
 
 function ContextCard({ title, Icon, gradient, children }: ContextCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-5 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90`} />
-      <div className="relative flex flex-col gap-4">
+    <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1424]/95 p-5 text-slate-100 shadow-[0_20px_44px_rgba(4,8,20,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-60`} />
+      <div className="relative flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#4b5ab5]/40 bg-[#1a2140]/85 text-sky-100 shadow-inner transition-colors duration-300 group-hover:border-[#8da0ff]/50 group-hover:text-white">
             <Icon className="h-5 w-5" />
           </div>
-          <span className="text-xs uppercase tracking-wide text-white/70">{title}</span>
+          <span className="text-xs uppercase tracking-wide text-slate-200/80">{title}</span>
         </div>
-        <div className="space-y-2 text-sm text-white/80">{children}</div>
+        <div className="space-y-2 text-sm text-slate-100/85">{children}</div>
       </div>
     </div>
   );
@@ -130,9 +187,10 @@ function ContextCard({ title, Icon, gradient, children }: ContextCardProps) {
 
 const getStatusStyles = (status?: string) => {
   const base = {
-    gradient: "from-gray-500/10 via-gray-500/10 to-gray-500/20",
-    iconWrapper: "bg-gray-500/20 border-gray-500/30",
-    valueClassName: "text-gray-100",
+    gradient: "from-slate-500/20 via-slate-600/10 to-transparent",
+    iconWrapper: "border-slate-600/40 bg-slate-800/55",
+    valueClassName: "text-slate-100",
+    iconColorClass: "text-slate-200",
   };
 
   if (!status) {
@@ -143,25 +201,28 @@ const getStatusStyles = (status?: string) => {
 
   if (normalized.includes("success") || normalized.includes("complete")) {
     return {
-      gradient: "from-emerald-500/20 via-emerald-500/10 to-emerald-400/20",
-      iconWrapper: "bg-emerald-500/25 border-emerald-400/40",
+      gradient: "from-emerald-500/25 via-emerald-400/10 to-transparent",
+      iconWrapper: "border-emerald-400/45 bg-emerald-500/20",
       valueClassName: "text-emerald-100",
+      iconColorClass: "text-emerald-200",
     };
   }
 
   if (normalized.includes("running") || normalized.includes("pending")) {
     return {
-      gradient: "from-blue-500/20 via-blue-500/10 to-cyan-400/20",
-      iconWrapper: "bg-blue-500/25 border-blue-400/40",
-      valueClassName: "text-blue-100",
+      gradient: "from-sky-500/25 via-cyan-400/10 to-transparent",
+      iconWrapper: "border-sky-400/45 bg-sky-500/20",
+      valueClassName: "text-sky-100",
+      iconColorClass: "text-sky-200",
     };
   }
 
   if (normalized.includes("fail") || normalized.includes("error")) {
     return {
-      gradient: "from-red-500/20 via-red-500/10 to-orange-500/20",
-      iconWrapper: "bg-red-500/25 border-red-400/40",
-      valueClassName: "text-red-100",
+      gradient: "from-rose-500/25 via-orange-400/10 to-transparent",
+      iconWrapper: "border-rose-400/45 bg-rose-500/20",
+      valueClassName: "text-rose-100",
+      iconColorClass: "text-rose-200",
     };
   }
 
@@ -174,16 +235,17 @@ function StatCard({
   Icon,
   gradient,
   iconWrapper,
+  iconColorClass,
   description,
   valueClassName,
 }: StatCardConfig) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient}`} />
+    <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1423]/95 text-slate-100 shadow-[0_18px_44px_rgba(4,8,20,0.68)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-55`} />
       <div className="relative flex flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="text-xs uppercase tracking-wide text-white/60">
+            <span className="text-[11px] uppercase tracking-wide text-slate-200/75">
               {label}
             </span>
             <div
@@ -193,13 +255,13 @@ function StatCard({
             </div>
           </div>
           <div
-            className={`flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 ${iconWrapper}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl border transition-colors duration-300 group-hover:border-white/20 group-hover:bg-white/10 ${iconWrapper}`}
           >
-            <Icon className="h-6 w-6 text-white" />
+            <Icon className={`h-6 w-6 ${iconColorClass ?? "text-white"}`} />
           </div>
         </div>
         {description ? (
-          <p className="text-xs leading-relaxed text-white/70">{description}</p>
+          <p className="text-xs leading-relaxed text-slate-200/75">{description}</p>
         ) : null}
       </div>
     </div>
@@ -216,55 +278,48 @@ export default function TaskDetails() {
     includeStatistics: false,
   });
 
-  const taskData = data.details;
+  const taskData = data?.details;
 
   if (isLoading) {
     return (
-      <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/40 p-6 backdrop-blur">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10" />
-        <div className="relative">
-          <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div
-                key={`task-loading-primary-${idx}`}
-                className="animate-pulse rounded-2xl border border-white/5 bg-white/5 p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-3">
-                    <div className="h-3 w-20 rounded-full bg-white/20" />
-                    <div className="h-6 w-24 rounded-full bg-white/30" />
-                  </div>
-                  <div className="h-12 w-12 rounded-xl bg-white/10" />
-                </div>
-                <div className="mt-4 h-3 w-28 rounded-full bg-white/15" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={`task-loading-meta-${idx}`}
-                className="animate-pulse rounded-2xl border border-white/5 bg-white/5 p-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-white/10" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-12 rounded-full bg-white/20" />
-                    <div className="h-4 w-full rounded-full bg-white/25" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 animate-pulse rounded-2xl border border-white/5 bg-white/5 p-5">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-white/10" />
-              <div className="flex-1 space-y-3">
-                <div className="h-4 w-32 rounded-full bg-white/20" />
-                <div className="h-4 w-full rounded-full bg-white/25" />
-                <div className="h-4 w-5/6 rounded-full bg-white/25" />
-              </div>
+      <div className="relative mb-10 overflow-hidden rounded-3xl border border-slate-700/40 bg-slate-950/60 p-6 shadow-[0_25px_60px_-12px_rgba(15,23,42,0.8)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-emerald-500/5 to-indigo-500/10 opacity-80" />
+        <div className="relative grid gap-6 animate-pulse lg:grid-cols-12">
+          <div className="space-y-4 lg:col-span-8">
+            <div className="h-4 w-40 rounded-full bg-slate-800/70" />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={`task-loading-info-${index}`}
+                  className="h-24 rounded-2xl border border-slate-800/70 bg-slate-900/60"
+                />
+              ))}
             </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`task-loading-primary-${index}`}
+                  className="h-32 rounded-2xl border border-slate-800/70 bg-slate-900/60"
+                />
+              ))}
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`task-loading-meta-${index}`}
+                  className="h-28 rounded-2xl border border-slate-800/70 bg-slate-900/60"
+                />
+              ))}
+            </div>
+            <div className="h-32 rounded-2xl border border-slate-800/70 bg-slate-900/60" />
+          </div>
+          <div className="space-y-4 lg:col-span-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={`task-loading-context-${index}`}
+                className="h-36 rounded-2xl border border-slate-800/70 bg-slate-900/60"
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -273,12 +328,12 @@ export default function TaskDetails() {
 
   if (error || !taskData) {
     return (
-      <div className="mb-6 rounded-3xl border border-red-400/40 bg-red-500/10 p-6 backdrop-blur">
+      <div className="mb-6 rounded-3xl border border-rose-400/40 bg-rose-500/10 p-6 backdrop-blur">
         <div className="text-center">
-          <div className="text-lg font-semibold text-red-200">
+          <div className="text-lg font-semibold text-rose-200">
             Failed to Load Task Data
           </div>
-          <div className="mt-1 text-sm text-red-100/80">
+          <div className="mt-1 text-sm text-rose-100/80">
             {error || "Task not found"}
           </div>
         </div>
@@ -320,8 +375,10 @@ export default function TaskDetails() {
     ? `${truncateMiddle(solutionInfo.solutionId, 5)} · ${solutionInfo.actionsCount} actions`
     : "—";
   const evaluationStatusLabel = formatLabel(evaluationInfo?.status ?? taskData.status);
-  const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId;
-  const quickInfoItems = [
+  const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId ?? "";
+  const statusLabel = formatLabel(taskData.status);
+
+  const quickInfoItems: QuickInfoItem[] = [
     {
       label: "Round",
       value:
@@ -330,6 +387,7 @@ export default function TaskDetails() {
           : roundInfo?.validatorRoundId
           ? truncateMiddle(roundInfo.validatorRoundId, 6)
           : "—",
+      subValue: roundInfo?.status ? formatLabel(roundInfo.status) : undefined,
       href: ((): string | undefined => {
         const key =
           roundInfo?.roundNumber != null
@@ -337,22 +395,56 @@ export default function TaskDetails() {
             : roundInfo?.validatorRoundId;
         return key ? `${routes.rounds}/${encodeURIComponent(key)}` : undefined;
       })(),
+      Icon: PiClockCountdown,
+      valueClassName: "font-mono text-base tracking-tight",
+      accentBarClass: "bg-gradient-to-r from-amber-400/90 via-amber-500/60 to-transparent",
+      iconWrapperClass: "border-amber-400/45 bg-[#2c2014]/80",
+      iconColorClass: "text-amber-200",
     },
     {
       label: "Validator",
       value: validatorInfo?.name ?? truncateMiddle(validatorInfo?.hotkey),
       subValue: validatorInfo?.hotkey ? truncateMiddle(validatorInfo.hotkey) : undefined,
+      Icon: PiShieldCheck,
+      valueClassName: "text-base text-white",
+      accentBarClass: "bg-gradient-to-r from-emerald-400/90 via-teal-500/60 to-transparent",
+      iconWrapperClass: "border-emerald-400/45 bg-[#132820]/80",
+      iconColorClass: "text-emerald-200",
     },
     {
       label: minerInfo?.isSota ? "SOTA Agent" : "Miner",
       value: minerInfo?.name ?? "—",
       subValue: minerInfo?.hotkey ? truncateMiddle(minerInfo.hotkey) : undefined,
+      Icon: PiUserCircle,
+      valueClassName: "text-base text-white",
+      accentBarClass: "bg-gradient-to-r from-fuchsia-400/90 via-purple-500/60 to-transparent",
+      iconWrapperClass: "border-fuchsia-400/45 bg-[#251632]/80",
+      iconColorClass: "text-fuchsia-200",
+    },
+    {
+      label: "Agent Run",
+      value: truncateMiddle(agentRunLinkId, 6),
+      subValue: agentRunInfo
+        ? `${agentRunDuration} • ${agentRunInfo.taskCount ?? "—"} tasks`
+        : agentRunDuration,
+      href: agentRunLinkId ? `${routes.agent_run}/${agentRunLinkId}` : undefined,
+      Icon: PiPlay,
+      valueClassName: "font-mono text-base tracking-tight",
+      accentBarClass: "bg-gradient-to-r from-sky-400/90 via-blue-500/60 to-transparent",
+      iconWrapperClass: "border-sky-400/45 bg-[#14263a]/80",
+      iconColorClass: "text-sky-200",
     },
     {
       label: "Evaluation",
       value: evaluationInfo?.evaluationId
         ? truncateMiddle(evaluationInfo.evaluationId, 6)
         : "—",
+      subValue: evaluationInfo ? evaluationStatusLabel : undefined,
+      Icon: PiIdentificationCard,
+      valueClassName: "font-mono text-base tracking-tight",
+      accentBarClass: "bg-gradient-to-r from-rose-400/90 via-amber-500/60 to-transparent",
+      iconWrapperClass: "border-rose-400/45 bg-[#2a1b22]/80",
+      iconColorClass: "text-rose-200",
     },
   ];
 
@@ -361,8 +453,9 @@ export default function TaskDetails() {
       label: "Score",
       value: evaluationScore,
       Icon: PiChartBar,
-      gradient: "from-emerald-500/20 via-emerald-500/10 to-emerald-400/20",
-      iconWrapper: "bg-emerald-500/30 border-emerald-400/40",
+      gradient: "from-emerald-500/18 via-emerald-400/8 to-transparent",
+      iconWrapper: "border-emerald-400/40 bg-[#1a2f24]/80",
+      iconColorClass: "text-emerald-200",
       description: evaluationInfo
         ? "Final evaluation issued by the validator for this task."
         : "Awaiting validator scoring for this task.",
@@ -370,10 +463,11 @@ export default function TaskDetails() {
     },
     {
       label: "Status",
-      value: formatLabel(taskData.status),
+      value: statusLabel,
       Icon: PiGauge,
       gradient: statusStyles.gradient,
       iconWrapper: statusStyles.iconWrapper,
+      iconColorClass: statusStyles.iconColorClass,
       description: "Live state of the agent execution and scoring pipeline.",
       valueClassName: statusStyles.valueClassName,
     },
@@ -381,73 +475,40 @@ export default function TaskDetails() {
       label: "Duration",
       value: evaluationDuration,
       Icon: PiTimer,
-      gradient: "from-purple-500/20 via-purple-500/10 to-indigo-400/20",
-      iconWrapper: "bg-purple-500/30 border-purple-400/40",
+      gradient: "from-indigo-500/18 via-indigo-400/8 to-transparent",
+      iconWrapper: "border-indigo-400/40 bg-[#1a1f3a]/80",
+      iconColorClass: "text-indigo-200",
       description: evaluationInfo
         ? "Measured evaluation time recorded by the validator."
         : "Elapsed time based on action execution.",
-      valueClassName: "text-purple-100",
+      valueClassName: "text-indigo-100",
     },
   ];
 
-  const secondaryCards: StatCardConfig[] = [
+  const metaCards: StatCardConfig[] = [
     {
       label: "Website",
       value: formatLabel(taskData.website),
       Icon: PiGlobe,
-      gradient: "from-blue-500/15 via-blue-500/10 to-indigo-500/20",
-      iconWrapper: "bg-blue-500/25 border-blue-400/40",
+      gradient: "from-sky-500/18 via-sky-400/8 to-transparent",
+      iconWrapper: "border-sky-400/40 bg-[#14293b]/80",
+      iconColorClass: "text-sky-200",
     },
     {
       label: "Use Case",
       value: formatLabel(taskData.useCase),
       Icon: PiTarget,
-      gradient: "from-cyan-500/15 via-cyan-500/10 to-emerald-500/20",
-      iconWrapper: "bg-cyan-500/25 border-cyan-400/40",
+      gradient: "from-emerald-500/18 via-teal-400/8 to-transparent",
+      iconWrapper: "border-emerald-400/40 bg-[#162b24]/80",
+      iconColorClass: "text-emerald-200",
     },
     {
       label: "Success Rate",
       value: formatPercent(taskData.successRate),
       Icon: PiGauge,
-      gradient: "from-emerald-500/15 via-emerald-500/10 to-green-500/20",
-      iconWrapper: "bg-emerald-500/25 border-emerald-400/40",
-    },
-    {
-      label: "Agent Run",
-      value: truncateMiddle(agentRunLinkId, 6),
-      Icon: PiPlay,
-      gradient: "from-purple-500/15 via-purple-500/10 to-pink-500/20",
-      iconWrapper: "bg-purple-500/25 border-purple-400/40",
-      valueClassName: "text-purple-50 font-mono text-base",
-      description: (
-        <>
-          <span className="block text-xs text-white/60">
-            {agentRunDuration} • {agentRunInfo?.taskCount ?? "—"} tasks • Avg {agentRunAverageScore}
-          </span>
-          <Link
-            href={`${routes.agent_run}/${agentRunLinkId}`}
-            className="mt-1 inline-flex items-center gap-1 text-xs text-purple-100 transition-colors duration-200 hover:text-white"
-          >
-            View agent run
-            <PiPlay className="h-3 w-3" />
-          </Link>
-        </>
-      ),
-    },
-    {
-      label: "Evaluation ID",
-      value: truncateMiddle(evaluationInfo?.evaluationId ?? undefined, 6),
-      Icon: PiIdentificationCard,
-      gradient: "from-amber-500/15 via-amber-500/10 to-orange-500/20",
-      iconWrapper: "bg-amber-500/25 border-amber-400/40",
-      valueClassName: "text-amber-50 font-mono text-base",
-      description: evaluationInfo ? (
-        <span className="text-xs text-white/60">
-          {evaluationDuration} • {artifactSummary}
-        </span>
-      ) : (
-        <span className="text-xs text-white/60">Awaiting validator evaluation.</span>
-      ),
+      gradient: "from-lime-500/18 via-emerald-400/8 to-transparent",
+      iconWrapper: "border-lime-400/40 bg-[#1c2f1b]/80",
+      iconColorClass: "text-lime-200",
     },
   ];
 
@@ -456,39 +517,120 @@ export default function TaskDetails() {
       label: "Started",
       value: formatDateTime(taskData.startTime),
       Icon: PiClock,
-      gradient: "from-blue-500/15 via-blue-500/5 to-blue-500/15",
-      iconWrapper: "bg-blue-500/25 border-blue-400/40",
+      gradient: "from-sky-500/18 via-slate-400/8 to-transparent",
+      iconWrapper: "border-sky-400/40 bg-[#162738]/80",
+      iconColorClass: "text-sky-200",
     },
     {
       label: "Finished",
       value: formatDateTime(taskData.endTime ?? taskData.updatedAt),
       Icon: PiClock,
-      gradient: "from-indigo-500/15 via-indigo-500/5 to-indigo-500/15",
-      iconWrapper: "bg-indigo-500/25 border-indigo-400/40",
+      gradient: "from-indigo-500/18 via-slate-400/8 to-transparent",
+      iconWrapper: "border-indigo-400/40 bg-[#1a2136]/80",
+      iconColorClass: "text-indigo-200",
     },
   ];
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/40 backdrop-blur transition-all duration-300 hover:border-white/20">
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 opacity-90" />
-      <div className="relative space-y-6 px-6 pb-6 pt-4 md:px-8 md:pb-8 md:pt-6">
-        {relationships ? (
+    <div className="relative mb-10 overflow-hidden rounded-[28px] border border-[#262d49]/70 bg-[#04070f] shadow-[0_26px_80px_rgba(3,7,18,0.82)]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0b0f1a]/98 via-[#05070e]/96 to-[#020409]/96 opacity-95" />
+      <div className="relative grid gap-10 p-6 sm:p-8 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)] lg:gap-12 lg:px-10 lg:py-8">
+        <div className="space-y-8 lg:col-span-8">
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aaeff]/70">
+              Task Snapshot
+            </span>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200/80">
+              <span
+                className={`inline-flex items-center rounded-full border border-[#37406a]/55 bg-[#11182c]/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusStyles.valueClassName ?? ""}`}
+              >
+                {statusLabel}
+              </span>
+              <span>Started {formatDateTime(taskData.startTime)}</span>
+              <span className="opacity-50">•</span>
+              <span>Updated {formatDateTime(taskData.updatedAt ?? taskData.endTime)}</span>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {quickInfoItems.map((item) => (
+              <QuickInfoTile key={item.label} {...item} />
+            ))}
+          </div>
+
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70">
+              Performance Metrics
+            </span>
+            <div className="grid gap-4 md:grid-cols-3">
+              {primaryCards.map((card) => (
+                <StatCard key={card.label} {...card} />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70">
+              Task Context
+            </span>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {metaCards.map((card) => (
+                <StatCard key={card.label} {...card} />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70">
+              Timeline
+            </span>
+            <div className="grid gap-4 md:grid-cols-2">
+              {timelineCards.map((card) => (
+                <StatCard key={card.label} {...card} />
+              ))}
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-2xl border border-[#343d63]/55 bg-[#0b101d]/95 p-5 text-slate-100 shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/14 via-transparent to-emerald-500/12 opacity-60" />
+            <div className="relative flex flex-col gap-4 md:flex-row md:items-start">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-violet-400/45 bg-[#231b3b]/85 text-violet-200 shadow-inner">
+                <PiFileText className="h-6 w-6" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Text className="text-lg font-medium text-white">
+                  Task Prompt
+                </Text>
+                <div className="rounded-xl border border-[#3a4266]/60 bg-[#070b15]/90 px-4 py-3 shadow-inner">
+                  <Text className="font-mono text-sm leading-relaxed text-slate-100/85">
+                    {taskData.prompt || "Prompt not provided for this task."}
+                  </Text>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 lg:col-span-1">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aaeff]/70">
+            Relationships
+          </span>
+          {relationships ? (
+            <div className="space-y-4">
               <ContextCard
                 title="Round"
                 Icon={PiClockCountdown}
-                gradient="from-emerald-500/15 via-emerald-500/10 to-teal-500/20"
+                gradient="from-sky-500/22 via-sky-400/8 to-transparent"
               >
                 <div>
                   <div className="text-lg font-semibold text-white">
                     #{roundInfo?.roundNumber ?? roundInfo?.validatorRoundId ?? "—"}
                   </div>
-                  <div className="mt-1 inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
+                  <div className="mt-1 inline-flex items-center rounded-full border border-emerald-300/40 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
                     {formatLabel(roundInfo?.status)}
                   </div>
                 </div>
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5 pt-2">
                   <InfoRow label="Started" value={formatDateTime(roundInfo?.startedAt)} />
                   <InfoRow label="Ended" value={formatDateTime(roundInfo?.endedAt)} />
                   <InfoRow
@@ -501,10 +643,11 @@ export default function TaskDetails() {
                   />
                 </div>
               </ContextCard>
+
               <ContextCard
                 title="Validator"
                 Icon={PiShieldCheck}
-                gradient="from-blue-500/15 via-blue-500/10 to-indigo-500/20"
+                gradient="from-emerald-500/22 via-emerald-400/8 to-transparent"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-semibold text-white line-clamp-1">
@@ -514,8 +657,12 @@ export default function TaskDetails() {
                     UID {validatorInfo?.uid ?? "—"}
                   </span>
                 </div>
-                <div className="space-y-1.5 pt-1">
-                  <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
+                <div className="space-y-1.5 pt-2">
+                  <InfoRow
+                    label="Hotkey"
+                    value={truncateMiddle(validatorInfo?.hotkey)}
+                    valueClassName="font-mono text-xs"
+                  />
                   <InfoRow
                     label="Stake"
                     value={
@@ -535,10 +682,11 @@ export default function TaskDetails() {
                   <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
                 </div>
               </ContextCard>
+
               <ContextCard
                 title={minerInfo?.isSota ? "SOTA Agent" : "Miner"}
                 Icon={PiUserCircle}
-                gradient="from-purple-500/15 via-purple-500/10 to-pink-500/20"
+                gradient="from-fuchsia-500/22 via-purple-400/8 to-transparent"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold text-white line-clamp-1">
@@ -550,7 +698,7 @@ export default function TaskDetails() {
                     </span>
                   ) : null}
                 </div>
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5 pt-2">
                   <InfoRow label="UID" value={minerInfo?.uid ?? "—"} />
                   <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
                   <InfoRow label="Provider" value={minerInfo?.provider ?? "—"} />
@@ -562,7 +710,7 @@ export default function TaskDetails() {
                           href={minerInfo.github}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center justify-end gap-1 text-emerald-200 hover:text-emerald-100"
+                          className="inline-flex items-center justify-end gap-1 text-emerald-200 transition-colors duration-200 hover:text-emerald-100"
                         >
                           <PiLinkSimple className="h-3 w-3" />
                           Repo
@@ -574,25 +722,28 @@ export default function TaskDetails() {
                   />
                 </div>
               </ContextCard>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
+
               <ContextCard
                 title="Agent Run"
                 Icon={PiPlay}
-                gradient="from-cyan-500/15 via-cyan-500/10 to-sky-500/20"
+                gradient="from-indigo-500/22 via-indigo-400/8 to-transparent"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <Link
-                    href={`${routes.agent_run}/${agentRunLinkId}`}
-                    className="font-mono text-sm text-white/90 transition-colors duration-200 hover:text-white"
-                  >
-                    {truncateMiddle(agentRunLinkId, 6)}
-                  </Link>
+                  {agentRunLinkId ? (
+                    <Link
+                      href={`${routes.agent_run}/${agentRunLinkId}`}
+                      className="font-mono text-sm text-white/90 transition-colors duration-200 hover:text-white"
+                    >
+                      {truncateMiddle(agentRunLinkId, 6)}
+                    </Link>
+                  ) : (
+                    <span className="font-mono text-sm text-white/80">—</span>
+                  )}
                   <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
                     {agentRunInfo?.isSota ? "SOTA" : "Miner"}
                   </span>
                 </div>
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5 pt-2">
                   <InfoRow label="Duration" value={agentRunDuration} />
                   <InfoRow label="Tasks" value={agentRunInfo?.taskCount ?? "—"} />
                   <InfoRow label="Completed" value={agentRunInfo?.completedTasks ?? "—"} />
@@ -600,10 +751,11 @@ export default function TaskDetails() {
                   <InfoRow label="Avg Score" value={agentRunAverageScore} />
                 </div>
               </ContextCard>
+
               <ContextCard
                 title="Evaluation"
                 Icon={PiChartBar}
-                gradient="from-amber-500/15 via-amber-500/10 to-orange-500/20"
+                gradient="from-amber-500/22 via-amber-400/8 to-transparent"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-semibold text-white">{evaluationScore}</span>
@@ -613,7 +765,7 @@ export default function TaskDetails() {
                     {evaluationStatusLabel}
                   </span>
                 </div>
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5 pt-2">
                   <InfoRow
                     label="Evaluation ID"
                     value={truncateMiddle(evaluationInfo?.evaluationId)}
@@ -629,73 +781,13 @@ export default function TaskDetails() {
                 </div>
               </ContextCard>
             </div>
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {quickInfoItems.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 shadow-md"
-            >
-              <span className="text-[11px] uppercase tracking-wide text-white/60">
-                {item.label}
-              </span>
-              {item.href ? (
-                <Link
-                  href={item.href}
-                  className="mt-1 block font-mono text-sm font-semibold text-sky-200 hover:text-sky-100"
-                >
-                  {item.value}
-                </Link>
-              ) : (
-                <span className="mt-1 block font-mono text-sm font-semibold text-white">
-                  {item.value}
-                </span>
-              )}
-              {item.subValue ? (
-                <span className="block text-xs text-white/60">{item.subValue}</span>
-              ) : null}
+          ) : (
+            <div className="rounded-2xl border border-slate-700/45 bg-slate-900/60 p-5 text-sm text-white/70">
+              Relationship data not available for this task.
             </div>
-          ))}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {primaryCards.map((card) => (
-            <StatCard key={card.label} {...card} />
-          ))}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {secondaryCards.map((card) => (
-            <StatCard key={card.label} {...card} />
-          ))}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {timelineCards.map((card) => (
-            <StatCard key={card.label} {...card} />
-          ))}
-        </div>
-
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-5 shadow-inner">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-indigo-500/10 opacity-90" />
-          <div className="relative flex flex-col gap-4 md:flex-row md:items-start">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-purple-400/40 bg-purple-500/25">
-              <PiFileText className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <Text className="text-lg font-medium text-white">
-                Task Prompt
-              </Text>
-              <Text className="text-sm leading-relaxed text-white/80">
-                {taskData.prompt || "Prompt not provided for this task."}
-              </Text>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-import { routes } from "@/config/routes";

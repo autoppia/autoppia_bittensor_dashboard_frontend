@@ -63,7 +63,10 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
+        className={cn(
+          "h-[650px] px-2 lg:px-4 w-full rounded-xl border border-transparent bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-lg group backdrop-blur-md transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300",
+          className
+        )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
@@ -89,7 +92,10 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
+        className={cn(
+          "h-[650px] px-2 lg:px-4 w-full rounded-xl border border-transparent bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-lg group backdrop-blur-md transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300",
+          className
+        )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
@@ -107,7 +113,10 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
+        className={cn(
+          "h-[650px] px-2 lg:px-4 w-full rounded-xl border border-transparent bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-lg group backdrop-blur-md transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300",
+          className
+        )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
@@ -128,7 +137,10 @@ export default function RoundTopMiners({
   return (
     <WidgetCard
       title="Top Miners"
-      className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
+      className={cn(
+        "h-[650px] px-2 lg:px-4 w-full rounded-xl border border-transparent bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-lg group backdrop-blur-md transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300",
+        className
+      )}
       headerClassName="px-3 pb-2"
       titleClassName="text-white text-xl font-bold"
     >
@@ -184,12 +196,12 @@ export default function RoundTopMiners({
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-gray-300 group-hover:text-gray-200">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white">
                         <span className="uppercase tracking-wide">
                           UID {miner.uid}
                         </span>
                         <span
-                          className="truncate max-w-[180px] text-[11px] font-normal uppercase tracking-wide text-gray-400 group-hover:text-gray-300"
+                          className="truncate max-w-[180px] text-[11px] font-normal uppercase tracking-wide text-white/90"
                           title={miner.hotkey ?? "Hotkey unavailable"}
                         >
                           Hotkey{" "}
@@ -201,7 +213,7 @@ export default function RoundTopMiners({
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <Text className="text-sm text-gray-300 font-medium">
+                        <Text className="text-sm text-white font-medium">
                           Score:
                         </Text>
                         <div
@@ -213,7 +225,7 @@ export default function RoundTopMiners({
                           {(miner.score * 100).toFixed(1)}%
                         </div>
                       </div>
-                      <div className="text-gray-300 group-hover:text-gray-200 transition-colors duration-200">
+                      <div className="text-white transition-colors duration-200">
                         <svg
                           className="w-4 h-4"
                           fill="none"

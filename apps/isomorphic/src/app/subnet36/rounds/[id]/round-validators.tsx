@@ -182,7 +182,7 @@ export default function RoundValidators({
                       "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
                         ? "bg-[wheat] border-[#e2c48a] hover:border-[#d7b26d] shadow-amber-200/40 hover:shadow-amber-300/60"
-                        : "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 hover:shadow-xl hover:shadow-blue-500/30"
+                        : "bg-transparent border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-xl"
                     )}
                   >
                     {/* Validator Content */}
