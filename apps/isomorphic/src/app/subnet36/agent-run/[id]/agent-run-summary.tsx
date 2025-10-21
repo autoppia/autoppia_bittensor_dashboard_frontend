@@ -12,6 +12,8 @@ import type {
   AgentRunSummaryChartData,
 } from "./agent-run-types";
 
+const HIGHLIGHT_COLOR = "#F5DEB3";
+
 // Rainbow colors starting with red using hex values
 const PROGRESS_COLORS = [
   "#EF4444", // red-500
@@ -208,28 +210,34 @@ export default function AgentRunSummary({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl ${className ?? ""}`}
+      className={`relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/24 to-purple-500/25 p-6 shadow-2xl backdrop-blur-xl text-white ${className ?? ""}`}
     >
-      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/20 via-emerald-500/5 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-gradient-to-br from-sky-500/10 via-sky-400/5 to-transparent blur-[100px]" />
+      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-purple-500/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -bottom-20 left-8 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
+      <div
+        className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
+        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+      />
       {/* Header */}
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl shadow-lg">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow-lg shadow-blue-500/25">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
               <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white">Summary</h2>
+          <h2 className="text-xl font-semibold text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+            Summary
+          </h2>
         </div>
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/60">
           Performance Breakdown
         </p>
       </div>
 
       {/* Content */}
-      <div className="relative text-slate-200">
+      <div className="relative text-white/80">
         <div className="h-[240px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>              
@@ -267,7 +275,7 @@ export default function AgentRunSummary({
           </ResponsiveContainer>
         </div>
         {hasWebsites ? (
-          <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
+          <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm">
             {displayData.map((item, idx) => (
               <div
                 key={item.label}
@@ -281,7 +289,7 @@ export default function AgentRunSummary({
                         PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
                     }}
                   />
-                  <span className="text-sm font-medium text-slate-200">
+                  <span className="text-sm font-medium text-white">
                     {item.label}
                   </span>
                 </div>
@@ -289,10 +297,10 @@ export default function AgentRunSummary({
                   <div className="text-sm font-semibold text-white">
                     {item.value.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {item.total} requests, {item.successCount} successes
+                  <div className="text-xs text-white/70">
+                    {item.total} requests • {item.successCount} successes
                     {selectedWebsite && (
-                      <span>, {item.avgSolutionTime.toFixed(2)}s avg</span>
+                      <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
                     )}
                   </div>
                 </div>
@@ -300,7 +308,7 @@ export default function AgentRunSummary({
             ))}
           </div>
         ) : (
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-white/70">
             Summary metrics are not available for this run yet.
           </div>
         )}
@@ -328,11 +336,12 @@ function CenterLabel({
       <text
         x={cx}
         y={cy - 20}
-        fill="#F3F4F6"
+        fill={HIGHLIGHT_COLOR}
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
+          textShadow: "0 12px 28px rgba(245, 222, 179, 0.35)",
         }}
       >
         <tspan fontSize="36" fontWeight="700">
@@ -342,7 +351,7 @@ function CenterLabel({
       <text
         x={cx}
         y={cy + 10}
-        fill="#9CA3AF"
+        fill="#E2E8F0"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
@@ -350,13 +359,13 @@ function CenterLabel({
         }}
       >
         <tspan fontSize="14" fontWeight="600">
-          Requests: {totalRequests}
+          Requests · {totalRequests}
         </tspan>
       </text>
       <text
         x={cx}
         y={cy + 30}
-        fill="#9CA3AF"
+        fill="#E2E8F0"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
@@ -364,7 +373,7 @@ function CenterLabel({
         }}
       >
         <tspan fontSize="14" fontWeight="600">
-          Successes: {totalSuccesses}
+          Successes · {totalSuccesses}
         </tspan>
       </text>
     </>

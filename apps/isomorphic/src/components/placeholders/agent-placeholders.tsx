@@ -19,10 +19,13 @@ const BAR_SKELETON_HEIGHTS = [
   57,
 ];
 
-const PLACEHOLDER_SURFACE = "bg-slate-900/35 border border-white/10 backdrop-blur-sm";
-const PLACEHOLDER_PANEL = "bg-slate-900/25 border border-white/10 backdrop-blur-sm";
-const PLACEHOLDER_SECTION = "bg-slate-900/20 border border-white/10 backdrop-blur-sm";
-const SKELETON_BASE = "bg-white/12";
+const PLACEHOLDER_SURFACE =
+  "bg-[#111111] border border-[#1f1f1f] backdrop-blur-sm";
+const PLACEHOLDER_PANEL =
+  "bg-[#111111] border border-[#1f1f1f] backdrop-blur-sm";
+const PLACEHOLDER_SECTION =
+  "bg-[#111111] border border-[#1f1f1f] backdrop-blur-sm";
+const SKELETON_BASE = "bg-white/15";
 const SKELETON_SUBTLE = "bg-white/8";
 
 // ===== AGENT STATS PLACEHOLDER =====

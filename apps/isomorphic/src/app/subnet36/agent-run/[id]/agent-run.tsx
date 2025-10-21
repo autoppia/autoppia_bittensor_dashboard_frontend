@@ -12,6 +12,8 @@ import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 import { routes } from "@/config/routes";
+
+const HIGHLIGHT_COLOR = "#F5DEB3";
 export default function AgentRun() {
   const { id } = useParams();
   const runId = Array.isArray(id) ? id[0] : id ?? "";
@@ -38,7 +40,14 @@ export default function AgentRun() {
         description={
           <span className="flex flex-wrap items-center gap-2">
             <span>Agent Run ID:</span>
-            <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-emerald-200">
+            <span
+              className="inline-flex items-center rounded-md px-2 py-0.5 font-mono text-sm font-semibold"
+              style={{
+                backgroundColor: "rgba(245, 222, 179, 0.18)",
+                color: HIGHLIGHT_COLOR,
+                border: "1px solid rgba(245, 222, 179, 0.35)",
+              }}
+            >
               {runId}
             </span>
           </span>
@@ -47,7 +56,7 @@ export default function AgentRun() {
       >
         <Link
           href={routes.agents}
-          className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+          className="flex items-center text-white/70 transition-colors duration-200 hover:text-[#F5DEB3]"
         >
           <PiArrowLeftLight className="w-4 h-4" />
           <span className="ms-1">Back to Agents</span>
@@ -55,11 +64,11 @@ export default function AgentRun() {
       </PageHeader>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+        <div className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/80 backdrop-blur">
           Failed to refresh some sections. You can{" "}
           <button
             onClick={refetch}
-            className="font-semibold underline underline-offset-2 hover:text-yellow-900"
+            className="font-semibold text-[#F5DEB3] underline underline-offset-4 hover:text-white"
           >
             retry
           </button>{" "}

@@ -5,8 +5,11 @@ import {
   PiArrowSquareOutDuotone,
   PiClock,
   PiGithubLogoDuotone,
+  PiCopySimple,
 } from "react-icons/pi";
 import { resolveAssetUrl } from "@/services/utils/assets";
+
+const HIGHLIGHT_COLOR = "#F5DEB3";
 
 interface AgentRunPersonasProps {
   personas?: any;
@@ -116,53 +119,66 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
       {/* Round Card */}
-      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/22 to-purple-500/22 p-5 shadow-2xl backdrop-blur-xl text-white">
+        <div className="pointer-events-none absolute -left-16 -top-10 h-36 w-36 rounded-full bg-blue-500/20 blur-2xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-purple-500/15 blur-[120px]" />
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-amber-300">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow-lg shadow-amber-500/40">
               <PiClock className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
                 Round
               </p>
-              <p className="text-3xl font-semibold text-white leading-tight">
+              <p className="text-3xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
                 #{roundData.id ?? summary?.roundId ?? "—"}
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200">
+          <span
+            className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+            style={{
+              borderColor: "rgba(245, 222, 179, 0.45)",
+              backgroundColor: "rgba(245, 222, 179, 0.12)",
+              color: HIGHLIGHT_COLOR,
+            }}
+          >
             {(roundData.status || "Active").replace(/^\w/, (c) => c.toUpperCase())}
           </span>
         </header>
 
-        <div className="mt-4 rounded-lg border border-slate-700/20 bg-slate-800/20 px-3 py-2 text-xs text-slate-300">
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">
-            Epoch
-          </p>
-          <p className="font-mono text-sm text-white">
-            {formatEpoch(epochStart)} - {formatEpoch(epochEnd)}
-          </p>
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
+              <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                Epoch:
+              </span>
+            <span className="whitespace-nowrap">
+              {formatEpoch(epochStart)} - {formatEpoch(epochEnd)}
+            </span>
+          </div>
         </div>
       </section>
 
       {/* Validator Card */}
-      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/22 to-purple-500/22 p-5 shadow-2xl backdrop-blur-xl text-white">
+        <div className="pointer-events-none absolute -right-12 -top-20 h-44 w-44 rounded-full bg-purple-500/20 blur-2xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-blue-400/15 blur-[120px]" />
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/20 bg-slate-800/20">
-              <Image
-                alt={validatorData.name}
-                src={validatorImageSrc}
-                width={56}
-                height={56}
-                unoptimized
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <Image
+              alt={validatorData.name}
+              src={validatorImageSrc}
+              width={56}
+              height={56}
+              unoptimized
+              className="h-14 w-14 rounded-2xl object-cover shadow-lg shadow-purple-500/30"
+            />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Validator</p>
-              <p className="text-sm font-semibold text-white">{validatorData.name}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Validator</p>
+              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                {validatorData.name}
+              </p>
             </div>
           </div>
           {taoStatsUrl ? (
@@ -170,7 +186,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
               href={taoStatsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-purple-400/30 bg-purple-500/15 text-purple-200 transition hover:border-purple-300"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
               title="Open TaoStats"
             >
               <PiArrowSquareOutDuotone className="h-4 w-4" />
@@ -179,36 +195,48 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
         </header>
 
         <div className="mt-4">
-          <dl className="space-y-2 text-xs text-slate-300">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                Hotkey
-              </p>
-              <p className="font-mono text-sm text-white">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                Hotkey:
+              </span>
+              <span className="font-mono text-sm text-white">
                 {truncateMiddle(validatorHotkey)}
-              </p>
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  validatorHotkey && navigator.clipboard.writeText(validatorHotkey)
+                }
+                className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+                aria-label="Copy validator hotkey"
+              >
+                <PiCopySimple className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </dl>
+          </div>
         </div>
       </section>
 
       {/* Miner Card */}
-      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl">
+      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/22 to-purple-500/22 p-5 shadow-2xl backdrop-blur-xl text-white">
+        <div className="pointer-events-none absolute -right-20 top-0 h-52 w-52 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-blue-500/20 blur-[120px]" />
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-slate-700/30 bg-slate-900/40 shadow-inner shadow-slate-900/40">
-              <Image
-                alt={agentData.name}
-                src={minerImageSrc}
-                width={64}
-                height={64}
-                unoptimized
-                className="h-14 w-14 rounded-full border border-slate-700/40 object-cover"
-              />
-            </div>
+            <Image
+              alt={agentData.name}
+              src={minerImageSrc}
+              width={64}
+              height={64}
+              unoptimized
+              className="h-16 w-16 rounded-full border border-white/15 object-cover shadow-lg shadow-blue-900/40"
+            />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Miner</p>
-              <p className="text-sm font-semibold text-white">{agentData.name}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Miner</p>
+              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                {agentData.name}
+              </p>
             </div>
           </div>
           {agentData.github ? (
@@ -216,7 +244,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
               href={agentData.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-200 transition hover:border-sky-300"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
               title="Open GitHub"
             >
               <PiGithubLogoDuotone className="h-4 w-4" />
@@ -225,24 +253,36 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
         </header>
 
         <div className="mt-4">
-          <dl className="flex flex-wrap items-start gap-6 text-xs text-slate-300">
-            <div className="flex-1 min-w-[140px]">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                UID
-              </p>
-              <p className="font-mono text-sm text-white">
-                {agentUid ?? "—"}
-              </p>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                  UID:
+                </span>
+                <span className="font-mono text-sm text-white">
+                  {agentUid ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                  Hotkey:
+                </span>
+                <span className="font-mono text-sm text-white">
+                  {truncateMiddle(agentHotkey)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    agentHotkey && navigator.clipboard.writeText(agentHotkey)
+                  }
+                  className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+                  aria-label="Copy miner hotkey"
+                >
+                  <PiCopySimple className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 min-w-[140px]">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                Hotkey
-              </p>
-              <p className="font-mono text-sm text-white">
-                {truncateMiddle(agentHotkey)}
-              </p>
-            </div>
-          </dl>
+          </div>
         </div>
       </section>
     </div>

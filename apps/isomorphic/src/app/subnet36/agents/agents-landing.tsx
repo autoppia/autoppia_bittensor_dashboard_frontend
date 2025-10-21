@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRounds } from "@/services/hooks/useRounds";
 import { useMinersList } from "@/services/hooks/useAgents";
 import type { MinimalAgentsListQueryParams } from "@/services/api/types/agents";
@@ -102,8 +102,6 @@ export default function AgentsLanding() {
   }, [roundFromQuery, roundSequence]);
 
   const [selectedRound, setSelectedRound] = useState<number | undefined>(initialRound);
-  const [lastRedirectKey, setLastRedirectKey] = useState<string | null>(null);
-  const attemptedRoundsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (!isFiniteNumber(roundFromQuery)) {
@@ -119,19 +117,6 @@ export default function AgentsLanding() {
       setSelectedRound(initialRound);
     }
   }, [initialRound, selectedRound]);
-
-  useEffect(() => {
-    const next = new Set<number>();
-    attemptedRoundsRef.current.forEach((round) => {
-      if (roundSequence.includes(round)) {
-        next.add(round);
-      }
-    });
-    if (isFiniteNumber(selectedRound)) {
-      next.add(selectedRound);
-    }
-    attemptedRoundsRef.current = next;
-  }, [roundSequence, selectedRound]);
 
   const roundReady = isFiniteNumber(selectedRound);
 
@@ -166,51 +151,32 @@ export default function AgentsLanding() {
   }, [resolvedRound, selectedRound]);
 
   useEffect(() => {
-    if (minersLoading || minersError) {
+    if (roundReady || !roundSequence.length) {
       return;
     }
-    if (!roundSequence.length) {
-      return;
+    const nextAvailableRound = roundSequence[0];
+    if (isFiniteNumber(nextAvailableRound)) {
+      setSelectedRound(nextAvailableRound);
     }
-    if (!isFiniteNumber(resolvedRound)) {
-      return;
-    }
-    const currentMiners = minersData?.miners ?? [];
-    if (currentMiners.length > 0) {
-      return;
-    }
+  }, [roundReady, roundSequence]);
 
-    const attempted = attemptedRoundsRef.current;
-    attempted.add(resolvedRound);
-
-    const currentIndex = roundSequence.indexOf(resolvedRound);
-    const candidates =
-      currentIndex >= 0
-        ? roundSequence.slice(currentIndex + 1)
-        : roundSequence;
-    const nextRound = candidates.find(
-      (candidate) => !attempted.has(candidate)
-    );
-
-    if (isFiniteNumber(nextRound)) {
-      setSelectedRound(nextRound);
-    }
-  }, [minersData, minersError, minersLoading, resolvedRound, roundSequence]);
+  const miners = minersData?.miners ?? [];
+  const hasMiners = miners.length > 0;
+  const pathname = usePathname();
+  const effectiveRound = resolvedRound ?? selectedRound;
 
   useEffect(() => {
-    if (!isFiniteNumber(resolvedRound)) {
+    if (!isFiniteNumber(effectiveRound)) {
       return;
     }
     if (minersLoading || minersError) {
       return;
     }
-
-    const currentMiners = minersData?.miners ?? [];
-    if (!currentMiners.length) {
+    if (!hasMiners) {
       return;
     }
 
-    const sortedMiners = [...currentMiners].sort(
+    const sortedMiners = [...miners].sort(
       (a, b) =>
         (a.ranking ?? Number.MAX_SAFE_INTEGER) -
         (b.ranking ?? Number.MAX_SAFE_INTEGER)
@@ -229,42 +195,65 @@ export default function AgentsLanding() {
     }
 
     const fallbackAgentId = String(topMiner.uid);
-    const targetAgentId = agentParam ?? fallbackAgentId;
+    const agentFromQueryExists =
+      typeof agentParam === "string" &&
+      miners.some(
+        (miner) => miner.uid !== undefined && String(miner.uid) === agentParam
+      );
+    const targetAgentId = agentFromQueryExists ? agentParam : fallbackAgentId;
 
     if (!targetAgentId) {
       return;
     }
 
-    const redirectKey = `${resolvedRound}:${targetAgentId}`;
-    if (lastRedirectKey === redirectKey) {
+    const targetPath = `${routes.agents}/${targetAgentId}`;
+    if (pathname === targetPath) {
       return;
     }
 
     const params = new URLSearchParams();
-    params.set("round", String(resolvedRound));
+    params.set("round", String(effectiveRound));
     params.set("agent", targetAgentId);
 
-    setLastRedirectKey(redirectKey);
-    router.replace(`${routes.agents}/${targetAgentId}?${params.toString()}`);
+    router.replace(`${targetPath}?${params.toString()}`);
   }, [
     agentParam,
-    lastRedirectKey,
-    minersData,
+    effectiveRound,
+    hasMiners,
+    miners,
     minersError,
     minersLoading,
-    resolvedRound,
+    pathname,
     router,
   ]);
 
-  const readyForRedirect =
-    isFiniteNumber(resolvedRound) &&
-    !minersLoading &&
-    !minersError &&
-    lastRedirectKey !== null;
-
-  if (!readyForRedirect) {
-    return <AgentsPageFallback />;
+  if (minersError) {
+    return (
+      <div className="flex h-full min-h-[360px] w-full items-center justify-center">
+        <div className="rounded-2xl border border-[#1f1f1f] bg-[#111111] px-6 py-8 text-center text-white/80 shadow-lg">
+          <h2 className="text-lg font-semibold text-white">Unable to load agents</h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/60">
+            {minersError}. Please try refreshing the page once the service is available again.
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  return null;
+  if (!minersLoading && !minersError && isFiniteNumber(effectiveRound) && !hasMiners) {
+    return (
+      <div className="flex h-full min-h-[360px] w-full items-center justify-center">
+        <div className="rounded-2xl border border-[#1f1f1f] bg-[#111111] px-6 py-8 text-center text-white/80 shadow-lg">
+          <h2 className="text-lg font-semibold text-white">No agents found</h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/60">
+            Recent rounds did not return any miners. Try selecting a different round or refreshing once new data is available.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Keep showing the fallback skeleton while the redirect is in flight so the page never
+  // flashes empty content before the target agent view loads.
+  return <AgentsPageFallback />;
 }
