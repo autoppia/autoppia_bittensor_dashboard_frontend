@@ -14,9 +14,16 @@ import {
   PiXCircle,
   PiPlay,
 } from "react-icons/pi";
-import { useTaskResults, useTaskActions, useTaskScreenshots } from "@/services/hooks/useTask";
-import Placeholder, { TextPlaceholder, ListItemPlaceholder } from "@/app/shared/placeholder";
-import { TaskAction } from "@/services/api/types/tasks";
+import {
+  useTaskResults,
+  useTaskActions,
+  useTaskScreenshots,
+} from "@/services/hooks/useTask";
+import Placeholder, {
+  TextPlaceholder,
+  ListItemPlaceholder,
+} from "@/app/shared/placeholder";
+import type { TaskAction } from "@/services/api/types/tasks";
 import { useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 
@@ -107,14 +114,12 @@ const ACTION_TYPE_META: Record<
 const truncate = (value: string, max = 64) =>
   value.length > max ? `${value.slice(0, max).trim()}…` : value;
 
-// Action status icons
 const getStatusIcon = (success: boolean, error?: string) => {
   if (error) return <PiXCircle className="w-4 h-4 text-red-500" />;
   if (success) return <PiCheckCircle className="w-4 h-4 text-green-500" />;
   return <PiWarning className="w-4 h-4 text-yellow-500" />;
 };
 
-// Format action detail copy for display
 const formatActionDetails = (action: TaskAction) => {
   const details: string[] = [];
 
@@ -141,26 +146,31 @@ export default function TaskResults() {
   const { id } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  
-  // Fetch task results data
-  const { results, isLoading: resultsLoading, error: resultsError } = useTaskResults(id as string);
-  
-  // Fetch task actions with pagination
-  const { 
-    actions, 
-    total: actionsTotal, 
-    isLoading: actionsLoading, 
+
+  const {
+    results,
+    isLoading: resultsLoading,
+    error: resultsError,
+  } = useTaskResults(id as string);
+
+  const {
+    actions,
+    total: actionsTotal,
+    isLoading: actionsLoading,
     error: actionsError,
-    goToPage 
+    goToPage,
   } = useTaskActions(id as string, {
     page: currentPage,
     limit: pageSize,
-    sortBy: 'timestamp',
-    sortOrder: 'asc'
+    sortBy: "timestamp",
+    sortOrder: "asc",
   });
-  
-  // Fetch task screenshots
-  const { screenshots, isLoading: screenshotsLoading, error: screenshotsError } = useTaskScreenshots(id as string);
+
+  const {
+    screenshots,
+    isLoading: screenshotsLoading,
+    error: screenshotsError,
+  } = useTaskScreenshots(id as string);
 
   const hasApiScreenshots = screenshots.length > 0;
 
@@ -200,7 +210,10 @@ export default function TaskResults() {
   const isMediaLoading =
     screenshotsLoading || (!hasApiScreenshots && resultsLoading);
   const showMediaError =
-    !isMediaLoading && !!screenshotsError && !isUsingFallbackMedia && mediaItems.length === 0;
+    !isMediaLoading &&
+    !!screenshotsError &&
+    !isUsingFallbackMedia &&
+    mediaItems.length === 0;
   const showMediaEmpty =
     !isMediaLoading && !showMediaError && mediaItems.length === 0;
 
@@ -223,7 +236,7 @@ export default function TaskResults() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Left Side - Actions */}
-      <section className="rounded-2xl border border-slate-700/25 bg-slate-900/45 p-5 backdrop-blur-sm">
+      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">
           <Text className="text-white text-lg font-semibold">Actions</Text>
           {!actionsLoading && actionsTotal > 0 && (
@@ -232,23 +245,22 @@ export default function TaskResults() {
             </Text>
           )}
         </div>
-        
-        <div className="space-y-2 rounded-xl border border-slate-700/25 h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto bg-slate-900/60">
+
+        <div className="space-y-2 rounded-xl border border-slate-700/20 h-[350px] p-4 overflow-y-auto bg-slate-900/40">
           {actionsLoading ? (
-            // Loading state
             Array.from({ length: 5 }, (_, index) => (
               <ListItemPlaceholder key={`action-loading-${index}`} />
             ))
           ) : actionsError ? (
-            // Error state
             <div className="flex items-center justify-center h-full text-red-300">
               <div className="text-center space-y-1">
                 <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">Failed to load actions</Text>
+                <Text className="text-sm text-red-200">
+                  Failed to load actions
+                </Text>
               </div>
             </div>
           ) : actions.length === 0 ? (
-            // Empty state
             <div className="flex items-center justify-center h-full text-slate-400">
               <div className="text-center space-y-1">
                 <PiPlay className="w-8 h-8 mx-auto" />
@@ -256,14 +268,14 @@ export default function TaskResults() {
               </div>
             </div>
           ) : (
-            // Actions list
             actions.map((action, index) => {
-              const meta = ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
+              const meta =
+                ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
               const ActionIcon = meta.icon;
               return (
                 <div
                   key={`action-item-${action.id || index}`}
-                  className="w-full flex items-start justify-between gap-3 rounded-lg px-3 py-3 text-slate-100 bg-slate-800/70 border border-slate-700/40 hover:border-emerald-400/40 hover:bg-emerald-500/10 transition-colors"
+                  className="w-full flex items-start justify-between gap-3 rounded-lg px-3 py-3 text-slate-100 bg-slate-800/70 border border-slate-700/40 transition-all duration-200 hover:bg-slate-700/80 hover:border-slate-600/60 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <span
@@ -291,8 +303,7 @@ export default function TaskResults() {
             })
           )}
         </div>
-        
-        {/* Pagination */}
+
         {!actionsLoading && actionsTotal > pageSize && (
           <div className="flex items-center justify-between mt-4">
             <Text className="text-slate-400 text-sm">
@@ -302,14 +313,14 @@ export default function TaskResults() {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1 text-sm rounded border border-sky-500/40 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-sky-400/60 hover:text-sky-100 transition-colors"
+                className="px-3 py-1 text-sm rounded border border-slate-600/40 bg-slate-700/40 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 text-sm rounded border border-sky-500/40 bg-slate-900/60 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-sky-400/60 hover:text-sky-100 transition-colors"
+                className="px-3 py-1 text-sm rounded border border-slate-600/40 bg-slate-700/40 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -319,7 +330,7 @@ export default function TaskResults() {
       </section>
 
       {/* Right Side - Screenshots */}
-      <section className="rounded-2xl border border-slate-700/25 bg-slate-900/45 p-5 backdrop-blur-sm">
+      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
             <Text className="text-white text-lg font-semibold">
@@ -337,10 +348,9 @@ export default function TaskResults() {
             </Text>
           )}
         </div>
-        
-        <div className="h-[350px] border border-slate-700/25 rounded-xl overflow-y-auto custom-scrollbar bg-slate-900/60">
+
+        <div className="h-[350px] border border-slate-700/20 rounded-xl overflow-y-auto bg-slate-900/40">
           {isMediaLoading ? (
-            // Loading state
             <div className="p-4 space-y-4">
               {Array.from({ length: 3 }, (_, index) => (
                 <div key={`screenshot-loading-${index}`} className="space-y-2">
@@ -350,45 +360,53 @@ export default function TaskResults() {
               ))}
             </div>
           ) : showMediaError ? (
-            // Error state
             <div className="flex items-center justify-center h-full text-red-300">
               <div className="text-center space-y-1">
                 <PiXCircle className="w-8 h-8 mx-auto" />
                 <Text className="text-sm text-red-200">
-                  {screenshotsError || resultsError || "Failed to load GIF replays"}
+                  {screenshotsError ||
+                    resultsError ||
+                    "Failed to load GIF replays"}
                 </Text>
               </div>
             </div>
           ) : showMediaEmpty ? (
-            // Empty state
             <div className="flex items-center justify-center h-full text-slate-400">
               <div className="text-center space-y-1">
                 <PiCamera className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">No GIF replays available</Text>
+                <Text className="text-sm text-slate-300">
+                  No GIF replays available
+                </Text>
               </div>
             </div>
           ) : (
-            // Screenshots grid
             <div className="p-4 space-y-4">
               {mediaItems.map((screenshot, index) => {
-                const timestampLabel = formatTimestampLabel(screenshot.timestamp);
+                const timestampLabel = formatTimestampLabel(
+                  screenshot.timestamp
+                );
                 return (
-                  <div key={`gif-${screenshot.id || index}`} className="space-y-2">
+                  <div
+                    key={`gif-${screenshot.id || index}`}
+                    className="space-y-2"
+                  >
                     <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
                       <img
-                        src={screenshot.url}
+                        src={screenshot.url || "/placeholder.svg"}
                         alt={`GIF Replay ${index + 1}`}
                         className="w-full h-32 object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
+                          target.style.display = "none";
+                          target.nextElementSibling?.classList.remove("hidden");
                         }}
                       />
                       <div className="hidden absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-900/80">
                         <div className="text-center space-y-1">
                           <PiCamera className="w-8 h-8 mx-auto" />
-                          <Text className="text-sm text-slate-300">GIF unavailable</Text>
+                          <Text className="text-sm text-slate-300">
+                            GIF unavailable
+                          </Text>
                         </div>
                       </div>
                     </div>
