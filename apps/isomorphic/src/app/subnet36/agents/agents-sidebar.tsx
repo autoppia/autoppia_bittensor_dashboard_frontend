@@ -215,46 +215,49 @@ export default function AgentsSidebar() {
 
   return (
     <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-      <div className="h-full border rounded-xl bg-gray-50 pb-3">
-        <div className="sticky top-0 border-b bg-gray-50 agents-round-select">
-          <Select
-            options={selectOptions}
-            value={roundSelectValue}
-            onChange={handleRoundChange}
-            disabled={!roundOptions.length}
-            placeholder="Select round"
-            className="w-full !rounded-none !border-none !shadow-none !px-4 !py-4 !text-lg"
-          />
+      <div className="h-full border rounded-xl bg-gray-50 pb-3 flex flex-col overflow-hidden">
+        <div className="sticky top-0 border-b bg-gray-50 agents-round-select z-10">
+          <div className="flex items-center gap-3 px-3 py-3">
+            <Text className="text-2xl font-bold text-gray-900">
+              All Miners
+            </Text>
+            <div className="flex-1 flex justify-end">
+              <Checkbox
+                id="show-sota-agents"
+                checked={includeSota}
+                onChange={(e) => setIncludeSota(e.target.checked)}
+                label={
+                  <span className="flex items-center gap-1">
+                    <Tooltip content="State of the art agents" placement="top">
+                      <BiInfoCircle className="h-3.5 w-3.5 text-white/70 hover:text-white" />
+                    </Tooltip>
+                    SOTA
+                  </span>
+                }
+                labelPlacement="left"
+                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
+                className={cn(
+                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border-none !shadow-inner",
+                  includeSota ? "!opacity-100" : "!opacity-70"
+                )}
+                inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
+                iconClassName="!text-black"
+              />
+            </div>
+          </div>
         </div>
-        <div className="custom-scrollbar h-[calc(100%-80px)] overflow-y-auto pl-3 pr-1.5 mt-0.5 pt-3 pb-3 scroll-smooth">
+        <div className="custom-scrollbar flex-1 overflow-y-auto pl-3 pr-1.5 mt-0.5 pt-3 pb-3 scroll-smooth">
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3 px-2">
-              <Text className="text-2xl font-bold text-gray-900">
-                All Miners
-              </Text>
-              <div className="flex-1 flex justify-end">
-                <Checkbox
-                  id="show-sota-agents"
-                  checked={includeSota}
-                  onChange={(e) => setIncludeSota(e.target.checked)}
-                  label={
-                    <span className="flex items-center gap-1">
-                      <Tooltip content="State of the art agents" placement="top">
-                        <BiInfoCircle className="h-3.5 w-3.5 text-white/70 hover:text-white" />
-                      </Tooltip>
-                      SOTA
-                    </span>
-                  }
-                  labelPlacement="left"
-                  labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
-                  className={cn(
-                    "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border !border-black/40 !shadow-inner",
-                    includeSota ? "!opacity-100" : "!opacity-70"
-                  )}
-                  inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
-                  iconClassName="!text-black"
-                />
-              </div>
+            <div className="px-1 pb-3">
+              <Select
+                options={selectOptions}
+                value={roundSelectValue}
+                onChange={handleRoundChange}
+                disabled={!roundOptions.length}
+                placeholder="Select round"
+                className="w-full !rounded-lg !border !border-gray-200 !shadow-sm !bg-gray-50 !text-gray-900 hover:!border-gray-300 focus:!border-black/40"
+                menuPortalTarget={undefined}
+              />
             </div>
             <div className="mb-2 mt-0.5 space-y-2 px-1">
               <Input
@@ -314,7 +317,7 @@ export default function AgentsSidebar() {
                     className={cn(
                       "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
-                        ? "bg-white/12 text-white border border-white/25 shadow-lg shadow-white/10 backdrop-blur"
+                        ? "bg-[wheat] text-black border border-[#e2c48a] shadow-lg shadow-amber-200/40"
                         : highlightTop
                         ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
                         : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
@@ -342,7 +345,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-sm font-semibold truncate",
                             isActive
-                              ? "text-white"
+                              ? "text-black"
                               : highlightTop
                                 ? "text-white"
                                 : "text-gray-300 group-hover:text-white"
@@ -363,7 +366,7 @@ export default function AgentsSidebar() {
                             "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
                             rankBadgePalette,
                             isActive && displayRank
-                                ? "ring-1 ring-white/60"
+                                ? "ring-1 ring-[#d7b26d]"
                                 : highlightTop && displayRank
                                   ? "ring-1 ring-orange-300/60"
                                   : ""
@@ -376,7 +379,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-mono",
                             isActive
-                              ? "text-white/80"
+                              ? "text-black"
                               : highlightTop
                                 ? "text-orange-300"
                                 : "text-gray-500 group-hover:text-gray-300"
@@ -388,7 +391,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-medium",
                             isActive
-                              ? "text-white/80"
+                              ? "text-black"
                               : highlightTop
                                 ? "text-orange-200"
                                 : "text-gray-400 group-hover:text-gray-200"

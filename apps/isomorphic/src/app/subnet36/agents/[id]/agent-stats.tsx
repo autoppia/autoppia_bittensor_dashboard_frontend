@@ -4,7 +4,7 @@ import { Button, Text } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
-import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget, LuCoins } from "react-icons/lu";
+import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget } from "react-icons/lu";
 import { AgentStatsPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type { AgentData, AgentRoundMetrics } from "@/services/api/types/agents";
 
@@ -41,8 +41,6 @@ export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
   ).toFixed(1)}%`;
 
   const roundsParticipated = (agent.roundsParticipated || agent.totalRuns).toLocaleString();
-  const alphaWon = `${(agent.alphaWonInPrizes || 0).toFixed(2)} α`;
-
   const stats = [
     {
       title: "Round Rank",
@@ -92,23 +90,7 @@ export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
         "relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
       descriptionClassName: "text-blue-100/80",
     },
-    {
-      title: "Alpha Won in Prizes",
-      metric: alphaWon,
-      description: "Cumulative alpha rewards",
-      icon: LuCoins,
-      className:
-        "relative overflow-visible bg-gradient-to-br from-purple-500/20 via-purple-400/15 to-purple-600/25 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-purple-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-purple-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-      metricClassName: "text-purple-500 drop-shadow-sm",
-      iconClassName:
-        "relative bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
-      descriptionClassName: "text-purple-100/80",
-    },
   ];
-
-  const visibleStats = agent.isSota
-    ? stats.filter((stat) => stat.title !== "Alpha Won in Prizes")
-    : stats;
 
   return (
     <div className="relative flex w-auto items-center overflow-visible">
@@ -126,7 +108,7 @@ export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-5 overflow-x-auto scroll-smooth 2xl:gap-6 3xl:gap-8 [&::-webkit-scrollbar]:h-0"
         >
-          {visibleStats.map((stat) => {
+          {stats.map((stat) => {
             const Icon = stat.icon;
             return (
               <div
