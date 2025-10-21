@@ -10,6 +10,7 @@ export interface AgentRunData {
   agentUid?: number | null;
   agentHotkey?: string | null;
   agentName?: string | null;
+  agentImage?: string | null;
   roundId: number;
   validatorId: string;
   validatorName: string;
@@ -52,6 +53,7 @@ export interface AgentRunListItem {
   agentUid?: number | null;
   agentHotkey?: string | null;
   agentName?: string | null;
+  agentImage?: string | null;
   roundId: number;
   validatorId: string;
   validatorName?: string;

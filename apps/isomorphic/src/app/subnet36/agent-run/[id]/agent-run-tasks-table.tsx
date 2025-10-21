@@ -31,7 +31,7 @@ export default function AgentRunTasksTable() {
       <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-blue-500/20 blur-[120px]" />
       <div
         className="pointer-events-none absolute right-6 bottom-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.15)" }}
+        style={{ backgroundColor: "rgba(253, 245, 230, 0.15)" }}
       />
       <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-white">All Tasks</h2>
@@ -48,7 +48,7 @@ export default function AgentRunTasksTable() {
             }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             className="w-full xs:max-w-60"
-            inputClassName="rounded-xl border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-[#F5DEB3]/60 focus:ring-0"
+            inputClassName="rounded-xl border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-[#FDF5E6]/60 focus:ring-0"
           />
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function AgentRunTasksTable() {
             headerClassName:
               "bg-gradient-to-r from-white/10 via-white/5 to-white/10 text-white/80 uppercase tracking-[0.25em]",
             rowClassName:
-              "border-b border-white/5 bg-white/5 transition-colors duration-200 hover:bg-white/10 hover:border-[#F5DEB3]/60 hover:shadow-[0_14px_34px_rgba(245,222,179,0.18)] text-white/80",
+              "border-b border-white/5 bg-white/5 transition-colors duration-200 hover:bg-white/10 hover:border-[#FDF5E6]/60 hover:shadow-[0_14px_34px_rgba(253,245,230,0.18)] text-white/80",
             }}
         />
       </div>

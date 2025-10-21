@@ -104,6 +104,40 @@ function formatAgentLabel(run: AgentRunListItem): string {
   return run.agentId;
 }
 
+function extractUidNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const match = value.match(/-?\d+/);
+    if (match) {
+      const parsed = Number.parseInt(match[0], 10);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function resolveMinerImage(run: AgentRunListItem): string {
+  if (run.agentImage) {
+    return resolveAssetUrl(run.agentImage);
+  }
+
+  const uidCandidate =
+    (typeof run.agentUid === "number" ? run.agentUid : null) ??
+    extractUidNumber(run.agentId) ??
+    extractUidNumber(run.agentHotkey);
+
+  if (uidCandidate !== null) {
+    const normalized = Math.abs(uidCandidate % 50);
+    return resolveAssetUrl(`/miners/${normalized}.svg`);
+  }
+
+  return resolveAssetUrl("/images/autoppia-logo.png");
+}
+
 const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
   const totalTasks = run.totalTasks ?? 0;
   const completed = run.successfulTasks ?? run.completedTasks ?? 0;
@@ -437,6 +471,10 @@ export default function AgentRunSearch() {
     return {
       runId: run.runId,
       agentId: run.agentId,
+      agentUid: run.agentUid,
+      agentHotkey: run.agentHotkey,
+      agentName: run.agentName,
+      agentImage: run.agentImage,
       roundId: run.roundId,
       validatorId: run.validatorId,
       validatorName: run.validatorName,
@@ -883,8 +921,11 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
-              const scorePercent = Math.round((run.overallScore ?? 0) * 100);
-              const successPercent = Math.round((run.successRate ?? 0) * 100);
+              const scoreOutOf100 = Math.max(
+                0,
+                Math.min(100, Math.round(run.overallScore ?? 0))
+              );
+              const minerImageSrc = resolveMinerImage(run);
 
               return (
                 <div
@@ -908,33 +949,39 @@ export default function AgentRunSearch() {
                       )}
                     </div>
 
-                    {/* Validator with Image */}
-                    <div className="mb-4 flex items-center gap-3">
-                      <Image
-                        src={validatorImageSrc}
-                        alt={validatorLabel}
-                        width={56}
-                        height={56}
-                        sizes="56px"
-                        className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-500/50"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-slate-500 mb-1">
+                    {/* Validator & Miner */}
+                    <div className="mb-4 grid grid-cols-2 gap-4">
+                      <div className="flex flex-col items-center text-center">
+                        <div className="text-xs font-medium text-slate-500 mb-2">
                           Validator
                         </div>
-                        <div className="text-lg font-bold text-white truncate">
+                        <Image
+                          src={validatorImageSrc}
+                          alt={validatorLabel}
+                          width={56}
+                          height={56}
+                          sizes="56px"
+                          className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-500/50"
+                        />
+                        <div className="mt-2 text-sm font-semibold text-white truncate">
                           {validatorLabel}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Agent Name */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-emerald-400 mb-1">
-                        Agent
-                      </div>
-                      <div className="text-base font-semibold text-emerald-200 truncate">
-                        {agentLabel}
+                      <div className="flex flex-col items-center text-center">
+                        <div className="text-xs font-medium text-emerald-400 mb-2">
+                          Miner
+                        </div>
+                        <Image
+                          src={minerImageSrc}
+                          alt={agentLabel}
+                          width={56}
+                          height={56}
+                          sizes="56px"
+                          className="h-14 w-14 rounded-full object-cover ring-2 ring-emerald-500/60"
+                        />
+                        <div className="mt-2 text-sm font-semibold text-emerald-200 truncate">
+                          {agentLabel}
+                        </div>
                       </div>
                     </div>
 
@@ -961,19 +1008,11 @@ export default function AgentRunSearch() {
 
                   {/* Footer Stats - Always at bottom */}
                   <div className="pt-4 border-t border-slate-700/50">
-                    <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                       <div className="text-center">
                         <div className="text-xs text-slate-400 mb-1">Score</div>
                         <div className="text-lg font-bold text-indigo-300">
-                          {scorePercent}%
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-slate-400 mb-1">
-                          Success
-                        </div>
-                        <div className="text-lg font-bold text-emerald-300">
-                          {successPercent}%
+                          {scoreOutOf100}/100
                         </div>
                       </div>
                       <div className="text-center">

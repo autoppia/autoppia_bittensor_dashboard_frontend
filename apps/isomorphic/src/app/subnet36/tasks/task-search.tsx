@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
-import type { TaskData } from "@/services/api/types/tasks";
+import type { TaskData, TaskRelationships } from "@/services/api/types/tasks";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
+import { resolveAssetUrl } from "@/services/utils/assets";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -15,6 +17,7 @@ import {
   PiCaretDownDuotone,
   PiGlobeDuotone,
   PiCodeDuotone,
+  PiCopySimpleDuotone,
 } from "react-icons/pi";
 
 const formatLabel = (value: string) =>
@@ -26,6 +29,51 @@ const formatLabel = (value: string) =>
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+function truncateMiddle(value?: string, visible: number = 8) {
+  if (!value) return "—";
+  if (value.length <= visible * 2) return value;
+  return `${value.slice(0, visible)}…${value.slice(-visible)}`;
+}
+
+function extractRoundNumber(value?: string | null): number | null {
+  if (!value) return null;
+  const match = value.match(/round[-_\s]?(\d+)/i);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to copy text:", error);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition-all duration-200 hover:border-emerald-300/60 hover:bg-emerald-500/20 hover:text-white hover:shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <span className="text-[11px] font-bold text-emerald-200">✓</span>
+      ) : (
+        <PiCopySimpleDuotone className="h-4 w-4 drop-shadow-[0_3px_8px_rgba(255,255,255,0.25)]" />
+      )}
+    </button>
+  );
+}
 
 export default function TaskSearch() {
   const router = useRouter();
@@ -41,6 +89,9 @@ export default function TaskSearch() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [relationshipsMap, setRelationshipsMap] = useState<
+    Record<string, TaskRelationships>
+  >({});
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
@@ -93,6 +144,63 @@ export default function TaskSearch() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const missingTasks = results.filter(
+      (task) =>
+        !task.relationships &&
+        !relationshipsMap[task.taskId]
+    );
+
+    if (missingTasks.length === 0) {
+      return;
+    }
+
+    const fetchRelationships = async () => {
+      const settled = await Promise.allSettled(
+        missingTasks.map((task) =>
+          tasksService
+            .getTask(task.taskId)
+            .then((data) => ({
+              taskId: task.taskId,
+              relationships: data.relationships,
+            }))
+        )
+      );
+
+      if (cancelled) return;
+
+      const updates: Record<string, TaskRelationships> = {};
+
+      settled.forEach((result) => {
+        if (result.status === "fulfilled" && result.value.relationships) {
+          updates[result.value.taskId] = result.value.relationships;
+        }
+      });
+
+      if (Object.keys(updates).length > 0) {
+        setRelationshipsMap((prev) => {
+          const next = { ...prev };
+          let changed = false;
+          for (const [taskId, relationships] of Object.entries(updates)) {
+            if (!next[taskId]) {
+              next[taskId] = relationships;
+              changed = true;
+            }
+          }
+          return changed ? next : prev;
+        });
+      }
+    };
+
+    fetchRelationships();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [results, relationshipsMap]);
 
   const handleSearch = async () => {
     setHasSearched(true);
@@ -171,8 +279,8 @@ export default function TaskSearch() {
   );
 
   return (
-    <div className="w-full max-w-[1024px] mx-auto h-full py-8">
-      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
+    <div className="w-full max-w-[1400px] mx-auto h-full py-8 px-4">
+      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50 max-w-[1024px] mx-auto">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
@@ -433,11 +541,13 @@ export default function TaskSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {results.map((task) => {
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
-              const isPassed = scorePercent === 100;
+
+              const relationships =
+                task.relationships ?? relationshipsMap[task.taskId];
 
               // Extract URL from navigate action if available
               const navigateAction = task.actions?.find(
@@ -469,118 +579,210 @@ export default function TaskSearch() {
 
               const webProject = getWebProject(taskUrl);
 
+              const websiteLabel = (() => {
+                if (webProject) {
+                  return webProject.name;
+                }
+                if (!taskUrl) {
+                  return formatLabel(task.website);
+                }
+                try {
+                  const parsed = new URL(taskUrl);
+                  return parsed.hostname.replace(/^www\./, "");
+                } catch {
+                  return taskUrl.replace(/^https?:\/\//, "");
+                }
+              })();
+
+              const validatorIdMatch = task.agentRunId.match(/validator-(\d+)/i);
+              const fallbackValidator = validatorIdMatch
+                ? `Validator ${validatorIdMatch[1]}`
+                : "Validator";
+
+              const validatorName =
+                relationships?.validator?.name ||
+                relationships?.validator?.hotkey ||
+                fallbackValidator;
+
+              const minerName =
+                relationships?.miner?.name ||
+                relationships?.miner?.hotkey ||
+                "Miner";
+
+              const durationLabel =
+                typeof task.duration === "number" && task.duration >= 0
+                  ? `${Math.round(task.duration)}s`
+                  : "—";
+
+              const validatorImageSrc = resolveAssetUrl(
+                relationships?.validator?.image,
+                "/validators/Other.png"
+              );
+
+              const minerImageSrc = resolveAssetUrl(
+                relationships?.miner?.image,
+                "/images/autoppia-logo.png"
+              );
+
+              const roundNumber =
+                relationships?.round?.roundNumber ??
+                extractRoundNumber(task.taskId) ??
+                extractRoundNumber(task.agentRunId);
+
+              const roundDisplay =
+                typeof roundNumber === "number" && Number.isFinite(roundNumber)
+                  ? `#${roundNumber}`
+                  : "—";
+
               return (
                 <div
                   key={task.taskId}
                   onClick={() => router.push(`${routes.tasks}/${task.taskId}`)}
-                  className={`group relative rounded-xl border ${
-                    isPassed
-                      ? "border-emerald-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-emerald-400/50 hover:shadow-emerald-500/20"
-                      : "border-red-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-red-400/50 hover:shadow-red-500/20"
-                  } p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl flex flex-col`}
+                  className="group relative rounded-xl border border-indigo-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-indigo-400/50 text-white shadow-lg transition-all duration-300 backdrop-blur-sm transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col px-5 py-6"
+                  style={{ cursor: "pointer" }}
                 >
-                  {/* Main Content - Grows to fill space */}
-                  <div className="flex-grow">
-                    {/* Web Project */}
-                    {webProject && (
-                      <div className="mb-3">
-                        <div
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-bold"
-                          style={{
-                            backgroundColor: `${webProject.color}`,
-                            color: "#FFFFFF",
-                          }}
-                        >
-                          <PiGlobeDuotone className="w-5 h-5" />
-                          {webProject.name}
+                  {/* Main Content */}
+                  <div className="flex h-full flex-col gap-4">
+                    {/* Identifiers */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                        <CopyButton text={task.taskId} />
+                        <div className="min-w-0">
+                          <div className="text-[10px] uppercase tracking-[0.35em] text-white/80">
+                            Task ID
+                          </div>
+                          <div className="font-mono text-xs font-semibold text-cyan-100 truncate">
+                            {truncateMiddle(task.taskId, 6)}
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Use Case */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-slate-500 mb-1">
-                        Use Case
-                      </div>
-                      <div className="text-lg font-semibold text-white">
-                        {useCaseLabel}
+                      <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                        <CopyButton text={task.agentRunId} />
+                        <div className="min-w-0">
+                          <div className="text-[10px] uppercase tracking-[0.35em] text-white/80">
+                            Run ID
+                          </div>
+                          <div className="font-mono text-xs font-semibold text-violet-100 truncate">
+                            {truncateMiddle(task.agentRunId, 6)}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Task ID */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-cyan-400 mb-1">
-                        Task ID
+                    {/* Validator & Miner */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col items-center text-center gap-2">
+                        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-indigo-500/40 bg-slate-900/70 shadow-lg">
+                          <Image
+                            src={validatorImageSrc}
+                            alt={validatorName}
+                            width={64}
+                            height={64}
+                            sizes="64px"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                          Validator
+                        </div>
+                        <div className="max-w-[160px] text-sm font-semibold truncate">
+                          {validatorName}
+                        </div>
                       </div>
-                      <div className="text-sm font-mono text-cyan-200 truncate">
-                        {task.taskId}
+                      <div className="flex flex-col items-center text-center gap-2">
+                        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-emerald-500/40 bg-slate-900/70 shadow-lg">
+                          <Image
+                            src={minerImageSrc}
+                            alt={minerName}
+                            width={64}
+                            height={64}
+                            sizes="64px"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                          Miner
+                        </div>
+                        <div className="max-w-[160px] text-sm font-semibold truncate">
+                          {minerName}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Agent Run ID */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-violet-400 mb-1">
-                        Agent Run
+                    {/* Website & Use Case */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div
+                        className="rounded-xl border border-white/15 bg-white/5 p-3"
+                        style={
+                          webProject
+                            ? {
+                                backgroundColor: webProject.color,
+                                color: "#FFFFFF",
+                                borderColor: "rgba(255,255,255,0.35)",
+                              }
+                            : undefined
+                        }
+                      >
+                        <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
+                          Website
+                        </div>
+                        <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                          <PiGlobeDuotone className="h-4 w-4" />
+                          <span className="truncate">{websiteLabel}</span>
+                        </div>
                       </div>
-                      <div className="text-sm font-mono text-violet-200 truncate">
-                        {task.agentRunId}
+                      <div
+                        className="rounded-xl border border-white/15 bg-white/5 p-3"
+                      >
+                        <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
+                          Use Case
+                        </div>
+                        <div className="flex items-center gap-2 text-sm font-semibold text-sky-100">
+                          <PiCodeDuotone className="h-4 w-4 text-sky-300" />
+                          <span className="truncate">{useCaseLabel}</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* URL */}
-                    {taskUrl && (
-                      <div className="mb-4">
-                        <div className="text-xs font-medium text-slate-400 mb-1">
-                          URL
-                        </div>
-                        <div className="p-2 rounded bg-slate-950/50 border border-slate-700/50">
-                          <p className="text-xs text-cyan-300 truncate font-mono">
-                            {taskUrl}
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Prompt */}
-                    <div className="mb-4">
-                      <div className="text-xs font-medium text-slate-400 mb-1">
+                    <div className="rounded-xl border border-white/15 bg-white/5 p-3">
+                      <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
                         Prompt
                       </div>
-                      <p className="text-sm text-slate-200 leading-relaxed line-clamp-3">
+                      <p className="text-sm leading-relaxed text-slate-200 line-clamp-3">
                         {task.prompt}
                       </p>
                     </div>
-                  </div>
 
-                  {/* Footer Stats - Always at bottom */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <div className="text-xs text-slate-400 mb-1">
-                          Duration
+                    {/* Stats */}
+                    <div className="mt-auto">
+                      <div className="grid grid-cols-3 gap-3 border-t border-white/10 pt-4">
+                        <div className="text-center">
+                          <div className="text-xs text-slate-400 mb-1">
+                            Round
+                          </div>
+                          <div className="text-lg font-bold text-amber-300">
+                            {roundDisplay}
+                          </div>
                         </div>
-                        <div className="text-sm font-bold text-amber-300">
-                          {task.duration}s
+                        <div className="text-center">
+                          <div className="text-xs text-slate-400 mb-1">
+                            Score
+                          </div>
+                          <div className="text-lg font-bold text-emerald-300">
+                            {Number.isFinite(scorePercent)
+                              ? `${scorePercent}%`
+                              : "—"}
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-slate-400 mb-1">
-                          Actions
+                        <div className="text-center">
+                          <div className="text-xs text-slate-400 mb-1">
+                            Duration
+                          </div>
+                          <div className="text-lg font-bold text-sky-200">
+                            {durationLabel}
+                          </div>
                         </div>
-                        <div className="text-sm font-bold text-indigo-300">
-                          {task.actions ? task.actions.length : 0}
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <div
-                        className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg ${
-                          isPassed
-                            ? "bg-emerald-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {isPassed ? "SUCCESS" : "FAILED"}
                       </div>
                     </div>
                   </div>

@@ -181,7 +181,7 @@ export default function RoundValidators({
                     className={cn(
                       "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
-                        ? "bg-[wheat] border-[#e2c48a] hover:border-[#d7b26d] shadow-amber-200/40 hover:shadow-amber-300/60"
+                        ? "bg-[#F8FAFC] border-[#E2E8F0] text-slate-900 shadow-[0_10px_24px_rgba(248,250,252,0.25)] hover:border-[#CBD5F5] hover:shadow-[0_16px_32px_rgba(248,250,252,0.35)]"
                         : "bg-transparent border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-xl"
                     )}
                   >
@@ -200,14 +200,14 @@ export default function RoundValidators({
                           sizes="(max-width: 768px) 100vw"
                           className={cn(
                             "h-full w-full rounded-full object-contain transition-all duration-300",
-                            isActive && "ring-2 ring-amber-300/60 ring-offset-2 shadow-lg shadow-amber-500/40"
+                            isActive && "ring-2 ring-[#E2E8F0]/60 ring-offset-1 shadow-[0_8px_18px_rgba(248,250,252,0.25)]"
                           )}
                         />
                       </div>
                       <span
                         className={cn(
                           "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                          isActive ? "text-black" : "text-white"
+                          isActive ? "text-slate-900" : "text-white"
                         )}
                       >
                         {validator.name}
@@ -215,7 +215,7 @@ export default function RoundValidators({
                       <span
                         className={cn(
                           "mt-1.5 text-xs font-medium tracking-wide font-inter transition-colors duration-300 truncate max-w-full",
-                          isActive ? "text-black/70" : "text-gray-300"
+                          isActive ? "text-slate-700" : "text-gray-300"
                         )}
                       >
                         {validator.hotkey
@@ -244,14 +244,14 @@ export default function RoundValidators({
       {/* Dynamic Content Separator */}
       <div className="mt-8 mb-6">
         <div className="flex items-center gap-6">
-          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-amber-300/50 to-transparent"></div>
-          <div className="flex items-center gap-3 px-6 py-3 bg-amber-100/80 rounded-full border-2 border-amber-300/60 shadow-lg backdrop-blur-sm">
-            <div className="w-3 h-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full animate-pulse shadow-md"></div>
-            <Text className="text-lg text-amber-800 font-bold tracking-wide">
+          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-[#F4E4C7]/60 to-transparent"></div>
+          <div className="flex items-center gap-3 px-6 py-3 bg-[#F8FAFC]/85 rounded-full border-2 border-[#E2E8F0] shadow-[0_12px_28px_rgba(248,250,252,0.3)] backdrop-blur-sm">
+            <div className="w-3 h-3 bg-gradient-to-r from-[#E3C697] to-[#D3AE72] rounded-full animate-pulse shadow-sm"></div>
+            <Text className="text-lg text-[#3A3124] font-bold tracking-wide">
               {selectedValidator?.name || "Selected Validator"}
             </Text>
           </div>
-          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-amber-300/50 to-transparent"></div>
+          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-[#F4E4C7]/60 to-transparent"></div>
         </div>
       </div>
     </div>

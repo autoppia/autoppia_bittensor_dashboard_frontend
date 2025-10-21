@@ -24,7 +24,7 @@ const PROGRESS_COLORS = [
   "#F43F5E", // rose-500
 ];
 
-const HIGHLIGHT_COLOR = "#F5DEB3";
+const HIGHLIGHT_COLOR = "#FDF5E6";
 
 // Utility function to format use case names
 function formatUseCaseName(name?: string | null): string {
@@ -115,7 +115,7 @@ export default function AgentRunDetail({
       <div className="pointer-events-none absolute right-10 -bottom-28 h-72 w-72 rounded-full bg-purple-500/25 blur-[140px]" />
       <div
         className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+        style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
       
       {/* Header Section */}
@@ -168,8 +168,8 @@ export default function AgentRunDetail({
           <span
             className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
             style={{
-              borderColor: "rgba(245, 222, 179, 0.45)",
-              backgroundColor: "rgba(245, 222, 179, 0.15)",
+              borderColor: "rgba(253, 245, 230, 0.45)",
+              backgroundColor: "rgba(253, 245, 230, 0.15)",
               color: HIGHLIGHT_COLOR,
             }}
           >
@@ -195,7 +195,7 @@ export default function AgentRunDetail({
             return (
               <div 
                 key={`${item.website}-${index}`} 
-                className="group relative rounded-xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm transition-all duration-300 hover:border-[#F5DEB3]/60 hover:shadow-2xl"
+                className="group relative rounded-xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm transition-all duration-300 hover:border-[#FDF5E6]/60 hover:shadow-2xl"
                 style={{
                   boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
                 }}
@@ -214,8 +214,8 @@ export default function AgentRunDetail({
                       <div
                         className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium border"
                         style={{
-                          backgroundColor: "rgba(245, 222, 179, 0.2)",
-                          borderColor: "rgba(245, 222, 179, 0.45)",
+                          backgroundColor: "rgba(253, 245, 230, 0.2)",
+                          borderColor: "rgba(253, 245, 230, 0.45)",
                           color: HIGHLIGHT_COLOR,
                         }}
                       >
@@ -254,8 +254,8 @@ export default function AgentRunDetail({
                       className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                       style={{
                         width: `${Math.max(0, Math.min(item.average, 100))}%`,
-                        background: `linear-gradient(90deg, ${colorClass} 0%, rgba(245, 222, 179, 0.85) 100%)`,
-                        boxShadow: "0 8px 25px rgba(245, 222, 179, 0.25)",
+                        background: `linear-gradient(90deg, ${colorClass} 0%, rgba(253, 245, 230, 0.85) 100%)`,
+                        boxShadow: "0 8px 25px rgba(253, 245, 230, 0.25)",
                       }}
                     >
                       {/* Shimmer effect */}

@@ -31,6 +31,7 @@ export interface TaskData {
     };
     userAgent: string;
   } | null;
+  relationships?: TaskRelationships | null;
 }
 
 // ===== TASK ACTION =====
@@ -119,6 +120,7 @@ export interface TaskValidatorSummary {
   hotkey: string;
   coldkey?: string | null;
   name?: string | null;
+  image?: string | null;
   stake: number;
   vtrust: number;
   version?: string | null;

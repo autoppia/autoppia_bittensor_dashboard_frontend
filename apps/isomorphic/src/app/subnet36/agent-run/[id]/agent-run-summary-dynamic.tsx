@@ -124,7 +124,7 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
       <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-blue-500/20 blur-3xl" />
       <div
         className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+        style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
 
       <div className="relative mb-6">
