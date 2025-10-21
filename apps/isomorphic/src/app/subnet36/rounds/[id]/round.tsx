@@ -35,7 +35,7 @@ export default function Round() {
         <span>Running</span>
       </div>
     ) : (
-      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/15 px-3 py-1.5 text-xs font-semibold text-emerald-600 shadow-lg shadow-emerald-500/30 sm:text-sm">
+      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-emerald-500/30 sm:text-sm">
         <PiCheckCircleFill className="h-4 w-4" />
         <span>Finished</span>
       </div>
@@ -67,7 +67,6 @@ export default function Round() {
       )}
       
       <div className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {statusBadge}
         <button
           type="button"
           onClick={handleOpenGlossary}
@@ -76,6 +75,7 @@ export default function Round() {
           <LuInfo className="h-4 w-4" />
           Glossary
         </button>
+        {statusBadge}
       </div>
       {/* Always render components - they will handle their own loading states */}
       <div className="mt-6">
