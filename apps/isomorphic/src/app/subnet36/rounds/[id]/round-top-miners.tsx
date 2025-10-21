@@ -63,10 +63,11 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[520px] px-2 lg:px-4 w-full rounded-xl", className)}
+        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
         headerClassName="px-3 pb-2"
+        titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
+        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
             {Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="flex items-center w-full px-4 py-1.5">
@@ -88,11 +89,12 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[520px] px-2 lg:px-4 w-full rounded-xl", className)}
+        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
         headerClassName="px-3 pb-2"
+        titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3 flex items-center justify-center">
-          <div className="text-center text-red-600">
+        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+          <div className="text-center text-red-400">
             <p className="text-lg font-semibold">Failed to load top miners</p>
             <p className="text-sm mt-2">Please try again later</p>
           </div>
@@ -105,11 +107,12 @@ export default function RoundTopMiners({
     return (
       <WidgetCard
         title="Top Miners"
-        className={cn("h-[520px] px-2 lg:px-4 w-full rounded-xl", className)}
+        className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
         headerClassName="px-3 pb-2"
+        titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3 flex items-center justify-center">
-          <div className="text-center text-gray-500">
+        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+          <div className="text-center text-gray-300">
             <p className="text-lg font-semibold">No miners ranked yet</p>
             <p className="text-sm mt-2">
               {selectedValidatorId
@@ -125,10 +128,11 @@ export default function RoundTopMiners({
   return (
     <WidgetCard
       title="Top Miners"
-      className={cn("h-[520px] px-2 lg:px-4 w-full rounded-xl", className)}
+      className={cn("h-[650px] px-2 lg:px-4 w-full rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40 backdrop-blur text-white shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300", className)}
       headerClassName="px-3 pb-2"
+      titleClassName="text-white text-xl font-bold"
     >
-      <div className="custom-scrollbar h-[430px] overflow-y-auto mt-3">
+      <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner, index) => {
             const agentHref =
@@ -144,12 +148,12 @@ export default function RoundTopMiners({
               >
                 <div
                   className={cn(
-                    "relative flex items-center w-full px-4 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-md cursor-pointer group border border-transparent hover:border-gray-200",
+                    "relative flex items-center w-full px-4 py-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 hover:shadow-md cursor-pointer group border border-transparent hover:border-white/20",
                     index === 0 &&
-                      "bg-yellow-500/10 border border-yellow-400/70 text-gray-900 hover:border-yellow-400 hover:bg-yellow-500/20"
+                      "bg-yellow-500/15 border border-yellow-400/60 hover:border-yellow-400 hover:bg-yellow-500/25"
                   )}
                 >
-                  <div className="relative me-3 h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100 @sm:h-12 @sm:w-12">
+                  <div className="relative me-3 h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 @sm:h-12 @sm:w-12">
                     <Image
                       src={`/miners/${miner.uid % 50}.svg`}
                       alt={miner.uid.toString()}
@@ -163,8 +167,8 @@ export default function RoundTopMiners({
                       <div className="flex items-center">
                         <Text
                           className={cn(
-                            "text-lg font-semibold text-gray-900",
-                            index === 0 && "text-yellow-500"
+                            "text-lg font-semibold text-white",
+                            index === 0 && "text-yellow-400"
                           )}
                         >
                           {miner.isSota && miner.name
@@ -174,18 +178,18 @@ export default function RoundTopMiners({
                         <div className="relative ms-2 text-xl">
                           {index === 0 && (
                             <>
-                              <PiCrownFill className="animate-ping opacity-50 text-yellow-500" />
-                              <PiCrownFill className="absolute top-0 left-0 text-yellow-500" />
+                              <PiCrownFill className="animate-ping opacity-50 text-yellow-400" />
+                              <PiCrownFill className="absolute top-0 left-0 text-yellow-400" />
                             </>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-gray-500 group-hover:text-gray-600">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-gray-300 group-hover:text-gray-200">
                         <span className="uppercase tracking-wide">
                           UID {miner.uid}
                         </span>
                         <span
-                          className="truncate max-w-[180px] text-[11px] font-normal uppercase tracking-wide text-gray-400 group-hover:text-gray-500"
+                          className="truncate max-w-[180px] text-[11px] font-normal uppercase tracking-wide text-gray-400 group-hover:text-gray-300"
                           title={miner.hotkey ?? "Hotkey unavailable"}
                         >
                           Hotkey{" "}
@@ -197,19 +201,19 @@ export default function RoundTopMiners({
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <Text className="text-sm text-gray-500 font-medium">
+                        <Text className="text-sm text-gray-300 font-medium">
                           Score:
                         </Text>
                         <div
                           className={cn(
                             "text-lg font-semibold",
-                            index === 0 ? "text-yellow-500" : "text-emerald-500"
+                            index === 0 ? "text-yellow-400" : "text-cyan-400"
                           )}
                         >
                           {(miner.score * 100).toFixed(1)}%
                         </div>
                       </div>
-                      <div className="text-gray-400 group-hover:text-gray-600 transition-colors duration-200">
+                      <div className="text-gray-300 group-hover:text-gray-200 transition-colors duration-200">
                         <svg
                           className="w-4 h-4"
                           fill="none"
