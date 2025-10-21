@@ -146,8 +146,8 @@ export default function AgentRunPersonas({
           </span>
         </header>
 
-        <div className="relative mt-5 rounded-xl border border-slate-700/40 bg-slate-900/50 px-4 py-4 shadow-md transition-all duration-300 hover:bg-slate-900/70">
-          <div className="flex items-center justify-between gap-4">
+        <div className="relative mt-6 rounded-xl border border-slate-700/40 bg-slate-900/50 px-4 py-4 shadow-md transition-all duration-300 hover:bg-slate-900/70">
+          <div className="flex items-center justify-between gap-4 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
               Epoch
             </span>
@@ -165,10 +165,10 @@ export default function AgentRunPersonas({
               <Image
                 alt={validatorData.name}
                 src={validatorImageSrc || "/placeholder.svg"}
-                width={64}
-                height={64}
+                width={56}
+                height={56}
                 unoptimized
-                className="h-16 w-16 rounded-2xl border-2 border-slate-700/50 object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
+                className="h-16 w-16 rounded-2xl object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
               />
             </div>
             <div>
@@ -225,10 +225,10 @@ export default function AgentRunPersonas({
               <Image
                 alt={agentData.name}
                 src={minerImageSrc || "/placeholder.svg"}
-                width={72}
-                height={72}
+                width={56}
+                height={56}
                 unoptimized
-                className="h-18 w-18 rounded-full border-2 border-slate-700/50 object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
+                className="h-16 w-16 rounded-full border-2 border-slate-700/50 object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
               />
             </div>
             <div>
