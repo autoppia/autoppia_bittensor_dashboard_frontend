@@ -150,7 +150,7 @@ export default function RoundResult() {
         key={card.key}
         className={cn(
           "group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
-          "bg-slate-900/45",
+          "bg-slate-800/20 border-slate-700/25",
           card.border,
         )}
       >

@@ -182,7 +182,7 @@ export default function RoundValidators({
                       "w-full min-w-[220px] rounded-xl px-5 py-5 transition-all duration-300 shadow-lg group backdrop-blur-md border-2",
                       isActive
                         ? "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-blue-400/60 hover:border-blue-400/80 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30"
-                        : "border-muted hover:border-blue-500/60 bg-gray-50 hover:bg-gray-100"
+                        : "bg-slate-800/20 border-slate-700/25 hover:bg-slate-800/30 hover:border-slate-700/40"
                     )}
                   >
                     {/* Validator Content */}
@@ -207,7 +207,7 @@ export default function RoundValidators({
                       <span
                         className={cn(
                           "text-base font-bold tracking-wide transition-colors duration-300 text-center",
-                          isActive ? "text-white" : "text-gray-700"
+                          isActive ? "text-white" : "text-white"
                         )}
                       >
                         {validator.name}
@@ -215,7 +215,7 @@ export default function RoundValidators({
                       <span
                         className={cn(
                           "mt-1.5 text-xs font-medium tracking-wide font-inter transition-colors duration-300 truncate max-w-full",
-                          isActive ? "text-blue-200" : "text-gray-500"
+                          isActive ? "text-blue-200" : "text-gray-300"
                         )}
                       >
                         {validator.hotkey
