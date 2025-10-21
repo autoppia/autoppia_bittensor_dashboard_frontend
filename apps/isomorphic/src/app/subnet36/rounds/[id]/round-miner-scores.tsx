@@ -58,8 +58,8 @@ export default function RoundMinerScores({
   const cardClassName = React.useMemo(
     () =>
       cn(
-        "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40",
-        "h-[650px] rounded-3xl text-white shadow-2xl backdrop-blur hover:shadow-blue-500/20 transition-shadow duration-300",
+        "border border-transparent bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white",
+        "h-[650px] rounded-xl px-6 py-7 shadow-lg group backdrop-blur-md transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300",
         className
       ),
     [className]

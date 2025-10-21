@@ -103,7 +103,7 @@ export default function RoundResult() {
         },
         {
           key: "miners",
-          title: "Miners Evaluated",
+          title: "Miners Participated",
           value: formatNumber(selectedValidator.totalMiners ?? 0),
           helper: "Unique miners assessed this round",
           icon: PiUsersThreeDuotone,
@@ -149,18 +149,11 @@ export default function RoundResult() {
       <div
         key={card.key}
         className={cn(
-          "group relative overflow-hidden rounded-2xl border-2 p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20",
-          "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-blue-400/40",
+          "w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md transform hover:scale-[1.02]",
+          "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white hover:shadow-xl hover:shadow-blue-500/30",
         )}
       >
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-0 opacity-90 transition-opacity duration-500 group-hover:opacity-100",
-            "bg-gradient-to-br",
-            card.gradient,
-          )}
-        />
-        <div className="relative flex h-full flex-col gap-6">
+        <div className="flex h-full flex-col gap-6">
           <div className="flex items-start justify-between gap-4">
             <div
               className={cn(
@@ -274,26 +267,18 @@ export default function RoundResult() {
         <RoundStats selectedValidator={selectedValidator} />
       </div>
 
-      {/* Validators Info Card */}
-      <div className="mt-8 mb-6 p-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20">
-            <PiUsersThreeDuotone className="w-4 h-4 text-blue-600" />
+      {/* Multiple Validators Section */}
+      <div className="mt-8 mb-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/20">
+            <PiUsersThreeDuotone className="w-3 h-3 text-blue-600" />
           </div>
-          <div className="flex-1">
-            <Text className="text-sm font-medium text-gray-700">
-              Multiple Validators
-            </Text>
-            <Text className="text-xs text-gray-500 mt-1">
-              Click on different validators below to see detailed information and metrics for each validator
-            </Text>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <Text className="text-xs text-blue-600 font-medium">
-              Interactive
-            </Text>
-          </div>
+          <Text className="text-sm font-medium text-gray-700">
+            Multiple Validators
+          </Text>
+          <Text className="text-xs text-gray-500">
+            Click on different validators below to see detailed information and metrics for each validator
+          </Text>
         </div>
       </div>
 

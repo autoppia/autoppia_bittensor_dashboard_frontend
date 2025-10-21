@@ -1,3 +1,45 @@
+const { URL } = require("url");
+
+const DEFAULT_ALLOWED_IMAGE_HOSTS = [
+  "leaderboard.autoppia.com",
+  "dev-infinitewebarena.autoppia.com",
+  "api-leaderboard.autoppia.com",
+  "raw.githubusercontent.com",
+  "taostats.io",
+];
+
+const defaultAssetBase =
+  process.env.NEXT_PUBLIC_ASSET_BASE_URL || "https://leaderboard.autoppia.com";
+
+let defaultAssetHost;
+try {
+  defaultAssetHost = new URL(defaultAssetBase).hostname;
+} catch (error) {
+  defaultAssetHost = undefined;
+}
+
+const envAllowedHosts = (process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS || "")
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
+
+const allowedImageHosts = Array.from(
+  new Set(
+    [
+      ...DEFAULT_ALLOWED_IMAGE_HOSTS,
+      ...envAllowedHosts,
+      defaultAssetHost && defaultAssetHost.toLowerCase(),
+    ].filter(Boolean)
+  )
+);
+
+const remoteImagePatterns = allowedImageHosts.map((hostname) => ({
+  protocol: "https",
+  hostname,
+  port: "",
+  pathname: "/**",
+}));
+
 /** @type {import("next").NextConfig} */
 module.exports = {
   reactStrictMode: true,
@@ -64,32 +106,7 @@ module.exports = {
     return config;
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "taostats.io",
-        port: "",
-        pathname: "/favicon.ico",
-      },
-      {
-        protocol: "https",
-        hostname: "example.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "*.example.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "**",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+    remotePatterns: remoteImagePatterns,
   },
   async redirects() {
     return [

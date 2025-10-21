@@ -27,9 +27,15 @@ export default function PageHeader({
             {title}
           </Title>
           {description ? (
-            <Text className="mt-1 text-md lg:text-lg text-gray-500">
-              {description}
-            </Text>
+            typeof description === "string" || typeof description === "number" ? (
+              <Text className="mt-1 text-md lg:text-lg text-gray-500">
+                {description}
+              </Text>
+            ) : (
+              <div className="mt-1 text-md lg:text-lg text-gray-500">
+                {description}
+              </div>
+            )
           ) : null}
         </div>
         {children}

@@ -39,6 +39,12 @@ function IDCopyButton({ text }: { text: string }) {
   );
 }
 
+function truncateMiddle(value?: string, visible: number = 8) {
+  if (!value) return "—";
+  if (value.length <= visible * 2) return value;
+  return `${value.slice(0, visible)}…${value.slice(-visible)}`;
+}
+
 export default function TaskDynamic() {
   const { id } = useParams();
   const taskId = Array.isArray(id) ? id[0] : id ?? "";
@@ -51,32 +57,45 @@ export default function TaskDynamic() {
   const runIdDisplay =
     details?.agentRunId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
+  const evaluationIdDisplay =
+    details?.relationships?.evaluation?.evaluationId ??
+    (isLoading ? "Loading…" : error ? "Unavailable" : "—");
 
   return (
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Task Details"
         description={
-          <div className="flex flex-col gap-3">
-            <div className="inline-flex items-center gap-3 rounded-lg border border-purple-400/30 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 px-4 py-2 backdrop-blur-sm">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300/70">Task ID</span>
-              <div className="h-4 w-px bg-gradient-to-b from-transparent via-purple-400/50 to-transparent" />
-              <span className="font-mono text-sm font-bold text-white">
-                {taskId}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-slate-800/50 px-3 py-1.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Task</span>
+              <div className="h-3.5 w-px bg-slate-600/70" />
+              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                {truncateMiddle(taskId, 8)}
               </span>
               <IDCopyButton text={taskId} />
             </div>
-            <div className="inline-flex items-center gap-3 rounded-lg border border-purple-400/30 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 px-4 py-2 backdrop-blur-sm">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300/70">Run ID</span>
-              <div className="h-4 w-px bg-gradient-to-b from-transparent via-purple-400/50 to-transparent" />
-              <span className="font-mono text-sm font-bold text-white">
-                {runIdDisplay}
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-slate-800/50 px-3 py-1.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Run</span>
+              <div className="h-3.5 w-px bg-slate-600/70" />
+              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && <IDCopyButton text={details.agentRunId} />}
             </div>
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-slate-800/50 px-3 py-1.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Evaluation</span>
+              <div className="h-3.5 w-px bg-slate-600/70" />
+              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                {truncateMiddle(evaluationIdDisplay as string, 8)}
+              </span>
+              {details?.relationships?.evaluation?.evaluationId && (
+                <IDCopyButton text={details.relationships.evaluation.evaluationId} />
+              )}
+            </div>
           </div>
         }
-        className="mt-4"
+        className="mt-2"
       >
         <Link
           href={routes.agent_run}
