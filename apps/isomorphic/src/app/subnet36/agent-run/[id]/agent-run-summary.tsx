@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Label,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 import type {
   AgentRunDetailData,
   AgentRunSummaryChartData,
@@ -210,46 +204,42 @@ export default function AgentRunSummary({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/24 to-purple-500/25 p-6 shadow-2xl backdrop-blur-xl text-white ${className ?? ""}`}
+      className={`relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white ${className ?? ""}`}
     >
-      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-purple-500/20 blur-[140px]" />
-      <div className="pointer-events-none absolute -bottom-20 left-8 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
-      <div
-        className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
-      />
       {/* Header */}
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow-lg shadow-blue-500/25">
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="rounded-lg border border-slate-700/40 bg-slate-700/30 p-2 shadow-lg">
+            <svg
+              className="w-5 h-5 text-slate-200"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
               <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-            Summary
-          </h2>
+          <h2 className="text-xl font-semibold text-slate-100">Summary</h2>
         </div>
-        <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-medium">
           Performance Breakdown
         </p>
       </div>
 
       {/* Content */}
-      <div className="relative text-white/80">
-        <div className="h-[240px] w-full @sm:py-3">
+      <div className="relative text-slate-300">
+        <div className="h-[260px] w-full py-2">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>              
+            <PieChart>
               <Pie
                 data={donutData}
-                innerRadius={85}
-                outerRadius={100}
-                paddingAngle={5}
-                cornerRadius={30}
+                innerRadius={90}
+                outerRadius={105}
+                paddingAngle={4}
+                cornerRadius={25}
                 dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
+                stroke="#1e293b"
+                strokeWidth={3}
               >
                 <Label
                   position="center"
@@ -275,32 +265,33 @@ export default function AgentRunSummary({
           </ResponsiveContainer>
         </div>
         {hasWebsites ? (
-          <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm">
+          <div className="flex flex-col divide-y divide-slate-700/40 rounded-xl border border-slate-700/40 bg-slate-800/50 overflow-hidden">
             {displayData.map((item, idx) => (
               <div
                 key={item.label}
-                className="flex items-center justify-between gap-3 py-3 px-2 last:border-b-0"
+                className="flex items-center justify-between gap-4 py-4 px-4 transition-colors hover:bg-slate-700/30"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span
-                    className="h-3 w-3 rounded-full"
+                    className="h-3.5 w-3.5 rounded-full flex-shrink-0 shadow-lg"
                     style={{
                       backgroundColor:
                         PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
+                      boxShadow: `0 0 12px ${PROGRESS_COLORS[idx % PROGRESS_COLORS.length]}40`,
                     }}
                   />
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-semibold text-slate-100 truncate">
                     {item.label}
                   </span>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold text-white">
+                <div className="text-right flex-shrink-0">
+                  <div className="text-base font-bold text-slate-100 mb-0.5">
                     {item.value.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-white/70">
-                    {item.total} requests • {item.successCount} successes
+                  <div className="text-xs text-slate-400 font-medium">
+                    {item.total} req • {item.successCount} ok
                     {selectedWebsite && (
-                      <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
+                      <span> • {item.avgSolutionTime.toFixed(2)}s</span>
                     )}
                   </div>
                 </div>
@@ -308,7 +299,7 @@ export default function AgentRunSummary({
             ))}
           </div>
         ) : (
-          <div className="text-sm text-white/70">
+          <div className="text-sm text-slate-400 text-center py-8 px-4 rounded-xl border border-slate-700/40 bg-slate-800/50">
             Summary metrics are not available for this run yet.
           </div>
         )}
@@ -335,44 +326,44 @@ function CenterLabel({
     <>
       <text
         x={cx}
-        y={cy - 20}
+        y={cy - 22}
         fill={HIGHLIGHT_COLOR}
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
-          textShadow: "0 12px 28px rgba(245, 222, 179, 0.35)",
+          textShadow: "0 4px 16px rgba(245, 222, 179, 0.4)",
         }}
       >
-        <tspan fontSize="36" fontWeight="700">
+        <tspan fontSize="40" fontWeight="700">
           {value}%
         </tspan>
       </text>
       <text
         x={cx}
-        y={cy + 10}
-        fill="#E2E8F0"
+        y={cy + 12}
+        fill="#cbd5e1"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <tspan fontSize="14" fontWeight="600">
+        <tspan fontSize="13" fontWeight="600">
           Requests · {totalRequests}
         </tspan>
       </text>
       <text
         x={cx}
-        y={cy + 30}
-        fill="#E2E8F0"
+        y={cy + 32}
+        fill="#cbd5e1"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <tspan fontSize="14" fontWeight="600">
+        <tspan fontSize="13" fontWeight="600">
           Successes · {totalSuccesses}
         </tspan>
       </text>
