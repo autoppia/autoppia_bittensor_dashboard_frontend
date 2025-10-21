@@ -169,7 +169,7 @@ export default function RoundRecents() {
                 (currentRoundNumber !== undefined && baseNumber === currentRoundNumber);
               const isCurrent = round.current;
               const RoundIcon = isCurrent ? LuActivity : LuCircleCheckBig;
-              const isHighlighted = isActive || isCurrent;
+              const isSelected = isActive;
               
               return (
               <Link 
@@ -184,7 +184,7 @@ export default function RoundRecents() {
                   <div
                     className={cn(
                       "w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md transform hover:scale-[1.02]",
-                      isHighlighted
+                      isSelected
                         ? "bg-[#F8FAFC] border-2 border-[#E2E8F0] text-slate-900 shadow-[0_10px_24px_rgba(248,250,252,0.25)] hover:border-[#CBD5F5] hover:shadow-[0_16px_32px_rgba(248,250,252,0.35)]"
                         : "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white hover:shadow-xl hover:shadow-blue-500/30"
                     )}
@@ -199,7 +199,7 @@ export default function RoundRecents() {
                         <span
                           className={cn(
                             "text-[20px] font-bold uppercase tracking-wide",
-                            isHighlighted ? "text-slate-900" : "text-white"
+                            isSelected ? "text-slate-900" : "text-white"
                           )}
                         >
                           Round {baseNumber}
@@ -209,7 +209,7 @@ export default function RoundRecents() {
                         <span
                           className={cn(
                             "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
-                            isHighlighted 
+                            isSelected 
                               ? "bg-green-500/20 text-green-700" 
                               : "bg-green-500/25 text-green-300"
                           )}
@@ -225,7 +225,7 @@ export default function RoundRecents() {
                       <div
                         className={cn(
                           "flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide",
-                            isHighlighted ? "text-slate-700" : "text-gray-400"
+                            isSelected ? "text-slate-700" : "text-gray-400"
                         )}
                       >
                         <span>Start</span>
@@ -235,7 +235,7 @@ export default function RoundRecents() {
                         <div
                           className={cn(
                             "flex-1 px-3 py-2 rounded-lg text-center font-mono text-sm font-bold transition-all",
-                            isHighlighted 
+                            isSelected 
                               ? "bg-black/10 text-slate-900" 
                               : "bg-white/10 text-white group-hover:bg-white/15"
                           )}
@@ -245,13 +245,13 @@ export default function RoundRecents() {
                         <div
                           className={cn(
                             "w-8 h-[2px] rounded-full",
-                            isHighlighted ? "bg-black/20" : "bg-white/20"
+                            isSelected ? "bg-black/20" : "bg-white/20"
                           )}
                         />
                         <div
                           className={cn(
                             "flex-1 px-3 py-2 rounded-lg text-center font-mono text-sm font-bold transition-all",
-                            isHighlighted 
+                            isSelected 
                               ? "bg-black/10 text-slate-900" 
                               : "bg-white/10 text-white group-hover:bg-white/15"
                           )}
