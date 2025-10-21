@@ -24,6 +24,8 @@ const PROGRESS_COLORS = [
   "#F43F5E", // rose-500
 ];
 
+const HIGHLIGHT_COLOR = "#F5DEB3";
+
 // Utility function to format use case names
 function formatUseCaseName(name?: string | null): string {
   if (!name) {
@@ -104,13 +106,17 @@ export default function AgentRunDetail({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl",
+        "relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/24 to-purple-500/22 p-6 shadow-2xl backdrop-blur-xl text-white",
         className
       )}
     >
       {/* Background effects */}
-      <div className="pointer-events-none absolute -left-24 top-10 h-56 w-56 rounded-full bg-gradient-to-br from-sky-500/15 via-sky-400/5 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute right-0 -bottom-24 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-400/10 via-emerald-500/5 to-transparent blur-[120px]" />
+      <div className="pointer-events-none absolute -left-24 top-10 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
+      <div className="pointer-events-none absolute right-10 -bottom-28 h-72 w-72 rounded-full bg-purple-500/25 blur-[140px]" />
+      <div
+        className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl"
+        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+      />
       
       {/* Header Section */}
       <div className="relative mb-8">
@@ -121,7 +127,7 @@ export default function AgentRunDetail({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Performance Analytics</h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-white/70">
                 Success rates and performance metrics
               </p>
             </div>
@@ -130,8 +136,8 @@ export default function AgentRunDetail({
           {/* Filter Controls */}
           <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <PiTarget className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-300">Time range:</span>
+            <PiTarget className="w-4 h-4 text-white/70" />
+            <span className="text-sm font-medium text-white/80">Time range:</span>
           </div>
             <Select
               options={periodOptions}
@@ -141,7 +147,7 @@ export default function AgentRunDetail({
               onChange={(option: { label: string; value: string }) =>
                 setPeriod(option.value === "__all__" ? null : option.value)
               }
-              className="w-[90px] text-sm"
+              className="w-[90px] text-sm rounded-lg border border-white/20 bg-white/10 text-white focus:border-white/40 focus:ring-0"
             />
             <Select
               options={websiteOptions}
@@ -153,9 +159,29 @@ export default function AgentRunDetail({
                   option.value === "__all__" ? null : option.value
                 )
               }
-              className="w-[160px] text-sm"
+              className="w-[160px] text-sm rounded-lg border border-white/20 bg-white/10 text-white focus:border-white/40 focus:ring-0"
             />
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+            style={{
+              borderColor: "rgba(245, 222, 179, 0.45)",
+              backgroundColor: "rgba(245, 222, 179, 0.15)",
+              color: HIGHLIGHT_COLOR,
+            }}
+          >
+            Active
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: HIGHLIGHT_COLOR }}
+            />
+          </span>
+          <span className="text-xs text-white/70">
+            Live view of current website performance trends
+          </span>
         </div>
       </div>
 
@@ -169,7 +195,10 @@ export default function AgentRunDetail({
             return (
               <div 
                 key={`${item.website}-${index}`} 
-                className="group relative bg-slate-800/20 backdrop-blur-sm rounded-xl p-5 border border-slate-700/25 hover:border-slate-600/45 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/15"
+                className="group relative rounded-xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm transition-all duration-300 hover:border-[#F5DEB3]/60 hover:shadow-2xl"
+                style={{
+                  boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
+                }}
               >
                 {/* Performance Indicator */}
                 <div className="flex items-center justify-between mb-3">
@@ -182,19 +211,26 @@ export default function AgentRunDetail({
                       {item.website}
                     </span>
                     {isHighPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-medium border border-emerald-500/30">
+                      <div
+                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium border"
+                        style={{
+                          backgroundColor: "rgba(245, 222, 179, 0.2)",
+                          borderColor: "rgba(245, 222, 179, 0.45)",
+                          color: HIGHLIGHT_COLOR,
+                        }}
+                      >
                         <PiTrendUp className="w-3 h-3" />
                         Excellent
                       </div>
                     )}
                     {isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs font-medium border border-amber-500/30">
+                      <div className="flex items-center gap-1 px-2 py-1 bg-indigo-500/20 text-indigo-100 rounded-full text-xs font-medium border border-indigo-400/30">
                         <PiTrendUp className="w-3 h-3" />
                         Good
                       </div>
                     )}
                     {!isHighPerformance && !isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium border border-red-500/30">
+                      <div className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-200 rounded-full text-xs font-medium border border-red-400/40">
                         <PiTrendDown className="w-3 h-3" />
                         Needs Improvement
                       </div>
@@ -213,27 +249,31 @@ export default function AgentRunDetail({
                 
                 {/* Enhanced Progress Bar */}
                 <div className="relative">
-                  <div className="h-4 w-full rounded-full bg-slate-700/30 overflow-hidden">
+                  <div className="h-4 w-full rounded-full bg-white/10 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                       style={{
                         width: `${Math.max(0, Math.min(item.average, 100))}%`,
-                        background: `linear-gradient(90deg, ${colorClass} 0%, ${colorClass}CC 100%)`,
+                        background: `linear-gradient(90deg, ${colorClass} 0%, rgba(245, 222, 179, 0.85) 100%)`,
+                        boxShadow: "0 8px 25px rgba(245, 222, 179, 0.25)",
                       }}
                     >
                       {/* Shimmer effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
                       
                       {/* Progress indicator dot */}
-                      <div 
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-sm"
-                        style={{ opacity: item.average > 5 ? 1 : 0 }}
+                      <div
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
+                        style={{
+                          backgroundColor: HIGHLIGHT_COLOR,
+                          opacity: item.average > 5 ? 1 : 0,
+                        }}
                       />
                     </div>
                   </div>
                   
                   {/* Performance markers */}
-                  <div className="flex justify-between mt-2 text-xs text-slate-500">
+                  <div className="flex justify-between mt-2 text-xs text-white/60">
                     <span>0%</span>
                     <span>25%</span>
                     <span>50%</span>
@@ -244,14 +284,14 @@ export default function AgentRunDetail({
                 
                 {/* Additional metrics */}
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-800/15 rounded-lg p-3 border border-slate-700/20">
-                    <div className="text-slate-400 mb-1">Avg Solution Time</div>
+                  <div className="rounded-lg border border-white/15 bg-white/10 p-3">
+                    <div className="mb-1 text-white/70">Avg Solution Time</div>
                     <div className="font-semibold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
                     </div>
                   </div>
-                  <div className="bg-slate-800/15 rounded-lg p-3 border border-slate-700/20">
-                    <div className="text-slate-400 mb-1">Success Rate</div>
+                  <div className="rounded-lg border border-white/15 bg-white/10 p-3">
+                    <div className="mb-1 text-white/70">Success Rate</div>
                     <div className="font-semibold text-white">
                       {((item.successCount / item.total) * 100).toFixed(1)}%
                     </div>
@@ -263,13 +303,13 @@ export default function AgentRunDetail({
         </div>
       ) : (
         <div className="relative text-center py-12">
-          <div className="w-16 h-16 bg-slate-800/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/25">
-            <PiChartBar className="w-8 h-8 text-slate-400" />
+          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+            <PiChartBar className="w-8 h-8 text-white/70" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">
             No Performance Data Available
           </h3>
-          <p className="text-slate-400">
+          <p className="text-white/70">
             Performance metrics will appear here once the agent run completes.
           </p>
         </div>

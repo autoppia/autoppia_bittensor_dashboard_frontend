@@ -45,50 +45,42 @@ export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
     {
       title: "Round Rank",
       metric: currentRankValue,
-      description: "Ranking within the selected round",
       icon: LuAward,
       className:
         "relative overflow-visible bg-gradient-to-br from-amber-500/20 via-amber-400/15 to-amber-600/25 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-amber-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-amber-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-      metricClassName: "text-amber-500 drop-shadow-sm",
+      metricClassName: "text-white drop-shadow-sm",
       iconClassName:
         "relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
-      descriptionClassName: "text-amber-100/80",
     },
     {
       title: "Best Rank Ever",
       metric: bestRankEver,
-      description: "Highest ranking achieved",
       icon: LuTrophy,
       className:
         "relative overflow-visible bg-gradient-to-br from-yellow-500/20 via-yellow-400/15 to-yellow-600/25 border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-yellow-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-yellow-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-      metricClassName: "text-yellow-500 drop-shadow-sm",
+      metricClassName: "text-white drop-shadow-sm",
       iconClassName:
         "relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
-      descriptionClassName: "text-yellow-100/80",
     },
     {
       title: "Current Score",
       metric: currentScorePercentage,
-      description: "Round average score",
       icon: LuTarget,
       className:
         "relative overflow-visible bg-gradient-to-br from-green-500/20 via-green-400/15 to-green-600/25 border border-green-500/30 hover:border-green-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-green-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-green-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-      metricClassName: "text-green-500 drop-shadow-sm",
+      metricClassName: "text-white drop-shadow-sm",
       iconClassName:
         "relative bg-gradient-to-br from-green-400 via-green-500 to-green-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
-      descriptionClassName: "text-green-100/80",
     },
     {
       title: "Rounds Participated",
       metric: roundsParticipated,
-      description: "Total rounds with records",
       icon: LuCircleCheckBig,
       className:
-        "relative overflow-visible bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-      metricClassName: "text-blue-500 drop-shadow-sm",
+        "relative overflow-visible bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/25 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-500 shadow-2xl group backdrop-blur-xl hover:shadow-3xl hover:shadow-blue-500/25 before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
+      metricClassName: "text-white drop-shadow-sm",
       iconClassName:
         "relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-xl",
-      descriptionClassName: "text-blue-100/80",
     },
   ];
 
@@ -133,19 +125,16 @@ export default function AgentStats({ agent, roundMetrics }: AgentStatsProps) {
                       <Icon className="w-6 h-6 group-hover:rotate-6 transition-transform duration-500" />
                     </div>
                     <div className="flex-1">
-                      <Text className="text-xs font-semibold text-gray-600/90 uppercase tracking-wider mb-1">
-                        {stat.title}
-                      </Text>
                       <Text
                         className={cn(
-                          "font-black text-2xl leading-none",
+                          "font-black text-3xl leading-none",
                           stat.metricClassName
                         )}
                       >
                         {stat.metric}
                       </Text>
-                      <Text className={cn("text-xs mt-1", stat.descriptionClassName)}>
-                        {stat.description}
+                      <Text className="text-xs font-semibold text-white uppercase tracking-wider mt-2">
+                        {stat.title}
                       </Text>
                     </div>
                   </div>

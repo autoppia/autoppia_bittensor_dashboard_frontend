@@ -203,10 +203,10 @@ export default function AgentsSidebar() {
   if (error) {
     return (
       <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-        <div className="h-full border rounded-xl bg-gray-50 pb-4 flex items-center justify-center">
+        <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-4 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-red-500 text-sm">Error loading agents</div>
-            <div className="text-gray-500 text-xs mt-1">{error}</div>
+            <div className="text-red-400 text-sm">Error loading agents</div>
+            <div className="text-white/60 text-xs mt-1">{error}</div>
           </div>
         </div>
       </aside>
@@ -215,10 +215,10 @@ export default function AgentsSidebar() {
 
   return (
     <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-      <div className="h-full border rounded-xl bg-gray-50 pb-3 flex flex-col overflow-hidden">
-        <div className="sticky top-0 border-b bg-gray-50 agents-round-select z-10">
+      <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-3 flex flex-col overflow-hidden">
+        <div className="sticky top-0 border-b border-[#1f1f1f] bg-[#111111] agents-round-select z-10">
           <div className="flex items-center gap-3 px-3 py-3">
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-white">
               All Miners
             </Text>
             <div className="flex-1 flex justify-end">
@@ -255,7 +255,7 @@ export default function AgentsSidebar() {
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-lg !border !border-gray-200 !shadow-sm !bg-gray-50 !text-gray-900 hover:!border-gray-300 focus:!border-black/40"
+                className="w-full !rounded-lg !border !border-[#1f1f1f] !bg-[#161616] !text-white hover:!border-white/30 focus:!border-white/60"
                 menuPortalTarget={undefined}
               />
             </div>
