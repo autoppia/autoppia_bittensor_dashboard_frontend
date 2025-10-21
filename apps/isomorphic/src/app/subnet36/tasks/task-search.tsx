@@ -645,24 +645,24 @@ export default function TaskSearch() {
                   <div className="flex h-full flex-col gap-4">
                     {/* Identifiers */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                      <div className="flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-slate-900/70 px-3 py-2 shadow-inner transition-colors duration-300 group-hover:border-indigo-300/60">
                         <CopyButton text={task.taskId} />
                         <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-[0.35em] text-white/80">
+                          <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-200/80">
                             Task ID
                           </div>
-                          <div className="font-mono text-xs font-semibold text-cyan-100 truncate">
+                          <div className="font-mono text-xs font-semibold text-cyan-200 truncate">
                             {truncateMiddle(task.taskId, 6)}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                      <div className="flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-slate-900/70 px-3 py-2 shadow-inner transition-colors duration-300 group-hover:border-indigo-300/60">
                         <CopyButton text={task.agentRunId} />
                         <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-[0.35em] text-white/80">
+                          <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-200/80">
                             Run ID
                           </div>
-                          <div className="font-mono text-xs font-semibold text-violet-100 truncate">
+                          <div className="font-mono text-xs font-semibold text-violet-200 truncate">
                             {truncateMiddle(task.agentRunId, 6)}
                           </div>
                         </div>
@@ -712,7 +712,7 @@ export default function TaskSearch() {
                     {/* Website & Use Case */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div
-                        className="rounded-xl border border-white/15 bg-white/5 p-3"
+                        className="rounded-xl border border-indigo-500/40 bg-slate-900/70 p-3 shadow-inner transition-colors duration-300 hover:border-indigo-300/60"
                         style={
                           webProject
                             ? {
@@ -723,7 +723,7 @@ export default function TaskSearch() {
                             : undefined
                         }
                       >
-                        <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
+                        <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-200/80 mb-1">
                           Website
                         </div>
                         <div className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -732,24 +732,24 @@ export default function TaskSearch() {
                         </div>
                       </div>
                       <div
-                        className="rounded-xl border border-white/15 bg-white/5 p-3"
+                        className="rounded-xl border border-indigo-500/40 bg-slate-900/70 p-3 shadow-inner transition-colors duration-300 hover:border-indigo-300/60"
                       >
-                        <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
+                        <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-200/80 mb-1">
                           Use Case
                         </div>
                         <div className="flex items-center gap-2 text-sm font-semibold text-sky-100">
-                          <PiCodeDuotone className="h-4 w-4 text-sky-300" />
+                          <PiCodeDuotone className="h-4 w-4 text-sky-200" />
                           <span className="truncate">{useCaseLabel}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Prompt */}
-                    <div className="rounded-xl border border-white/15 bg-white/5 p-3">
-                      <div className="text-[10px] uppercase tracking-[0.35em] text-white/80 mb-1">
+                    <div className="rounded-xl border border-indigo-500/40 bg-slate-900/70 p-3 shadow-inner">
+                      <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-200/80 mb-1">
                         Prompt
                       </div>
-                      <p className="text-sm leading-relaxed text-slate-200 line-clamp-3">
+                      <p className="text-sm leading-relaxed text-slate-100 line-clamp-3">
                         {task.prompt}
                       </p>
                     </div>
