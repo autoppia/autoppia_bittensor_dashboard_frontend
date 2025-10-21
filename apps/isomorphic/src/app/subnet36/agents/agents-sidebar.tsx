@@ -317,7 +317,7 @@ export default function AgentsSidebar() {
                     className={cn(
                       "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
-                        ? "bg-[wheat] text-black border border-[#e2c48a] shadow-lg shadow-amber-200/40"
+                        ? "bg-[#FDF5E6] text-slate-900 border border-[#EBD9BD] shadow-[0_10px_24px_rgba(253,245,230,0.28)] hover:border-[#E1CDAA] hover:shadow-[0_16px_30px_rgba(253,245,230,0.35)]"
                         : highlightTop
                         ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
                         : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
@@ -345,7 +345,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-sm font-semibold truncate",
                             isActive
-                              ? "text-black"
+                              ? "text-slate-900"
                               : highlightTop
                                 ? "text-white"
                                 : "text-gray-300 group-hover:text-white"
@@ -366,7 +366,7 @@ export default function AgentsSidebar() {
                             "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
                             rankBadgePalette,
                             isActive && displayRank
-                                ? "ring-1 ring-[#d7b26d]"
+                                ? "ring-1 ring-[#E1CDAA]"
                                 : highlightTop && displayRank
                                   ? "ring-1 ring-orange-300/60"
                                   : ""
@@ -379,7 +379,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-mono",
                             isActive
-                              ? "text-black"
+                              ? "text-slate-900"
                               : highlightTop
                                 ? "text-orange-300"
                                 : "text-gray-500 group-hover:text-gray-300"
@@ -391,7 +391,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-medium",
                             isActive
-                              ? "text-black"
+                              ? "text-slate-900"
                               : highlightTop
                                 ? "text-orange-200"
                                 : "text-gray-400 group-hover:text-gray-200"

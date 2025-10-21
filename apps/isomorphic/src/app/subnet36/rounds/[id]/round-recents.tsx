@@ -185,7 +185,7 @@ export default function RoundRecents() {
                     className={cn(
                       "w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md transform hover:scale-[1.02]",
                       isHighlighted
-                        ? "bg-[wheat] border-2 border-[#e2c48a] text-black shadow-amber-200/40 hover:border-[#d7b26d] hover:shadow-amber-300/60"
+                        ? "bg-[#F8FAFC] border-2 border-[#E2E8F0] text-slate-900 shadow-[0_10px_24px_rgba(248,250,252,0.25)] hover:border-[#CBD5F5] hover:shadow-[0_16px_32px_rgba(248,250,252,0.35)]"
                         : "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white hover:shadow-xl hover:shadow-blue-500/30"
                     )}
                   >
@@ -199,7 +199,7 @@ export default function RoundRecents() {
                         <span
                           className={cn(
                             "text-[20px] font-bold uppercase tracking-wide",
-                            isHighlighted ? "text-black" : "text-white"
+                            isHighlighted ? "text-slate-900" : "text-white"
                           )}
                         >
                           Round {baseNumber}
@@ -225,7 +225,7 @@ export default function RoundRecents() {
                       <div
                         className={cn(
                           "flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide",
-                          isHighlighted ? "text-black/60" : "text-gray-400"
+                            isHighlighted ? "text-slate-700" : "text-gray-400"
                         )}
                       >
                         <span>Start</span>
@@ -236,7 +236,7 @@ export default function RoundRecents() {
                           className={cn(
                             "flex-1 px-3 py-2 rounded-lg text-center font-mono text-sm font-bold transition-all",
                             isHighlighted 
-                              ? "bg-black/10 text-black" 
+                              ? "bg-black/10 text-slate-900" 
                               : "bg-white/10 text-white group-hover:bg-white/15"
                           )}
                         >
@@ -252,7 +252,7 @@ export default function RoundRecents() {
                           className={cn(
                             "flex-1 px-3 py-2 rounded-lg text-center font-mono text-sm font-bold transition-all",
                             isHighlighted 
-                              ? "bg-black/10 text-black" 
+                              ? "bg-black/10 text-slate-900" 
                               : "bg-white/10 text-white group-hover:bg-white/15"
                           )}
                         >

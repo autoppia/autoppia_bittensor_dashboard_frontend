@@ -12,7 +12,7 @@ import type {
   AgentRunSummaryChartData,
 } from "./agent-run-types";
 
-const HIGHLIGHT_COLOR = "#F5DEB3";
+const HIGHLIGHT_COLOR = "#FDF5E6";
 
 // Rainbow colors starting with red using hex values
 const PROGRESS_COLORS = [
@@ -216,7 +216,7 @@ export default function AgentRunSummary({
       <div className="pointer-events-none absolute -bottom-20 left-8 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
       <div
         className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+        style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
       {/* Header */}
       <div className="relative mb-6">
@@ -341,7 +341,7 @@ function CenterLabel({
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
-          textShadow: "0 12px 28px rgba(245, 222, 179, 0.35)",
+          textShadow: "0 12px 28px rgba(253, 245, 230, 0.35)",
         }}
       >
         <tspan fontSize="36" fontWeight="700">

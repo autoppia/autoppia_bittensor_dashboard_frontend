@@ -9,7 +9,7 @@ import {
 } from "react-icons/pi";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-const HIGHLIGHT_COLOR = "#F5DEB3";
+const HIGHLIGHT_COLOR = "#FDF5E6";
 
 interface AgentRunPersonasProps {
   personas?: any;
@@ -139,8 +139,8 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
           <span
             className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
             style={{
-              borderColor: "rgba(245, 222, 179, 0.45)",
-              backgroundColor: "rgba(245, 222, 179, 0.12)",
+              borderColor: "rgba(253, 245, 230, 0.45)",
+              backgroundColor: "rgba(253, 245, 230, 0.12)",
               color: HIGHLIGHT_COLOR,
             }}
           >
@@ -186,7 +186,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
               href={taoStatsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]"
               title="Open TaoStats"
             >
               <PiArrowSquareOutDuotone className="h-4 w-4" />
@@ -208,7 +208,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
                 onClick={() =>
                   validatorHotkey && navigator.clipboard.writeText(validatorHotkey)
                 }
-                className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+                className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]"
                 aria-label="Copy validator hotkey"
               >
                 <PiCopySimple className="h-3.5 w-3.5" />
@@ -244,7 +244,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
               href={agentData.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]"
               title="Open GitHub"
             >
               <PiGithubLogoDuotone className="h-4 w-4" />
@@ -275,7 +275,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
                   onClick={() =>
                     agentHotkey && navigator.clipboard.writeText(agentHotkey)
                   }
-                  className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#F5DEB3]/60 hover:text-[#F5DEB3]"
+                  className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 p-1 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]"
                   aria-label="Copy miner hotkey"
                 >
                   <PiCopySimple className="h-3.5 w-3.5" />

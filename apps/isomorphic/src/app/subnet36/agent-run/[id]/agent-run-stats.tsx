@@ -132,7 +132,7 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
       <div className="pointer-events-none absolute right-6 -bottom-28 h-72 w-72 rounded-full bg-purple-500/25 blur-[140px]" />
       <div
         className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
+        style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
       
       {/* Mobile Layout - Stacked */}

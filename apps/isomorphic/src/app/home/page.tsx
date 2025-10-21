@@ -68,29 +68,6 @@ const IWA_CONSTRAINTS: string[] = [
   "Expensive scaling: growing coverage requires proportional human effort.",
 ];
 
-const SN36_HIGHLIGHTS: Highlight[] = [
-  {
-    title: "Subnet 36: Web Agents",
-    description:
-      "Dynamic Zero tiers (D1-D4) shuffle layouts, content, and pop-ups so agents must reason beyond memorization.",
-    icon: PiTargetDuotone,
-    gradient: "from-sky-500 via-teal-500 to-emerald-400",
-  },
-  {
-    title: "Dynamic Zero Upgrade",
-    description:
-      "Launched Oct 21, it hardened SN36 with tougher evaluation variants, faster iteration, and transparent routing.",
-    icon: PiLightningDuotone,
-    gradient: "from-indigo-500 via-violet-500 to-fuchsia-500",
-  },
-  {
-    title: "Winner Takes It All",
-    description:
-      "Each evaluation crowns a single miner—the TAO reward goes entirely to the top-performing agent.",
-    icon: LuTrophy,
-    gradient: "from-amber-400 via-orange-500 to-rose-500",
-  },
-];
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -170,12 +147,12 @@ export default function LandingPage() {
             )}
           >
             <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-100 my-6 sm:my-8 leading-relaxed px-2">
-              The most{" "}
+              The most advanced Web Operation{" "}
               <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
-                advanced
+                Benchmark
               </span>{" "}
-              web operation benchmark designed to rigorously test and evaluate
-              Web Agents across dynamic, ever-changing web environments.
+              designed to rigorously test and evaluate Web Agents across
+              dynamic, ever-changing web environments.
             </Text>
           </div>
           {/* CTA Buttons */}
@@ -187,49 +164,27 @@ export default function LandingPage() {
                 : "opacity-0 translate-y-5"
             )}
           >
-            <Link href={routes.leaderboard} className="w-full sm:w-auto">
-              <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25"
-                style={{
-                  background: "linear-gradient(90deg, #EAB308, #F59E0B)",
-                  ":hover": {
-                    background: "linear-gradient(90deg, #CA8A04, #D97706)",
-                  },
-                }}
-              >
-                <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                LEADERBOARD
-              </button>
-            </Link>
             <Link href={routes.overview} className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/25"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #065F46, #059669, #10B981, #34D399)",
-                  ":hover": {
-                    background:
-                      "linear-gradient(90deg, #047857, #059669, #10B981, #6EE7B7)",
-                  },
-                }}
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-[#20b2aa] hover:bg-[#15968f] hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-teal-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-200/70"
               >
-                <LuNetwork className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                <LuNetwork className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
                 SUBNET 36
+              </button>
+            </Link>
+            <Link href={routes.leaderboard} className="w-full sm:w-auto">
+              <button
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] hover:from-[#8b5f00] hover:via-[#a16207] hover:to-[#c2410c] hover:scale-105 hover:shadow-lg hover:shadow-amber-600/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-300/70"
+              >
+                <LuTrophy className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
+                LEADERBOARD
               </button>
             </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl text-white font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #0891B2, #06B6D4, #3B82F6)",
-                  ":hover": {
-                    background:
-                      "linear-gradient(90deg, #0E7490, #0891B2, #2563EB)",
-                  },
-                }}
+                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-purple-500/70 via-pink-500/70 to-rose-500/70 border border-purple-500/40 hover:from-purple-500 hover:via-pink-500 hover:to-rose-500 hover:border-purple-400 hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-pink-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-300/70"
               >
-                <PiFlaskDuotone className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+                <PiFlaskDuotone className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
                 PLAYGROUND
               </button>
             </Link>
@@ -657,27 +612,6 @@ export default function LandingPage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {SN36_HIGHLIGHTS.map((highlight) => {
-                    const Icon = highlight.icon;
-                    return (
-                      <div
-                        key={highlight.title}
-                        className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Icon className="w-4 h-4 text-emerald-300" />
-                          <Text className="font-bold text-white text-sm">
-                            {highlight.title}
-                          </Text>
-                        </div>
-                        <Text className="text-emerald-100 text-xs leading-relaxed">
-                          {highlight.description}
-                        </Text>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             </div>
           </div>

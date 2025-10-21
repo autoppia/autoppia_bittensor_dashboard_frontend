@@ -48,7 +48,7 @@ export default function Round() {
       <button
         type="button"
         onClick={handleOpenGlossary}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border-2 border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-black shadow-lg backdrop-blur-sm transition hover:border-gray-400 hover:shadow-xl hover:scale-105"
+        className="fixed bottom-6 left-6 z-40 inline-flex items-center gap-2 rounded-full border-2 border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-black shadow-lg backdrop-blur-sm transition hover:border-gray-400 hover:shadow-xl hover:scale-105"
       >
         <LuInfo className="h-4 w-4" />
         Glossary
