@@ -38,6 +38,17 @@ export default function OverviewValidators() {
   const headerDescription =
     "Below are a list of validators currently running - click on any to see full details";
 
+  const statusColorClasses: Record<string, string> = {
+    "Sending Tasks": "bg-blue-500/20 text-blue-500",
+    Evaluating: "bg-orange-500/20 text-orange-500",
+    Waiting: "bg-purple-500/20 text-purple-500",
+    Finished: "bg-emerald-600/15 text-emerald-600",
+    "Not Started": "bg-slate-500/20 text-slate-200",
+    Starting: "bg-cyan-500/20 text-cyan-500",
+    Offline: "bg-rose-500/20 text-rose-500",
+    default: "bg-yellow-500/20 text-yellow-500",
+  };
+
   const runningRoundBadge = roundLoading ? (
     <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-200">
       <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin" />
@@ -152,6 +163,8 @@ export default function OverviewValidators() {
             validator.icon,
             resolveAssetUrl("/validators/Other.png")
           );
+          const statusColorClass =
+            statusColorClasses[validator.status] ?? statusColorClasses.default;
           const stakeMetric =
             typeof validator.weight === "number"
               ? `${(validator.weight / 1000).toFixed(0)}K`
@@ -250,15 +263,7 @@ export default function OverviewValidators() {
                         className={cn(
                           "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group/status",
                           "hover:scale-105 hover:shadow-xl",
-                          validator.status === "Sending Tasks"
-                            ? "bg-emerald-500/20 text-emerald-500"
-                          : validator.status === "Evaluating"
-                            ? "bg-orange-500/20 text-orange-500"
-                            : validator.status === "Waiting"
-                              ? "bg-blue-500/20 text-blue-500"
-                              : validator.status === "Finished"
-                                ? "bg-emerald-600/15 text-emerald-600"
-                                : "bg-yellow-500/20 text-yellow-500"
+                          statusColorClass
                       )}
                     >
                       {validator.status === "Sending Tasks" && (
@@ -383,17 +388,7 @@ export default function OverviewValidators() {
                   <div
                     className={cn(
                       "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300",
-                      validator.status === "Sending Tasks"
-                        ? "bg-emerald-500/20 text-emerald-500"
-                        : validator.status === "Evaluating"
-                        ? "bg-orange-500/20 text-orange-500"
-                        : validator.status === "Waiting"
-                        ? "bg-blue-500/20 text-blue-500"
-                        : validator.status === "Finished"
-                        ? "bg-emerald-600/15 text-emerald-600"
-                        : validator.status === "Not Started"
-                        ? "bg-slate-500/15 text-slate-500"
-                        : "bg-yellow-500/20 text-yellow-500"
+                      statusColorClass
                     )}
                   >
                     {normalizedStatus}
