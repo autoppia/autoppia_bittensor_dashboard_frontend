@@ -58,8 +58,8 @@ export default function RoundMinerScores({
   const cardClassName = React.useMemo(
     () =>
       cn(
-        roundGlassBackgroundClass,
-        "h-[520px] rounded-3xl text-white shadow-2xl backdrop-blur",
+        "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-2 border-blue-400/40",
+        "h-[650px] rounded-3xl text-white shadow-2xl backdrop-blur hover:shadow-blue-500/20 transition-shadow duration-300",
         className
       ),
     [className]
@@ -188,7 +188,7 @@ export default function RoundMinerScores({
               : "Miner";
         const slug = miner.provider ? slugify(miner.provider) : slugify(label);
 
-        let color = "#10B981";
+        let color = "#06B6D4";
         if (isSota) {
           if (BENCHMARK_COLORS[slug]) {
             color = BENCHMARK_COLORS[slug];
@@ -249,7 +249,7 @@ export default function RoundMinerScores({
       }
     });
     return [
-      { label: "Miners", color: "#10B981" },
+      { label: "Miners", color: "#06B6D4" },
       ...Array.from(sotaEntries.entries()).map(([label, color]) => ({ label, color })),
     ];
   }, [chartData]);
@@ -258,19 +258,26 @@ export default function RoundMinerScores({
   if (loading) {
     return (
       <WidgetCard
-        title="Miner Scores"
+        title={
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+            <Skeleton className="h-5 w-24" />
+          </div>
+        }
         className={cardClassName}
-        headerClassName="text-white"
+        headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-5 w-full h-[350px] lg:mt-7">
+        <div className="mt-6 w-full h-[420px]">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
-        <div className="mt-4 flex justify-center gap-6">
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-16" />
+        <div className="mt-3 flex justify-center gap-6">
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-28 rounded-full" />
         </div>
       </WidgetCard>
     );
@@ -280,15 +287,36 @@ export default function RoundMinerScores({
   if (error) {
     return (
       <WidgetCard
-        title="Miner Scores"
+        title={
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold">Miner Scores</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-2 border-white/30 bg-white/10 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+                disabled
+              />
+              <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+                Show SOTA
+              </span>
+            </label>
+          </div>
+        }
         className={cardClassName}
-        headerClassName="text-white"
+        headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
+        <div className="mt-6 flex h-[480px] w-full items-center justify-center">
           <div className="text-center text-rose-200">
-            <p className="text-lg font-semibold">Failed to load miner scores</p>
-            <p className="mt-2 text-sm text-white/80">Please try again later</p>
+            <p className="text-xl font-semibold">Failed to load miner scores</p>
+            <p className="mt-3 text-base text-white/80">Please try again later</p>
           </div>
         </div>
       </WidgetCard>
@@ -298,15 +326,36 @@ export default function RoundMinerScores({
   if (!chartData.length) {
     return (
       <WidgetCard
-        title="Miner Scores"
+        title={
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold">Miner Scores</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-2 border-white/30 bg-white/10 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+                disabled
+              />
+              <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+                Show SOTA
+              </span>
+            </label>
+          </div>
+        }
         className={cardClassName}
-        headerClassName="text-white"
+        headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-5 flex h-[350px] w-full items-center justify-center lg:mt-7">
+        <div className="mt-6 flex h-[480px] w-full items-center justify-center">
           <div className="text-center text-white/70">
-            <p className="text-lg font-semibold">No miners found</p>
-            <p className="mt-2 text-sm">
+            <p className="text-xl font-semibold">No miners found</p>
+            <p className="mt-3 text-base">
               {selectedValidatorId
                 ? "This validator has no miners evaluated in this round yet."
                 : "No miner data is available for this round."}
@@ -319,47 +368,79 @@ export default function RoundMinerScores({
 
   return (
     <WidgetCard
-      title="Miner Scores"
+      title={
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <span className="text-2xl font-bold">Miner Scores</span>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-2 border-white/30 bg-white/10 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+              Show SOTA
+            </span>
+          </label>
+        </div>
+      }
       className={cardClassName}
-      headerClassName="text-white"
+      headerClassName="text-white pb-4"
       titleClassName="text-white"
     >
-      <div className="mt-5 h-[350px] w-full lg:mt-7 custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-6 h-[420px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
             margin={{
               left: -20,
+              top: 20,
+              bottom: 10,
             }}
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
-            <CartesianGrid stroke="rgba(148,163,184,0.18)" strokeDasharray="3 3" />
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#06B6D4" stopOpacity={0.3} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(148,163,184,0.15)" strokeDasharray="4 4" />
             <XAxis
               dataKey="xAxisLabel"
               tick={{
-                fill: "rgba(226,232,240,0.86)",
-                fontSize: isSmallScreen ? 10 : 12,
+                fill: "rgba(226,232,240,0.9)",
+                fontSize: isSmallScreen ? 11 : 13,
                 fontFamily: "var(--font-inter)",
+                fontWeight: 500,
               }}
-              axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
-              tickLine={{ stroke: "rgba(148,163,184,0.25)" }}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              height={40}
             />
             <YAxis
               tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
               tick={{
-                fill: "rgba(226,232,240,0.86)",
-                fontSize: isSmallScreen ? 10 : 12,
+                fill: "rgba(226,232,240,0.9)",
+                fontSize: isSmallScreen ? 11 : 13,
                 fontFamily: "var(--font-inter)",
+                fontWeight: 500,
               }}
-              axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
-              tickLine={{ stroke: "rgba(148,163,184,0.25)" }}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              width={50}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.1)" }} />
             <Bar
               dataKey="score"
-              fill="#10B981"
+              fill="url(#barGradient)"
               strokeWidth={0}
-              radius={[4, 4, 0, 0]}
+              radius={[6, 6, 0, 0]}
               barSize={barSize}
             >
               {chartData.map((entry, index) => (
@@ -372,16 +453,17 @@ export default function RoundMinerScores({
 
       {/* Legend */}
       {legendItems.length > 0 && (
-        <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm">
+        <div className="mt-3 flex flex-wrap justify-center gap-6">
           {legendItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-2">
+            <div key={item.label} className="flex items-center gap-2.5 rounded-full bg-white/5 px-4 py-2 backdrop-blur-sm border border-white/10">
               <div
-                className="h-3 w-3 rounded"
+                className="h-4 w-4 rounded-full shadow-lg"
                 style={{
                   backgroundColor: item.color,
+                  boxShadow: `0 0 10px ${item.color}40`,
                 }}
               ></div>
-              <Text className="text-white/80">{item.label}</Text>
+              <Text className="text-white font-medium text-sm">{item.label}</Text>
             </div>
           ))}
         </div>

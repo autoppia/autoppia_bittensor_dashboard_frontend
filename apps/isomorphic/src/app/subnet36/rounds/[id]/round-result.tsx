@@ -149,9 +149,8 @@ export default function RoundResult() {
       <div
         key={card.key}
         className={cn(
-          "group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
-          "bg-slate-800/20 border-slate-700/25",
-          card.border,
+          "group relative overflow-hidden rounded-2xl border-2 p-5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20",
+          "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-blue-400/40",
         )}
       >
         <div

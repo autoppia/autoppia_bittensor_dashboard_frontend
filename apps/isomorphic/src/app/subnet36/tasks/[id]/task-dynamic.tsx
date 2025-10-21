@@ -4,10 +4,40 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
 import TaskResults from "./task-results";
-import { PiArrowLeftLight } from "react-icons/pi";
+import { PiArrowLeftLight, PiCopy } from "react-icons/pi";
 import { useTaskDetails } from "@/services/hooks/useTask";
 import TaskDetailsDynamic from "./task-details-dynamic";
 import { routes } from "@/config/routes";
+import { useState } from "react";
+
+function IDCopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center justify-center rounded-md bg-white/10 p-1 text-white transition-all duration-200 hover:bg-white/20 hover:scale-110"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <span className="text-[10px] font-bold text-emerald-300">✓</span>
+      ) : (
+        <PiCopy className="h-3 w-3" />
+      )}
+    </button>
+  );
+}
 
 export default function TaskDynamic() {
   const { id } = useParams();
@@ -27,20 +57,24 @@ export default function TaskDynamic() {
       <PageHeader
         title="Task Details"
         description={
-          <span className="flex flex-col gap-2">
-            <span className="flex flex-wrap items-center gap-2">
-              <span>Task ID:</span>
-              <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-emerald-200">
+          <div className="flex flex-col gap-3">
+            <div className="inline-flex items-center gap-3 rounded-lg border border-purple-400/30 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 px-4 py-2 backdrop-blur-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300/70">Task ID</span>
+              <div className="h-4 w-px bg-gradient-to-b from-transparent via-purple-400/50 to-transparent" />
+              <span className="font-mono text-sm font-bold text-white">
                 {taskId}
               </span>
-            </span>
-            <span className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
-              <span>Run ID:</span>
-              <span className="inline-flex items-center rounded-md bg-slate-700/40 px-2 py-0.5 font-mono text-sm font-semibold text-slate-100">
+              <IDCopyButton text={taskId} />
+            </div>
+            <div className="inline-flex items-center gap-3 rounded-lg border border-purple-400/30 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 px-4 py-2 backdrop-blur-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300/70">Run ID</span>
+              <div className="h-4 w-px bg-gradient-to-b from-transparent via-purple-400/50 to-transparent" />
+              <span className="font-mono text-sm font-bold text-white">
                 {runIdDisplay}
               </span>
-            </span>
-          </span>
+              {details?.agentRunId && <IDCopyButton text={details.agentRunId} />}
+            </div>
+          </div>
         }
         className="mt-4"
       >

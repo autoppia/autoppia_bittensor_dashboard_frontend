@@ -11,11 +11,13 @@ import { LuCircleCheckBig, LuActivity } from "react-icons/lu";
 import { useRounds } from "@/services/hooks/useRounds";
 import { extractRoundIdentifier, extractRoundNumber } from "./round-identifier";
 import { Skeleton } from "@core/ui/skeleton";
+import { useEffect, useRef } from "react";
 
 export default function RoundRecents() {
   const { id } = useParams();
   const currentRoundKey = extractRoundIdentifier(id);
   const currentRoundNumber = extractRoundNumber(currentRoundKey);
+  const hasScrolledToActive = useRef(false);
   
   // Get rounds data from API - ordered from higher to lower (descending)
   const { data: roundsData, loading, error } = useRounds({
@@ -32,6 +34,48 @@ export default function RoundRecents() {
     scrollToTheRight,
     scrollToTheLeft,
   } = useScrollableSlider();
+
+  // Auto-scroll to the active round when data loads
+  useEffect(() => {
+    if (!roundsData || loading || !sliderEl.current || hasScrolledToActive.current) {
+      return;
+    }
+
+    const roundsSource = roundsData?.data?.rounds ?? [];
+    const roundsList = roundsSource.slice(0, 10);
+    
+    if (roundsList.length === 0) {
+      return;
+    }
+
+    // Find the index of the currently active round
+    const activeIndex = roundsList.findIndex((round, index) => {
+      const roundKey = round.roundKey ?? (typeof round.id === "number" ? `round_${round.id}` : `round_${index + 1}`);
+      const baseNumber = round.roundNumber ?? round.id;
+      return (currentRoundKey !== undefined && roundKey === currentRoundKey) ||
+             (currentRoundNumber !== undefined && baseNumber === currentRoundNumber);
+    });
+
+    if (activeIndex !== -1) {
+      // Scroll to the active round card
+      setTimeout(() => {
+        const roundCards = sliderEl.current?.querySelectorAll('a');
+        if (roundCards && roundCards[activeIndex]) {
+          roundCards[activeIndex].scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+          hasScrolledToActive.current = true;
+        }
+      }, 100);
+    }
+  }, [roundsData, loading, sliderEl, currentRoundKey, currentRoundNumber]);
+
+  // Reset scroll flag when round changes
+  useEffect(() => {
+    hasScrolledToActive.current = false;
+  }, [currentRoundKey, currentRoundNumber]);
 
   // Show loading state
   if (loading) {
@@ -102,7 +146,7 @@ export default function RoundRecents() {
           variant="text"
           ref={sliderPrevBtn}
           onClick={() => scrollToTheLeft()}
-          className="flex-shrink-0 !h-16 !w-16 !rounded-full !bg-white hover:!bg-gray-100 !border-2 !border-gray-300 !shadow-lg !flex !items-center !justify-center !text-black transition-all duration-300 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex-shrink-0 !h-16 !w-16 !rounded-full !bg-white hover:!bg-gray-100 !border-2 !border-gray-300 !shadow-lg !flex !items-center !justify-center !text-black transition-all duration-300 hover:scale-110 hover:shadow-xl z-10"
         >
           <PiCaretLeftBold className="h-6 w-6" />
         </Button>
@@ -111,9 +155,10 @@ export default function RoundRecents() {
         <div className="flex-1 overflow-hidden">
           <div
             ref={sliderEl}
-            className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:h-0"
+            className="flex gap-6 overflow-x-scroll scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:h-0"
             style={{
               scrollbarWidth: 'none',
+              scrollBehavior: 'smooth',
             }}
           >
             {roundsList.map((round, index: number) => {
@@ -130,11 +175,15 @@ export default function RoundRecents() {
               <Link 
                 key={roundKey} 
                 href={`${routes.rounds}/${encodeURIComponent(roundKey)}`}
-                className="snap-start flex-shrink-0 w-[calc(33.333%-1rem)] min-w-[320px]"
+                className="snap-start flex-shrink-0 w-[calc(33.333%-1rem)] min-w-[320px] animate-fade-in"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'both'
+                }}
               >
                   <div
                     className={cn(
-                      "w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md",
+                      "w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md transform hover:scale-[1.02]",
                       isHighlighted
                         ? "bg-[wheat] border-2 border-[#e2c48a] text-black shadow-amber-200/40 hover:border-[#d7b26d] hover:shadow-amber-300/60"
                         : "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white hover:shadow-xl hover:shadow-blue-500/30"
@@ -224,7 +273,7 @@ export default function RoundRecents() {
           variant="text"
           ref={sliderNextBtn}
           onClick={() => scrollToTheRight()}
-          className="flex-shrink-0 !h-16 !w-16 !rounded-full !bg-white hover:!bg-gray-100 !border-2 !border-gray-300 !shadow-lg !flex !items-center !justify-center !text-black transition-all duration-300 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex-shrink-0 !h-16 !w-16 !rounded-full !bg-white hover:!bg-gray-100 !border-2 !border-gray-300 !shadow-lg !flex !items-center !justify-center !text-black transition-all duration-300 hover:scale-110 hover:shadow-xl z-10"
         >
           <PiCaretRightBold className="h-6 w-6" />
         </Button>
