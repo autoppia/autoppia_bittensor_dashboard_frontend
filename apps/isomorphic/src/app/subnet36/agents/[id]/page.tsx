@@ -62,27 +62,16 @@ import {
 import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget, LuStar, LuCrown } from "react-icons/lu";
 
 // ============================================================================
-// THEME COLOR SYSTEM - Centralized color variables for easy theme changes
+// THEME COLOR SYSTEM - Enhanced Glassmorphism Design System (matching Rounds page)
 // ============================================================================
-const THEME_COLORS = {
-  // Primary blue-black theme
-  border: "border-slate-900/60",
-  bgGradient: "bg-gradient-to-br from-slate-950/50 via-blue-950/40 to-slate-900/30",
-  shadow: "shadow-[0_20px_60px_-15px_rgba(15,23,42,0.6)]",
-  shadowHover: "hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]",
-  // Pulsing overlay
-  pulseGradient: "from-white/5 via-transparent to-white/5",
-  // Border colors for various elements
-  lightBorder: "border-white/20",
-  mediumBorder: "border-white/30",
-} as const;
-
-// ============================================================================
-// STYLE CONSTANTS - Modern Glassmorphism Design System
-// ============================================================================
-const glassCardBase = `relative overflow-hidden backdrop-blur-xl transition-all duration-500 ${THEME_COLORS.border} ${THEME_COLORS.bgGradient} ${THEME_COLORS.shadow}`;
-const statsCardBase = `${glassCardBase} rounded-3xl hover:-translate-y-3 ${THEME_COLORS.shadowHover}`;
-const chartCardBase = `${glassCardBase} rounded-2xl`;
+const roundGlassBackgroundClass = "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-2xl";
+const glassCardBase = `${roundGlassBackgroundClass} transition-all duration-300`;
+const statsCardBase = `${glassCardBase} rounded-3xl hover:-translate-y-3 hover:scale-[1.02] hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] hover:border-white/30`;
+const tallCardClass = `p-5 dark:bg-gray-50 lg:p-7 border backdrop-blur-xl rounded-2xl transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] relative overflow-hidden group`;
+const chartCardBase = tallCardClass;
+const metricCardClass = `p-5 dark:bg-gray-50 lg:p-7 border backdrop-blur-xl rounded-2xl transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:-translate-y-2 hover:border-white/30`;
+const roundAccentActive = "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
+const roundAccentCompleted = "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]";
 
 // ============================================================================
 // Shared helpers within this page
@@ -171,7 +160,7 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
       glowColor: "rgba(168,85,247,0.5)",
     },
     {
-      title: "Avg Tasks",
+      title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
       gradient: "from-orange-500/30 via-rose-500/20 to-orange-600/30",
@@ -212,53 +201,74 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
     },
   ];
 
-  // In current view: show Current Rank, Current Score, Validators, Avg Response Time, Avg Tasks
+  // In current view: show Current Rank, Current Score, Avg Response Time, Validators, Avg Tasks
   // In historical view: show Best Rank Ever, Best Ever Score, Rounds Participated, Total Alpha Earned
-  const displayStats = (mode === 'current' ? [stats[0], stats[2], stats[3], stats[4], stats[5]] : [stats[1], stats[6], stats[7], stats[8]]).filter(Boolean);
+  const displayStats = (mode === 'current' ? [stats[0], stats[2], stats[4], stats[3], stats[5]] : [stats[1], stats[6], stats[7], stats[8]]).filter(Boolean);
 
   return (
-    <div className="relative flex w-auto items-center overflow-visible">
+    <div className="relative flex w-auto items-center overflow-visible z-20">
       <Button
         title="Prev"
         variant="text"
         ref={sliderPrevBtn}
         onClick={() => scrollToTheLeft()}
-        className="!absolute -left-1 top-0 z-10 !h-full w-20 !justify-start rounded-none bg-gradient-to-r from-gray-0 via-gray-0/70 to-transparent px-0 ps-1 text-gray-500 hover:text-gray-900 dark:from-gray-50 dark:via-gray-50/70 3xl:hidden"
+        className="!absolute -left-1 top-0 z-[100] !h-full w-20 !justify-start rounded-none bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent px-0 ps-1 text-white/70 hover:text-white 3xl:hidden"
       >
         <PiCaretLeftBold className="h-5 w-5" />
       </Button>
-      <div className="w-full overflow-visible pt-4 pb-4">
-        <div ref={sliderEl} className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-4 px-2 pb-1 [&::-webkit-scrollbar]:h-0">
+      <div className="w-full overflow-visible pt-6 pb-8">
+        <div ref={sliderEl} className="custom-scrollbar grid grid-flow-col gap-4 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-5 3xl:gap-6 px-2 py-2 [&::-webkit-scrollbar]:h-0">
           {displayStats.map((stat) => {
             const Icon = stat.icon as any;
             return (
               <div
                 key={stat.title}
                 className={cn(
-                  "group relative overflow-hidden rounded-2xl p-3 min-w-[170px] cursor-pointer backdrop-blur-xl transition-all duration-500 hover:-translate-y-2",
-                  THEME_COLORS.shadowHover,
-                  THEME_COLORS.lightBorder,
-                  THEME_COLORS.bgGradient,
-                  THEME_COLORS.shadow
+                  metricCardClass,
+                  "min-w-[200px] cursor-pointer z-[30] hover:z-[90]",
+                  stat.borderColor,
+                  stat.bgGradient
                 )}
               >
-                {/* Animated pulsing background */}
-                <div className={cn("absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br animate-pulse pointer-events-none", THEME_COLORS.pulseGradient)} />
+                {/* Animated pulsing background like main card */}
+                <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                
+                {/* Animated glow effect */}
+                <div 
+                  className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-50 blur-3xl transition-all duration-700 group-hover:opacity-80 group-hover:blur-2xl" 
+                  style={{ 
+                    maskImage: 'radial-gradient(white, transparent)', 
+                    WebkitMaskImage: 'radial-gradient(white, transparent)',
+                    background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
+                  }} 
+                />
+                
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)' }} />
 
-                <div className="relative flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "flex items-center justify-center w-10 h-10 rounded-lg shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br",
-                      stat.iconGradient
-                    )}
-                  >
-                    <Icon className="w-5 h-5 text-white transition-transform duration-500 group-hover:rotate-12" />
+                <div className="relative flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-16 h-16 rounded-2xl shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 bg-gradient-to-br",
+                        "border-3 border-white/30 group-hover:border-white/50",
+                        stat.iconGradient
+                      )}
+                    >
+                      <Icon className="w-8 h-8 text-white drop-shadow-[0_8px_20px_rgba(255,255,255,0.4)]" />
+                      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="w-2 h-2 rounded-full bg-white/40 animate-pulse" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse" style={{ animationDelay: '75ms' }} />
+                      <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '150ms' }} />
+                    </div>
                   </div>
                   <div className="flex-1">
-                    <Text className="font-black text-2xl leading-none text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)] transition-all duration-300 group-hover:scale-105">
+                    <Text className="font-black text-3xl leading-none text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)] transition-all duration-300 group-hover:scale-105 mb-2">
                       {stat.metric}
                     </Text>
-                    <Text className="text-[10px] font-semibold text-white/80 group-hover:text-white uppercase tracking-wider mt-1 transition-colors duration-300">
+                    <Text className="text-[11px] font-black text-white/80 group-hover:text-white uppercase tracking-[0.35em] transition-colors duration-300 leading-tight">
                       {stat.title}
                     </Text>
                   </div>
@@ -273,7 +283,7 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
         variant="text"
         ref={sliderNextBtn}
         onClick={() => scrollToTheRight()}
-        className="!absolute -right-2 top-0 z-10 !h-full w-20 !justify-end rounded-none bg-gradient-to-l from-gray-0 via-gray-0/70 to-transparent px-0 pe-2 text-gray-500 hover:text-gray-900 dark:from-gray-50 dark:via-gray-50/70 3xl:hidden"
+        className="!absolute -right-2 top-0 z-[100] !h-full w-20 !justify-end rounded-none bg-gradient-to-l from-slate-900 via-slate-900/60 to-transparent px-0 pe-2 text-white/70 hover:text-white 3xl:hidden"
       >
         <PiCaretRightBold className="h-5 w-5" />
       </Button>
@@ -411,16 +421,16 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 
   return (
     <WidgetCard
-      title={<span className="text-2xl font-bold text-white">Score Over Time</span>}
+      title={<span className="text-2xl font-black text-white">Score Over Time</span>}
       action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />}
       headerClassName="flex-row items-start space-between pb-4"
       rounded="xl"
-      className={cn(chartCardBase, "flex flex-col min-h-[500px]", className)}
+      className={cn(tallCardClass, roundAccentCompleted, "flex flex-col min-h-[500px]", className)}
       titleClassName="text-white"
     >
       <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
       {processedRows.length === 0 && (
-        <div className={cn("relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90", THEME_COLORS.border, "bg-blue-900/20")}>
+        <div className={cn("relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90 border border-white/20 bg-blue-900/20")}>
           <strong>No history yet:</strong> This agent has not completed any recorded rounds.
         </div>
       )}
@@ -457,12 +467,12 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
         </div>
       </div>
       {legendItems.length > 1 && (
-        <div className="relative mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-white/70">
+        <div className="relative mt-3 flex flex-wrap justify-center gap-6">
           {legendItems.map((item) => (
-            <span key={item.label} className="inline-flex items-center gap-2">
-              <span className="inline-block h-2.5 w-2.5 rounded-full shadow-lg" style={{ backgroundColor: item.color }} />
-              {item.label}
-            </span>
+            <div key={item.label} className="flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/15 shadow-sm">
+              <div className="h-4 w-4 rounded-full shadow-lg" style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}66` }} />
+              <span className="text-white font-medium text-sm">{item.label}</span>
+            </div>
           ))}
         </div>
       )}
@@ -561,8 +571,16 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
       </div>
 
       {isInfoExpanded && (
-        <div className={cn("mb-6 relative overflow-hidden backdrop-blur-xl rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500", THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
-          <div className={cn("absolute inset-0 opacity-30 bg-gradient-to-br animate-pulse pointer-events-none", THEME_COLORS.pulseGradient)} />
+        <div className={cn(
+          "mb-6 relative overflow-hidden backdrop-blur-xl rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500",
+          "bg-white/90",
+          "border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+        )}
+        style={{
+          boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)`
+        }}
+        >
+          <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-br from-blue-50/30 via-blue-100/20 to-blue-50/30 animate-pulse pointer-events-none")} />
           <div className="relative z-10 flex items-center gap-3 mb-4">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
               <PiInfoDuotone className="w-5 h-5" />
@@ -574,39 +592,39 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
           </div>
           <div className="relative z-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/5 border border-white/20 rounded-xl p-4 shadow-lg hover:bg-white/10 hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg">
-                    <PiTrophyDuotone className="w-3.5 h-3.5 text-white" />
+              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
+                    <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-white">Validators</h4>
+                  <h4 className="font-bold text-white text-base">Validators</h4>
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Each validator runs independent evaluations of your agent across different tasks and scenarios to ensure fair and comprehensive testing.</p>
               </div>
-              <div className="bg-white/5 border border-white/20 rounded-xl p-4 shadow-lg hover:bg-white/10 hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg">
-                    <PiChartLineUpDuotone className="w-3.5 h-3.5 text-white" />
+              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
+                    <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-white">Scoring</h4>
+                  <h4 className="font-bold text-white text-base">Scoring</h4>
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Agents are scored based on task completion accuracy, response quality, and execution efficiency across multiple evaluation criteria.</p>
               </div>
-              <div className="bg-white/5 border border-white/20 rounded-xl p-4 shadow-lg hover:bg-white/10 hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                    <PiListChecksDuotone className="w-3.5 h-3.5 text-white" />
+              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
+                    <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-white">Ranking</h4>
+                  <h4 className="font-bold text-white text-base">Ranking</h4>
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Your final rank is determined by your average performance across all validators in each round, providing a comprehensive ranking system.</p>
               </div>
-              <div className="bg-white/5 border border-white/20 rounded-xl p-4 shadow-lg hover:bg-white/10 hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg">
-                    <PiTimerDuotone className="w-3.5 h-3.5 text-white" />
+              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
+                    <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-white">Response Time</h4>
+                  <h4 className="font-bold text-white text-base">Response Time</h4>
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Faster response times with maintained quality result in higher scores, balancing speed and accuracy in the evaluation process.</p>
               </div>
@@ -646,37 +664,47 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
 
             return (
               <Link key={`agent-run-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
-                <div className={cn("group relative overflow-hidden backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 rounded-2xl cursor-pointer", THEME_COLORS.shadowHover, THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
-                  <div className={cn("absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br animate-pulse pointer-events-none", THEME_COLORS.pulseGradient)} />
-                  <div className="relative p-4 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
+                <div className={cn(
+                  "group relative overflow-hidden backdrop-blur-xl transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer",
+                  "bg-white/90",
+                  "border border-white/15 hover:border-white/40",
+                  "shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_20px_60px_rgba(255,255,255,0.15)]",
+                  "z-10 hover:z-40"
+                )}
+                style={{
+                  boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)`
+                }}
+                >
+                  <div className={cn("absolute inset-0 rounded-2xl opacity-20 bg-gradient-to-br from-blue-50/30 via-blue-100/20 to-blue-50/30 animate-pulse pointer-events-none")} />
+                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/20 shadow-lg">
-                          <Image src={validatorImage} alt={validatorName} fill sizes="40px" className="object-cover" />
+                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
+                          <Image src={validatorImage} alt={validatorName} fill sizes="48px" className="object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white">{validatorName}</Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate">{validatorId.slice(0, 8)}...{validatorId.slice(-8)}</Text>
+                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">{validatorName}</Text>
+                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">{validatorId.slice(0, 8)}...{validatorId.slice(-8)}</Text>
                         </div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 hover:shadow-xl hover:bg-white/20 border border-white/20">
-                        <PiHashDuotone className="w-3.5 h-3.5" />
+                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
+                        <PiHashDuotone className="w-4 h-4" />
                         <span className="font-mono">{latestRun.runId}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-4 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4">
+                  <div className="relative p-5 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-white/5 backdrop-blur-sm border border-white/15 rounded-xl p-4 sm:p-5 group-hover:bg-white/10 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
-                          <div key={stat.title} className="flex items-center gap-2 w-full xs:w-1/2 sm:w-auto">
-                            <div className={cn("flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-white flex-shrink-0 shadow-lg", stat.iconClassName)}>
-                              <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                          <div key={stat.title} className="flex items-center gap-2.5 w-full xs:w-1/2 sm:w-auto">
+                            <div className={cn("flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300", stat.iconClassName)}>
+                              <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <Text className="text-xs text-white/70">{stat.title}</Text>
-                              <Text className={cn("font-bold text-sm truncate", stat.metricClassName ? "text-white" : "text-white")}>{stat.metric}</Text>
+                              <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">{stat.title}</Text>
+                              <Text className={cn("font-bold text-base truncate text-white")}>{stat.metric}</Text>
                             </div>
                           </div>
                         );
@@ -905,22 +933,22 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
 
   return (
     <WidgetCard
-      title={<span className="text-2xl font-bold text-white">Performance per website</span>}
+      title={<span className="text-2xl font-black text-white">Performance per website</span>}
       headerClassName="flex-row items-start space-between pb-4"
       rounded="xl"
-      className={cn(chartCardBase)}
+      className={cn(tallCardClass, roundAccentActive, "h-[650px]")}
       titleClassName="text-white"
     >
       <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
       {loading ? (
-        <div className="relative flex h-[260px] items-center justify-center text-white/70">Loading website stats…</div>
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
       ) : error ? (
-        <div className="relative flex h-[260px] items-center justify-center text-rose-200">{error}</div>
+        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
       ) : chartRows.length === 0 ? (
-        <div className="relative flex h-[200px] items-center justify-center text-white/70">No website stats available for this round.</div>
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
       ) : (
         <>
-          <div className="relative h-[200px] w-full mb-4">
+          <div className="relative h-[380px] w-full mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartRows} margin={{ top: 5, left: -10 }}>
                 <defs>
@@ -964,50 +992,60 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col">
-      <div className="flex flex-col gap-2 mt-2 mb-3 flex-shrink-0">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Image
-              src={agentImgSrc}
-              alt={agent.name}
-              width={48}
-              height={48}
-              className="rounded-full border-2 border-gray-200 shadow-sm"
-              onError={() => setAgentImgSrc(defaultAvatar)}
-            />
-            <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-2 mt-2 mb-3">
+        <div className={cn(
+          tallCardClass,
+          roundAccentCompleted,
+          "rounded-3xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        )}>
+          {/* Animated background gradient */}
+          <div className="absolute inset-0 rounded-3xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
+          
+          <div className="relative flex items-center gap-4 z-10">
+            <div className="relative">
+              <Image
+                src={agentImgSrc}
+                alt={agent.name}
+                width={56}
+                height={56}
+                className="rounded-full border-3 border-white/30 shadow-2xl ring-4 ring-white/20"
+                onError={() => setAgentImgSrc(defaultAvatar)}
+              />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-2xl font-bold text-gray-900">{agent.name}</span>
+                <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">{agent.name}</span>
                 {agent.isSota && (
-                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">SOTA</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">SOTA</span>
                 )}
                 {!agent.isSota && agent.status && agent.status !== 'active' && (
                   <span
                     className={cn(
-                      "px-2 py-1 rounded-full text-xs font-semibold",
+                      "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
                       agent.status === "maintenance"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
+                        ? "bg-yellow-500/90 text-white border-yellow-400/70"
+                        : "bg-white/90 text-gray-900 border-gray-300/70"
                     )}
                   >
                     {agent.status}
                   </span>
                 )}
                 {currentRound && (
-                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/90 to-indigo-500/90 text-white border-2 border-blue-400/70 shadow-lg backdrop-blur-sm">
                     Round {currentRound}
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
                 <div className="flex items-center gap-2">
-                  <PiHashDuotone className="w-4 h-4 text-gray-500" />
-                  <span className="font-mono">UID: {agent.isSota ? "—" : agent.uid ?? "unknown"}</span>
+                  <PiHashDuotone className="w-4 h-4 text-emerald-300" />
+                  <span className="font-mono font-semibold">UID: {agent.isSota ? "—" : agent.uid ?? "unknown"}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PiKeyDuotone className="w-4 h-4 text-gray-500" />
-                  <span className="font-mono text-xs">
+                  <PiKeyDuotone className="w-4 h-4 text-sky-300" />
+                  <span className="font-mono text-xs font-semibold">
                     {agent.isSota ? "No on-chain hotkey" : agent.hotkey ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}` : "unknown"}
                   </span>
                   {!agent.isSota && agent.hotkey && (
@@ -1021,37 +1059,37 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
                           console.error('Failed to copy:', err);
                         }
                       }} 
-                      className="p-1 hover:bg-gray-100 rounded transition-colors" 
+                      className="p-1.5 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-110 active:scale-95" 
                       title="Copy hotkey"
                     >
                       {copiedHotkey ? (
-                        <PiCheckDuotone className="w-3 h-3 text-emerald-600" />
+                        <PiCheckDuotone className="w-3.5 h-3.5 text-emerald-300" />
                       ) : (
-                        <PiCopyDuotone className="w-3 h-3" />
+                        <PiCopyDuotone className="w-3.5 h-3.5 text-white" />
                       )}
                     </button>
                   )}
                 </div>
-                <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200", githubAvailable ? "bg-gray-100 hover:bg-gray-200 cursor-pointer" : "bg-gray-200 cursor-not-allowed opacity-60")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
+                <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
                   {githubAvailable ? (
                     <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                      <PiGithubLogoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+                      <PiGithubLogoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
                     </a>
                   ) : (
-                    <PiGithubLogoDuotone className="w-5 h-5 text-gray-400" />
+                    <PiGithubLogoDuotone className="w-5 h-5 text-white/30" />
                   )}
                 </div>
-                <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200", taoStatsAvailable ? "bg-gray-100 hover:bg-gray-200 cursor-pointer" : "bg-gray-200 cursor-not-allowed opacity-60")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
+                <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
                   {taoStatsAvailable ? (
                     <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                      <PiInfoDuotone className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+                      <PiInfoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
                     </a>
                   ) : (
-                    <PiInfoDuotone className="w-5 h-5 text-gray-400" />
+                    <PiInfoDuotone className="w-5 h-5 text-white/30" />
                   )}
                 </div>
                 {agent.isSota && (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1.5 text-xs font-semibold text-yellow-800">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
                     <PiSparkle className="h-4 w-4" />
                     Benchmark Agent
                   </span>
@@ -1059,51 +1097,78 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               </div>
             </div>
           </div>
-          <div className={cn("inline-flex items-center rounded-full backdrop-blur-xl p-1 shadow-lg", THEME_COLORS.border, THEME_COLORS.bgGradient)}>
+          <div className={cn(
+            "relative inline-flex items-center gap-2 backdrop-blur-xl p-2 shadow-2xl border-2 z-10",
+            "bg-white/15 border-white/30"
+          )}>
             <button
               type="button"
               onClick={() => setViewMode('current')}
               className={cn(
-                "px-6 py-2.5 text-sm font-semibold transition-all duration-300 rounded-full",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "flex items-center gap-2",
                 viewMode === 'current' 
-                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm" 
-                  : "text-white/70 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-[0_8px_30px_rgba(16,185,129,0.5)] scale-105 border-2 border-emerald-400/70" 
+                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'current'}
             >
-              Current
+              {viewMode === 'current' && (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
+                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 pointer-events-none" />
+                </>
+              )}
+              <PiTrendUpDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'current' && "scale-110")} />
+              <span className="relative z-10 font-bold">Current</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('historical')}
               className={cn(
-                "px-6 py-2.5 text-sm font-semibold transition-all duration-300 rounded-full",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "flex items-center gap-2",
                 viewMode === 'historical' 
-                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm" 
-                  : "text-white/70 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_8px_30px_rgba(59,130,246,0.5)] scale-105 border-2 border-blue-400/70" 
+                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'historical'}
             >
-              Historical
+              {viewMode === 'historical' && (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
+                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500 pointer-events-none" />
+                </>
+              )}
+              <PiChartLineDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'historical' && "scale-110")} />
+              <span className="relative z-10 font-bold">Historical</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('runs')}
               className={cn(
-                "px-6 py-2.5 text-sm font-semibold transition-all duration-300 rounded-full",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "flex items-center gap-2",
                 viewMode === 'runs' 
-                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm" 
-                  : "text-white/70 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-[0_8px_30px_rgba(139,92,246,0.5)] scale-105 border-2 border-purple-400/70" 
+                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'runs'}
             >
-              Runs
+              {viewMode === 'runs' && (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
+                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 pointer-events-none" />
+                </>
+              )}
+              <PiListChecksDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'runs' && "scale-110")} />
+              <span className="relative z-10 font-bold">Runs</span>
             </button>
           </div>
       </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-3">
+      <div className="pb-3">
         {viewMode === 'runs' ? (
           <AgentValidators selectedRound={currentRound ?? null} />
         ) : (

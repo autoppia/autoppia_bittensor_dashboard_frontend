@@ -15,16 +15,6 @@ import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeho
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
 
-// ============================================================================
-// THEME COLOR SYSTEM - Centralized color variables (matching navbar)
-// ============================================================================
-const THEME_COLORS = {
-  // Match navbar background
-  border: "border-slate-900/20",
-  bgGradient: "bg-[rgb(var(--gray-50)_/_0.5)]",
-  shadow: "shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)]",
-} as const;
-
 export default function AgentsSidebar() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -212,21 +202,21 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl", THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
-        <div className="text-center">
-          <div className="text-rose-300 text-sm font-semibold">Error loading agents</div>
-          <div className="text-white/70 text-xs mt-1">{error}</div>
+      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-gray-200/50 shadow-[0_0_40px_rgba(0,0,0,0.08)]")} style={{ backgroundColor: 'rgb(var(--gray-50) / 0.5)' }}>
+        <div className="text-center px-6">
+          <div className="text-red-600 text-sm font-semibold">Error loading agents</div>
+          <div className="text-gray-600 text-xs mt-2">{error}</div>
         </div>
       </aside>
     );
   }
 
   return (
-    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl", THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
+    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-gray-200/50 shadow-[0_0_40px_rgba(0,0,0,0.08)]")} style={{ backgroundColor: 'rgb(var(--gray-50) / 0.5)' }}>
       <div className="h-full flex flex-col overflow-hidden pt-[90px]">
-        <div className="sticky top-0 border-b border-white/10 backdrop-blur-xl agents-round-select z-10">
-          <div className="flex items-center gap-3 px-3 py-3">
-            <Text className="text-2xl font-bold text-white">
+        <div className="sticky top-0 border-b border-gray-200/60 backdrop-blur-xl agents-round-select z-10 bg-white/60">
+          <div className="flex items-center gap-3 pl-4 pr-3 py-4">
+            <Text className="text-xl font-bold text-gray-900">
               All Miners
             </Text>
             <div className="flex-1 flex justify-end">
@@ -237,39 +227,40 @@ export default function AgentsSidebar() {
                 label={
                   <span className="flex items-center gap-1">
                     <Tooltip content="State of the art agents" placement="top">
-                      <BiInfoCircle className="h-3.5 w-3.5 text-white/70 hover:text-white" />
+                      <BiInfoCircle className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
                     </Tooltip>
                     SOTA
                   </span>
                 }
                 labelPlacement="left"
-                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
+                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-gray-700"
                 className={cn(
-                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/5 !border !border-white/10 !shadow-lg backdrop-blur-sm",
-                  includeSota ? "!opacity-100" : "!opacity-70"
+                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/70 !border !border-gray-300/50 !shadow-sm backdrop-blur-sm transition-all duration-300",
+                  includeSota ? "!opacity-100 !bg-white/90 !shadow-md" : "!opacity-80"
                 )}
-                inputClassName="!border !border-white/40 !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
-                iconClassName="!text-black"
+                inputClassName="!border !border-gray-400 !bg-white focus:!ring-blue-500 checked:!bg-blue-600 checked:!border-blue-600 transition-all duration-300"
+                iconClassName="!text-white"
               />
             </div>
           </div>
         </div>
-        <div className="custom-scrollbar flex-1 overflow-y-auto pl-3 pr-1.5 mt-0.5 pt-3 pb-3 scroll-smooth">
-          <div className="flex flex-col gap-1">
-            <div className="px-1 pb-3">
+        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/40 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/60 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
+          <div className="flex flex-col gap-2">
+            <div className="mb-1">
               <Select
                 options={selectOptions}
                 value={roundSelectValue}
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-lg !border !border-white/10 !bg-white/5 !text-white hover:!border-white/20 focus:!border-white/40 backdrop-blur-sm"
+                className="w-full !rounded-xl !border-2 !border-gray-300/60 !text-gray-900 hover:!border-blue-400 focus:!border-blue-500 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgb(var(--gray-0) / 0.8)' }}
                 menuPortalTarget={undefined}
               />
             </div>
-            <div className="mb-2 mt-0.5 space-y-2 px-1">
+            <div className="mb-2">
               <Input
-                prefix={<LuSearch className="w-4 text-white/70" />}
+                prefix={<LuSearch className="w-4 text-gray-500" />}
                 placeholder="Search miners..."
                 clearable={true}
                 value={query}
@@ -285,7 +276,8 @@ export default function AgentsSidebar() {
                     setFilteredAgents(filtered);
                   }
                 }}
-                className="!rounded-lg !border !border-white/10 !bg-white/5 !text-white placeholder:!text-white/50 hover:!border-white/20 focus:!border-white/40 backdrop-blur-sm"
+                className="!rounded-xl !border-2 !border-gray-300/60 !text-gray-900 placeholder:!text-gray-500 hover:!border-blue-400 focus:!border-blue-500 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgb(var(--gray-0) / 0.8)' }}
               />
             </div>
             {filteredAgents.map((miner) => {
@@ -324,22 +316,37 @@ export default function AgentsSidebar() {
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
+                      "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible",
                       isActive
-                        ? "bg-white/10 text-white border border-white/20 shadow-[0_10px_24px_rgba(255,255,255,0.1)] hover:border-white/30 hover:shadow-[0_16px_30px_rgba(255,255,255,0.15)] backdrop-blur-sm"
+                        ? "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white border-2 border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.6)] hover:shadow-[0_15px_50px_rgba(59,130,246,0.7)] scale-[1.03]"
                         : highlightTop
-                        ? "bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-white shadow-lg"
-                        : "text-white/70 hover:bg-white/5 hover:text-white border border-transparent hover:border-white/10"
+                        ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400/70 text-gray-900 shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
+                        : "text-gray-700 hover:bg-white/80 hover:text-gray-900 border border-gray-200/50 hover:border-gray-300/70 hover:shadow-md hover:scale-[1.01]"
                     )}
+                    style={isActive ? {
+                      boxShadow: `0 0 40px rgba(59,130,246,0.5), 0 10px 40px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1)`
+                    } : {}}
                   >
-                    {/* Crown badge for top agent - positioned at top-left corner */}
+                    {/* Animated gradient shimmer for active state */}
+                    {isActive && (
+                      <>
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse pointer-events-none" />
+                        <div className="absolute inset-0 rounded-xl opacity-50 blur-xl bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500 pointer-events-none" />
+                      </>
+                    )}
+                    
+                    {/* Crown badge for top agent */}
                     {showCrown && (
-                      <div className="absolute -top-2 -right-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
-                        <FaCrown className="w-3 h-3 text-white drop-shadow-sm" />
+                      <div className="absolute -top-1 -right-1 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 border-amber-300 animate-pulse">
+                        <FaCrown className="w-3 h-3 text-white drop-shadow-lg" />
+                        <div className="absolute inset-0 rounded-full bg-amber-400 blur-md opacity-60 animate-pulse pointer-events-none" />
                       </div>
                     )}
 
-                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-3 flex items-center justify-center">
+                    <div className={cn(
+                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
+                      isActive ? "ring-3 ring-white/50 shadow-lg shadow-blue-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-gray-200 group-hover:ring-2 group-hover:ring-gray-300"
+                    )}>
                       <Image
                         src={`/miners/${miner.uid % 50}.svg`}
                         alt={miner.name}
@@ -348,36 +355,41 @@ export default function AgentsSidebar() {
                         className="object-cover"
                       />
                     </div>
-                    <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex flex-col min-w-0 flex-1 relative z-10">
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "text-sm font-semibold truncate",
+                            "text-sm font-bold truncate transition-all duration-300",
                             isActive
-                              ? "text-white"
+                              ? "text-white drop-shadow-sm"
                               : highlightTop
-                                ? "text-white"
-                                : "text-white/70 group-hover:text-white"
+                                ? "text-gray-900 font-extrabold"
+                                : "text-gray-700 group-hover:text-gray-900"
                           )}
                         >
                           {miner.name}
                         </span>
                         {miner.isSota && (
-                          <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs font-semibold rounded-full border border-yellow-500/30">
-                            (SOTA)
+                          <span className={cn(
+                            "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
+                            isActive 
+                              ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
+                              : "bg-yellow-100 text-yellow-700 border-yellow-400/60"
+                          )}>
+                            SOTA
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {showRankBadge && (
                           <span
                             className={cn(
-                            "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
+                            "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300",
                             rankBadgePalette,
                             isActive && displayRank
-                                ? "ring-1 ring-white/20"
+                                ? "ring-2 ring-white/40 shadow-md"
                                 : highlightTop && displayRank
-                                  ? "ring-1 ring-orange-300/40"
+                                  ? "ring-1 ring-amber-400/50 shadow-sm"
                                   : ""
                           )}
                           >
@@ -386,27 +398,27 @@ export default function AgentsSidebar() {
                         )}
                         <span
                           className={cn(
-                            "text-xs font-mono",
+                            "text-[11px] font-mono font-medium transition-all duration-300",
                             isActive
-                              ? "text-white/90"
+                              ? "text-blue-100"
                               : highlightTop
-                                ? "text-orange-300"
-                                : "text-white/50 group-hover:text-white/70"
+                                ? "text-amber-700"
+                                : "text-gray-500 group-hover:text-gray-700"
                           )}
                         >
                           UID: {miner.uid}
                         </span>
                         <span
                           className={cn(
-                            "text-xs font-medium",
+                            "text-[11px] font-semibold transition-all duration-300",
                             isActive
-                              ? "text-white/90"
+                              ? "text-blue-100"
                               : highlightTop
-                                ? "text-orange-200"
-                                : "text-white/50 group-hover:text-white/70"
+                                ? "text-amber-600"
+                                : "text-gray-500 group-hover:text-gray-700"
                           )}
                         >
-                          Score: {(miner.score * 100).toFixed(1)}%
+                          {(miner.score * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
