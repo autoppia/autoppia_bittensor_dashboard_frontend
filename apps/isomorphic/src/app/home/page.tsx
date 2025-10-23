@@ -102,7 +102,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex flex-col w-full min-h-screen overflow-hidden font-sans">
+    <div className="flex flex-col w-full min-h-screen overflow-hidden">
       <section className="relative px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:max-w-[1400px] 2xl:mx-auto w-full py-20 md:py-32 overflow-hidden">
         {/* Subtle background gradients - much lighter than before */}
         {/* Hero Section */}
