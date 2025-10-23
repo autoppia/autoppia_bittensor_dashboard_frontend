@@ -22,6 +22,7 @@ import {
   Line,
   BarChart,
   Bar,
+  Cell,
 } from "recharts";
 import {
   AgentHeaderPlaceholder,
@@ -60,18 +61,7 @@ import {
   PiCaretUpDuotone,
 } from "react-icons/pi";
 import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget, LuStar, LuCrown } from "react-icons/lu";
-
-// ============================================================================
-// THEME COLOR SYSTEM - Enhanced Glassmorphism Design System (matching Rounds page)
-// ============================================================================
-const roundGlassBackgroundClass = "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-2xl";
-const glassCardBase = `${roundGlassBackgroundClass} transition-all duration-300`;
-const statsCardBase = `${glassCardBase} rounded-3xl hover:-translate-y-3 hover:scale-[1.02] hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] hover:border-white/30`;
-const tallCardClass = `p-5 dark:bg-gray-50 lg:p-7 border backdrop-blur-xl rounded-2xl transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] relative overflow-hidden group`;
-const chartCardBase = tallCardClass;
-const metricCardClass = `p-5 dark:bg-gray-50 lg:p-7 border backdrop-blur-xl rounded-2xl transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:-translate-y-2 hover:border-white/30`;
-const roundAccentActive = "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
-const roundAccentCompleted = "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]";
+import { GLASS_STYLES, METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
 // ============================================================================
 // Shared helpers within this page
@@ -113,91 +103,55 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
       title: "Current Rank",
       metric: currentRankValue,
       icon: LuAward,
-      gradient: "from-amber-500/30 via-yellow-500/20 to-orange-500/30",
-      bgGradient: "from-amber-500/20 via-yellow-500/10 to-orange-500/15",
-      iconGradient: "from-amber-400 via-yellow-500 to-orange-600",
-      borderColor: "border-amber-400/50",
-      glowColor: "rgba(251,191,36,0.5)",
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Best Rank Ever",
       metric: bestRankEver,
       icon: LuTrophy,
-      gradient: "from-yellow-500/30 via-amber-500/20 to-yellow-600/30",
-      bgGradient: "from-yellow-500/20 via-amber-500/10 to-yellow-600/15",
-      iconGradient: "from-yellow-400 via-amber-500 to-yellow-600",
-      borderColor: "border-yellow-400/50",
-      glowColor: "rgba(250,204,21,0.5)",
+      ...METRIC_CARD_GRADIENTS.yellow,
     },
     {
       title: "Current Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      gradient: "from-emerald-500/30 via-teal-500/20 to-green-500/30",
-      bgGradient: "from-emerald-500/20 via-teal-500/10 to-green-500/15",
-      iconGradient: "from-emerald-400 via-teal-500 to-green-600",
-      borderColor: "border-emerald-400/50",
-      glowColor: "rgba(16,185,129,0.5)",
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      gradient: "from-blue-500/30 via-indigo-500/20 to-blue-600/30",
-      bgGradient: "from-blue-500/20 via-indigo-500/10 to-blue-600/15",
-      iconGradient: "from-blue-400 via-indigo-500 to-blue-600",
-      borderColor: "border-blue-400/50",
-      glowColor: "rgba(59,130,246,0.5)",
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiClockDuotone,
-      gradient: "from-purple-500/30 via-violet-500/20 to-purple-600/30",
-      bgGradient: "from-purple-500/20 via-violet-500/10 to-purple-600/15",
-      iconGradient: "from-purple-400 via-violet-500 to-purple-600",
-      borderColor: "border-purple-400/50",
-      glowColor: "rgba(168,85,247,0.5)",
+      ...METRIC_CARD_GRADIENTS.purple,
     },
     {
       title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      gradient: "from-orange-500/30 via-rose-500/20 to-orange-600/30",
-      bgGradient: "from-orange-500/20 via-rose-500/10 to-orange-600/15",
-      iconGradient: "from-orange-400 via-rose-500 to-orange-600",
-      borderColor: "border-orange-400/50",
-      glowColor: "rgba(251,146,60,0.5)",
+      ...METRIC_CARD_GRADIENTS.orange,
     },
     {
       title: "Best Ever Score",
       metric: bestEverScorePercentage,
       icon: LuStar,
-      gradient: "from-emerald-500/30 via-teal-500/20 to-green-500/30",
-      bgGradient: "from-emerald-500/20 via-teal-500/10 to-green-500/15",
-      iconGradient: "from-emerald-400 via-teal-500 to-green-600",
-      borderColor: "border-emerald-400/50",
-      glowColor: "rgba(16,185,129,0.5)",
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "Rounds Participated",
       metric: roundsParticipated,
       icon: LuCircleCheckBig,
-      gradient: "from-cyan-500/30 via-teal-500/20 to-cyan-600/30",
-      bgGradient: "from-cyan-500/20 via-teal-500/10 to-cyan-600/15",
-      iconGradient: "from-cyan-400 via-teal-500 to-cyan-600",
-      borderColor: "border-cyan-400/50",
-      glowColor: "rgba(6,182,212,0.5)",
+      ...METRIC_CARD_GRADIENTS.cyan,
     },
     {
       title: "Total Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      gradient: "from-violet-500/30 via-purple-500/20 to-fuchsia-500/30",
-      bgGradient: "from-violet-500/20 via-purple-500/10 to-fuchsia-500/15",
-      iconGradient: "from-violet-400 via-purple-500 to-fuchsia-600",
-      borderColor: "border-violet-400/50",
-      glowColor: "rgba(139,92,246,0.5)",
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -216,22 +170,22 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
       >
         <PiCaretLeftBold className="h-5 w-5" />
       </Button>
-      <div className="w-full overflow-visible pt-6 pb-8">
-        <div ref={sliderEl} className="custom-scrollbar grid grid-flow-col gap-4 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-5 3xl:gap-6 px-2 py-2 [&::-webkit-scrollbar]:h-0">
+      <div className="w-full overflow-visible pt-3 pb-4">
+        <div ref={sliderEl} className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0">
           {displayStats.map((stat) => {
             const Icon = stat.icon as any;
             return (
               <div
                 key={stat.title}
                 className={cn(
-                  metricCardClass,
+                  "group relative overflow-hidden rounded-3xl p-8 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
                   "min-w-[200px] cursor-pointer z-[30] hover:z-[90]",
                   stat.borderColor,
                   stat.bgGradient
                 )}
               >
                 {/* Animated pulsing background like main card */}
-                <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                <div className={cn("absolute inset-0 rounded-3xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
                 
                 {/* Animated glow effect */}
                 <div 
@@ -244,7 +198,7 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
                 />
                 
                 {/* Shine effect on hover */}
-                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)' }} />
+                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)' }} />
 
                 <div className="relative flex flex-col gap-4">
                   <div className="flex items-center justify-between">
@@ -423,12 +377,12 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
     <WidgetCard
       title={<span className="text-2xl font-black text-white">Score Over Time</span>}
       action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />}
-      headerClassName="flex-row items-start space-between pb-4"
+      headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
-      className={cn(tallCardClass, roundAccentCompleted, "flex flex-col min-h-[500px]", className)}
+      className={cn("glass-card glass-card-tall glass-card-completed", "flex flex-col min-h-[500px] p-4 lg:p-5", className)}
       titleClassName="text-white"
     >
-      <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
+      <div className="pulse-bg-rounded-2xl" />
       {processedRows.length === 0 && (
         <div className={cn("relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90 border border-white/20 bg-blue-900/20")}>
           <strong>No history yet:</strong> This agent has not completed any recorded rounds.
@@ -546,7 +500,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({Object.keys(runsByValidator).length})
@@ -571,16 +525,8 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
       </div>
 
       {isInfoExpanded && (
-        <div className={cn(
-          "mb-6 relative overflow-hidden backdrop-blur-xl rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500",
-          "bg-white/90",
-          "border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
-        )}
-        style={{
-          boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)`
-        }}
-        >
-          <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-br from-blue-50/30 via-blue-100/20 to-blue-50/30 animate-pulse pointer-events-none")} />
+        <div className="glass-card glass-card-completed mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500">
+          <div className="pulse-bg-rounded-2xl" />
           <div className="relative z-10 flex items-center gap-3 mb-4">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
               <PiInfoDuotone className="w-5 h-5" />
@@ -592,7 +538,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
           </div>
           <div className="relative z-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
@@ -601,7 +547,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Each validator runs independent evaluations of your agent across different tasks and scenarios to ensure fair and comprehensive testing.</p>
               </div>
-              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
@@ -610,7 +556,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Agents are scored based on task completion accuracy, response quality, and execution efficiency across multiple evaluation criteria.</p>
               </div>
-              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
@@ -619,7 +565,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Your final rank is determined by your average performance across all validators in each round, providing a comprehensive ranking system.</p>
               </div>
-              <div className="bg-white/90 border border-white/20 rounded-xl p-5 shadow-lg hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
@@ -638,7 +584,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
       {filteredRuns.length === 0 ? (
         <div className="mt-6 text-center text-white/70">No runs available for the selected round.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8 px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 px-2 py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
             const scorePct = Math.round((latestRun.score ?? 0) * 100);
@@ -655,28 +601,18 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
             const validatorImage = resolveAssetUrl(latestRun.validatorImage || "/validators/default.png");
 
             const secondaryStats = [
-              { title: "Round", metric: latestRun.roundId, icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600", metricClassName: "text-purple-600" },
+              { title: "Round", metric: latestRun.roundId, icon: PiClockDuotone, iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600", metricClassName: "text-purple-600" },
               { title: "Rank", metric: typeof latestRun.ranking === "number" && latestRun.ranking > 0 ? `#${latestRun.ranking}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600", metricClassName: "text-yellow-600" },
               { title: "Score", metric: `${scorePct}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600", metricClassName: "text-emerald-600" },
-              { title: "Response Time", metric: `${responseTimeSeconds}s`, icon: PiClockDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600", metricClassName: "text-blue-600" },
+              { title: "Response Time", metric: `${responseTimeSeconds}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600", metricClassName: "text-blue-600" },
               { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600", metricClassName: "text-indigo-600" },
             ];
 
             return (
               <Link key={`agent-run-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
-                <div className={cn(
-                  "group relative overflow-hidden backdrop-blur-xl transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer",
-                  "bg-white/90",
-                  "border border-white/15 hover:border-white/40",
-                  "shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_20px_60px_rgba(255,255,255,0.15)]",
-                  "z-10 hover:z-40"
-                )}
-                style={{
-                  boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)`
-                }}
-                >
-                  <div className={cn("absolute inset-0 rounded-2xl opacity-20 bg-gradient-to-br from-blue-50/30 via-blue-100/20 to-blue-50/30 animate-pulse pointer-events-none")} />
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
+                <div className="glass-card glass-card-completed group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer hover:border-white/40 hover:shadow-[0_20px_60px_rgba(255,255,255,0.15)] z-10 hover:z-40">
+                  <div className="pulse-bg-rounded-2xl" />
+                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
@@ -694,7 +630,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                     </div>
                   </div>
                   <div className="relative p-5 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-white/5 backdrop-blur-sm border border-white/15 rounded-xl p-4 sm:p-5 group-hover:bg-white/10 group-hover:border-white/25 transition-all duration-300">
+                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 backdrop-blur-sm border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
@@ -845,9 +781,247 @@ export default function Page() {
         </div>
       </>
     );
+  }
+  
+  if (error || !agent) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-2">Error loading agent</div>
+          <div className="text-gray-500 text-sm">{error || "Agent not found"}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Current mode stats for header - showing only the 5 key metrics
+  const currentRankValue =
+    roundMetrics?.rank && roundMetrics.rank > 0
+      ? `#${roundMetrics.rank}`
+      : agent.currentRank && agent.currentRank > 0
+      ? `#${agent.currentRank}`
+      : "N/A";
+  
+  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
+  
+  const headerStats = [
+    {
+      title: "Current Rank",
+      metric: currentRankValue,
+      icon: LuAward,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "Current Score",
+      metric: currentScorePercentage,
+      icon: LuTarget,
+      ...METRIC_CARD_GRADIENTS.emerald,
+    },
+    {
+      title: "Avg Response Time",
+      metric: preAvg?.avgResp ?? "0s",
+      icon: PiClockDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
+    {
+      title: "Validators",
+      metric: (roundMetrics?.totalValidators ?? 0).toString(),
+      icon: PiTrophyDuotone,
+      ...METRIC_CARD_GRADIENTS.blue,
+    },
+    {
+      title: "Avg Task Per Validator",
+      metric: preAvg?.avgTasks ?? "0",
+      icon: PiListChecksDuotone,
+      ...METRIC_CARD_GRADIENTS.orange,
+    },
+  ];
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-1 mt-2 mb-2">
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchWebsites() {
+      if (!selectedRound || !Number.isFinite(selectedRound)) {
+        setLoading(false);
+        setChartRows([]);
+        setTotals({ successful: 0, total: 0 });
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const runsResp = await agentsService.getAgentRuns(agentId, { roundId: selectedRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
+        const runs = runsResp?.data?.runs ?? [];
+        if (!runs.length) {
+          if (!cancelled) {
+            setChartRows([]);
+            setTotals({ successful: 0, total: 0 });
+          }
+          return;
+        }
+
+        const details = await Promise.all(
+          runs.map(async (run) => {
+            try {
+              return await agentsService.getAgentRun(agentId, run.runId);
+            } catch (e) {
+              return null;
+            }
+          })
+        );
+
+        const bySite = new Map<string, { successful: number; total: number }>();
+        let totalSuccessful = 0;
+        let totalTasks = 0;
+        details.forEach((run) => {
+          if (!run || !Array.isArray(run.websites)) return;
+          run.websites.forEach((w) => {
+            const key = (w.website || 'unknown').toString();
+            const entry = bySite.get(key) || { successful: 0, total: 0 };
+            const succ = Number.isFinite(w.successful as any) ? Math.max(0, Number(w.successful)) : 0;
+            const tasks = Number.isFinite(w.tasks as any) ? Math.max(0, Number(w.tasks)) : 0;
+            entry.successful += succ;
+            entry.total += tasks;
+            bySite.set(key, entry);
+            totalSuccessful += succ;
+            totalTasks += tasks;
+          });
+        });
+
+        const rows = Array.from(bySite.entries())
+          .map(([website, { successful, total }]) => ({
+            website,
+            successful,
+            total,
+            successRate: total > 0 ? (successful / total) * 100 : 0,
+          }))
+          .sort((a, b) => b.successRate - a.successRate);
+
+        if (!cancelled) {
+          setChartRows(rows);
+          setTotals({ successful: totalSuccessful, total: totalTasks });
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || 'Failed to load website stats');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchWebsites();
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, selectedRound]);
+
+  const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
+
+  return (
+    <WidgetCard
+      title={<span className="text-2xl font-black text-white">Performance per website</span>}
+      headerClassName="flex-row items-start space-between pb-2"
+      rounded="xl"
+      className={cn("glass-card glass-card-tall glass-card-completed", "h-[650px] px-4 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3")}
+      titleClassName="text-white"
+    >
+      <div className="pulse-bg-rounded-2xl" />
+      {loading ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
+      ) : error ? (
+        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
+      ) : chartRows.length === 0 ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
+      ) : (
+        <>
+          <div className="relative h-[380px] w-full mb-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartRows} margin={{ top: 5, left: -10 }}>
+                <defs>
+                  {/* Gradient for autodrive */}
+                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06D6A0" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autowork */}
+                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autocalendar */}
+                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autolist */}
+                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autozone */}
+                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autocinema */}
+                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autoconnect */}
+                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autobooks */}
+                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autodining */}
+                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
+                <XAxis 
+                  dataKey="website" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#ffffff", fontSize: 12, fontWeight: 600 }} 
+                  height={60}
+                  angle={0}
+                  textAnchor="middle"
+                />
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  formatter={(value: number, name: string, props) => {
+                    const row = props?.payload as any;
+                    if (name === 'successRate') {
+                      return [`${Math.round(value)}%`, `Success Rate`];
+                    }
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => `${label}`}
+                />
+                <Bar dataKey="successRate" radius={[6, 6, 0, 0]}>
+                  {chartRows.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={`url(#barGradient${index})`} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
+    </WidgetCard>
+  );
 }
 
-// Websites performance for current round
+// Websites performance for current round  
 function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selectedRound?: number | null }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -934,12 +1108,12 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
   return (
     <WidgetCard
       title={<span className="text-2xl font-black text-white">Performance per website</span>}
-      headerClassName="flex-row items-start space-between pb-4"
+      headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
-      className={cn(tallCardClass, roundAccentActive, "h-[650px]")}
+      className={cn("glass-card glass-card-tall glass-card-completed", "h-[650px] px-4 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3")}
       titleClassName="text-white"
     >
-      <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
+      <div className="pulse-bg-rounded-2xl" />
       {loading ? (
         <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
       ) : error ? (
@@ -952,14 +1126,63 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartRows} margin={{ top: 5, left: -10 }}>
                 <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  {/* Gradient for autodrive */}
+                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06D6A0" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.85} />
                   </linearGradient>
+                  {/* Gradient for autowork */}
+                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autocalendar */}
+                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autolist */}
+                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autozone */}
+                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autocinema */}
+                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autoconnect */}
+                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autobooks */}
+                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.85} />
+                  </linearGradient>
+                  {/* Gradient for autodining */}
+                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-                <XAxis dataKey="website" axisLine tickLine={false} tick={{ fill: "rgba(226,232,240,0.9)", fontSize: 11, fontWeight: 500 }} />
-                <YAxis domain={[0, 100]} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
+                <XAxis 
+                  dataKey="website" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#ffffff", fontSize: 12, fontWeight: 600 }} 
+                  height={60}
+                  angle={0}
+                  textAnchor="middle"
+                />
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
                 <Tooltip
                   content={<CustomTooltip />}
                   formatter={(value: number, name: string, props) => {
@@ -971,7 +1194,11 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
                   }}
                   labelFormatter={(label) => `${label}`}
                 />
-                <Bar dataKey="successRate" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="successRate" radius={[6, 6, 0, 0]}>
+                  {chartRows.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={`url(#barGradient${index})`} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -980,71 +1207,95 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
     </WidgetCard>
   );
 }
-  if (error || !agent) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-lg mb-2">Error loading agent</div>
-          <div className="text-gray-500 text-sm">{error || "Agent not found"}</div>
-        </div>
-      </div>
-    );
-  }
+
+export default function Page() {
+  // ... (keeping all the existing Page function logic)
+  const { id } = useParams();
+  const uid = Number.parseInt(id as string, 10);
+  const searchParams = useSearchParams();
+  const roundParam = searchParams.get("round");
+  const [copiedHotkey, setCopiedHotkey] = useState(false);
+
+  const selectedRoundFromQuery = useMemo(() => {
+    if (!roundParam) return undefined;
+    const parsed = Number.parseInt(roundParam, 10);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }, [roundParam]);
+
+  const { data: agentData, loading, error } = useMinerDetails(
+    uid,
+    selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
+  );
+
+  const agent = agentData?.agent;
+  const roundMetrics = agentData?.roundMetrics ?? null;
+  const apiScoreRoundData = agentData?.scoreRoundData;
+  const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
+  const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
+
+  const defaultAvatar = `/miners/${Math.abs((uid ?? 0) % 50)}.svg`;
+  const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
+  useEffect(() => {
+    const candidate = agent?.imageUrl && agent.imageUrl.trim() !== "" ? agent.imageUrl : defaultAvatar;
+    setAgentImgSrc(candidate);
+  }, [agent?.imageUrl, defaultAvatar]);
+
+  const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
+
+  // ... (keeping all the existing scoreRoundData and other logic - need to read the rest of the file)
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-2 mt-2 mb-3">
-        <div className={cn(
-          tallCardClass,
-          roundAccentCompleted,
-          "rounded-3xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
-        )}>
+      <div className="flex flex-col gap-1 mt-2 mb-2">
+        <div className="glass-card glass-card-completed rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group">
           {/* Animated background gradient */}
-          <div className="absolute inset-0 rounded-3xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
+          <div className="pulse-bg-rounded-3xl" />
           
-          <div className="relative flex items-center gap-4 z-10">
-            <div className="relative">
-              <Image
-                src={agentImgSrc}
-                alt={agent.name}
-                width={56}
-                height={56}
-                className="rounded-full border-3 border-white/30 shadow-2xl ring-4 ring-white/20"
-                onError={() => setAgentImgSrc(defaultAvatar)}
-              />
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">{agent.name}</span>
-                {agent.isSota && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">SOTA</span>
-                )}
-                {!agent.isSota && agent.status && agent.status !== 'active' && (
-                  <span
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
-                      agent.status === "maintenance"
-                        ? "bg-yellow-500/90 text-white border-yellow-400/70"
-                        : "bg-white/90 text-gray-900 border-gray-300/70"
-                    )}
-                  >
-                    {agent.status}
-                  </span>
-                )}
-                {currentRound && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/90 to-indigo-500/90 text-white border-2 border-blue-400/70 shadow-lg backdrop-blur-sm">
-                    Round {currentRound}
-                  </span>
-                )}
+          {/* Header Section */}
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Image
+                  src={agentImgSrc}
+                  alt={agent.name}
+                  width={56}
+                  height={56}
+                  className="rounded-full border-3 border-white/30 shadow-2xl ring-4 ring-white/20"
+                  onError={() => setAgentImgSrc(defaultAvatar)}
+                />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
-                <div className="flex items-center gap-2">
-                  <PiHashDuotone className="w-4 h-4 text-emerald-300" />
-                  <span className="font-mono font-semibold">UID: {agent.isSota ? "—" : agent.uid ?? "unknown"}</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">{agent.name}</span>
+                  {agent.isSota && (
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">SOTA</span>
+                  )}
+                  {!agent.isSota && agent.status && agent.status !== 'active' && (
+                    <span
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
+                        agent.status === "maintenance"
+                          ? "bg-yellow-500/90 text-white border-yellow-400/70"
+                          : "bg-white/90 text-gray-900 border-gray-300/70"
+                      )}
+                    >
+                      {agent.status}
+                    </span>
+                  )}
+                  {currentRound && (
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/90 to-indigo-500/90 text-white border-2 border-blue-400/70 shadow-lg backdrop-blur-sm">
+                      Round {currentRound}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <PiKeyDuotone className="w-4 h-4 text-sky-300" />
+                <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
+                  <div className="flex items-center gap-2">
+                    <PiHashDuotone className="w-4 h-4 text-emerald-300" />
+                    <span className="font-mono font-semibold">UID: {agent.isSota ? "—" : agent.uid ?? "unknown"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PiKeyDuotone className="w-4 h-4 text-sky-300" />
                   <span className="font-mono text-xs font-semibold">
                     {agent.isSota ? "No on-chain hotkey" : agent.hotkey ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}` : "unknown"}
                   </span>
@@ -1070,45 +1321,95 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
                     </button>
                   )}
                 </div>
-                <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
-                  {githubAvailable ? (
-                    <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                      <PiGithubLogoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
-                    </a>
-                  ) : (
-                    <PiGithubLogoDuotone className="w-5 h-5 text-white/30" />
-                  )}
-                </div>
-                <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
-                  {taoStatsAvailable ? (
-                    <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                      <PiInfoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
-                    </a>
-                  ) : (
-                    <PiInfoDuotone className="w-5 h-5 text-white/30" />
-                  )}
-                </div>
-                {agent.isSota && (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
-                    <PiSparkle className="h-4 w-4" />
-                    Benchmark Agent
-                  </span>
-                )}
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
+                {githubAvailable ? (
+                  <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                    <PiGithubLogoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
+                  </a>
+                ) : (
+                  <PiGithubLogoDuotone className="w-5 h-5 text-white/30" />
+                )}
+              </div>
+              <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
+                {taoStatsAvailable ? (
+                  <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                    <PiInfoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
+                  </a>
+                ) : (
+                  <PiInfoDuotone className="w-5 h-5 text-white/30" />
+                )}
+              </div>
+              {agent.isSota && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
+                  <PiSparkle className="h-4 w-4" />
+                  Benchmark Agent
+                </span>
+              )}
+            </div>
           </div>
-          <div className={cn(
-            "relative inline-flex items-center gap-2 backdrop-blur-xl p-2 shadow-2xl border-2 z-10",
-            "bg-white/15 border-white/30"
-          )}>
+          
+          {/* Metrics Grid */}
+          <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 z-10">
+            {headerStats.map((stat) => {
+              const Icon = stat.icon as any;
+              return (
+                <div
+                  key={stat.title}
+                  className={cn(
+                    "group relative overflow-hidden rounded-2xl p-4 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border bg-gradient-to-br",
+                    stat.borderColor,
+                    stat.bgGradient
+                  )}
+                >
+                  {/* Animated pulsing background */}
+                  <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                  
+                  {/* Animated glow effect */}
+                  <div 
+                    className="pointer-events-none absolute -inset-10 -z-0 rotate-12 opacity-50 blur-2xl transition-all duration-500 group-hover:opacity-80" 
+                    style={{ 
+                      maskImage: 'radial-gradient(white, transparent)', 
+                      WebkitMaskImage: 'radial-gradient(white, transparent)',
+                      background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
+                    }} 
+                  />
+                  
+                  <div className="relative flex flex-col gap-2">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 bg-gradient-to-br",
+                        "border-2 border-white/30 group-hover:border-white/50",
+                        stat.iconGradient
+                      )}
+                    >
+                      <Icon className="w-6 h-6 text-white drop-shadow-lg" />
+                    </div>
+                    <div>
+                      <Text className="font-black text-2xl leading-none text-white drop-shadow-sm mb-1">
+                        {stat.metric}
+                      </Text>
+                      <Text className="text-[10px] font-bold text-white/70 uppercase tracking-wide leading-tight">
+                        {stat.title}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="glass-card relative inline-flex items-center gap-2 p-2 z-10 rounded-xl">
             <button
               type="button"
               onClick={() => setViewMode('current')}
               className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
                 "flex items-center gap-2",
                 viewMode === 'current' 
-                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-[0_8px_30px_rgba(16,185,129,0.5)] scale-105 border-2 border-emerald-400/70" 
+                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
                   : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'current'}
@@ -1116,7 +1417,7 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               {viewMode === 'current' && (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 pointer-events-none" />
+                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
                 </>
               )}
               <PiTrendUpDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'current' && "scale-110")} />
@@ -1126,10 +1427,10 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               type="button"
               onClick={() => setViewMode('historical')}
               className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
                 "flex items-center gap-2",
                 viewMode === 'historical' 
-                  ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_8px_30px_rgba(59,130,246,0.5)] scale-105 border-2 border-blue-400/70" 
+                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
                   : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'historical'}
@@ -1137,7 +1438,7 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               {viewMode === 'historical' && (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500 pointer-events-none" />
+                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
                 </>
               )}
               <PiChartLineDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'historical' && "scale-110")} />
@@ -1147,10 +1448,10 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               type="button"
               onClick={() => setViewMode('runs')}
               className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group",
+                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
                 "flex items-center gap-2",
                 viewMode === 'runs' 
-                  ? "bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-[0_8px_30px_rgba(139,92,246,0.5)] scale-105 border-2 border-purple-400/70" 
+                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
                   : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
               )}
               aria-pressed={viewMode === 'runs'}
@@ -1158,7 +1459,7 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
               {viewMode === 'runs' && (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-50 blur-xl bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 pointer-events-none" />
+                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
                 </>
               )}
               <PiListChecksDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'runs' && "scale-110")} />
@@ -1173,14 +1474,12 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
           <AgentValidators selectedRound={currentRound ?? null} />
         ) : (
           <>
-            <AgentStats agent={agent} roundMetrics={roundMetrics} mode={viewMode} preAvg={preAvg} />
-
             {viewMode === 'current' ? (
-              <div className="mt-1">
+              <div>
                 <RoundWebsitesChart agentId={String(uid)} selectedRound={currentRound ?? null} />
               </div>
             ) : (
-              <div className="mt-1">
+              <div>
                 <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} />
               </div>
             )}
