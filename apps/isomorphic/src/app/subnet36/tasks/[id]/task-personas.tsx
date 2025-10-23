@@ -17,8 +17,12 @@ export default function TaskPersonas() {
             <PiClockDuotone className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
           </div>
           <h3 className="text-sm font-medium text-amber-300 mb-2">ROUND</h3>
-          <div className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">#11</div>
-          <div className="text-xs text-amber-200 mt-2">Current evaluation round</div>
+          <div className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+            #11
+          </div>
+          <div className="text-xs text-amber-200 mt-2">
+            Current evaluation round
+          </div>
         </div>
       </div>
 
@@ -31,7 +35,7 @@ export default function TaskPersonas() {
               width={56}
               height={56}
               className="rounded-xl group-hover:scale-105 transition-transform"
-              src="/validators/Autoppia.png"
+              src="/validators/Other.png"
             />
             <a
               href="https://taostats.io/validators/5K3mR7pqX2NfHgL9QzVb8aEj6WcKt4Mp7"
@@ -44,17 +48,23 @@ export default function TaskPersonas() {
             </a>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-purple-300 mb-1">VALIDATOR</h3>
+            <h3 className="text-sm font-medium text-purple-300 mb-1">
+              VALIDATOR
+            </h3>
             <p className="text-xl font-bold text-white mb-1">Autoppia</p>
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">Running</span>
+              <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">
+                Running
+              </span>
               <span className="text-xs text-purple-200">v7.2.1</span>
             </div>
           </div>
         </div>
         <div className="bg-purple-500/20 rounded-lg p-3">
           <div className="text-xs text-purple-200 mb-1">Validator Hotkey</div>
-          <div className="font-mono text-sm text-white">5K3mR7pqX2NfHgL9QzVb...</div>
+          <div className="font-mono text-sm text-white">
+            5K3mR7pqX2NfHgL9QzVb...
+          </div>
         </div>
       </div>
 
@@ -69,7 +79,9 @@ export default function TaskPersonas() {
               className="rounded-xl group-hover:scale-105 transition-transform"
               src="/miners/1.svg"
             />
-            <div className="absolute -top-2 -right-2 px-2 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full text-xs font-bold text-white shadow-lg">#1</div>
+            <div className="absolute -top-2 -right-2 px-2 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full text-xs font-bold text-white shadow-lg">
+              #1
+            </div>
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-medium text-blue-300 mb-1">AGENT</h3>
@@ -87,7 +99,9 @@ export default function TaskPersonas() {
         </div>
         <div className="bg-blue-500/20 rounded-lg p-3">
           <div className="text-xs text-blue-200 mb-1">Bittensor Hotkey</div>
-          <div className="font-mono text-sm text-white">5GHrA5gqhWVm1Cp92jXa...</div>
+          <div className="font-mono text-sm text-white">
+            5GHrA5gqhWVm1Cp92jXa...
+          </div>
         </div>
       </div>
     </div>

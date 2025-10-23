@@ -1,151 +1,63 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Text } from "rizzui";
+import { useState } from "react";
 import {
   PiArrowRight,
-  PiClock,
-  PiKeyboard,
-  PiCursorClick,
-  PiScroll,
   PiCamera,
-  PiWarning,
   PiCheckCircle,
-  PiXCircle,
+  PiClock,
+  PiCursorClick,
+  PiKeyboard,
   PiPlay,
+  PiScroll,
+  PiWarning,
+  PiXCircle,
+  PiCaretLeft,
+  PiCaretRight,
 } from "react-icons/pi";
+import type { IconType } from "react-icons";
 import {
   useTaskResults,
   useTaskActions,
   useTaskScreenshots,
 } from "@/services/hooks/useTask";
-import Placeholder, {
-  TextPlaceholder,
-  ListItemPlaceholder,
-} from "@/app/shared/placeholder";
 import type { TaskAction } from "@/services/api/types/tasks";
-import { useMemo, useState } from "react";
-import type { IconType } from "react-icons";
+import { useMemo } from "react";
 
 const ACTION_TYPE_META: Record<
   TaskAction["type"],
-  { label: string; icon: IconType; badgeBg: string; badgeText: string }
+  { label: string; icon: IconType; color: string }
 > = {
-  navigate: {
-    label: "Navigate",
-    icon: PiArrowRight,
-    badgeBg: "bg-cyan-500/15",
-    badgeText: "text-cyan-300",
-  },
-  click: {
-    label: "Click",
-    icon: PiCursorClick,
-    badgeBg: "bg-purple-500/15",
-    badgeText: "text-purple-300",
-  },
-  type: {
-    label: "Type",
-    icon: PiKeyboard,
-    badgeBg: "bg-emerald-500/15",
-    badgeText: "text-emerald-300",
-  },
-  input: {
-    label: "Input",
-    icon: PiKeyboard,
-    badgeBg: "bg-emerald-500/15",
-    badgeText: "text-emerald-300",
-  },
-  search: {
-    label: "Search",
-    icon: PiArrowRight,
-    badgeBg: "bg-sky-500/15",
-    badgeText: "text-sky-300",
-  },
-  extract: {
-    label: "Extract",
-    icon: PiArrowRight,
-    badgeBg: "bg-indigo-500/15",
-    badgeText: "text-indigo-300",
-  },
-  submit: {
-    label: "Submit",
-    icon: PiArrowRight,
-    badgeBg: "bg-fuchsia-500/15",
-    badgeText: "text-fuchsia-300",
-  },
-  open_tab: {
-    label: "Open Tab",
-    icon: PiArrowRight,
-    badgeBg: "bg-blue-500/15",
-    badgeText: "text-blue-300",
-  },
-  close_tab: {
-    label: "Close Tab",
-    icon: PiXCircle,
-    badgeBg: "bg-rose-500/15",
-    badgeText: "text-rose-300",
-  },
-  wait: {
-    label: "Wait",
-    icon: PiClock,
-    badgeBg: "bg-amber-500/15",
-    badgeText: "text-amber-300",
-  },
-  scroll: {
-    label: "Scroll",
-    icon: PiScroll,
-    badgeBg: "bg-blue-500/15",
-    badgeText: "text-blue-300",
-  },
-  screenshot: {
-    label: "Screenshot",
-    icon: PiCamera,
-    badgeBg: "bg-pink-500/15",
-    badgeText: "text-pink-300",
-  },
-  other: {
-    label: "Other",
-    icon: PiPlay,
-    badgeBg: "bg-slate-500/15",
-    badgeText: "text-slate-200",
-  },
+  navigate: { label: "Navigate", icon: PiArrowRight, color: "cyan" },
+  click: { label: "Click", icon: PiCursorClick, color: "purple" },
+  type: { label: "Type", icon: PiKeyboard, color: "emerald" },
+  input: { label: "Input", icon: PiKeyboard, color: "emerald" },
+  search: { label: "Search", icon: PiArrowRight, color: "sky" },
+  extract: { label: "Extract", icon: PiArrowRight, color: "indigo" },
+  submit: { label: "Submit", icon: PiArrowRight, color: "fuchsia" },
+  open_tab: { label: "Open Tab", icon: PiArrowRight, color: "blue" },
+  close_tab: { label: "Close Tab", icon: PiXCircle, color: "rose" },
+  wait: { label: "Wait", icon: PiClock, color: "amber" },
+  scroll: { label: "Scroll", icon: PiScroll, color: "blue" },
+  screenshot: { label: "Screenshot", icon: PiCamera, color: "pink" },
+  other: { label: "Other", icon: PiPlay, color: "slate" },
 };
 
-const truncate = (value: string, max = 64) =>
+const truncate = (value: string, max = 80) =>
   value.length > max ? `${value.slice(0, max).trim()}…` : value;
 
-const getStatusIcon = (success: boolean, error?: string) => {
-  if (error) return <PiXCircle className="w-4 h-4 text-red-500" />;
-  if (success) return <PiCheckCircle className="w-4 h-4 text-green-500" />;
-  return <PiWarning className="w-4 h-4 text-yellow-500" />;
-};
-
-const formatActionDetails = (action: TaskAction) => {
-  const details: string[] = [];
-
-  if (action.selector) {
-    details.push(`Selector: ${truncate(action.selector, 80)}`);
-  }
-
-  if (action.value) {
-    details.push(`Value: ${truncate(action.value, 80)}`);
-  }
-
-  if (action.error) {
-    details.push(`Error: ${truncate(action.error, 80)}`);
-  }
-
-  if (details.length === 0) {
-    return "No additional details";
-  }
-
-  return details.join(" • ");
-};
+const getColorClasses = (color: string) => ({
+  bg: `bg-${color}-500/10`,
+  text: `text-${color}-400`,
+  border: `border-${color}-500/30`,
+});
 
 export default function TaskResults() {
   const { id } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(20);
+  const [selectedAction, setSelectedAction] = useState<TaskAction | null>(null);
 
   const {
     results,
@@ -175,10 +87,7 @@ export default function TaskResults() {
   const hasApiScreenshots = screenshots.length > 0;
 
   const fallbackScreenshots = useMemo(() => {
-    if (hasApiScreenshots || !results?.screenshots?.length) {
-      return [];
-    }
-
+    if (hasApiScreenshots || !results?.screenshots?.length) return [];
     return results.screenshots.map((url, index) => {
       const timelineTimestamp = results.timeline?.[index]?.timestamp;
       const actionTimestamp = results.actions?.[index]?.timestamp;
@@ -203,28 +112,12 @@ export default function TaskResults() {
   }, [hasApiScreenshots, results]);
 
   const mediaItems = hasApiScreenshots ? screenshots : fallbackScreenshots;
-  const isUsingFallbackMedia = !hasApiScreenshots && mediaItems.length > 0;
-
-  const gifCount = mediaItems.length;
-
   const isMediaLoading =
     screenshotsLoading || (!hasApiScreenshots && resultsLoading);
   const showMediaError =
-    !isMediaLoading &&
-    !!screenshotsError &&
-    !isUsingFallbackMedia &&
-    mediaItems.length === 0;
+    !isMediaLoading && !!screenshotsError && !mediaItems.length;
   const showMediaEmpty =
     !isMediaLoading && !showMediaError && mediaItems.length === 0;
-
-  const formatTimestampLabel = (value?: string) => {
-    if (!value) return null;
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-      return null;
-    }
-    return parsed.toLocaleString();
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -232,199 +125,217 @@ export default function TaskResults() {
   };
 
   const totalPages = Math.ceil(actionsTotal / pageSize);
+  const successCount = actions.filter((a) => a.success).length;
+  const failCount = actions.filter((a) => a.error || !a.success).length;
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Left Side - Actions */}
-      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-4">
-          <Text className="text-white text-lg font-semibold">Actions</Text>
-          {!actionsLoading && actionsTotal > 0 && (
-            <Text className="text-slate-400 text-sm">
-              {actionsTotal} total actions
-            </Text>
-          )}
-        </div>
-
-        <div className="space-y-2 rounded-xl border border-slate-700/20 h-[350px] p-4 overflow-y-auto bg-slate-900/40">
-          {actionsLoading ? (
-            Array.from({ length: 5 }, (_, index) => (
-              <ListItemPlaceholder key={`action-loading-${index}`} />
-            ))
-          ) : actionsError ? (
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  Failed to load actions
-                </Text>
-              </div>
-            </div>
-          ) : actions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiPlay className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">No actions found</Text>
-              </div>
-            </div>
-          ) : (
-            actions.map((action, index) => {
-              const meta =
-                ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
-              const ActionIcon = meta.icon;
-              return (
-                <div
-                  key={`action-item-${action.id || index}`}
-                  className="w-full flex items-start justify-between gap-3 rounded-lg px-3 py-3 text-slate-100 bg-slate-800/70 border border-slate-700/40 transition-all duration-200 hover:bg-slate-700/80 hover:border-slate-600/60 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
-                >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span
-                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${meta.badgeBg} ${meta.badgeText}`}
-                    >
-                      <ActionIcon className="h-5 w-5" />
-                    </span>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                        {meta.label}
-                        {getStatusIcon(action.success, action.error)}
-                      </span>
-                      <Text className="text-xs text-slate-300 leading-relaxed break-words">
-                        {formatActionDetails(action)}
-                      </Text>
-                    </div>
-                  </div>
-                  {action.duration && (
-                    <Text className="text-xs text-slate-400 whitespace-nowrap">
-                      {action.duration}s
-                    </Text>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {!actionsLoading && actionsTotal > pageSize && (
-          <div className="flex items-center justify-between mt-4">
-            <Text className="text-slate-400 text-sm">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 text-sm rounded border border-slate-600/40 bg-slate-700/40 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 text-sm rounded border border-slate-600/40 bg-slate-700/40 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
+    <div className="space-y-6">
+      <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">
+              Actions Timeline
+            </h2>
+            <p className="text-sm text-slate-400">
+              {actionsTotal} total actions · {successCount} successful ·{" "}
+              {failCount} failed
+            </p>
           </div>
-        )}
-      </section>
-
-      {/* Right Side - Screenshots */}
-      <section className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 shadow-xl backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-col">
-            <Text className="text-white text-lg font-semibold">
-              GIF Replays
-            </Text>
-            {!isMediaLoading && isUsingFallbackMedia && (
-              <span className="text-xs text-slate-400">
-                Loaded from task results payload
+          {!actionsLoading && totalPages > 1 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400">
+                Page {currentPage} of {totalPages}
               </span>
-            )}
-          </div>
-          {!isMediaLoading && gifCount > 0 && (
-            <Text className="text-slate-400 text-sm">
-              {gifCount} GIF{gifCount === 1 ? "" : "s"}
-            </Text>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <PiCaretLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <PiCaretRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="h-[350px] border border-slate-700/20 rounded-xl overflow-y-auto bg-slate-900/40">
-          {isMediaLoading ? (
-            <div className="p-4 space-y-4">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div key={`screenshot-loading-${index}`} className="space-y-2">
-                  <Placeholder height="120px" className="rounded-lg" />
-                  <TextPlaceholder lines={2} />
-                </div>
+        <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+          {actionsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }, (_, index) => (
+                <div
+                  key={`action-loading-${index}`}
+                  className="animate-pulse bg-slate-700/30 rounded-xl p-4 h-24"
+                />
               ))}
             </div>
-          ) : showMediaError ? (
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  {screenshotsError ||
-                    resultsError ||
-                    "Failed to load GIF replays"}
-                </Text>
-              </div>
+          ) : actionsError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-red-400">
+              <PiXCircle className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">Failed to load actions</p>
+              <p className="text-sm text-red-300 mt-1">{actionsError}</p>
             </div>
-          ) : showMediaEmpty ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiCamera className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">
-                  No GIF replays available
-                </Text>
-              </div>
+          ) : actions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <PiPlay className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">No actions recorded</p>
             </div>
           ) : (
-            <div className="p-4 space-y-4">
-              {mediaItems.map((screenshot, index) => {
-                const timestampLabel = formatTimestampLabel(
-                  screenshot.timestamp
-                );
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {actions.map((action, index) => {
+                const meta =
+                  ACTION_TYPE_META[
+                    action.type as keyof typeof ACTION_TYPE_META
+                  ] ?? ACTION_TYPE_META.other;
+                const ActionIcon = meta.icon;
+                const isSelected = selectedAction?.id === action.id;
+
                 return (
-                  <div
-                    key={`gif-${screenshot.id || index}`}
-                    className="space-y-2"
+                  <button
+                    key={`action-item-${action.id || index}`}
+                    onClick={() =>
+                      setSelectedAction(isSelected ? null : action)
+                    }
+                    className={`group relative bg-slate-900/50 hover:bg-slate-900/70 rounded-xl p-4 border transition-all text-left ${
+                      isSelected
+                        ? "border-blue-500/50 ring-2 ring-blue-500/20"
+                        : "border-slate-700/50 hover:border-slate-600/50"
+                    }`}
                   >
-                    <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
-                      <img
-                        src={screenshot.url || "/placeholder.svg"}
-                        alt={`GIF Replay ${index + 1}`}
-                        className="w-full h-32 object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          target.nextElementSibling?.classList.remove("hidden");
-                        }}
-                      />
-                      <div className="hidden absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-900/80">
-                        <div className="text-center space-y-1">
-                          <PiCamera className="w-8 h-8 mx-auto" />
-                          <Text className="text-sm text-slate-300">
-                            GIF unavailable
-                          </Text>
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-${meta.color}-500/10 text-${meta.color}-400`}
+                      >
+                        <ActionIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`text-sm font-semibold text-${meta.color}-400`}
+                          >
+                            {meta.label}
+                          </span>
+                          {action.success ? (
+                            <PiCheckCircle className="w-4 h-4 text-emerald-400" />
+                          ) : action.error ? (
+                            <PiXCircle className="w-4 h-4 text-red-400" />
+                          ) : (
+                            <PiWarning className="w-4 h-4 text-amber-400" />
+                          )}
+                          {action.duration && (
+                            <span className="ml-auto text-xs text-slate-500 font-mono">
+                              {action.duration}s
+                            </span>
+                          )}
                         </div>
+                        <p className="text-xs text-slate-300 line-clamp-2">
+                          {action.selector &&
+                            `Selector: ${truncate(action.selector, 60)}`}
+                          {action.value &&
+                            ` • Value: ${truncate(action.value, 40)}`}
+                          {!action.selector &&
+                            !action.value &&
+                            "No details available"}
+                        </p>
+                        {action.error && (
+                          <p className="text-xs text-red-400 mt-1 line-clamp-1">
+                            Error: {truncate(action.error, 60)}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-xs text-slate-300">
-                      <div className="font-medium text-slate-200">
-                        {screenshot.description || `GIF Replay ${index + 1}`}
-                      </div>
-                      <div className="text-slate-400">
-                        {timestampLabel ?? "Timestamp unavailable"}
-                      </div>
-                    </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           )}
         </div>
-      </section>
+      </div>
+
+      <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">
+              Screen Recordings
+            </h2>
+            <p className="text-sm text-slate-400">
+              {mediaItems.length} GIF replay{mediaItems.length !== 1 ? "s" : ""}{" "}
+              available
+            </p>
+          </div>
+        </div>
+
+        <div className="max-h-[600px] overflow-y-auto pr-2">
+          {isMediaLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div
+                  key={`screenshot-loading-${index}`}
+                  className="animate-pulse bg-slate-700/30 rounded-xl h-48"
+                />
+              ))}
+            </div>
+          ) : showMediaError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-red-400">
+              <PiXCircle className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">Failed to load recordings</p>
+              <p className="text-sm text-red-300 mt-1">
+                {screenshotsError || resultsError}
+              </p>
+            </div>
+          ) : showMediaEmpty ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <PiCamera className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">No recordings available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mediaItems.map((screenshot, index) => (
+                <div
+                  key={`gif-${screenshot.id || index}`}
+                  className="group bg-slate-900/50 rounded-xl overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-all"
+                >
+                  <div className="relative aspect-video bg-black/60">
+                    <img
+                      src={screenshot.url || "/placeholder.svg"}
+                      alt={`GIF Replay ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const errorDiv =
+                          target.nextElementSibling as HTMLElement;
+                        if (errorDiv) errorDiv.classList.remove("hidden");
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 items-center justify-center text-slate-500">
+                      <PiCamera className="w-12 h-12 mb-2" />
+                      <p className="text-sm">Recording unavailable</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-white mb-1">
+                      {screenshot.description || `GIF Replay ${index + 1}`}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {screenshot.timestamp
+                        ? new Date(screenshot.timestamp).toLocaleString()
+                        : "No timestamp"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

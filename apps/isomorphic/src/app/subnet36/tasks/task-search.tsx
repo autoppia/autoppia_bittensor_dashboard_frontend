@@ -472,7 +472,14 @@ export default function TaskSearch() {
               return (
                 <div
                   key={task.taskId}
-                  onClick={() => router.push(`${routes.tasks}/${task.taskId}`)}
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (webProject) {
+                      params.set('websiteName', webProject.name);
+                      params.set('websiteColor', webProject.color);
+                    }
+                    router.push(`${routes.tasks}/${task.taskId}?${params.toString()}`);
+                  }}
                   className={`group relative rounded-xl border ${
                     isPassed
                       ? "border-emerald-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-emerald-400/50 hover:shadow-emerald-500/20"
