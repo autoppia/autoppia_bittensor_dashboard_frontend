@@ -1,15 +1,12 @@
 const { URL } = require("url");
 
 const DEFAULT_ALLOWED_IMAGE_HOSTS = [
-  "leaderboard.autoppia.com",
+  "infinitewebarena.autoppia.com",
   "dev-infinitewebarena.autoppia.com",
-  "api-leaderboard.autoppia.com",
-  "raw.githubusercontent.com",
-  "taostats.io",
 ];
 
 const defaultAssetBase =
-  process.env.NEXT_PUBLIC_ASSET_BASE_URL || "https://leaderboard.autoppia.com";
+  process.env.NEXT_PUBLIC_ASSET_BASE_URL || "https://infinitewebarena.autoppia.com";
 
 let defaultAssetHost;
 try {
@@ -57,11 +54,6 @@ module.exports = {
         },
       },
     },
-  },
-  // Disable development overlay
-  devIndicators: {
-    buildActivity: false,
-    position: "bottom-right",
   },
   typescript: {
     // !! WARN !!

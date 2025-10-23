@@ -53,6 +53,7 @@ import {
   PiClockDuotone,
   PiChartLineDuotone,
   PiChartLineUpDuotone,
+  PiChartBarDuotone,
   PiTrophyDuotone,
   PiListChecksDuotone,
   PiTrendUpDuotone,
@@ -94,9 +95,11 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
 
   const bestRankEver = agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
+  const bestRoundScoreValue = agent.bestRoundScore ?? agent.currentTopScore ?? 0;
+  const bestEverScorePercentage = `${(bestRoundScoreValue * 100).toFixed(1)}%`;
   const roundsParticipated = (agent.roundsParticipated || agent.totalRuns).toLocaleString();
-  const totalAlphaEarned = ((agent as any).totalReward ?? 0).toFixed(2);
+  const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0);
+  const totalAlphaEarned = totalAlphaValue % 1 === 0 ? totalAlphaValue.toLocaleString() : totalAlphaValue.toFixed(2);
 
   const stats = [
     {
@@ -250,12 +253,8 @@ const filterOptions = ["7D", "15D", "All"];
 const BENCHMARK_COLORS: Record<string, string> = { openai: "#2563EB", anthropic: "#F97316", browser: "#8B5CF6", "browser-use": "#8B5CF6", browser_use: "#8B5CF6", claude: "#F97316" };
 const BENCHMARK_COLOR_PALETTE = ["#2563EB", "#F97316", "#8B5CF6", "#14B8A6", "#F472B6", "#EC4899"];
 
-function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint[] }: { className?: string; scoreRoundData?: ScoreRoundDataPoint[] }) {
-  const { id } = useParams();
-  const uid = parseInt(id as string, 10);
+function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint[], loading = false, error }: { className?: string; scoreRoundData?: ScoreRoundDataPoint[]; loading?: boolean; error?: string | null }) {
   const [timeRange, setTimeRange] = useState<"7d" | "15d" | "all">("all");
-
-  const { data: agent, loading, error } = useMinerDetails(uid);
 
   const { processedRows, benchmarkSeries } = useMemo(() => {
     const seriesMap = new Map<string, { label: string; color: string }>();
@@ -606,6 +605,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
               { title: "Score", metric: `${scorePct}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600", metricClassName: "text-emerald-600" },
               { title: "Response Time", metric: `${responseTimeSeconds}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600", metricClassName: "text-blue-600" },
               { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600", metricClassName: "text-indigo-600" },
+              { title: "Websites", metric: latestRun.websites ?? "0", icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600", metricClassName: "text-pink-600" },
             ];
 
             return (
@@ -625,16 +625,18 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
                         <PiHashDuotone className="w-4 h-4" />
-                        <span className="font-mono">{latestRun.runId}</span>
+                        <span className="font-mono" title={latestRun.runId}>
+                          {latestRun.runId.length > 12 ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}` : latestRun.runId}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="relative p-5 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 backdrop-blur-sm border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                    <div className="grid grid-cols-3 gap-3 bg-transparent border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
-                          <div key={stat.title} className="flex items-center gap-2.5 w-full xs:w-1/2 sm:w-auto">
+                          <div key={stat.title} className="flex items-center gap-2.5 min-w-0">
                             <div className={cn("flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300", stat.iconClassName)}>
                               <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                             </div>
@@ -688,6 +690,14 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
       
       {/* Task breakdown */}
       <div className="space-y-2">
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 border-b border-white/10 pb-3 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)' }} />
+            <span className="text-xs font-medium text-white/90">Total Tasks</span>
+          </div>
+          <span className="text-sm font-bold text-blue-300">{total}</span>
+        </div>
+        
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(52, 211, 153, 0.6)' }} />
@@ -702,14 +712,6 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             <span className="text-xs font-medium text-white/90">Failed</span>
           </div>
           <span className="text-sm font-bold text-rose-300">{failed}</span>
-        </div>
-        
-        <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 border-t border-white/10 mt-2 pt-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)' }} />
-            <span className="text-xs font-medium text-white/90">Total Tasks</span>
-          </div>
-          <span className="text-sm font-bold text-blue-300">{total}</span>
         </div>
       </div>
     </div>
@@ -1044,6 +1046,9 @@ export default function Page() {
   }, [agent?.imageUrl, defaultAvatar]);
 
   const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
+  
+  // Calculate websites count state
+  const [websitesCount, setWebsitesCount] = useState<number>(0);
 
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
     if (!apiScoreRoundData || apiScoreRoundData.length === 0) return [];
@@ -1119,6 +1124,45 @@ export default function Page() {
     };
   }, [preFilteredRuns]);
 
+  // Fetch websites count for current round
+  useEffect(() => {
+    async function fetchWebsitesCount() {
+      if (!currentRound || !Number.isFinite(currentRound)) {
+        setWebsitesCount(0);
+        return;
+      }
+      try {
+        const runsResp = await agentsService.getAgentRuns(String(uid), { roundId: currentRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
+        const runs = runsResp?.data?.runs ?? [];
+        if (!runs.length) {
+          setWebsitesCount(0);
+          return;
+        }
+        const details = await Promise.all(
+          runs.map(async (run) => {
+            try {
+              return await agentsService.getAgentRun(String(uid), run.runId);
+            } catch (e) {
+              return null;
+            }
+          })
+        );
+        const websiteSet = new Set<string>();
+        details.forEach((run) => {
+          if (!run || !Array.isArray(run.websites)) return;
+          run.websites.forEach((w) => {
+            const key = (w.website || 'unknown').toString();
+            websiteSet.add(key);
+          });
+        });
+        setWebsitesCount(websiteSet.size);
+      } catch (e) {
+        setWebsitesCount(0);
+      }
+    }
+    fetchWebsitesCount();
+  }, [uid, currentRound]);
+
   if (loading) {
     return (
       <>
@@ -1161,7 +1205,7 @@ export default function Page() {
   const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
   const roundsParticipated = (agent.roundsParticipated || agent.totalRuns || 0).toLocaleString();
   const totalAlphaEarned = ((agent as any).totalReward ?? 0).toFixed(2);
-  
+
   const currentStats = [
     {
       title: "Current Round",
@@ -1184,7 +1228,7 @@ export default function Page() {
     {
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
-      icon: PiClockDuotone,
+      icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.blue,
     },
     {
@@ -1194,10 +1238,22 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.orange,
     },
     {
-      title: "Avg Task Per Validator",
+      title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.cyan,
+    },
+    {
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      icon: LuTrophy,
+      ...METRIC_CARD_GRADIENTS.yellow,
+    },
+    {
+      title: "Websites",
+      metric: websitesCount.toString(),
+      icon: PiChartBarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -1399,48 +1455,66 @@ export default function Page() {
           
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 z-10">
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
                   <div
                     key={stat.title}
-                    className={cn(
-                      "group relative overflow-hidden rounded-2xl p-4 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border bg-gradient-to-br",
-                      stat.borderColor,
-                      stat.bgGradient
-                    )}
+                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] cursor-pointer"
                   >
-                    {/* Animated pulsing background */}
-                    <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                    {/* Card background with gradient */}
+                    <div className={cn(
+                      "absolute inset-0 rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-500 group-hover:opacity-100",
+                      stat.bgGradient
+                    )} />
                     
-                    {/* Animated glow effect */}
-                    <div 
-                      className="pointer-events-none absolute -inset-10 -z-0 rotate-12 opacity-50 blur-2xl transition-all duration-500 group-hover:opacity-80" 
-                      style={{ 
-                        maskImage: 'radial-gradient(white, transparent)', 
-                        WebkitMaskImage: 'radial-gradient(white, transparent)',
-                        background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
-                      }} 
+                    {/* Animated shimmer effect */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" 
+                         style={{ 
+                           backgroundSize: '200% 100%',
+                           animation: 'shimmer 2s infinite'
+                         }} 
                     />
                     
-                    <div className="relative flex items-center gap-3">
+                    {/* Border gradient */}
+                    <div className={cn(
+                      "absolute inset-0 rounded-2xl border-2 transition-all duration-500",
+                      stat.borderColor,
+                      "group-hover:shadow-2xl"
+                    )} 
+                    style={{
+                      boxShadow: `0 0 30px ${stat.glowColor}40`
+                    }}
+                    />
+                    
+                    {/* Content */}
+                    <div className="relative p-4 flex items-center gap-4">
+                      {/* Icon on left */}
                       <div
                         className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 bg-gradient-to-br flex-shrink-0",
-                          "border-2 border-white/30 group-hover:border-white/50",
+                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br flex-shrink-0",
+                          "border-2 border-white/40 group-hover:border-white/60",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-6 h-6 text-white drop-shadow-lg" />
+                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-2xl" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <Text className="font-black text-2xl leading-none text-white drop-shadow-sm mb-1">
-                          {stat.metric}
-                        </Text>
-                        <Text className="text-[10px] font-bold text-white/70 uppercase tracking-wide leading-tight">
+                      
+                      {/* Metrics in middle */}
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
                           {stat.title}
                         </Text>
+                        <Text className="text-2xl md:text-3xl font-black text-white drop-shadow-2xl leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                          {stat.metric}
+                        </Text>
+                      </div>
+                      
+                      {/* Decorative pulse indicator on right */}
+                      <div className="hidden md:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                        <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '100ms' }} />
                       </div>
                     </div>
                   </div>
@@ -1448,6 +1522,13 @@ export default function Page() {
               })}
             </div>
           )}
+          
+          <style jsx global>{`
+            @keyframes shimmer {
+              0% { background-position: -200% 0; }
+              100% { background-position: 200% 0; }
+            }
+          `}</style>
 
           {/* Content Section */}
           <div className="relative z-10">
@@ -1461,7 +1542,7 @@ export default function Page() {
                   </div>
                 ) : (
                   <div>
-                    <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} />
+                    <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} loading={loading} error={error} />
                   </div>
                 )}
               </>

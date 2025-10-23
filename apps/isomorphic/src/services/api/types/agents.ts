@@ -40,6 +40,7 @@ export interface AgentData {
   bestRankEver: number; // NEW FIELD
   roundsParticipated: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
+  bestRoundScore: number; // NEW FIELD
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;

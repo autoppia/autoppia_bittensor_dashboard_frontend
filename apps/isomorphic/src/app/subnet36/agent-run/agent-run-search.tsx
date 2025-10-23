@@ -933,121 +933,138 @@ export default function AgentRunSearch() {
                   onClick={() =>
                     router.push(`${routes.agent_run}/${run.runId}`)
                   }
-                  className="group relative rounded-xl border border-indigo-500/30 bg-gradient-to-br from-slate-900/90 to-slate-800/90 hover:border-indigo-400/50 p-6 shadow-lg transition-all duration-300 backdrop-blur-sm cursor-pointer hover:-translate-y-1 hover:shadow-xl flex flex-col"
+                  className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"
+                  style={{ cursor: "pointer" }}
                 >
-                  {/* Main Content - Grows to fill space */}
-                  <div className="flex-grow">
-                    {/* Round & Ranking - Top Priority */}
-                    <div className="mb-4 flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/50 bg-sky-500/15 px-3 py-1.5 text-base font-bold text-sky-200">
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
+                  
+                  {/* Content container */}
+                  <div className="relative flex h-full flex-col p-5 gap-4">
+                    {/* Round & Ranking */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
+                        <PiHashDuotone className="w-3.5 h-3.5" />
                         Round {run.roundId ?? "?"}
                       </span>
                       {typeof run.ranking === "number" && run.ranking > 0 && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-amber-500/60 bg-amber-500/20 px-3 py-1.5 text-base font-bold text-amber-200">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-amber-500/70 bg-gradient-to-br from-amber-500/25 to-amber-600/15 px-3 py-1.5 text-sm font-bold text-amber-200 shadow-md">
                           🏆 #{run.ranking}
                         </span>
                       )}
                     </div>
 
                     {/* Validator & Miner */}
-                    <div className="mb-4 grid grid-cols-2 gap-4">
-                      <div className="flex flex-col items-center text-center">
-                        <div className="text-xs font-medium text-slate-500 mb-2">
-                          Validator
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2.5 rounded-lg border border-indigo-500/40 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-indigo-400/60 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-indigo-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-indigo-500/20">
+                          <Image
+                            src={validatorImageSrc}
+                            alt={validatorLabel}
+                            width={40}
+                            height={40}
+                            sizes="40px"
+                            className="h-full w-full object-cover"
+                          />
                         </div>
-                        <Image
-                          src={validatorImageSrc}
-                          alt={validatorLabel}
-                          width={56}
-                          height={56}
-                          sizes="56px"
-                          className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-500/50"
-                        />
-                        <div className="mt-2 text-sm font-semibold text-white truncate">
-                          {validatorLabel}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold mb-0.5">
+                            Validator
+                          </div>
+                          <div className="text-xs font-bold text-indigo-50 truncate">
+                            {validatorLabel}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-center text-center">
-                        <div className="text-xs font-medium text-emerald-400 mb-2">
-                          Miner
+                      <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-emerald-400/60 group-hover:shadow-lg group-hover:shadow-emerald-500/10">
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-emerald-500/20">
+                          <Image
+                            src={minerImageSrc}
+                            alt={agentLabel}
+                            width={40}
+                            height={40}
+                            sizes="40px"
+                            className="h-full w-full object-cover"
+                          />
                         </div>
-                        <Image
-                          src={minerImageSrc}
-                          alt={agentLabel}
-                          width={56}
-                          height={56}
-                          sizes="56px"
-                          className="h-14 w-14 rounded-full object-cover ring-2 ring-emerald-500/60"
-                        />
-                        <div className="mt-2 text-sm font-semibold text-emerald-200 truncate">
-                          {agentLabel}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold mb-0.5">
+                            Miner
+                          </div>
+                          <div className="text-xs font-bold text-emerald-50 truncate">
+                            {agentLabel}
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Agent Hotkey */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-orange-400 mb-1">
+                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
+                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
                         Agent Hotkey
                       </div>
-                      <div className="text-xs font-mono text-orange-200 truncate">
+                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
                         {run.agentHotkey}
                       </div>
                     </div>
 
                     {/* Run ID */}
-                    <div className="mb-3">
-                      <div className="text-xs font-medium text-violet-400 mb-1">
+                    <div className="rounded-lg border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-violet-600/5 p-2.5 shadow-sm">
+                      <div className="text-[9px] uppercase tracking-wider text-violet-300 font-semibold mb-1">
                         Run ID
                       </div>
-                      <div className="text-sm font-mono text-violet-200 truncate">
+                      <div className="text-xs font-mono font-bold text-violet-50 truncate">
                         {run.runId}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Footer Stats - Always at bottom */}
-                  <div className="pt-4 border-t border-slate-700/50">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="text-center">
-                        <div className="text-xs text-slate-400 mb-1">Score</div>
-                        <div className="text-lg font-bold text-indigo-300">
-                          {scoreOutOf100}/100
+                    {/* Footer Stats */}
+                    <div className="mt-auto pt-3 border-t border-slate-600/60">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
+                            Score
+                          </div>
+                          <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
+                            {scoreOutOf100}/100
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold mb-1">
+                            Tasks
+                          </div>
+                          <div className="text-base font-bold text-amber-300 drop-shadow-sm">
+                            {completedTasks}/{totalTasks}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-xs text-slate-400 mb-1">Tasks</div>
-                        <div className="text-lg font-bold text-amber-300">
-                          {completedTasks}/{totalTasks}
-                        </div>
+                      <div className="flex items-center justify-center gap-1.5 text-xs text-slate-300 font-medium">
+                        <svg
+                          className="w-3.5 h-3.5 text-sky-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span>
+                          {new Date(run.startTime).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}{" "}
+                          ·{" "}
+                          {new Date(run.startTime).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>
-                        {new Date(run.startTime).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}{" "}
-                        ·{" "}
-                        {new Date(run.startTime).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
                     </div>
                   </div>
                 </div>
