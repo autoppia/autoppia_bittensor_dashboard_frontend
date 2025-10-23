@@ -15,6 +15,16 @@ import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeho
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
 
+// ============================================================================
+// THEME COLOR SYSTEM - Centralized color variables (matching navbar)
+// ============================================================================
+const THEME_COLORS = {
+  // Match navbar background
+  border: "border-slate-900/20",
+  bgGradient: "bg-[rgb(var(--gray-50)_/_0.5)]",
+  shadow: "shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)]",
+} as const;
+
 export default function AgentsSidebar() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -202,21 +212,19 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-        <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-4 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-400 text-sm">Error loading agents</div>
-            <div className="text-white/60 text-xs mt-1">{error}</div>
-          </div>
+      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl", THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
+        <div className="text-center">
+          <div className="text-rose-300 text-sm font-semibold">Error loading agents</div>
+          <div className="text-white/70 text-xs mt-1">{error}</div>
         </div>
       </aside>
     );
   }
 
   return (
-    <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-      <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-3 flex flex-col overflow-hidden">
-        <div className="sticky top-0 border-b border-[#1f1f1f] bg-[#111111] agents-round-select z-10">
+    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl", THEME_COLORS.border, THEME_COLORS.bgGradient, THEME_COLORS.shadow)}>
+      <div className="h-full flex flex-col overflow-hidden pt-[90px]">
+        <div className="sticky top-0 border-b border-white/10 backdrop-blur-xl agents-round-select z-10">
           <div className="flex items-center gap-3 px-3 py-3">
             <Text className="text-2xl font-bold text-white">
               All Miners
@@ -237,10 +245,10 @@ export default function AgentsSidebar() {
                 labelPlacement="left"
                 labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
                 className={cn(
-                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border-none !shadow-inner",
+                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/5 !border !border-white/10 !shadow-lg backdrop-blur-sm",
                   includeSota ? "!opacity-100" : "!opacity-70"
                 )}
-                inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
+                inputClassName="!border !border-white/40 !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
                 iconClassName="!text-black"
               />
             </div>
@@ -255,13 +263,13 @@ export default function AgentsSidebar() {
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-lg !border !border-[#1f1f1f] !bg-[#161616] !text-white hover:!border-white/30 focus:!border-white/60"
+                className="w-full !rounded-lg !border !border-white/10 !bg-white/5 !text-white hover:!border-white/20 focus:!border-white/40 backdrop-blur-sm"
                 menuPortalTarget={undefined}
               />
             </div>
             <div className="mb-2 mt-0.5 space-y-2 px-1">
               <Input
-                prefix={<LuSearch className="w-4" />}
+                prefix={<LuSearch className="w-4 text-white/70" />}
                 placeholder="Search miners..."
                 clearable={true}
                 value={query}
@@ -277,6 +285,7 @@ export default function AgentsSidebar() {
                     setFilteredAgents(filtered);
                   }
                 }}
+                className="!rounded-lg !border !border-white/10 !bg-white/5 !text-white placeholder:!text-white/50 hover:!border-white/20 focus:!border-white/40 backdrop-blur-sm"
               />
             </div>
             {filteredAgents.map((miner) => {
@@ -300,7 +309,7 @@ export default function AgentsSidebar() {
                   case 3:
                     return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-black shadow-sm";
                   default:
-                    return "bg-white/80 text-black border border-gray-200";
+                    return "bg-white/10 text-white border border-white/20";
                 }
               })();
 
@@ -317,10 +326,10 @@ export default function AgentsSidebar() {
                     className={cn(
                       "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
                       isActive
-                        ? "bg-[#FDF5E6] text-slate-900 border border-[#EBD9BD] shadow-[0_10px_24px_rgba(253,245,230,0.28)] hover:border-[#E1CDAA] hover:shadow-[0_16px_30px_rgba(253,245,230,0.35)]"
+                        ? "bg-white/10 text-white border border-white/20 shadow-[0_10px_24px_rgba(255,255,255,0.1)] hover:border-white/30 hover:shadow-[0_16px_30px_rgba(255,255,255,0.15)] backdrop-blur-sm"
                         : highlightTop
-                        ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
-                        : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                        ? "bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-white shadow-lg"
+                        : "text-white/70 hover:bg-white/5 hover:text-white border border-transparent hover:border-white/10"
                     )}
                   >
                     {/* Crown badge for top agent - positioned at top-left corner */}
@@ -345,10 +354,10 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-sm font-semibold truncate",
                             isActive
-                              ? "text-slate-900"
+                              ? "text-white"
                               : highlightTop
                                 ? "text-white"
-                                : "text-gray-300 group-hover:text-white"
+                                : "text-white/70 group-hover:text-white"
                           )}
                         >
                           {miner.name}
@@ -366,9 +375,9 @@ export default function AgentsSidebar() {
                             "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
                             rankBadgePalette,
                             isActive && displayRank
-                                ? "ring-1 ring-[#E1CDAA]"
+                                ? "ring-1 ring-white/20"
                                 : highlightTop && displayRank
-                                  ? "ring-1 ring-orange-300/60"
+                                  ? "ring-1 ring-orange-300/40"
                                   : ""
                           )}
                           >
@@ -379,10 +388,10 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-mono",
                             isActive
-                              ? "text-slate-900"
+                              ? "text-white/90"
                               : highlightTop
                                 ? "text-orange-300"
-                                : "text-gray-500 group-hover:text-gray-300"
+                                : "text-white/50 group-hover:text-white/70"
                           )}
                         >
                           UID: {miner.uid}
@@ -391,10 +400,10 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-xs font-medium",
                             isActive
-                              ? "text-slate-900"
+                              ? "text-white/90"
                               : highlightTop
                                 ? "text-orange-200"
-                                : "text-gray-400 group-hover:text-gray-200"
+                                : "text-white/50 group-hover:text-white/70"
                           )}
                         >
                           Score: {(miner.score * 100).toFixed(1)}%
