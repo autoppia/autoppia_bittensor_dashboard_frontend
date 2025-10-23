@@ -343,6 +343,57 @@
   .animate-fade-in {
     animation: fade-in 0.5s ease-out;
   }
+
+  /* ................................................... */
+  /* Glassmorphism utilities - matching Rounds page style */
+  /* ................................................... */
+  .glass-card {
+    @apply relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-2xl;
+  }
+  
+  .glass-card-active {
+    @apply border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)];
+  }
+  
+  .glass-card-completed {
+    @apply border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)];
+  }
+  
+  .glass-card-pending {
+    @apply border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)];
+  }
+
+  .glass-card-metric {
+    @apply rounded-3xl p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] hover:border-white/30;
+  }
+
+  .glass-card-tall {
+    @apply rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)];
+  }
+  
+  .pulse-bg {
+    @apply absolute inset-0 opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none;
+  }
+
+  .pulse-bg-rounded-3xl {
+    @apply pulse-bg rounded-3xl;
+  }
+
+  .pulse-bg-rounded-2xl {
+    @apply pulse-bg rounded-2xl;
+  }
+
+  .shine-effect {
+    @apply absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none;
+  }
+
+  .shine-effect-rounded-3xl {
+    @apply shine-effect rounded-3xl;
+  }
+
+  .shine-effect-rounded-2xl {
+    @apply shine-effect rounded-2xl;
+  }
 }
 
 /* ................................................... */

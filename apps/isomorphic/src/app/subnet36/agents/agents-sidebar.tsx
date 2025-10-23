@@ -14,6 +14,7 @@ import { useRounds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
+import { GLASS_STYLES } from "@/config/theme-styles";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
@@ -202,23 +203,28 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-gray-200/50 shadow-[0_0_40px_rgba(0,0,0,0.08)]")} style={{ backgroundColor: 'rgb(var(--gray-50) / 0.5)' }}>
+      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
         <div className="text-center px-6">
-          <div className="text-red-600 text-sm font-semibold">Error loading agents</div>
-          <div className="text-gray-600 text-xs mt-2">{error}</div>
+          <div className="text-red-400 text-sm font-semibold">Error loading agents</div>
+          <div className="text-white/70 text-xs mt-2">{error}</div>
         </div>
       </aside>
     );
   }
 
   return (
-    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-gray-200/50 shadow-[0_0_40px_rgba(0,0,0,0.08)]")} style={{ backgroundColor: 'rgb(var(--gray-50) / 0.5)' }}>
+    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
       <div className="h-full flex flex-col overflow-hidden pt-[90px]">
-        <div className="sticky top-0 border-b border-gray-200/60 backdrop-blur-xl agents-round-select z-10 bg-white/60">
+        <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10" style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
           <div className="flex items-center gap-3 pl-4 pr-3 py-4">
-            <Text className="text-xl font-bold text-gray-900">
-              All Miners
-            </Text>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg ring-2 ring-white/20">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <Text className="text-xl font-bold text-white">All Miners</Text>
+            </div>
             <div className="flex-1 flex justify-end">
               <Checkbox
                 id="show-sota-agents"
@@ -227,24 +233,24 @@ export default function AgentsSidebar() {
                 label={
                   <span className="flex items-center gap-1">
                     <Tooltip content="State of the art agents" placement="top">
-                      <BiInfoCircle className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+                      <BiInfoCircle className="h-3.5 w-3.5 text-white/60 hover:text-white/90" />
                     </Tooltip>
                     SOTA
                   </span>
                 }
                 labelPlacement="left"
-                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-gray-700"
+                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white/90"
                 className={cn(
-                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/70 !border !border-gray-300/50 !shadow-sm backdrop-blur-sm transition-all duration-300",
-                  includeSota ? "!opacity-100 !bg-white/90 !shadow-md" : "!opacity-80"
+                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/10 !border !border-white/20 !shadow-sm backdrop-blur-sm transition-all duration-300",
+                  includeSota ? "!opacity-100 !bg-white/20 !shadow-md !border-white/30" : "!opacity-80"
                 )}
-                inputClassName="!border !border-gray-400 !bg-white focus:!ring-blue-500 checked:!bg-blue-600 checked:!border-blue-600 transition-all duration-300"
+                inputClassName="!border !border-white/40 !bg-white/10 focus:!ring-emerald-500 checked:!bg-emerald-600 checked:!border-emerald-500 transition-all duration-300"
                 iconClassName="!text-white"
               />
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/40 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/60 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
+        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
           <div className="flex flex-col gap-2">
             <div className="mb-1">
               <Select
@@ -253,14 +259,14 @@ export default function AgentsSidebar() {
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-xl !border-2 !border-gray-300/60 !text-gray-900 hover:!border-blue-400 focus:!border-blue-500 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgb(var(--gray-0) / 0.8)' }}
+                className="w-full !rounded-xl !border-2 !border-white/20 !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                 menuPortalTarget={undefined}
               />
             </div>
             <div className="mb-2">
               <Input
-                prefix={<LuSearch className="w-4 text-gray-500" />}
+                prefix={<LuSearch className="w-4 text-white/60" />}
                 placeholder="Search miners..."
                 clearable={true}
                 value={query}
@@ -276,8 +282,8 @@ export default function AgentsSidebar() {
                     setFilteredAgents(filtered);
                   }
                 }}
-                className="!rounded-xl !border-2 !border-gray-300/60 !text-gray-900 placeholder:!text-gray-500 hover:!border-blue-400 focus:!border-blue-500 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgb(var(--gray-0) / 0.8)' }}
+                className="!rounded-xl !border-2 !border-white/20 !text-white placeholder:!text-white/50 hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
               />
             </div>
             {filteredAgents.map((miner) => {
@@ -316,12 +322,12 @@ export default function AgentsSidebar() {
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible",
+                      "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
                       isActive
                         ? "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white border-2 border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.6)] hover:shadow-[0_15px_50px_rgba(59,130,246,0.7)] scale-[1.03]"
                         : highlightTop
-                        ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400/70 text-gray-900 shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                        : "text-gray-700 hover:bg-white/80 hover:text-gray-900 border border-gray-200/50 hover:border-gray-300/70 hover:shadow-md hover:scale-[1.01]"
+                        ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
+                        : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
                     )}
                     style={isActive ? {
                       boxShadow: `0 0 40px rgba(59,130,246,0.5), 0 10px 40px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1)`
@@ -344,8 +350,8 @@ export default function AgentsSidebar() {
                     )}
 
                     <div className={cn(
-                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
-                      isActive ? "ring-3 ring-white/50 shadow-lg shadow-blue-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-gray-200 group-hover:ring-2 group-hover:ring-gray-300"
+                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
+                      isActive ? "ring-3 ring-white/50 shadow-lg shadow-blue-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
                     )}>
                       <Image
                         src={`/miners/${miner.uid % 50}.svg`}
@@ -363,8 +369,8 @@ export default function AgentsSidebar() {
                             isActive
                               ? "text-white drop-shadow-sm"
                               : highlightTop
-                                ? "text-gray-900 font-extrabold"
-                                : "text-gray-700 group-hover:text-gray-900"
+                                ? "text-amber-200 font-extrabold"
+                                : "text-white/90 group-hover:text-white"
                           )}
                         >
                           {miner.name}
@@ -374,7 +380,7 @@ export default function AgentsSidebar() {
                             "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
                             isActive 
                               ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
-                              : "bg-yellow-100 text-yellow-700 border-yellow-400/60"
+                              : "bg-purple-500/30 text-purple-100 border-purple-400/60"
                           )}>
                             SOTA
                           </span>
@@ -402,8 +408,8 @@ export default function AgentsSidebar() {
                             isActive
                               ? "text-blue-100"
                               : highlightTop
-                                ? "text-amber-700"
-                                : "text-gray-500 group-hover:text-gray-700"
+                                ? "text-amber-300"
+                                : "text-white/70 group-hover:text-white/90"
                           )}
                         >
                           UID: {miner.uid}
@@ -414,8 +420,8 @@ export default function AgentsSidebar() {
                             isActive
                               ? "text-blue-100"
                               : highlightTop
-                                ? "text-amber-600"
-                                : "text-gray-500 group-hover:text-gray-700"
+                                ? "text-amber-300"
+                                : "text-white/70 group-hover:text-white/90"
                           )}
                         >
                           {(miner.score * 100).toFixed(1)}%
