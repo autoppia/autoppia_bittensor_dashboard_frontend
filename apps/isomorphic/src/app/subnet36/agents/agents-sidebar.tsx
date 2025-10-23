@@ -218,11 +218,6 @@ export default function AgentsSidebar() {
         <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10" style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
           <div className="flex items-center gap-3 pl-4 pr-3 py-4">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg ring-2 ring-white/20">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
               <Text className="text-xl font-bold text-white">All Miners</Text>
             </div>
             <div className="flex-1 flex justify-end">
@@ -240,11 +235,8 @@ export default function AgentsSidebar() {
                 }
                 labelPlacement="left"
                 labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white/90"
-                className={cn(
-                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/10 !border !border-white/20 !shadow-sm backdrop-blur-sm transition-all duration-300",
-                  includeSota ? "!opacity-100 !bg-white/20 !shadow-md !border-white/30" : "!opacity-80"
-                )}
-                inputClassName="!border !border-white/40 !bg-white/10 focus:!ring-emerald-500 checked:!bg-emerald-600 checked:!border-emerald-500 transition-all duration-300"
+                className="!flex !flex-row !items-center !gap-2 !bg-transparent !border-0 transition-all duration-300"
+                inputClassName="!border !border-white/40 !bg-transparent focus:!ring-emerald-500 checked:!bg-emerald-600 checked:!border-emerald-500 transition-all duration-300"
                 iconClassName="!text-white"
               />
             </div>
@@ -259,8 +251,7 @@ export default function AgentsSidebar() {
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-xl !border-2 !border-white/20 !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
                 menuPortalTarget={undefined}
               />
             </div>
@@ -282,8 +273,8 @@ export default function AgentsSidebar() {
                     setFilteredAgents(filtered);
                   }
                 }}
-                className="!rounded-xl !border-2 !border-white/20 !text-white placeholder:!text-white/50 hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                className="!rounded-xl !border-2 !border-white/20 !bg-transparent !text-white placeholder:!text-white/50 hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                inputClassName="!bg-transparent !text-white placeholder:!text-white/50"
               />
             </div>
             {filteredAgents.map((miner) => {
@@ -324,20 +315,16 @@ export default function AgentsSidebar() {
                     className={cn(
                       "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
                       isActive
-                        ? "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white border-2 border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.6)] hover:shadow-[0_15px_50px_rgba(59,130,246,0.7)] scale-[1.03]"
+                        ? "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]"
                         : highlightTop
                         ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
                         : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
                     )}
-                    style={isActive ? {
-                      boxShadow: `0 0 40px rgba(59,130,246,0.5), 0 10px 40px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1)`
-                    } : {}}
                   >
                     {/* Animated gradient shimmer for active state */}
                     {isActive && (
                       <>
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse pointer-events-none" />
-                        <div className="absolute inset-0 rounded-xl opacity-50 blur-xl bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500 pointer-events-none" />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
                       </>
                     )}
                     
@@ -351,7 +338,7 @@ export default function AgentsSidebar() {
 
                     <div className={cn(
                       "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
-                      isActive ? "ring-3 ring-white/50 shadow-lg shadow-blue-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
+                      isActive ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
                     )}>
                       <Image
                         src={`/miners/${miner.uid % 50}.svg`}
@@ -406,7 +393,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-[11px] font-mono font-medium transition-all duration-300",
                             isActive
-                              ? "text-blue-100"
+                              ? "text-emerald-200"
                               : highlightTop
                                 ? "text-amber-300"
                                 : "text-white/70 group-hover:text-white/90"
@@ -418,7 +405,7 @@ export default function AgentsSidebar() {
                           className={cn(
                             "text-[11px] font-semibold transition-all duration-300",
                             isActive
-                              ? "text-blue-100"
+                              ? "text-emerald-200"
                               : highlightTop
                                 ? "text-amber-300"
                                 : "text-white/70 group-hover:text-white/90"

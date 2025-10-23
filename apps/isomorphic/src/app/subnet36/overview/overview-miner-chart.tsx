@@ -426,6 +426,13 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
                 type="number"
                 domain={["dataMin", "dataMax"]}
                 tickFormatter={xAxisTickFormatter}
+                label={{
+                  value: "Rounds",
+                  position: "insideBottom",
+                  offset: -8,
+                  fill: "#94a3b8",
+                  fontSize: 12,
+                }}
               />
               <YAxis
                 axisLine={false}

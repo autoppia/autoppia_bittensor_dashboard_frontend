@@ -94,9 +94,9 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
 
   const bestRankEver = agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  const bestEverScorePercentage = `${((agent.bestScore ?? 0) * 100).toFixed(1)}%`;
+  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
   const roundsParticipated = (agent.roundsParticipated || agent.totalRuns).toLocaleString();
-  const totalAlphaEarned = (agent.totalReward ?? 0).toFixed(2);
+  const totalAlphaEarned = ((agent as any).totalReward ?? 0).toFixed(2);
 
   const stats = [
     {
@@ -310,7 +310,7 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 
   if (error) {
     return (
-      <WidgetCard title="Score Over Time" action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />} headerClassName="flex-row items-start space-between text-white pb-4" rounded="xl" className={cn(chartCardBase, className)} titleClassName="text-white">
+      <WidgetCard title="Score Over Time" action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />} headerClassName="flex-row items-start space-between text-white pb-4" rounded="xl" className={className} titleClassName="text-white">
         <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="relative flex h-[273px] items-center justify-center text-rose-200">
           <div className="text-center">
@@ -379,10 +379,10 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
       action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />}
       headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
-      className={cn("glass-card glass-card-tall glass-card-completed", "flex flex-col min-h-[500px] p-4 lg:p-5", className)}
+      className={cn("flex flex-col min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none", className)}
       titleClassName="text-white"
     >
-      <div className="pulse-bg-rounded-2xl" />
+      <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
       {processedRows.length === 0 && (
         <div className={cn("relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90 border border-white/20 bg-blue-900/20")}>
           <strong>No history yet:</strong> This agent has not completed any recorded rounds.
@@ -525,8 +525,8 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
       </div>
 
       {isInfoExpanded && (
-        <div className="glass-card glass-card-completed mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500">
-          <div className="pulse-bg-rounded-2xl" />
+        <div className="mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
           <div className="relative z-10 flex items-center gap-3 mb-4">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
               <PiInfoDuotone className="w-5 h-5" />
@@ -538,7 +538,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
           </div>
           <div className="relative z-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
+              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
@@ -547,7 +547,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Each validator runs independent evaluations of your agent across different tasks and scenarios to ensure fair and comprehensive testing.</p>
               </div>
-              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
+              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
@@ -556,7 +556,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Agents are scored based on task completion accuracy, response quality, and execution efficiency across multiple evaluation criteria.</p>
               </div>
-              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
+              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
@@ -565,7 +565,7 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed">Your final rank is determined by your average performance across all validators in each round, providing a comprehensive ranking system.</p>
               </div>
-              <div className="glass-card rounded-xl p-5 hover:shadow-xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 group">
+              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
@@ -610,9 +610,9 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
 
             return (
               <Link key={`agent-run-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
-                <div className="glass-card glass-card-completed group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer hover:border-white/40 hover:shadow-[0_20px_60px_rgba(255,255,255,0.15)] z-10 hover:z-40">
-                  <div className="pulse-bg-rounded-2xl" />
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm">
+                <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40" style={{ background: 'transparent', boxShadow: 'none' }}>
+                  <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
+                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
@@ -657,8 +657,362 @@ function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
   );
 }
 
+// Enhanced custom tooltip for bar chart
+const WebsitePerformanceTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  
+  const data = payload[0].payload;
+  const successRate = Math.round(data.successRate);
+  const successful = data.successful;
+  const total = data.total;
+  const failed = total - successful;
+  
+  return (
+    <div className="rounded-2xl border-2 border-white/30 bg-slate-900/95 backdrop-blur-xl p-4 shadow-2xl min-w-[220px]">
+      {/* Website name header */}
+      <div className="mb-3 pb-3 border-b border-white/20">
+        <div className="text-base font-bold text-white mb-1">{data.website}</div>
+        <div className="text-xs text-white/60 font-medium">Performance Metrics</div>
+      </div>
+      
+      {/* Success Rate - Main metric */}
+      <div className="mb-3 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">Success Rate</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+        </div>
+        <div className="text-2xl font-black text-white drop-shadow-lg">{successRate}%</div>
+      </div>
+      
+      {/* Task breakdown */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(52, 211, 153, 0.6)' }} />
+            <span className="text-xs font-medium text-white/90">Successful</span>
+          </div>
+          <span className="text-sm font-bold text-emerald-300">{successful}</span>
+        </div>
+        
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(251, 113, 133, 0.6)' }} />
+            <span className="text-xs font-medium text-white/90">Failed</span>
+          </div>
+          <span className="text-sm font-bold text-rose-300">{failed}</span>
+        </div>
+        
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 border-t border-white/10 mt-2 pt-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)' }} />
+            <span className="text-xs font-medium text-white/90">Total Tasks</span>
+          </div>
+          <span className="text-sm font-bold text-blue-300">{total}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Websites performance for current round  
+function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selectedRound?: number | null }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [chartRows, setChartRows] = useState<Array<{ website: string; successRate: number; successful: number; total: number }>>([]);
+  const [totals, setTotals] = useState<{ successful: number; total: number }>({ successful: 0, total: 0 });
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchWebsites() {
+      if (!selectedRound || !Number.isFinite(selectedRound)) {
+        setLoading(false);
+        setChartRows([]);
+        setTotals({ successful: 0, total: 0 });
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const runsResp = await agentsService.getAgentRuns(agentId, { roundId: selectedRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
+        const runs = runsResp?.data?.runs ?? [];
+        if (!runs.length) {
+          if (!cancelled) {
+            setChartRows([]);
+            setTotals({ successful: 0, total: 0 });
+          }
+          return;
+        }
+
+        const details = await Promise.all(
+          runs.map(async (run) => {
+            try {
+              return await agentsService.getAgentRun(agentId, run.runId);
+            } catch (e) {
+              return null;
+            }
+          })
+        );
+
+        const bySite = new Map<string, { successful: number; total: number }>();
+        let totalSuccessful = 0;
+        let totalTasks = 0;
+        details.forEach((run) => {
+          if (!run || !Array.isArray(run.websites)) return;
+          run.websites.forEach((w) => {
+            const key = (w.website || 'unknown').toString();
+            const entry = bySite.get(key) || { successful: 0, total: 0 };
+            const succ = Number.isFinite(w.successful as any) ? Math.max(0, Number(w.successful)) : 0;
+            const tasks = Number.isFinite(w.tasks as any) ? Math.max(0, Number(w.tasks)) : 0;
+            entry.successful += succ;
+            entry.total += tasks;
+            bySite.set(key, entry);
+            totalSuccessful += succ;
+            totalTasks += tasks;
+          });
+        });
+
+        const rows = Array.from(bySite.entries())
+          .map(([website, { successful, total }]) => ({
+            website: website.charAt(0).toUpperCase() + website.slice(1),
+            successful,
+            total,
+            successRate: total > 0 ? (successful / total) * 100 : 0,
+          }))
+          .sort((a, b) => b.successRate - a.successRate);
+
+        if (!cancelled) {
+          setChartRows(rows);
+          setTotals({ successful: totalSuccessful, total: totalTasks });
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || 'Failed to load website stats');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchWebsites();
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, selectedRound]);
+
+  const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
+
+  return (
+    <div className="relative">
+      {loading ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
+      ) : error ? (
+        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
+      ) : chartRows.length === 0 ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
+      ) : (
+        <>
+          {/* Performance per website heading */}
+          <div className="mb-6">
+            <span className="text-2xl font-black text-white">Performance per website</span>
+          </div>
+
+          {/* Bar Chart */}
+          <div className="relative h-[450px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={chartRows} 
+                margin={{ top: 20, left: -10 }}
+                onMouseMove={(state) => {
+                  if (state.isTooltipActive) {
+                    setActiveIndex(state.activeTooltipIndex ?? null);
+                  } else {
+                    setActiveIndex(null);
+                  }
+                }}
+                onMouseLeave={() => setActiveIndex(null)}
+              >
+                <defs>
+                  {/* Enhanced gradients with glow effects */}
+                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#06D6A0" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow0" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#C084FC" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#A855F7" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#F59E0B" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F87171" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#EF4444" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow3" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#60A5FA" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#3B82F6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow4" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F472B6" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#EC4899" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow5" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2DD4BF" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#14B8A6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow6" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FCD34D" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#FBBF24" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow7" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
+                    <stop offset="50%" stopColor="#10B981" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
+                  </linearGradient>
+                  <filter id="glow8" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <CartesianGrid 
+                  vertical={false} 
+                  strokeDasharray="3 3" 
+                  stroke="rgba(148,163,184,0.15)" 
+                />
+                <XAxis 
+                  dataKey="website" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#ffffff", fontSize: 13, fontWeight: 700 }} 
+                  height={60}
+                  angle={0}
+                  textAnchor="middle"
+                />
+                <YAxis 
+                  domain={[0, 100]} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={<CustomYAxisTick postfix="%" />} 
+                  stroke="rgba(148,163,184,0.3)" 
+                />
+                <Tooltip
+                  content={<WebsitePerformanceTooltip />}
+                  cursor={{ 
+                    fill: 'rgba(255, 255, 255, 0.08)'
+                  }}
+                  wrapperStyle={{ 
+                    outline: 'none',
+                    zIndex: 1000
+                  }}
+                />
+                <Bar 
+                  dataKey="successRate" 
+                  radius={[12, 12, 0, 0]}
+                  maxBarSize={80}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                >
+                  {chartRows.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`url(#barGradient${index})`}
+                      filter={activeIndex === index ? `url(#glow${index})` : undefined}
+                      fillOpacity={activeIndex === null ? 0.9 : activeIndex === index ? 1 : 0.4}
+                      style={{ 
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'pointer',
+                        transformOrigin: 'center bottom',
+                      }}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 // Main Agent page (header + sections)
 export default function Page() {
+  // ... (keeping all the existing Page function logic)
   const { id } = useParams();
   const uid = Number.parseInt(id as string, 10);
   const searchParams = useSearchParams();
@@ -682,7 +1036,6 @@ export default function Page() {
   const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
   const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
 
-  // Avatar state must be declared before any conditional return to preserve hook order
   const defaultAvatar = `/miners/${Math.abs((uid ?? 0) % 50)}.svg`;
   const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
   useEffect(() => {
@@ -690,7 +1043,6 @@ export default function Page() {
     setAgentImgSrc(candidate);
   }, [agent?.imageUrl, defaultAvatar]);
 
-  // Current | Historical view toggle
   const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
 
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
@@ -804,7 +1156,19 @@ export default function Page() {
   
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
   
-  const headerStats = [
+  // Historical metrics
+  const bestRankEver = agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
+  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
+  const roundsParticipated = (agent.roundsParticipated || agent.totalRuns || 0).toLocaleString();
+  const totalAlphaEarned = ((agent as any).totalReward ?? 0).toFixed(2);
+  
+  const currentStats = [
+    {
+      title: "Current Round",
+      metric: currentRound ? `${currentRound}` : "N/A",
+      icon: PiClockDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
     {
       title: "Current Rank",
       metric: currentRankValue,
@@ -821,435 +1185,57 @@ export default function Page() {
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.orange,
     },
     {
       title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
-  return (
-    <div className="flex flex-col">
-      <div className="flex flex-col gap-1 mt-2 mb-2">
+  const historicalStats = [
+    {
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      icon: LuTrophy,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "Best Score Ever",
+      metric: bestEverScorePercentage,
+      icon: LuStar,
+      ...METRIC_CARD_GRADIENTS.emerald,
+    },
+    {
+      title: "Rounds Participated",
+      metric: roundsParticipated,
+      icon: LuCircleCheckBig,
+      ...METRIC_CARD_GRADIENTS.blue,
+    },
+    {
+      title: "Total Alpha Earned",
+      metric: `${totalAlphaEarned} α`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
+  ];
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchWebsites() {
-      if (!selectedRound || !Number.isFinite(selectedRound)) {
-        setLoading(false);
-        setChartRows([]);
-        setTotals({ successful: 0, total: 0 });
-        return;
-      }
-      try {
-        setLoading(true);
-        setError(null);
-        const runsResp = await agentsService.getAgentRuns(agentId, { roundId: selectedRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
-        const runs = runsResp?.data?.runs ?? [];
-        if (!runs.length) {
-          if (!cancelled) {
-            setChartRows([]);
-            setTotals({ successful: 0, total: 0 });
-          }
-          return;
-        }
-
-        const details = await Promise.all(
-          runs.map(async (run) => {
-            try {
-              return await agentsService.getAgentRun(agentId, run.runId);
-            } catch (e) {
-              return null;
-            }
-          })
-        );
-
-        const bySite = new Map<string, { successful: number; total: number }>();
-        let totalSuccessful = 0;
-        let totalTasks = 0;
-        details.forEach((run) => {
-          if (!run || !Array.isArray(run.websites)) return;
-          run.websites.forEach((w) => {
-            const key = (w.website || 'unknown').toString();
-            const entry = bySite.get(key) || { successful: 0, total: 0 };
-            const succ = Number.isFinite(w.successful as any) ? Math.max(0, Number(w.successful)) : 0;
-            const tasks = Number.isFinite(w.tasks as any) ? Math.max(0, Number(w.tasks)) : 0;
-            entry.successful += succ;
-            entry.total += tasks;
-            bySite.set(key, entry);
-            totalSuccessful += succ;
-            totalTasks += tasks;
-          });
-        });
-
-        const rows = Array.from(bySite.entries())
-          .map(([website, { successful, total }]) => ({
-            website,
-            successful,
-            total,
-            successRate: total > 0 ? (successful / total) * 100 : 0,
-          }))
-          .sort((a, b) => b.successRate - a.successRate);
-
-        if (!cancelled) {
-          setChartRows(rows);
-          setTotals({ successful: totalSuccessful, total: totalTasks });
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load website stats');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchWebsites();
-    return () => {
-      cancelled = true;
-    };
-  }, [agentId, selectedRound]);
-
-  const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
-
-  return (
-    <WidgetCard
-      title={<span className="text-2xl font-black text-white">Performance per website</span>}
-      headerClassName="flex-row items-start space-between pb-2"
-      rounded="xl"
-      className={cn("glass-card glass-card-tall glass-card-completed", "h-[650px] px-4 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3")}
-      titleClassName="text-white"
-    >
-      <div className="pulse-bg-rounded-2xl" />
-      {loading ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
-      ) : error ? (
-        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
-      ) : chartRows.length === 0 ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
-      ) : (
-        <>
-          <div className="relative h-[380px] w-full mb-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartRows} margin={{ top: 5, left: -10 }}>
-                <defs>
-                  {/* Gradient for autodrive */}
-                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06D6A0" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autowork */}
-                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autocalendar */}
-                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autolist */}
-                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autozone */}
-                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autocinema */}
-                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autoconnect */}
-                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autobooks */}
-                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autodining */}
-                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-                <XAxis 
-                  dataKey="website" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: "#ffffff", fontSize: 12, fontWeight: 600 }} 
-                  height={60}
-                  angle={0}
-                  textAnchor="middle"
-                />
-                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  formatter={(value: number, name: string, props) => {
-                    const row = props?.payload as any;
-                    if (name === 'successRate') {
-                      return [`${Math.round(value)}%`, `Success Rate`];
-                    }
-                    return [value, name];
-                  }}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Bar dataKey="successRate" radius={[6, 6, 0, 0]}>
-                  {chartRows.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`url(#barGradient${index})`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
-    </WidgetCard>
-  );
-}
-
-// Websites performance for current round  
-function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selectedRound?: number | null }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [chartRows, setChartRows] = useState<Array<{ website: string; successRate: number; successful: number; total: number }>>([]);
-  const [totals, setTotals] = useState<{ successful: number; total: number }>({ successful: 0, total: 0 });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchWebsites() {
-      if (!selectedRound || !Number.isFinite(selectedRound)) {
-        setLoading(false);
-        setChartRows([]);
-        setTotals({ successful: 0, total: 0 });
-        return;
-      }
-      try {
-        setLoading(true);
-        setError(null);
-        const runsResp = await agentsService.getAgentRuns(agentId, { roundId: selectedRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
-        const runs = runsResp?.data?.runs ?? [];
-        if (!runs.length) {
-          if (!cancelled) {
-            setChartRows([]);
-            setTotals({ successful: 0, total: 0 });
-          }
-          return;
-        }
-
-        const details = await Promise.all(
-          runs.map(async (run) => {
-            try {
-              return await agentsService.getAgentRun(agentId, run.runId);
-            } catch (e) {
-              return null;
-            }
-          })
-        );
-
-        const bySite = new Map<string, { successful: number; total: number }>();
-        let totalSuccessful = 0;
-        let totalTasks = 0;
-        details.forEach((run) => {
-          if (!run || !Array.isArray(run.websites)) return;
-          run.websites.forEach((w) => {
-            const key = (w.website || 'unknown').toString();
-            const entry = bySite.get(key) || { successful: 0, total: 0 };
-            const succ = Number.isFinite(w.successful as any) ? Math.max(0, Number(w.successful)) : 0;
-            const tasks = Number.isFinite(w.tasks as any) ? Math.max(0, Number(w.tasks)) : 0;
-            entry.successful += succ;
-            entry.total += tasks;
-            bySite.set(key, entry);
-            totalSuccessful += succ;
-            totalTasks += tasks;
-          });
-        });
-
-        const rows = Array.from(bySite.entries())
-          .map(([website, { successful, total }]) => ({
-            website,
-            successful,
-            total,
-            successRate: total > 0 ? (successful / total) * 100 : 0,
-          }))
-          .sort((a, b) => b.successRate - a.successRate);
-
-        if (!cancelled) {
-          setChartRows(rows);
-          setTotals({ successful: totalSuccessful, total: totalTasks });
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load website stats');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchWebsites();
-    return () => {
-      cancelled = true;
-    };
-  }, [agentId, selectedRound]);
-
-  const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
-
-  return (
-    <WidgetCard
-      title={<span className="text-2xl font-black text-white">Performance per website</span>}
-      headerClassName="flex-row items-start space-between pb-2"
-      rounded="xl"
-      className={cn("glass-card glass-card-tall glass-card-completed", "h-[650px] px-4 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3")}
-      titleClassName="text-white"
-    >
-      <div className="pulse-bg-rounded-2xl" />
-      {loading ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
-      ) : error ? (
-        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
-      ) : chartRows.length === 0 ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
-      ) : (
-        <>
-          <div className="relative h-[380px] w-full mb-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartRows} margin={{ top: 5, left: -10 }}>
-                <defs>
-                  {/* Gradient for autodrive */}
-                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06D6A0" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autowork */}
-                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autocalendar */}
-                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autolist */}
-                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autozone */}
-                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autocinema */}
-                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autoconnect */}
-                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autobooks */}
-                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.85} />
-                  </linearGradient>
-                  {/* Gradient for autodining */}
-                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-                <XAxis 
-                  dataKey="website" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: "#ffffff", fontSize: 12, fontWeight: 600 }} 
-                  height={60}
-                  angle={0}
-                  textAnchor="middle"
-                />
-                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  formatter={(value: number, name: string, props) => {
-                    const row = props?.payload as any;
-                    if (name === 'successRate') {
-                      return [`${Math.round(value)}%`, `Success Rate`];
-                    }
-                    return [value, name];
-                  }}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Bar dataKey="successRate" radius={[6, 6, 0, 0]}>
-                  {chartRows.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`url(#barGradient${index})`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
-    </WidgetCard>
-  );
-}
-
-export default function Page() {
-  // ... (keeping all the existing Page function logic)
-  const { id } = useParams();
-  const uid = Number.parseInt(id as string, 10);
-  const searchParams = useSearchParams();
-  const roundParam = searchParams.get("round");
-  const [copiedHotkey, setCopiedHotkey] = useState(false);
-
-  const selectedRoundFromQuery = useMemo(() => {
-    if (!roundParam) return undefined;
-    const parsed = Number.parseInt(roundParam, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }, [roundParam]);
-
-  const { data: agentData, loading, error } = useMinerDetails(
-    uid,
-    selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
-  );
-
-  const agent = agentData?.agent;
-  const roundMetrics = agentData?.roundMetrics ?? null;
-  const apiScoreRoundData = agentData?.scoreRoundData;
-  const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
-  const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
-
-  const defaultAvatar = `/miners/${Math.abs((uid ?? 0) % 50)}.svg`;
-  const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
-  useEffect(() => {
-    const candidate = agent?.imageUrl && agent.imageUrl.trim() !== "" ? agent.imageUrl : defaultAvatar;
-    setAgentImgSrc(candidate);
-  }, [agent?.imageUrl, defaultAvatar]);
-
-  const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
-
-  // ... (keeping all the existing scoreRoundData and other logic - need to read the rest of the file)
+  const headerStats = viewMode === 'current' ? currentStats : viewMode === 'historical' ? historicalStats : [];
 
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-1 mt-2 mb-2">
-        <div className="glass-card glass-card-completed rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group">
+        <div className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
           {/* Animated background gradient */}
-          <div className="pulse-bg-rounded-3xl" />
+          <div className="pulse-bg-rounded-3xl" style={{ display: 'none' }} />
           
           {/* Header Section */}
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
@@ -1283,11 +1269,26 @@ export default function Page() {
                       {agent.status}
                     </span>
                   )}
-                  {currentRound && (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/90 to-indigo-500/90 text-white border-2 border-blue-400/70 shadow-lg backdrop-blur-sm">
-                      Round {currentRound}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <div className={cn("flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
+                      {githubAvailable ? (
+                        <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                          <PiGithubLogoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                        </a>
+                      ) : (
+                        <PiGithubLogoDuotone className="w-4 h-4 text-white/30" />
+                      )}
+                    </div>
+                    <div className={cn("flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
+                      {taoStatsAvailable ? (
+                        <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                          <PiInfoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                        </a>
+                      ) : (
+                        <PiInfoDuotone className="w-4 h-4 text-white/30" />
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
                   <div className="flex items-center gap-2">
@@ -1323,24 +1324,69 @@ export default function Page() {
                 </div>
               </div>
             </div>
+          </div>
             <div className="flex items-center gap-2">
-              <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
-                {githubAvailable ? (
-                  <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                    <PiGithubLogoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
-                  </a>
-                ) : (
-                  <PiGithubLogoDuotone className="w-5 h-5 text-white/30" />
-                )}
-              </div>
-              <div className={cn("flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border-2 border-white/20 hover:border-white/40 shadow-lg hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border-2 border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
-                {taoStatsAvailable ? (
-                  <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
-                    <PiInfoDuotone className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
-                  </a>
-                ) : (
-                  <PiInfoDuotone className="w-5 h-5 text-white/30" />
-                )}
+              <div className="glass-card inline-flex items-center gap-1.5 p-1.5 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('current')}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
+                    "flex items-center gap-2",
+                    viewMode === 'current' 
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
+                      : "text-white hover:text-white hover:bg-white/10 border border-transparent"
+                  )}
+                  aria-pressed={viewMode === 'current'}
+                >
+                  {viewMode === 'current' && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
+                    </>
+                  )}
+                  <PiTrendUpDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'current' && "scale-110")} />
+                  <span className="relative z-10 hidden sm:inline">Current</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('historical')}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
+                    "flex items-center gap-2",
+                    viewMode === 'historical' 
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
+                      : "text-white hover:text-white hover:bg-white/10 border border-transparent"
+                  )}
+                  aria-pressed={viewMode === 'historical'}
+                >
+                  {viewMode === 'historical' && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
+                    </>
+                  )}
+                  <PiChartLineDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'historical' && "scale-110")} />
+                  <span className="relative z-10 hidden sm:inline">Historical</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('runs')}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
+                    "flex items-center gap-2",
+                    viewMode === 'runs' 
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
+                      : "text-white hover:text-white hover:bg-white/10 border border-transparent"
+                  )}
+                  aria-pressed={viewMode === 'runs'}
+                >
+                  {viewMode === 'runs' && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
+                    </>
+                  )}
+                  <PiListChecksDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'runs' && "scale-110")} />
+                  <span className="relative z-10 hidden sm:inline">Runs</span>
+                </button>
               </div>
               {agent.isSota && (
                 <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
@@ -1352,139 +1398,76 @@ export default function Page() {
           </div>
           
           {/* Metrics Grid */}
-          <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 z-10">
-            {headerStats.map((stat) => {
-              const Icon = stat.icon as any;
-              return (
-                <div
-                  key={stat.title}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl p-4 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border bg-gradient-to-br",
-                    stat.borderColor,
-                    stat.bgGradient
-                  )}
-                >
-                  {/* Animated pulsing background */}
-                  <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
-                  
-                  {/* Animated glow effect */}
-                  <div 
-                    className="pointer-events-none absolute -inset-10 -z-0 rotate-12 opacity-50 blur-2xl transition-all duration-500 group-hover:opacity-80" 
-                    style={{ 
-                      maskImage: 'radial-gradient(white, transparent)', 
-                      WebkitMaskImage: 'radial-gradient(white, transparent)',
-                      background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
-                    }} 
-                  />
-                  
-                  <div className="relative flex flex-col gap-2">
-                    <div
-                      className={cn(
-                        "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 bg-gradient-to-br",
-                        "border-2 border-white/30 group-hover:border-white/50",
-                        stat.iconGradient
-                      )}
-                    >
-                      <Icon className="w-6 h-6 text-white drop-shadow-lg" />
-                    </div>
-                    <div>
-                      <Text className="font-black text-2xl leading-none text-white drop-shadow-sm mb-1">
-                        {stat.metric}
-                      </Text>
-                      <Text className="text-[10px] font-bold text-white/70 uppercase tracking-wide leading-tight">
-                        {stat.title}
-                      </Text>
+          {headerStats.length > 0 && (
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 z-10">
+              {headerStats.map((stat) => {
+                const Icon = stat.icon as any;
+                return (
+                  <div
+                    key={stat.title}
+                    className={cn(
+                      "group relative overflow-hidden rounded-2xl p-4 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border bg-gradient-to-br",
+                      stat.borderColor,
+                      stat.bgGradient
+                    )}
+                  >
+                    {/* Animated pulsing background */}
+                    <div className={cn("absolute inset-0 rounded-2xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                    
+                    {/* Animated glow effect */}
+                    <div 
+                      className="pointer-events-none absolute -inset-10 -z-0 rotate-12 opacity-50 blur-2xl transition-all duration-500 group-hover:opacity-80" 
+                      style={{ 
+                        maskImage: 'radial-gradient(white, transparent)', 
+                        WebkitMaskImage: 'radial-gradient(white, transparent)',
+                        background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
+                      }} 
+                    />
+                    
+                    <div className="relative flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 bg-gradient-to-br flex-shrink-0",
+                          "border-2 border-white/30 group-hover:border-white/50",
+                          stat.iconGradient
+                        )}
+                      >
+                        <Icon className="w-6 h-6 text-white drop-shadow-lg" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Text className="font-black text-2xl leading-none text-white drop-shadow-sm mb-1">
+                          {stat.metric}
+                        </Text>
+                        <Text className="text-[10px] font-bold text-white/70 uppercase tracking-wide leading-tight">
+                          {stat.title}
+                        </Text>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
-          <div className="glass-card relative inline-flex items-center gap-2 p-2 z-10 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setViewMode('current')}
-              className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
-                "flex items-center gap-2",
-                viewMode === 'current' 
-                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
-                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
-              )}
-              aria-pressed={viewMode === 'current'}
-            >
-              {viewMode === 'current' && (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
-                </>
-              )}
-              <PiTrendUpDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'current' && "scale-110")} />
-              <span className="relative z-10 font-bold">Current</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('historical')}
-              className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
-                "flex items-center gap-2",
-                viewMode === 'historical' 
-                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
-                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
-              )}
-              aria-pressed={viewMode === 'historical'}
-            >
-              {viewMode === 'historical' && (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
-                </>
-              )}
-              <PiChartLineDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'historical' && "scale-110")} />
-              <span className="relative z-10 font-bold">Historical</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('runs')}
-              className={cn(
-                "relative px-6 py-3 text-sm font-bold transition-all duration-300 overflow-hidden group rounded-lg",
-                "flex items-center gap-2",
-                viewMode === 'runs' 
-                  ? "bg-gradient-to-br from-white to-white/95 text-gray-900 shadow-[0_8px_30px_rgba(255,255,255,0.5)] scale-105 border-2 border-white/70" 
-                  : "text-white/80 hover:text-white hover:bg-white/15 hover:scale-105 border-2 border-transparent"
-              )}
-              aria-pressed={viewMode === 'runs'}
-            >
-              {viewMode === 'runs' && (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-pulse" />
-                  <div className="absolute inset-0 opacity-30 blur-xl bg-gradient-to-r from-white via-white to-white pointer-events-none" />
-                </>
-              )}
-              <PiListChecksDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'runs' && "scale-110")} />
-              <span className="relative z-10 font-bold">Runs</span>
-            </button>
-          </div>
-      </div>
-      </div>
-
-      <div className="pb-3">
-        {viewMode === 'runs' ? (
-          <AgentValidators selectedRound={currentRound ?? null} />
-        ) : (
-          <>
-            {viewMode === 'current' ? (
-              <div>
-                <RoundWebsitesChart agentId={String(uid)} selectedRound={currentRound ?? null} />
-              </div>
+          {/* Content Section */}
+          <div className="relative z-10">
+            {viewMode === 'runs' ? (
+              <AgentValidators selectedRound={currentRound ?? null} />
             ) : (
-              <div>
-                <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} />
-              </div>
+              <>
+                {viewMode === 'current' ? (
+                  <div>
+                    <RoundWebsitesChart agentId={String(uid)} selectedRound={currentRound ?? null} />
+                  </div>
+                ) : (
+                  <div>
+                    <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} />
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+      </div>
       </div>
     </div>
   );
