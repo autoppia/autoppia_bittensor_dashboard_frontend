@@ -3,7 +3,15 @@
 import cn from "@core/utils/class-names";
 import { Select } from "rizzui";
 import type { AgentRunDetailData } from "./agent-run-types";
-import { PiTrendUp, PiTrendDown, PiChartBar, PiTarget } from "react-icons/pi";
+import { 
+  PiTrendUp, 
+  PiTrendDown, 
+  PiChartBar, 
+  PiTarget, 
+  PiClock,
+  PiCheckCircle,
+  PiGlobe
+} from "react-icons/pi";
 
 const PROGRESS_COLORS = [
   "#10B981", // emerald-500
@@ -23,8 +31,6 @@ const PROGRESS_COLORS = [
   "#D946EF", // fuchsia-500
   "#F43F5E", // rose-500
 ];
-
-const HIGHLIGHT_COLOR = "#F5DEB3";
 
 // Utility function to format use case names
 function formatUseCaseName(name?: string | null): string {
@@ -83,7 +89,8 @@ export default function AgentRunDetail({
               website: formatUseCaseName(
                 selectedWeb.useCases.find(
                   (uc) => String(uc.id) === String(result.useCaseId)
-                )?.name || `Use Case ${result.useCaseId}`
+                )
+                  ?.name || `Use Case ${result.useCaseId}`
               ),
               average: Number((result.successRate ?? 0).toFixed(3)),
               total: result.total,
@@ -103,36 +110,27 @@ export default function AgentRunDetail({
         }));
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white",
-        className
-      )}
-    >
-      {/* Header Section */}
-      <div className="relative mb-6">
-        <div className="flex items-center flex-col sm:flex-row justify-between mb-5">
-          <div className="flex items-center flex-col sm:flex-row gap-3">
-            <div className="p-2.5 bg-blue-500/20 rounded-xl border border-blue-500/30 shadow-lg">
-              <PiChartBar className="w-6 h-6 text-blue-400" />
+    <div className={cn("space-y-6", className)}>
+      {/* Header Card */}
+      <div className="bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-2xl">
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-lg">
+              <PiChartBar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-center sm:text-left text-2xl font-bold text-white">
-                Performance Analytics
-              </h2>
-              <p className="text-center sm:text-left text-sm text-slate-400">
-                Success rates and performance metrics
+              <h2 className="text-2xl font-bold text-white mb-1">Performance Analytics</h2>
+              <p className="text-sm text-slate-400">
+                Success rates and performance metrics across websites
               </p>
             </div>
           </div>
-
+          
           {/* Filter Controls */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <PiTarget className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-300">
-                Time range:
-              </span>
+              <span className="text-sm font-medium text-slate-400">Filters:</span>
             </div>
             <Select
               options={periodOptions}
@@ -142,7 +140,8 @@ export default function AgentRunDetail({
               onChange={(option: { label: string; value: string }) =>
                 setPeriod(option.value === "__all__" ? null : option.value)
               }
-              className="w-[90px] text-sm rounded-lg border border-slate-700/50 bg-slate-800/50 text-white focus:border-slate-600 focus:ring-0"
+              className="min-w-[120px]"
+              selectClassName="bg-slate-800/50 border-slate-600/50 text-white"
             />
             <Select
               options={websiteOptions}
@@ -154,125 +153,118 @@ export default function AgentRunDetail({
                   option.value === "__all__" ? null : option.value
                 )
               }
-              className="w-[160px] text-sm rounded-lg border border-slate-700/50 bg-slate-800/50 text-white focus:border-slate-600 focus:ring-0"
+              className="min-w-[180px]"
+              selectClassName="bg-slate-800/50 border-slate-600/50 text-white"
             />
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wider"
-            style={{
-              borderColor: "rgba(245, 222, 179, 0.4)",
-              backgroundColor: "rgba(245, 222, 179, 0.1)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
-            Active
-            <span
-              className="h-2 w-2 rounded-full animate-pulse"
-              style={{ backgroundColor: HIGHLIGHT_COLOR }}
-            />
-          </span>
-          <span className="text-xs text-slate-400">
-            Live view of current website performance trends
-          </span>
         </div>
       </div>
 
       {hasWebsites ? (
-        <div className="relative space-y-6 sm:space-y-4">
+        <div className="grid grid-cols-1 gap-6">
           {chartData.map((item, index) => {
             const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
             const isHighPerformance = item.average >= 80;
             const isMediumPerformance = item.average >= 60 && item.average < 80;
-
+            
             return (
-              <div
-                key={`${item.website}-${index}`}
-                className="group relative rounded-xl border border-slate-700/40 bg-slate-800/40 p-4 sm:p-5 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40"
+              <div 
+                key={`${item.website}-${index}`} 
+                className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl hover:border-slate-600/50 transition-all duration-300"
               >
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
-                  {/* Website + performance */}
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full shadow-md"
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
                       style={{
-                        backgroundColor: colorClass,
-                        boxShadow: `0 0 12px ${colorClass}40`,
+                        background: `linear-gradient(135deg, ${colorClass}CC, ${colorClass})`,
                       }}
-                    />
-                    <span className="text-base sm:text-lg font-semibold text-white truncate max-w-[180px] sm:max-w-none">
-                      {item.website}
-                    </span>
-
-                    {isHighPerformance && (
-                      <div
-                        className="flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium border"
-                        style={{
-                          backgroundColor: "rgba(245, 222, 179, 0.15)",
-                          borderColor: "rgba(245, 222, 179, 0.4)",
-                          color: HIGHLIGHT_COLOR,
-                        }}
-                      >
-                        <PiTrendUp className="w-3 h-3" />
-                        Excellent
-                      </div>
-                    )}
-                    {isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-blue-500/15 text-blue-300 rounded-full text-[10px] sm:text-xs font-medium border border-blue-500/30">
-                        <PiTrendUp className="w-3 h-3" />
-                        Good
-                      </div>
-                    )}
-                    {!isHighPerformance && !isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-red-500/15 text-red-300 rounded-full text-[10px] sm:text-xs font-medium border border-red-500/30">
-                        <PiTrendDown className="w-3 h-3" />
-                        Needs Improvement
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="text-left sm:text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-white">
-                      {item.average.toFixed(1)}%
+                    >
+                      <PiGlobe className="w-7 h-7 text-white" />
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-400">
-                      {item.total} requests • {item.successCount} successful
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold text-white">
+                          {item.website}
+                        </h3>
+                        {isHighPerformance && (
+                          <div
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border"
+                            style={{
+                              backgroundColor: `${colorClass}20`,
+                              borderColor: `${colorClass}50`,
+                              color: colorClass,
+                            }}
+                          >
+                            <PiTrendUp className="w-3.5 h-3.5" />
+                            Excellent
+                          </div>
+                        )}
+                        {isMediumPerformance && (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold border border-blue-500/30">
+                            <PiTrendUp className="w-3.5 h-3.5" />
+                            Good
+                          </div>
+                        )}
+                        {!isHighPerformance && !isMediumPerformance && (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-300 rounded-full text-xs font-semibold border border-red-500/40">
+                            <PiTrendDown className="w-3.5 h-3.5" />
+                            Needs Improvement
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-slate-400">
+                        <span className="flex items-center gap-1.5">
+                          <PiCheckCircle className="w-4 h-4" />
+                          {item.successCount} / {item.total} successful
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                      Success Rate
+                    </div>
+                    <div 
+                      className="text-5xl font-bold"
+                      style={{ color: colorClass }}
+                    >
+                      {item.average.toFixed(1)}%
                     </div>
                   </div>
                 </div>
-
-                {/* Progress bar */}
-                <div className="relative mb-3 sm:mb-4">
-                  <div className="h-2 sm:h-3 w-full rounded-full bg-slate-900/50 border border-slate-700/30 overflow-hidden">
+                
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="relative h-5 w-full rounded-full bg-slate-950/50 overflow-hidden border border-slate-700/50">
                     <div
                       className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                       style={{
                         width: `${Math.max(0, Math.min(item.average, 100))}%`,
-                        background: `linear-gradient(90deg, ${colorClass} 0%, rgba(245, 222, 179, 0.8) 100%)`,
-                        boxShadow: `0 0 20px ${colorClass}30`,
+                        background: `linear-gradient(90deg, ${colorClass} 0%, ${colorClass}DD 100%)`,
+                        boxShadow: `0 0 20px ${colorClass}60`,
                       }}
                     >
-                      {/* Shimmer */}
+                      {/* Shimmer effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-
-                      {/* Dot */}
-                      <div
-                        className="absolute right-0.5 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"
-                        style={{
-                          backgroundColor: HIGHLIGHT_COLOR,
-                          opacity: item.average > 5 ? 1 : 0,
-                          boxShadow: `0 0 8px ${HIGHLIGHT_COLOR}`,
-                        }}
-                      />
+                      
+                      {/* Progress indicator dot */}
+                      {item.average > 5 && (
+                        <div
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full"
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                            boxShadow: `0 0 10px ${colorClass}`,
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
-
-                  {/* Markers */}
-                  <div className="hidden sm:flex justify-between mt-2 text-xs text-slate-500">
+                  
+                  {/* Performance markers */}
+                  <div className="flex justify-between mt-2 text-xs text-slate-500">
                     <span>0%</span>
                     <span>25%</span>
                     <span>50%</span>
@@ -280,23 +272,48 @@ export default function AgentRunDetail({
                     <span>100%</span>
                   </div>
                 </div>
-
-                {/* Additional metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-slate-700/40 bg-slate-900/30 p-3 text-center sm:text-left">
-                    <div className="mb-1 text-slate-400 text-xs font-medium">
-                      Avg Solution Time
+                
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Avg Solution Time
+                      </div>
+                      <PiClock className="w-4 h-4 text-cyan-400" />
                     </div>
-                    <div className="font-semibold text-white text-base sm:text-lg">
+                    <div className="text-3xl font-bold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-700/40 bg-slate-900/30 p-3 text-center sm:text-left">
-                    <div className="mb-1 text-slate-400 text-xs font-medium">
-                      Success Rate
+                  
+                  <div className="bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Total Requests
+                      </div>
+                      <PiTarget className="w-4 h-4 text-purple-400" />
                     </div>
-                    <div className="font-semibold text-white text-base sm:text-lg">
-                      {((item.successCount / item.total) * 100).toFixed(1)}%
+                    <div className="text-3xl font-bold text-white">
+                      {item.total}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Success Count
+                      </div>
+                      <PiCheckCircle 
+                        className="w-4 h-4"
+                        style={{ color: colorClass }}
+                      />
+                    </div>
+                    <div 
+                      className="text-3xl font-bold"
+                      style={{ color: colorClass }}
+                    >
+                      {item.successCount}
                     </div>
                   </div>
                 </div>
@@ -305,15 +322,15 @@ export default function AgentRunDetail({
           })}
         </div>
       ) : (
-        <div className="relative text-center py-10 sm:py-12">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/40">
-            <PiChartBar className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400" />
+        <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-12 shadow-xl text-center">
+          <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-700/50">
+            <PiChartBar className="w-10 h-10 text-slate-500" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
+          <h3 className="text-xl font-bold text-white mb-3">
             No Performance Data Available
           </h3>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Performance metrics will appear here once the agent run completes.
+          <p className="text-slate-400 max-w-md mx-auto">
+            Performance metrics will appear here once the agent run completes its tasks.
           </p>
         </div>
       )}

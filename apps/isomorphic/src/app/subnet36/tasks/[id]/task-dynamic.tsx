@@ -11,10 +11,10 @@ import TaskResults from "./task-results";
 export default function TaskDynamic() {
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const taskId = Array.isArray(id) ? id[0] : id ?? "";
-  
-  const websiteNameParam = searchParams.get('websiteName');
-  const websiteColorParam = searchParams.get('websiteColor');
+  const taskId = Array.isArray(id) ? id[0] : (id ?? "");
+
+  const websiteNameParam = searchParams.get("websiteName");
+  const websiteColorParam = searchParams.get("websiteColor");
 
   const { details, isLoading, error } = useTaskDetails(taskId);
 

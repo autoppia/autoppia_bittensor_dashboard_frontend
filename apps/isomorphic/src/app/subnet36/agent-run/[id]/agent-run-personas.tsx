@@ -2,21 +2,22 @@
 
 import Image from "next/image";
 import {
-  PiArrowSquareOutDuotone,
+  PiArrowSquareOut,
   PiClock,
-  PiGithubLogoDuotone,
-  PiCopySimple,
+  PiGithubLogo,
+  PiCopy,
+  PiShieldCheck,
+  PiUser,
 } from "react-icons/pi";
 import { resolveAssetUrl } from "@/services/utils/assets";
-
-const HIGHLIGHT_COLOR = "#F5DEB3";
+import { useState } from "react";
 
 interface AgentRunPersonasProps {
   personas?: any;
   summary?: any;
 }
 
-function truncateMiddle(value?: string | null, visible = 6) {
+function truncateMiddle(value?: string | null, visible: number = 6) {
   if (!value) return "—";
   if (value.length <= visible * 2) return value;
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
@@ -38,38 +39,66 @@ function extractUidNumber(value: unknown): number | null {
   return null;
 }
 
-export default function AgentRunPersonas({
-  personas,
-  summary,
-}: AgentRunPersonasProps) {
-  const roundData = personas?.round || {
-    id: "—",
-    status: "Active",
-    startTime: null,
-    totalValidators: personas?.validatorCount || 0,
-  };
-  const validatorData = personas?.validator || {
-    name: "Autoppia Validator",
-    image: "/validators/Autoppia.png",
-    id: null,
-    country: "—",
-    track: "—",
-  };
-  const agentData = personas?.agent || {
-    name: "Benchmark Agent",
-    image: "/images/autoppia-logo.png",
-    id: "—",
-    uid: null,
-    hotkey: null,
-    provider: "—",
-    github: null,
-    successRate: null,
-    avgDuration: null,
-    websitesEvaluated: null,
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   };
 
-  const validatorHotkey =
-    summary?.validatorId || validatorData.id || validatorData.name;
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="inline-flex items-center justify-center rounded-lg bg-slate-700/50 p-1.5 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-all duration-200"
+      aria-label="Copy"
+    >
+      {copied ? (
+        <span className="text-[10px] font-bold text-emerald-400">✓</span>
+      ) : (
+        <PiCopy className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
+
+export default function AgentRunPersonas({ personas, summary }: AgentRunPersonasProps) {
+  const roundData =
+    personas?.round || {
+      id: "—",
+      status: "Active",
+      startTime: null,
+      totalValidators: personas?.validatorCount || 0,
+    };
+  const validatorData =
+    personas?.validator || {
+      name: "Autoppia Validator",
+      image: "/validators/Autoppia.png",
+      id: null,
+      country: "—",
+      track: "—",
+    };
+  const agentData =
+    personas?.agent || {
+      name: "Benchmark Agent",
+      image: "/images/autoppia-logo.png",
+      id: "—",
+      uid: null,
+      hotkey: null,
+      provider: "—",
+      github: null,
+      successRate: null,
+      avgDuration: null,
+      websitesEvaluated: null,
+    };
+
+  const validatorHotkey = summary?.validatorId || validatorData.id || validatorData.name;
   const taoStatsUrl = validatorHotkey
     ? `https://taostats.io/validators/${validatorHotkey}`
     : null;
@@ -86,7 +115,9 @@ export default function AgentRunPersonas({
     summary?.agentId;
 
   const fallbackMinerImage = (() => {
-    const uidCandidate = agentUid ?? extractUidNumber(summary?.minerUid);
+    const uidCandidate =
+      agentUid ??
+      extractUidNumber(summary?.minerUid);
     if (uidCandidate === null) {
       return "/images/autoppia-logo.png";
     }
@@ -116,66 +147,59 @@ export default function AgentRunPersonas({
     typeof value === "number" ? value.toString() : "—";
 
   return (
-    <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <section className="group relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white transition-all duration-300">
-        <header className="relative flex items-center justify-between gap-4 overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400 text-black shadow-lg transition-all duration-300 group-hover:shadow-xl">
-              <PiClock className="h-7 w-7" />
+    <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Round Card */}
+      <section className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl">
+        <header className="flex items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg">
+              <PiClock className="h-7 w-7 text-white" />
             </div>
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-slate-400 mb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                 Round
               </p>
-              <p className="text-4xl font-bold leading-none text-white">
+              <p className="text-3xl font-bold text-white">
                 #{roundData.id ?? summary?.roundId ?? "—"}
               </p>
             </div>
           </div>
-          <span
-            className="rounded-full border px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] shadow-md transition-all duration-300 hover:scale-105"
-            style={{
-              borderColor: "rgba(245, 222, 179, 0.5)",
-              backgroundColor: "rgba(245, 222, 179, 0.15)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
-            {(roundData.status || "Active").replace(/^\w/, (c) =>
-              c.toUpperCase()
-            )}
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
+            {(roundData.status || "Active").replace(/^\w/, (c) => c.toUpperCase())}
           </span>
         </header>
 
-        <div className="relative mt-6 rounded-xl border border-slate-700/40 bg-slate-900/50 px-4 py-4 shadow-md transition-all duration-300 hover:bg-slate-900/70">
-          <div className="flex items-center justify-between gap-4 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="uppercase tracking-wider text-[10px] font-semibold text-slate-400">
               Epoch
             </span>
-            <span className="font-mono text-base font-semibold text-white tabular-nums">
+            <span className="font-mono text-sm font-semibold text-white">
               {formatEpoch(epochStart)} - {formatEpoch(epochEnd)}
             </span>
           </div>
         </div>
       </section>
 
-      <section className="group relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white transition-all duration-300">
-        <header className="relative flex items-center justify-between gap-4 overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+      {/* Validator Card */}
+      <section className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl">
+        <header className="flex items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="relative h-14 w-14 flex-shrink-0 rounded-xl overflow-hidden border-2 border-emerald-500/50 bg-slate-700/30 shadow-lg">
               <Image
                 alt={validatorData.name}
-                src={validatorImageSrc || "/placeholder.svg"}
-                width={56}
-                height={56}
+                src={validatorImageSrc}
+                fill
+                sizes="56px"
+                className="object-cover"
                 unoptimized
-                className="h-16 w-16 rounded-2xl object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
               />
             </div>
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-slate-400 mb-1">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                 Validator
               </p>
-              <p className="text-xl font-bold text-white leading-tight">
+              <p className="text-xl font-bold text-white truncate">
                 {validatorData.name}
               </p>
             </div>
@@ -185,57 +209,48 @@ export default function AgentRunPersonas({
               href={taoStatsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-900/50 text-white shadow-md transition-all duration-300 hover:border-slate-600/70 hover:bg-slate-900/80 hover:text-[#F5DEB3] hover:scale-110 active:scale-95"
+              className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/50 text-slate-300 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all duration-200"
               title="Open TaoStats"
             >
-              <PiArrowSquareOutDuotone className="h-5 w-5" />
+              <PiArrowSquareOut className="h-4 w-4" />
             </a>
           ) : null}
         </header>
 
-        <div className="relative mt-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700/40 bg-slate-900/50 px-4 py-3.5 shadow-md transition-all duration-300 hover:bg-slate-900/70">
-            <div className="flex items-center gap-2.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
-                Hotkey
-              </span>
-              <span className="font-mono text-sm font-semibold text-white tabular-nums">
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="uppercase tracking-wider text-[10px] font-semibold text-slate-400 flex-shrink-0">
+              Hotkey
+            </span>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-mono text-sm font-semibold text-white truncate">
                 {truncateMiddle(validatorHotkey)}
               </span>
+              {validatorHotkey && <CopyButton text={validatorHotkey} />}
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                validatorHotkey &&
-                navigator.clipboard.writeText(validatorHotkey)
-              }
-              className="inline-flex items-center justify-center rounded-lg border border-slate-700/50 bg-slate-900/50 p-2 text-white shadow-md transition-all duration-300 hover:border-slate-600/70 hover:bg-slate-900/80 hover:text-[#F5DEB3] hover:scale-110 active:scale-95"
-              aria-label="Copy validator hotkey"
-            >
-              <PiCopySimple className="h-4 w-4" />
-            </button>
           </div>
         </div>
       </section>
 
-      <section className="group relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white transition-all duration-300">
-        <header className="relative flex items-center justify-between gap-4 overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+      {/* Miner Card */}
+      <section className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl">
+        <header className="flex items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="relative h-14 w-14 flex-shrink-0 rounded-xl overflow-hidden border-2 border-cyan-500/50 bg-slate-700/30 shadow-lg">
               <Image
                 alt={agentData.name}
-                src={minerImageSrc || "/placeholder.svg"}
-                width={56}
-                height={56}
+                src={minerImageSrc}
+                fill
+                sizes="56px"
+                className="object-cover"
                 unoptimized
-                className="h-16 w-16 rounded-full border-2 border-slate-700/50 object-cover shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
               />
             </div>
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-slate-400 mb-1">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                 Miner
               </p>
-              <p className="text-xl font-bold text-white leading-tight">
+              <p className="text-xl font-bold text-white truncate">
                 {agentData.name}
               </p>
             </div>
@@ -245,44 +260,32 @@ export default function AgentRunPersonas({
               href={agentData.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-900/50 text-white shadow-md transition-all duration-300 hover:border-slate-600/70 hover:bg-slate-900/80 hover:text-[#F5DEB3] hover:scale-110 active:scale-95"
+              className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/50 text-slate-300 hover:border-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-400 transition-all duration-200"
               title="Open GitHub"
             >
-              <PiGithubLogoDuotone className="h-5 w-5" />
+              <PiGithubLogo className="h-4 w-4" />
             </a>
           ) : null}
         </header>
 
-        <div className="relative mt-5">
-          <div className="rounded-xl border border-slate-700/40 bg-slate-900/50 px-4 py-3.5 shadow-md transition-all duration-300 hover:bg-slate-900/70">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
-                  UID
-                </span>
-                <span className="font-mono text-sm font-semibold text-white tabular-nums">
-                  {agentUid ?? "—"}
-                </span>
-              </div>
-              <div className="h-4 w-px bg-slate-700/50" />
-              <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
-                  Hotkey
-                </span>
-                <span className="font-mono text-sm font-semibold text-white tabular-nums">
-                  {truncateMiddle(agentHotkey)}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  agentHotkey && navigator.clipboard.writeText(agentHotkey)
-                }
-                className="inline-flex items-center justify-center rounded-lg border border-slate-700/50 bg-slate-900/50 p-2 text-white shadow-md transition-all duration-300 hover:border-slate-600/70 hover:bg-slate-900/80 hover:text-[#F5DEB3] hover:scale-110 active:scale-95"
-                aria-label="Copy miner hotkey"
-              >
-                <PiCopySimple className="h-4 w-4" />
-              </button>
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="uppercase tracking-wider text-[10px] font-semibold text-slate-400">
+                UID
+              </span>
+              <span className="font-mono text-sm font-semibold text-white">
+                {agentUid ?? "—"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="uppercase tracking-wider text-[10px] font-semibold text-slate-400 flex-shrink-0">
+                Hotkey
+              </span>
+              <span className="font-mono text-sm font-semibold text-white truncate">
+                {truncateMiddle(agentHotkey)}
+              </span>
+              {agentHotkey && <CopyButton text={agentHotkey} />}
             </div>
           </div>
         </div>

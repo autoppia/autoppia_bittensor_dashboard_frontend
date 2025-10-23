@@ -83,109 +83,48 @@ export default function AgentRunSummaryDynamic({
 }
 
 function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
-  const donutInner = (
-    <div className="relative flex items-center justify-center py-4">
-      <div className="relative flex items-center justify-center">
-        <Placeholder
-          variant="circular"
-          width={200}
-          height={200}
-          className="border border-white/15 bg-white/10"
-        />
-        <div className="absolute flex flex-col items-center gap-2">
-          <Placeholder
-            height="2.25rem"
-            width="4rem"
-            className="rounded-lg bg-white/20"
-          />
-          <Placeholder
-            height="0.9rem"
-            width="7.5rem"
-            className="rounded bg-white/15"
-          />
-          <Placeholder
-            height="0.9rem"
-            width="6.5rem"
-            className="rounded bg-white/15"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/24 to-purple-500/25 p-6 shadow-2xl backdrop-blur-xl",
-        className
-      )}
-    >
-      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-purple-500/20 blur-[140px]" />
-      <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-blue-500/20 blur-3xl" />
-      <div
-        className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.18)" }}
-      />
-
-      <div className="relative mb-6">
-        <div className="mb-2 flex items-center gap-3">
-          <div className="rounded-xl border border-white/15 bg-white/10 p-2">
-            <Placeholder
-              variant="circular"
-              width={24}
-              height={24}
-              className="bg-white/20"
-            />
+    <div className={cn("bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl animate-pulse", className)}>
+      {/* Header Skeleton */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-xl bg-slate-700/50" />
+          <div className="space-y-2">
+            <div className="h-6 w-32 bg-slate-700/50 rounded" />
+            <div className="h-4 w-48 bg-slate-700/30 rounded" />
           </div>
-          <Placeholder
-            height="1.35rem"
-            width="6rem"
-            className="bg-white/20"
-          />
         </div>
-        <Placeholder
-          height="0.75rem"
-          width="10rem"
-          className="bg-white/15"
-        />
       </div>
 
-      <div className="relative text-white/80">
-        {donutInner}
-        <div className="mt-6 flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm">
-          {Array.from({ length: 3 }, (_, index) => (
-            <div
-              key={`summary-placeholder-${index}`}
-              className="flex items-center justify-between gap-3 px-3 py-4"
-            >
-              <div className="flex items-center gap-2">
-                <Placeholder
-                  variant="circular"
-                  width={12}
-                  height={12}
-                  className="bg-white/30"
-                />
-                <Placeholder
-                  height="0.85rem"
-                  width="7rem"
-                  className="bg-white/20"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Placeholder
-                  height="1rem"
-                  width="3.75rem"
-                  className="bg-white/20"
-                />
-                <Placeholder
-                  height="0.75rem"
-                  width="8rem"
-                  className="bg-white/15"
-                />
-              </div>
-            </div>
-          ))}
+      {/* Chart Skeleton */}
+      <div className="h-[280px] w-full mb-6 flex items-center justify-center">
+        <div className="relative">
+          <div className="w-[220px] h-[220px] rounded-full border-[20px] border-slate-700/50" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div className="h-10 w-20 bg-slate-700/50 rounded" />
+            <div className="h-3 w-24 bg-slate-700/30 rounded" />
+            <div className="h-3 w-28 bg-slate-700/30 rounded" />
+          </div>
         </div>
+      </div>
+
+      {/* Legend Skeleton */}
+      <div className="space-y-2">
+        {Array.from({ length: 3 }, (_, index) => (
+          <div
+            key={`summary-placeholder-${index}`}
+            className="flex items-center justify-between gap-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div className="h-3 w-3 rounded-full bg-slate-700/50" />
+              <div className="h-4 w-32 bg-slate-700/50 rounded" />
+            </div>
+            <div className="space-y-2 text-right">
+              <div className="h-5 w-16 bg-slate-700/50 rounded" />
+              <div className="h-3 w-24 bg-slate-700/30 rounded" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

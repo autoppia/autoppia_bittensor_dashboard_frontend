@@ -26,17 +26,14 @@ export default function AgentRunTasksTable() {
   });
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-sky-300/35 via-blue-500/24 to-purple-500/25 p-6 shadow-2xl backdrop-blur-xl text-white">
-      <div className="pointer-events-none absolute -right-20 top-0 h-60 w-60 rounded-full bg-purple-500/20 blur-[140px]" />
-      <div className="pointer-events-none absolute bottom-[-60px] left-8 h-64 w-64 rounded-full bg-blue-500/20 blur-[120px]" />
-      <div
-        className="pointer-events-none absolute right-6 bottom-10 h-40 w-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "rgba(245, 222, 179, 0.15)" }}
-      />
-      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-white">All Tasks</h2>
+    <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl">
+      <div className="relative mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-1">All Tasks</h2>
+          <p className="text-sm text-slate-400">{tasksData.length} total tasks</p>
+        </div>
 
-        <div className="relative w-full max-w-[240px]">
+        <div className="relative w-full sm:w-auto sm:max-w-xs">
           <Input
             type="search"
             clearable={true}
@@ -44,33 +41,33 @@ export default function AgentRunTasksTable() {
             onClear={() => table.setGlobalFilter("")}
             value={table.getState().globalFilter ?? ""}
             prefix={
-              <PiMagnifyingGlassBold className="size-4 text-white/70" />
+              <PiMagnifyingGlassBold className="size-4 text-slate-400" />
             }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
-            className="w-full xs:max-w-60"
-            inputClassName="rounded-xl border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-[#F5DEB3]/60 focus:ring-0"
+            className="w-full"
+            inputClassName="rounded-xl border border-slate-600/50 bg-slate-800/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 focus:ring-0"
           />
         </div>
       </div>
 
-      <div className="relative mb-2">
+      <div className="relative mb-4 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-950/50">
         <Table
           table={table}
           variant="modern"
           classNames={{
             container:
-              "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-white/10 bg-white/10 backdrop-blur-sm",
+              "custom-scrollbar scroll-smooth overflow-x-auto",
             headerClassName:
-              "bg-gradient-to-r from-white/10 via-white/5 to-white/10 text-white/80 uppercase tracking-[0.25em]",
+              "bg-gradient-to-r from-slate-800/80 via-slate-800/60 to-slate-800/80 text-slate-300 text-xs font-semibold uppercase tracking-wider border-b border-slate-700/50",
             rowClassName:
-              "border-b border-white/5 bg-white/5 transition-colors duration-200 hover:bg-white/10 hover:border-[#F5DEB3]/60 hover:shadow-[0_14px_34px_rgba(245,222,179,0.18)] text-white/80",
-            }}
+              "border-b border-slate-800/50 bg-slate-900/30 hover:bg-slate-800/50 transition-all duration-200 text-slate-200",
+          }}
         />
       </div>
 
       <TablePagination
         table={table}
-        className="relative py-4 text-white/70"
+        className="relative py-3 text-slate-400 border-t border-slate-700/30"
       />
     </div>
   );

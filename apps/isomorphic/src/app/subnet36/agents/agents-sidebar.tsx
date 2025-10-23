@@ -14,6 +14,7 @@ import { useRounds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
+import { GLASS_STYLES } from "@/config/theme-styles";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
@@ -202,25 +203,28 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-        <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-4 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-400 text-sm">Error loading agents</div>
-            <div className="text-white/60 text-xs mt-1">{error}</div>
-          </div>
+      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+        <div className="text-center px-6">
+          <div className="text-red-400 text-sm font-semibold">Error loading agents</div>
+          <div className="text-white/70 text-xs mt-2">{error}</div>
         </div>
       </aside>
     );
   }
 
   return (
-    <aside className="hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] p-4">
-      <div className="h-full border border-[#1f1f1f] rounded-xl bg-[#111111] pb-3 flex flex-col overflow-hidden">
-        <div className="sticky top-0 border-b border-[#1f1f1f] bg-[#111111] agents-round-select z-10">
-          <div className="flex items-center gap-3 px-3 py-3">
-            <Text className="text-2xl font-bold text-white">
-              All Miners
-            </Text>
+    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+      <div className="h-full flex flex-col overflow-hidden pt-[90px]">
+        <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10" style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+          <div className="flex items-center gap-3 pl-4 pr-3 py-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg ring-2 ring-white/20">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <Text className="text-xl font-bold text-white">All Miners</Text>
+            </div>
             <div className="flex-1 flex justify-end">
               <Checkbox
                 id="show-sota-agents"
@@ -229,39 +233,40 @@ export default function AgentsSidebar() {
                 label={
                   <span className="flex items-center gap-1">
                     <Tooltip content="State of the art agents" placement="top">
-                      <BiInfoCircle className="h-3.5 w-3.5 text-white/70 hover:text-white" />
+                      <BiInfoCircle className="h-3.5 w-3.5 text-white/60 hover:text-white/90" />
                     </Tooltip>
                     SOTA
                   </span>
                 }
                 labelPlacement="left"
-                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white"
+                labelClassName="!text-xs !font-semibold !uppercase !tracking-wide !text-white/90"
                 className={cn(
-                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-black !bg-opacity-85 !border-none !shadow-inner",
-                  includeSota ? "!opacity-100" : "!opacity-70"
+                  "!flex !flex-row !items-center !gap-2 !rounded-lg !px-3 !py-2 !bg-white/10 !border !border-white/20 !shadow-sm backdrop-blur-sm transition-all duration-300",
+                  includeSota ? "!opacity-100 !bg-white/20 !shadow-md !border-white/30" : "!opacity-80"
                 )}
-                inputClassName="!border !border-white !bg-transparent focus:!ring-white checked:!bg-white checked:!border-white"
-                iconClassName="!text-black"
+                inputClassName="!border !border-white/40 !bg-white/10 focus:!ring-emerald-500 checked:!bg-emerald-600 checked:!border-emerald-500 transition-all duration-300"
+                iconClassName="!text-white"
               />
             </div>
           </div>
         </div>
-        <div className="custom-scrollbar flex-1 overflow-y-auto pl-3 pr-1.5 mt-0.5 pt-3 pb-3 scroll-smooth">
-          <div className="flex flex-col gap-1">
-            <div className="px-1 pb-3">
+        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
+          <div className="flex flex-col gap-2">
+            <div className="mb-1">
               <Select
                 options={selectOptions}
                 value={roundSelectValue}
                 onChange={handleRoundChange}
                 disabled={!roundOptions.length}
                 placeholder="Select round"
-                className="w-full !rounded-lg !border !border-[#1f1f1f] !bg-[#161616] !text-white hover:!border-white/30 focus:!border-white/60"
+                className="w-full !rounded-xl !border-2 !border-white/20 !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                 menuPortalTarget={undefined}
               />
             </div>
-            <div className="mb-2 mt-0.5 space-y-2 px-1">
+            <div className="mb-2">
               <Input
-                prefix={<LuSearch className="w-4" />}
+                prefix={<LuSearch className="w-4 text-white/60" />}
                 placeholder="Search miners..."
                 clearable={true}
                 value={query}
@@ -277,6 +282,8 @@ export default function AgentsSidebar() {
                     setFilteredAgents(filtered);
                   }
                 }}
+                className="!rounded-xl !border-2 !border-white/20 !text-white placeholder:!text-white/50 hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
               />
             </div>
             {filteredAgents.map((miner) => {
@@ -300,7 +307,7 @@ export default function AgentsSidebar() {
                   case 3:
                     return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-black shadow-sm";
                   default:
-                    return "bg-white/80 text-black border border-gray-200";
+                    return "bg-white/10 text-white border border-white/20";
                 }
               })();
 
@@ -315,22 +322,37 @@ export default function AgentsSidebar() {
                 >
                   <div
                     className={cn(
-                      "relative flex items-center w-full pl-2.5 pr-2 py-2 rounded-lg transition-all duration-200 group overflow-visible",
+                      "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
                       isActive
-                        ? "bg-[wheat] text-black border border-[#e2c48a] shadow-lg shadow-amber-200/40"
+                        ? "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white border-2 border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.6)] hover:shadow-[0_15px_50px_rgba(59,130,246,0.7)] scale-[1.03]"
                         : highlightTop
-                        ? "bg-gradient-to-r from-orange-500/25 to-amber-500/25 border border-orange-500/40 text-white shadow-lg"
-                        : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                        ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
+                        : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
                     )}
+                    style={isActive ? {
+                      boxShadow: `0 0 40px rgba(59,130,246,0.5), 0 10px 40px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1)`
+                    } : {}}
                   >
-                    {/* Crown badge for top agent - positioned at top-left corner */}
+                    {/* Animated gradient shimmer for active state */}
+                    {isActive && (
+                      <>
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse pointer-events-none" />
+                        <div className="absolute inset-0 rounded-xl opacity-50 blur-xl bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500 pointer-events-none" />
+                      </>
+                    )}
+                    
+                    {/* Crown badge for top agent */}
                     {showCrown && (
-                      <div className="absolute -top-2 -right-2 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 border-orange-300">
-                        <FaCrown className="w-3 h-3 text-white drop-shadow-sm" />
+                      <div className="absolute -top-1 -right-1 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 border-amber-300 animate-pulse">
+                        <FaCrown className="w-3 h-3 text-white drop-shadow-lg" />
+                        <div className="absolute inset-0 rounded-full bg-amber-400 blur-md opacity-60 animate-pulse pointer-events-none" />
                       </div>
                     )}
 
-                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100 mr-3 flex items-center justify-center">
+                    <div className={cn(
+                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
+                      isActive ? "ring-3 ring-white/50 shadow-lg shadow-blue-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
+                    )}>
                       <Image
                         src={`/miners/${miner.uid % 50}.svg`}
                         alt={miner.name}
@@ -339,36 +361,41 @@ export default function AgentsSidebar() {
                         className="object-cover"
                       />
                     </div>
-                    <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex flex-col min-w-0 flex-1 relative z-10">
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "text-sm font-semibold truncate",
+                            "text-sm font-bold truncate transition-all duration-300",
                             isActive
-                              ? "text-black"
+                              ? "text-white drop-shadow-sm"
                               : highlightTop
-                                ? "text-white"
-                                : "text-gray-300 group-hover:text-white"
+                                ? "text-amber-200 font-extrabold"
+                                : "text-white/90 group-hover:text-white"
                           )}
                         >
                           {miner.name}
                         </span>
                         {miner.isSota && (
-                          <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs font-semibold rounded-full border border-yellow-500/30">
-                            (SOTA)
+                          <span className={cn(
+                            "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
+                            isActive 
+                              ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
+                              : "bg-purple-500/30 text-purple-100 border-purple-400/60"
+                          )}>
+                            SOTA
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {showRankBadge && (
                           <span
                             className={cn(
-                            "text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5",
+                            "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300",
                             rankBadgePalette,
                             isActive && displayRank
-                                ? "ring-1 ring-[#d7b26d]"
+                                ? "ring-2 ring-white/40 shadow-md"
                                 : highlightTop && displayRank
-                                  ? "ring-1 ring-orange-300/60"
+                                  ? "ring-1 ring-amber-400/50 shadow-sm"
                                   : ""
                           )}
                           >
@@ -377,27 +404,27 @@ export default function AgentsSidebar() {
                         )}
                         <span
                           className={cn(
-                            "text-xs font-mono",
+                            "text-[11px] font-mono font-medium transition-all duration-300",
                             isActive
-                              ? "text-black"
+                              ? "text-blue-100"
                               : highlightTop
-                                ? "text-orange-300"
-                                : "text-gray-500 group-hover:text-gray-300"
+                                ? "text-amber-300"
+                                : "text-white/70 group-hover:text-white/90"
                           )}
                         >
                           UID: {miner.uid}
                         </span>
                         <span
                           className={cn(
-                            "text-xs font-medium",
+                            "text-[11px] font-semibold transition-all duration-300",
                             isActive
-                              ? "text-black"
+                              ? "text-blue-100"
                               : highlightTop
-                                ? "text-orange-200"
-                                : "text-gray-400 group-hover:text-gray-200"
+                                ? "text-amber-300"
+                                : "text-white/70 group-hover:text-white/90"
                           )}
                         >
-                          Score: {(miner.score * 100).toFixed(1)}%
+                          {(miner.score * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>

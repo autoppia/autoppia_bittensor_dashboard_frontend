@@ -1,12 +1,21 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Label,
+} from "recharts";
+import { 
+  PiChartPie,
+  PiCheckCircle,
+  PiTarget
+} from "react-icons/pi";
 import type {
   AgentRunDetailData,
   AgentRunSummaryChartData,
 } from "./agent-run-types";
-
-const HIGHLIGHT_COLOR = "#F5DEB3";
 
 // Rainbow colors starting with red using hex values
 const PROGRESS_COLORS = [
@@ -168,7 +177,6 @@ export default function AgentRunSummary({
           })
           .sort((a, b) => b.average - a.average);
 
-        // Use average (success rate) scaled by total as value for strength
         return displayData.map((item, idx) => {
           const matchingDonutData = sortedResults.find(
             (data) => data.label === item.label
@@ -177,7 +185,7 @@ export default function AgentRunSummary({
             label: item.label,
             value: matchingDonutData
               ? matchingDonutData.average * matchingDonutData.total
-              : item.value * item.total, // Scale average by total for strength
+              : item.value * item.total,
             average: matchingDonutData ? matchingDonutData.average : item.value,
             total: matchingDonutData ? matchingDonutData.total : item.total,
             successCount: matchingDonutData
@@ -193,7 +201,7 @@ export default function AgentRunSummary({
       })()
     : agentData.websites.map((web, idx) => ({
         label: web.name ?? `Website ${idx + 1}`,
-        value: web.overall.successRate * web.overall.total, // Use success rate scaled by total
+        value: web.overall.successRate * web.overall.total,
         average: web.overall.successRate,
         total: web.overall.total,
         successCount: web.overall.successCount,
@@ -203,51 +211,43 @@ export default function AgentRunSummary({
       }));
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-xl text-white ${className ?? ""}`}
-    >
+    <div className={`bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-xl ${className ?? ""}`}>
       {/* Header */}
-      <div className="relative mb-6">
+      <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="rounded-lg border border-slate-700/40 bg-slate-700/30 p-2 shadow-lg">
-            <svg
-              className="w-5 h-5 text-slate-200"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-              <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-            </svg>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+            <PiChartPie className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-semibold text-slate-100">Summary</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-white">Summary</h2>
+            <p className="text-sm text-slate-400">Performance breakdown overview</p>
+          </div>
         </div>
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-medium">
-          Performance Breakdown
-        </p>
       </div>
 
       {/* Content */}
-      <div className="relative text-slate-300">
-        <div className="h-[260px] w-full py-2">
+      <div className="relative">
+        {/* Chart */}
+        <div className="h-[280px] w-full mb-6">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart>              
               <Pie
                 data={donutData}
                 innerRadius={90}
-                outerRadius={105}
+                outerRadius={110}
                 paddingAngle={4}
-                cornerRadius={25}
+                cornerRadius={8}
                 dataKey="value"
-                stroke="#1e293b"
-                strokeWidth={3}
+                stroke="rgba(15, 23, 42, 0.5)"
+                strokeWidth={2}
               >
                 <Label
                   position="center"
                   content={(props) => (
                     <CenterLabel
-                      value={successRate.toFixed(0)}
-                      totalRequests={totalRequests.toFixed(0)}
-                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      value={successRate.toFixed(1)}
+                      totalRequests={totalRequests.toString()}
+                      totalSuccesses={totalSuccesses.toString()}
                       viewBox={props.viewBox}
                     />
                   )}
@@ -257,41 +257,56 @@ export default function AgentRunSummary({
                     key={`cell-${idx}`}
                     fill={entry.fill}
                     stroke={entry.stroke}
-                    strokeWidth={2}
+                    strokeWidth={1}
                   />
                 ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Legend */}
         {hasWebsites ? (
-          <div className="flex flex-col divide-y divide-slate-700/40 rounded-xl border border-slate-700/40 bg-slate-800/50 overflow-hidden">
+          <div className="space-y-2">
             {displayData.map((item, idx) => (
               <div
                 key={item.label}
-                className="flex items-center justify-between gap-4 py-4 px-4 transition-colors hover:bg-slate-700/30"
+                className="flex items-center justify-between gap-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800/70 hover:border-slate-600/50 transition-all duration-200"
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span
-                    className="h-3.5 w-3.5 rounded-full flex-shrink-0 shadow-lg"
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div
+                    className="h-3 w-3 rounded-full flex-shrink-0"
                     style={{
-                      backgroundColor:
-                        PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-                      boxShadow: `0 0 12px ${PROGRESS_COLORS[idx % PROGRESS_COLORS.length]}40`,
+                      backgroundColor: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
+                      boxShadow: `0 0 12px ${PROGRESS_COLORS[idx % PROGRESS_COLORS.length]}60`,
                     }}
                   />
-                  <span className="text-sm font-semibold text-slate-100 truncate">
+                  <span className="text-sm font-semibold text-white truncate">
                     {item.label}
                   </span>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-base font-bold text-slate-100 mb-0.5">
+                  <div 
+                    className="text-lg font-bold mb-1"
+                    style={{ color: PROGRESS_COLORS[idx % PROGRESS_COLORS.length] }}
+                  >
                     {item.value.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-slate-400 font-medium">
-                    {item.total} req • {item.successCount} ok
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <PiTarget className="w-3 h-3" />
+                      {item.total}
+                    </span>
+                    <span className="text-slate-600">•</span>
+                    <span className="flex items-center gap-1">
+                      <PiCheckCircle className="w-3 h-3" />
+                      {item.successCount}
+                    </span>
                     {selectedWebsite && (
-                      <span> • {item.avgSolutionTime.toFixed(2)}s</span>
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span>{item.avgSolutionTime.toFixed(2)}s</span>
+                      </>
                     )}
                   </div>
                 </div>
@@ -299,8 +314,13 @@ export default function AgentRunSummary({
             ))}
           </div>
         ) : (
-          <div className="text-sm text-slate-400 text-center py-8 px-4 rounded-xl border border-slate-700/40 bg-slate-800/50">
-            Summary metrics are not available for this run yet.
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700/50">
+              <PiChartPie className="w-8 h-8 text-slate-500" />
+            </div>
+            <p className="text-sm text-slate-400">
+              Summary metrics will appear here once data is available.
+            </p>
           </div>
         )}
       </div>
@@ -326,23 +346,23 @@ function CenterLabel({
     <>
       <text
         x={cx}
-        y={cy - 22}
-        fill={HIGHLIGHT_COLOR}
+        y={cy - 15}
+        fill="#10B981"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
-          textShadow: "0 4px 16px rgba(245, 222, 179, 0.4)",
+          filter: "drop-shadow(0 4px 12px rgba(16, 185, 129, 0.4))",
         }}
       >
-        <tspan fontSize="40" fontWeight="700">
+        <tspan fontSize="42" fontWeight="700">
           {value}%
         </tspan>
       </text>
       <text
         x={cx}
-        y={cy + 12}
-        fill="#cbd5e1"
+        y={cy + 15}
+        fill="#CBD5E1"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
@@ -350,21 +370,21 @@ function CenterLabel({
         }}
       >
         <tspan fontSize="13" fontWeight="600">
-          Requests · {totalRequests}
+          {totalRequests} requests
         </tspan>
       </text>
       <text
         x={cx}
-        y={cy + 32}
-        fill="#cbd5e1"
+        y={cy + 33}
+        fill="#94A3B8"
         textAnchor="middle"
         dominantBaseline="central"
         style={{
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <tspan fontSize="13" fontWeight="600">
-          Successes · {totalSuccesses}
+        <tspan fontSize="12" fontWeight="500">
+          {totalSuccesses} successful
         </tspan>
       </text>
     </>

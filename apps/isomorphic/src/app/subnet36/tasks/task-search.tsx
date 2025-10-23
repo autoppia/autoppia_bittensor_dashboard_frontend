@@ -475,10 +475,12 @@ export default function TaskSearch() {
                   onClick={() => {
                     const params = new URLSearchParams();
                     if (webProject) {
-                      params.set('websiteName', webProject.name);
-                      params.set('websiteColor', webProject.color);
+                      params.set("websiteName", webProject.name);
+                      params.set("websiteColor", webProject.color);
                     }
-                    router.push(`${routes.tasks}/${task.taskId}?${params.toString()}`);
+                    router.push(
+                      `${routes.tasks}/${task.taskId}?${params.toString()}`
+                    );
                   }}
                   className={`group relative rounded-xl border ${
                     isPassed
