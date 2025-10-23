@@ -59,17 +59,17 @@ export default function OverviewValidators() {
       className={cn(
         "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]",
         isRoundActive
-          ? "border border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+          ? "border border-blue-400/60 bg-blue-500/15 text-blue-200"
           : "border border-slate-400/60 bg-slate-500/10 text-slate-200"
       )}
     >
       {isRoundActive ? (
-        <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin" />
+        <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin text-blue-200" />
       ) : (
         <PiCheckCircleFill className="h-3.5 w-3.5 text-emerald-300" />
       )}
       <span className="flex items-center gap-1">
-        {isRoundActive ? "Running" : "Last"} Round
+        {isRoundActive ? "Current" : "Last"} round
         <span className="ml-1 font-semibold text-white">
           {roundNumber}
         </span>

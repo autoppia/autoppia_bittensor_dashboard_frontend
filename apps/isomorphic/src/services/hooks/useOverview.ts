@@ -84,9 +84,13 @@ function useApiCall<T>(
   return { data, loading, error, refetch: fetchData };
 }
 
-// Hook for overview metrics
-export function useOverviewMetrics() {
-  return useApiCall(() => overviewService.getMetrics());
+// Hook for overview metrics with default polling to keep metrics fresh
+export function useOverviewMetrics(options: UseApiCallOptions = { pollIntervalMs: 5000 }) {
+  const mergedOptions = {
+    pollIntervalMs: 5000,
+    ...options,
+  };
+  return useApiCall(() => overviewService.getMetrics(), [], mergedOptions);
 }
 
 // Hook for validators
