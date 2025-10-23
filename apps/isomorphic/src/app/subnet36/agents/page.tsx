@@ -250,9 +250,12 @@ function AgentsLanding() {
   if (minersError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
-        <div className="rounded-2xl border border-[#1f1f1f] bg-[#111111] px-6 py-8 text-center text-white/80 shadow-lg">
-          <h2 className="text-lg font-semibold text-white">Unable to load agents</h2>
-          <p className="mt-3 text-sm leading-relaxed text-white/60">
+        <div className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
+        style={{
+          boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`
+        }}>
+          <h2 className="text-xl font-bold text-gray-900">Unable to load agents</h2>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
             {minersError}. Please try refreshing the page once the service is available again.
           </p>
         </div>
@@ -263,9 +266,12 @@ function AgentsLanding() {
   if (!minersLoading && !minersError && isFiniteNumber(effectiveRound) && !hasMiners) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
-        <div className="rounded-2xl border border-[#1f1f1f] bg-[#111111] px-6 py-8 text-center text-white/80 shadow-lg">
-          <h2 className="text-lg font-semibold text-white">No agents found</h2>
-          <p className="mt-3 text-sm leading-relaxed text-white/60">
+        <div className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
+        style={{
+          boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`
+        }}>
+          <h2 className="text-xl font-bold text-gray-900">No agents found</h2>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
             Recent rounds did not return any miners. Try selecting a different round or refreshing once new data is available.
           </p>
         </div>
