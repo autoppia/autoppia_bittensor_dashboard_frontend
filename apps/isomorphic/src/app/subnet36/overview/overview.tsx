@@ -113,9 +113,14 @@ export default function Overview() {
               className="flex items-center gap-3 text-[22px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
             >
               Subnet 36 - Web Agents
-              <span className="inline-flex items-center rounded-md bg-sky-500/10 px-3 py-1 text-xs lg:text-sm font-semibold text-sky-500">
+              <Link
+                href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-md border border-blue-400/60 bg-blue-500/15 px-3 py-1 text-xs lg:text-sm font-semibold text-blue-200 transition hover:border-blue-300 hover:text-blue-100"
+              >
                 IM: Dynamic Zero V1
-              </span>
+              </Link>
             </Title>
           </div>
           <OverviewMinerChart

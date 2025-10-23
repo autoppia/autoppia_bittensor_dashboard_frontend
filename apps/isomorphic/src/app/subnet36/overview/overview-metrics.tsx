@@ -207,8 +207,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               <div className={cn("text-xs truncate", metric.descriptionClassName)}>
                 {metric.id === "score-to-win" && "Current target score"}
                 {metric.id === "total-validators" && "Active validators"}
-                {metric.id === "total-miners" && "Miners in last round"}
-                {metric.id === "total-websites" && "Available websites"}
+                {metric.id === "total-miners" && "Active miners"}
+                {metric.id === "total-websites" && "Active websites"}
               </div>
             </div>
           </div>
