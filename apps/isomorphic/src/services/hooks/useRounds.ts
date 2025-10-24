@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching rounds data with loading states and error handling
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { roundsService } from '../api/rounds.service';
 import type {
   RoundData,
@@ -20,7 +20,7 @@ import type {
 // Generic hook for API calls with loading and error states
 function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencyKey?: string,
   enabled: boolean = true
 ) {
   const [data, setData] = useState<T | null>(null);
@@ -44,11 +44,11 @@ function useApiCall<T>(
     } finally {
       setLoading(false);
     }
-  }, [...dependencies, enabled]);
+  }, [apiCall, enabled]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, dependencyKey, enabled]);
 
   return { data, loading, error, refetch: fetchData };
 }
@@ -70,33 +70,41 @@ const identifierKey = (id?: RoundIdentifier): string =>
 
 // Hook for rounds list
 export function useRounds(params?: RoundsListQueryParams) {
-  return useApiCall(
-    () => roundsService.getRounds(params),
-    [JSON.stringify(params)]
-  );
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(() => roundsService.getRounds(params), [params]);
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for specific round details
 export function useRound(id?: RoundIdentifier) {
   const enabled = isValidRoundIdentifier(id);
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getRound(id as RoundIdentifier),
-    [identifierKey(id)],
+    [id]
+  );
+  return useApiCall(
+    request,
+    identifierKey(id),
     enabled
   );
 }
 
 // Hook for current round
 export function useCurrentRound() {
-  return useApiCall(() => roundsService.getCurrentRound());
+  const request = useCallback(() => roundsService.getCurrentRound(), []);
+  return useApiCall(request);
 }
 
 // Hook for round statistics
 export function useRoundStatistics(roundId?: RoundIdentifier) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getRoundStatistics(roundId as RoundIdentifier),
-    [identifierKey(roundId)],
+    [roundId]
+  );
+  return useApiCall(
+    request,
+    identifierKey(roundId),
     enabled
   );
 }
@@ -104,9 +112,14 @@ export function useRoundStatistics(roundId?: RoundIdentifier) {
 // Hook for round miners
 export function useRoundMiners(roundId?: RoundIdentifier, params?: RoundMinersQueryParams) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => roundsService.getRoundMiners(roundId as RoundIdentifier, params),
-    [identifierKey(roundId), JSON.stringify(params)],
+    [roundId, params]
+  );
+  return useApiCall(
+    request,
+    `${identifierKey(roundId)}:${paramsKey}`,
     enabled
   );
 }
@@ -114,9 +127,13 @@ export function useRoundMiners(roundId?: RoundIdentifier, params?: RoundMinersQu
 // Hook for round validators
 export function useRoundValidators(roundId?: RoundIdentifier) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getRoundValidators(roundId as RoundIdentifier),
-    [identifierKey(roundId)],
+    [roundId]
+  );
+  return useApiCall(
+    request,
+    identifierKey(roundId),
     enabled
   );
 }
@@ -124,9 +141,14 @@ export function useRoundValidators(roundId?: RoundIdentifier) {
 // Hook for round activity
 export function useRoundActivity(roundId?: RoundIdentifier, params?: RoundActivityQueryParams) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => roundsService.getRoundActivity(roundId as RoundIdentifier, params),
-    [identifierKey(roundId), JSON.stringify(params)],
+    [roundId, params]
+  );
+  return useApiCall(
+    request,
+    `${identifierKey(roundId)}:${paramsKey}`,
     enabled
   );
 }
@@ -134,9 +156,13 @@ export function useRoundActivity(roundId?: RoundIdentifier, params?: RoundActivi
 // Hook for round progress
 export function useRoundProgress(roundId?: RoundIdentifier) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getRoundProgress(roundId as RoundIdentifier),
-    [identifierKey(roundId)],
+    [roundId]
+  );
+  return useApiCall(
+    request,
+    identifierKey(roundId),
     enabled
   );
 }
@@ -144,36 +170,52 @@ export function useRoundProgress(roundId?: RoundIdentifier) {
 // Hook for top miners
 export function useTopMiners(roundId?: RoundIdentifier, limit: number = 10) {
   const enabled = isValidRoundIdentifier(roundId);
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getTopMiners(roundId as RoundIdentifier, limit),
-    [identifierKey(roundId), limit],
+    [limit, roundId]
+  );
+  return useApiCall(
+    request,
+    `${identifierKey(roundId)}:${limit}`,
     enabled
   );
 }
 
 // Hook for specific miner performance
 export function useMinerPerformance(roundId: RoundIdentifier, minerUid: number) {
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getMinerPerformance(roundId, minerUid),
-    [identifierKey(roundId), minerUid],
+    [minerUid, roundId]
+  );
+  return useApiCall(
+    request,
+    `${identifierKey(roundId)}:${minerUid}`,
     isValidRoundIdentifier(roundId)
   );
 }
 
 // Hook for specific validator performance
 export function useValidatorPerformance(roundId: RoundIdentifier, validatorId: string) {
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getValidatorPerformance(roundId, validatorId),
-    [identifierKey(roundId), validatorId],
+    [roundId, validatorId]
+  );
+  return useApiCall(
+    request,
+    `${identifierKey(roundId)}:${validatorId}`,
     isValidRoundIdentifier(roundId)
   );
 }
 
 // Hook for round summary
 export function useRoundSummary(roundId: RoundIdentifier) {
-  return useApiCall(
+  const request = useCallback(
     () => roundsService.getRoundSummary(roundId),
-    [identifierKey(roundId)],
+    [roundId]
+  );
+  return useApiCall(
+    request,
+    identifierKey(roundId),
     isValidRoundIdentifier(roundId)
   );
 }

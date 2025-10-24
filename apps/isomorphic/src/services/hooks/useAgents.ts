@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching and managing agents data
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { agentsService } from '../api/agents.service';
 import type {
   AgentData,
@@ -24,7 +24,7 @@ import type {
 // Generic hook for API calls with loading and error states
 function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = []
+  dependencyKey?: string
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,11 +41,11 @@ function useApiCall<T>(
     } finally {
       setLoading(false);
     }
-  }, dependencies);
+  }, [apiCall]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, dependencyKey]);
 
   const refetch = useCallback(() => {
     fetchData();
@@ -56,18 +56,22 @@ function useApiCall<T>(
 
 // Hook for minimal miners list (optimized for sidebar)
 export function useMinersList(params?: MinimalAgentsListQueryParams) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getMinersList(params),
-    [JSON.stringify(params)]
+    [params]
   );
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
 export function useMinerDetails(uid: number, params?: { round?: number }) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getMinerDetails(uid, params),
-    [uid, JSON.stringify(params)]
+    [uid, params]
   );
+  return useApiCall(request, `${uid}:${paramsKey}`);
 }
 
 // Hook for miner performance metrics by UID (optimized endpoint)
@@ -75,31 +79,34 @@ export function useMinerPerformance(
   uid: number,
   params?: { timeRange?: '7d' | '30d' | '90d'; granularity?: 'hour' | 'day' }
 ) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getMinerPerformance(uid, params),
-    [uid, JSON.stringify(params)]
+    [uid, params]
   );
+  return useApiCall(request, `${uid}:${paramsKey}`);
 }
 
 // Hook for agents list with filtering and pagination (legacy)
 export function useAgents(params?: AgentsListQueryParams) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getAgents(params),
-    [JSON.stringify(params)]
+    [params]
   );
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for specific agent details
 export function useAgent(id?: string | null, params?: { round?: number }) {
-  return useApiCall<{ agent: AgentData | null; scoreRoundData: ScoreRoundDataPoint[] }>(
-    () => {
-      if (!id) {
-        return Promise.resolve({ agent: null, scoreRoundData: [] });
-      }
-      return agentsService.getAgent(id, params);
-    },
-    [id, JSON.stringify(params)]
-  );
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(() => {
+    if (!id) {
+      return Promise.resolve({ agent: null, scoreRoundData: [] });
+    }
+    return agentsService.getAgent(id, params);
+  }, [id, params]);
+  return useApiCall(request, id ? `${id}:${paramsKey}` : 'agent:none');
 }
 
 // Hook for agent performance metrics
@@ -107,10 +114,12 @@ export function useAgentPerformance(
   id: string,
   params?: AgentPerformanceQueryParams
 ) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getAgentPerformance(id, params),
-    [id, JSON.stringify(params)]
+    [id, params]
   );
+  return useApiCall(request, `${id}:${paramsKey}`);
 }
 
 // Hook for agent runs
@@ -118,18 +127,21 @@ export function useAgentRuns(
   id: string,
   params?: AgentRunsQueryParams
 ) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getAgentRuns(id, params),
-    [id, JSON.stringify(params)]
+    [id, params]
   );
+  return useApiCall(request, `${id}:${paramsKey}`);
 }
 
 // Hook for specific agent run
 export function useAgentRun(agentId: string, runId: string) {
-  return useApiCall(
+  const request = useCallback(
     () => agentsService.getAgentRun(agentId, runId),
     [agentId, runId]
   );
+  return useApiCall(request, `${agentId}:${runId}`);
 }
 
 // Hook for agent activity
@@ -137,65 +149,67 @@ export function useAgentActivity(
   id: string,
   params?: AgentActivityQueryParams
 ) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getAgentActivity(id, params),
-    [id, JSON.stringify(params)]
+    [id, params]
   );
+  return useApiCall(request, `${id}:${paramsKey}`);
 }
 
 // Hook for agent comparison
 export function useAgentComparison(params: AgentComparisonQueryParams) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.compareAgents(params),
-    [JSON.stringify(params)]
+    [params]
   );
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for agent statistics
 export function useAgentStatistics() {
-  return useApiCall(() => agentsService.getAgentStatistics());
+  const request = useCallback(() => agentsService.getAgentStatistics(), []);
+  return useApiCall(request, 'agent-statistics');
 }
 
 // Hook for all agent activity
 export function useAllAgentActivity(params?: AgentActivityQueryParams) {
-  return useApiCall(
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(
     () => agentsService.getAllAgentActivity(params),
-    [JSON.stringify(params)]
+    [params]
   );
+  return useApiCall(request, `all-activity:${paramsKey}`);
 }
 
 // Hook for top performing agents
 export function useTopAgents(limit: number = 10) {
-  return useApiCall(
-    () => agentsService.getTopAgents(limit),
-    [limit]
-  );
+  const request = useCallback(() => agentsService.getTopAgents(limit), [limit]);
+  return useApiCall(request, `top-agents:${limit}`);
 }
 
 // Hook for most active agents
 export function useMostActiveAgents(limit: number = 10) {
-  return useApiCall(
-    () => agentsService.getMostActiveAgents(limit),
-    [limit]
-  );
+  const request = useCallback(() => agentsService.getMostActiveAgents(limit), [limit]);
+  return useApiCall(request, `most-active:${limit}`);
 }
 
 // Hook for agents by type
 export function useAgentsByType(
   type: 'autoppia' | 'openai' | 'anthropic' | 'browser-use' | 'custom'
 ) {
-  return useApiCall(
-    () => agentsService.getAgentsByType(type),
-    [type]
-  );
+  const request = useCallback(() => agentsService.getAgentsByType(type), [type]);
+  return useApiCall(request, `agents-type:${type}`);
 }
 
 // Hook for agent search
 export function useAgentSearch(query: string, limit: number = 20) {
-  return useApiCall(
+  const request = useCallback(
     () => agentsService.searchAgents(query, limit),
     [query, limit]
   );
+  return useApiCall(request, `agent-search:${query}:${limit}`);
 }
 
 // Hook for agent performance trends
@@ -203,18 +217,17 @@ export function useAgentPerformanceTrends(
   id: string,
   timeRange: '7d' | '30d' | '90d' = '30d'
 ) {
-  return useApiCall(
+  const request = useCallback(
     () => agentsService.getAgentPerformanceTrends(id, timeRange),
     [id, timeRange]
   );
+  return useApiCall(request, `agent-trends:${id}:${timeRange}`);
 }
 
 // Hook for agent score distribution
 export function useAgentScoreDistribution(id: string) {
-  return useApiCall(
-    () => agentsService.getAgentScoreDistribution(id),
-    [id]
-  );
+  const request = useCallback(() => agentsService.getAgentScoreDistribution(id), [id]);
+  return useApiCall(request, `agent-score-distribution:${id}`);
 }
 
 // Hook for agent run history
@@ -223,18 +236,17 @@ export function useAgentRunHistory(
   page: number = 1,
   limit: number = 20
 ) {
-  return useApiCall(
+  const request = useCallback(
     () => agentsService.getAgentRunHistory(id, page, limit),
     [id, page, limit]
   );
+  return useApiCall(request, `agent-run-history:${id}:${page}:${limit}`);
 }
 
 // Hook for comprehensive agent summary
 export function useAgentSummary(id: string) {
-  return useApiCall(
-    () => agentsService.getAgentSummary(id),
-    [id]
-  );
+  const request = useCallback(() => agentsService.getAgentSummary(id), [id]);
+  return useApiCall(request, `agent-summary:${id}`);
 }
 
 // Hook for real-time agent data updates
@@ -324,7 +336,7 @@ export function useAgentPerformanceComparison(
     if (agentIds.length > 0) {
       fetchComparisonData();
     }
-  }, [fetchComparisonData]);
+  }, [fetchComparisonData, agentIds.length]);
 
   const refetch = useCallback(() => {
     fetchComparisonData();

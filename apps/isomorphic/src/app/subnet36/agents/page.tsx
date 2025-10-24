@@ -180,7 +180,10 @@ function AgentsLanding() {
     }
   }, [roundReady, roundSequence]);
 
-  const miners = minersData?.miners ?? [];
+  const miners = useMemo(
+    () => minersData?.miners ?? [],
+    [minersData?.miners]
+  );
   const hasMiners = miners.length > 0;
   const pathname = usePathname();
   const effectiveRound = resolvedRound ?? selectedRound;

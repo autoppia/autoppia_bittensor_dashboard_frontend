@@ -375,6 +375,7 @@ export default function TaskResults() {
                 return (
                   <div key={`gif-${screenshot.id || index}`} className="space-y-2">
                     <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={screenshot.url}
                         alt={`GIF Replay ${index + 1}`}

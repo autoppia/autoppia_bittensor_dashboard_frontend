@@ -79,7 +79,7 @@ export function useTask(
 
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchData]);
+  }, [autoRefresh, refreshInterval, fetchData, taskId]);
 
   const refetch = useCallback(() => {
     fetchData();
@@ -361,7 +361,7 @@ export function useTaskLogs(
     };
 
     fetchLogs();
-  }, [taskId, paramsKey]);
+  }, [taskId, paramsKey, params]);
 
   return { logs, total, isLoading, error };
 }

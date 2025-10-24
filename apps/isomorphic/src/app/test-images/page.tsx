@@ -54,6 +54,7 @@ export default function TestImagesPage() {
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">Regular img tag:</p>
               <div className="w-16 h-16 border border-gray-300 rounded-full overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={image.src}
                   alt={image.name}

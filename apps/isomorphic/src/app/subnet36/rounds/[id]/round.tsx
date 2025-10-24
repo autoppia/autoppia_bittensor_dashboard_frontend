@@ -890,7 +890,7 @@ function RoundMinerScoresInline({ className, selectedValidatorId, }: { className
       return { name: label, score, isSota: true, uid: `benchmark-${benchmark.id}`, color, provider: benchmark.provider, xAxisLabel: "" };
     });
     return [...minerEntries, ...benchmarkEntries].sort((a, b) => b.score - a.score);
-  }, [minersData, selectedValidatorId]);
+  }, [chartSource, selectedValidatorId]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();

@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching overview data with loading states and error handling
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { overviewService } from '../api/overview.service';
 import type {
   OverviewMetrics,
@@ -23,7 +23,7 @@ type UseApiCallOptions = {
 
 function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencyKey?: string,
   options: UseApiCallOptions = {}
 ) {
   const [data, setData] = useState<T | null>(null);
@@ -53,11 +53,11 @@ function useApiCall<T>(
         setLoading(false);
       }
     }
-  }, dependencies);
+  }, [apiCall]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, dependencyKey]);
 
   useEffect(() => {
     if (!initialFetchRef.current) {
@@ -90,31 +90,27 @@ export function useOverviewMetrics(options: UseApiCallOptions = { pollIntervalMs
     pollIntervalMs: 5000,
     ...options,
   };
-  return useApiCall(() => overviewService.getMetrics(), [], mergedOptions);
+  const request = useCallback(() => overviewService.getMetrics(), []);
+  return useApiCall(request, 'metrics', mergedOptions);
 }
 
 // Hook for validators
 export function useValidators(params?: ValidatorsQueryParams) {
-  return useApiCall(
-    () => overviewService.getValidators(params),
-    [JSON.stringify(params)],
-    { pollIntervalMs: 3000 }
-  );
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(() => overviewService.getValidators(params), [params]);
+  return useApiCall(request, paramsKey, { pollIntervalMs: 3000 });
 }
 
 // Hook for a specific validator
 export function useValidator(id: string) {
-  return useApiCall(
-    () => overviewService.getValidator(id),
-    [id]
-  );
+  const request = useCallback(() => overviewService.getValidator(id), [id]);
+  return useApiCall(request, id);
 }
 
 // Hook for validator filter options
 export function useValidatorFilterOptions() {
-  const { data, loading, error, refetch } = useApiCall(
-    () => overviewService.getValidatorFilters()
-  );
+  const request = useCallback(() => overviewService.getValidatorFilters(), []);
+  const { data, loading, error, refetch } = useApiCall(request);
 
   return {
     validators: data?.validators ?? [],
@@ -126,36 +122,34 @@ export function useValidatorFilterOptions() {
 
 // Hook for current round
 export function useCurrentRound() {
-  return useApiCall(() => overviewService.getCurrentRound(), [], { pollIntervalMs: 3000 });
+  const request = useCallback(() => overviewService.getCurrentRound(), []);
+  return useApiCall(request, 'current-round', { pollIntervalMs: 3000 });
 }
 
 // Hook for rounds
 export function useRounds(params?: RoundsQueryParams) {
-  return useApiCall(
-    () => overviewService.getRounds(params),
-    [JSON.stringify(params)]
-  );
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(() => overviewService.getRounds(params), [params]);
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for a specific round
 export function useRound(id: number) {
-  return useApiCall(
-    () => overviewService.getRound(id),
-    [id]
-  );
+  const request = useCallback(() => overviewService.getRound(id), [id]);
+  return useApiCall(request, String(id));
 }
 
 // Hook for leaderboard
 export function useLeaderboard(params?: LeaderboardQueryParams) {
-  return useApiCall(
-    () => overviewService.getLeaderboard(params),
-    [JSON.stringify(params)]
-  );
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const request = useCallback(() => overviewService.getLeaderboard(params), [params]);
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for subnet statistics
 export function useSubnetStatistics() {
-  return useApiCall(() => overviewService.getSubnetStatistics());
+  const request = useCallback(() => overviewService.getSubnetStatistics(), []);
+  return useApiCall(request, 'subnet-stats');
 }
 
 // Hook for network status

@@ -286,6 +286,7 @@ function LogoYAxisTick(props: any) {
   return (
     <g transform={`translate(${x},${y})`}>
       <foreignObject x={-logo - 22} y={-logo / 2} width={logo} height={logo}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.logoUrl}
           alt={item.label}
@@ -423,6 +424,7 @@ function FlatTooltip({ active, payload }: any) {
   return (
     <div className="rounded-2xl border border-cyan-500/30 bg-[#05070C]/95 px-4 py-3 shadow-[0_18px_40px_rgba(6,182,212,0.35)] backdrop-blur">
       <div className="flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={p.logoUrl}
           alt={p.label}

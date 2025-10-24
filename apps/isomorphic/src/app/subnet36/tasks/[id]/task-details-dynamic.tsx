@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Text } from "rizzui";
 import type { IconType } from "react-icons";
@@ -21,7 +21,6 @@ import {
 import type { TaskDetails } from "@/services/api/types/tasks";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
-import { useState } from "react";
 
 type StatCardConfig = {
   label: string;
