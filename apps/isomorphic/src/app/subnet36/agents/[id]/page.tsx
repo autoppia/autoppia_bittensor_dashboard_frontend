@@ -1038,11 +1038,13 @@ export default function Page() {
   const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
   const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
 
-  const defaultAvatar = `/miners/${Math.abs((uid ?? 0) % 50)}.svg`;
+  const defaultAvatar = useMemo(
+    () => resolveAssetUrl(`/miners/${Math.abs((uid ?? 0) % 50)}.svg`),
+    [uid]
+  );
   const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
   useEffect(() => {
-    const candidate = agent?.imageUrl && agent.imageUrl.trim() !== "" ? agent.imageUrl : defaultAvatar;
-    setAgentImgSrc(candidate);
+    setAgentImgSrc(resolveAssetUrl(agent?.imageUrl, defaultAvatar));
   }, [agent?.imageUrl, defaultAvatar]);
 
   const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');

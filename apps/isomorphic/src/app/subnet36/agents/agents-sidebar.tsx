@@ -15,6 +15,7 @@ import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeho
 import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
 import { GLASS_STYLES } from "@/config/theme-styles";
+import { resolveAssetUrl } from "@/services/utils/assets";
 
 export default function AgentsSidebar() {
   const { id } = useParams();
@@ -341,7 +342,10 @@ export default function AgentsSidebar() {
                       isActive ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
                     )}>
                       <Image
-                        src={`/miners/${miner.uid % 50}.svg`}
+                        src={resolveAssetUrl(
+                          miner.imageUrl,
+                          resolveAssetUrl(`/miners/${Math.abs(miner.uid % 50)}.svg`)
+                        )}
                         alt={miner.name}
                         fill
                         sizes="(max-width: 768px) 100vw"
