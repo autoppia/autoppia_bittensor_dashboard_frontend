@@ -30,12 +30,13 @@ import {
   AgentScoreChartPlaceholder,
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
-import { useMinerDetails, useAgentRuns } from "@/services/hooks/useAgents";
+import { useAgent } from "@/services/hooks/useAgents";
 import { agentsService } from "@/services/api/agents.service";
 import type {
   ScoreRoundDataPoint,
   AgentData,
   AgentRoundMetrics,
+  AgentRunOverview,
 } from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -77,6 +78,39 @@ const slugify = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+const RUNS_PAGE_SIZE = 100;
+
+async function fetchAllAgentRuns(
+  agentId: string,
+  params: { roundId?: number; validatorId?: string } = {}
+): Promise<{ runs: AgentRunOverview[]; total: number }> {
+  let page = 1;
+  const aggregated: AgentRunOverview[] = [];
+  let total = 0;
+
+  while (true) {
+    const response = await agentsService.getAgentRuns(agentId, {
+      ...params,
+      page,
+      limit: RUNS_PAGE_SIZE,
+      sortBy: "startTime",
+      sortOrder: "desc",
+    });
+    const payload = response?.data;
+    const batch = payload?.runs ?? [];
+    if (page === 1) {
+      total = payload?.total ?? batch.length;
+    }
+    aggregated.push(...batch);
+    if (aggregated.length >= total || batch.length < RUNS_PAGE_SIZE) {
+      break;
+    }
+    page += 1;
+  }
+
+  return { runs: aggregated, total };
+}
 
 // Agent stats band
 function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?: AgentData | null; roundMetrics?: AgentRoundMetrics | null; mode?: 'current' | 'historical'; preAvg?: any }) {
@@ -434,68 +468,46 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 }
 
 // Validators/runs list
-function AgentValidators({ selectedRound }: { selectedRound?: number | null }) {
-  const { id } = useParams();
+function AgentValidators({
+  selectedRound,
+  runs,
+  loading,
+  error,
+}: {
+  selectedRound?: number | null;
+  runs: AgentRunOverview[];
+  loading: boolean;
+  error?: string | null;
+}) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-
-  const queryParams = useMemo(
-    () => ({ limit: 50, sortBy: "startTime" as const, sortOrder: "desc" as const, ...(selectedRound !== null ? { roundId: selectedRound } : {}) }),
-    [selectedRound]
-  );
-
-  const { data: runsData, loading } = useAgentRuns(id as string, queryParams);
-  const availableRounds = runsData?.data?.availableRounds ?? [];
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
   }
 
-  if (!runsData?.data?.runs) {
+  if (error) {
     return (
       <div className="mt-6">
-        <div className="text-center py-12">
-          <div className="text-gray-500">No validator runs found for this agent</div>
-        </div>
+        <div className="text-center py-12 text-red-300">{error}</div>
       </div>
     );
   }
 
-  const effectiveRound = selectedRound ?? runsData.data.selectedRound ?? (availableRounds.length > 0 ? availableRounds[0] : null);
+  if (!runs.length) {
+    return (
+      <div className="mt-6">
+        <div className="text-center py-12 text-white/70">No validator runs found for this agent</div>
+      </div>
+    );
+  }
 
-  const filteredRuns = effectiveRound != null ? (runsData.data.runs ?? []).filter((run) => run.roundId === effectiveRound) : (runsData.data.runs ?? []);
+  const filteredRuns = selectedRound != null ? runs.filter((run) => run.roundId === selectedRound) : runs;
 
   const runsByValidator = filteredRuns.reduce((acc, run) => {
     if (!acc[run.validatorId]) acc[run.validatorId] = [] as typeof filteredRuns;
     acc[run.validatorId].push(run);
     return acc;
   }, {} as Record<string, typeof filteredRuns>);
-
-  const rankingValues = filteredRuns
-    .map((run) => (typeof run.ranking === "number" && Number.isFinite(run.ranking) ? (run.ranking > 0 ? run.ranking : null) : null))
-    .filter((value): value is number => value !== null);
-  const avgRankValue = rankingValues.length > 0 ? rankingValues.reduce((sum, value) => sum + value, 0) / rankingValues.length : null;
-  const avgRank = avgRankValue !== null ? avgRankValue.toFixed(1) : "N/A";
-
-  const scoreValues = filteredRuns
-    .map((run) => (typeof run.score === "number" && Number.isFinite(run.score) ? run.score : null))
-    .filter((value): value is number => value !== null);
-  const avgScore = scoreValues.length > 0 ? ((scoreValues.reduce((sum, value) => sum + value, 0) / scoreValues.length) * 100).toFixed(1) : "0";
-
-  const responseTimeValues = filteredRuns
-    .map((run) => {
-      if (typeof run.averageEvaluationTime === "number" && Number.isFinite(run.averageEvaluationTime)) return Math.abs(run.averageEvaluationTime);
-      if (typeof run.duration === "number" && Number.isFinite(run.duration)) return Math.abs(run.duration);
-      return null;
-    })
-    .filter((value): value is number => value !== null);
-  const avgResponseTime = responseTimeValues.length > 0
-    ? Math.round(responseTimeValues.reduce((sum, value) => sum + value, 0) / responseTimeValues.length).toString()
-    : "0";
-
-  const tasksValues = filteredRuns
-    .map((run) => (typeof run.completedTasks === "number" && Number.isFinite(run.completedTasks) ? run.completedTasks : null))
-    .filter((value): value is number => value !== null);
-  const avgTasks = tasksValues.length > 0 ? Math.round(tasksValues.reduce((sum, value) => sum + value, 0) / tasksValues.length).toString() : "0";
 
   return (
     <>
@@ -718,38 +730,44 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
   );
 };
 
-// Websites performance for current round  
-function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selectedRound?: number | null }) {
+// Websites performance for current round
+function RoundWebsitesChart({
+  agentId,
+  selectedRound,
+  runs,
+  onSummaryChange,
+}: {
+  agentId: string;
+  selectedRound?: number | null;
+  runs: AgentRunOverview[];
+  onSummaryChange?: (summary: { uniqueWebsites: number; totalTasks: number }) => void;
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chartRows, setChartRows] = useState<Array<{ website: string; successRate: number; successful: number; total: number }>>([]);
   const [totals, setTotals] = useState<{ successful: number; total: number }>({ successful: 0, total: 0 });
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+  const runsForRound = useMemo(() => {
+    if (!selectedRound) return runs;
+    return runs.filter((run) => run.roundId === selectedRound);
+  }, [runs, selectedRound]);
+
   useEffect(() => {
     let cancelled = false;
     async function fetchWebsites() {
-      if (!selectedRound || !Number.isFinite(selectedRound)) {
+      if (!selectedRound || !Number.isFinite(selectedRound) || runsForRound.length === 0) {
         setLoading(false);
         setChartRows([]);
         setTotals({ successful: 0, total: 0 });
+        onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         return;
       }
       try {
         setLoading(true);
         setError(null);
-        const runsResp = await agentsService.getAgentRuns(agentId, { roundId: selectedRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
-        const runs = runsResp?.data?.runs ?? [];
-        if (!runs.length) {
-          if (!cancelled) {
-            setChartRows([]);
-            setTotals({ successful: 0, total: 0 });
-          }
-          return;
-        }
-
         const details = await Promise.all(
-          runs.map(async (run) => {
+          runsForRound.map(async (run) => {
             try {
               return await agentsService.getAgentRun(agentId, run.runId);
             } catch (e) {
@@ -788,9 +806,13 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
         if (!cancelled) {
           setChartRows(rows);
           setTotals({ successful: totalSuccessful, total: totalTasks });
+          onSummaryChange?.({ uniqueWebsites: rows.length, totalTasks: totalTasks });
         }
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load website stats');
+        if (!cancelled) {
+          setError(e?.message || 'Failed to load website stats');
+          onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -799,7 +821,7 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
     return () => {
       cancelled = true;
     };
-  }, [agentId, selectedRound]);
+  }, [agentId, onSummaryChange, runsForRound, selectedRound]);
 
   const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
 
@@ -1014,9 +1036,10 @@ function RoundWebsitesChart({ agentId, selectedRound }: { agentId: string; selec
 }
 // Main Agent page (header + sections)
 export default function Page() {
-  // ... (keeping all the existing Page function logic)
-  const { id } = useParams();
-  const uid = Number.parseInt(id as string, 10);
+  const params = useParams<{ id: string }>();
+  const rawId = params?.id;
+  const agentParam = Array.isArray(rawId) ? rawId[0] : rawId;
+  const trimmedId = agentParam?.trim() ?? "";
   const searchParams = useSearchParams();
   const roundParam = searchParams.get("round");
   const [copiedHotkey, setCopiedHotkey] = useState(false);
@@ -1027,20 +1050,42 @@ export default function Page() {
     return Number.isFinite(parsed) ? parsed : undefined;
   }, [roundParam]);
 
-  const { data: agentData, loading, error } = useMinerDetails(
-    uid,
+  const normalizedAgentId = useMemo(() => {
+    if (!trimmedId) return null;
+    if (/^\d+$/.test(trimmedId)) return trimmedId;
+    if (/^agent-\d+$/i.test(trimmedId)) return trimmedId;
+    const matches = trimmedId.match(/\d+/g);
+    if (matches?.length) {
+      return `agent-${matches[matches.length - 1]}`;
+    }
+    return trimmedId;
+  }, [trimmedId]);
+
+  const numericUidFromParam = useMemo(() => {
+    if (!trimmedId) return undefined;
+    const matches = trimmedId.match(/\d+/g);
+    if (!matches?.length) return undefined;
+    const value = Number.parseInt(matches[matches.length - 1], 10);
+    return Number.isFinite(value) ? value : undefined;
+  }, [trimmedId]);
+
+  const agentIdForQuery = normalizedAgentId ?? (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
+
+  const { data: agentDetail, loading, error } = useAgent(
+    agentIdForQuery,
     selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
   );
 
-  const agent = agentData?.agent;
-  const roundMetrics = agentData?.roundMetrics ?? null;
-  const apiScoreRoundData = agentData?.scoreRoundData;
+  const agent = agentDetail?.agent ?? null;
+  const roundMetrics = agentDetail?.roundMetrics ?? null;
+  const availableRounds = agentDetail?.availableRounds ?? [];
+  const apiScoreRoundData = agentDetail?.scoreRoundData ?? [];
   const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
   const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
 
   const defaultAvatar = useMemo(
-    () => resolveAssetUrl(`/miners/${Math.abs((uid ?? 0) % 50)}.svg`),
-    [uid]
+    () => resolveAssetUrl(`/miners/${Math.abs((agent?.uid ?? numericUidFromParam ?? 0) % 50)}.svg`),
+    [agent?.uid, numericUidFromParam]
   );
   const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
   useEffect(() => {
@@ -1048,13 +1093,17 @@ export default function Page() {
   }, [agent?.imageUrl, defaultAvatar]);
 
   const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
-  
-  // Calculate websites count state
-  const [websitesCount, setWebsitesCount] = useState<number>(0);
+  const [websitesSummary, setWebsitesSummary] = useState<{ unique: number; total: number }>({ unique: 0, total: 0 });
+
+  const currentRound =
+    selectedRoundFromQuery ??
+    roundMetrics?.roundId ??
+    (availableRounds.length > 0 ? availableRounds[0] : undefined);
 
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
-    if (!apiScoreRoundData || apiScoreRoundData.length === 0) return [];
-    return apiScoreRoundData.map((point: any) => {
+    const source = agentDetail?.scoreRoundData ?? [];
+    if (!source.length) return [];
+    return source.map((point: any) => {
       const roundId = point.round_id ?? point.validator_round_id ?? point.roundId ?? point.validatorRoundId ?? point.round ?? 0;
       return {
         round_id: Number(roundId),
@@ -1064,32 +1113,61 @@ export default function Page() {
         timestamp: typeof point.timestamp === "string" ? point.timestamp : point.timestamp?.toString() ?? "",
         topScore: normalizeScore(point.topScore ?? point.top_score ?? point.bestScore) ?? undefined,
         benchmarks: Array.isArray(point.benchmarks)
-          ? point.benchmarks.map((benchmark: any) => ({ name: benchmark.name ?? benchmark.provider ?? "Benchmark", provider: benchmark.provider, score: normalizeScore(benchmark.score) ?? 0 }))
+          ? point.benchmarks.map((benchmark: any) => ({
+              name: benchmark.name ?? benchmark.provider ?? "Benchmark",
+              provider: benchmark.provider,
+              score: normalizeScore(benchmark.score) ?? 0,
+            }))
           : undefined,
       };
     });
-  }, [apiScoreRoundData]);
+  }, [agentDetail?.scoreRoundData]);
 
-  const currentRound = selectedRoundFromQuery ?? roundMetrics?.roundId ?? (Array.isArray(agentData?.availableRounds) ? agentData?.availableRounds[0] : undefined);
+  const canFetchRuns = useMemo(() => {
+    if (!agentIdForQuery) return false;
+    return /\d+/.test(agentIdForQuery);
+  }, [agentIdForQuery]);
 
-  // Preload agent runs to compute round-level aggregates for Current view
-  const runsQueryParams = useMemo(
-    () => ({
-      limit: 50,
-      sortBy: 'startTime' as const,
-      sortOrder: 'desc' as const,
-      ...(currentRound != null ? { roundId: currentRound } : {}),
-    }),
-    [currentRound]
-  );
-  const { data: preRunsData } = useAgentRuns(String(uid), runsQueryParams);
-  const preFilteredRuns = useMemo(() => {
-    const all = preRunsData?.data?.runs ?? [];
-    if (currentRound == null) return all;
-    return all.filter((run) => run.roundId === currentRound);
-  }, [preRunsData?.data?.runs, currentRound]);
+  const [runsState, setRunsState] = useState<{ loading: boolean; runs: AgentRunOverview[]; error: string | null }>({
+    loading: true,
+    runs: [],
+    error: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!agentIdForQuery || !currentRound || !Number.isFinite(currentRound) || !canFetchRuns) {
+      setRunsState({ loading: false, runs: [], error: null });
+      return;
+    }
+
+    setRunsState({ loading: true, runs: [], error: null });
+
+    (async () => {
+      try {
+        const { runs } = await fetchAllAgentRuns(agentIdForQuery, { roundId: currentRound });
+        if (!cancelled) {
+          setRunsState({ loading: false, runs, error: null });
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setRunsState({
+            loading: false,
+            runs: [],
+            error: err?.message || "Failed to load validator runs",
+          });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agentIdForQuery, canFetchRuns, currentRound]);
+
   const preAvg = useMemo(() => {
-    const runs = preFilteredRuns;
+    const runs = runsState.runs;
     const rankingValues = runs
       .map((run) => (typeof run.ranking === 'number' && Number.isFinite(run.ranking) && run.ranking > 0 ? run.ranking : null))
       .filter((v): v is number => v !== null);
@@ -1124,46 +1202,7 @@ export default function Page() {
       avgResp: `${avgResp}s`,
       avgTasks: `${avgTasksVal}`,
     };
-  }, [preFilteredRuns]);
-
-  // Fetch websites count for current round
-  useEffect(() => {
-    async function fetchWebsitesCount() {
-      if (!currentRound || !Number.isFinite(currentRound)) {
-        setWebsitesCount(0);
-        return;
-      }
-      try {
-        const runsResp = await agentsService.getAgentRuns(String(uid), { roundId: currentRound, limit: 50, sortBy: 'startTime', sortOrder: 'desc' });
-        const runs = runsResp?.data?.runs ?? [];
-        if (!runs.length) {
-          setWebsitesCount(0);
-          return;
-        }
-        const details = await Promise.all(
-          runs.map(async (run) => {
-            try {
-              return await agentsService.getAgentRun(String(uid), run.runId);
-            } catch (e) {
-              return null;
-            }
-          })
-        );
-        const websiteSet = new Set<string>();
-        details.forEach((run) => {
-          if (!run || !Array.isArray(run.websites)) return;
-          run.websites.forEach((w) => {
-            const key = (w.website || 'unknown').toString();
-            websiteSet.add(key);
-          });
-        });
-        setWebsitesCount(websiteSet.size);
-      } catch (e) {
-        setWebsitesCount(0);
-      }
-    }
-    fetchWebsitesCount();
-  }, [uid, currentRound]);
+  }, [runsState.runs]);
 
   if (loading) {
     return (
@@ -1253,7 +1292,7 @@ export default function Page() {
     },
     {
       title: "Websites",
-      metric: websitesCount.toString(),
+      metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
@@ -1527,12 +1566,24 @@ export default function Page() {
           {/* Content Section */}
           <div className="relative z-10">
             {viewMode === 'runs' ? (
-              <AgentValidators selectedRound={currentRound ?? null} />
+              <AgentValidators
+                selectedRound={currentRound ?? null}
+                runs={runsState.runs}
+                loading={runsState.loading}
+                error={runsState.error ?? undefined}
+              />
             ) : (
               <>
                 {viewMode === 'current' ? (
                   <div>
-                    <RoundWebsitesChart agentId={String(uid)} selectedRound={currentRound ?? null} />
+                    <RoundWebsitesChart
+                      agentId={agentIdForQuery ?? trimmedId}
+                      selectedRound={currentRound ?? null}
+                      runs={runsState.runs}
+                      onSummaryChange={({ uniqueWebsites, totalTasks }) =>
+                        setWebsitesSummary({ unique: uniqueWebsites, total: totalTasks })
+                      }
+                    />
                   </div>
                 ) : (
                   <div>
