@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -422,8 +422,8 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
         </div>
       )}
       <div className="relative custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
-        <div className={cn("h-full w-full pt-2")}> 
-          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
+        <div className={cn("h-full w-full pt-2 min-h-[360px]")}>
+          <ResponsiveContainer width="100%" height={360} minWidth={600}>
             <ComposedChart data={displayData} margin={{ top: 10, left: -10 }}>
               <defs>
                 <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
@@ -1095,6 +1095,12 @@ export default function Page() {
   const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
   const [websitesSummary, setWebsitesSummary] = useState<{ unique: number; total: number }>({ unique: 0, total: 0 });
 
+  const handleSummaryChange = useCallback((
+    { uniqueWebsites, totalTasks }: { uniqueWebsites: number; totalTasks: number }
+  ) => {
+    setWebsitesSummary({ unique: uniqueWebsites, total: totalTasks });
+  }, [setWebsitesSummary]);
+
   const currentRound =
     selectedRoundFromQuery ??
     roundMetrics?.roundId ??
@@ -1580,9 +1586,7 @@ export default function Page() {
                       agentId={agentIdForQuery ?? trimmedId}
                       selectedRound={currentRound ?? null}
                       runs={runsState.runs}
-                      onSummaryChange={({ uniqueWebsites, totalTasks }) =>
-                        setWebsitesSummary({ unique: uniqueWebsites, total: totalTasks })
-                      }
+                      onSummaryChange={handleSummaryChange}
                     />
                   </div>
                 ) : (
