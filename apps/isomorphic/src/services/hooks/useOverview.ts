@@ -16,6 +16,25 @@ import type {
   RoundsQueryParams,
 } from '../api/types/overview';
 
+type SerializableParams = Record<string, any> | undefined;
+
+function useStableParams<T extends SerializableParams>(params: T) {
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const paramsRef = useRef<{ key: string; value: T | undefined }>({
+    key: '',
+    value: undefined,
+  });
+
+  if (paramsRef.current.key !== paramsKey) {
+    paramsRef.current = {
+      key: paramsKey,
+      value: params ? ({ ...params } as T) : undefined,
+    };
+  }
+
+  return { paramsKey, stableParams: paramsRef.current.value };
+}
+
 // Generic hook for API calls with loading and error states
 type UseApiCallOptions = {
   pollIntervalMs?: number;
@@ -24,7 +43,7 @@ type UseApiCallOptions = {
 function useApiCall<T>(
   apiCall: () => Promise<T>,
   dependencyKey?: string,
-  options: UseApiCallOptions = {}
+  options?: UseApiCallOptions
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +51,7 @@ function useApiCall<T>(
   const pollIntervalMs = options?.pollIntervalMs;
   const initialFetchRef = useRef(true);
   const serializedDataRef = useRef<string | null>(null);
+  const lastDependencyKeyRef = useRef<string | undefined>(undefined);
 
   const fetchData = useCallback(async () => {
     try {
@@ -56,6 +76,11 @@ function useApiCall<T>(
   }, [apiCall]);
 
   useEffect(() => {
+    const key = dependencyKey ?? '__default__';
+    if (lastDependencyKeyRef.current === key && !initialFetchRef.current) {
+      return;
+    }
+    lastDependencyKeyRef.current = key;
     fetchData();
   }, [fetchData, dependencyKey]);
 
@@ -84,21 +109,21 @@ function useApiCall<T>(
   return { data, loading, error, refetch: fetchData };
 }
 
-// Hook for overview metrics with default polling to keep metrics fresh
-export function useOverviewMetrics(options: UseApiCallOptions = { pollIntervalMs: 5000 }) {
-  const mergedOptions = {
-    pollIntervalMs: 5000,
-    ...options,
-  };
+// Hook for overview metrics
+export function useOverviewMetrics(options?: UseApiCallOptions) {
+  const { stableParams: stableOptions } = useStableParams(options);
   const request = useCallback(() => overviewService.getMetrics(), []);
-  return useApiCall(request, 'metrics', mergedOptions);
+  return useApiCall(request, 'metrics', stableOptions);
 }
 
 // Hook for validators
 export function useValidators(params?: ValidatorsQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
-  const request = useCallback(() => overviewService.getValidators(params), [params]);
-  return useApiCall(request, paramsKey, { pollIntervalMs: 3000 });
+  const { paramsKey, stableParams } = useStableParams(params);
+  const request = useCallback(
+    () => overviewService.getValidators(stableParams),
+    [stableParams]
+  );
+  return useApiCall(request, paramsKey);
 }
 
 // Hook for a specific validator
@@ -123,13 +148,16 @@ export function useValidatorFilterOptions() {
 // Hook for current round
 export function useCurrentRound() {
   const request = useCallback(() => overviewService.getCurrentRound(), []);
-  return useApiCall(request, 'current-round', { pollIntervalMs: 3000 });
+  return useApiCall(request, 'current-round');
 }
 
 // Hook for rounds
 export function useRounds(params?: RoundsQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
-  const request = useCallback(() => overviewService.getRounds(params), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
+  const request = useCallback(
+    () => overviewService.getRounds(stableParams),
+    [stableParams]
+  );
   return useApiCall(request, paramsKey);
 }
 
@@ -141,8 +169,11 @@ export function useRound(id: number) {
 
 // Hook for leaderboard
 export function useLeaderboard(params?: LeaderboardQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
-  const request = useCallback(() => overviewService.getLeaderboard(params), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
+  const request = useCallback(
+    () => overviewService.getLeaderboard(stableParams),
+    [stableParams]
+  );
   return useApiCall(request, paramsKey);
 }
 
@@ -154,23 +185,26 @@ export function useSubnetStatistics() {
 
 // Hook for network status
 export function useNetworkStatus() {
-  return useApiCall(() => overviewService.getNetworkStatus());
+  const request = useCallback(() => overviewService.getNetworkStatus(), []);
+  return useApiCall(request, 'network-status');
 }
 
 // Hook for recent activity
 export function useRecentActivity(limit: number = 10) {
-  return useApiCall(
+  const request = useCallback(
     () => overviewService.getRecentActivity(limit),
     [limit]
   );
+  return useApiCall(request, `recent-activity:${limit}`);
 }
 
 // Hook for performance trends
 export function usePerformanceTrends(days: number = 7) {
-  return useApiCall(
+  const request = useCallback(
     () => overviewService.getPerformanceTrends(days),
     [days]
   );
+  return useApiCall(request, `performance-trends:${days}`);
 }
 
 // Combined hook for overview page data

@@ -47,13 +47,7 @@ const isAllowedHost = (hostname: string | null): boolean => {
 
 const normalizeRelativePath = (value: string): string => {
   const cleaned = value.replace(/^\/+/, "");
-  if (!cleaned) {
-    return DEFAULT_ASSET_BASE;
-  }
-  if (DEFAULT_ASSET_BASE) {
-    return `${DEFAULT_ASSET_BASE}/${cleaned}`;
-  }
-  return `/${cleaned}`;
+  return cleaned ? `/${cleaned}` : "/";
 };
 
 const sanitizeUrl = (value?: string | null): string => {
@@ -104,8 +98,8 @@ const rewriteToLocalAsset = (value: string): string => {
     return value;
   }
 
-  // Skip rewriting when we don't have an asset base (or the URL is already relative)
-  if (!DEFAULT_ASSET_BASE || value.startsWith("/")) {
+  // Skip rewriting when we already have a relative path or data URI
+  if (value.startsWith("/") || value.startsWith("data:")) {
     return value;
   }
 
@@ -120,13 +114,11 @@ const rewriteToLocalAsset = (value: string): string => {
       return path + candidateUrl.search;
     }
   } catch (error) {
-    if (value.startsWith(DEFAULT_ASSET_BASE)) {
-      const remainder = value.slice(DEFAULT_ASSET_BASE.length) || "/";
-      return remainder.startsWith("/") ? remainder : `/${remainder}`;
-    }
+    // noop
   }
 
-  return value;
+  // Any other absolute URL should be considered invalid for frontend assets.
+  return "";
 };
 
 export function resolveAssetUrl(
@@ -135,5 +127,5 @@ export function resolveAssetUrl(
 ): string {
   const normalizedFallback = rewriteToLocalAsset(sanitizeUrl(fallback));
   const normalizedSrc = rewriteToLocalAsset(sanitizeUrl(src));
-  return normalizedSrc || normalizedFallback;
+  return normalizedSrc || normalizedFallback || "/images/autoppia-logo.png";
 }
