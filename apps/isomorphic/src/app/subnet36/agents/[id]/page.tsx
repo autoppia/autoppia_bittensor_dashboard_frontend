@@ -1524,14 +1524,6 @@ export default function Page() {
               })}
             </div>
           )}
-          
-          <style jsx global>{`
-            @keyframes shimmer {
-              0% { background-position: -200% 0; }
-              100% { background-position: 200% 0; }
-            }
-          `}</style>
-
           {/* Content Section */}
           <div className="relative z-10">
             {viewMode === 'runs' ? (

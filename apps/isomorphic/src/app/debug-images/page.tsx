@@ -109,6 +109,7 @@ export default function DebugImagesPage() {
             <div>
               <p className="text-sm text-gray-600 mb-2">Small (48x48):</p>
               <div className="w-12 h-12 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={testImage}
                   alt="Autoppia"
@@ -120,6 +121,7 @@ export default function DebugImagesPage() {
             <div>
               <p className="text-sm text-gray-600 mb-2">Medium (96x96):</p>
               <div className="w-24 h-24 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={testImage}
                   alt="Autoppia"
@@ -131,6 +133,7 @@ export default function DebugImagesPage() {
             <div>
               <p className="text-sm text-gray-600 mb-2">Large (192x192):</p>
               <div className="w-48 h-48 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={testImage}
                   alt="Autoppia"

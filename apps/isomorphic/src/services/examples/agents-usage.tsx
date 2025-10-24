@@ -3,6 +3,7 @@
  * Demonstrates how to use the agents API service and hooks
  */
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { agentsService } from '../api/agents.service';
 import {
@@ -108,7 +109,12 @@ export function AgentDetailsExample({ agentId }: { agentId: string }) {
       
       {/* Agent Info */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-        <img src={agent.imageUrl} alt={agent.name} width={64} height={64} />
+        <Image
+          src={agent.imageUrl}
+          alt={agent.name}
+          width={64}
+          height={64}
+        />
         <div>
           <p><strong>Type:</strong> {agent.type}</p>
           <p><strong>Version:</strong> {agent.version}</p>
