@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching rounds data with loading states and error handling
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { roundsService } from '../api/rounds.service';
 import type {
   RoundData,
@@ -17,6 +17,25 @@ import type {
   RoundActivityQueryParams,
 } from '../api/types/rounds';
 
+type SerializableParams = Record<string, any> | undefined;
+
+function useStableParams<T extends SerializableParams>(params: T) {
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const paramsRef = useRef<{ key: string; value: T | undefined }>({
+    key: '',
+    value: undefined,
+  });
+
+  if (paramsRef.current.key !== paramsKey) {
+    paramsRef.current = {
+      key: paramsKey,
+      value: params ? ({ ...params } as T) : undefined,
+    };
+  }
+
+  return { paramsKey, stableParams: paramsRef.current.value };
+}
+
 // Generic hook for API calls with loading and error states
 function useApiCall<T>(
   apiCall: () => Promise<T>,
@@ -26,6 +45,8 @@ function useApiCall<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const lastDependencyKeyRef = useRef<string | undefined>(undefined);
+  const hasFetchedRef = useRef(false);
 
   const fetchData = useCallback(async () => {
     if (!enabled) {
@@ -47,6 +68,22 @@ function useApiCall<T>(
   }, [apiCall, enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      if (lastDependencyKeyRef.current !== undefined) {
+        lastDependencyKeyRef.current = undefined;
+      }
+      hasFetchedRef.current = false;
+      setData(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    const key = dependencyKey ?? '__default__';
+    if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
+      return;
+    }
+    lastDependencyKeyRef.current = key;
+    hasFetchedRef.current = true;
     fetchData();
   }, [fetchData, dependencyKey, enabled]);
 
@@ -70,8 +107,11 @@ const identifierKey = (id?: RoundIdentifier): string =>
 
 // Hook for rounds list
 export function useRounds(params?: RoundsListQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
-  const request = useCallback(() => roundsService.getRounds(params), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
+  const request = useCallback(
+    () => roundsService.getRounds(stableParams),
+    [stableParams]
+  );
   return useApiCall(request, paramsKey);
 }
 
@@ -112,10 +152,10 @@ export function useRoundStatistics(roundId?: RoundIdentifier) {
 // Hook for round miners
 export function useRoundMiners(roundId?: RoundIdentifier, params?: RoundMinersQueryParams) {
   const enabled = isValidRoundIdentifier(roundId);
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => roundsService.getRoundMiners(roundId as RoundIdentifier, params),
-    [roundId, params]
+    () => roundsService.getRoundMiners(roundId as RoundIdentifier, stableParams),
+    [roundId, stableParams]
   );
   return useApiCall(
     request,
@@ -141,10 +181,10 @@ export function useRoundValidators(roundId?: RoundIdentifier) {
 // Hook for round activity
 export function useRoundActivity(roundId?: RoundIdentifier, params?: RoundActivityQueryParams) {
   const enabled = isValidRoundIdentifier(roundId);
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => roundsService.getRoundActivity(roundId as RoundIdentifier, params),
-    [roundId, params]
+    () => roundsService.getRoundActivity(roundId as RoundIdentifier, stableParams),
+    [roundId, stableParams]
   );
   return useApiCall(
     request,

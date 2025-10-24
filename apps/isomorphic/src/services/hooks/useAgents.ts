@@ -3,7 +3,7 @@
  * Provides easy-to-use hooks for fetching and managing agents data
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { agentsService } from '../api/agents.service';
 import type {
   AgentData,
@@ -23,6 +23,25 @@ import type {
   AgentComparisonQueryParams,
 } from '../api/types/agents';
 
+type SerializableParams = Record<string, any> | undefined;
+
+function useStableParams<T extends SerializableParams>(params: T) {
+  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const paramsRef = useRef<{ key: string; value: T | undefined }>({
+    key: '',
+    value: undefined,
+  });
+
+  if (paramsRef.current.key !== paramsKey) {
+    paramsRef.current = {
+      key: paramsKey,
+      value: params ? ({ ...params } as T) : undefined,
+    };
+  }
+
+  return { paramsKey, stableParams: paramsRef.current.value };
+}
+
 // Generic hook for API calls with loading and error states
 function useApiCall<T>(
   apiCall: () => Promise<T>,
@@ -31,6 +50,8 @@ function useApiCall<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastDependencyKeyRef = useRef<string | undefined>(undefined);
+  const hasFetchedRef = useRef(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -46,6 +67,12 @@ function useApiCall<T>(
   }, [apiCall]);
 
   useEffect(() => {
+    const key = dependencyKey ?? '__default__';
+    if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
+      return;
+    }
+    lastDependencyKeyRef.current = key;
+    hasFetchedRef.current = true;
     fetchData();
   }, [fetchData, dependencyKey]);
 
@@ -58,20 +85,20 @@ function useApiCall<T>(
 
 // Hook for minimal miners list (optimized for sidebar)
 export function useMinersList(params?: MinimalAgentsListQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinersList(params),
-    [params]
+    () => agentsService.getMinersList(stableParams),
+    [stableParams]
   );
   return useApiCall(request, paramsKey);
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
 export function useMinerDetails(uid: number, params?: { round?: number }) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinerDetails(uid, params),
-    [uid, params]
+    () => agentsService.getMinerDetails(uid, stableParams),
+    [uid, stableParams]
   );
   return useApiCall(request, `${uid}:${paramsKey}`);
 }
@@ -81,20 +108,20 @@ export function useMinerPerformance(
   uid: number,
   params?: { timeRange?: '7d' | '30d' | '90d'; granularity?: 'hour' | 'day' }
 ) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinerPerformance(uid, params),
-    [uid, params]
+    () => agentsService.getMinerPerformance(uid, stableParams),
+    [uid, stableParams]
   );
   return useApiCall(request, `${uid}:${paramsKey}`);
 }
 
 // Hook for agents list with filtering and pagination (legacy)
 export function useAgents(params?: AgentsListQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgents(params),
-    [params]
+    () => agentsService.getAgents(stableParams),
+    [stableParams]
   );
   return useApiCall(request, paramsKey);
 }
@@ -108,13 +135,13 @@ type AgentDetailPayload = {
 };
 
 export function useAgent(id?: string | null, params?: { round?: number }) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
-    return agentsService.getAgent(id, params);
-  }, [id, params]);
+    return agentsService.getAgent(id, stableParams);
+  }, [id, stableParams]);
   return useApiCall(request, id ? `${id}:${paramsKey}` : 'agent:none');
 }
 
@@ -123,10 +150,10 @@ export function useAgentPerformance(
   id: string,
   params?: AgentPerformanceQueryParams
 ) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentPerformance(id, params),
-    [id, params]
+    () => agentsService.getAgentPerformance(id, stableParams),
+    [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
 }
@@ -136,10 +163,10 @@ export function useAgentRuns(
   id: string,
   params?: AgentRunsQueryParams
 ) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentRuns(id, params),
-    [id, params]
+    () => agentsService.getAgentRuns(id, stableParams),
+    [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
 }
@@ -158,20 +185,20 @@ export function useAgentActivity(
   id: string,
   params?: AgentActivityQueryParams
 ) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentActivity(id, params),
-    [id, params]
+    () => agentsService.getAgentActivity(id, stableParams),
+    [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
 }
 
 // Hook for agent comparison
 export function useAgentComparison(params: AgentComparisonQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.compareAgents(params),
-    [params]
+    () => agentsService.compareAgents(stableParams as AgentComparisonQueryParams),
+    [stableParams]
   );
   return useApiCall(request, paramsKey);
 }
@@ -184,10 +211,10 @@ export function useAgentStatistics() {
 
 // Hook for all agent activity
 export function useAllAgentActivity(params?: AgentActivityQueryParams) {
-  const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
+  const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAllAgentActivity(params),
-    [params]
+    () => agentsService.getAllAgentActivity(stableParams),
+    [stableParams]
   );
   return useApiCall(request, `all-activity:${paramsKey}`);
 }

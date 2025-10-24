@@ -30,13 +30,6 @@ const allowedImageHosts = Array.from(
   )
 );
 
-const remoteImagePatterns = allowedImageHosts.map((hostname) => ({
-  protocol: "https",
-  hostname,
-  port: "",
-  pathname: "/**",
-}));
-
 /** @type {import("next").NextConfig} */
 module.exports = {
   reactStrictMode: true,
@@ -98,7 +91,7 @@ module.exports = {
     return config;
   },
   images: {
-    remotePatterns: remoteImagePatterns,
+    remotePatterns: [],
   },
   async redirects() {
     return [
