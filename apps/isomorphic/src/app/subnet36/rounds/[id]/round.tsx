@@ -552,7 +552,7 @@ function RoundStatsInline({ selectedValidator }: { selectedValidator?: Validator
   const winnerAverageScore = statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
 
   const aggregatedCards = [
-    { key: "winner", title: "Winner", value: topMinerLabel, uid: topMiner?.uid, hotkey: topMiner?.hotkey, helper: !topMiner ? "Awaiting validator results" : undefined, icon: PiCrownDuotone, gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30", bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10", iconGradient: "from-amber-400 to-orange-500", borderColor: "border-amber-400/50", glowColor: "rgba(251,191,36,0.5)", valueClass: "text-2xl" },
+    { key: "winner", title: "Winner", value: topMinerLabel, uid: topMiner?.uid, hotkey: topMiner?.hotkey, imageUrl: topMiner?.imageUrl, helper: !topMiner ? "Awaiting validator results" : undefined, icon: PiCrownDuotone, gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30", bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10", iconGradient: "from-amber-400 to-orange-500", borderColor: "border-amber-400/50", glowColor: "rgba(251,191,36,0.5)", valueClass: "text-2xl" },
     { key: "winnerAverageScore", title: "Winner Average Score", value: `${formatNumber(winnerAverageScore * 100, 1)}%`, helper: "Average score achieved by the winning miner across validators", icon: PiTrophyDuotone, gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30", bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10", iconGradient: "from-emerald-400 to-teal-500", borderColor: "border-emerald-400/50", glowColor: "rgba(16,185,129,0.5)", valueClass: "text-4xl" },
     { key: "miners", title: "Miners Evaluated", value: formatNumber(statistics.totalMiners ?? 0), helper: "Unique miners participating this round", icon: PiUsersThreeDuotone, gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30", bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10", iconGradient: "from-violet-400 to-fuchsia-500", borderColor: "border-violet-400/50", glowColor: "rgba(139,92,246,0.5)", valueClass: "text-4xl" },
     { key: "tasks", title: "Average Tasks", value: formatNumber(averageTasks, 1), helper: "Tasks completed per validator", icon: PiListChecksDuotone, gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30", bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10", iconGradient: "from-blue-400 to-indigo-500", borderColor: "border-blue-400/50", glowColor: "rgba(59,130,246,0.5)", valueClass: "text-4xl" },
@@ -569,6 +569,15 @@ function MetricCard({ card }: { card: any }) {
   const Icon = card.icon;
   const isWinner = card.key === "winner" && typeof card.uid === "number";
   const [copied, setCopied] = React.useState(false);
+  const fallbackAvatarIndex = (() => {
+    const uidValue = card?.uid;
+    if (typeof uidValue === "number" && Number.isFinite(uidValue)) {
+      return Math.abs(uidValue % 50);
+    }
+    return 0;
+  })();
+  const fallbackAvatar = resolveAssetUrl(`/miners/${fallbackAvatarIndex}.svg`);
+  const winnerAvatar = resolveAssetUrl(card?.imageUrl, fallbackAvatar);
   
   const handleCopyHotkey = async (hotkey: string) => {
     try {
@@ -610,7 +619,7 @@ function MetricCard({ card }: { card: any }) {
         <div className="flex items-start gap-4">
           {isWinner ? (
             <div className="relative h-24 w-24 overflow-hidden rounded-2xl border-3 border-amber-300/70 shadow-2xl ring-6 ring-amber-400/30 transition-all duration-300 group-hover:scale-110 group-hover:ring-amber-400/50 group-hover:rotate-3">
-              <Image src={`/miners/${(card.uid as number) % 50}.svg`} alt={`UID ${(card.uid as number)}`} fill sizes="(max-width: 768px) 100vw" className="object-cover" />
+              <Image src={winnerAvatar} alt={`UID ${card.uid ?? "winner"}`} fill sizes="(max-width: 768px) 100vw" className="object-cover" />
               <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-2.5 shadow-2xl ring-3 ring-white/30 animate-pulse">
                 <PiCrownDuotone className="h-6 w-6 text-white" />
               </div>
@@ -1007,6 +1016,8 @@ function RoundTopMinersInline({ className, selectedValidatorId, roundNumber, }: 
             const rank = index + 1;
             const rawIsSota = miner.isSota ?? miner.is_sota ?? miner.isBenchmark ?? miner.is_benchmark ?? (typeof miner.type === "string" && miner.type.toLowerCase() === "benchmark");
             const isSota = Boolean(rawIsSota);
+            const fallbackAvatar = resolveAssetUrl(`/miners/${Math.abs(miner.uid % 50)}.svg`);
+            const avatarSrc = resolveAssetUrl(miner.imageUrl, fallbackAvatar);
             return (
               <Link key={`top-miner-${index}`} href={agentHref} title="Inspect Agent Run">
                 <div className={cn("relative flex items-center w-full px-5 py-4 mb-3 rounded-2xl transition-all duration-300 cursor-pointer group border-2", listRowHover, rank === 1 ? "border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10" : "border-transparent")}> 
@@ -1014,7 +1025,7 @@ function RoundTopMinersInline({ className, selectedValidatorId, roundNumber, }: 
                   {rank <= 3 && <div className={cn("absolute -inset-0.5 rounded-2xl bg-gradient-to-br opacity-0 group-hover:opacity-20 blur transition-opacity duration-500", rank === 1 ? "from-amber-400 via-yellow-400 to-amber-500" : rank === 2 ? "from-slate-300 via-slate-200 to-slate-400" : "from-orange-400 via-amber-500 to-orange-600")} />}
                   
                   <div className={cn("relative me-4 h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 transition-all duration-300 group-hover:scale-110 group-hover:ring-4 shadow-xl", rank === 1 ? "ring-amber-400/60 group-hover:ring-amber-400/80" : "ring-white/20 group-hover:ring-white/40")}>
-                    <Image src={`/miners/${miner.uid % 50}.svg`} alt={miner.uid.toString()} fill sizes="(max-width: 768px) 100vw" className="object-cover" />
+                    <Image src={avatarSrc} alt={miner.uid.toString()} fill sizes="(max-width: 768px) 100vw" className="object-cover" />
                     {rank === 1 && <div className="absolute -top-1 -right-1 p-1 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-2 ring-white/50 shadow-lg"><PiCrownFill className="h-3 w-3 text-white" /></div>}
                   </div>
                   <div className="flex w-full items-center justify-between gap-3">
@@ -1090,7 +1101,7 @@ export default function Round() {
 
   const selectedValidatorCards = selectedValidator
     ? [
-        { key: "winner", title: "Validator Winner", value: winnerLabel, uid: winnerUidVal, hotkey: selectedValidator?.topMiner?.hotkey, helper: winnerUidVal != null ? `UID ${winnerUidVal}` : (selectedValidator.name ? `${selectedValidator.name} latest champion` : "Champion for this validator"), icon: PiCrownDuotone, gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30", bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10", iconGradient: "from-amber-400 to-orange-500", borderColor: "border-amber-400/50", glowColor: "rgba(251,191,36,0.5)", valueClass: "text-2xl" },
+        { key: "winner", title: "Validator Winner", value: winnerLabel, uid: winnerUidVal, hotkey: selectedValidator?.topMiner?.hotkey, imageUrl: selectedValidator?.topMiner?.imageUrl ?? aggregatedTopMiner?.imageUrl, helper: winnerUidVal != null ? `UID ${winnerUidVal}` : (selectedValidator.name ? `${selectedValidator.name} latest champion` : "Champion for this validator"), icon: PiCrownDuotone, gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30", bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10", iconGradient: "from-amber-400 to-orange-500", borderColor: "border-amber-400/50", glowColor: "rgba(251,191,36,0.5)", valueClass: "text-2xl" },
         { key: "score", title: "Top Score", value: `${formatNumber(((selectedValidator.topScore ?? selectedValidator.averageScore) ?? 0) * 100, 1)}%`, helper: "Best run recorded by this validator", icon: PiTrophyDuotone, gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30", bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10", iconGradient: "from-emerald-400 to-teal-500", borderColor: "border-emerald-400/50", glowColor: "rgba(16,185,129,0.5)", valueClass: "text-4xl" },
         { key: "miners", title: "Miners Participated", value: formatNumber(selectedValidator.totalMiners ?? 0), helper: "Unique miners assessed this round", icon: PiUsersThreeDuotone, gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30", bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10", iconGradient: "from-violet-400 to-fuchsia-500", borderColor: "border-violet-400/50", glowColor: "rgba(139,92,246,0.5)", valueClass: "text-4xl" },
         { key: "tasks", title: "Tasks", value: formatNumber(selectedValidator.totalTasks ?? 0), helper: "Total tasks executed by this validator", icon: PiListChecksDuotone, gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30", bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10", iconGradient: "from-blue-400 to-indigo-500", borderColor: "border-blue-400/50", glowColor: "rgba(59,130,246,0.5)", valueClass: "text-4xl" },
