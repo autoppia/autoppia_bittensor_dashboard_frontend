@@ -1,6 +1,7 @@
 "use client";
 
 import cn from "@core/utils/class-names";
+import { CHIP_STYLES } from "@/config/theme-styles";
 import { Select } from "rizzui";
 import type { AgentRunDetailData } from "./agent-run-types";
 import { PiTrendUp, PiTrendDown, PiChartBar, PiTarget } from "react-icons/pi";
@@ -135,20 +136,6 @@ export default function AgentRunDetail({
           
           {/* Filter Controls */}
           <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <PiTarget className="w-4 h-4 text-white/70" />
-            <span className="text-sm font-medium text-white/80">Time range:</span>
-          </div>
-            <Select
-              options={periodOptions}
-              value={periodOptions.find(
-                (opt) => opt.value === (period ?? "__all__")
-              )}
-              onChange={(option: { label: string; value: string }) =>
-                setPeriod(option.value === "__all__" ? null : option.value)
-              }
-              className="w-[90px] text-sm rounded-lg border border-white/20 bg-white/10 text-white focus:border-white/40 focus:ring-0"
-            />
             <Select
               options={websiteOptions}
               value={websiteOptions.find(
@@ -165,19 +152,9 @@ export default function AgentRunDetail({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span
-            className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-            style={{
-              borderColor: "rgba(253, 245, 230, 0.45)",
-              backgroundColor: "rgba(253, 245, 230, 0.15)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
+          <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1`}>
             Active
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: HIGHLIGHT_COLOR }}
-            />
+            <span className="h-2 w-2 rounded-full bg-white/90" />
           </span>
           <span className="text-xs text-white/70">
             Live view of current website performance trends
@@ -242,7 +219,7 @@ export default function AgentRunDetail({
                       {item.average.toFixed(1)}%
                     </div>
                     <div className="text-sm text-slate-400">
-                      {item.total} requests • {item.successCount} successful
+                      {item.total} tasks • {item.successCount} successful
                     </div>
                   </div>
                 </div>

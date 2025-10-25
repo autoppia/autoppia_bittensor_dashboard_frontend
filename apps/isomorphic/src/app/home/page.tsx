@@ -147,12 +147,12 @@ export default function LandingPage() {
             )}
           >
             <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-100 my-6 sm:my-8 leading-relaxed px-2">
-              The most advanced Web Operation{" "}
+              The most advanced Web Operation benchmark designed to rigorously
+              test and evaluate{" "}
               <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
-                benchmark
+                Web Agents
               </span>{" "}
-              designed to rigorously test and evaluate Web Agents across
-              dynamic, ever-changing web environments.
+              across dynamic, ever-changing web environments.
             </Text>
           </div>
           {/* CTA Buttons */}

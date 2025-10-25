@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
+import { CHIP_STYLES } from "@/config/theme-styles";
 import AgentRunPersonasDynamic from "./agent-run-personas-dynamic";
 import AgentRunStatsDynamic from "./agent-run-stats-dynamic";
 import AgentRunDetailDynamic from "./agent-run-detail-dynamic";
@@ -38,19 +39,24 @@ export default function AgentRun() {
       <PageHeader
         title="Agent Run Details"
         description={
-          <span className="flex flex-wrap items-center gap-2">
-            <span>Agent Run ID:</span>
-            <span
-              className="inline-flex items-center rounded-md px-2 py-0.5 font-mono text-sm font-semibold"
-              style={{
-                backgroundColor: "rgba(253, 245, 230, 0.18)",
-                color: HIGHLIGHT_COLOR,
-                border: "1px solid rgba(253, 245, 230, 0.35)",
-              }}
-            >
-              {runId}
-            </span>
-          </span>
+          (() => {
+            const roundId = (data?.summary?.roundId ?? data?.personas?.round?.id ?? "") as any;
+            const roundLabel = typeof roundId === 'number' || (typeof roundId === 'string' && roundId)
+              ? String(roundId)
+              : "—";
+            return (
+              <span className="flex flex-wrap items-center gap-2">
+                <span>Validator Round ID:</span>
+                <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1 font-mono`}>
+                  {roundLabel}
+                </span>
+                <span className="ms-2">Agent Run ID:</span>
+                <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.completed} !px-3 !py-1 font-mono`}>
+                  {runId}
+                </span>
+              </span>
+            );
+          })()
         }
         className="mt-4"
       >

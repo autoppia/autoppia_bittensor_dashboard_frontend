@@ -50,30 +50,23 @@ export default function OverviewValidators() {
   };
 
   const runningRoundBadge = roundLoading ? (
-    <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-200">
-      <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin" />
-      Loading round…
+    <span
+      className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <PiSpinnerGapBold className="h-5 w-5 animate-spin text-slate-100" />
+      <span>Loading current round…</span>
     </span>
   ) : roundNumber ? (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]",
-        isRoundActive
-          ? "border border-blue-400/60 bg-blue-500/15 text-blue-200"
-          : "border border-slate-400/60 bg-slate-500/10 text-slate-200"
-      )}
-    >
+    <span className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm">
       {isRoundActive ? (
-        <PiSpinnerGapBold className="h-3.5 w-3.5 animate-spin text-blue-200" />
+        <PiArrowClockwiseDuotone className="h-5 w-5 animate-spin text-blue-300" />
       ) : (
-        <PiCheckCircleFill className="h-3.5 w-3.5 text-emerald-300" />
+        <PiCheckCircleFill className="h-5 w-5 text-emerald-300" />
       )}
-      <span className="flex items-center gap-1">
-        {isRoundActive ? "Current" : "Last"} round
-        <span className="ml-1 font-semibold text-white">
-          {roundNumber}
-        </span>
-      </span>
+      <span>{isRoundActive ? "Current round:" : "Last round:"}</span>
+      <span className="font-extrabold text-white">{roundNumber}</span>
     </span>
   ) : null;
 
@@ -305,7 +298,7 @@ export default function OverviewValidators() {
                       <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
                         <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
                       </div>
-                      <Text className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                      <Text className={cn("text-xs font-bold uppercase tracking-wide", showCurrentTask ? "text-gray-800" : "text-gray-500") }>
                         Current Task
                       </Text>
                     </div>
@@ -320,8 +313,16 @@ export default function OverviewValidators() {
                         />
                       </div>
                     ) : (
-                      <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
-                        {normalizedStatus === "Finished" ? "Round completed" : "Awaiting activity"}
+                      <div
+                        className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center gap-2"
+                        aria-disabled="true"
+                      >
+                        <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
+                        <span>
+                          {normalizedStatus === "Finished"
+                            ? "Round finished — no task prompt available"
+                            : "No task prompt available yet"}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -401,7 +402,7 @@ export default function OverviewValidators() {
                     <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
                       <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
                     </div>
-                    <Text className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                    <Text className={cn("text-xs font-bold uppercase tracking-wide", showCurrentTask ? "text-gray-800" : "text-gray-500") }>
                       Current Task
                     </Text>
                   </div>
@@ -410,8 +411,16 @@ export default function OverviewValidators() {
                       {validator.currentTask}
                     </div>
                   ) : (
-                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-600">
-                      {normalizedStatus === "Finished" ? "Round completed" : "Awaiting activity"}
+                    <div
+                      className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center gap-2"
+                      aria-disabled="true"
+                    >
+                      <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
+                      <span>
+                        {normalizedStatus === "Finished"
+                          ? "Round finished — no task prompt available"
+                          : "No task prompt available yet"}
+                      </span>
                     </div>
                   )}
                 </div>

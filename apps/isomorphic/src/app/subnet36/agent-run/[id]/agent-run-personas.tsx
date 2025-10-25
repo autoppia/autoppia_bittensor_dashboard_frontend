@@ -8,6 +8,7 @@ import {
   PiCopySimple,
 } from "react-icons/pi";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { CHIP_STYLES } from "@/config/theme-styles";
 
 const HIGHLIGHT_COLOR = "#FDF5E6";
 
@@ -124,8 +125,8 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
         <div className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-purple-500/15 blur-[120px]" />
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow-lg shadow-amber-500/40">
-              <PiClock className="h-6 w-6" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500 text-white shadow-lg shadow-amber-500/40">
+              <PiClock className="h-6 w-6 text-white" />
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/60">
@@ -136,16 +137,20 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
               </p>
             </div>
           </div>
-          <span
-            className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-            style={{
-              borderColor: "rgba(253, 245, 230, 0.45)",
-              backgroundColor: "rgba(253, 245, 230, 0.12)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
-            {(roundData.status || "Active").replace(/^\w/, (c) => c.toUpperCase())}
-          </span>
+          {(() => {
+            const status = String(roundData.status || "Active").toLowerCase();
+            const colorClass =
+              status === "completed"
+                ? CHIP_STYLES.completed
+                : status === "pending"
+                ? CHIP_STYLES.pending
+                : CHIP_STYLES.active;
+            return (
+              <span className={`${CHIP_STYLES.base} ${colorClass} !px-3 !py-1`}>
+                {(roundData.status || "Active").replace(/^\w/, (c: string) => c.toUpperCase())}
+              </span>
+            );
+          })()}
         </header>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
