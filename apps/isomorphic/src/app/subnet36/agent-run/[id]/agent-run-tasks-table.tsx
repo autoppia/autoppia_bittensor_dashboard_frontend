@@ -54,18 +54,18 @@ export default function AgentRunTasksTable() {
       </div>
 
       <div className="relative mb-2">
-        <Table
-          table={table}
-          variant="modern"
-          classNames={{
-            container:
+          <Table
+            table={table}
+            variant="modern"
+            classNames={{
+              container:
               "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-white/10 bg-white/10 backdrop-blur-sm",
-            headerClassName:
+              headerClassName:
               "bg-gradient-to-r from-white/10 via-white/5 to-white/10 text-white/80 uppercase tracking-[0.25em]",
-            rowClassName:
-              "border-b border-white/5 bg-white/5 transition-colors duration-200 hover:bg-white/10 hover:border-[#FDF5E6]/60 hover:shadow-[0_14px_34px_rgba(253,245,230,0.18)] text-white/80",
-            }}
-        />
+              rowClassName:
+              "cursor-pointer border-b border-white/10 bg-white/5 transition-colors duration-150 hover:bg-white/15 hover:border-white/20 hover:shadow-[0_10px_24px_rgba(255,255,255,0.09)] text-white/80",
+              }}
+          />
       </div>
 
       <TablePagination

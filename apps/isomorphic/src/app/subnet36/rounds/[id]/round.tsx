@@ -284,12 +284,24 @@ function RoundHeaderInline() {
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => goToRound(previousKey)} disabled={!previousKey} className={cn(roundNavButton)}>
+                {/* Per request: clicking LEFT should INCREASE round (go to next) */}
+                <button
+                  type="button"
+                  onClick={() => goToRound(nextKey)}
+                  disabled={!nextKey}
+                  className={cn(roundNavButton)}
+                >
                   <PiCaretLeftBold className="h-4 w-4" />
-                  <span>{previousNumber ? `Round ${previousNumber}` : "Prev"}</span>
-                </button>
-                <button type="button" onClick={() => goToRound(nextKey)} disabled={!nextKey} className={cn(roundNavButton)}>
                   <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
+                </button>
+                {/* And clicking RIGHT should DECREASE round (go to previous) */}
+                <button
+                  type="button"
+                  onClick={() => goToRound(previousKey)}
+                  disabled={!previousKey}
+                  className={cn(roundNavButton)}
+                >
+                  <span>{previousNumber ? `Round ${previousNumber}` : "Prev"}</span>
                   <PiCaretRightBold className="h-4 w-4" />
                 </button>
               </div>

@@ -9,11 +9,14 @@ import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input } from "rizzui";
 import Link from "next/link";
 import Table from "@core/components/table";
+import { Table as RTable } from "rizzui";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
 import { AgentRunTaskData } from "@/services/api/types/agent-runs";
 import { routes } from "@/config/routes";
+import { useRouter } from "next/navigation";
+import { flexRender } from "@tanstack/react-table";
 
 const columnHelper = createColumnHelper<AgentRunTaskData>();
 
@@ -121,6 +124,7 @@ const agentRunTasksColumns = [
 
 export default function AgentRunTasksTableDynamic() {
   const { id } = useParams();
+  const router = useRouter();
   const { 
     tasks, 
     total, 
@@ -268,7 +272,34 @@ export default function AgentRunTasksTableDynamic() {
               headerClassName:
                 "bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 text-slate-200",
               rowClassName:
-                "border-b border-slate-700/25 transition-colors duration-200 hover:bg-emerald-500/15 hover:border-emerald-400/40 hover:shadow-[0_12px_28px_rgba(16,185,129,0.12)]",
+                "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_22px_rgba(255,255,255,0.06)]",
+            }}
+            components={{
+              bodyRow: ({ table }) => (
+                <>
+                  {table.getRowModel().rows.map((row) => {
+                    const taskId = (row as any).original?.taskId;
+                    const href = `${routes.tasks}/${taskId}`;
+                    return (
+                      <RTable.Row
+                        key={row.id}
+                        className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-white/10 hover:border-white/20"
+                        onClick={() => router.push(href)}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <RTable.Cell
+                            key={cell.id}
+                            style={{ width: cell.column.getSize() }}
+                            className="text-slate-200"
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </RTable.Cell>
+                        ))}
+                      </RTable.Row>
+                    );
+                  })}
+                </>
+              ),
             }}
           />
         ) : (
