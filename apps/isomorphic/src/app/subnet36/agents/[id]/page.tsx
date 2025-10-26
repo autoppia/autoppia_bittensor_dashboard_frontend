@@ -215,18 +215,18 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
               <div
                 key={stat.title}
                 className={cn(
-                  "group relative overflow-hidden rounded-3xl p-8 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
+                  "group relative overflow-hidden rounded-3xl p-8 backdrop-blur-xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border bg-gradient-to-br",
                   "min-w-[200px] cursor-pointer z-[30] hover:z-[90]",
                   stat.borderColor,
                   stat.bgGradient
                 )}
               >
                 {/* Animated pulsing background like main card */}
-                <div className={cn("absolute inset-0 rounded-3xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none", stat.gradient)} />
+                <div className={cn("absolute inset-0 rounded-3xl opacity-20 bg-gradient-to-br pointer-events-none", stat.gradient)} />
                 
                 {/* Animated glow effect */}
                 <div 
-                  className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-50 blur-3xl transition-all duration-700 group-hover:opacity-80 group-hover:blur-2xl" 
+                  className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-20 blur-2xl transition-all duration-500 group-hover:opacity-30 group-hover:blur-xl" 
                   style={{ 
                     maskImage: 'radial-gradient(white, transparent)', 
                     WebkitMaskImage: 'radial-gradient(white, transparent)',
@@ -235,28 +235,27 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
                 />
                 
                 {/* Shine effect on hover */}
-                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)' }} />
+                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-25 transition-opacity duration-300 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%)' }} />
 
                 <div className="relative flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div
                       className={cn(
-                        "flex items-center justify-center w-16 h-16 rounded-2xl shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 bg-gradient-to-br",
-                        "border-3 border-white/30 group-hover:border-white/50",
+                        "flex items-center justify-center w-16 h-16 rounded-2xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br",
+                        "border-2 border-white/30 group-hover:border-white/40",
                         stat.iconGradient
                       )}
                     >
-                      <Icon className="w-8 h-8 text-white drop-shadow-[0_8px_20px_rgba(255,255,255,0.4)]" />
-                      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
+                      <Icon className="w-8 h-8 text-white drop-shadow" />
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <div className="w-2 h-2 rounded-full bg-white/40 animate-pulse" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse" style={{ animationDelay: '75ms' }} />
-                      <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '150ms' }} />
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-70 transition-opacity duration-300">
+                      <div className="w-2 h-2 rounded-full bg-white/40" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+                      <div className="w-1 h-1 rounded-full bg-white/20" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <Text className="font-black text-3xl leading-none text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)] transition-all duration-300 group-hover:scale-105 mb-2">
+                    <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105 mb-2">
                       {stat.metric}
                     </Text>
                     <Text className="text-[11px] font-black text-white/80 group-hover:text-white uppercase tracking-[0.35em] transition-colors duration-300 leading-tight">
@@ -1508,30 +1507,30 @@ export default function Page() {
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] cursor-pointer"
+                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
                   >
                     {/* Card background with gradient */}
                     <div className={cn(
-                      "absolute inset-0 rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-500 group-hover:opacity-100",
+                      "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
                       stat.bgGradient
                     )} />
                     
                     {/* Animated shimmer effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" 
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" 
                          style={{ 
                            backgroundSize: '200% 100%',
-                           animation: 'shimmer 2s infinite'
+                           animation: 'shimmer 3.5s linear infinite'
                          }} 
                     />
                     
                     {/* Border gradient */}
                     <div className={cn(
-                      "absolute inset-0 rounded-2xl border-2 transition-all duration-500",
+                      "absolute inset-0 rounded-2xl border transition-all duration-300",
                       stat.borderColor,
-                      "group-hover:shadow-2xl"
+                      "group-hover:shadow-lg"
                     )} 
                     style={{
-                      boxShadow: `0 0 30px ${stat.glowColor}40`
+                      boxShadow: `0 0 12px ${stat.glowColor}33`
                     }}
                     />
                     
@@ -1540,12 +1539,12 @@ export default function Page() {
                       {/* Icon on left */}
                       <div
                         className={cn(
-                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br flex-shrink-0",
-                          "border-2 border-white/40 group-hover:border-white/60",
+                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
+                          "border border-white/40 group-hover:border-white/60",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-2xl" />
+                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow" />
                       </div>
                       
                       {/* Metrics in middle */}
@@ -1553,15 +1552,15 @@ export default function Page() {
                         <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <Text className="text-2xl md:text-3xl font-black text-white drop-shadow-2xl leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                        <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                           {stat.metric}
                         </Text>
                       </div>
                       
                       {/* Decorative pulse indicator on right */}
-                      <div className="hidden md:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                        <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '100ms' }} />
+                      <div className="hidden md:flex items-center gap-1.5 opacity-0 group-hover:opacity-80 transition-opacity duration-300">
+                        <div className="w-2 h-2 rounded-full bg-white/60" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
                       </div>
                     </div>
                   </div>

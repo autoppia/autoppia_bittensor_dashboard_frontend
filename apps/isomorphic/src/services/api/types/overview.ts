@@ -23,6 +23,8 @@ export interface ValidatorData {
   hotkey: string | null;
   icon: string;
   currentTask: string;
+  currentWebsite?: string | null;
+  currentUseCase?: string | null;
   status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline' | 'Finished' | 'Starting' | 'Not Started';
   totalTasks: number;
   weight: number | null;

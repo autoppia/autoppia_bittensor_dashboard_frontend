@@ -204,7 +204,11 @@ export default function AgentsSidebar() {
   // Show error state
   if (error) {
     return (
-      <aside className={cn("hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+      <aside
+        className={cn(
+          "hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+        )}
+      >
         <div className="text-center px-6">
           <div className="text-red-400 text-sm font-semibold">Error loading agents</div>
           <div className="text-white/70 text-xs mt-2">{error}</div>
@@ -214,9 +218,13 @@ export default function AgentsSidebar() {
   }
 
   return (
-    <aside className={cn("hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]")} style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+    <aside
+      className={cn(
+        "hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+      )}
+    >
       <div className="h-full flex flex-col overflow-hidden pt-[90px]">
-        <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10" style={{ backgroundColor: 'rgba(8, 9, 14, 0.8)' }}>
+        <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10 bg-gray-0/80 dark:bg-gray-50/50">
           <div className="flex items-center gap-3 pl-4 pr-3 py-4">
             <div className="flex items-center gap-2">
               <Text className="text-xl font-bold text-white">All Miners</Text>

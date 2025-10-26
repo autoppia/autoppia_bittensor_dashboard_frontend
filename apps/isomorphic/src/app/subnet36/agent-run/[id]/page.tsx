@@ -103,6 +103,36 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
+function IDCopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center justify-center rounded-md bg-white/10 p-1.5 text-white transition-all duration-200 hover:bg-white/20 hover:scale-110"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <span className="text-[10px] font-bold text-emerald-300">✓</span>
+      ) : (
+        <PiCopySimple className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
+
 function formatUseCaseName(name?: string | null): string {
   if (!name) return "Use Case";
   return name
@@ -110,6 +140,12 @@ function formatUseCaseName(name?: string | null): string {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+function formatWebsiteName(name?: string | null): string {
+  if (!name) return "Website";
+  if (name.length === 0) return name;
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 // Transform stats to local detail model (no external utils)
@@ -152,7 +188,6 @@ export default function Page() {
   const runId = Array.isArray(id) ? id[0] : (id as string) || "";
 
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
-  const [period, setPeriod] = useState<string | null>(null);
 
   const { data, error, refetch, isAnyLoading } = useAgentRun(runId, {
     includePersonas: true,
@@ -171,33 +206,31 @@ export default function Page() {
       <PageHeader
         title="Agent Run Details"
         description={
-          <div className="flex flex-col gap-1">
-            <span className="flex flex-wrap items-center gap-2">
-              <span>Agent Run ID:</span>
-              <span
-                className="inline-flex items-center rounded-md px-2 py-0.5 font-mono text-sm font-semibold"
-                style={{
-                  backgroundColor: "rgba(253, 245, 230, 0.18)",
-                  color: HIGHLIGHT_COLOR,
-                  border: "1px solid rgba(253, 245, 230, 0.35)",
-                }}
-              >
-                {runId}
-              </span>
-            </span>
-            <span className="flex flex-wrap items-center gap-2">
-              <span>Validator Round ID:</span>
-              <span
-                className="inline-flex items-center rounded-md px-2 py-0.5 font-mono text-sm font-semibold"
-                style={{
-                  backgroundColor: "rgba(253, 245, 230, 0.18)",
-                  color: HIGHLIGHT_COLOR,
-                  border: "1px solid rgba(253, 245, 230, 0.35)",
-                }}
-              >
-                {data?.personas?.round?.name ?? "—"}
-              </span>
-            </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href={((): string => {
+                const roundKey =
+                  typeof data?.summary?.roundId === 'number' && Number.isFinite(data.summary.roundId)
+                    ? `round_${data.summary.roundId}`
+                    : (data?.personas?.round?.name ?? '');
+                return roundKey ? `${routes.rounds}/${encodeURIComponent(roundKey)}` : '#';
+              })()}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Round</span>
+              <div className="h-3.5 w-px bg-slate-600/70" />
+              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">{truncateMiddle(data?.personas?.round?.name ?? "—", 8)}</span>
+              {data?.personas?.round?.name && <IDCopyButton text={data.personas.round.name} />}
+            </Link>
+            <Link
+              href={runId ? `${routes.agent_run}/${encodeURIComponent(runId)}` : '#'}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Run</span>
+              <div className="h-3.5 w-px bg-slate-600/70" />
+              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">{truncateMiddle(runId, 8)}</span>
+              {!!runId && <IDCopyButton text={runId} />}
+            </Link>
           </div>
         }
         className="mt-4"
@@ -236,8 +269,6 @@ export default function Page() {
             <AgentRunDetail
               selectedWebsite={selectedWebsite}
               setSelectedWebsite={setSelectedWebsite}
-              period={period}
-              setPeriod={setPeriod}
               data={detailData}
             />
           )}
@@ -267,6 +298,18 @@ export default function Page() {
 
 // Personas card group
 function AgentRunPersonas({ personas, summary }: { personas?: any; summary?: any }) {
+  function extractUidNumber(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, Math.abs(value));
+    if (typeof value === "string") {
+      // Extract first sequence of digits; treat hyphens as delimiters, not signs
+      const match = value.match(/\d+/);
+      if (match) {
+        const parsed = Number.parseInt(match[0], 10);
+        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
+      }
+    }
+    return null;
+  }
   const roundData = personas?.round || {
     id: "—",
     status: "Active",
@@ -291,19 +334,8 @@ function AgentRunPersonas({ personas, summary }: { personas?: any; summary?: any
   };
 
   const validatorHotkey = summary?.validatorId || validatorData.id || validatorData.name;
+  const validatorUid = extractUidNumber(summary?.validatorId) ?? extractUidNumber(validatorHotkey);
   const taoStatsUrl = validatorHotkey ? `https://taostats.io/validators/${validatorHotkey}` : null;
-
-  const extractUidNumber = (value: unknown): number | null => {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string") {
-      const match = value.match(/-?\d+/);
-      if (match) {
-        const parsed = Number.parseInt(match[0], 10);
-        if (!Number.isNaN(parsed)) return parsed;
-      }
-    }
-    return null;
-  };
 
   const agentUid =
     (typeof agentData.uid === "number" ? agentData.uid : null) ??
@@ -339,10 +371,10 @@ function AgentRunPersonas({ personas, summary }: { personas?: any; summary?: any
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
       {/* Round */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-transparent p-5 text-white">
+      <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-transparent text-amber-300 border border-amber-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
               <PiClock className="h-6 w-6" />
             </div>
             <div>
@@ -360,7 +392,7 @@ function AgentRunPersonas({ personas, summary }: { personas?: any; summary?: any
           </span>
         </header>
 
-        <div className="mt-4 rounded-xl border border-white/10 bg-transparent px-3 py-3 text-sm text-white/80">
+        <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
             <span className="uppercase tracking-[0.3em] text-xs text-white/60">Epoch:</span>
             <span className="whitespace-nowrap">{formatEpoch(epochStart)} - {formatEpoch(epochEnd)}</span>
@@ -369,67 +401,75 @@ function AgentRunPersonas({ personas, summary }: { personas?: any; summary?: any
       </section>
 
       {/* Validator */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-transparent p-5 text-white">
+      <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Image alt={validatorData.name} src={validatorImageSrc} width={56} height={56} unoptimized className="h-14 w-14 rounded-2xl object-cover shadow-lg shadow-purple-500/30" />
+            <Image alt={validatorData.name} src={validatorImageSrc} width={56} height={56} unoptimized className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1" />
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/60">Validator</p>
               <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">{validatorData.name}</p>
             </div>
           </div>
           {taoStatsUrl ? (
-            <a href={taoStatsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-transparent text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]" title="Open TaoStats">
+            <a href={taoStatsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-400 text-black shadow hover:bg-sky-300" title="Open TaoStats">
               <PiArrowSquareOutDuotone className="h-4 w-4" />
             </a>
           ) : null}
         </header>
 
         <div className="mt-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80">
-            <div className="flex items-center gap-2">
-              <span className="uppercase tracking-[0.3em] text-xs text-white/60">Hotkey:</span>
-              <span className="font-mono text-sm text-white">{truncateMiddle(validatorHotkey)}</span>
-              <button type="button" onClick={() => validatorHotkey && navigator.clipboard.writeText(validatorHotkey)} className="inline-flex items-center justify-center rounded-md border border-white/20 bg-transparent p-1 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]" aria-label="Copy validator hotkey">
-                <PiCopySimple className="h-3.5 w-3.5" />
-              </button>
-            </div>
+          <div className="flex flex-wrap items-stretch gap-3">
+            <div className="inline-flex shrink-0 items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">UID:</span>
+                <span className="font-mono text-sm text-white">{validatorUid ?? "—"}</span>
+              </div>
+              {validatorUid != null && <IDCopyButton text={String(validatorUid)} />}
+              </div>
+            <div className="flex min-w-[220px] flex-1 items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <span className="uppercase tracking-[0.3em] text-xs text-white/60">Hotkey:</span>
+                  <span className="font-mono text-sm text-white">{truncateMiddle(validatorHotkey)}</span>
+                </div>
+                {validatorHotkey && <IDCopyButton text={validatorHotkey} />}
+              </div>
           </div>
         </div>
       </section>
 
       {/* Miner */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-transparent p-5 text-white">
+      <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Image alt={agentData.name} src={minerImageSrc} width={64} height={64} unoptimized className="h-16 w-16 rounded-full border border-white/15 object-cover shadow-lg shadow-blue-900/40" />
+            <Image alt={agentData.name} src={minerImageSrc} width={64} height={64} unoptimized className="h-16 w-16 rounded-full object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1" />
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/60">Miner</p>
               <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">{agentData.name}</p>
             </div>
           </div>
           {agentData.github ? (
-            <a href={agentData.github} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-transparent text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]" title="Open GitHub">
+            <a href={agentData.github} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300" title="Open GitHub">
               <PiGithubLogoDuotone className="h-4 w-4" />
             </a>
           ) : null}
         </header>
 
         <div className="mt-4">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80">
+          <div className="flex flex-wrap items-stretch gap-3">
+            <div className="inline-flex shrink-0 items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
               <div className="flex items-center gap-2">
                 <span className="uppercase tracking-[0.3em] text-xs text-white/60">UID:</span>
                 <span className="font-mono text-sm text-white">{agentUid ?? "—"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="uppercase tracking-[0.3em] text-xs text-white/60">Hotkey:</span>
-                <span className="font-mono text-sm text-white">{truncateMiddle(agentHotkey)}</span>
-                <button type="button" onClick={() => agentHotkey && navigator.clipboard.writeText(agentHotkey)} className="inline-flex items-center justify-center rounded-md border border-white/20 bg-transparent p-1 text-white transition hover:border-[#FDF5E6]/60 hover:text-[#FDF5E6]" aria-label="Copy miner hotkey">
-                  <PiCopySimple className="h-3.5 w-3.5" />
-                </button>
+              {agentUid != null && <IDCopyButton text={String(agentUid)} />}
               </div>
-            </div>
+            <div className="flex min-w-[220px] flex-1 items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <span className="uppercase tracking-[0.3em] text-xs text-white/60">Hotkey:</span>
+                  <span className="font-mono text-sm text-white">{truncateMiddle(agentHotkey)}</span>
+                </div>
+                {agentHotkey && <IDCopyButton text={agentHotkey} />}
+              </div>
           </div>
         </div>
       </section>
@@ -467,10 +507,46 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const displayAverageDuration = formatDuration(averageDuration);
 
   const cards = [
-    { key: "tasks", label: "Total Tasks", value: formatCount(totalTasks), icon: PiClock, wrapperClass: "border-blue-400/45 text-blue-50", iconClass: "text-blue-100", valueClass: "text-blue-50", labelClass: "text-blue-100/80" },
-    { key: "websites", label: "Websites", value: formatCount(websitesCount), icon: PiGlobe, wrapperClass: "border-amber-400/50 text-amber-50", iconClass: "text-amber-100", valueClass: "text-amber-50", labelClass: "text-amber-100/85" },
-    { key: "success", label: "Successful", value: formatCount(successfulTasks), icon: PiCheckCircle, wrapperClass: "border-emerald-400/50 text-emerald-50", iconClass: "text-emerald-100", valueClass: "text-emerald-50", labelClass: "text-emerald-100/80" },
-    { key: "failed", label: "Failed", value: formatCount(failedTasks), icon: PiXCircle, wrapperClass: "border-rose-400/50 text-rose-50", iconClass: "text-rose-100", valueClass: "text-rose-50", labelClass: "text-rose-100/80" },
+    {
+      key: "tasks",
+      label: "Total Tasks",
+      value: formatCount(totalTasks),
+      icon: PiClock,
+      wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+    },
+    {
+      key: "websites",
+      label: "Websites",
+      value: formatCount(websitesCount),
+      icon: PiGlobe,
+      wrapperClass: "border-amber-400/40 bg-amber-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+    },
+    {
+      key: "success",
+      label: "Successful",
+      value: formatCount(successfulTasks),
+      icon: PiCheckCircle,
+      wrapperClass: "border-emerald-400/40 bg-emerald-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+    },
+    {
+      key: "failed",
+      label: "Failed",
+      value: formatCount(failedTasks),
+      icon: PiXCircle,
+      wrapperClass: "border-rose-400/40 bg-rose-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+    },
   ] as const;
 
   const renderCard = (card: (typeof cards)[number], isMobile = false) => {
@@ -514,15 +590,11 @@ function AgentRunDetail({
   className,
   selectedWebsite,
   setSelectedWebsite,
-  period,
-  setPeriod,
   data,
 }: {
   className?: string;
   selectedWebsite?: string | null;
   setSelectedWebsite: (value: string | null) => void;
-  period: string | null;
-  setPeriod: (value: string | null) => void;
   data?: AgentRunDetailData | null;
 }) {
   const agentDetailsData: AgentRunDetailData = data ?? { websites: [] };
@@ -530,14 +602,13 @@ function AgentRunDetail({
 
   const websiteOptions = [
     { value: "__all__", label: "All Websites" },
-    ...agentDetailsData.websites.map((web, index) => ({ value: web.name ?? `Website ${index + 1}`, label: web.name ?? `Website ${index + 1}` })),
+    ...agentDetailsData.websites.map((web, index) => ({
+      value: web.name ?? `Website ${index + 1}`,
+      label: formatWebsiteName(web.name ?? `Website ${index + 1}`),
+    })),
   ];
 
-  const periodOptions = [
-    { value: "24h", label: "Last 24h" },
-    { value: "7d", label: "Last 7d" },
-    { value: "__all__", label: "All time" },
-  ];
+  // Removed time range filter as requested
 
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
@@ -557,7 +628,7 @@ function AgentRunDetail({
           );
         })()
       : agentDetailsData.websites.map((web, idx) => ({
-          website: web.name,
+          website: formatWebsiteName(web.name),
           average: Number((web.overall.successRate ?? 0).toFixed(3)),
           total: web.overall.total ?? 0,
           successCount: web.overall.successCount ?? 0,
@@ -580,16 +651,6 @@ function AgentRunDetail({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <PiTarget className="w-4 h-4 text-white/70" />
-              <span className="text-sm font-medium text-white/80">Time range:</span>
-            </div>
-            <Select
-              options={periodOptions}
-              value={periodOptions.find((opt) => opt.value === (period ?? "__all__"))}
-              onChange={(option: { label: string; value: string }) => setPeriod(option.value === "__all__" ? null : option.value)}
-              className="w-[90px] text-sm rounded-lg border border-white/20 bg-transparent text-white focus:border-white/40 focus:ring-0"
-            />
             <Select
               options={websiteOptions}
               value={websiteOptions.find((opt) => opt.value === (selectedWebsite ?? "__all__"))}
@@ -599,13 +660,7 @@ function AgentRunDetail({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]" style={{ borderColor: "rgba(253, 245, 230, 0.45)", backgroundColor: "rgba(253, 245, 230, 0.15)", color: HIGHLIGHT_COLOR }}>
-            Active
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: HIGHLIGHT_COLOR }} />
-          </span>
-          <span className="text-xs text-white/70">Live view of current website performance trends</span>
-        </div>
+        {/* removed status chip and live view helper text per request */}
       </div>
 
       {hasWebsites ? (
@@ -790,7 +845,7 @@ function AgentRunSummary({ className, selectedWebsite, data }: { className?: str
       }));
     }
     return agentData.websites.map((w, idx) => ({
-      label: w.name ?? `Website ${idx + 1}`,
+      label: formatWebsiteName(w.name ?? `Website ${idx + 1}`),
       value: w.overall.successRate,
       total: w.overall.total,
       successCount: w.overall.successCount,
@@ -824,7 +879,7 @@ function AgentRunSummary({ className, selectedWebsite, data }: { className?: str
         });
       })()
     : agentData.websites.map((w, idx) => ({
-        label: w.name ?? `Website ${idx + 1}`,
+        label: formatWebsiteName(w.name ?? `Website ${idx + 1}`),
         value: w.overall.successRate * w.overall.total,
         average: w.overall.successRate,
         total: w.overall.total,
@@ -991,7 +1046,7 @@ const agentRunTasksColumns = [
         className="inline-flex items-center rounded-md border border-blue-600 px-2 py-0.5 text-xs text-blue-300"
         title="View task details"
       >
-        {row.original.website}
+        {formatWebsiteName(row.original.website)}
       </Link>
     ),
   }),
@@ -1146,7 +1201,7 @@ function AgentRunTasksSection() {
                 "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-transparent",
               headerClassName: "bg-transparent text-slate-200",
               rowClassName:
-                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_12px_28px_rgba(255,255,255,0.12)]",
+                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_12px_28px_rgba(56,189,248,0.18)]",
             }}
           />
         ) : (

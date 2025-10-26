@@ -637,7 +637,9 @@ export default function TaskDetails() {
                     label="Epoch"
                     value={
                       roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
-                        ? `${roundInfo.startEpoch} → ${roundInfo.endEpoch ?? "—"}`
+                        ? `${roundInfo.startEpoch} → ${
+                            roundInfo?.endEpoch ?? (roundInfo?.status && String(roundInfo.status).toLowerCase() === 'active' ? 'Active' : '—')
+                          }`
                         : "—"
                     }
                   />

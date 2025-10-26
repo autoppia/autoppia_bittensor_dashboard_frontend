@@ -8,10 +8,12 @@ const config: Omit<Config, "content"> = {
   safelist: [
     // Safelist dynamic color classes for website badges
     {
-      pattern: /bg-\[#[A-Fa-f0-9]{6}\]/,
+      // Allow hex background colors with optional opacity suffix, e.g. bg-[#0d1e42]/95
+      pattern: /bg-\[#[A-Fa-f0-9]{6}\](?:\/[0-9]{1,3})?/,
     },
     {
-      pattern: /text-\[#[A-Fa-f0-9]{6}\]/,
+      // Allow hex text colors with optional opacity suffix, e.g. text-[#2f1b0d]
+      pattern: /text-\[#[A-Fa-f0-9]{6}\](?:\/[0-9]{1,3})?/,
     },
     // Safelist specific hex colors used in the codebase
     'bg-[#f3f3f3]',

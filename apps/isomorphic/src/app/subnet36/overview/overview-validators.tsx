@@ -6,7 +6,6 @@ import PageHeader from "@/app/shared/page-header";
 import { routes } from "@/config/routes";
 import cn from "@core/utils/class-names";
 import {
-  PiOpenAiLogoDuotone,
   PiCurrencyDollarDuotone,
   PiClockDuotone,
   PiFingerprintDuotone,
@@ -17,6 +16,8 @@ import {
   PiHourglassMediumFill,
   PiSpinnerGapBold,
   PiCheckCircleFill,
+  PiGlobe,
+  PiTarget,
 } from "react-icons/pi";
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
@@ -202,7 +203,8 @@ export default function OverviewValidators() {
               ? "Not Started"
               : validator.status;
 
-          const showCurrentTask = validator.currentTask?.trim();
+          const showCurrentTask =
+            normalizedStatus === "Evaluating" && (validator.currentTask?.trim() || "");
 
           const resolvedRoundNumber =
             typeof validator.roundNumber === "number"
@@ -295,12 +297,32 @@ export default function OverviewValidators() {
                   {/* Current Task */}
                   <div className="border border-muted rounded-lg p-3">
                     <div className="flex items-center justify-center gap-2 mb-2.5">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
-                        <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
-                      </div>
-                      <Text className={cn("text-xs font-bold uppercase tracking-wide", showCurrentTask ? "text-gray-800" : "text-gray-500") }>
-                        Current Task
-                      </Text>
+                      {(() => {
+                        const hasLiveMeta =
+                          normalizedStatus === "Evaluating" &&
+                          (validator.currentWebsite || validator.currentUseCase);
+                        const websiteText = hasLiveMeta && validator.currentWebsite ? validator.currentWebsite : "__";
+                        const useCaseText = hasLiveMeta && validator.currentUseCase ? validator.currentUseCase : "__";
+                        return (
+                          <div
+                            className={cn(
+                              "flex items-center justify-center gap-4 flex-wrap text-xs font-bold uppercase tracking-wide",
+                              showCurrentTask ? "text-gray-800" : "text-gray-500"
+                            )}
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              <PiGlobe className="w-3.5 h-3.5" />
+                              <span className="text-gray-700">Website:</span>
+                              <span className="font-semibold text-gray-900 normal-case">{websiteText}</span>
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <PiTarget className="w-3.5 h-3.5" />
+                              <span className="text-gray-700">Use Case:</span>
+                              <span className="font-semibold text-gray-900 normal-case">{useCaseText}</span>
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     {showCurrentTask ? (
                       <div className="bg-gray-900/5 border border-muted rounded-lg p-3">
@@ -314,7 +336,7 @@ export default function OverviewValidators() {
                       </div>
                     ) : (
                       <div
-                        className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center gap-2"
+                        className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
                         aria-disabled="true"
                       >
                         <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
@@ -399,12 +421,32 @@ export default function OverviewValidators() {
               <div className="p-4 space-y-3">
                 <div className="border border-muted rounded-lg p-3">
                   <div className="flex items-center justify-center gap-2 mb-2.5">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white">
-                      <PiOpenAiLogoDuotone className="w-3.5 h-3.5" />
-                    </div>
-                    <Text className={cn("text-xs font-bold uppercase tracking-wide", showCurrentTask ? "text-gray-800" : "text-gray-500") }>
-                      Current Task
-                    </Text>
+                    {(() => {
+                      const hasLiveMeta =
+                        normalizedStatus === "Evaluating" &&
+                        (validator.currentWebsite || validator.currentUseCase);
+                      const websiteText = hasLiveMeta && validator.currentWebsite ? validator.currentWebsite : "__";
+                      const useCaseText = hasLiveMeta && validator.currentUseCase ? validator.currentUseCase : "__";
+                      return (
+                        <div
+                          className={cn(
+                            "flex items-center justify-center gap-4 flex-wrap text-xs font-bold uppercase tracking-wide",
+                            showCurrentTask ? "text-gray-800" : "text-gray-500"
+                          )}
+                        >
+                          <span className="inline-flex items-center gap-1.5">
+                            <PiGlobe className="w-3.5 h-3.5" />
+                            <span className="text-gray-700">Website:</span>
+                            <span className="font-semibold text-gray-900 normal-case">{websiteText}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <PiTarget className="w-3.5 h-3.5" />
+                            <span className="text-gray-700">Use Case:</span>
+                            <span className="font-semibold text-gray-900 normal-case">{useCaseText}</span>
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   {showCurrentTask ? (
                     <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900">
@@ -412,7 +454,7 @@ export default function OverviewValidators() {
                     </div>
                   ) : (
                     <div
-                      className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center gap-2"
+                      className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
                       aria-disabled="true"
                     >
                       <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
