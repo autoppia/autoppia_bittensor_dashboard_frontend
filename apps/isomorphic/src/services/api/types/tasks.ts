@@ -8,6 +8,7 @@ export interface TaskData {
   taskId: string;
   agentRunId: string;
   website: string;
+  seed?: string | null;
   useCase: string;
   prompt: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -66,6 +67,7 @@ export interface TaskDetails {
   taskId: string;
   agentRunId: string;
   website: string;
+  seed?: string | null;
   useCase: string;
   prompt: string;
   status: string;

@@ -232,6 +232,18 @@ export default function TaskSearch() {
     setResults([]);
 
     try {
+      // If a Task ID is entered, try direct lookup first and navigate
+      const trimmed = (searchTerm || '').trim();
+      if (trimmed) {
+        try {
+          const direct = await tasksService.getTask(trimmed);
+          router.push(`${routes.tasks}/${direct.taskId}`);
+          return;
+        } catch {
+          // ignore and fall back to broader search
+        }
+      }
+
       const response = await tasksService.searchTasks({
         query: searchTerm || undefined,
         agentRunId: agentRunInput || undefined,
@@ -328,6 +340,12 @@ export default function TaskSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
                 placeholder="Enter Task ID or Prompt (e.g., 3413)"
                 className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />

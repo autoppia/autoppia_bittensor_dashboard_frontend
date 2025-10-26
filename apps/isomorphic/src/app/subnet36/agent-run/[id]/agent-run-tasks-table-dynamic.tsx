@@ -272,7 +272,7 @@ export default function AgentRunTasksTableDynamic() {
               headerClassName:
                 "bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 text-slate-200",
               rowClassName:
-                "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_22px_rgba(255,255,255,0.06)]",
+                "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_8px_22px_rgba(56,189,248,0.15)]",
             }}
             components={{
               bodyRow: ({ table }) => (
@@ -283,7 +283,7 @@ export default function AgentRunTasksTableDynamic() {
                     return (
                       <RTable.Row
                         key={row.id}
-                        className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-white/10 hover:border-white/20"
+                        className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
                         onClick={() => router.push(href)}
                       >
                         {row.getVisibleCells().map((cell) => (

@@ -63,7 +63,7 @@ export default function AgentRunTasksTable() {
               headerClassName:
               "bg-gradient-to-r from-white/10 via-white/5 to-white/10 text-white/80 uppercase tracking-[0.25em]",
               rowClassName:
-              "cursor-pointer border-b border-white/10 bg-white/5 transition-colors duration-150 hover:bg-white/15 hover:border-white/20 hover:shadow-[0_10px_24px_rgba(255,255,255,0.09)] text-white/80",
+              "cursor-pointer border-b border-white/10 bg-white/5 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_10px_24px_rgba(56,189,248,0.16)] text-white/80",
               }}
           />
       </div>

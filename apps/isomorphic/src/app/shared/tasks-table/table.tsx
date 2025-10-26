@@ -33,7 +33,7 @@ export default function TasksTable() {
         classNames={{
           container:
             "border border-muted rounded-md border-t-0 bg-gray-0 dark:bg-gray-50",
-          rowClassName: "last:border-0",
+          rowClassName: "last:border-0 transition-colors duration-150 hover:bg-sky-500/10",
         }}
       />
       <TablePagination table={table} className="py-4" />
