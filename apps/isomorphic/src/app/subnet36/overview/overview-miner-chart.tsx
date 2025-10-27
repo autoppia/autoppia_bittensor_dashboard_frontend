@@ -1,7 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useMemo, useCallback, useEffect, type CSSProperties } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  type CSSProperties,
+} from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
 import { CustomTooltip } from "@core/components/charts/custom-tooltip";
@@ -80,11 +86,18 @@ interface MinerChartProps {
   targetHeight?: number;
 }
 
-export default function MinerChart({ className, targetHeight }: MinerChartProps) {
+export default function MinerChart({
+  className,
+  targetHeight,
+}: MinerChartProps) {
   const [timeRange, setTimeRange] = useState<FilterOption>("All");
   // Get leaderboard data from API
   const apiTimeRange = timeRange === "All" ? "all" : timeRange;
-  const { data: leaderboardData, loading, error } = useLeaderboard({ timeRange: apiTimeRange });
+  const {
+    data: leaderboardData,
+    loading,
+    error,
+  } = useLeaderboard({ timeRange: apiTimeRange });
   const chartContainerStyle = useMemo<CSSProperties>(
     () => ({
       minHeight: CHART_HEIGHT,
@@ -106,7 +119,7 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
     () => cn("flex flex-col", className),
     [className]
   );
-  
+
   // Memoize chart data to prevent infinite re-renders
   const rawChartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     const apiLeaderboard = leaderboardData?.data?.leaderboard;
@@ -114,40 +127,42 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
       return [];
     }
 
-    return apiLeaderboard
-      .map((entry, index) => {
-        const normalizedRound =
-          resolveRoundNumber(entry.round) ??
-          resolveRoundNumber(entry.roundNumber) ??
-          resolveRoundNumber((entry as LeaderboardSource).round_id) ??
-          resolveRoundNumber((entry as LeaderboardSource).roundId) ??
-          resolveRoundNumber((entry as LeaderboardSource).id) ??
-          (Number.isFinite(index) ? index + 1 : undefined);
+    return (
+      apiLeaderboard
+        .map((entry, index) => {
+          const normalizedRound =
+            resolveRoundNumber(entry.round) ??
+            resolveRoundNumber(entry.roundNumber) ??
+            resolveRoundNumber((entry as LeaderboardSource).round_id) ??
+            resolveRoundNumber((entry as LeaderboardSource).roundId) ??
+            resolveRoundNumber((entry as LeaderboardSource).id) ??
+            (Number.isFinite(index) ? index + 1 : undefined);
 
-        if (normalizedRound === undefined) {
-          return null;
-        }
+          if (normalizedRound === undefined) {
+            return null;
+          }
 
-        const source = entry as LeaderboardSource;
-        const labelSource =
-          source.roundLabel ??
-          source.roundDisplay ??
-          source.roundText ??
-          source.roundTitle ??
-          entry.round ??
-          entry.roundNumber ??
-          source.round_id ??
-          source.roundId;
+          const source = entry as LeaderboardSource;
+          const labelSource =
+            source.roundLabel ??
+            source.roundDisplay ??
+            source.roundText ??
+            source.roundTitle ??
+            entry.round ??
+            entry.roundNumber ??
+            source.round_id ??
+            source.roundId;
 
-        return {
-          ...entry,
-          round: normalizedRound,
-          roundLabel: deriveRoundLabel(labelSource, normalizedRound),
-        };
-      })
-      .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
-      // Sort after normalization so the x-axis stays in ascending order.
-      .sort((a, b) => a.round - b.round);
+          return {
+            ...entry,
+            round: normalizedRound,
+            roundLabel: deriveRoundLabel(labelSource, normalizedRound),
+          };
+        })
+        .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
+        // Sort after normalization so the x-axis stays in ascending order.
+        .sort((a, b) => a.round - b.round)
+    );
   }, [leaderboardData?.data?.leaderboard]);
 
   const scaleScoreValue = (value?: number | null) => {
@@ -203,13 +218,18 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
       return;
     }
 
-    const filtered = compareWith.filter((value) => availableSotaSeries.includes(value));
+    const filtered = compareWith.filter((value) =>
+      availableSotaSeries.includes(value)
+    );
     if (filtered.length !== compareWith.length) {
       setCompareWith(filtered);
     }
   }, [availableSotaSeries, compareWith, userTouchedSeries]);
 
-  const availableSotaSet = useMemo(() => new Set(availableSotaSeries), [availableSotaSeries]);
+  const availableSotaSet = useMemo(
+    () => new Set(availableSotaSeries),
+    [availableSotaSeries]
+  );
 
   const handleCompareChange = useCallback((values: string[]) => {
     setUserTouchedSeries(true);
@@ -240,7 +260,10 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
   }, [chartData]);
 
   const selectedSeries = useMemo(
-    () => sotaAgents.filter((agent) => compareWith.includes(agent.value)).map((agent) => agent.value),
+    () =>
+      sotaAgents
+        .filter((agent) => compareWith.includes(agent.value))
+        .map((agent) => agent.value),
     [compareWith]
   );
 
@@ -267,7 +290,10 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
       const centered = Number(minValue.toFixed(1));
       const padding = centered === 0 ? 5 : Math.max(centered * 0.05, 2);
       const lowerSingle = Math.max(0, Number((centered - padding).toFixed(1)));
-      const upperSingle = Math.min(100, Number((centered + padding).toFixed(1)));
+      const upperSingle = Math.min(
+        100,
+        Number((centered + padding).toFixed(1))
+      );
       return [lowerSingle, Math.max(lowerSingle + 1, upperSingle)];
     }
     const range = Math.max(maxValue - minValue, 1);
@@ -329,11 +355,16 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
           className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
         >
           <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex min-h-0 w-full flex-1 pt-2" style={chartContainerStyle}>
+            <div
+              className="flex min-h-0 w-full flex-1 pt-2"
+              style={chartContainerStyle}
+            >
               <div className="h-full w-full bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center">
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <div className="text-gray-600 text-sm">Loading chart data...</div>
+                  <div className="text-gray-600 text-sm">
+                    Loading chart data...
+                  </div>
                 </div>
               </div>
             </div>
@@ -371,7 +402,9 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
           className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
         >
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-600 font-medium">Error loading leaderboard data</p>
+            <p className="text-red-600 font-medium">
+              Error loading leaderboard data
+            </p>
             <p className="text-red-500 text-sm mt-1">{error}</p>
           </div>
         </WidgetCard>
@@ -393,7 +426,10 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
       rounded="lg"
       className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
     >
-      <div className="flex min-h-0 w-full flex-1 pt-2" style={chartContainerStyle}>
+      <div
+        className="flex min-h-0 w-full flex-1 pt-2"
+        style={chartContainerStyle}
+      >
         {filteredData.length < 2 ? (
           <div className="h-full w-full flex items-center justify-center text-gray-500">
             <div className="text-center">
@@ -406,6 +442,7 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={filteredData}
+              margin={{ top: 5, right: 5, bottom: 20, left: 0 }}
               className="[&_.recharts-cartesian-axis-tick-value]:fill-gray-500 [&_.recharts-cartesian-axis.yAxis]:-translate-y-3 rtl:[&_.recharts-cartesian-axis.yAxis]:-translate-x-12"
             >
               <defs>
@@ -429,7 +466,7 @@ export default function MinerChart({ className, targetHeight }: MinerChartProps)
                 label={{
                   value: "Rounds",
                   position: "insideBottom",
-                  offset: -8,
+                  offset: 0,
                   fill: "#94a3b8",
                   fontSize: 12,
                 }}

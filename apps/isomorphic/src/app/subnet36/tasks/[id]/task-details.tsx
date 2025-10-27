@@ -131,9 +131,13 @@ function QuickInfoTile({
   const baseClass = "mt-1 block text-sm font-semibold";
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#11162a]/95 p-4 text-slate-100 shadow-[0_14px_34px_rgba(5,8,20,0.65)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
-      <span className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 ${accentBarClass}`} />
+      <span
+        className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 ${accentBarClass}`}
+      />
       <div className="relative flex items-start gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${iconWrapperClass} shadow-inner transition-all duration-300 group-hover:scale-105`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${iconWrapperClass} shadow-inner transition-all duration-300 group-hover:scale-105`}
+        >
           <Icon className={`h-5 w-5 ${iconColorClass}`} />
         </div>
         <div className="flex-1">
@@ -148,12 +152,16 @@ function QuickInfoTile({
               {value}
             </Link>
           ) : (
-            <span className={`${baseClass} text-white/90 ${valueClassName ?? ""}`}>
+            <span
+              className={`${baseClass} text-white/90 ${valueClassName ?? ""}`}
+            >
               {value}
             </span>
           )}
           {subValue ? (
-            <span className="mt-0.5 block text-xs text-slate-200/70">{subValue}</span>
+            <span className="mt-0.5 block text-xs text-slate-200/70">
+              {subValue}
+            </span>
           ) : null}
         </div>
       </div>
@@ -171,13 +179,17 @@ type ContextCardProps = {
 function ContextCard({ title, Icon, gradient, children }: ContextCardProps) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1424]/95 p-5 text-slate-100 shadow-[0_20px_44px_rgba(4,8,20,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-60`} />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-60`}
+      />
       <div className="relative flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#4b5ab5]/40 bg-[#1a2140]/85 text-sky-100 shadow-inner transition-colors duration-300 group-hover:border-[#8da0ff]/50 group-hover:text-white">
             <Icon className="h-5 w-5" />
           </div>
-          <span className="text-xs uppercase tracking-wide text-slate-200/80">{title}</span>
+          <span className="text-xs uppercase tracking-wide text-slate-200/80">
+            {title}
+          </span>
         </div>
         <div className="space-y-2 text-sm text-slate-100/85">{children}</div>
       </div>
@@ -241,7 +253,9 @@ function StatCard({
 }: StatCardConfig) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1423]/95 text-slate-100 shadow-[0_18px_44px_rgba(4,8,20,0.68)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-55`} />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-55`}
+      />
       <div className="relative flex flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -261,7 +275,9 @@ function StatCard({
           </div>
         </div>
         {description ? (
-          <p className="text-xs leading-relaxed text-slate-200/75">{description}</p>
+          <p className="text-xs leading-relaxed text-slate-200/75">
+            {description}
+          </p>
         ) : null}
       </div>
     </div>
@@ -349,7 +365,9 @@ export default function TaskDetails() {
   const agentRunInfo = relationships?.agentRun;
   const evaluationInfo = relationships?.evaluation;
   const solutionInfo = relationships?.solution;
-  const evaluationStyles = getStatusStyles(evaluationInfo?.status ?? taskData.status);
+  const evaluationStyles = getStatusStyles(
+    evaluationInfo?.status ?? taskData.status
+  );
   const evaluationScore = evaluationInfo
     ? formatPercent(evaluationInfo.finalScore)
     : formatPercent(taskData.score);
@@ -360,7 +378,9 @@ export default function TaskDetails() {
     ? formatDuration(agentRunInfo.duration)
     : formatDuration(taskData.duration);
   const agentRunAverageScore =
-    typeof agentRunInfo?.averageScore === "number" ? formatPercent(agentRunInfo.averageScore) : "—";
+    typeof agentRunInfo?.averageScore === "number"
+      ? formatPercent(agentRunInfo.averageScore)
+      : "—";
   const artifactSummary = (() => {
     const parts: string[] = [];
     if (evaluationInfo?.hasRecording || solutionInfo?.hasRecording) {
@@ -374,7 +394,9 @@ export default function TaskDetails() {
   const solutionSummary = solutionInfo
     ? `${truncateMiddle(solutionInfo.solutionId, 5)} · ${solutionInfo.actionsCount} actions`
     : "—";
-  const evaluationStatusLabel = formatLabel(evaluationInfo?.status ?? taskData.status);
+  const evaluationStatusLabel = formatLabel(
+    evaluationInfo?.status ?? taskData.status
+  );
   const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId ?? "";
   const statusLabel = formatLabel(taskData.status);
 
@@ -385,8 +407,8 @@ export default function TaskDetails() {
         roundInfo?.roundNumber != null
           ? `#${roundInfo.roundNumber}`
           : roundInfo?.validatorRoundId
-          ? truncateMiddle(roundInfo.validatorRoundId, 6)
-          : "—",
+            ? truncateMiddle(roundInfo.validatorRoundId, 6)
+            : "—",
       subValue: roundInfo?.status ? formatLabel(roundInfo.status) : undefined,
       href: ((): string | undefined => {
         const key =
@@ -397,27 +419,34 @@ export default function TaskDetails() {
       })(),
       Icon: PiClockCountdown,
       valueClassName: "font-mono text-base tracking-tight",
-      accentBarClass: "bg-gradient-to-r from-amber-400/90 via-amber-500/60 to-transparent",
+      accentBarClass:
+        "bg-gradient-to-r from-amber-400/90 via-amber-500/60 to-transparent",
       iconWrapperClass: "border-amber-400/45 bg-[#2c2014]/80",
       iconColorClass: "text-amber-200",
     },
     {
       label: "Validator",
       value: validatorInfo?.name ?? truncateMiddle(validatorInfo?.hotkey),
-      subValue: validatorInfo?.hotkey ? truncateMiddle(validatorInfo.hotkey) : undefined,
+      subValue: validatorInfo?.hotkey
+        ? truncateMiddle(validatorInfo.hotkey)
+        : undefined,
       Icon: PiShieldCheck,
       valueClassName: "text-base text-white",
-      accentBarClass: "bg-gradient-to-r from-emerald-400/90 via-teal-500/60 to-transparent",
+      accentBarClass:
+        "bg-gradient-to-r from-emerald-400/90 via-teal-500/60 to-transparent",
       iconWrapperClass: "border-emerald-400/45 bg-[#132820]/80",
       iconColorClass: "text-emerald-200",
     },
     {
       label: minerInfo?.isSota ? "SOTA Agent" : "Miner",
       value: minerInfo?.name ?? "—",
-      subValue: minerInfo?.hotkey ? truncateMiddle(minerInfo.hotkey) : undefined,
+      subValue: minerInfo?.hotkey
+        ? truncateMiddle(minerInfo.hotkey)
+        : undefined,
       Icon: PiUserCircle,
       valueClassName: "text-base text-white",
-      accentBarClass: "bg-gradient-to-r from-fuchsia-400/90 via-purple-500/60 to-transparent",
+      accentBarClass:
+        "bg-gradient-to-r from-fuchsia-400/90 via-purple-500/60 to-transparent",
       iconWrapperClass: "border-fuchsia-400/45 bg-[#251632]/80",
       iconColorClass: "text-fuchsia-200",
     },
@@ -427,10 +456,13 @@ export default function TaskDetails() {
       subValue: agentRunInfo
         ? `${agentRunDuration} • ${agentRunInfo.taskCount ?? "—"} tasks`
         : agentRunDuration,
-      href: agentRunLinkId ? `${routes.agent_run}/${agentRunLinkId}` : undefined,
+      href: agentRunLinkId
+        ? `${routes.agent_run}/${agentRunLinkId}`
+        : undefined,
       Icon: PiPlay,
       valueClassName: "font-mono text-base tracking-tight",
-      accentBarClass: "bg-gradient-to-r from-sky-400/90 via-blue-500/60 to-transparent",
+      accentBarClass:
+        "bg-gradient-to-r from-sky-400/90 via-blue-500/60 to-transparent",
       iconWrapperClass: "border-sky-400/45 bg-[#14263a]/80",
       iconColorClass: "text-sky-200",
     },
@@ -442,7 +474,8 @@ export default function TaskDetails() {
       subValue: evaluationInfo ? evaluationStatusLabel : undefined,
       Icon: PiIdentificationCard,
       valueClassName: "font-mono text-base tracking-tight",
-      accentBarClass: "bg-gradient-to-r from-rose-400/90 via-amber-500/60 to-transparent",
+      accentBarClass:
+        "bg-gradient-to-r from-rose-400/90 via-amber-500/60 to-transparent",
       iconWrapperClass: "border-rose-400/45 bg-[#2a1b22]/80",
       iconColorClass: "text-rose-200",
     },
@@ -548,7 +581,9 @@ export default function TaskDetails() {
               </span>
               <span>Started {formatDateTime(taskData.startTime)}</span>
               <span className="opacity-50">•</span>
-              <span>Updated {formatDateTime(taskData.updatedAt ?? taskData.endTime)}</span>
+              <span>
+                Updated {formatDateTime(taskData.updatedAt ?? taskData.endTime)}
+              </span>
             </div>
           </div>
 
@@ -624,21 +659,35 @@ export default function TaskDetails() {
               >
                 <div>
                   <div className="text-lg font-semibold text-white">
-                    #{roundInfo?.roundNumber ?? roundInfo?.validatorRoundId ?? "—"}
+                    #
+                    {roundInfo?.roundNumber ??
+                      roundInfo?.validatorRoundId ??
+                      "—"}
                   </div>
                   <div className="mt-1 inline-flex items-center rounded-full border border-emerald-300/40 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
                     {formatLabel(roundInfo?.status)}
                   </div>
                 </div>
                 <div className="space-y-1.5 pt-2">
-                  <InfoRow label="Started" value={formatDateTime(roundInfo?.startedAt)} />
-                  <InfoRow label="Ended" value={formatDateTime(roundInfo?.endedAt)} />
+                  <InfoRow
+                    label="Started"
+                    value={formatDateTime(roundInfo?.startedAt)}
+                  />
+                  <InfoRow
+                    label="Ended"
+                    value={formatDateTime(roundInfo?.endedAt)}
+                  />
                   <InfoRow
                     label="Epoch"
                     value={
-                      roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
+                      roundInfo?.startEpoch !== undefined &&
+                      roundInfo?.startEpoch !== null
                         ? `${roundInfo.startEpoch} → ${
-                            roundInfo?.endEpoch ?? (roundInfo?.status && String(roundInfo.status).toLowerCase() === 'active' ? 'Active' : '—')
+                            roundInfo?.endEpoch ??
+                            (roundInfo?.status &&
+                            String(roundInfo.status).toLowerCase() === "active"
+                              ? "Active"
+                              : "—")
                           }`
                         : "—"
                     }
@@ -653,7 +702,8 @@ export default function TaskDetails() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-semibold text-white line-clamp-1">
-                    {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
+                    {validatorInfo?.name ||
+                      truncateMiddle(validatorInfo?.hotkey)}
                   </span>
                   <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/70">
                     UID {validatorInfo?.uid ?? "—"}
@@ -668,7 +718,8 @@ export default function TaskDetails() {
                   <InfoRow
                     label="Stake"
                     value={
-                      validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
+                      validatorInfo?.stake !== undefined &&
+                      validatorInfo?.stake !== null
                         ? `${formatNumber(validatorInfo.stake)} TAO`
                         : "—"
                     }
@@ -676,12 +727,16 @@ export default function TaskDetails() {
                   <InfoRow
                     label="vTrust"
                     value={
-                      validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
+                      validatorInfo?.vtrust !== undefined &&
+                      validatorInfo?.vtrust !== null
                         ? formatNumber(validatorInfo.vtrust)
                         : "—"
                     }
                   />
-                  <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
+                  <InfoRow
+                    label="Version"
+                    value={validatorInfo?.version ?? "—"}
+                  />
                 </div>
               </ContextCard>
 
@@ -702,8 +757,14 @@ export default function TaskDetails() {
                 </div>
                 <div className="space-y-1.5 pt-2">
                   <InfoRow label="UID" value={minerInfo?.uid ?? "—"} />
-                  <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
-                  <InfoRow label="Provider" value={minerInfo?.provider ?? "—"} />
+                  <InfoRow
+                    label="Hotkey"
+                    value={truncateMiddle(minerInfo?.hotkey)}
+                  />
+                  <InfoRow
+                    label="Provider"
+                    value={minerInfo?.provider ?? "—"}
+                  />
                   <InfoRow
                     label="GitHub"
                     value={
@@ -747,9 +808,18 @@ export default function TaskDetails() {
                 </div>
                 <div className="space-y-1.5 pt-2">
                   <InfoRow label="Duration" value={agentRunDuration} />
-                  <InfoRow label="Tasks" value={agentRunInfo?.taskCount ?? "—"} />
-                  <InfoRow label="Completed" value={agentRunInfo?.completedTasks ?? "—"} />
-                  <InfoRow label="Failed" value={agentRunInfo?.failedTasks ?? "—"} />
+                  <InfoRow
+                    label="Tasks"
+                    value={agentRunInfo?.taskCount ?? "—"}
+                  />
+                  <InfoRow
+                    label="Finished"
+                    value={agentRunInfo?.completedTasks ?? "—"}
+                  />
+                  <InfoRow
+                    label="Failed"
+                    value={agentRunInfo?.failedTasks ?? "—"}
+                  />
                   <InfoRow label="Avg Score" value={agentRunAverageScore} />
                 </div>
               </ContextCard>
@@ -760,7 +830,9 @@ export default function TaskDetails() {
                 gradient="from-amber-500/22 via-amber-400/8 to-transparent"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-semibold text-white">{evaluationScore}</span>
+                  <span className="text-2xl font-semibold text-white">
+                    {evaluationScore}
+                  </span>
                   <span
                     className={`inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${evaluationStyles.valueClassName ?? ""}`}
                   >
@@ -776,10 +848,18 @@ export default function TaskDetails() {
                   <InfoRow label="Duration" value={evaluationDuration} />
                   <InfoRow
                     label="Web Agent"
-                    value={evaluationInfo?.webAgentId ?? solutionInfo?.webAgentId ?? "—"}
+                    value={
+                      evaluationInfo?.webAgentId ??
+                      solutionInfo?.webAgentId ??
+                      "—"
+                    }
                   />
                   <InfoRow label="Artifacts" value={artifactSummary} />
-                  <InfoRow label="Solution" value={solutionSummary} valueClassName="text-white/80" />
+                  <InfoRow
+                    label="Solution"
+                    value={solutionSummary}
+                    valueClassName="text-white/80"
+                  />
                 </div>
               </ContextCard>
             </div>

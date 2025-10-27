@@ -5,7 +5,10 @@ import Link from "next/link";
 import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
-import { useOverviewMetrics } from "@/services/hooks/useOverview";
+import {
+  useOverviewMetrics,
+  useLeaderboard,
+} from "@/services/hooks/useOverview";
 import { websitesData } from "@/data/websites-data";
 
 const metricsData = [
@@ -62,10 +65,31 @@ const metricsData = [
 
 export default function OverviewMetrics({ className }: { className?: string }) {
   const { data: metrics, loading, error } = useOverviewMetrics();
+  const { data: leaderboardData, loading: leaderboardLoading } = useLeaderboard(
+    { timeRange: "all" }
+  );
   const activeWebsitesCount = useMemo(
     () => websitesData.filter((website) => !website.isComingSoon).length,
     []
   );
+
+  // Calculate actual top score from leaderboard data
+  const calculatedTopScore = useMemo(() => {
+    const apiLeaderboard = leaderboardData?.data?.leaderboard;
+    if (!Array.isArray(apiLeaderboard) || apiLeaderboard.length === 0) {
+      return null;
+    }
+
+    let maxScore = -Infinity;
+    apiLeaderboard.forEach((entry: any) => {
+      const score = entry.subnet36;
+      if (typeof score === "number" && !Number.isNaN(score)) {
+        maxScore = Math.max(maxScore, score);
+      }
+    });
+
+    return Number.isFinite(maxScore) ? maxScore : null;
+  }, [leaderboardData]);
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
@@ -80,11 +104,19 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   };
 
   // Show loading state
-  if (loading) {
+  if (loading || leaderboardLoading) {
     return (
-      <div className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4", className)}>
+      <div
+        className={cn(
+          "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 h-full",
+          className
+        )}
+      >
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-2xl p-5 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+          <div
+            key={index}
+            className="rounded-2xl p-5 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+          >
             <div className="flex space-x-4 mb-3">
               <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
               <div className="flex-1">
@@ -106,7 +138,12 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   // Show error state
   if (error) {
     return (
-      <div className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4", className)}>
+      <div
+        className={cn(
+          "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 h-full",
+          className
+        )}
+      >
         <div className="col-span-2 rounded-2xl p-5 bg-red-50 border border-red-200">
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading metrics</p>
@@ -122,7 +159,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "score-to-win",
       title: "Top Score",
-      value: formatPercentage(metrics?.topScore),
+      value: formatPercentage(calculatedTopScore ?? metrics?.topScore),
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -172,22 +209,28 @@ export default function OverviewMetrics({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn("w-full grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0", className)}
+      className={cn(
+        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0 h-full",
+        className
+      )}
     >
       {dynamicMetricsData.map((metric) => {
         const Icon = metric.icon;
         const metricCard = (
-          <div className={cn("rounded-2xl p-5 min-w-0", metric.bgColor)}>
-            <div className="flex space-x-4 mb-3 min-w-0">
+          <div
+            className={cn(
+              "rounded-2xl p-4 min-w-0 h-full flex flex-col justify-between",
+              metric.bgColor
+            )}
+          >
+            <div className="flex space-x-4 mb-2 min-w-0">
               <div
                 className={cn(
                   "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg flex-shrink-0",
                   metric.iconClassName
                 )}
               >
-                 <Icon
-                   className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300"
-                 />
+                <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3
@@ -204,8 +247,10 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               </div>
             </div>
             <div className="text-center min-w-0">
-              <div className={cn("text-xs truncate", metric.descriptionClassName)}>
-                {metric.id === "score-to-win" && "Current target score"}
+              <div
+                className={cn("text-xs truncate", metric.descriptionClassName)}
+              >
+                {metric.id === "score-to-win" && "Current round"}
                 {metric.id === "total-validators" && "Active validators"}
                 {metric.id === "total-miners" && "Active miners"}
                 {metric.id === "total-websites" && "Active websites"}
