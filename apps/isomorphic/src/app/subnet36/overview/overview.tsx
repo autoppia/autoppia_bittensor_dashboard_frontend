@@ -20,7 +20,9 @@ export default function Overview() {
   const { openModal } = useModal();
   const hasOpenedAnnouncement = useRef(false);
   const metricsColumnRef = useRef<HTMLDivElement | null>(null);
-  const [metricsHeight, setMetricsHeight] = useState<number | undefined>(undefined);
+  const [metricsHeight, setMetricsHeight] = useState<number | undefined>(
+    undefined
+  );
   const metricsRound = overviewData?.metrics?.metricsRound ?? null;
 
   const openAnnouncementModal = useCallback(() => {
@@ -90,7 +92,9 @@ export default function Overview() {
         <div className="mb-6 bg-red-900/20 border border-red-700/50 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-400 font-medium">Error loading overview data</p>
+              <p className="text-red-400 font-medium">
+                Error loading overview data
+              </p>
               <p className="text-red-300 text-sm mt-1">{error}</p>
             </div>
             <button
@@ -128,35 +132,38 @@ export default function Overview() {
             targetHeight={metricsHeight}
           />
         </div>
-        <div className="w-full lg:w-[460px] min-w-0" ref={metricsColumnRef}>
+        <div
+          className="w-full lg:w-[460px] min-w-0 flex flex-col"
+          ref={metricsColumnRef}
+        >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              Latest completed round:
+              Latest finished round:
               <span className="font-bold text-white">
                 {metricsRound ?? "—"}
               </span>
             </span>
             <div className="flex items-center justify-end gap-2 min-w-0">
-            <button
-              onClick={handleOpenTimeline}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
-            >
-              <FaPlay className="h-3.5 w-3.5 text-black" />
-              Replay
-            </button>
-            <Link
-              href="https://github.com/autoppia/autoppia_web_agents_subnet"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
-              title="View Subnet Repository"
-            >
-              <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-            </Link>
+              <button
+                onClick={handleOpenTimeline}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
+              >
+                <FaPlay className="h-3.5 w-3.5 text-black" />
+                Replay
+              </button>
+              <Link
+                href="https://github.com/autoppia/autoppia_web_agents_subnet"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
+                title="View Subnet Repository"
+              >
+                <PiGithubLogoDuotone className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+              </Link>
             </div>
           </div>
-          <OverviewMetrics className="w-full min-w-0" />
+          <OverviewMetrics className="w-full min-w-0 flex-1" />
         </div>
       </div>
       <OverviewValidators />
