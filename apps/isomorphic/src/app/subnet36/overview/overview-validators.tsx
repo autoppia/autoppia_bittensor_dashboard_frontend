@@ -26,8 +26,16 @@ import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 export default function OverviewValidators() {
-  const { data: validatorsData, loading: validatorsLoading, error: validatorsError } = useValidators({ limit: 6 });
-  const { data: currentRound, loading: roundLoading, error: roundError } = useCurrentRound();
+  const {
+    data: validatorsData,
+    loading: validatorsLoading,
+    error: validatorsError,
+  } = useValidators({ limit: 6 });
+  const {
+    data: currentRound,
+    loading: roundLoading,
+    error: roundError,
+  } = useCurrentRound();
   const roundNumber = currentRound?.id ?? null;
   const isRoundActive =
     !!currentRound &&
@@ -75,12 +83,19 @@ export default function OverviewValidators() {
   if (validatorsLoading || roundLoading) {
     return (
       <>
-        <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+        <PageHeader
+          title={headerTitle}
+          description={headerDescription}
+          className="mt-12"
+        >
           {runningRoundBadge}
         </PageHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden">
+            <div
+              key={index}
+              className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden"
+            >
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -133,14 +148,16 @@ export default function OverviewValidators() {
   if (validatorsError) {
     return (
       <>
-        <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+        <PageHeader
+          title={headerTitle}
+          description={headerDescription}
+          className="mt-12"
+        >
           {runningRoundBadge}
         </PageHeader>
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6 text-center">
           <p className="text-red-400 font-medium">Error loading validators</p>
-          <p className="text-red-300 text-sm mt-1">
-            {validatorsError}
-          </p>
+          <p className="text-red-300 text-sm mt-1">{validatorsError}</p>
         </div>
       </>
     );
@@ -148,7 +165,11 @@ export default function OverviewValidators() {
 
   return (
     <>
-      <PageHeader title={headerTitle} description={headerDescription} className="mt-12">
+      <PageHeader
+        title={headerTitle}
+        description={headerDescription}
+        className="mt-12"
+      >
         {runningRoundBadge}
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
@@ -164,13 +185,24 @@ export default function OverviewValidators() {
               ? `${(validator.weight / 1000).toFixed(0)}K`
               : "—";
           const trustMetric =
-            typeof validator.trust === "number" ? validator.trust.toFixed(2) : "—";
-          const versionMetric =
-            validator.version != null ? validator.version : "—";
+            typeof validator.trust === "number"
+              ? validator.trust.toFixed(2)
+              : "—";
+          const versionMetric = (() => {
+            if (validator.version == null) return "—";
+            const version = String(validator.version);
+            // If it's just a number like "10", format as "10.0.0"
+            if (/^\d+$/.test(version)) {
+              return `${version}.0.0`;
+            }
+            // Otherwise return as is
+            return version;
+          })();
           const secondaryStats = [
             {
               title: "UID",
-              metric: validator.validatorUid != null ? validator.validatorUid : "—",
+              metric:
+                validator.validatorUid != null ? validator.validatorUid : "—",
               icon: PiFingerprintDuotone,
               iconClassName: "bg-gradient-to-br from-emerald-500 to-teal-600",
             },
@@ -198,37 +230,38 @@ export default function OverviewValidators() {
             validator.status === "Evaluating"
               ? "Evaluating..."
               : validator.status === "Finished"
-              ? "Finished"
-              : validator.status === "Not Started"
-              ? "Not Started"
-              : validator.status;
+                ? "Finished"
+                : validator.status === "Not Started"
+                  ? "Not Started"
+                  : validator.status;
 
           const showCurrentTask =
-            normalizedStatus === "Evaluating" && (validator.currentTask?.trim() || "");
+            normalizedStatus === "Evaluating" &&
+            (validator.currentTask?.trim() || "");
 
           const resolvedRoundNumber =
             typeof validator.roundNumber === "number"
               ? validator.roundNumber
               : typeof currentRound?.id === "number"
-              ? currentRound.id
-              : undefined;
+                ? currentRound.id
+                : undefined;
           const validatorParam =
-            validator.id || (validator.validatorUid != null ? `validator-${validator.validatorUid}` : "");
+            validator.id ||
+            (validator.validatorUid != null
+              ? `validator-${validator.validatorUid}`
+              : "");
           const roundKey =
             typeof resolvedRoundNumber === "number"
               ? `round_${resolvedRoundNumber}`
               : currentRound?.id != null
-              ? `round_${currentRound.id}`
-              : validator.validatorRoundId ?? undefined;
+                ? `round_${currentRound.id}`
+                : (validator.validatorRoundId ?? undefined);
           const roundsLink = roundKey
             ? `${routes.rounds}/${encodeURIComponent(roundKey)}${validatorParam ? `?validator=${encodeURIComponent(validatorParam)}` : ""}`
             : undefined;
 
           return roundsLink ? (
-            <Link
-              key={`validator-${validator.id}`}
-              href={roundsLink}
-            >
+            <Link key={`validator-${validator.id}`} href={roundsLink}>
               <div className="bg-gray-50 border-2 border-muted hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                 {/* Header - Validator Info & Status */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -254,11 +287,11 @@ export default function OverviewValidators() {
                         </Text>
                       </div>
                     </div>
-                      <div
-                        className={cn(
-                          "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group/status",
-                          "hover:scale-105 hover:shadow-xl",
-                          statusColorClass
+                    <div
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group/status",
+                        "hover:scale-105 hover:shadow-xl",
+                        statusColorClass
                       )}
                     >
                       {validator.status === "Sending Tasks" && (
@@ -274,12 +307,12 @@ export default function OverviewValidators() {
                         <PiCheckCircleFill className="w-3.5 h-3.5" />
                       )}
                       {validator.status !== "Sending Tasks" &&
-                       validator.status !== "Evaluating" &&
-                       validator.status !== "Waiting" &&
-                       validator.status !== "Finished" &&
-                       validator.status !== "Not Started" && (
-                        <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
-                      )}
+                        validator.status !== "Evaluating" &&
+                        validator.status !== "Waiting" &&
+                        validator.status !== "Finished" &&
+                        validator.status !== "Not Started" && (
+                          <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
+                        )}
                       {validator.status === "Not Started" && (
                         <PiArrowClockwiseDuotone className="w-3.5 h-3.5" />
                       )}
@@ -300,25 +333,38 @@ export default function OverviewValidators() {
                       {(() => {
                         const hasLiveMeta =
                           normalizedStatus === "Evaluating" &&
-                          (validator.currentWebsite || validator.currentUseCase);
-                        const websiteText = hasLiveMeta && validator.currentWebsite ? validator.currentWebsite : "__";
-                        const useCaseText = hasLiveMeta && validator.currentUseCase ? validator.currentUseCase : "__";
+                          (validator.currentWebsite ||
+                            validator.currentUseCase);
+                        const websiteText =
+                          hasLiveMeta && validator.currentWebsite
+                            ? validator.currentWebsite
+                            : "__";
+                        const useCaseText =
+                          hasLiveMeta && validator.currentUseCase
+                            ? validator.currentUseCase
+                            : "__";
                         return (
                           <div
                             className={cn(
                               "flex items-center justify-center gap-4 flex-wrap text-xs font-bold uppercase tracking-wide",
-                              showCurrentTask ? "text-gray-800" : "text-gray-500"
+                              showCurrentTask
+                                ? "text-gray-800"
+                                : "text-gray-500"
                             )}
                           >
                             <span className="inline-flex items-center gap-1.5">
                               <PiGlobe className="w-3.5 h-3.5" />
                               <span className="text-gray-700">Website:</span>
-                              <span className="font-semibold text-gray-900 normal-case">{websiteText}</span>
+                              <span className="font-semibold text-gray-900 normal-case">
+                                {websiteText}
+                              </span>
                             </span>
                             <span className="inline-flex items-center gap-1.5">
                               <PiTarget className="w-3.5 h-3.5" />
                               <span className="text-gray-700">Use Case:</span>
-                              <span className="font-semibold text-gray-900 normal-case">{useCaseText}</span>
+                              <span className="font-semibold text-gray-900 normal-case">
+                                {useCaseText}
+                              </span>
                             </span>
                           </div>
                         );
@@ -354,11 +400,16 @@ export default function OverviewValidators() {
                     {secondaryStats.map((stat) => {
                       const Icon = stat.icon;
                       return (
-                        <div key={stat.title} className="flex items-center gap-2">
-                          <div className={cn(
-                            "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
-                            stat.iconClassName
-                          )}>
+                        <div
+                          key={stat.title}
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className={cn(
+                              "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
+                              stat.iconClassName
+                            )}
+                          >
                             <Icon className="w-3.5 h-3.5" />
                           </div>
                           <div className="flex flex-col min-w-0">
@@ -375,7 +426,9 @@ export default function OverviewValidators() {
                   </div>
                   <div className="text-right text-[11px] text-gray-400">
                     Last seen round{" "}
-                    {resolvedRoundNumber != null ? `#${resolvedRoundNumber}` : "—"}
+                    {resolvedRoundNumber != null
+                      ? `#${resolvedRoundNumber}`
+                      : "—"}
                   </div>
                 </div>
               </div>
@@ -425,8 +478,14 @@ export default function OverviewValidators() {
                       const hasLiveMeta =
                         normalizedStatus === "Evaluating" &&
                         (validator.currentWebsite || validator.currentUseCase);
-                      const websiteText = hasLiveMeta && validator.currentWebsite ? validator.currentWebsite : "__";
-                      const useCaseText = hasLiveMeta && validator.currentUseCase ? validator.currentUseCase : "__";
+                      const websiteText =
+                        hasLiveMeta && validator.currentWebsite
+                          ? validator.currentWebsite
+                          : "__";
+                      const useCaseText =
+                        hasLiveMeta && validator.currentUseCase
+                          ? validator.currentUseCase
+                          : "__";
                       return (
                         <div
                           className={cn(
@@ -437,12 +496,16 @@ export default function OverviewValidators() {
                           <span className="inline-flex items-center gap-1.5">
                             <PiGlobe className="w-3.5 h-3.5" />
                             <span className="text-gray-700">Website:</span>
-                            <span className="font-semibold text-gray-900 normal-case">{websiteText}</span>
+                            <span className="font-semibold text-gray-900 normal-case">
+                              {websiteText}
+                            </span>
                           </span>
                           <span className="inline-flex items-center gap-1.5">
                             <PiTarget className="w-3.5 h-3.5" />
                             <span className="text-gray-700">Use Case:</span>
-                            <span className="font-semibold text-gray-900 normal-case">{useCaseText}</span>
+                            <span className="font-semibold text-gray-900 normal-case">
+                              {useCaseText}
+                            </span>
                           </span>
                         </div>
                       );
@@ -471,10 +534,12 @@ export default function OverviewValidators() {
                     const Icon = stat.icon;
                     return (
                       <div key={stat.title} className="flex items-center gap-2">
-                        <div className={cn(
-                          "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
-                          stat.iconClassName
-                        )}>
+                        <div
+                          className={cn(
+                            "flex items-center justify-center w-7 h-7 rounded-lg text-white flex-shrink-0",
+                            stat.iconClassName
+                          )}
+                        >
                           <Icon className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -491,7 +556,9 @@ export default function OverviewValidators() {
                 </div>
                 <div className="text-right text-[11px] text-gray-400">
                   Last seen round{" "}
-                  {resolvedRoundNumber != null ? `#${resolvedRoundNumber}` : "—"}
+                  {resolvedRoundNumber != null
+                    ? `#${resolvedRoundNumber}`
+                    : "—"}
                 </div>
               </div>
             </div>
