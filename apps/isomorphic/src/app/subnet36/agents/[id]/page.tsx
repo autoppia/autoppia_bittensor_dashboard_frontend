@@ -62,7 +62,14 @@ import {
   PiCaretDownDuotone,
   PiCaretUpDuotone,
 } from "react-icons/pi";
-import { LuCircleCheckBig, LuTrophy, LuAward, LuTarget, LuStar, LuCrown } from "react-icons/lu";
+import {
+  LuCircleCheckBig,
+  LuTrophy,
+  LuAward,
+  LuTarget,
+  LuStar,
+  LuCrown,
+} from "react-icons/lu";
 import { GLASS_STYLES, METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
 // ============================================================================
@@ -113,8 +120,24 @@ async function fetchAllAgentRuns(
 }
 
 // Agent stats band
-function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?: AgentData | null; roundMetrics?: AgentRoundMetrics | null; mode?: 'current' | 'historical'; preAvg?: any }) {
-  const { sliderEl, sliderPrevBtn, sliderNextBtn, scrollToTheRight, scrollToTheLeft } = useScrollableSlider();
+function AgentStats({
+  agent,
+  roundMetrics,
+  mode = "current",
+  preAvg,
+}: {
+  agent?: AgentData | null;
+  roundMetrics?: AgentRoundMetrics | null;
+  mode?: "current" | "historical";
+  preAvg?: any;
+}) {
+  const {
+    sliderEl,
+    sliderPrevBtn,
+    sliderNextBtn,
+    scrollToTheRight,
+    scrollToTheLeft,
+  } = useScrollableSlider();
 
   if (!agent) {
     return <AgentStatsPlaceholder />;
@@ -124,27 +147,36 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
     roundMetrics?.rank && roundMetrics.rank > 0
       ? `#${roundMetrics.rank}`
       : agent.currentRank && agent.currentRank > 0
-      ? `#${agent.currentRank}`
-      : "N/A";
+        ? `#${agent.currentRank}`
+        : "N/A";
 
-  const bestRankEver = agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
+  const bestRankEver =
+    agent.bestRankEver && agent.bestRankEver > 0
+      ? `#${agent.bestRankEver}`
+      : "N/A";
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  const bestRoundScoreValue = agent.bestRoundScore ?? agent.currentTopScore ?? 0;
+  const bestRoundScoreValue =
+    agent.bestRoundScore ?? agent.currentTopScore ?? 0;
   const bestEverScorePercentage = `${(bestRoundScoreValue * 100).toFixed(1)}%`;
-  const roundsParticipated = (agent.roundsParticipated || agent.totalRuns).toLocaleString();
+  const roundsParticipated = (
+    agent.roundsParticipated || agent.totalRuns
+  ).toLocaleString();
   const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0);
-  const totalAlphaEarned = totalAlphaValue % 1 === 0 ? totalAlphaValue.toLocaleString() : totalAlphaValue.toFixed(2);
+  const totalAlphaEarned =
+    totalAlphaValue % 1 === 0
+      ? totalAlphaValue.toLocaleString()
+      : totalAlphaValue.toFixed(2);
 
   const stats = [
     {
-      title: "Current Rank",
+      title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
+      title: "Total Tasks",
+      metric: (roundMetrics?.totalTasks ?? 0).toString(),
       icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.yellow,
     },
@@ -192,9 +224,13 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
     },
   ];
 
-  // In current view: show Current Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Best Rank Ever, Best Ever Score, Rounds Participated, Total Alpha Earned
-  const displayStats = (mode === 'current' ? [stats[0], stats[2], stats[4], stats[3], stats[5]] : [stats[1], stats[6], stats[7], stats[8]]).filter(Boolean);
+  // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
+  // In historical view: show Total Tasks, Best Ever Score, Rounds Participated, Total Alpha Earned
+  const displayStats = (
+    mode === "current"
+      ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
+      : [stats[1], stats[6], stats[7], stats[8]]
+  ).filter(Boolean);
 
   return (
     <div className="relative flex w-auto items-center overflow-visible z-20">
@@ -208,7 +244,10 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
         <PiCaretLeftBold className="h-5 w-5" />
       </Button>
       <div className="w-full overflow-visible pt-3 pb-4">
-        <div ref={sliderEl} className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0">
+        <div
+          ref={sliderEl}
+          className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0"
+        >
           {displayStats.map((stat) => {
             const Icon = stat.icon as any;
             return (
@@ -222,20 +261,31 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
                 )}
               >
                 {/* Animated pulsing background like main card */}
-                <div className={cn("absolute inset-0 rounded-3xl opacity-20 bg-gradient-to-br pointer-events-none", stat.gradient)} />
-                
-                {/* Animated glow effect */}
-                <div 
-                  className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-20 blur-2xl transition-all duration-500 group-hover:opacity-30 group-hover:blur-xl" 
-                  style={{ 
-                    maskImage: 'radial-gradient(white, transparent)', 
-                    WebkitMaskImage: 'radial-gradient(white, transparent)',
-                    background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`
-                  }} 
+                <div
+                  className={cn(
+                    "absolute inset-0 rounded-3xl opacity-20 bg-gradient-to-br pointer-events-none",
+                    stat.gradient
+                  )}
                 />
-                
+
+                {/* Animated glow effect */}
+                <div
+                  className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-20 blur-2xl transition-all duration-500 group-hover:opacity-30 group-hover:blur-xl"
+                  style={{
+                    maskImage: "radial-gradient(white, transparent)",
+                    WebkitMaskImage: "radial-gradient(white, transparent)",
+                    background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`,
+                  }}
+                />
+
                 {/* Shine effect on hover */}
-                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-25 transition-opacity duration-300 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%)' }} />
+                <div
+                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-25 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%)",
+                  }}
+                />
 
                 <div className="relative flex flex-col gap-4">
                   <div className="flex items-center justify-between">
@@ -283,10 +333,34 @@ function AgentStats({ agent, roundMetrics, mode = 'current', preAvg }: { agent?:
 
 // Score over time chart
 const filterOptions = ["7D", "15D", "All"];
-const BENCHMARK_COLORS: Record<string, string> = { openai: "#2563EB", anthropic: "#F97316", browser: "#8B5CF6", "browser-use": "#8B5CF6", browser_use: "#8B5CF6", claude: "#F97316" };
-const BENCHMARK_COLOR_PALETTE = ["#2563EB", "#F97316", "#8B5CF6", "#14B8A6", "#F472B6", "#EC4899"];
+const BENCHMARK_COLORS: Record<string, string> = {
+  openai: "#2563EB",
+  anthropic: "#F97316",
+  browser: "#8B5CF6",
+  "browser-use": "#8B5CF6",
+  browser_use: "#8B5CF6",
+  claude: "#F97316",
+};
+const BENCHMARK_COLOR_PALETTE = [
+  "#2563EB",
+  "#F97316",
+  "#8B5CF6",
+  "#14B8A6",
+  "#F472B6",
+  "#EC4899",
+];
 
-function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint[], loading = false, error }: { className?: string; scoreRoundData?: ScoreRoundDataPoint[]; loading?: boolean; error?: string | null }) {
+function AgentScoreChart({
+  className,
+  scoreRoundData = [] as ScoreRoundDataPoint[],
+  loading = false,
+  error,
+}: {
+  className?: string;
+  scoreRoundData?: ScoreRoundDataPoint[];
+  loading?: boolean;
+  error?: string | null;
+}) {
   const [timeRange, setTimeRange] = useState<"7d" | "15d" | "all">("all");
 
   const { processedRows, benchmarkSeries } = useMemo(() => {
@@ -307,26 +381,43 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 
         if (Array.isArray(point.benchmarks) && point.benchmarks.length > 0) {
           point.benchmarks.forEach((benchmark, idx) => {
-            const rawId = benchmark.provider || benchmark.name || `benchmark-${idx}`;
+            const rawId =
+              benchmark.provider || benchmark.name || `benchmark-${idx}`;
             const slug = slugify(rawId);
             const key = `benchmark_${slug || idx}`;
             const normalized = normalizeScore(benchmark.score);
 
             if (!seriesMap.has(key)) {
-              const color = BENCHMARK_COLORS[slug] || BENCHMARK_COLOR_PALETTE[seriesMap.size % BENCHMARK_COLOR_PALETTE.length];
-              seriesMap.set(key, { label: benchmark.name || benchmark.provider || "Benchmark", color });
+              const color =
+                BENCHMARK_COLORS[slug] ||
+                BENCHMARK_COLOR_PALETTE[
+                  seriesMap.size % BENCHMARK_COLOR_PALETTE.length
+                ];
+              seriesMap.set(key, {
+                label: benchmark.name || benchmark.provider || "Benchmark",
+                color,
+              });
             }
             row[key] = normalized;
           });
         }
         return row;
       })
-      .filter((entry) => typeof entry.round === "number" && Number.isFinite(entry.round) && (entry.round as number) > 0)
-      .sort((a, b) => (Number(a.round) - Number(b.round)));
+      .filter(
+        (entry) =>
+          typeof entry.round === "number" &&
+          Number.isFinite(entry.round) &&
+          (entry.round as number) > 0
+      )
+      .sort((a, b) => Number(a.round) - Number(b.round));
 
     return {
       processedRows: rows,
-      benchmarkSeries: Array.from(seriesMap.entries()).map(([key, meta]) => ({ key, label: meta.label, color: meta.color })),
+      benchmarkSeries: Array.from(seriesMap.entries()).map(([key, meta]) => ({
+        key,
+        label: meta.label,
+        color: meta.color,
+      })),
     };
   }, [scoreRoundData]);
 
@@ -342,11 +433,25 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 
   if (error) {
     return (
-      <WidgetCard title="Score Over Time" action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />} headerClassName="flex-row items-start space-between text-white pb-4" rounded="xl" className={className} titleClassName="text-white">
+      <WidgetCard
+        title="Score Over Time"
+        action={
+          <ButtonGroupAction
+            options={filterOptions}
+            onChange={(option) => handleFilterBy(option)}
+          />
+        }
+        headerClassName="flex-row items-start space-between text-white pb-4"
+        rounded="xl"
+        className={className}
+        titleClassName="text-white"
+      >
         <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="relative flex h-[273px] items-center justify-center text-rose-200">
           <div className="text-center">
-            <p className="text-lg font-semibold">Error loading performance data</p>
+            <p className="text-lg font-semibold">
+              Error loading performance data
+            </p>
             <p className="mt-2 text-sm text-white/80">{error}</p>
           </div>
         </div>
@@ -366,22 +471,30 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
     const scaled: Record<string, number | string | null> = {
       ...entry,
       score: entry.score != null ? Number(entry.score) * 100 : entry.score,
-      topBenchmarkScore: entry.topBenchmarkScore != null ? Number(entry.topBenchmarkScore) * 100 : entry.topBenchmarkScore,
+      topBenchmarkScore:
+        entry.topBenchmarkScore != null
+          ? Number(entry.topBenchmarkScore) * 100
+          : entry.topBenchmarkScore,
     };
     benchmarkSeries.forEach((series) => {
-      if (scaled[series.key] != null) scaled[series.key] = Number(scaled[series.key]) * 100;
+      if (scaled[series.key] != null)
+        scaled[series.key] = Number(scaled[series.key]) * 100;
     });
     return scaled;
   });
 
-  const hasTopBenchmark = displayData.some((entry) => typeof entry.topBenchmarkScore === "number");
+  const hasTopBenchmark = displayData.some(
+    (entry) => typeof entry.topBenchmarkScore === "number"
+  );
   const scoreValues = displayData
     .flatMap((entry) => {
       const values: number[] = [];
       if (typeof entry.score === "number") values.push(entry.score);
-      if (typeof entry.topBenchmarkScore === "number") values.push(entry.topBenchmarkScore);
+      if (typeof entry.topBenchmarkScore === "number")
+        values.push(entry.topBenchmarkScore);
       benchmarkSeries.forEach((series) => {
-        if (typeof entry[series.key] === "number") values.push(entry[series.key] as number);
+        if (typeof entry[series.key] === "number")
+          values.push(entry[series.key] as number);
       });
       return values;
     })
@@ -400,53 +513,132 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
 
   const yAxisDomain = computeDomain();
   const legendItems = [
-    { label: "Agent score", color: "#10B981" },
-    ...(hasTopBenchmark ? [{ label: "Top score", color: "#FACC15" }] : []),
-    ...benchmarkSeries.map((series) => ({ label: series.label, color: series.color })),
+    { label: "Miner score", color: "#10B981" },
+    ...(hasTopBenchmark
+      ? [{ label: "Top miner score", color: "#FACC15" }]
+      : []),
+    ...benchmarkSeries.map((series) => ({
+      label: series.label,
+      color: series.color,
+    })),
   ];
 
   return (
     <WidgetCard
-      title={<span className="text-2xl font-black text-white">Score Over Time</span>}
-      action={<ButtonGroupAction options={filterOptions} onChange={(option) => handleFilterBy(option)} />}
+      title={
+        <span className="text-2xl font-black text-white">Score Over Time</span>
+      }
+      action={
+        <ButtonGroupAction
+          options={filterOptions}
+          onChange={(option) => handleFilterBy(option)}
+        />
+      }
       headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
-      className={cn("flex flex-col min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none", className)}
+      className={cn(
+        "flex flex-col min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none",
+        className
+      )}
       titleClassName="text-white"
     >
-      <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
+      <div className="pulse-bg-rounded-2xl" style={{ display: "none" }} />
       {processedRows.length === 0 && (
-        <div className={cn("relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90 border border-white/20 bg-blue-900/20")}>
-          <strong>No history yet:</strong> This agent has not completed any recorded rounds.
+        <div
+          className={cn(
+            "relative mb-4 rounded-lg backdrop-blur-sm p-3 text-sm text-white/90 border border-white/20 bg-blue-900/20"
+          )}
+        >
+          <strong>No history yet:</strong> This agent has not completed any
+          recorded rounds.
         </div>
       )}
       <div className="relative custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
         <div className={cn("h-full w-full pt-2 min-h-[360px]")}>
           <ResponsiveContainer width="100%" height={360} minWidth={600}>
-            <ComposedChart data={displayData} margin={{ top: 10, left: -10 }}>
+            <ComposedChart
+              data={displayData}
+              margin={{ top: 10, left: -10, bottom: 20 }}
+            >
               <defs>
                 <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
                   <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-              <XAxis dataKey="round" axisLine tickLine={false} tickFormatter={(value) => `${value}`} tick={{ fill: "rgba(226,232,240,0.9)", fontSize: 13, fontWeight: 500 }} />
-              <YAxis axisLine tickLine={false} domain={yAxisDomain} tick={<CustomYAxisTick postfix="%" />} stroke="rgba(148,163,184,0.3)" />
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
+                stroke="rgba(148,163,184,0.15)"
+              />
+              <XAxis
+                dataKey="round"
+                axisLine
+                tickLine={false}
+                tickFormatter={(value) => `${value}`}
+                tick={{
+                  fill: "rgba(226,232,240,0.9)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
+                label={{
+                  value: "Rounds",
+                  position: "insideBottom",
+                  offset: -10,
+                  fill: "#94a3b8",
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              />
+              <YAxis
+                axisLine
+                tickLine={false}
+                domain={yAxisDomain}
+                tick={<CustomYAxisTick postfix="%" />}
+                stroke="rgba(148,163,184,0.3)"
+              />
               <Tooltip
                 content={<CustomTooltip />}
-                formatter={(value: any, name: string) => (value == null ? ["—", name] : [`${Number(value).toFixed(1)}%`, name])}
+                formatter={(value: any, name: string) =>
+                  value == null
+                    ? ["—", name]
+                    : [`${Number(value).toFixed(2)}%`, name]
+                }
                 labelFormatter={(value, payload) => {
                   const data = payload?.[0]?.payload;
                   return `${value}${data?.rank ? ` (Rank #${data.rank})` : ""}`;
                 }}
               />
-              <Area type="monotone" dataKey="score" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#scoreArea)" name="Agent score" />
+              <Area
+                type="monotone"
+                dataKey="score"
+                stroke="#10B981"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#scoreArea)"
+                name="Miner score"
+              />
               {hasTopBenchmark && (
-                <Line type="monotone" dataKey="topBenchmarkScore" stroke="#FACC15" strokeWidth={2} dot={false} strokeDasharray="6 4" name="Top score" />
+                <Line
+                  type="monotone"
+                  dataKey="topBenchmarkScore"
+                  stroke="#FACC15"
+                  strokeWidth={2}
+                  dot={false}
+                  strokeDasharray="6 4"
+                  name="Top miner score"
+                />
               )}
               {benchmarkSeries.map((series) => (
-                <Line key={series.key} type="monotone" dataKey={series.key} stroke={series.color} strokeWidth={1.75} dot={false} name={series.label} />
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  stroke={series.color}
+                  strokeWidth={1.75}
+                  dot={false}
+                  name={series.label}
+                />
               ))}
             </ComposedChart>
           </ResponsiveContainer>
@@ -455,9 +647,20 @@ function AgentScoreChart({ className, scoreRoundData = [] as ScoreRoundDataPoint
       {legendItems.length > 1 && (
         <div className="relative mt-3 flex flex-wrap justify-center gap-6">
           {legendItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/15 shadow-sm">
-              <div className="h-4 w-4 rounded-full shadow-lg" style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}66` }} />
-              <span className="text-white font-medium text-sm">{item.label}</span>
+            <div
+              key={item.label}
+              className="flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/15 shadow-sm"
+            >
+              <div
+                className="h-4 w-4 rounded-full shadow-lg"
+                style={{
+                  backgroundColor: item.color,
+                  boxShadow: `0 0 10px ${item.color}66`,
+                }}
+              />
+              <span className="text-white font-medium text-sm">
+                {item.label}
+              </span>
             </div>
           ))}
         </div>
@@ -495,18 +698,27 @@ function AgentValidators({
   if (!runs.length) {
     return (
       <div className="mt-6">
-        <div className="text-center py-12 text-white/70">No validator runs found for this agent</div>
+        <div className="text-center py-12 text-white/70">
+          No validator runs found for this agent
+        </div>
       </div>
     );
   }
 
-  const filteredRuns = selectedRound != null ? runs.filter((run) => run.roundId === selectedRound) : runs;
+  const filteredRuns =
+    selectedRound != null
+      ? runs.filter((run) => run.roundId === selectedRound)
+      : runs;
 
-  const runsByValidator = filteredRuns.reduce((acc, run) => {
-    if (!acc[run.validatorId]) acc[run.validatorId] = [] as typeof filteredRuns;
-    acc[run.validatorId].push(run);
-    return acc;
-  }, {} as Record<string, typeof filteredRuns>);
+  const runsByValidator = filteredRuns.reduce(
+    (acc, run) => {
+      if (!acc[run.validatorId])
+        acc[run.validatorId] = [] as typeof filteredRuns;
+      acc[run.validatorId].push(run);
+      return acc;
+    },
+    {} as Record<string, typeof filteredRuns>
+  );
 
   return (
     <>
@@ -514,6 +726,7 @@ function AgentValidators({
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({Object.keys(runsByValidator).length})
+            {selectedRound ? ` - Round ${selectedRound}` : ""}
           </Text>
         </div>
         <button
@@ -535,54 +748,111 @@ function AgentValidators({
       </div>
 
       {isInfoExpanded && (
-        <div className="mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
+        <div
+          className="mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500"
+          style={{
+            background: "transparent",
+            border: "none",
+            boxShadow: "none",
+          }}
+        >
+          <div className="pulse-bg-rounded-2xl" style={{ display: "none" }} />
           <div className="relative z-10 flex items-center gap-3 mb-4">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
               <PiInfoDuotone className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">How Agent Evaluation Works</h3>
-              <p className="text-sm text-white/70">Understanding the validation process</p>
+              <h3 className="text-lg font-bold text-white">
+                How Agent Evaluation Works
+              </h3>
+              <p className="text-sm text-white/70">
+                Understanding the validation process
+              </p>
             </div>
           </div>
           <div className="relative z-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+              <div
+                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  boxShadow: "none",
+                }}
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-base">Validators</h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">Each validator runs independent evaluations of your agent across different tasks and scenarios to ensure fair and comprehensive testing.</p>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Each validator runs independent evaluations of your agent
+                  across different tasks and scenarios to ensure fair and
+                  comprehensive testing.
+                </p>
               </div>
-              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+              <div
+                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  boxShadow: "none",
+                }}
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-base">Scoring</h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">Agents are scored based on task completion accuracy, response quality, and execution efficiency across multiple evaluation criteria.</p>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Agents are scored based on task completion accuracy, response
+                  quality, and execution efficiency across multiple evaluation
+                  criteria.
+                </p>
               </div>
-              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+              <div
+                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  boxShadow: "none",
+                }}
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-base">Ranking</h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">Your final rank is determined by your average performance across all validators in each round, providing a comprehensive ranking system.</p>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Your final rank is determined by your average performance
+                  across all validators in each round, providing a comprehensive
+                  ranking system.
+                </p>
               </div>
-              <div className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+              <div
+                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  boxShadow: "none",
+                }}
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
                     <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Response Time</h4>
+                  <h4 className="font-bold text-white text-base">
+                    Response Time
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">Faster response times with maintained quality result in higher scores, balancing speed and accuracy in the evaluation process.</p>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Faster response times with maintained quality result in higher
+                  scores, balancing speed and accuracy in the evaluation
+                  process.
+                </p>
               </div>
             </div>
           </div>
@@ -592,52 +862,136 @@ function AgentValidators({
       {/* Removed duplicate Avg cards from validators section */}
 
       {filteredRuns.length === 0 ? (
-        <div className="mt-6 text-center text-white/70">No runs available for the selected round.</div>
+        <div className="mt-6 text-center text-white/70">
+          No runs available for the selected round.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 px-2 py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
             const scorePct = Math.round((latestRun.score ?? 0) * 100);
             const responseTimeSeconds = (() => {
-              if (typeof latestRun.averageEvaluationTime === "number" && Number.isFinite(latestRun.averageEvaluationTime)) {
+              if (
+                typeof latestRun.averageEvaluationTime === "number" &&
+                Number.isFinite(latestRun.averageEvaluationTime)
+              ) {
                 return Math.round(Math.abs(latestRun.averageEvaluationTime));
               }
-              if (typeof latestRun.duration === "number" && Number.isFinite(latestRun.duration)) {
+              if (
+                typeof latestRun.duration === "number" &&
+                Number.isFinite(latestRun.duration)
+              ) {
                 return Math.round(Math.abs(latestRun.duration));
               }
               return 0;
             })();
-            const validatorName = latestRun.validatorName || `Validator ${validatorId.slice(0, 6)}...`;
-            const validatorImage = resolveAssetUrl(latestRun.validatorImage || "/validators/default.png");
+            const validatorName =
+              latestRun.validatorName ||
+              `Validator ${validatorId.slice(0, 6)}...`;
+            const validatorImage = resolveAssetUrl(
+              latestRun.validatorImage || "/validators/default.png"
+            );
 
             const secondaryStats = [
-              { title: "Round", metric: latestRun.roundId, icon: PiClockDuotone, iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600", metricClassName: "text-purple-600" },
-              { title: "Rank", metric: typeof latestRun.ranking === "number" && latestRun.ranking > 0 ? `#${latestRun.ranking}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600", metricClassName: "text-yellow-600" },
-              { title: "Score", metric: `${scorePct}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600", metricClassName: "text-emerald-600" },
-              { title: "Response Time", metric: `${responseTimeSeconds}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600", metricClassName: "text-blue-600" },
-              { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600", metricClassName: "text-indigo-600" },
-              { title: "Websites", metric: latestRun.websites ?? "0", icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600", metricClassName: "text-pink-600" },
+              {
+                title: "Round",
+                metric: latestRun.roundId,
+                icon: PiClockDuotone,
+                iconClassName:
+                  "bg-gradient-to-br from-purple-500 to-violet-600",
+                metricClassName: "text-purple-600",
+              },
+              {
+                title: "Rank",
+                metric:
+                  typeof latestRun.ranking === "number" && latestRun.ranking > 0
+                    ? `#${latestRun.ranking}`
+                    : "N/A",
+                icon: PiHashDuotone,
+                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
+                metricClassName: "text-yellow-600",
+              },
+              {
+                title: "Score",
+                metric: `${scorePct}%`,
+                icon: PiChartLineUpDuotone,
+                iconClassName:
+                  "bg-gradient-to-br from-emerald-500 to-green-600",
+                metricClassName: "text-emerald-600",
+              },
+              {
+                title: "Response Time",
+                metric: `${responseTimeSeconds}s`,
+                icon: PiTimerDuotone,
+                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
+                metricClassName: "text-blue-600",
+              },
+              {
+                title: "Tasks",
+                metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`,
+                icon: PiListChecksDuotone,
+                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
+                metricClassName: "text-indigo-600",
+              },
+              {
+                title: "Websites",
+                metric: (() => {
+                  const anyRun: any = latestRun as any;
+                  if (typeof anyRun.websitesCount === "number")
+                    return anyRun.websitesCount;
+                  const ws = anyRun.websites;
+                  if (Array.isArray(ws)) return ws.length;
+                  if (typeof ws === "number") return ws;
+                  if (typeof anyRun.totalWebsites === "number")
+                    return anyRun.totalWebsites;
+                  return 0;
+                })(),
+                icon: PiChartBarDuotone,
+                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
+                metricClassName: "text-pink-600",
+              },
             ];
 
             return (
-              <Link key={`agent-run-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
-                <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40" style={{ background: 'transparent', boxShadow: 'none' }}>
-                  <div className="pulse-bg-rounded-2xl" style={{ display: 'none' }} />
+              <Link
+                key={`agent-run-${validatorId}`}
+                href={`${routes.agent_run}/${latestRun.runId}`}
+              >
+                <div
+                  className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40"
+                  style={{ background: "transparent", boxShadow: "none" }}
+                >
+                  <div
+                    className="pulse-bg-rounded-2xl"
+                    style={{ display: "none" }}
+                  />
                   <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                          <Image src={validatorImage} alt={validatorName} fill sizes="48px" className="object-cover" />
+                          <Image
+                            src={validatorImage}
+                            alt={validatorName}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">{validatorName}</Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">{validatorId.slice(0, 8)}...{validatorId.slice(-8)}</Text>
+                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
+                            {validatorName}
+                          </Text>
+                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
+                            {validatorId.slice(0, 8)}...{validatorId.slice(-8)}
+                          </Text>
                         </div>
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
                         <PiHashDuotone className="w-4 h-4" />
                         <span className="font-mono" title={latestRun.runId}>
-                          {latestRun.runId.length > 12 ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}` : latestRun.runId}
+                          {latestRun.runId.length > 12
+                            ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}`
+                            : latestRun.runId}
                         </span>
                       </div>
                     </div>
@@ -647,13 +1001,29 @@ function AgentValidators({
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
-                          <div key={stat.title} className="flex items-center gap-2.5 min-w-0">
-                            <div className={cn("flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300", stat.iconClassName)}>
+                          <div
+                            key={stat.title}
+                            className="flex items-center gap-2.5 min-w-0"
+                          >
+                            <div
+                              className={cn(
+                                "flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
+                                stat.iconClassName
+                              )}
+                            >
                               <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">{stat.title}</Text>
-                              <Text className={cn("font-bold text-base truncate text-white")}>{stat.metric}</Text>
+                              <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
+                                {stat.title}
+                              </Text>
+                              <Text
+                                className={cn(
+                                  "font-bold text-base truncate text-white"
+                                )}
+                              >
+                                {stat.metric}
+                              </Text>
                             </div>
                           </div>
                         );
@@ -673,53 +1043,74 @@ function AgentValidators({
 // Enhanced custom tooltip for bar chart
 const WebsitePerformanceTooltip = ({ active, payload }: any) => {
   if (!active || !payload || !payload.length) return null;
-  
+
   const data = payload[0].payload;
   const successRate = Math.round(data.successRate);
   const successful = data.successful;
   const total = data.total;
   const failed = total - successful;
-  
+
   return (
-    <div className="rounded-2xl border-2 border-white/30 bg-slate-900/95 backdrop-blur-xl p-4 shadow-2xl min-w-[220px]">
+    <div className="rounded-2xl border-2 border-white/30 bg-slate-900/95 p-4 shadow-2xl min-w-[220px]">
       {/* Website name header */}
       <div className="mb-3 pb-3 border-b border-white/20">
-        <div className="text-base font-bold text-white mb-1">{data.website}</div>
-        <div className="text-xs text-white/60 font-medium">Performance Metrics</div>
+        <div className="text-base font-bold text-white mb-1">
+          {data.website}
+        </div>
+        <div className="text-xs text-white/60 font-medium">
+          Performance Metrics
+        </div>
       </div>
-      
+
       {/* Success Rate - Main metric */}
       <div className="mb-3 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">Success Rate</span>
+          <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">
+            Success Rate
+          </span>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
         </div>
-        <div className="text-2xl font-black text-white drop-shadow-lg">{successRate}%</div>
+        <div className="text-2xl font-black text-white">{successRate}%</div>
       </div>
-      
+
       {/* Task breakdown */}
       <div className="space-y-2">
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 border-b border-white/10 pb-3 mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)' }} />
-            <span className="text-xs font-medium text-white/90">Total Tasks</span>
+            <div
+              className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg"
+              style={{ boxShadow: "0 0 8px rgba(96, 165, 250, 0.6)" }}
+            />
+            <span className="text-xs font-medium text-white/90">
+              Total Tasks
+            </span>
           </div>
           <span className="text-sm font-bold text-blue-300">{total}</span>
         </div>
-        
+
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(52, 211, 153, 0.6)' }} />
-            <span className="text-xs font-medium text-white/90">Successful</span>
+            <div
+              className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg"
+              style={{ boxShadow: "0 0 8px rgba(52, 211, 153, 0.6)" }}
+            />
+            <span className="text-xs font-medium text-white/90">
+              Successful
+            </span>
           </div>
-          <span className="text-sm font-bold text-emerald-300">{successful}</span>
+          <span className="text-sm font-bold text-emerald-300">
+            {successful}
+          </span>
         </div>
-        
+
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-lg" style={{ boxShadow: '0 0 8px rgba(251, 113, 133, 0.6)' }} />
+            <div
+              className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-lg"
+              style={{ boxShadow: "0 0 8px rgba(251, 113, 133, 0.6)" }}
+            />
             <span className="text-xs font-medium text-white/90">Failed</span>
           </div>
           <span className="text-sm font-bold text-rose-300">{failed}</span>
@@ -739,12 +1130,25 @@ function RoundWebsitesChart({
   agentId: string;
   selectedRound?: number | null;
   runs: AgentRunOverview[];
-  onSummaryChange?: (summary: { uniqueWebsites: number; totalTasks: number }) => void;
+  onSummaryChange?: (summary: {
+    uniqueWebsites: number;
+    totalTasks: number;
+  }) => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [chartRows, setChartRows] = useState<Array<{ website: string; successRate: number; successful: number; total: number }>>([]);
-  const [totals, setTotals] = useState<{ successful: number; total: number }>({ successful: 0, total: 0 });
+  const [chartRows, setChartRows] = useState<
+    Array<{
+      website: string;
+      successRate: number;
+      successful: number;
+      total: number;
+    }>
+  >([]);
+  const [totals, setTotals] = useState<{ successful: number; total: number }>({
+    successful: 0,
+    total: 0,
+  });
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const runsForRound = useMemo(() => {
@@ -755,7 +1159,11 @@ function RoundWebsitesChart({
   useEffect(() => {
     let cancelled = false;
     async function fetchWebsites() {
-      if (!selectedRound || !Number.isFinite(selectedRound) || runsForRound.length === 0) {
+      if (
+        !selectedRound ||
+        !Number.isFinite(selectedRound) ||
+        runsForRound.length === 0
+      ) {
         setLoading(false);
         setChartRows([]);
         setTotals({ successful: 0, total: 0 });
@@ -781,10 +1189,14 @@ function RoundWebsitesChart({
         details.forEach((run) => {
           if (!run || !Array.isArray(run.websites)) return;
           run.websites.forEach((w) => {
-            const key = (w.website || 'unknown').toString();
+            const key = (w.website || "unknown").toString();
             const entry = bySite.get(key) || { successful: 0, total: 0 };
-            const succ = Number.isFinite(w.successful as any) ? Math.max(0, Number(w.successful)) : 0;
-            const tasks = Number.isFinite(w.tasks as any) ? Math.max(0, Number(w.tasks)) : 0;
+            const succ = Number.isFinite(w.successful as any)
+              ? Math.max(0, Number(w.successful))
+              : 0;
+            const tasks = Number.isFinite(w.tasks as any)
+              ? Math.max(0, Number(w.tasks))
+              : 0;
             entry.successful += succ;
             entry.total += tasks;
             bySite.set(key, entry);
@@ -795,7 +1207,34 @@ function RoundWebsitesChart({
 
         const rows = Array.from(bySite.entries())
           .map(([website, { successful, total }]) => ({
-            website: website.charAt(0).toUpperCase() + website.slice(1),
+            website: (() => {
+              // Mapeo de puertos localhost a nombres de proyectos web
+              const portMapping: { [key: string]: string } = {
+                "8000": "AutoCinema",
+                "8001": "AutoBooks",
+                "8002": "Autozone",
+                "8003": "AutoDining",
+                "8004": "AutoCRM",
+                "8005": "AutoMail",
+                "8006": "AutoDelivery",
+                "8007": "AutoLodge",
+                "8008": "AutoConnect",
+                "8009": "AutoWork",
+                "8010": "AutoCalendar",
+                "8011": "AutoList",
+                "8012": "AutoDrive",
+                "8013": "AutoHealth",
+                "8014": "AutoFinance",
+              };
+
+              const portMatch = website.match(/localhost:(\d+)/);
+              if (portMatch) {
+                const port = portMatch[1];
+                return portMapping[port] || `Web Project (${port})`;
+              }
+
+              return website.charAt(0).toUpperCase() + website.slice(1);
+            })(),
             successful,
             total,
             successRate: total > 0 ? (successful / total) * 100 : 0,
@@ -805,11 +1244,14 @@ function RoundWebsitesChart({
         if (!cancelled) {
           setChartRows(rows);
           setTotals({ successful: totalSuccessful, total: totalTasks });
-          onSummaryChange?.({ uniqueWebsites: rows.length, totalTasks: totalTasks });
+          onSummaryChange?.({
+            uniqueWebsites: rows.length,
+            totalTasks: totalTasks,
+          });
         }
       } catch (e: any) {
         if (!cancelled) {
-          setError(e?.message || 'Failed to load website stats');
+          setError(e?.message || "Failed to load website stats");
           onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         }
       } finally {
@@ -822,28 +1264,37 @@ function RoundWebsitesChart({
     };
   }, [agentId, onSummaryChange, runsForRound, selectedRound]);
 
-  const totalRate = totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
+  const totalRate =
+    totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
 
   return (
     <div className="relative">
       {loading ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">Loading website stats…</div>
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">
+          Loading website stats…
+        </div>
       ) : error ? (
-        <div className="relative flex h-[420px] items-center justify-center text-rose-200">{error}</div>
+        <div className="relative flex h-[420px] items-center justify-center text-rose-200">
+          {error}
+        </div>
       ) : chartRows.length === 0 ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">No website stats available for this round.</div>
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">
+          No website stats available for this round.
+        </div>
       ) : (
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
-            <span className="text-2xl font-black text-white">Performance per website</span>
+            <span className="text-2xl font-black text-white">
+              Performance per website
+            </span>
           </div>
 
           {/* Bar Chart */}
           <div className="relative h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={chartRows} 
+              <BarChart
+                data={chartRows}
                 margin={{ top: 20, left: -10 }}
                 onMouseMove={(state) => {
                   if (state.isTooltipActive) {
@@ -861,166 +1312,228 @@ function RoundWebsitesChart({
                     <stop offset="50%" stopColor="#06D6A0" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow0" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow0"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#C084FC" stopOpacity={1} />
                     <stop offset="50%" stopColor="#A855F7" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow1"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#FBBF24" stopOpacity={1} />
                     <stop offset="50%" stopColor="#F59E0B" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#F97316" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow2"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#F87171" stopOpacity={1} />
                     <stop offset="50%" stopColor="#EF4444" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#DC2626" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow3" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow3"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#60A5FA" stopOpacity={1} />
                     <stop offset="50%" stopColor="#3B82F6" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#2563EB" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow4" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow4"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#F472B6" stopOpacity={1} />
                     <stop offset="50%" stopColor="#EC4899" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#DB2777" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow5" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow5"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#2DD4BF" stopOpacity={1} />
                     <stop offset="50%" stopColor="#14B8A6" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#0D9488" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow6" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow6"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#FCD34D" stopOpacity={1} />
                     <stop offset="50%" stopColor="#FBBF24" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow7" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow7"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  
+
                   <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
                     <stop offset="50%" stopColor="#10B981" stopOpacity={0.95} />
                     <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
                   </linearGradient>
-                  <filter id="glow8" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <filter
+                    id="glow8"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
                 </defs>
-                <CartesianGrid 
-                  vertical={false} 
-                  strokeDasharray="3 3" 
-                  stroke="rgba(148,163,184,0.15)" 
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  stroke="rgba(148,163,184,0.15)"
                 />
-                <XAxis 
-                  dataKey="website" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: "#ffffff", fontSize: 13, fontWeight: 700 }} 
+                <XAxis
+                  dataKey="website"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#ffffff", fontSize: 13, fontWeight: 700 }}
                   height={60}
                   angle={0}
                   textAnchor="middle"
                 />
-                <YAxis 
-                  domain={[0, 100]} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={<CustomYAxisTick postfix="%" />} 
-                  stroke="rgba(148,163,184,0.3)" 
+                <YAxis
+                  domain={[0, 100]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={<CustomYAxisTick postfix="%" />}
+                  stroke="rgba(148,163,184,0.3)"
                 />
                 <Tooltip
                   content={<WebsitePerformanceTooltip />}
-                  cursor={{ 
-                    fill: 'rgba(255, 255, 255, 0.08)'
+                  cursor={{
+                    fill: "rgba(255, 255, 255, 0.08)",
                   }}
-                  wrapperStyle={{ 
-                    outline: 'none',
-                    zIndex: 1000
+                  wrapperStyle={{
+                    outline: "none",
+                    zIndex: 1000,
                   }}
                 />
-                <Bar 
-                  dataKey="successRate" 
+                <Bar
+                  dataKey="successRate"
                   radius={[12, 12, 0, 0]}
                   maxBarSize={80}
                   animationDuration={800}
                   animationEasing="ease-out"
                 >
                   {chartRows.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={`url(#barGradient${index})`}
-                      filter={activeIndex === index ? `url(#glow${index})` : undefined}
-                      fillOpacity={activeIndex === null ? 0.9 : activeIndex === index ? 1 : 0.4}
-                      style={{ 
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        cursor: 'pointer',
-                        transformOrigin: 'center bottom',
+                      filter={
+                        activeIndex === index ? `url(#glow${index})` : undefined
+                      }
+                      fillOpacity={
+                        activeIndex === null
+                          ? 0.9
+                          : activeIndex === index
+                            ? 1
+                            : 0.4
+                      }
+                      style={{
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        cursor: "pointer",
+                        transformOrigin: "center bottom",
                       }}
                     />
                   ))}
@@ -1068,9 +1581,15 @@ export default function Page() {
     return Number.isFinite(value) ? value : undefined;
   }, [trimmedId]);
 
-  const agentIdForQuery = normalizedAgentId ?? (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
+  const agentIdForQuery =
+    normalizedAgentId ??
+    (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
 
-  const { data: agentDetail, loading, error } = useAgent(
+  const {
+    data: agentDetail,
+    loading,
+    error,
+  } = useAgent(
     agentIdForQuery,
     selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
   );
@@ -1080,10 +1599,15 @@ export default function Page() {
   const availableRounds = agentDetail?.availableRounds ?? [];
   const apiScoreRoundData = agentDetail?.scoreRoundData ?? [];
   const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
-  const taoStatsAvailable = Boolean(!agent?.isSota && (agent?.taostatsUrl || agent?.hotkey));
+  const taoStatsAvailable = Boolean(
+    !agent?.isSota && (agent?.taostatsUrl || agent?.hotkey)
+  );
 
   const defaultAvatar = useMemo(
-    () => resolveAssetUrl(`/miners/${Math.abs((agent?.uid ?? numericUidFromParam ?? 0) % 50)}.svg`),
+    () =>
+      resolveAssetUrl(
+        `/miners/${Math.abs((agent?.uid ?? numericUidFromParam ?? 0) % 50)}.svg`
+      ),
     [agent?.uid, numericUidFromParam]
   );
   const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
@@ -1091,14 +1615,26 @@ export default function Page() {
     setAgentImgSrc(resolveAssetUrl(agent?.imageUrl, defaultAvatar));
   }, [agent?.imageUrl, defaultAvatar]);
 
-  const [viewMode, setViewMode] = useState<'current' | 'historical' | 'runs'>('current');
-  const [websitesSummary, setWebsitesSummary] = useState<{ unique: number; total: number }>({ unique: 0, total: 0 });
+  const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
+    "current"
+  );
+  const [websitesSummary, setWebsitesSummary] = useState<{
+    unique: number;
+    total: number;
+  }>({ unique: 0, total: 0 });
 
-  const handleSummaryChange = useCallback((
-    { uniqueWebsites, totalTasks }: { uniqueWebsites: number; totalTasks: number }
-  ) => {
-    setWebsitesSummary({ unique: uniqueWebsites, total: totalTasks });
-  }, [setWebsitesSummary]);
+  const handleSummaryChange = useCallback(
+    ({
+      uniqueWebsites,
+      totalTasks,
+    }: {
+      uniqueWebsites: number;
+      totalTasks: number;
+    }) => {
+      setWebsitesSummary({ unique: uniqueWebsites, total: totalTasks });
+    },
+    [setWebsitesSummary]
+  );
 
   const currentRound =
     selectedRoundFromQuery ??
@@ -1109,14 +1645,26 @@ export default function Page() {
     const source = agentDetail?.scoreRoundData ?? [];
     if (!source.length) return [];
     return source.map((point: any) => {
-      const roundId = point.round_id ?? point.validator_round_id ?? point.roundId ?? point.validatorRoundId ?? point.round ?? 0;
+      const roundId =
+        point.round_id ??
+        point.validator_round_id ??
+        point.roundId ??
+        point.validatorRoundId ??
+        point.round ??
+        0;
       return {
         round_id: Number(roundId),
         score: normalizeScore(point.score) ?? 0,
         rank: point.rank ?? point.position ?? null,
         reward: point.reward ?? 0,
-        timestamp: typeof point.timestamp === "string" ? point.timestamp : point.timestamp?.toString() ?? "",
-        topScore: normalizeScore(point.topScore ?? point.top_score ?? point.bestScore) ?? undefined,
+        timestamp:
+          typeof point.timestamp === "string"
+            ? point.timestamp
+            : (point.timestamp?.toString() ?? ""),
+        topScore:
+          normalizeScore(
+            point.topScore ?? point.top_score ?? point.bestScore
+          ) ?? undefined,
         benchmarks: Array.isArray(point.benchmarks)
           ? point.benchmarks.map((benchmark: any) => ({
               name: benchmark.name ?? benchmark.provider ?? "Benchmark",
@@ -1133,7 +1681,11 @@ export default function Page() {
     return /\d+/.test(agentIdForQuery);
   }, [agentIdForQuery]);
 
-  const [runsState, setRunsState] = useState<{ loading: boolean; runs: AgentRunOverview[]; error: string | null }>({
+  const [runsState, setRunsState] = useState<{
+    loading: boolean;
+    runs: AgentRunOverview[];
+    error: string | null;
+  }>({
     loading: true,
     runs: [],
     error: null,
@@ -1142,7 +1694,12 @@ export default function Page() {
   useEffect(() => {
     let cancelled = false;
 
-    if (!agentIdForQuery || !currentRound || !Number.isFinite(currentRound) || !canFetchRuns) {
+    if (
+      !agentIdForQuery ||
+      !currentRound ||
+      !Number.isFinite(currentRound) ||
+      !canFetchRuns
+    ) {
       setRunsState({ loading: false, runs: [], error: null });
       return;
     }
@@ -1151,7 +1708,9 @@ export default function Page() {
 
     (async () => {
       try {
-        const { runs } = await fetchAllAgentRuns(agentIdForQuery, { roundId: currentRound });
+        const { runs } = await fetchAllAgentRuns(agentIdForQuery, {
+          roundId: currentRound,
+        });
         if (!cancelled) {
           setRunsState({ loading: false, runs, error: null });
         }
@@ -1174,35 +1733,64 @@ export default function Page() {
   const preAvg = useMemo(() => {
     const runs = runsState.runs;
     const rankingValues = runs
-      .map((run) => (typeof run.ranking === 'number' && Number.isFinite(run.ranking) && run.ranking > 0 ? run.ranking : null))
+      .map((run) =>
+        typeof run.ranking === "number" &&
+        Number.isFinite(run.ranking) &&
+        run.ranking > 0
+          ? run.ranking
+          : null
+      )
       .filter((v): v is number => v !== null);
-    const avgRankVal = rankingValues.length > 0
-      ? rankingValues.reduce((sum, v) => sum + v, 0) / rankingValues.length
-      : null;
+    const avgRankVal =
+      rankingValues.length > 0
+        ? rankingValues.reduce((sum, v) => sum + v, 0) / rankingValues.length
+        : null;
     const scoreValues = runs
-      .map((run) => (typeof run.score === 'number' && Number.isFinite(run.score) ? run.score : null))
+      .map((run) =>
+        typeof run.score === "number" && Number.isFinite(run.score)
+          ? run.score
+          : null
+      )
       .filter((v): v is number => v !== null);
-    const avgScoreVal = scoreValues.length > 0
-      ? Math.round((scoreValues.reduce((s, v) => s + v, 0) / scoreValues.length) * 100)
-      : 0;
+    const avgScoreVal =
+      scoreValues.length > 0
+        ? Math.round(
+            (scoreValues.reduce((s, v) => s + v, 0) / scoreValues.length) * 100
+          )
+        : 0;
     const responseTimeValues = runs
       .map((run) => {
-        if (typeof run.averageEvaluationTime === 'number' && Number.isFinite(run.averageEvaluationTime)) return Math.abs(run.averageEvaluationTime);
-        if (typeof run.duration === 'number' && Number.isFinite(run.duration)) return Math.abs(run.duration);
+        if (
+          typeof run.averageEvaluationTime === "number" &&
+          Number.isFinite(run.averageEvaluationTime)
+        )
+          return Math.abs(run.averageEvaluationTime);
+        if (typeof run.duration === "number" && Number.isFinite(run.duration))
+          return Math.abs(run.duration);
         return null;
       })
       .filter((v): v is number => v !== null);
-    const avgResp = responseTimeValues.length > 0
-      ? Math.round(responseTimeValues.reduce((s, v) => s + v, 0) / responseTimeValues.length)
-      : 0;
+    const avgResp =
+      responseTimeValues.length > 0
+        ? Math.round(
+            responseTimeValues.reduce((s, v) => s + v, 0) /
+              responseTimeValues.length
+          )
+        : 0;
     const taskValues = runs
-      .map((run) => (typeof run.completedTasks === 'number' && Number.isFinite(run.completedTasks) ? run.completedTasks : null))
+      .map((run) =>
+        typeof run.completedTasks === "number" &&
+        Number.isFinite(run.completedTasks)
+          ? run.completedTasks
+          : null
+      )
       .filter((v): v is number => v !== null);
-    const avgTasksVal = taskValues.length > 0
-      ? Math.round(taskValues.reduce((s, v) => s + v, 0) / taskValues.length)
-      : 0;
+    const avgTasksVal =
+      taskValues.length > 0
+        ? Math.round(taskValues.reduce((s, v) => s + v, 0) / taskValues.length)
+        : 0;
     return {
-      avgRank: avgRankVal !== null ? avgRankVal.toFixed(1) : 'N/A',
+      avgRank: avgRankVal !== null ? avgRankVal.toFixed(1) : "N/A",
       avgScore: `${avgScoreVal}%`,
       avgResp: `${avgResp}s`,
       avgTasks: `${avgTasksVal}`,
@@ -1224,13 +1812,15 @@ export default function Page() {
       </>
     );
   }
-  
+
   if (error || !agent) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-red-500 text-lg mb-2">Error loading agent</div>
-          <div className="text-gray-500 text-sm">{error || "Agent not found"}</div>
+          <div className="text-gray-500 text-sm">
+            {error || "Agent not found"}
+          </div>
         </div>
       </div>
     );
@@ -1241,32 +1831,38 @@ export default function Page() {
     roundMetrics?.rank && roundMetrics.rank > 0
       ? `#${roundMetrics.rank}`
       : agent.currentRank && agent.currentRank > 0
-      ? `#${agent.currentRank}`
-      : "N/A";
-  
-  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  
-  // Historical metrics
-  const bestRankEver = agent.bestRankEver && agent.bestRankEver > 0 ? `#${agent.bestRankEver}` : "N/A";
-  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
-  const roundsParticipated = (agent.roundsParticipated || agent.totalRuns || 0).toLocaleString();
-  const totalAlphaEarned = ((agent as any).totalReward ?? 0).toFixed(2);
+        ? `#${agent.currentRank}`
+        : "N/A";
 
+  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
+
+  // Historical metrics
+  const bestRankEver =
+    agent.bestRankEver && agent.bestRankEver > 0
+      ? `#${agent.bestRankEver}`
+      : "N/A";
+  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
+  const roundsParticipated = (
+    agent.roundsParticipated ||
+    agent.totalRuns ||
+    0
+  ).toLocaleString();
+  const totalAlphaEarned = Number(agent.alphaWonInPrizes ?? 0).toFixed(2);
   const currentStats = [
     {
-      title: "Current Round",
+      title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.purple,
     },
     {
-      title: "Current Rank",
+      title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Current Score",
+      title: "Avg Score",
       metric: currentScorePercentage,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.emerald,
@@ -1290,8 +1886,8 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.cyan,
     },
     {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
+      title: "Total Tasks",
+      metric: (roundMetrics?.totalTasks ?? 0).toString(),
       icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.yellow,
     },
@@ -1305,8 +1901,8 @@ export default function Page() {
 
   const historicalStats = [
     {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
+      title: "Total Tasks",
+      metric: (roundMetrics?.totalTasks ?? 0).toString(),
       icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.amber,
     },
@@ -1330,15 +1926,27 @@ export default function Page() {
     },
   ];
 
-  const headerStats = viewMode === 'current' ? currentStats : viewMode === 'historical' ? historicalStats : [];
+  const headerStats =
+    viewMode === "current"
+      ? currentStats
+      : viewMode === "historical"
+        ? historicalStats
+        : [];
 
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-1 mt-2 mb-2">
-        <div className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+        <div
+          className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group"
+          style={{
+            background: "transparent",
+            border: "none",
+            boxShadow: "none",
+          }}
+        >
           {/* Animated background gradient */}
-          <div className="pulse-bg-rounded-3xl" style={{ display: 'none' }} />
-          
+          <div className="pulse-bg-rounded-3xl" style={{ display: "none" }} />
+
           {/* Header Section */}
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
             <div className="flex items-center gap-4">
@@ -1355,35 +1963,84 @@ export default function Page() {
               </div>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">{agent.name}</span>
+                  <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
+                    {agent.name}
+                  </span>
                   {agent.isSota && (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">SOTA</span>
-                  )}
-                  {!agent.isSota && agent.status && agent.status !== 'active' && (
-                    <span
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
-                        agent.status === "maintenance"
-                          ? "bg-yellow-500/90 text-white border-yellow-400/70"
-                          : "bg-white/90 text-gray-900 border-gray-300/70"
-                      )}
-                    >
-                      {agent.status}
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">
+                      SOTA
                     </span>
                   )}
+                  {!agent.isSota &&
+                    agent.status &&
+                    agent.status !== "active" && (
+                      <span
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
+                          agent.status === "maintenance"
+                            ? "bg-yellow-500/90 text-white border-yellow-400/70"
+                            : "bg-white/90 text-gray-900 border-gray-300/70"
+                        )}
+                      >
+                        {agent.status}
+                      </span>
+                    )}
                   <div className="flex items-center gap-2">
-                    <div className={cn("flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300", githubAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10")} title={agent.isSota ? "GitHub repository not available for SOTA benchmarks" : agent.githubUrl ? "View GitHub repository" : "GitHub repository not available"}>
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        githubAvailable
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
+                      )}
+                      title={
+                        agent.isSota
+                          ? "GitHub repository not available for SOTA benchmarks"
+                          : agent.githubUrl
+                            ? "View GitHub repository"
+                            : "GitHub repository not available"
+                      }
+                    >
                       {githubAvailable ? (
-                        <a href={agent.githubUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                        <a
+                          href={agent.githubUrl ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-full w-full items-center justify-center group"
+                        >
                           <PiGithubLogoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
                         </a>
                       ) : (
                         <PiGithubLogoDuotone className="w-4 h-4 text-white/30" />
                       )}
                     </div>
-                    <div className={cn("flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300", taoStatsAvailable ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95" : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10")} title={agent.isSota ? "On-chain explorer is not available for SOTA benchmarks" : agent.taostatsUrl || agent.hotkey ? "View on TaoStats" : "TaoStats link not available"}>
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        taoStatsAvailable
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
+                      )}
+                      title={
+                        agent.isSota
+                          ? "On-chain explorer is not available for SOTA benchmarks"
+                          : agent.taostatsUrl || agent.hotkey
+                            ? "View on TaoStats"
+                            : "TaoStats link not available"
+                      }
+                    >
                       {taoStatsAvailable ? (
-                        <a href={agent.taostatsUrl || (agent.hotkey ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}` : "#")} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center group">
+                        <a
+                          href={
+                            agent.taostatsUrl ||
+                            (agent.hotkey
+                              ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}`
+                              : "#")
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-full w-full items-center justify-center group"
+                        >
                           <PiInfoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
                         </a>
                       ) : (
@@ -1395,110 +2052,118 @@ export default function Page() {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
                   <div className="flex items-center gap-2">
                     <PiHashDuotone className="w-4 h-4 text-emerald-300" />
-                    <span className="font-mono font-semibold">UID: {agent.isSota ? "—" : agent.uid ?? "unknown"}</span>
+                    <span className="font-mono font-semibold">
+                      UID: {agent.isSota ? "—" : (agent.uid ?? "unknown")}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <PiKeyDuotone className="w-4 h-4 text-sky-300" />
-                  <span className="font-mono text-xs font-semibold">
-                    {agent.isSota ? "No on-chain hotkey" : agent.hotkey ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}` : "unknown"}
-                  </span>
-                  {!agent.isSota && agent.hotkey && (
-                    <button 
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(agent.hotkey!);
-                          setCopiedHotkey(true);
-                          setTimeout(() => setCopiedHotkey(false), 2000);
-                        } catch (err) {
-                          console.error('Failed to copy:', err);
-                        }
-                      }} 
-                      className="p-1.5 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-110 active:scale-95" 
-                      title="Copy hotkey"
-                    >
-                      {copiedHotkey ? (
-                        <PiCheckDuotone className="w-3.5 h-3.5 text-emerald-300" />
-                      ) : (
-                        <PiCopyDuotone className="w-3.5 h-3.5 text-white" />
-                      )}
-                    </button>
-                  )}
+                    <span className="font-mono text-xs font-semibold">
+                      {agent.isSota
+                        ? "No on-chain hotkey"
+                        : agent.hotkey
+                          ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}`
+                          : "unknown"}
+                    </span>
+                    {!agent.isSota && agent.hotkey && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(agent.hotkey!);
+                            setCopiedHotkey(true);
+                            setTimeout(() => setCopiedHotkey(false), 2000);
+                          } catch (err) {
+                            console.error("Failed to copy:", err);
+                          }
+                        }}
+                        className="p-1.5 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-110 active:scale-95"
+                        title="Copy hotkey"
+                      >
+                        {copiedHotkey ? (
+                          <PiCheckDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                        ) : (
+                          <PiCopyDuotone className="w-3.5 h-3.5 text-white" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
             <div className="flex items-center gap-2">
               <div className="glass-card inline-flex items-center gap-1.5 p-1.5 rounded-xl">
                 <button
                   type="button"
-                  onClick={() => setViewMode('current')}
+                  onClick={() => setViewMode("current")}
                   className={cn(
                     "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
                     "flex items-center gap-2",
-                    viewMode === 'current' 
-                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
+                    viewMode === "current"
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
                   )}
-                  aria-pressed={viewMode === 'current'}
+                  aria-pressed={viewMode === "current"}
                 >
-                  {viewMode === 'current' && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
-                    </>
-                  )}
-                  <PiTrendUpDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'current' && "scale-110")} />
-                  <span className="relative z-10 hidden sm:inline">Current</span>
+                  <PiTrendUpDuotone
+                    className={cn(
+                      "w-4 h-4 transition-transform duration-300 relative z-10",
+                      viewMode === "current" && "scale-110"
+                    )}
+                  />
+                  <span className="relative z-10 hidden sm:inline">Round</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode('historical')}
+                  onClick={() => setViewMode("runs")}
                   className={cn(
                     "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
                     "flex items-center gap-2",
-                    viewMode === 'historical' 
-                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
+                    viewMode === "runs"
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
                   )}
-                  aria-pressed={viewMode === 'historical'}
+                  aria-pressed={viewMode === "runs"}
                 >
-                  {viewMode === 'historical' && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
-                    </>
-                  )}
-                  <PiChartLineDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'historical' && "scale-110")} />
-                  <span className="relative z-10 hidden sm:inline">Historical</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('runs')}
-                  className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
-                    viewMode === 'runs' 
-                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80" 
-                      : "text-white hover:text-white hover:bg-white/10 border border-transparent"
-                  )}
-                  aria-pressed={viewMode === 'runs'}
-                >
-                  {viewMode === 'runs' && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-pulse" />
-                    </>
-                  )}
-                  <PiListChecksDuotone className={cn("w-4 h-4 transition-transform duration-300 relative z-10", viewMode === 'runs' && "scale-110")} />
+                  <PiListChecksDuotone
+                    className={cn(
+                      "w-4 h-4 transition-transform duration-300 relative z-10",
+                      viewMode === "runs" && "scale-110"
+                    )}
+                  />
                   <span className="relative z-10 hidden sm:inline">Runs</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("historical")}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
+                    "flex items-center gap-2",
+                    viewMode === "historical"
+                      ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
+                      : "text-white hover:text-white hover:bg-white/10 border border-transparent"
+                  )}
+                  aria-pressed={viewMode === "historical"}
+                >
+                  <PiChartLineDuotone
+                    className={cn(
+                      "w-4 h-4 transition-transform duration-300 relative z-10",
+                      viewMode === "historical" && "scale-110"
+                    )}
+                  />
+                  <span className="relative z-10 hidden sm:inline">
+                    Historical
+                  </span>
                 </button>
               </div>
               {agent.isSota && (
-                <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
                   <PiSparkle className="h-4 w-4" />
                   Benchmark Agent
                 </span>
               )}
             </div>
           </div>
-          
+
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
             <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
@@ -1510,30 +2175,34 @@ export default function Page() {
                     className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
                   >
                     {/* Card background with gradient */}
-                    <div className={cn(
-                      "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
-                      stat.bgGradient
-                    )} />
-                    
+                    <div
+                      className={cn(
+                        "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        stat.bgGradient
+                      )}
+                    />
+
                     {/* Animated shimmer effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" 
-                         style={{ 
-                           backgroundSize: '200% 100%',
-                           animation: 'shimmer 3.5s linear infinite'
-                         }} 
+                    <div
+                      className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
+                      style={{
+                        backgroundSize: "200% 100%",
+                        animation: "shimmer 3.5s linear infinite",
+                      }}
                     />
-                    
+
                     {/* Border gradient */}
-                    <div className={cn(
-                      "absolute inset-0 rounded-2xl border transition-all duration-300",
-                      stat.borderColor,
-                      "group-hover:shadow-lg"
-                    )} 
-                    style={{
-                      boxShadow: `0 0 12px ${stat.glowColor}33`
-                    }}
+                    <div
+                      className={cn(
+                        "absolute inset-0 rounded-2xl border transition-all duration-300",
+                        stat.borderColor,
+                        "group-hover:shadow-lg"
+                      )}
+                      style={{
+                        boxShadow: `0 0 12px ${stat.glowColor}33`,
+                      }}
                     />
-                    
+
                     {/* Content */}
                     <div className="relative p-4 flex items-center gap-4">
                       {/* Icon on left */}
@@ -1546,7 +2215,7 @@ export default function Page() {
                       >
                         <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow" />
                       </div>
-                      
+
                       {/* Metrics in middle */}
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
@@ -1556,12 +2225,6 @@ export default function Page() {
                           {stat.metric}
                         </Text>
                       </div>
-                      
-                      {/* Decorative pulse indicator on right */}
-                      <div className="hidden md:flex items-center gap-1.5 opacity-0 group-hover:opacity-80 transition-opacity duration-300">
-                        <div className="w-2 h-2 rounded-full bg-white/60" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                      </div>
                     </div>
                   </div>
                 );
@@ -1570,7 +2233,7 @@ export default function Page() {
           )}
           {/* Content Section */}
           <div className="relative z-10">
-            {viewMode === 'runs' ? (
+            {viewMode === "runs" ? (
               <AgentValidators
                 selectedRound={currentRound ?? null}
                 runs={runsState.runs}
@@ -1579,7 +2242,7 @@ export default function Page() {
               />
             ) : (
               <>
-                {viewMode === 'current' ? (
+                {viewMode === "current" ? (
                   <div>
                     <RoundWebsitesChart
                       agentId={agentIdForQuery ?? trimmedId}
@@ -1590,13 +2253,18 @@ export default function Page() {
                   </div>
                 ) : (
                   <div>
-                    <AgentScoreChart className="w-full" scoreRoundData={scoreRoundData} loading={loading} error={error} />
+                    <AgentScoreChart
+                      className="w-full"
+                      scoreRoundData={scoreRoundData}
+                      loading={loading}
+                      error={error}
+                    />
                   </div>
                 )}
               </>
             )}
           </div>
-      </div>
+        </div>
       </div>
     </div>
   );
