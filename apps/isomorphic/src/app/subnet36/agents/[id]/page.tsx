@@ -6,6 +6,11 @@ import Image from "next/image";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
 import { Button, Text } from "rizzui";
+import {
+  formatWebsiteName,
+  getProjectColors,
+  getProjectMainColor,
+} from "@/utils/website-colors";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
@@ -1227,34 +1232,7 @@ function RoundWebsitesChart({
 
         const rows = Array.from(bySite.entries())
           .map(([website, { successful, total }]) => ({
-            website: (() => {
-              // Mapeo de puertos localhost a nombres de proyectos web
-              const portMapping: { [key: string]: string } = {
-                "8000": "AutoCinema",
-                "8001": "AutoBooks",
-                "8002": "Autozone",
-                "8003": "AutoDining",
-                "8004": "AutoCRM",
-                "8005": "AutoMail",
-                "8006": "AutoDelivery",
-                "8007": "AutoLodge",
-                "8008": "AutoConnect",
-                "8009": "AutoWork",
-                "8010": "AutoCalendar",
-                "8011": "AutoList",
-                "8012": "AutoDrive",
-                "8013": "AutoHealth",
-                "8014": "AutoFinance",
-              };
-
-              const portMatch = website.match(/localhost:(\d+)/);
-              if (portMatch) {
-                const port = portMatch[1];
-                return portMapping[port] || `Web Project (${port})`;
-              }
-
-              return website.charAt(0).toUpperCase() + website.slice(1);
-            })(),
+            website: formatWebsiteName(website),
             successful,
             total,
             successRate: total > 0 ? (successful / total) * 100 : 0,

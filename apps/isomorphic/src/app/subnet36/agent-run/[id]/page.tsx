@@ -4,6 +4,11 @@ import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { routes } from "@/config/routes";
+import {
+  formatWebsiteName,
+  getProjectColors,
+  getProjectMainColor,
+} from "@/utils/website-colors";
 
 import PageHeader from "@/app/shared/page-header";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
@@ -137,101 +142,6 @@ function formatUseCaseName(name?: string | null): string {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
-}
-
-function formatWebsiteName(name?: string | null): string {
-  if (!name) return "Website";
-  if (name.length === 0) return name;
-
-  // Map localhost ports to project names
-  const portMapping: { [key: string]: string } = {
-    "8000": "AutoCinema",
-    "8001": "AutoBooks",
-    "8002": "Autozone",
-    "8003": "AutoDining",
-    "8004": "AutoCRM",
-    "8005": "AutoMail",
-    "8006": "AutoDelivery",
-    "8007": "AutoLodge",
-    "8008": "AutoConnect",
-    "8009": "AutoWork",
-    "8010": "AutoCalendar",
-    "8011": "AutoList",
-    "8012": "AutoDrive",
-    "8013": "AutoHealth",
-    "8014": "AutoFinance",
-  };
-
-  const portMatch = name.match(/localhost:(\d+)/);
-  if (portMatch) {
-    const port = portMatch[1];
-    return portMapping[port] || `Web Project (${port})`;
-  }
-
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-function getProjectColors(projectName: string): {
-  borderColor: string;
-  bgGradient: string;
-  textColor: string;
-  dotColor: string;
-  iconBg: string;
-} {
-  const colorMap: { [key: string]: any } = {
-    AutoCinema: {
-      borderColor: "border-pink-500/60",
-      bgGradient: "from-pink-500/15 to-rose-500/10",
-      textColor: "text-pink-300",
-      dotColor: "#ec4899",
-      iconBg: "from-pink-500/30 to-rose-500/30",
-    },
-    AutoBooks: {
-      borderColor: "border-blue-500/60",
-      bgGradient: "from-blue-500/15 to-indigo-500/10",
-      textColor: "text-blue-300",
-      dotColor: "#3b82f6",
-      iconBg: "from-blue-500/30 to-indigo-500/30",
-    },
-    Autozone: {
-      borderColor: "border-orange-500/60",
-      bgGradient: "from-orange-500/15 to-red-500/10",
-      textColor: "text-orange-300",
-      dotColor: "#f97316",
-      iconBg: "from-orange-500/30 to-red-500/30",
-    },
-    AutoDining: {
-      borderColor: "border-emerald-500/60",
-      bgGradient: "from-emerald-500/15 to-green-500/10",
-      textColor: "text-emerald-300",
-      dotColor: "#10b981",
-      iconBg: "from-emerald-500/30 to-green-500/30",
-    },
-    AutoCRM: {
-      borderColor: "border-purple-500/60",
-      bgGradient: "from-purple-500/15 to-violet-500/10",
-      textColor: "text-purple-300",
-      dotColor: "#a855f7",
-      iconBg: "from-purple-500/30 to-violet-500/30",
-    },
-    AutoMail: {
-      borderColor: "border-cyan-500/60",
-      bgGradient: "from-cyan-500/15 to-teal-500/10",
-      textColor: "text-cyan-300",
-      dotColor: "#06b6d4",
-      iconBg: "from-cyan-500/30 to-teal-500/30",
-    },
-  };
-
-  return (
-    colorMap[projectName] || {
-      borderColor: "border-slate-500/60",
-      bgGradient: "from-slate-500/15 to-gray-500/10",
-      textColor: "text-slate-300",
-      dotColor: "#64748b",
-      iconBg: "from-slate-500/30 to-gray-500/30",
-    }
-  );
 }
 
 // Transform stats to local detail model (no external utils)
@@ -826,8 +736,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             Overall evaluation score
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Success rate {displaySuccessRate} • Avg duration{" "}
-            {displayAverageDuration}
+            Avg duration {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
@@ -945,8 +854,12 @@ function AgentRunDetail({
             return (
               <div
                 key={`${item.website}-${index}`}
-                className={`group relative rounded-xl border ${projectColors.borderColor} bg-gradient-to-br ${projectColors.bgGradient} p-5 transition-all duration-300 hover:shadow-2xl hover:border-opacity-80`}
-                style={{ boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)" }}
+                className="group relative rounded-xl border p-5 transition-all duration-300 hover:shadow-2xl"
+                style={{
+                  boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
+                  borderColor: `${projectColors.mainColor}99`, // 60% opacity
+                  background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`, // 15% to 10% opacity
+                }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -954,9 +867,7 @@ function AgentRunDetail({
                       className="w-3 h-3 rounded-full shadow-sm"
                       style={{ backgroundColor: projectColors.dotColor }}
                     />
-                    <span
-                      className={`text-lg font-semibold ${projectColors.textColor}`}
-                    >
+                    <span className="text-lg font-semibold text-white">
                       {item.website}
                     </span>
                     {isHighPerformance && (
@@ -995,34 +906,42 @@ function AgentRunDetail({
                   </div>
                 </div>
 
-                <div className="relative">
-                  <div className="h-4 w-full rounded-full bg-transparent overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
-                      style={{
-                        width: `${Math.max(0, Math.min(item.average, 100))}%`,
-                        background: `linear-gradient(90deg, ${colorClass} 0%, rgba(253, 245, 230, 0.85) 100%)`,
-                        boxShadow: "0 8px 25px rgba(253, 245, 230, 0.25)",
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                {item.average > 0 ? (
+                  <div className="relative">
+                    <div className="h-4 w-full rounded-full bg-transparent overflow-hidden">
                       <div
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
+                        className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                         style={{
-                          backgroundColor: HIGHLIGHT_COLOR,
-                          opacity: item.average > 5 ? 1 : 0,
+                          width: `${Math.max(0, Math.min(item.average, 100))}%`,
+                          background: `linear-gradient(90deg, ${colorClass} 0%, rgba(253, 245, 230, 0.85) 100%)`,
+                          boxShadow: "0 8px 25px rgba(253, 245, 230, 0.25)",
                         }}
-                      />
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                        <div
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
+                          style={{
+                            backgroundColor: HIGHLIGHT_COLOR,
+                            opacity: item.average > 5 ? 1 : 0,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-white/60">
+                      <span>0%</span>
+                      <span>25%</span>
+                      <span>50%</span>
+                      <span>75%</span>
+                      <span>100%</span>
                     </div>
                   </div>
-                  <div className="flex justify-between mt-2 text-xs text-white/60">
-                    <span>0%</span>
-                    <span>25%</span>
-                    <span>50%</span>
-                    <span>75%</span>
-                    <span>100%</span>
+                ) : (
+                  <div className="relative text-center py-2">
+                    <div className="text-sm text-white/50 italic">
+                      No success rate to display
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                   <div className="rounded-lg border border-white/15 bg-transparent p-3">
@@ -1362,9 +1281,9 @@ function AgentRunSummary({
     >
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 p-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30">
             <svg
-              className="w-5 h-5 text-amber-400"
+              className="w-5 h-5 text-emerald-400"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -1372,11 +1291,11 @@ function AgentRunSummary({
               <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
             Summary
           </h2>
         </div>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-200/70">
+        <p className="text-xs uppercase tracking-[0.3em] text-emerald-200/70">
           Performance Breakdown
         </p>
       </div>
@@ -1464,9 +1383,7 @@ function AgentRunSummary({
                         backgroundColor: projectColors.dotColor,
                       }}
                     />
-                    <span
-                      className={`text-sm font-medium ${projectColors.textColor}`}
-                    >
+                    <span className="text-sm font-medium text-white">
                       {item.label}
                     </span>
                   </div>
@@ -1877,9 +1794,9 @@ function AgentRunTasksSection() {
     <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
       <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 border border-blue-500/30">
             <svg
-              className="w-5 h-5 text-violet-400"
+              className="w-5 h-5 text-blue-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -1892,10 +1809,10 @@ function AgentRunTasksSection() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
             All Tasks
             {total > 0 && (
-              <span className="ml-2 text-sm font-normal text-violet-300/70">
+              <span className="ml-2 text-sm font-normal text-blue-300/70">
                 ({total} total)
               </span>
             )}
@@ -1923,7 +1840,8 @@ function AgentRunTasksSection() {
             classNames={{
               container:
                 "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-transparent",
-              headerClassName: "bg-transparent text-slate-200",
+              headerClassName:
+                "bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 border-b border-blue-500/30",
               rowClassName:
                 "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_12px_28px_rgba(56,189,248,0.18)]",
             }}
