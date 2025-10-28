@@ -106,14 +106,14 @@ function formatAgentLabel(run: AgentRunListItem): string {
 
 function extractUidNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
+    return Math.abs(value);
   }
   if (typeof value === "string") {
-    const match = value.match(/-?\d+/);
+    const match = value.match(/\d+/);
     if (match) {
       const parsed = Number.parseInt(match[0], 10);
       if (!Number.isNaN(parsed)) {
-        return parsed;
+        return Math.abs(parsed);
       }
     }
   }
@@ -944,7 +944,6 @@ export default function AgentRunSearch() {
                     {/* Round & Ranking */}
                     <div className="flex items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
-                        <PiHashDuotone className="w-3.5 h-3.5" />
                         Round {run.roundId ?? "?"}
                       </span>
                       {typeof run.ranking === "number" && run.ranking > 0 && (
