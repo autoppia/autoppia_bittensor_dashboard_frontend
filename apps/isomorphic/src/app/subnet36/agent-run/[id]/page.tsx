@@ -943,33 +943,28 @@ function AgentRunDetail({
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-center gap-6 py-3 rounded-lg border border-white/10 bg-white/5">
-                  <div className="flex items-center gap-2">
-                    <PiTarget className="w-4 h-4 text-emerald-400" />
-                    <div className="text-center">
-                      <div className="text-xs text-white/60 uppercase tracking-wider">
-                        Score
-                      </div>
-                      <div className="text-lg font-bold text-white">
-                        {(
-                          (item.successCount / Math.max(item.total, 1)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </div>
-                    </div>
+                <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <PiTarget className="w-6 h-6 text-emerald-400" />
+                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                      Score
+                    </span>
+                    <span className="text-xl font-bold text-white">
+                      {(
+                        (item.successCount / Math.max(item.total, 1)) *
+                        100
+                      ).toFixed(1)}
+                      %
+                    </span>
                   </div>
-                  <div className="h-8 w-px bg-white/20"></div>
-                  <div className="flex items-center gap-2">
-                    <PiClock className="w-4 h-4 text-blue-400" />
-                    <div className="text-center">
-                      <div className="text-xs text-white/60 uppercase tracking-wider">
-                        Time
-                      </div>
-                      <div className="text-lg font-bold text-white">
-                        {item.avgSolutionTime.toFixed(2)}s
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <PiClock className="w-6 h-6 text-blue-400" />
+                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                      Time
+                    </span>
+                    <span className="text-xl font-bold text-white">
+                      {item.avgSolutionTime.toFixed(2)}s
+                    </span>
                   </div>
                 </div>
               </div>
