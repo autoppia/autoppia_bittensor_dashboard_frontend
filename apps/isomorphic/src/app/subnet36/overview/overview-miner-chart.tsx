@@ -176,6 +176,7 @@ export default function MinerChart({
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     return rawChartData.map((entry) => ({
       ...entry,
+      Score: scaleScoreValue(entry.subnet36) ?? 0,
       subnet36: scaleScoreValue(entry.subnet36) ?? 0,
       openai_cua: scaleScoreValue((entry as any).openai_cua),
       anthropic_cua: scaleScoreValue((entry as any).anthropic_cua),
@@ -271,7 +272,7 @@ export default function MinerChart({
     if (!filteredData.length) {
       return [0, 100];
     }
-    const keys = ["subnet36", ...selectedSeries];
+    const keys = ["Score", ...selectedSeries];
     let minValue = Infinity;
     let maxValue = -Infinity;
     filteredData.forEach((entry) => {
@@ -483,7 +484,7 @@ export default function MinerChart({
               />
               <Area
                 type="monotone"
-                dataKey="subnet36"
+                dataKey="Score"
                 stroke="#10b981"
                 strokeWidth={2}
                 strokeLinecap="round"

@@ -101,7 +101,7 @@ function extractRoundNumber(
 // STYLE CONSTANTS - Enhanced Modern Design System
 // ============================================================================
 const roundGlassBackgroundClass =
-  "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-2xl";
+  "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl";
 const roundAccentActive =
   "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
 const roundAccentCompleted =
@@ -110,7 +110,7 @@ const roundAccentPending =
   "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]";
 const roundSectionHeaderClass = `${roundGlassBackgroundClass} rounded-2xl border-white/30 px-8 py-4 text-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center gap-4 hover:border-white/40 transition-all duration-300`;
 const chipBase =
-  "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-lg transition-all duration-300";
+  "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
 const chipActive =
   "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
 const chipCompleted =
@@ -118,14 +118,14 @@ const chipCompleted =
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
 const roundNavButton =
-  "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100 backdrop-blur-sm";
+  "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
 const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
 const tallCardClass = `${roundGlassBackgroundClass} rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]`;
 const listRowHover =
   "hover:bg-white/15 hover:shadow-lg hover:border-white/30 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]";
 const listRowHighlight = "";
 const skeletonCard =
-  "rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm animate-pulse";
+  "rounded-2xl border border-white/15 bg-white/5 animate-pulse";
 
 // Modals
 import { useModal } from "@/app/shared/modal-views/use-modal";
@@ -172,21 +172,22 @@ const DEFAULT_BENCHMARK_COLORS = [
 
 function CustomTooltip({ label, active, payload, className }: any) {
   if (!active || !payload?.length) return null;
+  const minerData = payload[0]?.payload;
   return (
     <div
       className={cn(
-        "rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl",
+        "rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]",
         className
       )}
     >
       <Text className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
-        {payload[0]?.payload?.name}
+        {minerData?.name}
       </Text>
-      <div className="px-4 py-3 text-sm">
+      <div className="px-4 py-3 text-sm space-y-2">
         {payload.map((item: any, index: number) => (
           <div
             key={item.dataKey + index}
-            className="chart-tooltip-item flex items-center justify-between gap-4 py-2"
+            className="chart-tooltip-item flex items-center justify-between gap-4"
           >
             <div className="flex items-center gap-2.5">
               <span
@@ -208,6 +209,16 @@ function CustomTooltip({ label, active, payload, className }: any) {
             </Text>
           </div>
         ))}
+        {minerData?.avgTime != null && (
+          <div className="chart-tooltip-item flex items-center justify-between gap-4 pt-1 border-t border-white/10">
+            <Text as="span" className="capitalize text-white/90 font-semibold">
+              Avg Time:
+            </Text>
+            <Text as="span" className="font-black text-white text-base">
+              {Number(minerData.avgTime).toFixed(2)}s
+            </Text>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -310,16 +321,6 @@ function RoundHeaderInline() {
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
-  const lastUpdatedLabel = React.useMemo(() => {
-    if (!progressData?.lastUpdated) return null;
-    const timestamp = new Date(progressData.lastUpdated);
-    if (Number.isNaN(timestamp.getTime())) return null;
-    return timestamp.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, [progressData?.lastUpdated]);
-
   const previousKey = resolveRoundKey(neighborRounds.previous);
   const nextKey = resolveRoundKey(neighborRounds.next);
   const previousNumber = resolveRoundNumber(neighborRounds.previous);
@@ -332,7 +333,7 @@ function RoundHeaderInline() {
       <div
         className={cn(
           roundGlassBackgroundClass,
-          "rounded-3xl p-8 text-white shadow-2xl backdrop-blur-xl relative",
+          "rounded-3xl p-8 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
             : status === "completed"
@@ -342,14 +343,11 @@ function RoundHeaderInline() {
                 : undefined
         )}
       >
-        {/* Animated background gradient */}
-        <div className="absolute inset-0 rounded-3xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
-
         <div className="relative space-y-8">
           <header className="flex flex-wrap items-start justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <h1 className="text-3xl font-black leading-none md:text-5xl bg-gradient-to-br from-white via-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
+                <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
                   Round {normalizedCurrentNumber ?? "—"}
                 </h1>
                 <span
@@ -396,45 +394,37 @@ function RoundHeaderInline() {
                       </span>
                     </div>
                   )}
-                {lastUpdatedLabel && (
-                  <div className="flex items-center gap-2">
-                    <PiClockDuotone className="h-5 w-5 text-white/60" />
-                    <span className="text-xs uppercase tracking-wide text-white/60">
-                      Updated {lastUpdatedLabel}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
-                {/* Per request: clicking LEFT should INCREASE round (go to next) */}
-                <button
-                  type="button"
-                  onClick={() => goToRound(nextKey)}
-                  disabled={!nextKey}
-                  className={cn(roundNavButton)}
-                >
-                  <PiCaretLeftBold className="h-4 w-4" />
-                  <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
-                </button>
-                {/* And clicking RIGHT should DECREASE round (go to previous) */}
+                {/* Previous round (lower number) on the left */}
                 <button
                   type="button"
                   onClick={() => goToRound(previousKey)}
                   disabled={!previousKey}
                   className={cn(roundNavButton)}
                 >
+                  <PiCaretLeftBold className="h-4 w-4" />
                   <span>
                     {previousNumber ? `Round ${previousNumber}` : "Prev"}
                   </span>
+                </button>
+                {/* Next round (higher number) on the right */}
+                <button
+                  type="button"
+                  onClick={() => goToRound(nextKey)}
+                  disabled={!nextKey}
+                  className={cn(roundNavButton)}
+                >
+                  <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
                   <PiCaretRightBold className="h-4 w-4" />
                 </button>
               </div>
               {currentRoundKey && currentRoundKey !== roundKey && (
                 <Link
                   href={`${routes.rounds}/${encodeURIComponent(currentRoundKey)}`}
-                  className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95 backdrop-blur-sm"
+                  className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
                   Current (Round {currentRoundNumber ?? "—"})
@@ -480,9 +470,9 @@ function RoundHeaderInline() {
                 />
               </div>
               <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3">
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4 backdrop-blur-sm hover:border-white/30 hover:shadow-lg transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-400/20 ring-2 ring-emerald-400/30">
-                    <PiClockDuotone className="h-7 w-7 text-emerald-200" />
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40">
+                    <PiClockDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
                   <div>
                     <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
@@ -493,20 +483,20 @@ function RoundHeaderInline() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4 backdrop-blur-sm hover:border-white/30 hover:shadow-lg transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-sky-400/20 to-cyan-400/20 ring-2 ring-sky-400/30">
-                    <PiPulseDuotone className="h-7 w-7 text-sky-200" />
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40">
+                    <PiPulseDuotone className="h-7 w-7 text-amber-200" />
                   </div>
                   <div>
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
+                    <span className="text-xs uppercase tracking-wider text-amber-200/80 font-bold">
                       Current Block
                     </span>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-amber-100 mt-0.5">
                       {currentBlock.toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4 backdrop-blur-sm hover:border-white/30 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30">
                     <PiFlagCheckeredDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
@@ -629,7 +619,7 @@ function RoundHeaderInline() {
               const isSelected = isActive;
               return (
                 <Link key={roundKey} href={`${routes.rounds}/${encodeURIComponent(roundKey)}`} className="snap-start flex-shrink-0 w-[calc(33.333%-1rem)] min-w-[320px] animate-fade-in" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
-                  <div className={cn("w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group backdrop-blur-md transform hover:scale-[1.02]",
+                  <div className={cn("w-full h-full rounded-xl px-6 py-7 transition-all duration-300 shadow-lg group  transform hover:scale-[1.02]",
                     isSelected ? "bg-[#F8FAFC] border-2 border-[#E2E8F0] text-slate-900 shadow-[0_10px_24px_rgba(248,250,252,0.25)] hover:border-[#CBD5F5] hover:shadow-[0_16px_32px_rgba(248,250,252,0.35)]" : "bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white hover:shadow-xl hover:shadow-blue-500/30")}
                   >
                     <div className="mb-4 flex items-center justify-between gap-4">
@@ -846,38 +836,11 @@ function MetricCard({ card }: { card: any }) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-3xl p-8 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
+        "group relative overflow-hidden rounded-3xl p-8 shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
         card.borderColor,
         card.bgGradient
       )}
     >
-      {/* Animated pulsing background like main card */}
-      <div
-        className={cn(
-          "absolute inset-0 rounded-3xl opacity-40 bg-gradient-to-br animate-pulse pointer-events-none",
-          card.gradient
-        )}
-      />
-
-      {/* Animated glow effect */}
-      <div
-        className="pointer-events-none absolute -inset-20 -z-0 rotate-12 opacity-50 blur-3xl transition-all duration-700 group-hover:opacity-80 group-hover:blur-2xl"
-        style={{
-          maskImage: "radial-gradient(white, transparent)",
-          WebkitMaskImage: "radial-gradient(white, transparent)",
-          background: `radial-gradient(circle, ${card.glowColor}, transparent 70%)`,
-        }}
-      />
-
-      {/* Shine effect on hover */}
-      <div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)",
-        }}
-      />
-
       <div className="relative flex h-full flex-col gap-7">
         <div className="flex items-start gap-4">
           {isWinner ? (
@@ -901,7 +864,7 @@ function MetricCard({ card }: { card: any }) {
                 card.iconGradient
               )}
             >
-              <Icon className="h-12 w-12 text-white drop-shadow-[0_8px_20px_rgba(255,255,255,0.4)]" />
+              <Icon className="h-12 w-12 text-white" />
               <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
             </div>
           )}
@@ -914,7 +877,7 @@ function MetricCard({ card }: { card: any }) {
                 <span className="text-[10px] font-black uppercase tracking-wider text-white/60">
                   UID
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/40 text-white font-black text-sm shadow-lg backdrop-blur-sm">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/40 text-white font-black text-sm shadow-lg">
                   {card.uid}
                 </span>
               </div>
@@ -924,7 +887,7 @@ function MetricCard({ card }: { card: any }) {
         <div className="mt-auto space-y-3">
           <div
             className={cn(
-              "font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)] transition-all duration-300 group-hover:scale-105",
+              "font-black text-white transition-all duration-300 group-hover:scale-105",
               card.valueClass
             )}
           >
@@ -936,7 +899,7 @@ function MetricCard({ card }: { card: any }) {
               <span className="text-[10px] font-black uppercase tracking-wider text-white/60">
                 Hotkey
               </span>
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-white/15 to-white/10 border-2 border-white/30 backdrop-blur-sm shadow-lg group-hover:border-white/40 transition-all duration-300">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-white/15 to-white/10 border-2 border-white/30 shadow-lg group-hover:border-white/40 transition-all duration-300">
                 <span className="text-xs font-mono font-bold text-white/95 truncate flex-1">
                   {card.hotkey.slice(0, 10)}...{card.hotkey.slice(-10)}
                 </span>
@@ -1123,25 +1086,13 @@ function RoundValidatorsInline({
                 >
                   <div
                     className={cn(
-                      "relative w-full min-w-[240px] px-6 py-6 transition-all duration-500 shadow-2xl group rounded-2xl",
+                      "relative w-full min-w-[200px] px-5 py-5 transition-all duration-500 shadow-2xl group rounded-2xl",
                       tallCardClass,
                       isActive
-                        ? "border-sky-400/70 bg-gradient-to-br from-sky-500/20 via-cyan-500/15 to-blue-500/20 ring-4 ring-sky-400/30 scale-105"
-                        : "hover:border-white/40 hover:bg-white/10 hover:scale-110 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]"
+                        ? "border-sky-400/70 bg-gradient-to-br from-sky-500/20 via-cyan-500/15 to-blue-500/20 ring-4 ring-sky-400/30"
+                        : "hover:border-white/40 hover:bg-white/10 hover:scale-102 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]"
                     )}
                   >
-                    {/* Animated glow */}
-                    <div className="pointer-events-none absolute -inset-28 -z-0 rotate-12 bg-gradient-to-br from-sky-400/15 via-emerald-400/15 to-indigo-400/15 blur-3xl opacity-50 group-hover:opacity-80 transition-all duration-700" />
-
-                    {/* Shine effect */}
-                    <div
-                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)",
-                      }}
-                    />
-
                     <div className="relative flex flex-col items-center text-white">
                       <div
                         className={cn(
@@ -1227,10 +1178,10 @@ function RoundValidatorsInline({
 
 function RoundMinerScoresInline({
   className,
-  selectedValidatorId,
+  selectedValidator,
 }: {
   className?: string;
-  selectedValidatorId?: string;
+  selectedValidator?: ValidatorPerformance | null;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -1251,7 +1202,7 @@ function RoundMinerScoresInline({
       cn(
         tallCardClass,
         accentClass,
-        "relative overflow-hidden group h-[650px] px-6 py-7",
+        "relative overflow-hidden group h-[650px] px-6 py-4",
         className
       ),
     [accentClass, className]
@@ -1351,9 +1302,9 @@ function RoundMinerScoresInline({
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
     const benchmarks: BenchmarkPerformance[] = chartSource.benchmarks || [];
-    const filteredMiners = selectedValidatorId
+    const filteredMiners = selectedValidator?.id
       ? chartSource.miners.filter(
-          (miner) => miner.validatorId === selectedValidatorId
+          (miner) => miner.validatorId === selectedValidator.id
         )
       : chartSource.miners;
     const minerEntries = filteredMiners.map((miner: any) => {
@@ -1433,7 +1384,7 @@ function RoundMinerScoresInline({
     return [...minerEntries, ...benchmarkEntries].sort(
       (a, b) => b.score - a.score
     );
-  }, [chartSource, selectedValidatorId]);
+  }, [chartSource, selectedValidator]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
@@ -1441,7 +1392,6 @@ function RoundMinerScoresInline({
       if (entry.isSota) sotaEntries.set(entry.name, entry.color);
     });
     return [
-      { label: "Miners", color: "#06B6D4" },
       ...Array.from(sotaEntries.entries()).map(([label, color]) => ({
         label,
         color,
@@ -1465,8 +1415,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
-        <div className="mt-6 w-full h-[420px]">
+        <div className="mt-3 w-full h-[490px]">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
         <div className="mt-3 flex justify-center gap-6">
@@ -1517,8 +1466,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
-        <div className="mt-6 flex h-[480px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
           <div className="text-center text-rose-200">
             <p className="text-xl font-semibold">Failed to load miner scores</p>
             <p className="mt-3 text-base text-white/80">
@@ -1569,8 +1517,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
-        <div className="mt-6 flex h-[480px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
           <div className="text-center text-white/70">
             <p className="text-xl font-semibold">No miners found</p>
             <p className="mt-3 text-base">
@@ -1602,29 +1549,22 @@ function RoundMinerScoresInline({
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold">Miner Scores</span>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded border-2 border-white/30 bg-white/10 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
-            />
-            <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
-              Show SOTA
+            <span className="text-2xl font-bold">
+              Miner Scores
+              {selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}
             </span>
-          </label>
+          </div>
         </div>
       }
       className={cardClassName}
       headerClassName="text-white pb-4"
       titleClassName="text-white"
     >
-      <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
-      <div className="mt-6 h-[420px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-3 h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
-            margin={{ left: -20, top: 20, bottom: 10 }}
+            margin={{ left: -20, top: 20, bottom: 30 }}
             className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
           >
             <defs>
@@ -1648,6 +1588,13 @@ function RoundMinerScoresInline({
               axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
               tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
               height={40}
+              label={{
+                value: "Miner UID",
+                position: "insideBottom",
+                offset: -5,
+                fill: "#94a3b8",
+                fontSize: 12,
+              }}
             />
             <YAxis
               tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
@@ -1659,7 +1606,7 @@ function RoundMinerScoresInline({
               }}
               axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
               tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
-              width={50}
+              width={60}
             />
             <Tooltip
               content={<CustomTooltip />}
@@ -1687,7 +1634,7 @@ function RoundMinerScoresInline({
           {legendItems.map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/15 shadow-sm"
+              className="flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 border border-white/15 shadow-sm"
             >
               <div
                 className="h-4 w-4 rounded-full shadow-lg"
@@ -1709,11 +1656,11 @@ function RoundMinerScoresInline({
 
 function RoundTopMinersInline({
   className,
-  selectedValidatorId,
+  selectedValidator,
   roundNumber,
 }: {
   className?: string;
-  selectedValidatorId?: string;
+  selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
 }) {
   const { id } = useParams();
@@ -1751,17 +1698,17 @@ function RoundTopMinersInline({
       Array.isArray(roundMinersData.data.miners)
         ? roundMinersData.data.miners
         : [];
-    if (!selectedValidatorId) return miners.slice(0, 10);
+    if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
-      (miner) => miner.validatorId === selectedValidatorId
+      (miner) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
-  }, [roundMinersData, selectedValidatorId]);
+  }, [roundMinersData, selectedValidator]);
 
   if (loading) {
     return (
       <WidgetCard
-        title="Top Miners"
+        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
         className={cn(
           tallCardClass,
           accentClass,
@@ -1771,7 +1718,6 @@ function RoundTopMinersInline({
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
             {Array.from({ length: 10 }).map((_, index) => (
@@ -1793,7 +1739,7 @@ function RoundTopMinersInline({
   if (error) {
     return (
       <WidgetCard
-        title="Top Miners"
+        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
         className={cn(
           tallCardClass,
           accentClass,
@@ -1803,7 +1749,6 @@ function RoundTopMinersInline({
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-red-400">
             <p className="text-lg font-semibold">Failed to load top miners</p>
@@ -1817,7 +1762,7 @@ function RoundTopMinersInline({
   if (!topMinersList.length) {
     return (
       <WidgetCard
-        title="Top Miners"
+        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
         className={cn(
           tallCardClass,
           accentClass,
@@ -1827,12 +1772,11 @@ function RoundTopMinersInline({
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-gray-300">
             <p className="text-lg font-semibold">No miners ranked yet</p>
             <p className="text-sm mt-2">
-              {selectedValidatorId
+              {selectedValidator
                 ? "Select another validator or check back once evaluations complete."
                 : "No miner leaderboard data is available for this round."}
             </p>
@@ -1844,7 +1788,7 @@ function RoundTopMinersInline({
 
   return (
     <WidgetCard
-      title="Top Miners"
+      title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
       className={cn(
         tallCardClass,
         accentClass,
@@ -1854,7 +1798,6 @@ function RoundTopMinersInline({
       headerClassName="px-3 pb-2"
       titleClassName="text-white text-xl font-bold"
     >
-      <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
       <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner: any, index: number) => {
@@ -2138,7 +2081,7 @@ export default function Round() {
   );
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto">
+    <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
       {error && (
@@ -2214,11 +2157,11 @@ export default function Round() {
       <div className="flex flex-col xl:flex-row gap-6 mt-6">
         <RoundMinerScoresInline
           className="w-full xl:w-[calc(100%-400px)]"
-          selectedValidatorId={selectedValidator?.id}
+          selectedValidator={selectedValidator}
         />
         <RoundTopMinersInline
           className="w-full xl:w-[400px]"
-          selectedValidatorId={selectedValidator?.id}
+          selectedValidator={selectedValidator}
           roundNumber={roundNumberForLinks}
         />
       </div>
@@ -2227,7 +2170,7 @@ export default function Round() {
       <button
         type="button"
         onClick={handleOpenGlossary}
-        className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] backdrop-blur-xl transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
+        className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
       >
         <div className="relative">
           <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
@@ -2277,7 +2220,7 @@ export default function Round() {
 
   if (loading) {
     return (
-      <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+      <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 ">
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-6 w-24" />
@@ -2301,7 +2244,7 @@ export default function Round() {
 
   if (progressError || roundError) {
     return (
-      <div className="w-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-red-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+      <div className="w-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-red-500/30 rounded-2xl mt-4 px-7 py-5 ">
         <div className="text-center text-red-200">
           <p className="text-lg font-semibold">Progress data unavailable</p>
           <p className="text-sm mt-2">Failed to load round data</p>
@@ -2312,7 +2255,7 @@ export default function Round() {
 
   if (!round) {
     return (
-      <div className="w-full bg-gradient-to-r from-gray-500/10 via-gray-500/10 to-gray-500/10 border-2 border-gray-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md">
+      <div className="w-full bg-gradient-to-r from-gray-500/10 via-gray-500/10 to-gray-500/10 border-2 border-gray-500/30 rounded-2xl mt-4 px-7 py-5 ">
         <div className="text-center text-gray-300">
           <p className="text-lg font-semibold">Round not found</p>
         </div>
@@ -2321,7 +2264,7 @@ export default function Round() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5 backdrop-blur-md hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
+    <div className="w-full bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 rounded-2xl mt-4 px-7 py-5  hover:border-emerald-400/50 transition-all duration-300 shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div className="text-2xl font-bold text-white">Round Progress</div>
         <div className="flex items-center text-md text-white font-semibold">
