@@ -169,6 +169,10 @@ export interface AgentRunOverview {
   ranking: number;
   duration: number;
   averageEvaluationTime?: number | null;
+  // Optional: number of unique websites involved in this run
+  websitesCount?: number;
+  // Optional legacy field present in some backends
+  totalWebsites?: number;
 }
 
 // ===== AGENT COMPARISON =====

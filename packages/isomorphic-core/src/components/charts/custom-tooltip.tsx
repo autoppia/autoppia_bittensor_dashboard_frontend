@@ -47,7 +47,8 @@ export function CustomTooltip({
       if (formattedNumber) {
         return formatNumber(value);
       }
-      return value;
+      // Default: round to 2 decimals for cleaner display
+      return value.toFixed(2);
     }
     return value;
   };
@@ -80,7 +81,7 @@ export function CustomTooltip({
             />
             <Text>
               <Text as="span" className="capitalize">
-                {addSpacesToCamelCase(item.dataKey)}:
+                {item.name || addSpacesToCamelCase(item.dataKey)}:
               </Text>{" "}
               <Text
                 as="span"
