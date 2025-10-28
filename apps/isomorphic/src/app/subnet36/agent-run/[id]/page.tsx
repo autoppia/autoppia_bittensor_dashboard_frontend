@@ -835,7 +835,7 @@ function AgentRunDetail({
                   option.value === "__all__" ? null : option.value
                 )
               }
-              className="w-[160px] text-sm rounded-lg border border-white/20 bg-transparent text-white focus:border-white/40 focus:ring-0"
+              className="w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
             />
           </div>
         </div>
