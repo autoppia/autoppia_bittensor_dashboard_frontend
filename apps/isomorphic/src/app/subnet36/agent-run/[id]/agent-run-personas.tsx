@@ -103,19 +103,18 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
     ? resolveAssetUrl(validatorData.image)
     : resolveAssetUrl("/validators/Other.png");
 
-  const toEpochSeconds = (value?: string | null) => {
+  // Epoch seconds helpers (Unix time)
+  const toEpochSeconds = (value?: string | null): number | null => {
     if (!value) return null;
-    const timestamp = Date.parse(value);
-    if (Number.isNaN(timestamp)) {
-      return null;
-    }
-    return Math.floor(timestamp / 1000);
+    const ts = Date.parse(value);
+    if (Number.isNaN(ts)) return null;
+    return Math.floor(ts / 1000);
   };
-
   const epochStart = toEpochSeconds(roundData.startTime);
-  const epochEnd = toEpochSeconds(roundData.endTime ?? summary?.endTime);
+  const epochEndFixed = toEpochSeconds(roundData.endTime ?? summary?.endTime);
+  const epochEndLive = epochEndFixed ?? Math.floor(Date.now() / 1000);
   const formatEpoch = (value: number | null) =>
-    typeof value === "number" ? value.toString() : "—";
+    typeof value === 'number' && Number.isFinite(value) ? String(value) : '—';
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -155,12 +154,8 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
 
         <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
-              <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                Epoch:
-              </span>
-            <span className="whitespace-nowrap">
-              {formatEpoch(epochStart)} - {formatEpoch(epochEnd)}
-            </span>
+            <span className="uppercase tracking-[0.3em] text-xs text-white/60">Epoch:</span>
+            <span className="whitespace-nowrap">{formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}</span>
           </div>
         </div>
       </section>
