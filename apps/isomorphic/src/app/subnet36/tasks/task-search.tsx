@@ -143,6 +143,54 @@ export default function TaskSearch() {
     };
   }, []);
 
+  // Auto-load tasks on page load
+  useEffect(() => {
+    let ignore = false;
+
+    const loadInitialTasks = async () => {
+      setIsSearching(true);
+      setSearchError(null);
+
+      try {
+        const response = await tasksService.searchTasks({
+          limit: 50, // Load recent tasks by default
+        });
+
+        if (ignore) return;
+
+        const data = response.data;
+        setResults(data?.tasks ?? []);
+        setHasSearched(true);
+
+        if (data?.facets) {
+          setAvailableWebsites(
+            data.facets.websites.map((item) => item.name).sort()
+          );
+          setAvailableUseCases(
+            data.facets.useCases.map((item) => item.name).sort()
+          );
+        }
+      } catch (error) {
+        if (!ignore) {
+          setResults([]);
+          setSearchError(
+            error instanceof Error ? error.message : "Failed to load tasks"
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    loadInitialTasks();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -172,9 +220,7 @@ export default function TaskSearch() {
     let cancelled = false;
 
     const missingTasks = results.filter(
-      (task) =>
-        !task.relationships &&
-        !relationshipsMap[task.taskId]
+      (task) => !task.relationships && !relationshipsMap[task.taskId]
     );
 
     if (missingTasks.length === 0) {
@@ -184,12 +230,10 @@ export default function TaskSearch() {
     const fetchRelationships = async () => {
       const settled = await Promise.allSettled(
         missingTasks.map((task) =>
-          tasksService
-            .getTask(task.taskId)
-            .then((data) => ({
-              taskId: task.taskId,
-              relationships: data.relationships,
-            }))
+          tasksService.getTask(task.taskId).then((data) => ({
+            taskId: task.taskId,
+            relationships: data.relationships,
+          }))
         )
       );
 
@@ -233,7 +277,7 @@ export default function TaskSearch() {
 
     try {
       // If a Task ID is entered, try direct lookup first and navigate
-      const trimmed = (searchTerm || '').trim();
+      const trimmed = (searchTerm || "").trim();
       if (trimmed) {
         try {
           const direct = await tasksService.getTask(trimmed);
@@ -341,7 +385,7 @@ export default function TaskSearch() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     handleSearch();
                   }
@@ -516,7 +560,7 @@ export default function TaskSearch() {
             <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={`task-skeleton-${index}`}
@@ -582,7 +626,7 @@ export default function TaskSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {results.map((task) => {
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
@@ -635,7 +679,8 @@ export default function TaskSearch() {
                 }
               })();
 
-              const validatorIdMatch = task.agentRunId.match(/validator-(\d+)/i);
+              const validatorIdMatch =
+                task.agentRunId.match(/validator-(\d+)/i);
               const fallbackValidator = validatorIdMatch
                 ? `Validator ${validatorIdMatch[1]}`
                 : "Validator";
@@ -684,7 +729,7 @@ export default function TaskSearch() {
                 >
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
-                  
+
                   {/* Content container */}
                   <div className="relative flex h-full flex-col p-5 gap-4">
                     {/* Task ID and Run ID - Same Row */}
@@ -766,7 +811,8 @@ export default function TaskSearch() {
                             ? {
                                 backgroundColor: webProject.color,
                                 borderColor: "rgba(255,255,255,0.4)",
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                                boxShadow:
+                                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                               }
                             : {
                                 backgroundColor: "rgba(51, 65, 85, 0.5)",
@@ -827,7 +873,9 @@ export default function TaskSearch() {
                             Score
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {Number.isFinite(scorePercent) ? `${scorePercent}%` : "—"}
+                            {Number.isFinite(scorePercent)
+                              ? `${scorePercent}%`
+                              : "—"}
                           </div>
                         </div>
                         <div className="text-center">

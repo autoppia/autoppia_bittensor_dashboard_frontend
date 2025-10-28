@@ -606,7 +606,7 @@ export default function TaskDetails() {
 
           <div className="space-y-4">
             <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70">
-              Task Context
+              <b> Task Context</b>
             </span>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {metaCards.map((card) => (
