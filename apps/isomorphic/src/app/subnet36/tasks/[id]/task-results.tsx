@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Text } from "rizzui";
 import {
@@ -14,8 +15,15 @@ import {
   PiXCircle,
   PiPlay,
 } from "react-icons/pi";
-import { useTaskResults, useTaskActions, useTaskScreenshots } from "@/services/hooks/useTask";
-import Placeholder, { TextPlaceholder, ListItemPlaceholder } from "@/app/shared/placeholder";
+import {
+  useTaskResults,
+  useTaskActions,
+  useTaskScreenshots,
+} from "@/services/hooks/useTask";
+import Placeholder, {
+  TextPlaceholder,
+  ListItemPlaceholder,
+} from "@/app/shared/placeholder";
 import { TaskAction } from "@/services/api/types/tasks";
 import { useMemo, useState } from "react";
 import type { IconType } from "react-icons";
@@ -141,26 +149,34 @@ export default function TaskResults() {
   const { id } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  
+
   // Fetch task results data
-  const { results, isLoading: resultsLoading, error: resultsError } = useTaskResults(id as string);
-  
+  const {
+    results,
+    isLoading: resultsLoading,
+    error: resultsError,
+  } = useTaskResults(id as string);
+
   // Fetch task actions with pagination
-  const { 
-    actions, 
-    total: actionsTotal, 
-    isLoading: actionsLoading, 
+  const {
+    actions,
+    total: actionsTotal,
+    isLoading: actionsLoading,
     error: actionsError,
-    goToPage 
+    goToPage,
   } = useTaskActions(id as string, {
     page: currentPage,
     limit: pageSize,
-    sortBy: 'timestamp',
-    sortOrder: 'asc'
+    sortBy: "timestamp",
+    sortOrder: "asc",
   });
-  
+
   // Fetch task screenshots
-  const { screenshots, isLoading: screenshotsLoading, error: screenshotsError } = useTaskScreenshots(id as string);
+  const {
+    screenshots,
+    isLoading: screenshotsLoading,
+    error: screenshotsError,
+  } = useTaskScreenshots(id as string);
 
   const hasApiScreenshots = screenshots.length > 0;
 
@@ -200,7 +216,10 @@ export default function TaskResults() {
   const isMediaLoading =
     screenshotsLoading || (!hasApiScreenshots && resultsLoading);
   const showMediaError =
-    !isMediaLoading && !!screenshotsError && !isUsingFallbackMedia && mediaItems.length === 0;
+    !isMediaLoading &&
+    !!screenshotsError &&
+    !isUsingFallbackMedia &&
+    mediaItems.length === 0;
   const showMediaEmpty =
     !isMediaLoading && !showMediaError && mediaItems.length === 0;
 
@@ -232,7 +251,7 @@ export default function TaskResults() {
             </Text>
           )}
         </div>
-        
+
         <div className="space-y-2 rounded-xl border border-slate-700/25 h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto bg-slate-900/60">
           {actionsLoading ? (
             // Loading state
@@ -244,7 +263,9 @@ export default function TaskResults() {
             <div className="flex items-center justify-center h-full text-red-300">
               <div className="text-center space-y-1">
                 <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">Failed to load actions</Text>
+                <Text className="text-sm text-red-200">
+                  Failed to load actions
+                </Text>
               </div>
             </div>
           ) : actions.length === 0 ? (
@@ -258,7 +279,8 @@ export default function TaskResults() {
           ) : (
             // Actions list
             actions.map((action, index) => {
-              const meta = ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
+              const meta =
+                ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
               const ActionIcon = meta.icon;
               return (
                 <div
@@ -291,7 +313,7 @@ export default function TaskResults() {
             })
           )}
         </div>
-        
+
         {/* Pagination */}
         {!actionsLoading && actionsTotal > pageSize && (
           <div className="flex items-center justify-between mt-4">
@@ -337,7 +359,7 @@ export default function TaskResults() {
             </Text>
           )}
         </div>
-        
+
         <div className="h-[350px] border border-slate-700/25 rounded-xl overflow-y-auto custom-scrollbar bg-slate-900/60">
           {isMediaLoading ? (
             // Loading state
@@ -355,25 +377,34 @@ export default function TaskResults() {
               <div className="text-center space-y-1">
                 <PiXCircle className="w-8 h-8 mx-auto" />
                 <Text className="text-sm text-red-200">
-                  {screenshotsError || resultsError || "Failed to load GIF replays"}
+                  {screenshotsError ||
+                    resultsError ||
+                    "Failed to load GIF replays"}
                 </Text>
               </div>
             </div>
           ) : showMediaEmpty ? (
             // Empty state
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiCamera className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">No GIF replays available</Text>
-              </div>
+            <div className="relative w-full h-full rounded-xl overflow-hidden">
+              <Image
+                src="/images/no_gift_available.png"
+                alt="No GIF replays available"
+                fill
+                className="object-contain rounded-xl"
+              />
             </div>
           ) : (
             // Screenshots grid
             <div className="p-4 space-y-4">
               {mediaItems.map((screenshot, index) => {
-                const timestampLabel = formatTimestampLabel(screenshot.timestamp);
+                const timestampLabel = formatTimestampLabel(
+                  screenshot.timestamp
+                );
                 return (
-                  <div key={`gif-${screenshot.id || index}`} className="space-y-2">
+                  <div
+                    key={`gif-${screenshot.id || index}`}
+                    className="space-y-2"
+                  >
                     <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -382,14 +413,16 @@ export default function TaskResults() {
                         className="w-full h-32 object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
+                          target.style.display = "none";
+                          target.nextElementSibling?.classList.remove("hidden");
                         }}
                       />
                       <div className="hidden absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-900/80">
                         <div className="text-center space-y-1">
                           <PiCamera className="w-8 h-8 mx-auto" />
-                          <Text className="text-sm text-slate-300">GIF unavailable</Text>
+                          <Text className="text-sm text-slate-300">
+                            GIF unavailable
+                          </Text>
                         </div>
                       </div>
                     </div>
