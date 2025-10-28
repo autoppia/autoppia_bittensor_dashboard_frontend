@@ -7,6 +7,7 @@ import Placeholder from "@/app/shared/placeholder";
 import {
   useAgentRunStats,
   useAgentRunSummary,
+  useAgentRunTasks,
 } from "@/services/hooks/useAgentRun";
 import AgentRunSummary from "./agent-run-summary";
 import {
@@ -59,6 +60,9 @@ export default function AgentRunSummaryDynamic({
     return buildSummaryChartData(summary, detailData, fallbackSummary);
   }, [summary, detailData, fallbackSummary]);
 
+  // Fetch tasks (large limit) to reliably compute totals when stats/summary miss items
+  const { tasks: runTasks } = useAgentRunTasks(id as string, { limit: 1000 });
+
   const shouldShowPlaceholder =
     (!summary && isSummaryLoading) || (!stats && isStatsLoading);
 
@@ -77,6 +81,17 @@ export default function AgentRunSummaryDynamic({
         selectedWebsite={selectedWebsite}
         data={detailData}
         summaryData={summaryChartData}
+        summaryTotals={{
+          totalRequests:
+            (summary?.totalTasks ?? 0) > 0
+              ? summary!.totalTasks
+              : (runTasks?.length ?? 0),
+          totalSuccesses:
+            (summary?.successfulTasks ?? 0) > 0
+              ? summary!.successfulTasks
+              : (runTasks?.filter?.((t) => String(t.status).toLowerCase() === 'completed')?.length ?? 0),
+          successRate: summary?.overallScore ?? (summaryChartData?.total ?? 0),
+        }}
       />
     </div>
   );

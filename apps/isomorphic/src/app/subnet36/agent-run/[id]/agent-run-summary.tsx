@@ -39,6 +39,11 @@ export interface AgentRunSummaryProps {
   selectedWebsite?: string | null;
   data?: AgentRunDetailData | null;
   summaryData?: AgentRunSummaryChartData | null;
+  summaryTotals?: {
+    totalRequests: number;
+    totalSuccesses: number;
+    successRate: number; // 0-100
+  } | null;
 }
 
 interface DisplayDataItem {
@@ -66,6 +71,7 @@ export default function AgentRunSummary({
   selectedWebsite,
   data,
   summaryData,
+  summaryTotals,
 }: AgentRunSummaryProps) {
   const agentData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentData.websites.length > 0;
@@ -97,19 +103,24 @@ export default function AgentRunSummary({
     }
   } else {
     const websiteAverages = agentData.websites;
-    successRate =
-      websiteAverages.length > 0
-        ? websiteAverages.reduce((sum, w) => sum + w.overall.successRate, 0) /
-          websiteAverages.length
-        : fallbackSummary.total || 0;
-    totalRequests = websiteAverages.reduce(
-      (sum, w) => sum + w.overall.total,
-      0
-    );
-    totalSuccesses = websiteAverages.reduce(
-      (sum, w) => sum + w.overall.successCount,
-      0
-    );
+    if (websiteAverages.length > 0) {
+      successRate =
+        websiteAverages.reduce((sum, w) => sum + w.overall.successRate, 0) /
+        websiteAverages.length;
+      totalRequests = websiteAverages.reduce(
+        (sum, w) => sum + w.overall.total,
+        0
+      );
+      totalSuccesses = websiteAverages.reduce(
+        (sum, w) => sum + w.overall.successCount,
+        0
+      );
+    } else {
+      // Fallback to summary totals so the donut always shows something
+      successRate = summaryTotals?.successRate ?? fallbackSummary.total ?? 0;
+      totalRequests = summaryTotals?.totalRequests ?? 0;
+      totalSuccesses = summaryTotals?.totalSuccesses ?? 0;
+    }
     avgSolutionTime =
       websiteAverages.length > 0
         ? websiteAverages.reduce(
@@ -148,7 +159,7 @@ export default function AgentRunSummary({
     }));
   }
 
-  const donutData = selectedWebsite
+  let donutData = selectedWebsite
     ? (() => {
         const selectedWeb = agentData.websites.find(
           (web) => web.name === selectedWebsite
@@ -207,6 +218,22 @@ export default function AgentRunSummary({
         fill: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
         stroke: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
       }));
+
+  // If no data segments exist, show a neutral full ring so the donut is visible
+  if (!donutData || donutData.length === 0) {
+    donutData = [
+      {
+        label: "All",
+        value: 1,
+        average: (summaryTotals?.successRate ?? fallbackSummary.total ?? 0) / 100,
+        total: summaryTotals?.totalRequests ?? 0,
+        successCount: summaryTotals?.totalSuccesses ?? 0,
+        avgSolutionTime: 0,
+        fill: "#64748B", // slate-500
+        stroke: "#64748B",
+      } as any,
+    ];
+  }
 
   return (
     <div
