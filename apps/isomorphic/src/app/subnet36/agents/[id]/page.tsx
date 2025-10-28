@@ -158,14 +158,20 @@ function AgentStats({
   const bestRoundScoreValue =
     agent.bestRoundScore ?? agent.currentTopScore ?? 0;
   const bestEverScorePercentage = `${(bestRoundScoreValue * 100).toFixed(1)}%`;
+  const bestRoundBadge =
+    agent.bestRoundId && agent.bestRoundId > 0
+      ? `Round ${agent.bestRoundId}`
+      : null;
   const roundsParticipated = (
     agent.roundsParticipated || agent.totalRuns
   ).toLocaleString();
   const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0);
-  const totalAlphaEarned =
-    totalAlphaValue % 1 === 0
-      ? totalAlphaValue.toLocaleString()
-      : totalAlphaValue.toFixed(2);
+  const totalAlphaEarned = Math.round(totalAlphaValue);
+  const totalTaoEarned = (() => {
+    const v = (agent as any).taoWonInPrizes;
+    if (typeof v === "number") return Math.round(v);
+    return Math.round(Number(agent.alphaWonInPrizes ?? 0));
+  })();
 
   const stats = [
     {
@@ -175,8 +181,18 @@ function AgentStats({
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Total Tasks",
-      metric: (roundMetrics?.totalTasks ?? 0).toString(),
+      title: "Success Rate",
+      metric: (() => {
+        const total =
+          mode === "historical"
+            ? (agent.totalTasks ?? 0)
+            : (roundMetrics?.totalTasks ?? 0);
+        const completed =
+          mode === "historical"
+            ? (agent.completedTasks ?? 0)
+            : (agent.completedTasks ?? 0);
+        return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
+      })(),
       icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.yellow,
     },
@@ -207,25 +223,26 @@ function AgentStats({
     {
       title: "Best Ever Score",
       metric: bestEverScorePercentage,
+      badge: bestRoundBadge,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.green,
     },
     {
-      title: "Rounds Participated",
-      metric: roundsParticipated,
-      icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.cyan,
-    },
-    {
-      title: "Total Alpha Earned",
+      title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
+    {
+      title: "TAO Earned",
+      metric: `${totalTaoEarned} τ`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
   ];
 
   // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Total Tasks, Best Ever Score, Rounds Participated, Total Alpha Earned
+  // In historical view: show Success Rate, Tasks Success, Tasks Failed, Alpha Earned (first row), Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned (second row)
   const displayStats = (
     mode === "current"
       ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
@@ -305,9 +322,16 @@ function AgentStats({
                     </div>
                   </div>
                   <div className="flex-1">
-                    <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105 mb-2">
-                      {stat.metric}
-                    </Text>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
+                        {stat.metric}
+                      </Text>
+                      {stat.badge ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                          {stat.badge}
+                        </span>
+                      ) : null}
+                    </div>
                     <Text className="text-[11px] font-black text-white/80 group-hover:text-white uppercase tracking-[0.35em] transition-colors duration-300 leading-tight">
                       {stat.title}
                     </Text>
@@ -1083,9 +1107,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
               className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-lg"
               style={{ boxShadow: "0 0 8px rgba(96, 165, 250, 0.6)" }}
             />
-            <span className="text-xs font-medium text-white/90">
-              Total Tasks
-            </span>
+            <span className="text-xs font-medium text-white/90">All Tasks</span>
           </div>
           <span className="text-sm font-bold text-blue-300">{total}</span>
         </div>
@@ -1096,9 +1118,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
               className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg"
               style={{ boxShadow: "0 0 8px rgba(52, 211, 153, 0.6)" }}
             />
-            <span className="text-xs font-medium text-white/90">
-              Successful
-            </span>
+            <span className="text-xs font-medium text-white/90">Success</span>
           </div>
           <span className="text-sm font-bold text-emerald-300">
             {successful}
@@ -1841,13 +1861,20 @@ export default function Page() {
     agent.bestRankEver && agent.bestRankEver > 0
       ? `#${agent.bestRankEver}`
       : "N/A";
-  const bestEverScorePercentage = `${(((agent as any).bestScore ?? 0) * 100).toFixed(1)}%`;
+  const bestEverScorePercentage = `${((agent.bestRoundScore ?? 0) * 100).toFixed(1)}%`;
+  const bestRoundBadge =
+    agent.bestRoundId && agent.bestRoundId > 0
+      ? `Round ${agent.bestRoundId}`
+      : null;
   const roundsParticipated = (
     agent.roundsParticipated ||
     agent.totalRuns ||
     0
   ).toLocaleString();
-  const totalAlphaEarned = Number(agent.alphaWonInPrizes ?? 0).toFixed(2);
+  const totalAlphaEarned = Math.round(Number(agent.alphaWonInPrizes ?? 0));
+  const totalTaoEarned = Math.round(
+    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0)
+  );
   const currentStats = [
     {
       title: "Round",
@@ -1886,43 +1913,81 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.cyan,
     },
     {
-      title: "Total Tasks",
-      metric: (roundMetrics?.totalTasks ?? 0).toString(),
-      icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.yellow,
-    },
-    {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
+    {
+      title: "TAO Earned",
+      metric: `${totalTaoEarned} τ`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
   ];
 
   const historicalStats = [
+    // Primera fila: Success Rate, Tasks Success, Tasks Failed, Alpha Earned
     {
-      title: "Total Tasks",
-      metric: (roundMetrics?.totalTasks ?? 0).toString(),
-      icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.amber,
+      title: "Success Rate",
+      metric: (() => {
+        const total = agent.totalTasks ?? 0;
+        const completed = agent.completedTasks ?? 0;
+        return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
+      })(),
+      icon: LuAward,
+      ...METRIC_CARD_GRADIENTS.cyan,
     },
     {
-      title: "Best Score Ever",
-      metric: bestEverScorePercentage,
-      icon: LuStar,
+      title: "Tasks Success",
+      metric: (agent.completedTasks ?? 0).toLocaleString(),
+      icon: LuCircleCheckBig,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
-      title: "Rounds Participated",
-      metric: roundsParticipated,
-      icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.blue,
+      title: "Tasks Failed",
+      metric: Math.max(
+        0,
+        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
+      ).toLocaleString(),
+      icon: LuTarget,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Total Alpha Earned",
+      title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.purple,
+    },
+    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
+    {
+      title: "Best Score Ever",
+      metric: bestEverScorePercentage,
+      badge: bestRoundBadge,
+      icon: LuStar,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    {
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      badge:
+        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
+          ? `Round ${(agent as any).bestRankRoundId}`
+          : null,
+      icon: LuCrown,
+      ...METRIC_CARD_GRADIENTS.yellow,
+    },
+    {
+      title: "Rounds Won",
+      metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
+      icon: LuTrophy,
+      ...METRIC_CARD_GRADIENTS.orange,
+    },
+    {
+      title: "TAO Earned",
+      metric: `${totalTaoEarned} τ`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -2221,9 +2286,16 @@ export default function Page() {
                         <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
-                          {stat.metric}
-                        </Text>
+                        <div className="flex items-center gap-2">
+                          <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                            {stat.metric}
+                          </Text>
+                          {stat.badge ? (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                              {stat.badge}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>
