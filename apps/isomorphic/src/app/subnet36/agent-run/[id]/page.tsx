@@ -171,6 +171,69 @@ function formatWebsiteName(name?: string | null): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
+function getProjectColors(projectName: string): {
+  borderColor: string;
+  bgGradient: string;
+  textColor: string;
+  dotColor: string;
+  iconBg: string;
+} {
+  const colorMap: { [key: string]: any } = {
+    AutoCinema: {
+      borderColor: "border-pink-500/60",
+      bgGradient: "from-pink-500/15 to-rose-500/10",
+      textColor: "text-pink-300",
+      dotColor: "#ec4899",
+      iconBg: "from-pink-500/30 to-rose-500/30",
+    },
+    AutoBooks: {
+      borderColor: "border-blue-500/60",
+      bgGradient: "from-blue-500/15 to-indigo-500/10",
+      textColor: "text-blue-300",
+      dotColor: "#3b82f6",
+      iconBg: "from-blue-500/30 to-indigo-500/30",
+    },
+    Autozone: {
+      borderColor: "border-orange-500/60",
+      bgGradient: "from-orange-500/15 to-red-500/10",
+      textColor: "text-orange-300",
+      dotColor: "#f97316",
+      iconBg: "from-orange-500/30 to-red-500/30",
+    },
+    AutoDining: {
+      borderColor: "border-emerald-500/60",
+      bgGradient: "from-emerald-500/15 to-green-500/10",
+      textColor: "text-emerald-300",
+      dotColor: "#10b981",
+      iconBg: "from-emerald-500/30 to-green-500/30",
+    },
+    AutoCRM: {
+      borderColor: "border-purple-500/60",
+      bgGradient: "from-purple-500/15 to-violet-500/10",
+      textColor: "text-purple-300",
+      dotColor: "#a855f7",
+      iconBg: "from-purple-500/30 to-violet-500/30",
+    },
+    AutoMail: {
+      borderColor: "border-cyan-500/60",
+      bgGradient: "from-cyan-500/15 to-teal-500/10",
+      textColor: "text-cyan-300",
+      dotColor: "#06b6d4",
+      iconBg: "from-cyan-500/30 to-teal-500/30",
+    },
+  };
+
+  return (
+    colorMap[projectName] || {
+      borderColor: "border-slate-500/60",
+      bgGradient: "from-slate-500/15 to-gray-500/10",
+      textColor: "text-slate-300",
+      dotColor: "#64748b",
+      iconBg: "from-slate-500/30 to-gray-500/30",
+    }
+  );
+}
+
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
   stats?: AgentRunStatsData | null
@@ -840,14 +903,14 @@ function AgentRunDetail({
       <div className="relative mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl">
-              <PiChartBar className="w-6 h-6 text-white" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30">
+              <PiChartBar className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
                 Performance Analytics
               </h2>
-              <p className="text-sm text-white/70">
+              <p className="text-sm text-emerald-200/70">
                 Success rates and performance metrics
               </p>
             </div>
@@ -875,22 +938,25 @@ function AgentRunDetail({
         <div className="relative space-y-6">
           {chartData.map((item, index) => {
             const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
+            const projectColors = getProjectColors(item.website);
             const isHighPerformance = item.average >= 80;
             const isMediumPerformance = item.average >= 60 && item.average < 80;
 
             return (
               <div
                 key={`${item.website}-${index}`}
-                className="group relative rounded-xl border border-white/15 bg-transparent p-5 transition-all duration-300 hover:border-[#FDF5E6]/60 hover:shadow-2xl"
+                className={`group relative rounded-xl border ${projectColors.borderColor} bg-gradient-to-br ${projectColors.bgGradient} p-5 transition-all duration-300 hover:shadow-2xl hover:border-opacity-80`}
                 style={{ boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)" }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-3 h-3 rounded-full shadow-sm"
-                      style={{ backgroundColor: colorClass }}
+                      style={{ backgroundColor: projectColors.dotColor }}
                     />
-                    <span className="text-lg font-semibold text-white">
+                    <span
+                      className={`text-lg font-semibold ${projectColors.textColor}`}
+                    >
                       {item.website}
                     </span>
                     {isHighPerformance && (
@@ -1240,13 +1306,12 @@ function AgentRunSummary({
           .sort((a, b) => b.average - a.average);
         return displayData.map((item, idx) => {
           const match = sortedResults.find((d) => d.label === item.label);
+          const totalVal = match ? match.total : item.total;
           return {
             label: item.label,
-            value: match
-              ? match.average * match.total
-              : item.value * item.total,
+            value: Math.max(totalVal, 1), // Always show at least 1 to render the segment
             average: match ? match.average : item.value,
-            total: match ? match.total : item.total,
+            total: totalVal,
             successCount: match ? match.successCount : item.successCount,
             avgSolutionTime: match
               ? match.avgSolutionTime
@@ -1256,16 +1321,40 @@ function AgentRunSummary({
           };
         });
       })()
-    : agentData.websites.map((w, idx) => ({
-        label: formatWebsiteName(w.name ?? `Website ${idx + 1}`),
-        value: w.overall.successRate * w.overall.total,
-        average: w.overall.successRate,
-        total: w.overall.total,
-        successCount: w.overall.successCount,
-        avgSolutionTime: w.overall.avgSolutionTime,
-        fill: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-        stroke: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-      }));
+    : agentData.websites.map((w, idx) => {
+        const websiteName = formatWebsiteName(w.name ?? `Website ${idx + 1}`);
+        const projectColors = getProjectColors(websiteName);
+        return {
+          label: websiteName,
+          value: Math.max(w.overall.total, 1), // Always show at least 1 to render the segment
+          average: w.overall.successRate,
+          total: w.overall.total,
+          successCount: w.overall.successCount,
+          avgSolutionTime: w.overall.avgSolutionTime,
+          fill: projectColors.dotColor,
+          stroke: projectColors.dotColor,
+        };
+      });
+
+  // Ensure donutData has valid values for rendering
+  const finalDonutData =
+    donutData.length > 0 && donutData.some((d) => d.value > 0)
+      ? donutData
+      : hasWebsites
+        ? displayData.map((item, idx) => {
+            const projectColors = getProjectColors(item.label);
+            return {
+              label: item.label,
+              value: 100, // Show equal segments when no data
+              average: 0,
+              total: item.total,
+              successCount: 0,
+              avgSolutionTime: 0,
+              fill: projectColors.dotColor,
+              stroke: projectColors.dotColor,
+            };
+          })
+        : [];
 
   return (
     <div
@@ -1273,9 +1362,9 @@ function AgentRunSummary({
     >
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="rounded-xl border border-white/15 bg-transparent p-2">
+          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 p-2">
             <svg
-              className="w-5 h-5 text-white"
+              className="w-5 h-5 text-amber-400"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -1283,11 +1372,11 @@ function AgentRunSummary({
               <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
             Summary
           </h2>
         </div>
-        <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+        <p className="text-xs uppercase tracking-[0.3em] text-amber-200/70">
           Performance Breakdown
         </p>
       </div>
@@ -1297,25 +1386,15 @@ function AgentRunSummary({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={
-                  donutData.length > 0
-                    ? donutData
-                    : [
-                        {
-                          label: "No Data",
-                          value: 1,
-                          fill: "#64748b",
-                          stroke: "#64748b",
-                        },
-                      ]
-                }
+                data={finalDonutData}
                 innerRadius={85}
                 outerRadius={100}
-                paddingAngle={donutData.length > 0 ? 5 : 0}
+                paddingAngle={finalDonutData.length > 1 ? 5 : 0}
                 cornerRadius={30}
                 dataKey="value"
-                stroke="#475569"
+                stroke="#1e293b"
                 strokeWidth={2}
+                isAnimationActive={true}
               >
                 <Label
                   position="center"
@@ -1328,21 +1407,11 @@ function AgentRunSummary({
                     />
                   )}
                 />
-                {(donutData.length > 0
-                  ? donutData
-                  : [
-                      {
-                        label: "No Data",
-                        value: 1,
-                        fill: "#64748b",
-                        stroke: "#64748b",
-                      },
-                    ]
-                ).map((entry: any, idx: number) => (
+                {finalDonutData.map((entry: any, idx: number) => (
                   <Cell
                     key={`cell-${idx}`}
                     fill={entry.fill}
-                    stroke={entry.stroke}
+                    stroke={entry.stroke || entry.fill}
                     strokeWidth={2}
                   />
                 ))}
@@ -1381,36 +1450,40 @@ function AgentRunSummary({
         )}
         {displayData.length > 0 ? (
           <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-transparent">
-            {displayData.map((item, idx) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between gap-3 py-3 px-2 last:border-b-0"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{
-                      backgroundColor:
-                        PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-                    }}
-                  />
-                  <span className="text-sm font-medium text-white">
-                    {item.label}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold text-white">
-                    {item.value.toFixed(1)}%
+            {displayData.map((item, idx) => {
+              const projectColors = getProjectColors(item.label);
+              return (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-3 py-3 px-2 last:border-b-0"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{
+                        backgroundColor: projectColors.dotColor,
+                      }}
+                    />
+                    <span
+                      className={`text-sm font-medium ${projectColors.textColor}`}
+                    >
+                      {item.label}
+                    </span>
                   </div>
-                  <div className="text-xs text-white/70">
-                    {item.total} requests • {item.successCount} successes
-                    {selectedWebsite && (
-                      <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
-                    )}
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-white">
+                      {item.value.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-white/70">
+                      {item.total} requests • {item.successCount} successes
+                      {selectedWebsite && (
+                        <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-sm text-white/70">
@@ -1803,14 +1876,31 @@ function AgentRunTasksSection() {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
       <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-white">
-          All Tasks
-          {total > 0 && (
-            <span className="ml-2 text-sm font-normal text-slate-300">
-              ({total} total)
-            </span>
-          )}
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30">
+            <svg
+              className="w-5 h-5 text-violet-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+            All Tasks
+            {total > 0 && (
+              <span className="ml-2 text-sm font-normal text-violet-300/70">
+                ({total} total)
+              </span>
+            )}
+          </h2>
+        </div>
         <div className="relative w-full max-w-[240px]">
           <Input
             type="search"
