@@ -938,7 +938,7 @@ export default function AgentRunSearch() {
                 >
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
-                  
+
                   {/* Content container */}
                   <div className="relative flex h-full flex-col p-5 gap-4">
                     {/* Round & Ranking */}
@@ -954,66 +954,57 @@ export default function AgentRunSearch() {
                       )}
                     </div>
 
-                    {/* Validator & Miner */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2.5 rounded-lg border border-indigo-500/40 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-indigo-400/60 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-indigo-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-indigo-500/20">
-                          <Image
-                            src={validatorImageSrc}
-                            alt={validatorLabel}
-                            width={40}
-                            height={40}
-                            sizes="40px"
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold mb-0.5">
-                            Validator
-                          </div>
-                          <div className="text-xs font-bold text-indigo-50 truncate">
-                            {validatorLabel}
-                          </div>
-                        </div>
+                    {/* Validator */}
+                    <div className="flex items-center gap-2.5 rounded-lg border border-indigo-500/40 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-indigo-400/60 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-indigo-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-indigo-500/20">
+                        <Image
+                          src={validatorImageSrc}
+                          alt={validatorLabel}
+                          width={40}
+                          height={40}
+                          sizes="40px"
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                      <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-emerald-400/60 group-hover:shadow-lg group-hover:shadow-emerald-500/10">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-emerald-500/20">
-                          <Image
-                            src={minerImageSrc}
-                            alt={agentLabel}
-                            width={40}
-                            height={40}
-                            sizes="40px"
-                            className="h-full w-full object-cover"
-                          />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold mb-0.5">
+                          Validator {extractUidNumber(run.validatorId) ?? "—"}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold mb-0.5">
-                            Miner
-                          </div>
-                          <div className="text-xs font-bold text-emerald-50 truncate">
-                            {agentLabel}
-                          </div>
+                        <div className="text-xs font-bold text-indigo-50 truncate">
+                          {validatorLabel}
                         </div>
                       </div>
                     </div>
 
-                    {/* Agent Hotkey */}
-                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
-                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
-                        Agent Hotkey
+                    {/* Miner */}
+                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-emerald-400/60 group-hover:shadow-lg group-hover:shadow-emerald-500/10">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-emerald-500/20">
+                        <Image
+                          src={minerImageSrc}
+                          alt={agentLabel}
+                          width={40}
+                          height={40}
+                          sizes="40px"
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
-                        {run.agentHotkey}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold mb-0.5">
+                          Miner{" "}
+                          {run.agentUid ?? extractUidNumber(run.agentId) ?? "—"}
+                        </div>
+                        <div className="text-xs font-bold text-emerald-50 truncate">
+                          {agentLabel}
+                        </div>
                       </div>
                     </div>
 
                     {/* Run ID */}
-                    <div className="rounded-lg border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-violet-600/5 p-2.5 shadow-sm">
-                      <div className="text-[9px] uppercase tracking-wider text-violet-300 font-semibold mb-1">
+                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
+                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
                         Run ID
                       </div>
-                      <div className="text-xs font-mono font-bold text-violet-50 truncate">
+                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
                         {run.runId}
                       </div>
                     </div>
@@ -1026,7 +1017,7 @@ export default function AgentRunSearch() {
                             Score
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {scoreOutOf100}/100
+                            {scoreOutOf100}%
                           </div>
                         </div>
                         <div className="text-center">

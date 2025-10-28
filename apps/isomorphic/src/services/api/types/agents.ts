@@ -38,9 +38,13 @@ export interface AgentData {
   currentTopScore: number; // RENAMED from bestScore
   currentRank: number; // NEW FIELD
   bestRankEver: number; // NEW FIELD
+  bestRankRoundId?: number; // NEW FIELD
   roundsParticipated: number; // NEW FIELD
+  roundsWon?: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
+  taoWonInPrizes?: number; // NEW FIELD (derived)
   bestRoundScore: number; // NEW FIELD
+  bestRoundId?: number; // NEW FIELD
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
