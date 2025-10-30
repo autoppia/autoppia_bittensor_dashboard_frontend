@@ -19,8 +19,8 @@ import { FiRefreshCcw } from "react-icons/fi";
 // Mapeo correcto de nombres de websites a directorios de GitHub
 const getGitHubUrl = (websiteName: string): string => {
   const websiteToGitHubMap: Record<string, string> = {
-    "Autoppia Cinema": "web_1_demo_movies",
-    "Autoppia Books": "web_2_demo_books",
+    AutoCinema: "web_1_demo_movies",
+    AutoBooks: "web_2_demo_books",
     Autozone: "web_3_autozone",
     AutoDining: "web_4_autodining",
     AutoCRM: "web_5_autocrm",
@@ -47,9 +47,16 @@ export default function WebsiteDetailPage() {
   const websiteSlug = params?.name as string;
   const website = websitesData.find((w) => w.slug === websiteSlug);
 
-  // ✅ Show all use cases initially
-  const [useCases, setUseCases] = useState(website?.useCases || []);
+  // ✅ Initialize use cases with random prompts
+  const [useCases, setUseCases] = useState(() => {
+    if (!website) return [];
+    return website.useCases.map((useCase) => ({
+      ...useCase,
+      examplePrompt: useCase.examplePrompt?.slice(0, 2) || [],
+    }));
+  });
   const [loading, setLoading] = useState(false);
+  const [seed, setSeed] = useState(1);
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -67,76 +74,39 @@ export default function WebsiteDetailPage() {
   const colorWithOpacity20 = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
   const colorBorder = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
 
-  // ✅ Refresh tasks from API and update useCases state
-  const handleRefresh = async () => {
+  // Helper function to add seed parameter to website URL
+  const getWebsiteUrlWithSeed = (baseUrl: string, seedValue: number) => {
+    if (baseUrl === "#") return "#";
+    const url = new URL(baseUrl);
+    url.searchParams.set("seed", seedValue.toString());
+    return url.toString();
+  };
+
+  // ✅ Generate random example prompts from predefined pool
+  const generateExamplePrompts = (useCase: any, count: number = 1) => {
+    const allPrompts = useCase.examplePrompt || [];
+    if (allPrompts.length <= count) return allPrompts;
+
+    // Shuffle and return random prompts
+    const shuffled = [...allPrompts].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  };
+
+  const handleRefresh = () => {
     if (!website) return;
     setLoading(true);
 
-    try {
-      const response = await fetch(
-        "https://api-benchmark.autoppia.com/generate-tasks",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            projects: [website.slug],
-            num_of_runs: 2,
-            selective_use_cases: [],
-            prompts_per_use_case: 1,
-          }),
-        }
-      );
+    // Simulate a brief loading state for UX
+    setTimeout(() => {
+      // Regenerate use cases with random example prompts
+      const refreshedUseCases = website.useCases.map((useCase) => ({
+        ...useCase,
+        examplePrompt: generateExamplePrompts(useCase, 2),
+      }));
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const data = await response.json();
-      console.log("API Response:", data); // Debug log
-
-      // Handle the API response structure
-      let projectData;
-      if (data.generated_tasks && Array.isArray(data.generated_tasks)) {
-        // API returns { generated_tasks: [...] }
-        projectData = data.generated_tasks.find(
-          (item: any) => item.project_id === website.slug
-        );
-      } else if (Array.isArray(data)) {
-        // Direct array response
-        projectData = data.find(
-          (item: any) => item.project_id === website.slug
-        );
-      } else if (data && typeof data === "object") {
-        // Single object response
-        projectData = data;
-      }
-
-      console.log("Project Data:", projectData); // Debug log
-
-      if (projectData && projectData.tasks) {
-        console.log("Tasks found:", projectData.tasks); // Debug log
-
-        // Convert API response to useCases format
-        const newUseCases = Object.entries(projectData.tasks).map(
-          ([useCaseName, prompts]) => ({
-            name: useCaseName
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (l: string) => l.toUpperCase()),
-            examplePrompt: Array.isArray(prompts) ? prompts : [prompts],
-          })
-        );
-
-        console.log("New Use Cases:", newUseCases); // Debug log
-
-        // Update all use cases from API
-        setUseCases(newUseCases);
-        console.log("Updated use cases to:", newUseCases); // Debug log
-      } else {
-        console.log("No project data or tasks found"); // Debug log
-      }
-    } catch (err) {
-      console.error("❌ Failed to refresh data:", err);
-    } finally {
+      setUseCases(refreshedUseCases);
       setLoading(false);
-    }
+    }, 300);
   };
 
   if (!website) {
@@ -221,25 +191,55 @@ export default function WebsiteDetailPage() {
 
               {!website.isComingSoon && website.href !== "#" && (
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href={website.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group/btn flex-1"
-                  >
-                    <Button
-                      size="lg"
-                      className="w-full text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
+                  <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                    {/* Seed Input */}
+                    <div
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 backdrop-blur-sm"
                       style={{
-                        backgroundColor: website.color,
-                        borderColor: website.color,
+                        backgroundColor: colorWithOpacity10,
+                        borderColor: colorBorder,
                       }}
                     >
-                      <PiGlobeBold className="me-2 h-5 w-5 text-white group-hover/btn:rotate-12 transition-transform" />
-                      Visit Website
-                      <FaExternalLinkAlt className="ms-2 h-4 w-4 text-white" />
-                    </Button>
-                  </Link>
+                      <Text className="text-xs font-semibold text-white whitespace-nowrap">
+                        Seed:
+                      </Text>
+                      <input
+                        type="number"
+                        min="1"
+                        max="300"
+                        value={seed}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 1;
+                          setSeed(Math.min(300, Math.max(1, value)));
+                        }}
+                        className="w-16 px-2 py-1 rounded-lg bg-white/10 border text-white font-bold text-center text-sm focus:outline-none focus:ring-2 transition-all"
+                        style={{
+                          borderColor: colorBorder,
+                        }}
+                      />
+                    </div>
+
+                    <Link
+                      href={getWebsiteUrlWithSeed(website.href, seed)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/btn flex-1"
+                    >
+                      <Button
+                        size="lg"
+                        className="w-full text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
+                        style={{
+                          backgroundColor: website.color,
+                          borderColor: website.color,
+                        }}
+                      >
+                        <PiGlobeBold className="me-2 h-5 w-5 text-white group-hover/btn:rotate-12 transition-transform" />
+                        Visit Website
+                        <FaExternalLinkAlt className="ms-2 h-4 w-4 text-white" />
+                      </Button>
+                    </Link>
+                  </div>
+
                   <a
                     href={getGitHubUrl(website.name)}
                     target="_blank"
