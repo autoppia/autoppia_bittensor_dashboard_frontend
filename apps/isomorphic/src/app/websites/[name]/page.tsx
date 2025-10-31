@@ -139,7 +139,7 @@ export default function WebsiteDetailPage() {
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 sm:p-12">
             <div
-              className="relative aspect-video rounded-2xl overflow-hidden border-2 shadow-2xl group"
+              className="relative h-full min-h-[400px] rounded-2xl overflow-hidden border-2 shadow-2xl group"
               style={{ borderColor: colorBorder }}
             >
               <Image
