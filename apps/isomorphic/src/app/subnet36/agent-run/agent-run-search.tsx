@@ -170,6 +170,7 @@ export default function AgentRunSearch() {
   );
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualLoading, setManualLoading] = useState(false);
+  const [lastSearchedRunId, setLastSearchedRunId] = useState<string>("");
 
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -389,12 +390,57 @@ export default function AgentRunSearch() {
     }
   }, [searchTerm, isManualSearchActive, manualLoading]);
 
+  // Auto-search when filters change (without clicking search button)
   useEffect(() => {
-    if (
-      searchTerm.trim() !== "" ||
-      (isManualSearchActive && manualResults !== null)
-    ) {
+    const trimmedRunId = searchTerm.trim();
+
+    // If there's a Run UID search term, handle it separately
+    if (trimmedRunId !== "") {
+      // Prevent searching for the same run ID repeatedly
+      if (trimmedRunId === lastSearchedRunId) {
+        return;
+      }
+
+      // Debounce is handled by debouncedFilters
+      // We'll search for the run ID automatically
+      const searchByRunId = async () => {
+        setLastSearchedRunId(trimmedRunId);
+        setHasSearched(true);
+        setManualLoading(true);
+        setManualError(null);
+        try {
+          console.log(`Auto-searching for agent run: ${trimmedRunId}`);
+          const run = await agentRunsService.getAgentRun(trimmedRunId);
+          setManualResults([mapRunDetailToListItem(run)]);
+        } catch (err: any) {
+          console.error("Agent run auto-search error:", err);
+          setManualResults([]);
+
+          const errorMessage = err?.message || String(err);
+          if (
+            errorMessage.includes("404") ||
+            errorMessage.includes("Not Found")
+          ) {
+            setManualError(
+              `Agent run '${trimmedRunId}' not found. The run ID might not exist or the format is incorrect. Try filtering by Round, Validator, or Agent instead.`
+            );
+          } else {
+            setManualError(`Failed to load agent run: ${errorMessage}`);
+          }
+        } finally {
+          setManualLoading(false);
+        }
+      };
+
+      searchByRunId();
       return;
+    }
+
+    // Clear manual results if search term was cleared
+    if (isManualSearchActive && manualResults !== null) {
+      setManualResults(null);
+      setManualError(null);
+      setLastSearchedRunId("");
     }
 
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
@@ -505,14 +551,27 @@ export default function AgentRunSearch() {
       setManualLoading(true);
       setManualError(null);
       try {
+        console.log(`Searching for agent run: ${trimmedRunId}`);
+        console.log(`API endpoint: /api/v1/agent-runs/${trimmedRunId}`);
+
         const run = await agentRunsService.getAgentRun(trimmedRunId);
         setManualResults([mapRunDetailToListItem(run)]);
       } catch (err: any) {
+        console.error("Agent run search error:", err);
         setManualResults([]);
-        setManualError(
-          err?.message ||
-            `Agent run '${trimmedRunId}' not found. Please verify the ID.`
-        );
+
+        // Provide more helpful error message
+        const errorMessage = err?.message || String(err);
+        if (
+          errorMessage.includes("404") ||
+          errorMessage.includes("Not Found")
+        ) {
+          setManualError(
+            `Agent run '${trimmedRunId}' not found. The run ID might not exist or the format is incorrect. Try filtering by Round, Validator, or Agent instead.`
+          );
+        } else {
+          setManualError(`Failed to load agent run: ${errorMessage}`);
+        }
       } finally {
         setManualLoading(false);
       }
@@ -551,6 +610,7 @@ export default function AgentRunSearch() {
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
+    setLastSearchedRunId("");
     setQueryParams({
       page: 1,
       limit: queryParams.limit ?? DEFAULT_LIMIT,
