@@ -170,6 +170,7 @@ export default function AgentRunSearch() {
   );
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualLoading, setManualLoading] = useState(false);
+  const [lastSearchedRunId, setLastSearchedRunId] = useState<string>("");
 
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -195,6 +196,8 @@ export default function AgentRunSearch() {
   >([]);
   const [validatorLoading, setValidatorLoading] = useState(false);
   const [validatorError, setValidatorError] = useState<string | null>(null);
+
+  console.log("Current queryParams:", queryParams);
 
   const {
     runs,
@@ -264,6 +267,12 @@ export default function AgentRunSearch() {
 
   const activeRuns = useMemo<AgentRunListItem[]>(() => {
     const source = manualResults ?? runs;
+    console.log("activeRuns updated:", {
+      hasManualResults: manualResults !== null,
+      manualResultsCount: manualResults?.length ?? 0,
+      runsCount: runs.length,
+      sourceCount: source.length,
+    });
     return source.map(normalizeListItemValues);
   }, [manualResults, runs]);
 
@@ -389,14 +398,53 @@ export default function AgentRunSearch() {
     }
   }, [searchTerm, isManualSearchActive, manualLoading]);
 
+  // Auto-search when filters change (without clicking search button)
   useEffect(() => {
-    if (
-      searchTerm.trim() !== "" ||
-      (isManualSearchActive && manualResults !== null)
-    ) {
+    const trimmedRunId = searchTerm.trim();
+
+    // If there's a Run UID search term, handle it separately
+    if (trimmedRunId !== "") {
+      // Prevent searching for the same run ID repeatedly
+      if (trimmedRunId === lastSearchedRunId) {
+        return;
+      }
+
+      // Debounce is handled by debouncedFilters
+      // We'll search for the run ID automatically
+      const searchByRunId = async () => {
+        setLastSearchedRunId(trimmedRunId);
+        setHasSearched(true);
+        setManualLoading(true);
+        setManualError(null);
+        try {
+          console.log(`Auto-searching for agent run: ${trimmedRunId}`);
+          const run = await agentRunsService.getAgentRun(trimmedRunId);
+          setManualResults([mapRunDetailToListItem(run)]);
+        } catch (err: any) {
+          console.error("Agent run auto-search error:", err);
+          setManualResults([]);
+
+          const errorMessage = err?.message || String(err);
+          if (
+            errorMessage.includes("404") ||
+            errorMessage.includes("Not Found")
+          ) {
+            setManualError(
+              `Agent run '${trimmedRunId}' not found. The run ID might not exist or the format is incorrect. Try filtering by Round, Validator, or Agent instead.`
+            );
+          } else {
+            setManualError(`Failed to load agent run: ${errorMessage}`);
+          }
+        } finally {
+          setManualLoading(false);
+        }
+      };
+
+      searchByRunId();
       return;
     }
 
+    // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     const roundIdParam = debouncedFilters.round
       ? Number(debouncedFilters.round)
@@ -412,10 +460,12 @@ export default function AgentRunSearch() {
       queryParams.validatorId === normalizedValidator &&
       queryParams.agentId === normalizedAgent;
 
+    // If filters haven't changed, don't re-run
     if (filtersAreInSync) {
       return;
     }
 
+    // Filters have changed - build new query
     const nextQuery: AgentRunsListQueryParams = {
       page: 1,
       limit: resolvedLimit,
@@ -431,9 +481,13 @@ export default function AgentRunSearch() {
       nextQuery.agentId = normalizedAgent;
     }
 
+    console.log("Applying filters:", nextQuery);
+
+    // Clear manual search results when switching to filter mode
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
+    setLastSearchedRunId("");
     setHasSearched(true);
     setQueryParams(nextQuery);
   }, [
@@ -443,8 +497,7 @@ export default function AgentRunSearch() {
     queryParams.roundId,
     queryParams.validatorId,
     searchTerm,
-    isManualSearchActive,
-    manualResults,
+    lastSearchedRunId,
   ]);
 
   useEffect(() => {
@@ -505,14 +558,27 @@ export default function AgentRunSearch() {
       setManualLoading(true);
       setManualError(null);
       try {
+        console.log(`Searching for agent run: ${trimmedRunId}`);
+        console.log(`API endpoint: /api/v1/agent-runs/${trimmedRunId}`);
+
         const run = await agentRunsService.getAgentRun(trimmedRunId);
         setManualResults([mapRunDetailToListItem(run)]);
       } catch (err: any) {
+        console.error("Agent run search error:", err);
         setManualResults([]);
-        setManualError(
-          err?.message ||
-            `Agent run '${trimmedRunId}' not found. Please verify the ID.`
-        );
+
+        // Provide more helpful error message
+        const errorMessage = err?.message || String(err);
+        if (
+          errorMessage.includes("404") ||
+          errorMessage.includes("Not Found")
+        ) {
+          setManualError(
+            `Agent run '${trimmedRunId}' not found. The run ID might not exist or the format is incorrect. Try filtering by Round, Validator, or Agent instead.`
+          );
+        } else {
+          setManualError(`Failed to load agent run: ${errorMessage}`);
+        }
       } finally {
         setManualLoading(false);
       }
@@ -551,6 +617,7 @@ export default function AgentRunSearch() {
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
+    setLastSearchedRunId("");
     setQueryParams({
       page: 1,
       limit: queryParams.limit ?? DEFAULT_LIMIT,
@@ -799,13 +866,13 @@ export default function AgentRunSearch() {
 
             {/* Action Buttons */}
             <div className="flex gap-4 flex-col sm:flex-row justify-center">
-              <button
+              {/* <button
                 onClick={handleSearch}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 backdrop-blur-md"
               >
                 <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                 SEARCH
-              </button>
+              </button> */}
 
               <button
                 onClick={clearFilters}
