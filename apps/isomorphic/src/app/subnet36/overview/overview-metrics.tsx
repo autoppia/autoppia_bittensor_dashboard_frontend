@@ -161,7 +161,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "score-to-win",
       title: "Top Score",
       value: formatPercentage(topScoreValue),
-      subtitle: topMinerInfo,
+      bottomLabel: topMinerInfo,
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -246,17 +246,13 @@ export default function OverviewMetrics({ className }: { className?: string }) {
                 <div className={cn("truncate", metric.metricClassName)}>
                   {metric.value}
                 </div>
-                {metric.subtitle && (
-                  <div className="text-xs text-white/70 mt-1 truncate">
-                    {metric.subtitle}
-                  </div>
-                )}
               </div>
             </div>
             <div className="text-center min-w-0">
               <div
                 className={cn("text-xs truncate", metric.descriptionClassName)}
               >
+                {metric.id === "score-to-win" && metric.bottomLabel}
                 {metric.id === "total-validators" && "Active validators"}
                 {metric.id === "total-miners" && "Active miners"}
                 {metric.id === "total-websites" && "Active websites"}

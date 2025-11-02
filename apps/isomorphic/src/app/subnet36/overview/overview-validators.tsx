@@ -61,7 +61,7 @@ export default function OverviewValidators() {
 
   const statusColorClasses: Record<string, string> = {
     "Sending Tasks": "bg-blue-500/20 text-blue-500",
-    Evaluating: "bg-orange-500/20 text-orange-500",
+    Evaluating: "bg-emerald-500/20 text-emerald-500",
     Waiting: "bg-purple-500/20 text-purple-500",
     Finished: "bg-emerald-600/15 text-emerald-600",
     "Not Started": "bg-slate-500/20 text-slate-200",
@@ -240,7 +240,7 @@ export default function OverviewValidators() {
 
           const normalizedStatus =
             validator.status === "Evaluating"
-              ? "Evaluating..."
+              ? "Evaluating"
               : validator.status === "Finished"
                 ? "Finished"
                 : validator.status === "Not Started"
