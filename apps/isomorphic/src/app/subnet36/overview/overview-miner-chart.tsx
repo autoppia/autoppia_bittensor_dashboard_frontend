@@ -190,6 +190,33 @@ export default function MinerChart({
     }));
   }, [rawChartData]);
 
+  // Generate X-axis ticks every 4 rounds
+  const xAxisTicks = useMemo<number[]>(() => {
+    if (!chartData.length) {
+      return [];
+    }
+    const rounds = chartData.map((d) => d.round);
+    const minRound = Math.min(...rounds);
+    const maxRound = Math.max(...rounds);
+
+    const ticks: number[] = [];
+    // Start from the first multiple of 4 >= minRound
+    const startTick = Math.ceil(minRound / 4) * 4;
+    for (let i = startTick; i <= maxRound; i += 4) {
+      ticks.push(i);
+    }
+
+    // Always include min and max if not already included
+    if (!ticks.includes(minRound)) {
+      ticks.unshift(minRound);
+    }
+    if (!ticks.includes(maxRound)) {
+      ticks.push(maxRound);
+    }
+
+    return ticks.sort((a, b) => a - b);
+  }, [chartData]);
+
   const availableSotaSeries = useMemo<string[]>(() => {
     if (!chartData.length) {
       return [];
@@ -545,11 +572,12 @@ export default function MinerChart({
                 allowDuplicatedCategory={false}
                 type="number"
                 domain={["dataMin", "dataMax"]}
+                ticks={xAxisTicks}
                 tickFormatter={xAxisTickFormatter}
                 label={{
                   value: "Rounds",
                   position: "insideBottom",
-                  offset: 0,
+                  offset: -10,
                   fill: "#94a3b8",
                   fontSize: 12,
                 }}
