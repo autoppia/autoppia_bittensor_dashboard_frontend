@@ -223,6 +223,8 @@ export function useTaskActions(
 ) {
   const [actions, setActions] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failCount, setFailCount] = useState(0);
   const [page, setPage] = useState(params?.page || 1);
   const [limit, setLimit] = useState(params?.limit || 20);
   const [isLoading, setIsLoading] = useState(true);
@@ -256,6 +258,8 @@ export function useTaskActions(
       });
       setActions(result.actions);
       setTotal(result.total);
+      setSuccessCount(result.successCount ?? 0);
+      setFailCount(result.failCount ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch actions');
     } finally {
@@ -290,6 +294,8 @@ export function useTaskActions(
   return {
     actions,
     total,
+    successCount,
+    failCount,
     page,
     limit,
     isLoading,

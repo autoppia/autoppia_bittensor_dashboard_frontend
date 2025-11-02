@@ -1092,6 +1092,8 @@ function TaskResults() {
   const {
     actions,
     total: actionsTotal,
+    successCount,
+    failCount,
     isLoading: actionsLoading,
     error: actionsError,
     goToPage,
@@ -1153,8 +1155,7 @@ function TaskResults() {
   };
 
   const totalPages = Math.max(1, Math.ceil(actionsTotal / pageSize));
-  const successCount = actions.filter((a) => a.success).length;
-  const failCount = actions.filter((a) => a.error || !a.success).length;
+  // successCount and failCount now come from the API (total counts, not just current page)
 
   const handleDownloadAll = () => {
     if (!mediaItems || mediaItems.length === 0) return;
