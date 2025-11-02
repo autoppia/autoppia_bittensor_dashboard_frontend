@@ -104,7 +104,7 @@ const roundGlassBackgroundClass =
   "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl";
 const roundAccentActive =
   "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
-const roundAccentCompleted =
+const roundAccentFinished =
   "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]";
 const roundAccentPending =
   "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]";
@@ -113,7 +113,7 @@ const chipBase =
   "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
 const chipActive =
   "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
-const chipCompleted =
+const chipFinished =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
@@ -285,18 +285,20 @@ function RoundHeaderInline() {
     [router, roundKey]
   );
 
-  const status = (round?.status ??
-    (round?.current ? "active" : "completed")) as
+  const status = (round?.status ?? (round?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
   const isActive = status === "active";
   const statusLabel =
-    status === "completed"
+    status === "finished"
       ? "Finished"
-      : status === "pending"
-        ? "Pending"
-        : "Running";
+      : status === "evaluating_finished"
+        ? "Waiting Consensus"
+        : status === "pending"
+          ? "Pending"
+          : "Running";
 
   const progressPercentageRaw =
     typeof progressData?.progress === "number"
@@ -336,8 +338,8 @@ function RoundHeaderInline() {
           "rounded-3xl p-8 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
-            : status === "completed"
-              ? roundAccentCompleted
+            : status === "finished"
+              ? roundAccentFinished
               : status === "pending"
                 ? roundAccentPending
                 : undefined
@@ -354,7 +356,7 @@ function RoundHeaderInline() {
                   className={cn(
                     chipBase,
                     status === "pending" && chipPending,
-                    status === "completed" && chipCompleted,
+                    status === "finished" && chipFinished,
                     isActive && chipActive
                   )}
                 >
@@ -362,7 +364,7 @@ function RoundHeaderInline() {
                     className={cn(
                       "h-2.5 w-2.5 rounded-full shadow-lg",
                       isActive && "bg-white animate-pulse",
-                      status === "completed" && "bg-white",
+                      status === "finished" && "bg-white",
                       status === "pending" && "bg-white"
                     )}
                   />
@@ -449,7 +451,7 @@ function RoundHeaderInline() {
                     "absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg",
                     isActive &&
                       "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 shadow-emerald-500/50",
-                    status === "completed" &&
+                    status === "finished" &&
                       "bg-gradient-to-r from-indigo-400 via-purple-400 to-violet-500 shadow-indigo-500/50",
                     status === "pending" &&
                       "bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 shadow-amber-500/50"
@@ -461,7 +463,7 @@ function RoundHeaderInline() {
                     "absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20",
                     isActive &&
                       "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)] animate-pulse",
-                    status === "completed" &&
+                    status === "finished" &&
                       "bg-indigo-400 shadow-[0_0_25px_rgba(129,140,248,0.6)]",
                     status === "pending" &&
                       "bg-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)]"
@@ -1187,15 +1189,16 @@ function RoundMinerScoresInline({
   const roundKey = extractRoundIdentifier(id);
   const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
-    (roundInfo?.current ? "active" : "completed")) as
+    (roundInfo?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
   const accentClass =
     roundStatus === "active"
       ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
+      : roundStatus === "finished"
+        ? roundAccentFinished
         : roundAccentPending;
   const cardClassName = React.useMemo(
     () =>
@@ -1667,15 +1670,16 @@ function RoundTopMinersInline({
   const roundKey = extractRoundIdentifier(id);
   const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
-    (roundInfo?.current ? "active" : "completed")) as
+    (roundInfo?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
   const accentClass =
     roundStatus === "active"
       ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
+      : roundStatus === "finished"
+        ? roundAccentFinished
         : roundAccentPending;
   const minersQuery = React.useMemo(
     () => ({

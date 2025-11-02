@@ -9,7 +9,7 @@ export interface ValidatorRoundData {
   validatorUid?: number;
   validatorName?: string;
   validatorHotkey?: string;
-  status: 'active' | 'completed' | 'pending';
+  status: "active" | "finished" | "pending" | "evaluating_finished";
   startTime: string;
   endTime?: string;
   averageScore: number;
@@ -31,7 +31,7 @@ export interface RoundData {
   current: boolean;
   startTime: string;
   endTime?: string;
-  status: 'active' | 'completed' | 'pending';
+  status: "active" | "finished" | "pending" | "evaluating_finished";
   totalTasks: number;
   completedTasks: number;
   averageScore: number;
@@ -97,7 +97,7 @@ export interface ValidatorPerformance {
   name: string;
   hotkey: string;
   icon: string;
-  status: 'active' | 'inactive' | 'offline';
+  status: "active" | "inactive" | "offline";
   totalTasks: number;
   completedTasks: number;
   totalMiners: number;
@@ -117,7 +117,14 @@ export interface ValidatorPerformance {
 // ===== ROUND RECENT ACTIVITY =====
 export interface RoundActivity {
   id: string;
-  type: 'task_completed' | 'miner_joined' | 'miner_left' | 'validator_joined' | 'validator_left' | 'round_started' | 'round_ended';
+  type:
+    | "task_completed"
+    | "miner_joined"
+    | "miner_left"
+    | "validator_joined"
+    | "validator_left"
+    | "round_started"
+    | "round_ended";
   message: string;
   timestamp: string;
   metadata: {
@@ -209,16 +216,16 @@ export interface RoundProgressResponse {
 export interface RoundsListQueryParams {
   page?: number;
   limit?: number;
-  status?: 'active' | 'completed' | 'pending';
-  sortBy?: 'id' | 'startTime' | 'endTime' | 'totalTasks' | 'averageScore';
-  sortOrder?: 'asc' | 'desc';
+  status?: "active" | "finished" | "pending" | "evaluating_finished";
+  sortBy?: "id" | "startTime" | "endTime" | "totalTasks" | "averageScore";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface RoundMinersQueryParams {
   page?: number;
   limit?: number;
-  sortBy?: 'score' | 'duration' | 'ranking' | 'uid';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "score" | "duration" | "ranking" | "uid";
+  sortOrder?: "asc" | "desc";
   success?: boolean;
   minScore?: number;
   maxScore?: number;
