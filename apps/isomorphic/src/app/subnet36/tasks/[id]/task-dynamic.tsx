@@ -1024,11 +1024,15 @@ const extractActionDetailPairs = (
   const pairs: Array<[string, string]> = [];
   const add = (k: string, v: any) => {
     if (v === undefined || v === null || v === "") return;
+    // Skip 'type' field as it's already shown in the action badge
+    if (k.toLowerCase() === "type") return;
+    // Skip 'value' field as it's often redundant with text
+    if (k.toLowerCase() === "value") return;
     const val = typeof v === "string" ? v : JSON.stringify(v);
     pairs.push([k, val]);
   };
   if (action.selector) add("selector", action.selector);
-  if (action.value) add("value", action.value);
+  // if (action.value) add("value", action.value); // Hide value as it's often redundant with text
 
   const meta: any = (action as any).metadata || {};
   const attr = meta?.attributes?.attributes || meta?.attributes || {};
@@ -1048,15 +1052,19 @@ const extractActionDetailPairs = (
   if (typeof (attr.deltaX ?? rawAttr.deltaX) === "number")
     add("deltaX", attr.deltaX ?? rawAttr.deltaX);
   add("title", attr.title ?? rawAttr.title);
-  // Hide redundant type for navigate actions; label already conveys it
-  if (raw?.type && String(raw.type).toLowerCase() !== "navigate") {
-    add("type", raw.type);
-  }
+  // Hide redundant type field; action type is already shown in the badge/icon
+  // if (raw?.type && String(raw.type).toLowerCase() !== "navigate") {
+  //   add("type", raw.type);
+  // }
   if (action.error) add("error", action.error);
 
-  // If nothing, surface first entries of metadata
+  // If nothing, surface first entries of metadata (excluding type and value)
   if (pairs.length === 0 && meta && typeof meta === "object") {
-    const entries = Object.entries(meta).slice(0, 3) as Array<[string, any]>;
+    const entries = Object.entries(meta)
+      .filter(
+        ([k]) => k.toLowerCase() !== "type" && k.toLowerCase() !== "value"
+      ) // Exclude type and value fields
+      .slice(0, 3) as Array<[string, any]>;
     entries.forEach(([k, v]) => add(k, v));
   }
   return pairs;
