@@ -690,8 +690,10 @@ function RoundHeaderInline() {
 
 function RoundStatsInline({
   selectedValidator,
+  roundStatus,
 }: {
   selectedValidator?: ValidatorPerformance | null;
+  roundStatus?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -769,6 +771,8 @@ function RoundStatsInline({
   const winnerAverageScore =
     statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
 
+  const isPreliminary = roundStatus === "evaluating_finished";
+
   const aggregatedCards = [
     {
       key: "winner",
@@ -777,7 +781,11 @@ function RoundStatsInline({
       uid: topMiner?.uid,
       hotkey: topMiner?.hotkey,
       imageUrl: topMiner?.imageUrl,
-      helper: !topMiner ? "Awaiting validator results" : undefined,
+      helper: !topMiner
+        ? "Awaiting validator results"
+        : isPreliminary
+          ? "Preliminary - from this validator"
+          : undefined,
       icon: PiCrownDuotone,
       gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
       bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
@@ -788,9 +796,13 @@ function RoundStatsInline({
     },
     {
       key: "winnerAverageScore",
-      title: "Winner Average Score",
+      title: isPreliminary
+        ? "Winner Score (Preliminary)"
+        : "Winner Average Score",
       value: `${formatNumber(winnerAverageScore * 100, 1)}%`,
-      helper: "Average score achieved by the winning miner across validators",
+      helper: isPreliminary
+        ? "Score from this validator - may change after consensus"
+        : "Average score achieved by the winning miner across validators",
       icon: PiTrophyDuotone,
       gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
       bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
@@ -2145,7 +2157,10 @@ export default function Round() {
             </Text>
           </div>
         </div>
-        <RoundStatsInline selectedValidator={selectedValidator} />
+        <RoundStatsInline
+          selectedValidator={selectedValidator}
+          roundStatus={status}
+        />
       </div>
 
       {/* Validators selector */}

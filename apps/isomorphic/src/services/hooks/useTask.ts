@@ -2,8 +2,8 @@
  * Custom hooks for Task data management with partial loading
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { tasksService } from '../api/tasks.service';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { tasksService } from "../api/tasks.service";
 import {
   TaskData,
   TaskDetails,
@@ -11,7 +11,7 @@ import {
   TaskPersonas,
   TaskStatistics,
   TaskPartialData,
-} from '../api/types/tasks';
+} from "../api/types/tasks";
 
 // Hook for getting task data with progressive loading
 export function useTask(
@@ -63,11 +63,19 @@ export function useTask(
 
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch task data');
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch task data"
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [taskId, includePersonas, includeDetails, includeResults, includeStatistics]);
+  }, [
+    taskId,
+    includePersonas,
+    includeDetails,
+    includeResults,
+    includeStatistics,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -85,13 +93,13 @@ export function useTask(
     fetchData();
   }, [fetchData]);
 
-  const isAnyLoading = Object.values(data.loading).some(loading => loading);
+  const isAnyLoading = Object.values(data.loading).some((loading) => loading);
   const hasAnyError = Object.keys(data.errors).length > 0;
 
   return {
     data,
     isLoading: isLoading || isAnyLoading,
-    error: error || (hasAnyError ? 'Some data failed to load' : null),
+    error: error || (hasAnyError ? "Some data failed to load" : null),
     refetch,
     isAnyLoading,
     hasAnyError,
@@ -114,7 +122,9 @@ export function useTaskPersonas(taskId: string) {
         const data = await tasksService.getTaskPersonas(taskId);
         setPersonas(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch personas');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch personas"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -142,7 +152,9 @@ export function useTaskDetails(taskId: string) {
         const data = await tasksService.getTaskDetails(taskId);
         setDetails(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch details');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch details"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -170,7 +182,9 @@ export function useTaskResults(taskId: string) {
         const data = await tasksService.getTaskResults(taskId);
         setResults(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch results');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch results"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -198,7 +212,9 @@ export function useTaskStatistics(taskId: string) {
         const data = await tasksService.getTaskStatistics(taskId);
         setStatistics(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch statistics');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch statistics"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -217,8 +233,8 @@ export function useTaskActions(
     page?: number;
     limit?: number;
     type?: string;
-    sortBy?: 'timestamp' | 'duration';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "timestamp" | "duration";
+    sortOrder?: "asc" | "desc";
   }
 ) {
   const [actions, setActions] = useState<any[]>([]);
@@ -242,7 +258,7 @@ export function useTaskActions(
 
   const desiredLimit = useMemo(() => {
     const raw = (stableParams as Record<string, unknown>).limit;
-    return typeof raw === 'number' ? raw : undefined;
+    return typeof raw === "number" ? raw : undefined;
   }, [stableParams]);
 
   const fetchActions = useCallback(async () => {
@@ -261,7 +277,7 @@ export function useTaskActions(
       setSuccessCount(result.successCount ?? 0);
       setFailCount(result.failCount ?? 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch actions');
+      setError(err instanceof Error ? err.message : "Failed to fetch actions");
     } finally {
       setIsLoading(false);
     }
@@ -322,7 +338,9 @@ export function useTaskScreenshots(taskId: string) {
         const result = await tasksService.getTaskScreenshots(taskId);
         setScreenshots(result.screenshots);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch screenshots');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch screenshots"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -338,7 +356,7 @@ export function useTaskScreenshots(taskId: string) {
 export function useTaskLogs(
   taskId: string,
   params?: {
-    level?: 'info' | 'warn' | 'error' | 'debug';
+    level?: "info" | "warn" | "error" | "debug";
     limit?: number;
     offset?: number;
   }
@@ -360,7 +378,7 @@ export function useTaskLogs(
         setLogs(result.logs);
         setTotal(result.total);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch logs');
+        setError(err instanceof Error ? err.message : "Failed to fetch logs");
       } finally {
         setIsLoading(false);
       }
@@ -388,7 +406,9 @@ export function useTaskMetrics(taskId: string) {
         const result = await tasksService.getTaskMetrics(taskId);
         setMetrics(result.metrics);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch metrics');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch metrics"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -416,7 +436,9 @@ export function useTaskTimeline(taskId: string) {
         const result = await tasksService.getTaskTimeline(taskId);
         setTimeline(result.timeline);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch timeline');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch timeline"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -430,18 +452,16 @@ export function useTaskTimeline(taskId: string) {
 
 // Hook for getting tasks list
 export function useTasksList(
-  params?:
-    | {
-        page?: number;
-        limit?: number;
-        website?: string;
-        useCase?: string;
-        status?: string;
-        agentRunId?: string;
-        sortBy?: string;
-        sortOrder?: 'asc' | 'desc';
-      }
-    | null,
+  params?: {
+    page?: number;
+    limit?: number;
+    website?: string;
+    useCase?: string;
+    status?: string;
+    agentRunId?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  } | null,
   options?: {
     enabled?: boolean;
   }
@@ -466,7 +486,7 @@ export function useTasksList(
 
   const desiredLimit = useMemo(() => {
     const raw = (stableParams as Record<string, unknown>).limit;
-    return typeof raw === 'number' ? raw : undefined;
+    return typeof raw === "number" ? raw : undefined;
   }, [stableParams]);
 
   const fetchTasks = useCallback(async () => {
@@ -488,7 +508,7 @@ export function useTasksList(
       setTasks(result.tasks);
       setTotal(result.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
+      setError(err instanceof Error ? err.message : "Failed to fetch tasks");
     } finally {
       setIsLoading(false);
     }
@@ -546,7 +566,7 @@ export function useTaskSearch(params: {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }) {
   const [results, setResults] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -559,7 +579,7 @@ export function useTaskSearch(params: {
       const result = await tasksService.searchTasks(params);
       setResults(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search tasks');
+      setError(err instanceof Error ? err.message : "Failed to search tasks");
     } finally {
       setIsLoading(false);
     }
