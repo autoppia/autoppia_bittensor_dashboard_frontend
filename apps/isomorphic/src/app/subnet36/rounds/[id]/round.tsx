@@ -382,9 +382,30 @@ function RoundHeaderInline() {
                 <div className="flex items-center gap-2">
                   <PiClockDuotone className="h-5 w-5 text-emerald-300" />
                   <span>
-                    {isActive
-                      ? "Waiting for updated timing"
-                      : "No remaining time"}
+                    {(() => {
+                      if (status === "finished") {
+                        return "Round completed";
+                      }
+                      if (
+                        typeof blocksRemaining === "number" &&
+                        blocksRemaining > 0
+                      ) {
+                        const minutes = Math.floor((blocksRemaining * 12) / 60);
+                        const hours = Math.floor(minutes / 60);
+                        if (hours > 0) {
+                          const remainingMinutes = minutes % 60;
+                          return `~${hours}h ${remainingMinutes}m remaining`;
+                        }
+                        return `~${minutes} minutes remaining`;
+                      }
+                      if (status === "evaluating_finished") {
+                        return "Waiting for consensus";
+                      }
+                      if (isActive) {
+                        return "Waiting for updated timing";
+                      }
+                      return "No remaining time";
+                    })()}
                   </span>
                 </div>
                 {typeof blocksRemaining === "number" &&
@@ -453,6 +474,8 @@ function RoundHeaderInline() {
                       "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 shadow-emerald-500/50",
                     status === "finished" &&
                       "bg-gradient-to-r from-indigo-400 via-purple-400 to-violet-500 shadow-indigo-500/50",
+                    status === "evaluating_finished" &&
+                      "bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 shadow-yellow-500/50",
                     status === "pending" &&
                       "bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 shadow-amber-500/50"
                   )}
@@ -465,6 +488,8 @@ function RoundHeaderInline() {
                       "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)] animate-pulse",
                     status === "finished" &&
                       "bg-indigo-400 shadow-[0_0_25px_rgba(129,140,248,0.6)]",
+                    status === "evaluating_finished" &&
+                      "bg-yellow-400 shadow-[0_0_25px_rgba(234,179,8,0.6)]",
                     status === "pending" &&
                       "bg-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)]"
                   )}
@@ -2109,10 +2134,14 @@ export default function Round() {
           </div>
           <div className="flex-1">
             <Text className="text-base font-black text-white uppercase tracking-wider">
-              Aggregated Metrics
+              {status === "evaluating_finished"
+                ? "Preliminary Results - This Validator"
+                : "Aggregated Metrics"}
             </Text>
             <Text className="text-xs text-white/60 font-semibold">
-              Comprehensive stats across all validators
+              {status === "evaluating_finished"
+                ? "⏳ Awaiting consensus from other validators - results may change after consensus"
+                : "Comprehensive stats across all validators"}
             </Text>
           </div>
         </div>
