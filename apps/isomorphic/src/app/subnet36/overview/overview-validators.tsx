@@ -22,8 +22,21 @@ import {
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
-import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
+import {
+  useValidators,
+  useOverviewMetrics,
+} from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
+
+const DEFAULT_TASK_MESSAGES = new Set([
+  "Awaiting round start",
+  "Validator connected – awaiting task upload",
+  "Distributing tasks to agent runs",
+  "Evaluating miner submissions",
+  "Awaiting next action",
+  "No activity detected recently",
+  "Round completed",
+]);
 
 export default function OverviewValidators() {
   const {
@@ -32,16 +45,15 @@ export default function OverviewValidators() {
     error: validatorsError,
   } = useValidators({ limit: 6 });
   const {
-    data: currentRound,
+    data: metricsData,
     loading: roundLoading,
     error: roundError,
-  } = useCurrentRound();
-  const roundNumber = currentRound?.id ?? null;
-  const isRoundActive =
-    !!currentRound &&
-    (currentRound.current ||
-      currentRound.status === "active" ||
-      currentRound.status === "pending");
+  } = useOverviewMetrics();
+
+  // Always show current round from blockchain (not from DB)
+  const roundNumber = metricsData?.currentRound ?? null;
+  // Current round is always "active" (it's the one in progress)
+  const isRoundActive = true;
 
   const headerTitle = "What's happening on the subnet";
   const headerDescription =
@@ -235,9 +247,10 @@ export default function OverviewValidators() {
                   ? "Not Started"
                   : validator.status;
 
+          const rawCurrentTask = validator.currentTask?.trim() ?? "";
           const showCurrentTask =
-            normalizedStatus === "Evaluating" &&
-            (validator.currentTask?.trim() || "");
+            rawCurrentTask.length > 0 &&
+            !DEFAULT_TASK_MESSAGES.has(rawCurrentTask);
 
           const resolvedRoundNumber =
             typeof validator.roundNumber === "number"
