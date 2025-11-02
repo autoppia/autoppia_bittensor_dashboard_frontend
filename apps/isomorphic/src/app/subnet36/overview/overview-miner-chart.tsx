@@ -350,10 +350,20 @@ export default function MinerChart({
       const winnerUid = data.winnerUid ?? (data as any).winner_uid;
 
       return (
-        <div className="rounded-lg border border-gray-700/50 bg-gray-900/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+        <div
+          style={{
+            backgroundColor: "rgba(17, 24, 39, 0.98)", // gray-900 with high opacity
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+          className="rounded-lg border border-gray-700 px-4 py-3 shadow-2xl"
+        >
           <div className="flex flex-col gap-2">
             {/* Round number */}
-            <p className="text-sm font-semibold text-white border-b border-gray-700 pb-2">
+            <p
+              style={{ color: "#ffffff", borderBottomColor: "#374151" }}
+              className="text-sm font-semibold border-b pb-2"
+            >
               Round {roundNum}
             </p>
 
@@ -361,14 +371,24 @@ export default function MinerChart({
             {winnerName && winnerUid !== null && winnerUid !== undefined && (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Miner:</span>
-                  <span className="text-sm font-medium text-white">
+                  <span style={{ color: "#9ca3af" }} className="text-xs">
+                    Miner:
+                  </span>
+                  <span
+                    style={{ color: "#ffffff" }}
+                    className="text-sm font-medium"
+                  >
                     {winnerName}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">UID:</span>
-                  <span className="text-sm font-medium text-emerald-400">
+                  <span style={{ color: "#9ca3af" }} className="text-xs">
+                    UID:
+                  </span>
+                  <span
+                    style={{ color: "#10b981" }}
+                    className="text-sm font-medium"
+                  >
                     {winnerUid}
                   </span>
                 </div>
@@ -376,9 +396,14 @@ export default function MinerChart({
             )}
 
             {/* Score */}
-            <div className="flex items-center gap-2 pt-2 border-t border-gray-700">
-              <span className="text-xs text-gray-400">Score:</span>
-              <span className="text-lg font-bold text-emerald-400">
+            <div
+              style={{ borderTopColor: "#374151" }}
+              className="flex items-center gap-2 pt-2 border-t"
+            >
+              <span style={{ color: "#9ca3af" }} className="text-xs">
+                Score:
+              </span>
+              <span style={{ color: "#10b981" }} className="text-lg font-bold">
                 {score.toFixed(1)}%
               </span>
             </div>
