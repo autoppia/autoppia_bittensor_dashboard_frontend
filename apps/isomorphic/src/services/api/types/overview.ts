@@ -25,7 +25,14 @@ export interface ValidatorData {
   currentTask: string;
   currentWebsite?: string | null;
   currentUseCase?: string | null;
-  status: 'Sending Tasks' | 'Evaluating' | 'Waiting' | 'Offline' | 'Finished' | 'Starting' | 'Not Started';
+  status:
+    | "Sending Tasks"
+    | "Evaluating"
+    | "Waiting"
+    | "Offline"
+    | "Finished"
+    | "Starting"
+    | "Not Started";
   totalTasks: number;
   weight: number | null;
   trust: number | null;
@@ -54,7 +61,7 @@ export interface OverviewRoundData {
   current: boolean;
   startTime: string;
   endTime?: string;
-  status: 'active' | 'completed' | 'pending';
+  status: "active" | "finished" | "pending" | "evaluating_finished";
   totalTasks: number;
   completedTasks: number;
   averageScore: number;
@@ -155,12 +162,12 @@ export interface ValidatorsQueryParams {
   page?: number;
   limit?: number;
   status?: string;
-  sortBy?: 'weight' | 'trust' | 'totalTasks' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "weight" | "trust" | "totalTasks" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface LeaderboardQueryParams {
-  timeRange?: '7D' | '15D' | '30D' | 'all';
+  timeRange?: "7D" | "15D" | "30D" | "all";
   limit?: number;
   offset?: number;
 }
@@ -168,6 +175,6 @@ export interface LeaderboardQueryParams {
 export interface RoundsQueryParams {
   page?: number;
   limit?: number;
-  status?: 'active' | 'completed' | 'pending';
+  status?: "active" | "finished" | "pending" | "evaluating_finished";
   includeCurrent?: boolean;
 }
