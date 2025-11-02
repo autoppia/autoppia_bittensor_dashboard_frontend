@@ -33,7 +33,7 @@ const DEFAULT_TASK_MESSAGES = new Set([
   "Validator connected – awaiting task upload",
   "Distributing tasks to agent runs",
   "Evaluating miner submissions",
-  "Awaiting next action",
+  "Waiting for consensus",
   "No activity detected recently",
   "Round completed",
 ]);
@@ -344,10 +344,9 @@ export default function OverviewValidators() {
                   <div className="border border-muted rounded-lg p-3">
                     <div className="flex items-center justify-center gap-2 mb-2.5">
                       {(() => {
+                        // Show website/use case whenever they exist, regardless of status
                         const hasLiveMeta =
-                          normalizedStatus === "Evaluating" &&
-                          (validator.currentWebsite ||
-                            validator.currentUseCase);
+                          validator.currentWebsite || validator.currentUseCase;
                         const websiteText =
                           hasLiveMeta && validator.currentWebsite
                             ? validator.currentWebsite
@@ -488,9 +487,9 @@ export default function OverviewValidators() {
                 <div className="border border-muted rounded-lg p-3">
                   <div className="flex items-center justify-center gap-2 mb-2.5">
                     {(() => {
+                      // Show website/use case whenever they exist, regardless of status
                       const hasLiveMeta =
-                        normalizedStatus === "Evaluating" &&
-                        (validator.currentWebsite || validator.currentUseCase);
+                        validator.currentWebsite || validator.currentUseCase;
                       const websiteText =
                         hasLiveMeta && validator.currentWebsite
                           ? validator.currentWebsite
