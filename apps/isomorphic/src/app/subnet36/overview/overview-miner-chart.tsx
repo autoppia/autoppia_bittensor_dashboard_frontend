@@ -130,6 +130,8 @@ export default function MinerChart({
       return [];
     }
 
+    console.log("📊 Raw leaderboard from API:", apiLeaderboard);
+
     return (
       apiLeaderboard
         .map((entry, index) => {
@@ -160,6 +162,9 @@ export default function MinerChart({
             ...entry,
             round: normalizedRound,
             roundLabel: deriveRoundLabel(labelSource, normalizedRound),
+            // Explicitly preserve winner fields (support both camelCase and snake_case)
+            winnerUid: entry.winnerUid ?? (entry as any).winner_uid,
+            winnerName: entry.winnerName ?? (entry as any).winner_name,
           };
         })
         .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
@@ -341,10 +346,17 @@ export default function MinerChart({
       if (!active || !payload || !payload.length) return null;
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
+      console.log("🔍 Tooltip data:", {
+        fullData: data,
+        winnerUid: data.winnerUid,
+        winnerName: data.winnerName,
+        winnerUid_alt: (data as any).winner_uid,
+        winnerName_alt: (data as any).winner_name,
+      });
       const roundNum = data.round;
       const score = data.subnet36;
-      const winnerName = data.winnerName;
-      const winnerUid = data.winnerUid;
+      const winnerName = data.winnerName || (data as any).winner_name;
+      const winnerUid = data.winnerUid ?? (data as any).winner_uid;
 
       return (
         <div className="rounded-lg border border-gray-700 bg-gray-900/95 px-3 py-2 shadow-xl backdrop-blur-sm">
