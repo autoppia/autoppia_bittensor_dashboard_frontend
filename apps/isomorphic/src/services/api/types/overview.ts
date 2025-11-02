@@ -74,6 +74,8 @@ export interface OverviewRoundData {
 export interface LeaderboardData {
   round: number;
   subnet36: number;
+  winnerUid?: number | null;
+  winnerName?: string | null;
   openai_cua?: number | null;
   anthropic_cua?: number | null;
   browser_use?: number | null;

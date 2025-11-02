@@ -10,7 +10,6 @@ import {
 } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import cn from "@core/utils/class-names";
 import { Checkbox, CheckboxGroup } from "rizzui";
@@ -53,7 +52,11 @@ const sotaAgents = [
 ];
 
 type LeaderboardSource = LeaderboardData & Record<string, unknown>;
-type NormalizedLeaderboardDatum = LeaderboardData & { roundLabel: string };
+type NormalizedLeaderboardDatum = LeaderboardData & {
+  roundLabel: string;
+  winnerUid?: number | null;
+  winnerName?: string | null;
+};
 
 const resolveRoundNumber = (value: unknown): number | undefined => {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -332,6 +335,36 @@ export default function MinerChart({
     [roundLabelMap]
   );
 
+  // Custom tooltip to show winner info
+  const CustomLeaderboardTooltip = useCallback(
+    ({ active, payload, label }: any) => {
+      if (!active || !payload || !payload.length) return null;
+
+      const data = payload[0].payload as NormalizedLeaderboardDatum;
+      const roundNum = data.round;
+      const score = data.subnet36;
+      const winnerName = data.winnerName;
+      const winnerUid = data.winnerUid;
+
+      return (
+        <div className="rounded-lg border border-gray-700 bg-gray-900/95 px-3 py-2 shadow-xl backdrop-blur-sm">
+          <p className="mb-1 text-sm font-semibold text-gray-200">
+            Round {roundNum}
+          </p>
+          {winnerName && winnerUid !== null && winnerUid !== undefined && (
+            <p className="mb-1 text-xs text-gray-400">
+              {winnerName} (UID {winnerUid})
+            </p>
+          )}
+          <p className="text-sm font-medium text-green-400">
+            Score: {score.toFixed(1)}%
+          </p>
+        </div>
+      );
+    },
+    []
+  );
+
   function handleFilterBy(option: string) {
     if (filterOptions.includes(option as FilterOption)) {
       setTimeRange(option as FilterOption);
@@ -478,10 +511,7 @@ export default function MinerChart({
                 domain={yAxisDomain}
                 tick={<CustomYAxisTick postfix="%" decimals={0} />}
               />
-              <Tooltip
-                content={<CustomTooltip postfix="%" decimals={1} />}
-                labelFormatter={tooltipLabelFormatter}
-              />
+              <Tooltip content={<CustomLeaderboardTooltip />} />
               <Area
                 type="monotone"
                 dataKey="Score"
