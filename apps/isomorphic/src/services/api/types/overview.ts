@@ -6,6 +6,8 @@
 // ===== OVERVIEW METRICS =====
 export interface OverviewMetrics {
   topScore: number;
+  topMinerUid?: number | null;
+  topMinerName?: string | null;
   totalWebsites: number;
   totalValidators: number;
   totalMiners: number;
