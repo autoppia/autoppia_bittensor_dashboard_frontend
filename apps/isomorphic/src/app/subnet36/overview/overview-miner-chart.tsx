@@ -350,19 +350,38 @@ export default function MinerChart({
       const winnerUid = data.winnerUid ?? (data as any).winner_uid;
 
       return (
-        <div className="rounded-md border border-gray-200/20 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-medium text-gray-500">
+        <div className="rounded-lg border border-gray-700/50 bg-gray-900/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col gap-2">
+            {/* Round number */}
+            <p className="text-sm font-semibold text-white border-b border-gray-700 pb-2">
               Round {roundNum}
             </p>
+
+            {/* Winner info */}
             {winnerName && winnerUid !== null && winnerUid !== undefined && (
-              <p className="text-sm font-semibold text-gray-900">
-                {winnerName} (UID {winnerUid})
-              </p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Miner:</span>
+                  <span className="text-sm font-medium text-white">
+                    {winnerName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">UID:</span>
+                  <span className="text-sm font-medium text-emerald-400">
+                    {winnerUid}
+                  </span>
+                </div>
+              </div>
             )}
-            <p className="text-lg font-bold text-emerald-600">
-              {score.toFixed(1)}%
-            </p>
+
+            {/* Score */}
+            <div className="flex items-center gap-2 pt-2 border-t border-gray-700">
+              <span className="text-xs text-gray-400">Score:</span>
+              <span className="text-lg font-bold text-emerald-400">
+                {score.toFixed(1)}%
+              </span>
+            </div>
           </div>
         </div>
       );
