@@ -130,8 +130,6 @@ export default function MinerChart({
       return [];
     }
 
-    console.log("📊 Raw leaderboard from API:", apiLeaderboard);
-
     return (
       apiLeaderboard
         .map((entry, index) => {
@@ -346,31 +344,26 @@ export default function MinerChart({
       if (!active || !payload || !payload.length) return null;
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
-      console.log("🔍 Tooltip data:", {
-        fullData: data,
-        winnerUid: data.winnerUid,
-        winnerName: data.winnerName,
-        winnerUid_alt: (data as any).winner_uid,
-        winnerName_alt: (data as any).winner_name,
-      });
       const roundNum = data.round;
       const score = data.subnet36;
       const winnerName = data.winnerName || (data as any).winner_name;
       const winnerUid = data.winnerUid ?? (data as any).winner_uid;
 
       return (
-        <div className="rounded-lg border border-gray-700 bg-gray-900/95 px-3 py-2 shadow-xl backdrop-blur-sm">
-          <p className="mb-1 text-sm font-semibold text-gray-200">
-            Round {roundNum}
-          </p>
-          {winnerName && winnerUid !== null && winnerUid !== undefined && (
-            <p className="mb-1 text-xs text-gray-400">
-              {winnerName} (UID {winnerUid})
+        <div className="rounded-md border border-gray-200/20 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-medium text-gray-500">
+              Round {roundNum}
             </p>
-          )}
-          <p className="text-sm font-medium text-green-400">
-            Score: {score.toFixed(1)}%
-          </p>
+            {winnerName && winnerUid !== null && winnerUid !== undefined && (
+              <p className="text-sm font-semibold text-gray-900">
+                {winnerName} (UID {winnerUid})
+              </p>
+            )}
+            <p className="text-lg font-bold text-emerald-600">
+              {score.toFixed(1)}%
+            </p>
+          </div>
         </div>
       );
     },
