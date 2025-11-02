@@ -9,7 +9,6 @@ import {
   useOverviewMetrics,
   useLeaderboard,
 } from "@/services/hooks/useOverview";
-import { websitesData } from "@/data/websites-data";
 
 const metricsData = [
   {
@@ -67,10 +66,6 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   const { data: metrics, loading, error } = useOverviewMetrics();
   const { data: leaderboardData, loading: leaderboardLoading } = useLeaderboard(
     { timeRange: "all" }
-  );
-  const activeWebsitesCount = useMemo(
-    () => websitesData.filter((website) => !website.isComingSoon).length,
-    []
   );
 
   // Calculate actual top score from leaderboard data
@@ -172,7 +167,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-websites",
       title: "Websites",
-      value: metrics?.totalWebsites ?? activeWebsitesCount,
+      value: 13,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
