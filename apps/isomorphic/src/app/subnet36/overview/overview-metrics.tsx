@@ -212,7 +212,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0 h-full",
+        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0",
         className
       )}
     >
@@ -221,7 +221,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
         const metricCard = (
           <div
             className={cn(
-              "rounded-2xl p-4 min-w-0 h-full flex flex-col justify-between",
+              "rounded-2xl p-4 min-w-0 h-[140px] flex flex-col justify-between",
               metric.bgColor
             )}
           >
@@ -257,7 +257,6 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               <div
                 className={cn("text-xs truncate", metric.descriptionClassName)}
               >
-                {metric.id === "score-to-win" && `Round ${latestFinishedRound}`}
                 {metric.id === "total-validators" && "Active validators"}
                 {metric.id === "total-miners" && "Active miners"}
                 {metric.id === "total-websites" && "Active websites"}

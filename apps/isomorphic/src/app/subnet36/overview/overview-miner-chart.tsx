@@ -625,11 +625,6 @@ export default function MinerChart({
             />
           ))}
         </CheckboxGroup>
-        {availableSotaSeries.length === 0 && (
-          <div className="text-xs text-gray-400">
-            Benchmark agent data not available for this range.
-          </div>
-        )}
       </div>
     </WidgetCard>
   );
