@@ -168,8 +168,8 @@ export default function TaskSearch() {
         if (ignore) return;
 
         const data = response.data;
-        setResults(data?.tasks ?? []);
-        setTotal(data?.total ?? 0);
+        setResults(data.tasks);
+        setTotal(data.total);
 
         if (data?.facets) {
           setAvailableWebsites(
