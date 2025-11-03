@@ -230,9 +230,10 @@ function RoundHeaderInline() {
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
 
-  const { data: round } = useRound(roundKey);
-  const { data: progressData } = useRoundProgress(roundKey);
-  const { data: roundsData } = useRounds({
+  const { data: round, loading: roundLoading } = useRound(roundKey);
+  const { data: progressData, loading: progressLoading } =
+    useRoundProgress(roundKey);
+  const { data: roundsData, loading: roundsLoading } = useRounds({
     page: 1,
     limit: 30,
     sortBy: "startTime",
@@ -241,6 +242,8 @@ function RoundHeaderInline() {
   const rawRounds = roundsData?.data?.rounds;
   const rounds = React.useMemo(() => rawRounds ?? [], [rawRounds]);
   const currentRoundFromList = (roundsData?.data as any)?.currentRound;
+
+  const isLoading = roundLoading || progressLoading;
 
   const resolveRoundNumber = (r: any) => r?.roundNumber ?? r?.round ?? r?.id;
   const resolveRoundKey = (r: any, fallbackNumber?: number) =>
@@ -327,6 +330,50 @@ function RoundHeaderInline() {
   const nextNumber = resolveRoundNumber(neighborRounds.next);
   const currentRoundKey = resolveRoundKey(currentRoundFromList);
   const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
+
+  if (isLoading) {
+    return (
+      <section className="mb-10">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-900/40 backdrop-blur-md border border-white/10 p-8 text-white shadow-2xl">
+          <div className="relative space-y-8">
+            <header className="flex flex-wrap items-start justify-between gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-40 md:h-14 md:w-56" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+              </div>
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-28" />
+                  <Skeleton className="h-10 w-28" />
+                </div>
+              </div>
+            </header>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-1 flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-4 w-full rounded-full" />
+                <div className="grid gap-5 sm:grid-cols-3">
+                  <Skeleton className="h-24 rounded-2xl" />
+                  <Skeleton className="h-24 rounded-2xl" />
+                  <Skeleton className="h-24 rounded-2xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-10">
