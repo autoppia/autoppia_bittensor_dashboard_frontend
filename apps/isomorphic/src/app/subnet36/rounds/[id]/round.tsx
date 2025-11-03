@@ -1462,7 +1462,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 w-full h-[300px] md:h-[400px] xl:h-[490px]">
+        <div className="mt-3 w-full h-[360px] md:h-[400px] xl:h-[490px]">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
         <div className="mt-3 flex justify-center gap-6">
@@ -1513,7 +1513,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[300px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[360px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-rose-200">
             <p className="text-xl font-semibold">Failed to load miner scores</p>
             <p className="mt-3 text-base text-white/80">
@@ -1564,7 +1564,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[300px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[360px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-white/70">
             <p className="text-xl font-semibold">No miners found</p>
             <p className="mt-3 text-base">
@@ -1607,7 +1607,7 @@ function RoundMinerScoresInline({
       headerClassName="text-white pb-4"
       titleClassName="text-white"
     >
-      <div className="mt-3 h-[300px] md:h-[400px] xl:h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-3 h-[360px] md:h-[400px] xl:h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
@@ -1640,7 +1640,7 @@ function RoundMinerScoresInline({
                 position: "insideBottom",
                 offset: -5,
                 fill: "#94a3b8",
-                fontSize: 12,
+                fontSize: isSmallScreen ? 10 : 12,
               }}
             />
             <YAxis
