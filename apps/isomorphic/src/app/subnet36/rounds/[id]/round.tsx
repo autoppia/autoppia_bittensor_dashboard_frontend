@@ -1755,17 +1755,17 @@ function RoundTopMinersInline({
   if (loading) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={<Skeleton className="h-6 w-32 bg-white/10" />}
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
             {Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="flex items-center w-full px-4 py-1.5">
@@ -1790,13 +1790,13 @@ function RoundTopMinersInline({
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-red-400">
             <p className="text-lg font-semibold">Failed to load top miners</p>
             <p className="text-sm mt-2">Please try again later</p>
