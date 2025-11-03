@@ -334,23 +334,23 @@ function RoundHeaderInline() {
   if (isLoading) {
     return (
       <section className="mb-10">
-        <div className="rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-900/40 backdrop-blur-md border border-white/10 p-8 text-white shadow-2xl">
+        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl p-8 text-white">
           <div className="relative space-y-8">
             <header className="flex flex-wrap items-start justify-between gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-40 md:h-14 md:w-56" />
-                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-10 w-40 md:h-14 md:w-56 bg-white/10" />
+                  <Skeleton className="h-8 w-24 bg-white/10" />
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                  <Skeleton className="h-5 w-48" />
-                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-5 w-48 bg-white/10" />
+                  <Skeleton className="h-5 w-40 bg-white/10" />
                 </div>
               </div>
               <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2">
-                  <Skeleton className="h-10 w-28" />
-                  <Skeleton className="h-10 w-28" />
+                  <Skeleton className="h-10 w-28 bg-white/10" />
+                  <Skeleton className="h-10 w-28 bg-white/10" />
                 </div>
               </div>
             </header>
@@ -358,14 +358,14 @@ function RoundHeaderInline() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex flex-1 flex-col gap-5">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-5 w-32 bg-white/10" />
+                  <Skeleton className="h-8 w-16 bg-white/10" />
                 </div>
-                <Skeleton className="h-4 w-full rounded-full" />
+                <Skeleton className="h-4 w-full rounded-full bg-white/10" />
                 <div className="grid gap-5 sm:grid-cols-3">
-                  <Skeleton className="h-24 rounded-2xl" />
-                  <Skeleton className="h-24 rounded-2xl" />
-                  <Skeleton className="h-24 rounded-2xl" />
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
                 </div>
               </div>
             </div>
