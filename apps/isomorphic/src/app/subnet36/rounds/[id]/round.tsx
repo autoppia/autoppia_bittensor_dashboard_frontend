@@ -104,7 +104,7 @@ const roundGlassBackgroundClass =
   "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl";
 const roundAccentActive =
   "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
-const roundAccentCompleted =
+const roundAccentFinished =
   "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]";
 const roundAccentPending =
   "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]";
@@ -113,9 +113,11 @@ const chipBase =
   "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
 const chipActive =
   "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
-const chipCompleted =
+const chipFinished =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
+  "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
+const chipWaitingConsensus =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
 const roundNavButton =
   "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
@@ -288,18 +290,31 @@ function RoundHeaderInline() {
     [router, roundKey]
   );
 
-  const status = (round?.status ??
-    (round?.current ? "active" : "completed")) as
+  const status = (round?.status ?? (round?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
+
+  // Debug: Log status to console
+  React.useEffect(() => {
+    console.log("🔍 Round Status Debug:", {
+      roundId: normalizedCurrentNumber,
+      status,
+      rawRoundStatus: round?.status,
+      roundCurrent: round?.current,
+    });
+  }, [status, round?.status, round?.current, normalizedCurrentNumber]);
+
   const isActive = status === "active";
   const statusLabel =
-    status === "completed"
+    status === "finished"
       ? "Finished"
-      : status === "pending"
-        ? "Pending"
-        : "Running";
+      : status === "evaluating_finished"
+        ? "Waiting Consensus"
+        : status === "pending"
+          ? "Pending"
+          : "Running";
 
   const progressPercentageRaw =
     typeof progressData?.progress === "number"
@@ -383,8 +398,8 @@ function RoundHeaderInline() {
           "rounded-3xl p-8 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
-            : status === "completed"
-              ? roundAccentCompleted
+            : status === "finished"
+              ? roundAccentFinished
               : status === "pending"
                 ? roundAccentPending
                 : undefined
@@ -401,7 +416,8 @@ function RoundHeaderInline() {
                   className={cn(
                     chipBase,
                     status === "pending" && chipPending,
-                    status === "completed" && chipCompleted,
+                    status === "finished" && chipFinished,
+                    status === "evaluating_finished" && chipWaitingConsensus,
                     isActive && chipActive
                   )}
                 >
@@ -409,8 +425,10 @@ function RoundHeaderInline() {
                     className={cn(
                       "h-2.5 w-2.5 rounded-full shadow-lg",
                       isActive && "bg-white animate-pulse",
-                      status === "completed" && "bg-white",
-                      status === "pending" && "bg-white"
+                      status === "finished" && "bg-white",
+                      status === "pending" && "bg-white",
+                      status === "evaluating_finished" &&
+                        "bg-white animate-pulse"
                     )}
                   />
                   {statusLabel}
@@ -427,9 +445,30 @@ function RoundHeaderInline() {
                 <div className="flex items-center gap-2">
                   <PiClockDuotone className="h-5 w-5 text-emerald-300" />
                   <span>
-                    {isActive
-                      ? "Waiting for updated timing"
-                      : "No remaining time"}
+                    {(() => {
+                      if (status === "finished") {
+                        return "Round completed";
+                      }
+                      if (
+                        typeof blocksRemaining === "number" &&
+                        blocksRemaining > 0
+                      ) {
+                        const minutes = Math.floor((blocksRemaining * 12) / 60);
+                        const hours = Math.floor(minutes / 60);
+                        if (hours > 0) {
+                          const remainingMinutes = minutes % 60;
+                          return `~${hours}h ${remainingMinutes}m remaining`;
+                        }
+                        return `~${minutes} minutes remaining`;
+                      }
+                      if (status === "evaluating_finished") {
+                        return "Waiting for consensus";
+                      }
+                      if (isActive) {
+                        return "Waiting for updated timing";
+                      }
+                      return "No remaining time";
+                    })()}
                   </span>
                 </div>
                 {typeof blocksRemaining === "number" &&
@@ -496,8 +535,10 @@ function RoundHeaderInline() {
                     "absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg",
                     isActive &&
                       "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 shadow-emerald-500/50",
-                    status === "completed" &&
+                    status === "finished" &&
                       "bg-gradient-to-r from-indigo-400 via-purple-400 to-violet-500 shadow-indigo-500/50",
+                    status === "evaluating_finished" &&
+                      "bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 shadow-yellow-500/50",
                     status === "pending" &&
                       "bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 shadow-amber-500/50"
                   )}
@@ -508,8 +549,10 @@ function RoundHeaderInline() {
                     "absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20",
                     isActive &&
                       "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)] animate-pulse",
-                    status === "completed" &&
+                    status === "finished" &&
                       "bg-indigo-400 shadow-[0_0_25px_rgba(129,140,248,0.6)]",
+                    status === "evaluating_finished" &&
+                      "bg-yellow-400 shadow-[0_0_25px_rgba(234,179,8,0.6)]",
                     status === "pending" &&
                       "bg-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)]"
                   )}
@@ -710,8 +753,10 @@ function RoundHeaderInline() {
 
 function RoundStatsInline({
   selectedValidator,
+  roundStatus,
 }: {
   selectedValidator?: ValidatorPerformance | null;
+  roundStatus?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -789,6 +834,8 @@ function RoundStatsInline({
   const winnerAverageScore =
     statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
 
+  const isPreliminary = roundStatus === "evaluating_finished";
+
   const aggregatedCards = [
     {
       key: "winner",
@@ -797,7 +844,11 @@ function RoundStatsInline({
       uid: topMiner?.uid,
       hotkey: topMiner?.hotkey,
       imageUrl: topMiner?.imageUrl,
-      helper: !topMiner ? "Awaiting validator results" : undefined,
+      helper: !topMiner
+        ? "Awaiting validator results"
+        : isPreliminary
+          ? "Preliminary - from this validator"
+          : undefined,
       icon: PiCrownDuotone,
       gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
       bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
@@ -808,9 +859,13 @@ function RoundStatsInline({
     },
     {
       key: "winnerAverageScore",
-      title: "Winner Average Score",
+      title: isPreliminary
+        ? "Winner Score (Preliminary)"
+        : "Winner Average Score",
       value: `${formatNumber(winnerAverageScore * 100, 1)}%`,
-      helper: "Average score achieved by the winning miner across validators",
+      helper: isPreliminary
+        ? "Score from this validator - may change after consensus"
+        : "Average score achieved by the winning miner across validators",
       icon: PiTrophyDuotone,
       gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
       bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
@@ -1234,15 +1289,16 @@ function RoundMinerScoresInline({
   const roundKey = extractRoundIdentifier(id);
   const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
-    (roundInfo?.current ? "active" : "completed")) as
+    (roundInfo?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
   const accentClass =
     roundStatus === "active"
       ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
+      : roundStatus === "finished"
+        ? roundAccentFinished
         : roundAccentPending;
   const cardClassName = React.useMemo(
     () =>
@@ -1714,15 +1770,16 @@ function RoundTopMinersInline({
   const roundKey = extractRoundIdentifier(id);
   const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
-    (roundInfo?.current ? "active" : "completed")) as
+    (roundInfo?.current ? "active" : "finished")) as
     | "active"
-    | "completed"
-    | "pending";
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
   const accentClass =
     roundStatus === "active"
       ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
+      : roundStatus === "finished"
+        ? roundAccentFinished
         : roundAccentPending;
   const minersQuery = React.useMemo(
     () => ({
@@ -1997,6 +2054,13 @@ export default function Round() {
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
 
+  // Determine round status for conditional rendering
+  const status = (round?.status ?? (round?.current ? "active" : "finished")) as
+    | "active"
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
+
   // Selection state for validator-driven panels
   const [selectedValidator, setSelectedValidator] =
     React.useState<ValidatorPerformance | null>(null);
@@ -2130,17 +2194,14 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
+  // Check if round is starting (404 error)
+  const isRoundStarting = error && !round;
+
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
-      {error && (
-        <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 mb-6 text-rose-200">
-          <p className="text-sm">⚠️ Failed to load round data: {error}</p>
-        </div>
-      )}
-
-      {/* Header */}
+      {/* Header with progress - always show */}
       <RoundHeaderInline />
 
       {/* Recents removed: using Prev/Next navigation in header */}
@@ -2202,39 +2263,41 @@ export default function Round() {
         )}
       </div>
 
-      <RoundValidatorsInline
-        onValidatorSelect={handleValidatorSelect}
-        selectedValidatorId={selectedValidator?.id ?? null}
-        requestedValidatorId={requestedValidatorId}
-      />
+          <RoundValidatorsInline
+            onValidatorSelect={handleValidatorSelect}
+            selectedValidatorId={selectedValidator?.id ?? null}
+            requestedValidatorId={requestedValidatorId}
+          />
 
-      {/* Selected validator metric cards */}
-      {minersLoading || !selectedValidator ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className={cn("h-36", skeletonCard)} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {selectedValidatorCards.map((card) => (
-            <MetricCard key={(card as any).key} card={card} />
-          ))}
-        </div>
+          {/* Selected validator metric cards */}
+          {minersLoading || !selectedValidator ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className={cn("h-36", skeletonCard)} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {selectedValidatorCards.map((card) => (
+                <MetricCard key={(card as any).key} card={card} />
+              ))}
+            </div>
+          )}
+
+          {/* Charts */}
+          <div className="flex flex-col xl:flex-row gap-6 mt-6">
+            <RoundMinerScoresInline
+              className="w-full xl:w-[calc(100%-400px)]"
+              selectedValidator={selectedValidator}
+            />
+            <RoundTopMinersInline
+              className="w-full xl:w-[400px]"
+              selectedValidator={selectedValidator}
+              roundNumber={roundNumberForLinks}
+            />
+          </div>
+        </>
       )}
-
-      {/* Charts */}
-      <div className="flex flex-col xl:flex-row gap-6 mt-6">
-        <RoundMinerScoresInline
-          className="w-full xl:w-[calc(100%-400px)]"
-          selectedValidator={selectedValidator}
-        />
-        <RoundTopMinersInline
-          className="w-full xl:w-[400px]"
-          selectedValidator={selectedValidator}
-          roundNumber={roundNumberForLinks}
-        />
-      </div>
 
       {/* Floating Glossary Button */}
       <button

@@ -9,7 +9,6 @@ import {
   useOverviewMetrics,
   useLeaderboard,
 } from "@/services/hooks/useOverview";
-import { websitesData } from "@/data/websites-data";
 
 const metricsData = [
   {
@@ -67,10 +66,6 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   const { data: metrics, loading, error } = useOverviewMetrics();
   const { data: leaderboardData, loading: leaderboardLoading } = useLeaderboard(
     { timeRange: "all" }
-  );
-  const activeWebsitesCount = useMemo(
-    () => websitesData.filter((website) => !website.isComingSoon).length,
-    []
   );
 
   // Calculate actual top score from leaderboard data
@@ -155,11 +150,19 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   }
 
   // Create dynamic metrics data from API with safe fallbacks
+  const latestFinishedRound = metrics?.metricsRound ?? 0;
+  const topScoreValue = metrics?.topScore ?? calculatedTopScore ?? 0;
+  const topMinerInfo = metrics?.topMinerUid
+    ? `${metrics.topMinerName || "Miner"} (UID ${metrics.topMinerUid})`
+    : null;
+
   const dynamicMetricsData = [
     {
       id: "score-to-win",
       title: "Top Score",
-      value: formatPercentage(calculatedTopScore ?? metrics?.topScore),
+      value: formatPercentage(topScoreValue),
+      topLabel: topMinerInfo,
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -172,7 +175,9 @@ export default function OverviewMetrics({ className }: { className?: string }) {
     {
       id: "total-websites",
       title: "Websites",
-      value: metrics?.totalWebsites ?? activeWebsitesCount,
+      value: 13,
+      topLabel: "Active websites",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -185,6 +190,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "total-validators",
       title: "Validators",
       value: metrics?.totalValidators ?? 0,
+      topLabel: "Active validators",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuShield,
       bgColor:
         "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -197,6 +204,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "total-miners",
       title: "Miners",
       value: metrics?.totalMiners ?? 0,
+      topLabel: "Active miners",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuPickaxe,
       bgColor:
         "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -210,7 +219,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0 h-full",
+        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0",
         className
       )}
     >
@@ -219,11 +228,11 @@ export default function OverviewMetrics({ className }: { className?: string }) {
         const metricCard = (
           <div
             className={cn(
-              "rounded-2xl p-4 min-w-0 h-full flex flex-col justify-between",
+              "rounded-2xl p-4 min-w-0 h-[140px] flex flex-col",
               metric.bgColor
             )}
           >
-            <div className="flex space-x-4 mb-2 min-w-0">
+            <div className="flex space-x-4 min-w-0 flex-1">
               <div
                 className={cn(
                   "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg flex-shrink-0",
@@ -232,7 +241,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
               >
                 <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <h3
                   className={cn(
                     "text-xs font-medium uppercase tracking-wide mb-1 truncate",
@@ -246,15 +255,27 @@ export default function OverviewMetrics({ className }: { className?: string }) {
                 </div>
               </div>
             </div>
-            <div className="text-center min-w-0">
-              <div
-                className={cn("text-xs truncate", metric.descriptionClassName)}
-              >
-                {metric.id === "score-to-win" && "Current round"}
-                {metric.id === "total-validators" && "Active validators"}
-                {metric.id === "total-miners" && "Active miners"}
-                {metric.id === "total-websites" && "Active websites"}
-              </div>
+            <div className="mt-3 pt-3 border-t border-white/10 min-w-0 space-y-1">
+              {(metric as any).topLabel && (
+                <div
+                  className={cn(
+                    "text-xs text-center truncate font-bold",
+                    metric.descriptionClassName
+                  )}
+                >
+                  {(metric as any).topLabel}
+                </div>
+              )}
+              {(metric as any).bottomLabel && (
+                <div
+                  className={cn(
+                    "text-[10px] text-center truncate opacity-70",
+                    metric.descriptionClassName
+                  )}
+                >
+                  {(metric as any).bottomLabel}
+                </div>
+              )}
             </div>
           </div>
         );
