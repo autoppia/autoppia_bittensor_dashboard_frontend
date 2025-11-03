@@ -161,8 +161,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "score-to-win",
       title: "Top Score",
       value: formatPercentage(topScoreValue),
-      bottomLabel: topMinerInfo,
-      extraInfo: `Round ${latestFinishedRound}`,
+      topLabel: topMinerInfo,
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -176,7 +176,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "total-websites",
       title: "Websites",
       value: 13,
-      extraInfo: "15 use cases",
+      topLabel: "Active websites",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -189,9 +190,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "total-validators",
       title: "Validators",
       value: metrics?.totalValidators ?? 0,
-      extraInfo: metrics?.currentRound
-        ? `Round ${metrics.currentRound}`
-        : "Current round",
+      topLabel: "Active validators",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuShield,
       bgColor:
         "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -204,7 +204,8 @@ export default function OverviewMetrics({ className }: { className?: string }) {
       id: "total-miners",
       title: "Miners",
       value: metrics?.totalMiners ?? 0,
-      extraInfo: "Competing now",
+      topLabel: "Active miners",
+      bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuPickaxe,
       bgColor:
         "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -254,55 +255,25 @@ export default function OverviewMetrics({ className }: { className?: string }) {
                 </div>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-white/10 min-w-0 space-y-0.5">
-              {metric.id === "score-to-win" && metric.bottomLabel && (
+            <div className="mt-3 pt-3 border-t border-white/10 min-w-0 space-y-1">
+              {(metric as any).topLabel && (
                 <div
                   className={cn(
-                    "text-xs text-center truncate font-semibold",
+                    "text-xs text-center truncate font-bold",
                     metric.descriptionClassName
                   )}
                 >
-                  {metric.bottomLabel}
+                  {(metric as any).topLabel}
                 </div>
               )}
-              {(metric as any).extraInfo && (
+              {(metric as any).bottomLabel && (
                 <div
                   className={cn(
-                    "text-[10px] text-center truncate opacity-60",
+                    "text-[10px] text-center truncate opacity-70",
                     metric.descriptionClassName
                   )}
                 >
-                  {(metric as any).extraInfo}
-                </div>
-              )}
-              {metric.id === "total-validators" && !metric.bottomLabel && (
-                <div
-                  className={cn(
-                    "text-xs text-center truncate",
-                    metric.descriptionClassName
-                  )}
-                >
-                  Active validators
-                </div>
-              )}
-              {metric.id === "total-miners" && !metric.bottomLabel && (
-                <div
-                  className={cn(
-                    "text-xs text-center truncate",
-                    metric.descriptionClassName
-                  )}
-                >
-                  Active miners
-                </div>
-              )}
-              {metric.id === "total-websites" && !metric.bottomLabel && (
-                <div
-                  className={cn(
-                    "text-xs text-center truncate",
-                    metric.descriptionClassName
-                  )}
-                >
-                  Active websites
+                  {(metric as any).bottomLabel}
                 </div>
               )}
             </div>
