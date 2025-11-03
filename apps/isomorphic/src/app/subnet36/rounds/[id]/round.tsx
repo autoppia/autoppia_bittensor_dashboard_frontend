@@ -2263,41 +2263,39 @@ export default function Round() {
         )}
       </div>
 
-          <RoundValidatorsInline
-            onValidatorSelect={handleValidatorSelect}
-            selectedValidatorId={selectedValidator?.id ?? null}
-            requestedValidatorId={requestedValidatorId}
-          />
+      <RoundValidatorsInline
+        onValidatorSelect={handleValidatorSelect}
+        selectedValidatorId={selectedValidator?.id ?? null}
+        requestedValidatorId={requestedValidatorId}
+      />
 
-          {/* Selected validator metric cards */}
-          {minersLoading || !selectedValidator ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-              {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className={cn("h-36", skeletonCard)} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-              {selectedValidatorCards.map((card) => (
-                <MetricCard key={(card as any).key} card={card} />
-              ))}
-            </div>
-          )}
-
-          {/* Charts */}
-          <div className="flex flex-col xl:flex-row gap-6 mt-6">
-            <RoundMinerScoresInline
-              className="w-full xl:w-[calc(100%-400px)]"
-              selectedValidator={selectedValidator}
-            />
-            <RoundTopMinersInline
-              className="w-full xl:w-[400px]"
-              selectedValidator={selectedValidator}
-              roundNumber={roundNumberForLinks}
-            />
-          </div>
-        </>
+      {/* Selected validator metric cards */}
+      {minersLoading || !selectedValidator ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className={cn("h-36", skeletonCard)} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+          {selectedValidatorCards.map((card) => (
+            <MetricCard key={(card as any).key} card={card} />
+          ))}
+        </div>
       )}
+
+      {/* Charts */}
+      <div className="flex flex-col xl:flex-row gap-6 mt-6">
+        <RoundMinerScoresInline
+          className="w-full xl:w-[calc(100%-400px)]"
+          selectedValidator={selectedValidator}
+        />
+        <RoundTopMinersInline
+          className="w-full xl:w-[400px]"
+          selectedValidator={selectedValidator}
+          roundNumber={roundNumberForLinks}
+        />
+      </div>
 
       {/* Floating Glossary Button */}
       <button
