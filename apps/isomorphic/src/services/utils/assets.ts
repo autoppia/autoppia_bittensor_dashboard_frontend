@@ -114,6 +114,14 @@ const rewriteToLocalAsset = (value: string): string => {
     return value;
   }
 
+  // S3 URLs should be returned as-is (not rewritten to local paths)
+  if (
+    value.includes("s3.amazonaws.com") ||
+    value.includes("s3.eu-west-1.amazonaws.com")
+  ) {
+    return value;
+  }
+
   try {
     const baseUrl = new URL(DEFAULT_ASSET_BASE);
     const candidateUrl = new URL(value);
