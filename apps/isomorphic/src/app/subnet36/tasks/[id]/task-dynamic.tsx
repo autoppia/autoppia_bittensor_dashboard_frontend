@@ -782,19 +782,16 @@ function TaskDetailsDynamic({
                   />
                   <RunStatCard
                     label="Successful"
-                    value={String(agentRunInfo.completedTasks ?? "—")}
+                    value={String(
+                      (details as any)?.performance?.successfulActions ?? "—"
+                    )}
                     color="emerald"
                     Icon={PiCheckCircle}
                   />
                   <RunStatCard
                     label="Failed"
                     value={String(
-                      agentRunInfo.failedTasks ??
-                        Math.max(
-                          (agentRunInfo.taskCount ?? 0) -
-                            (agentRunInfo.completedTasks ?? 0),
-                          0
-                        )
+                      (details as any)?.performance?.failedActions ?? "—"
                     )}
                     color="rose"
                     Icon={PiXCircle}
@@ -836,19 +833,16 @@ function TaskDetailsDynamic({
                 <div className="grid grid-cols-2 gap-4 justify-end">
                   <RunStatCard
                     label="Successful"
-                    value={String(agentRunInfo.completedTasks ?? "—")}
+                    value={String(
+                      (details as any)?.performance?.successfulActions ?? "—"
+                    )}
                     color="emerald"
                     Icon={PiCheckCircle}
                   />
                   <RunStatCard
                     label="Failed"
                     value={String(
-                      agentRunInfo.failedTasks ??
-                        Math.max(
-                          (agentRunInfo.taskCount ?? 0) -
-                            (agentRunInfo.completedTasks ?? 0),
-                          0
-                        )
+                      (details as any)?.performance?.failedActions ?? "—"
                     )}
                     color="rose"
                     Icon={PiXCircle}
