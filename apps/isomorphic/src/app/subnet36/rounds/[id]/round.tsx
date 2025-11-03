@@ -1202,7 +1202,7 @@ function RoundMinerScoresInline({
       cn(
         tallCardClass,
         accentClass,
-        "relative overflow-hidden group h-[650px] px-6 py-4",
+        "relative overflow-hidden group h-[450px] md:h-[550px] xl:h-[650px] px-6 py-4",
         className
       ),
     [accentClass, className]
@@ -1293,8 +1293,8 @@ function RoundMinerScoresInline({
     "(min-width: 768px) and (max-width: 1023px)",
     false
   );
-  const barSize = isSmallScreen ? 16 : isMediumScreen ? 22 : 25;
-  const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
+  const barSize = isSmallScreen ? 14 : isMediumScreen ? 20 : 25;
+  const minWidth = isSmallScreen ? 480 : isMediumScreen ? 640 : 840;
   const chartSource = expandedMinersData?.data ?? minersData?.data;
 
   const chartData = React.useMemo(() => {
@@ -1415,7 +1415,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 w-full h-[490px]">
+        <div className="mt-3 w-full h-[300px] md:h-[400px] xl:h-[490px]">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
         <div className="mt-3 flex justify-center gap-6">
@@ -1466,7 +1466,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[300px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-rose-200">
             <p className="text-xl font-semibold">Failed to load miner scores</p>
             <p className="mt-3 text-base text-white/80">
@@ -1517,7 +1517,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[300px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-white/70">
             <p className="text-xl font-semibold">No miners found</p>
             <p className="mt-3 text-base">
@@ -1560,7 +1560,7 @@ function RoundMinerScoresInline({
       headerClassName="text-white pb-4"
       titleClassName="text-white"
     >
-      <div className="mt-3 h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-3 h-[300px] md:h-[400px] xl:h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
