@@ -151,81 +151,6 @@ export default function TaskSearch() {
   const headerCount = total || results.length;
 
   useEffect(() => {
-    let ignore = false;
-
-    const loadFacets = async () => {
-      try {
-        const response = await tasksService.searchTasks({ limit: 1 });
-        if (ignore) return;
-        const facets = response.data?.facets;
-        if (facets) {
-          setAvailableWebsites(facets.websites.map((item) => item.name).sort());
-          setAvailableUseCases(facets.useCases.map((item) => item.name).sort());
-        }
-      } catch (error) {
-        // ignore metadata errors – filters will populate after first search
-      }
-    };
-
-    loadFacets();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  // Auto-load tasks on page load
-  useEffect(() => {
-    let ignore = false;
-
-    const loadInitialTasks = async () => {
-      setIsSearching(true);
-      setSearchError(null);
-
-      try {
-        const response = await tasksService.searchTasks({
-          page: currentPage,
-          limit: currentLimit,
-        });
-
-        if (ignore) return;
-
-        const data = response.data;
-        setResults(data?.tasks ?? []);
-        setTotal(data?.total ?? 0);
-        setHasSearched(true);
-
-        if (data?.facets) {
-          setAvailableWebsites(
-            data.facets.websites.map((item) => item.name).sort()
-          );
-          setAvailableUseCases(
-            data.facets.useCases.map((item) => item.name).sort()
-          );
-        }
-      } catch (error) {
-        if (!ignore) {
-          setResults([]);
-          setTotal(0);
-          setSearchError(
-            error instanceof Error ? error.message : "Failed to load tasks"
-          );
-        }
-      } finally {
-        if (!ignore) {
-          setIsSearching(false);
-        }
-      }
-    };
-
-    loadInitialTasks();
-
-    return () => {
-      ignore = true;
-    };
-  }, [currentPage, currentLimit]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         websiteDropdownRef.current &&
@@ -644,46 +569,21 @@ export default function TaskSearch() {
         </div>
       </div>
       {hasSearched && isSearching && (
-        <div className="mt-6 relative z-0">
-          <div className="text-center mb-6">
-            <div className="h-7 w-48 mx-auto rounded-full bg-purple-500/20 animate-pulse" />
-            <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={`task-skeleton-${index}`}
-                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
-              >
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-500/30" />
-                    <div className="space-y-2">
-                      <div className="h-3 w-24 rounded-full bg-purple-500/30" />
-                      <div className="h-2.5 w-32 rounded-full bg-purple-500/20" />
-                    </div>
-                  </div>
-                  <div className="h-6 w-28 rounded-full bg-purple-500/20" />
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                  <div className="h-6 w-24 rounded-full bg-blue-500/20" />
-                  <div className="h-5 w-12 rounded-full bg-emerald-500/30" />
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
-                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
-                  <div className="h-3 w-5/6 rounded-full bg-purple-500/15" />
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
-                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
-                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
-                </div>
+        <div className="mt-6 text-center relative z-0">
+          <div className="relative bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-violet-600/5 border-2 border-purple-500/40 rounded-2xl p-8 shadow-lg backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-pink-900/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-900/10 via-transparent to-indigo-900/10"></div>
+            <div className="relative">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl shadow-lg mx-auto mb-4">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </div>
-            ))}
+              <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2">
+                LOADING TASKS
+              </h3>
+              <p className="text-purple-200 text-sm">
+                Fetching tasks from the validator network...
+              </p>
+            </div>
           </div>
         </div>
       )}
