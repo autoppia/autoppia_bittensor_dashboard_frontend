@@ -76,7 +76,7 @@ export default function TaskPersonasDynamic() {
     personas.validator.image && personas.validator.image.trim()
       ? resolveAssetUrl(personas.validator.image, validatorDefaultImage)
       : validatorDefaultImage;
-  const agentDefaultImage = resolveAssetUrl("/images/autoppia-logo.png");
+  const agentDefaultImage = resolveAssetUrl("/miners/0.svg");
   const agentImage =
     personas.agent.image && personas.agent.image.trim()
       ? resolveAssetUrl(personas.agent.image, agentDefaultImage)
