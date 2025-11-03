@@ -746,8 +746,8 @@ export default function TaskSearch() {
               );
 
               const minerImageSrc = resolveAssetUrl(
-                (task as any).minerImage || relationships?.miner?.image,
-                "/miners/0.svg"
+                relationships?.miner?.image,
+                "/miners/30.svg "
               );
 
               const roundNumber =
