@@ -165,7 +165,7 @@ function buildDetailDataFromStats(
           useCaseId: uc.useCase || idx,
           name: uc.useCase || `Use Case ${idx + 1}`,
           successRate:
-            typeof uc.averageScore === "number" ? uc.averageScore : 0,
+            typeof uc.averageScore === "number" ? uc.averageScore * 100 : 0,
           total: uc.tasks || 0,
           successCount: uc.successful || 0,
           avgSolutionTime: uc.averageDuration || 0,
@@ -177,7 +177,8 @@ function buildDetailDataFromStats(
         useCases: websiteUseCases,
         results: websiteResults,
         overall: {
-          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
+          successRate:
+            typeof w.averageScore === "number" ? w.averageScore * 100 : 0,
           total: w.tasks || 0,
           successCount: w.successful || 0,
           avgSolutionTime:
@@ -779,9 +780,16 @@ function AgentRunDetail({
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
       ? (() => {
+          console.log("🔍 Filtering by website:", selectedWebsite);
+          console.log(
+            "📊 Available websites:",
+            agentDetailsData.websites.map((w) => w.name)
+          );
           const selectedWeb = agentDetailsData.websites.find(
             (web) => web.name === selectedWebsite
           );
+          console.log("✅ Found website:", selectedWeb);
+          console.log("📋 Results:", selectedWeb?.results);
           return (
             selectedWeb?.results.map((result, idx) => ({
               website: formatUseCaseName(
@@ -1177,10 +1185,17 @@ function AgentRunSummary({
 
   const displayData = (() => {
     if (selectedWebsite) {
+      console.log("🎯 Summary: Filtering by website:", selectedWebsite);
+      console.log(
+        "🏢 Summary: Available websites:",
+        agentData.websites.map((w) => w.name)
+      );
       const selectedWeb = agentData.websites.find(
         (w) => w.name === selectedWebsite
       );
-      if (!selectedWeb)
+      console.log("✨ Summary: Found website:", selectedWeb);
+      if (!selectedWeb) {
+        console.warn("⚠️ Summary: Website not found!");
         return [] as {
           label: string;
           value: number;
@@ -1188,6 +1203,8 @@ function AgentRunSummary({
           successCount: number;
           avgSolutionTime: number;
         }[];
+      }
+      console.log("📋 Summary: Results:", selectedWeb.results);
       return selectedWeb.results.map((r) => ({
         label: formatUseCaseName(
           selectedWeb.useCases.find(
