@@ -232,9 +232,10 @@ function RoundHeaderInline() {
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
 
-  const { data: round, error: roundError } = useRound(roundKey);
-  const { data: progressData } = useRoundProgress(roundKey);
-  const { data: roundsData } = useRounds({
+  const { data: round, loading: roundLoading } = useRound(roundKey);
+  const { data: progressData, loading: progressLoading } =
+    useRoundProgress(roundKey);
+  const { data: roundsData, loading: roundsLoading } = useRounds({
     page: 1,
     limit: 30,
     sortBy: "startTime",
@@ -244,20 +245,7 @@ function RoundHeaderInline() {
   const rounds = React.useMemo(() => rawRounds ?? [], [rawRounds]);
   const currentRoundFromList = (roundsData?.data as any)?.currentRound;
 
-  // Auto-redirect to latest round if current round doesn't exist (404)
-  React.useEffect(() => {
-    if (roundError && rounds.length > 0) {
-      const latestRound = rounds[0];
-      const latestRoundNumber =
-        latestRound?.roundNumber ?? latestRound?.round ?? latestRound?.id;
-      if (latestRoundNumber && latestRoundNumber !== roundNumber) {
-        console.warn(
-          `⚠️ Round ${roundNumber} not found (404) - redirecting to latest round: ${latestRoundNumber}`
-        );
-        router.replace(`/subnet36/rounds/round_${latestRoundNumber}`);
-      }
-    }
-  }, [roundError, rounds, roundNumber, router]);
+  const isLoading = roundLoading || progressLoading;
 
   const resolveRoundNumber = (r: any) => r?.roundNumber ?? r?.round ?? r?.id;
   const resolveRoundKey = (r: any, fallbackNumber?: number) =>
@@ -357,6 +345,50 @@ function RoundHeaderInline() {
   const nextNumber = resolveRoundNumber(neighborRounds.next);
   const currentRoundKey = resolveRoundKey(currentRoundFromList);
   const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
+
+  if (isLoading) {
+    return (
+      <section className="mb-10">
+        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl p-8 text-white">
+          <div className="relative space-y-8">
+            <header className="flex flex-wrap items-start justify-between gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-40 md:h-14 md:w-56 bg-white/10" />
+                  <Skeleton className="h-8 w-24 bg-white/10" />
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Skeleton className="h-5 w-48 bg-white/10" />
+                  <Skeleton className="h-5 w-40 bg-white/10" />
+                </div>
+              </div>
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-28 bg-white/10" />
+                  <Skeleton className="h-10 w-28 bg-white/10" />
+                </div>
+              </div>
+            </header>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-1 flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-32 bg-white/10" />
+                  <Skeleton className="h-8 w-16 bg-white/10" />
+                </div>
+                <Skeleton className="h-4 w-full rounded-full bg-white/10" />
+                <div className="grid gap-5 sm:grid-cols-3">
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
+                  <Skeleton className="h-24 rounded-2xl bg-white/10" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-10">
@@ -1273,7 +1305,7 @@ function RoundMinerScoresInline({
       cn(
         tallCardClass,
         accentClass,
-        "relative overflow-hidden group h-[650px] px-6 py-4",
+        "relative overflow-hidden group h-[450px] md:h-[550px] xl:h-[650px] px-6 py-4",
         className
       ),
     [accentClass, className]
@@ -1364,8 +1396,8 @@ function RoundMinerScoresInline({
     "(min-width: 768px) and (max-width: 1023px)",
     false
   );
-  const barSize = isSmallScreen ? 16 : isMediumScreen ? 22 : 25;
-  const minWidth = isSmallScreen ? 560 : isMediumScreen ? 640 : 840;
+  const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
+  const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
   const chartSource = expandedMinersData?.data ?? minersData?.data;
 
   const chartData = React.useMemo(() => {
@@ -1486,7 +1518,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 w-full h-[490px]">
+        <div className="mt-3 w-full h-[360px] md:h-[400px] xl:h-[490px]">
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
         <div className="mt-3 flex justify-center gap-6">
@@ -1537,7 +1569,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[360px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-rose-200">
             <p className="text-xl font-semibold">Failed to load miner scores</p>
             <p className="mt-3 text-base text-white/80">
@@ -1588,7 +1620,7 @@ function RoundMinerScoresInline({
         headerClassName="text-white pb-4"
         titleClassName="text-white"
       >
-        <div className="mt-3 flex h-[490px] w-full items-center justify-center">
+        <div className="mt-3 flex h-[360px] md:h-[400px] xl:h-[490px] w-full items-center justify-center">
           <div className="text-center text-white/70">
             <p className="text-xl font-semibold">No miners found</p>
             <p className="mt-3 text-base">
@@ -1605,9 +1637,9 @@ function RoundMinerScoresInline({
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+            <div className="flex h-8 w-8 md:h-10 md:w-10 xl:h-12 xl:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
               <svg
-                className="h-6 w-6 text-white"
+                className="h-4 w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -1620,7 +1652,7 @@ function RoundMinerScoresInline({
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold">
+            <span className="text-md sm:text-2xl font-bold">
               Miner Scores
               {selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}
             </span>
@@ -1631,7 +1663,7 @@ function RoundMinerScoresInline({
       headerClassName="text-white pb-4"
       titleClassName="text-white"
     >
-      <div className="mt-3 h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
+      <div className="mt-3 h-[360px] md:h-[400px] xl:h-[490px] w-full custom-scrollbar overflow-x-auto scroll-smooth">
         <ResponsiveContainer width="100%" height="100%" minWidth={minWidth}>
           <ComposedChart
             data={chartData}
@@ -1664,7 +1696,7 @@ function RoundMinerScoresInline({
                 position: "insideBottom",
                 offset: -5,
                 fill: "#94a3b8",
-                fontSize: 12,
+                fontSize: isSmallScreen ? 10 : 12,
               }}
             />
             <YAxis
@@ -1780,17 +1812,17 @@ function RoundTopMinersInline({
   if (loading) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={<Skeleton className="h-6 w-32 bg-white/10" />}
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
             {Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="flex items-center w-full px-4 py-1.5">
@@ -1815,13 +1847,13 @@ function RoundTopMinersInline({
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-red-400">
             <p className="text-lg font-semibold">Failed to load top miners</p>
             <p className="text-sm mt-2">Please try again later</p>
@@ -1838,13 +1870,13 @@ function RoundTopMinersInline({
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-gray-300">
             <p className="text-lg font-semibold">No miners ranked yet</p>
             <p className="text-sm mt-2">
@@ -1864,13 +1896,13 @@ function RoundTopMinersInline({
       className={cn(
         tallCardClass,
         accentClass,
-        "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+        "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
         className
       )}
       headerClassName="px-3 pb-2"
       titleClassName="text-white text-xl font-bold"
     >
-      <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
+      <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner: any, index: number) => {
             const agentHref =
@@ -2054,6 +2086,9 @@ export default function Round() {
   const roundLabel = roundNumberForLinks ?? roundKey;
 
   const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
+  const { loading: statsLoading } = useRoundStatistics(roundKey);
+  const { loading: validatorsLoading } = useRoundValidators(roundKey);
+
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
     return topMiners[0] ?? null;
@@ -2169,100 +2204,64 @@ export default function Round() {
       {/* Header with progress - always show */}
       <RoundHeaderInline />
 
-      {/* If round is starting, show friendly message */}
-      {isRoundStarting && (
-        <div className="mt-10 mb-6">
-          <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-yellow-500/10 p-12 text-center backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-2xl">
-                <svg
-                  className="h-10 w-10 text-white animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-2xl font-bold text-amber-400">
-                  Round is Starting...
-                </h3>
-                <p className="text-white/80 text-lg max-w-xl mx-auto">
-                  The validator is uploading data for this round.
-                  <br />
-                  This usually takes 20-30 seconds.
-                </p>
-                <p className="text-white/60 text-sm">
-                  Please wait a moment and refresh the page.
-                </p>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                🔄 Refresh Page
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Recents removed: using Prev/Next navigation in header */}
 
-      {/* Only show content if round data is available */}
-      {!isRoundStarting && (
-        <>
-          {/* Aggregated Metrics */}
-          <div className="mt-10 mb-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-                <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
-              </div>
-              <div className="flex-1">
-                <Text className="text-base font-black text-white uppercase tracking-wider">
-                  {status === "evaluating_finished"
-                    ? "Preliminary Results - This Validator"
-                    : "Aggregated Metrics"}
-                </Text>
-                <Text className="text-xs text-white/60 font-semibold">
-                  {status === "evaluating_finished"
-                    ? "⏳ Awaiting consensus from other validators - results may change after consensus"
-                    : "Comprehensive stats across all validators"}
-                </Text>
-              </div>
-            </div>
-            <RoundStatsInline
-              selectedValidator={selectedValidator}
-              roundStatus={status}
-            />
-          </div>
+      {/* Round Progress removed: already shown in main header card */}
 
-          {/* Validators selector */}
-          <div className="mt-10 mb-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-                <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-              </div>
-              <div className="flex-1">
-                <Text className="text-base font-black text-white uppercase tracking-wider">
-                  Multiple Validators
-                </Text>
-                <Text className="text-xs text-white/60 font-semibold">
-                  Select a validator to view detailed performance metrics
-                </Text>
-              </div>
+      {/* Aggregated Metrics */}
+      <div className="mt-10 mb-6">
+        {statsLoading || minersLoading ? (
+          <div className="flex items-center gap-4 mb-5">
+            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+              <Skeleton className="h-3 w-64 bg-white/10" />
             </div>
           </div>
+        ) : (
+          <div className="flex items-center gap-4 mb-5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+              <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="flex-1">
+              <Text className="text-base font-black text-white uppercase tracking-wider">
+                Aggregated Metrics
+              </Text>
+              <Text className="text-xs text-white/60 font-semibold">
+                Comprehensive stats across all validators
+              </Text>
+            </div>
+          </div>
+        )}
+        <RoundStatsInline selectedValidator={selectedValidator} />
+      </div>
+
+      {/* Validators selector */}
+      <div className="mt-10 mb-6">
+        {validatorsLoading ? (
+          <div className="flex items-center gap-4 mb-5">
+            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+              <Skeleton className="h-3 w-72 bg-white/10" />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 mb-5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+              <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+            </div>
+            <div className="flex-1">
+              <Text className="text-base font-black text-white uppercase tracking-wider">
+                Multiple Validators
+              </Text>
+              <Text className="text-xs text-white/60 font-semibold">
+                Select a validator to view detailed performance metrics
+              </Text>
+            </div>
+          </div>
+        )}
+      </div>
 
           <RoundValidatorsInline
             onValidatorSelect={handleValidatorSelect}
