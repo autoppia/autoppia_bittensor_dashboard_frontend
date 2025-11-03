@@ -333,16 +333,18 @@ function TaskDetailsDynamic({
   const HIGHLIGHT_COLOR = "#FDF5E6";
 
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
-  const validatorImage = validatorInfo?.image
-    ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
-    : validatorDefaultImage;
+  const validatorImage =
+    validatorInfo?.image && validatorInfo.image.trim()
+      ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
+      : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
     minerInfo?.isSota ? "/validators/Other.png" : "/images/autoppia-logo.png"
   );
-  const minerImage = minerInfo?.image
-    ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
-    : minerDefaultImage;
+  const minerImage =
+    minerInfo?.image && minerInfo.image.trim()
+      ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
+      : minerDefaultImage;
 
   // Display helpers for UID (ensure non-negative & string-safe)
   const displayValidatorUid = (() => {
