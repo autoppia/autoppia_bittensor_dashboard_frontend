@@ -150,6 +150,57 @@ export default function TaskSearch() {
 
   const headerCount = total || results.length;
 
+  // Auto-load tasks on page load
+  useEffect(() => {
+    let ignore = false;
+
+    const loadInitialTasks = async () => {
+      setHasSearched(true);
+      setIsSearching(true);
+      setSearchError(null);
+
+      try {
+        const response = await tasksService.searchTasks({
+          page: currentPage,
+          limit: currentLimit,
+        });
+
+        if (ignore) return;
+
+        const data = response.data;
+        setResults(data?.tasks ?? []);
+        setTotal(data?.total ?? 0);
+
+        if (data?.facets) {
+          setAvailableWebsites(
+            data.facets.websites.map((item) => item.name).sort()
+          );
+          setAvailableUseCases(
+            data.facets.useCases.map((item) => item.name).sort()
+          );
+        }
+      } catch (error) {
+        if (!ignore) {
+          setResults([]);
+          setTotal(0);
+          setSearchError(
+            error instanceof Error ? error.message : "Failed to load tasks"
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    loadInitialTasks();
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentPage, currentLimit]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
