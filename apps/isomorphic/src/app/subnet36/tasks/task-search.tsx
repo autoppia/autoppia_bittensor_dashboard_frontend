@@ -747,7 +747,7 @@ export default function TaskSearch() {
 
               const minerImageSrc = resolveAssetUrl(
                 relationships?.miner?.image,
-                "/images/autoppia-logo.png"
+                "/miners/30.svg "
               );
 
               const roundNumber =
