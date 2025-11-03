@@ -61,7 +61,7 @@ export default function OverviewValidators() {
 
   const statusColorClasses: Record<string, string> = {
     "Sending Tasks": "bg-blue-500/20 text-blue-500",
-    Evaluating: "bg-emerald-500/20 text-emerald-500",
+    Evaluating: "bg-amber-500/20 text-amber-400",
     Waiting: "bg-purple-500/20 text-purple-500",
     Finished: "bg-emerald-600/15 text-emerald-600",
     "Not Started": "bg-slate-500/20 text-slate-200",
