@@ -44,7 +44,6 @@ const formatLabel = (value?: string) => {
     .join(" ");
 };
 
-
 const formatPercent = (value?: number | null) => {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return "0%";
@@ -160,7 +159,13 @@ type ContextCardProps = {
   header?: ReactNode; // override header content
 };
 
-function ContextCard({ title, Icon, gradient, children, header }: ContextCardProps) {
+function ContextCard({
+  title,
+  Icon,
+  gradient,
+  children,
+  header,
+}: ContextCardProps) {
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 text-white shadow-2xl backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20">
       <div className="relative flex flex-col gap-4">
@@ -184,7 +189,8 @@ function ContextCard({ title, Icon, gradient, children, header }: ContextCardPro
 
 const getStatusStyles = (status?: string) => {
   const base = {
-    gradient: "bg-gradient-to-br from-slate-900/50 via-slate-900/60 to-slate-950/80",
+    gradient:
+      "bg-gradient-to-br from-slate-900/50 via-slate-900/60 to-slate-950/80",
     iconWrapper: "bg-slate-900/60 border-slate-800/60",
     valueClassName: "text-slate-200",
   };
@@ -197,7 +203,8 @@ const getStatusStyles = (status?: string) => {
 
   if (normalized.includes("success") || normalized.includes("complete")) {
     return {
-      gradient: "bg-gradient-to-br from-emerald-500/12 via-slate-900/55 to-slate-950/80",
+      gradient:
+        "bg-gradient-to-br from-emerald-500/12 via-slate-900/55 to-slate-950/80",
       iconWrapper: "bg-emerald-500/15 border-emerald-400/30",
       valueClassName: "text-emerald-100",
     };
@@ -205,7 +212,8 @@ const getStatusStyles = (status?: string) => {
 
   if (normalized.includes("running") || normalized.includes("pending")) {
     return {
-      gradient: "bg-gradient-to-br from-sky-500/12 via-slate-900/55 to-slate-950/80",
+      gradient:
+        "bg-gradient-to-br from-sky-500/12 via-slate-900/55 to-slate-950/80",
       iconWrapper: "bg-sky-500/15 border-sky-400/30",
       valueClassName: "text-blue-100",
     };
@@ -213,7 +221,8 @@ const getStatusStyles = (status?: string) => {
 
   if (normalized.includes("fail") || normalized.includes("error")) {
     return {
-      gradient: "bg-gradient-to-br from-rose-500/12 via-slate-900/55 to-slate-950/80",
+      gradient:
+        "bg-gradient-to-br from-rose-500/12 via-slate-900/55 to-slate-950/80",
       iconWrapper: "bg-rose-500/15 border-rose-400/30",
       valueClassName: "text-red-100",
     };
@@ -344,16 +353,17 @@ export default function TaskDetailsDynamic({
       : "—";
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
   const validatorImage =
-    validatorInfo?.hotkey && validatorInfo.hotkey.length > 0
-      ? resolveAssetUrl(`/validators/${validatorInfo.hotkey}.png`, validatorDefaultImage)
+    validatorInfo?.image && validatorInfo.image.trim()
+      ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
       : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
     minerInfo?.isSota ? "/validators/Other.png" : "/images/autoppia-logo.png"
   );
-  const minerImage = minerInfo?.image
-    ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
-    : minerDefaultImage;
+  const minerImage =
+    minerInfo?.image && minerInfo.image.trim()
+      ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
+      : minerDefaultImage;
 
   const artifactSummary = (() => {
     const parts: string[] = [];
@@ -368,9 +378,13 @@ export default function TaskDetailsDynamic({
   const solutionSummary = solutionInfo
     ? `${truncateMiddle(solutionInfo.solutionId, 5)} · ${solutionInfo.actionsCount} actions`
     : "—";
-  const evaluationStatusLabel = formatLabel(evaluationInfo?.status ?? taskData.status);
+  const evaluationStatusLabel = formatLabel(
+    evaluationInfo?.status ?? taskData.status
+  );
   const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId;
-  const evaluationStyles = getStatusStyles(evaluationInfo?.status ?? taskData.status);
+  const evaluationStyles = getStatusStyles(
+    evaluationInfo?.status ?? taskData.status
+  );
 
   // Removed identifier chips row in favor of compact header pills
 
@@ -379,7 +393,8 @@ export default function TaskDetailsDynamic({
       label: "Score",
       value: evaluationScore,
       Icon: PiChartBar,
-      gradient: "bg-gradient-to-br from-emerald-500/12 via-slate-900/55 to-slate-950/80",
+      gradient:
+        "bg-gradient-to-br from-emerald-500/12 via-slate-900/55 to-slate-950/80",
       iconWrapper: "bg-emerald-500/15 border-emerald-400/30",
       description: "Final evaluation score recorded for this task.",
     },
@@ -387,7 +402,8 @@ export default function TaskDetailsDynamic({
       label: "Duration",
       value: evaluationDuration,
       Icon: PiTimer,
-      gradient: "bg-gradient-to-br from-sky-500/12 via-slate-900/55 to-slate-950/80",
+      gradient:
+        "bg-gradient-to-br from-sky-500/12 via-slate-900/55 to-slate-950/80",
       iconWrapper: "bg-sky-500/15 border-sky-400/30",
       description: "Time taken from task submission to evaluation completion.",
     },
@@ -401,7 +417,6 @@ export default function TaskDetailsDynamic({
       description: "Overall status reported by the validator.",
     },
   ];
-
 
   const secondaryCards: StatCardConfig[] = [];
 
@@ -421,7 +436,9 @@ export default function TaskDetailsDynamic({
                       <PiClockCountdown className="h-6 w-6" />
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-white">Round {roundInfo?.roundNumber ?? "—"}</span>
+                      <span className="text-2xl font-bold text-white">
+                        Round {roundInfo?.roundNumber ?? "—"}
+                      </span>
                     </div>
                   </div>
                 }
@@ -443,7 +460,8 @@ export default function TaskDetailsDynamic({
                     <StatPill
                       label="Epoch"
                       value={
-                        roundInfo?.startEpoch !== undefined && roundInfo?.startEpoch !== null
+                        roundInfo?.startEpoch !== undefined &&
+                        roundInfo?.startEpoch !== null
                           ? roundInfo.startEpoch
                           : "—"
                       }
@@ -470,9 +488,12 @@ export default function TaskDetailsDynamic({
                     </div>
                     <div className="flex items-end gap-2 min-w-0">
                       <p className="text-xl font-semibold text-white truncate">
-                        {validatorInfo?.name || truncateMiddle(validatorInfo?.hotkey)}
+                        {validatorInfo?.name ||
+                          truncateMiddle(validatorInfo?.hotkey)}
                       </p>
-                      <span className="text-[10px] uppercase tracking-[0.25em] text-white/70">Validator</span>
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-white/70">
+                        Validator
+                      </span>
                     </div>
                   </div>
                 }
@@ -489,7 +510,8 @@ export default function TaskDetailsDynamic({
                     <StatPill
                       label="Stake"
                       value={
-                        validatorInfo?.stake !== undefined && validatorInfo?.stake !== null
+                        validatorInfo?.stake !== undefined &&
+                        validatorInfo?.stake !== null
                           ? `${formatNumber(validatorInfo.stake)} TAO`
                           : "—"
                       }
@@ -498,7 +520,8 @@ export default function TaskDetailsDynamic({
                     <StatPill
                       label="vTrust"
                       value={
-                        validatorInfo?.vtrust !== undefined && validatorInfo?.vtrust !== null
+                        validatorInfo?.vtrust !== undefined &&
+                        validatorInfo?.vtrust !== null
                           ? formatNumber(validatorInfo.vtrust)
                           : "—"
                       }
@@ -506,8 +529,14 @@ export default function TaskDetailsDynamic({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <InfoRow label="Hotkey" value={truncateMiddle(validatorInfo?.hotkey)} />
-                    <InfoRow label="Version" value={validatorInfo?.version ?? "—"} />
+                    <InfoRow
+                      label="Hotkey"
+                      value={truncateMiddle(validatorInfo?.hotkey)}
+                    />
+                    <InfoRow
+                      label="Version"
+                      value={validatorInfo?.version ?? "—"}
+                    />
                   </div>
                 </div>
               </ContextCard>
@@ -543,12 +572,16 @@ export default function TaskDetailsDynamic({
                 <div className="flex items-start gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-slate-400 font-medium">
-                      {minerInfo?.isSota ? "SOTA Agent" : "Miner"} • UID {minerInfo?.uid ?? "—"}
+                      {minerInfo?.isSota ? "SOTA Agent" : "Miner"} • UID{" "}
+                      {minerInfo?.uid ?? "—"}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-1.5 pt-3">
-                  <InfoRow label="Hotkey" value={truncateMiddle(minerInfo?.hotkey)} />
+                  <InfoRow
+                    label="Hotkey"
+                    value={truncateMiddle(minerInfo?.hotkey)}
+                  />
                   <InfoRow
                     label="GitHub"
                     value={
