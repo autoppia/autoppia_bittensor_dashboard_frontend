@@ -1438,36 +1438,20 @@ export default function TaskDynamic() {
       <PageHeader
         title="Task Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href={
-                roundKeyForHeader
-                  ? `${routes.rounds}/${encodeURIComponent(roundKeyForHeader)}`
-                  : "#"
-              }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Round
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(roundKeyForHeader || "-", 8)}
-              </span>
-            </Link>
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={
                 details?.agentRunId
                   ? `${routes.agent_run}/${encodeURIComponent(details.agentRunId)}`
                   : "#"
               }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Run
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && (
@@ -1476,26 +1460,26 @@ export default function TaskDynamic() {
             </Link>
             <Link
               href={`${routes.tasks}/${taskId}`}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
+              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Task
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(taskId, 8)}
               </span>
               <IDCopyButton text={taskId} />
             </Link>
             <a
               href="#evaluation"
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
+              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Evaluation
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
               {details?.relationships?.evaluation?.evaluationId && (
