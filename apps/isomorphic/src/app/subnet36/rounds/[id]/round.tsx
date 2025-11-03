@@ -2022,6 +2022,9 @@ export default function Round() {
   const roundLabel = roundNumberForLinks ?? roundKey;
 
   const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
+  const { loading: statsLoading } = useRoundStatistics(roundKey);
+  const { loading: validatorsLoading } = useRoundValidators(roundKey);
+
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
     return topMiners[0] ?? null;
@@ -2146,37 +2149,57 @@ export default function Round() {
 
       {/* Aggregated Metrics */}
       <div className="mt-10 mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-            <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+        {statsLoading || minersLoading ? (
+          <div className="flex items-center gap-4 mb-5">
+            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+              <Skeleton className="h-3 w-64 bg-white/10" />
+            </div>
           </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              Aggregated Metrics
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
-              Comprehensive stats across all validators
-            </Text>
+        ) : (
+          <div className="flex items-center gap-4 mb-5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+              <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="flex-1">
+              <Text className="text-base font-black text-white uppercase tracking-wider">
+                Aggregated Metrics
+              </Text>
+              <Text className="text-xs text-white/60 font-semibold">
+                Comprehensive stats across all validators
+              </Text>
+            </div>
           </div>
-        </div>
+        )}
         <RoundStatsInline selectedValidator={selectedValidator} />
       </div>
 
       {/* Validators selector */}
       <div className="mt-10 mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-            <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+        {validatorsLoading ? (
+          <div className="flex items-center gap-4 mb-5">
+            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+              <Skeleton className="h-3 w-72 bg-white/10" />
+            </div>
           </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              Multiple Validators
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
-              Select a validator to view detailed performance metrics
-            </Text>
+        ) : (
+          <div className="flex items-center gap-4 mb-5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+              <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+            </div>
+            <div className="flex-1">
+              <Text className="text-base font-black text-white uppercase tracking-wider">
+                Multiple Validators
+              </Text>
+              <Text className="text-xs text-white/60 font-semibold">
+                Select a validator to view detailed performance metrics
+              </Text>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <RoundValidatorsInline
