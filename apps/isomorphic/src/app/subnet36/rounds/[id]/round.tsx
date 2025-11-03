@@ -2159,98 +2159,146 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
+  // Check if round is starting (404 error)
+  const isRoundStarting = error && !round;
+
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
-      {error && (
-        <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 mb-6 text-rose-200">
-          <p className="text-sm">⚠️ Failed to load round data: {error}</p>
-        </div>
-      )}
-
-      {/* Header */}
+      {/* Header with progress - always show */}
       <RoundHeaderInline />
 
-      {/* Recents removed: using Prev/Next navigation in header */}
-
-      {/* Round Progress removed: already shown in main header card */}
-
-      {/* Aggregated Metrics */}
-      <div className="mt-10 mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-            <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+      {/* If round is starting, show friendly message */}
+      {isRoundStarting && (
+        <div className="mt-10 mb-6">
+          <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-yellow-500/10 p-12 text-center backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-2xl">
+                <svg
+                  className="h-10 w-10 text-white animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-2xl font-bold text-amber-400">
+                  Round is Starting...
+                </h3>
+                <p className="text-white/80 text-lg max-w-xl mx-auto">
+                  The validator is uploading data for this round.
+                  <br />
+                  This usually takes 20-30 seconds.
+                </p>
+                <p className="text-white/60 text-sm">
+                  Please wait a moment and refresh the page.
+                </p>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+              >
+                🔄 Refresh Page
+              </button>
+            </div>
           </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              {status === "evaluating_finished"
-                ? "Preliminary Results - This Validator"
-                : "Aggregated Metrics"}
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
-              {status === "evaluating_finished"
-                ? "⏳ Awaiting consensus from other validators - results may change after consensus"
-                : "Comprehensive stats across all validators"}
-            </Text>
-          </div>
-        </div>
-        <RoundStatsInline
-          selectedValidator={selectedValidator}
-          roundStatus={status}
-        />
-      </div>
-
-      {/* Validators selector */}
-      <div className="mt-10 mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-            <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-          </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              Multiple Validators
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
-              Select a validator to view detailed performance metrics
-            </Text>
-          </div>
-        </div>
-      </div>
-
-      <RoundValidatorsInline
-        onValidatorSelect={handleValidatorSelect}
-        selectedValidatorId={selectedValidator?.id ?? null}
-        requestedValidatorId={requestedValidatorId}
-      />
-
-      {/* Selected validator metric cards */}
-      {minersLoading || !selectedValidator ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className={cn("h-36", skeletonCard)} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {selectedValidatorCards.map((card) => (
-            <MetricCard key={(card as any).key} card={card} />
-          ))}
         </div>
       )}
 
-      {/* Charts */}
-      <div className="flex flex-col xl:flex-row gap-6 mt-6">
-        <RoundMinerScoresInline
-          className="w-full xl:w-[calc(100%-400px)]"
-          selectedValidator={selectedValidator}
-        />
-        <RoundTopMinersInline
-          className="w-full xl:w-[400px]"
-          selectedValidator={selectedValidator}
-          roundNumber={roundNumberForLinks}
-        />
-      </div>
+      {/* Only show content if round data is available */}
+      {!isRoundStarting && (
+        <>
+          {/* Aggregated Metrics */}
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+                <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+              </div>
+              <div className="flex-1">
+                <Text className="text-base font-black text-white uppercase tracking-wider">
+                  {status === "evaluating_finished"
+                    ? "Preliminary Results - This Validator"
+                    : "Aggregated Metrics"}
+                </Text>
+                <Text className="text-xs text-white/60 font-semibold">
+                  {status === "evaluating_finished"
+                    ? "⏳ Awaiting consensus from other validators - results may change after consensus"
+                    : "Comprehensive stats across all validators"}
+                </Text>
+              </div>
+            </div>
+            <RoundStatsInline
+              selectedValidator={selectedValidator}
+              roundStatus={status}
+            />
+          </div>
+
+          {/* Validators selector */}
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+                <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+              </div>
+              <div className="flex-1">
+                <Text className="text-base font-black text-white uppercase tracking-wider">
+                  Multiple Validators
+                </Text>
+                <Text className="text-xs text-white/60 font-semibold">
+                  Select a validator to view detailed performance metrics
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          <RoundValidatorsInline
+            onValidatorSelect={handleValidatorSelect}
+            selectedValidatorId={selectedValidator?.id ?? null}
+            requestedValidatorId={requestedValidatorId}
+          />
+
+          {/* Selected validator metric cards */}
+          {minersLoading || !selectedValidator ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className={cn("h-36", skeletonCard)} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {selectedValidatorCards.map((card) => (
+                <MetricCard key={(card as any).key} card={card} />
+              ))}
+            </div>
+          )}
+
+          {/* Charts */}
+          <div className="flex flex-col xl:flex-row gap-6 mt-6">
+            <RoundMinerScoresInline
+              className="w-full xl:w-[calc(100%-400px)]"
+              selectedValidator={selectedValidator}
+            />
+            <RoundTopMinersInline
+              className="w-full xl:w-[400px]"
+              selectedValidator={selectedValidator}
+              roundNumber={roundNumberForLinks}
+            />
+          </div>
+        </>
+      )}
 
       {/* Floating Glossary Button */}
       <button
