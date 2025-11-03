@@ -165,7 +165,7 @@ function buildDetailDataFromStats(
           useCaseId: uc.useCase || idx,
           name: uc.useCase || `Use Case ${idx + 1}`,
           successRate:
-            typeof uc.averageScore === "number" ? uc.averageScore * 100 : 0,
+            typeof uc.averageScore === "number" ? uc.averageScore : 0,
           total: uc.tasks || 0,
           successCount: uc.successful || 0,
           avgSolutionTime: uc.averageDuration || 0,
@@ -177,8 +177,7 @@ function buildDetailDataFromStats(
         useCases: websiteUseCases,
         results: websiteResults,
         overall: {
-          successRate:
-            typeof w.averageScore === "number" ? w.averageScore * 100 : 0,
+          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
           total: w.tasks || 0,
           successCount: w.successful || 0,
           avgSolutionTime:
