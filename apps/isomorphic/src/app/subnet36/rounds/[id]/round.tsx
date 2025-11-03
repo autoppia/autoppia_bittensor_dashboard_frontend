@@ -117,6 +117,8 @@ const chipFinished =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
+const chipWaitingConsensus =
+  "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
 const roundNavButton =
   "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
 const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
@@ -290,6 +292,17 @@ function RoundHeaderInline() {
     | "finished"
     | "pending"
     | "evaluating_finished";
+
+  // Debug: Log status to console
+  React.useEffect(() => {
+    console.log("🔍 Round Status Debug:", {
+      roundId: normalizedCurrentNumber,
+      status,
+      rawRoundStatus: round?.status,
+      roundCurrent: round?.current,
+    });
+  }, [status, round?.status, round?.current, normalizedCurrentNumber]);
+
   const isActive = status === "active";
   const statusLabel =
     status === "finished"
@@ -357,6 +370,7 @@ function RoundHeaderInline() {
                     chipBase,
                     status === "pending" && chipPending,
                     status === "finished" && chipFinished,
+                    status === "evaluating_finished" && chipWaitingConsensus,
                     isActive && chipActive
                   )}
                 >
@@ -365,7 +379,9 @@ function RoundHeaderInline() {
                       "h-2.5 w-2.5 rounded-full shadow-lg",
                       isActive && "bg-white animate-pulse",
                       status === "finished" && "bg-white",
-                      status === "pending" && "bg-white"
+                      status === "pending" && "bg-white",
+                      status === "evaluating_finished" &&
+                        "bg-white animate-pulse"
                     )}
                   />
                   {statusLabel}
