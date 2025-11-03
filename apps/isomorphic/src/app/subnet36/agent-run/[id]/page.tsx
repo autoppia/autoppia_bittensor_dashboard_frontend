@@ -150,38 +150,41 @@ function buildDetailDataFromStats(
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
 
-  const useCases: AgentRunUseCase[] = (stats.performanceByUseCase || []).map(
-    (u, idx) => ({
-      id: u.useCase || idx,
-      name: u.useCase || `Use Case ${idx + 1}`,
-    })
-  );
-
-  const genericResults: AgentRunResult[] = (
-    stats.performanceByUseCase || []
-  ).map((u, idx) => ({
-    useCaseId: u.useCase || idx,
-    name: u.useCase || `Use Case ${idx + 1}`,
-    successRate: typeof u.averageScore === "number" ? u.averageScore : 0,
-    total: u.tasks || 0,
-    successCount: u.successful || 0,
-    avgSolutionTime: u.averageDuration || 0,
-  }));
-
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
-    (w, i) => ({
-      name: w.website || `Website ${i + 1}`,
-      useCases,
-      // Note: Per-website use-case breakdown may not be available; use global as a reasonable approximation
-      results: genericResults,
-      overall: {
-        successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
-        total: w.tasks || 0,
-        successCount: w.successful || 0,
-        avgSolutionTime:
-          typeof w.averageDuration === "number" ? w.averageDuration : 0,
-      },
-    })
+    (w, i) => {
+      // Extract use cases specific to this website from the backend
+      const websiteUseCases: AgentRunUseCase[] = (w.useCases || []).map(
+        (uc, idx) => ({
+          id: uc.useCase || idx,
+          name: uc.useCase || `Use Case ${idx + 1}`,
+        })
+      );
+
+      const websiteResults: AgentRunResult[] = (w.useCases || []).map(
+        (uc, idx) => ({
+          useCaseId: uc.useCase || idx,
+          name: uc.useCase || `Use Case ${idx + 1}`,
+          successRate:
+            typeof uc.averageScore === "number" ? uc.averageScore : 0,
+          total: uc.tasks || 0,
+          successCount: uc.successful || 0,
+          avgSolutionTime: uc.averageDuration || 0,
+        })
+      );
+
+      return {
+        name: w.website || `Website ${i + 1}`,
+        useCases: websiteUseCases,
+        results: websiteResults,
+        overall: {
+          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
+          total: w.tasks || 0,
+          successCount: w.successful || 0,
+          avgSolutionTime:
+            typeof w.averageDuration === "number" ? w.averageDuration : 0,
+        },
+      };
+    }
   );
 
   return { websites };
@@ -408,7 +411,7 @@ function AgentRunPersonas({
   const epochEndFixed = toEpochSeconds(roundData.endTime ?? summary?.endTime);
   const epochEndLive = epochEndFixed ?? Math.floor(Date.now() / 1000);
   const formatEpoch = (value: number | null) =>
-    typeof value === 'number' && Number.isFinite(value) ? String(value) : '—';
+    typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -444,8 +447,12 @@ function AgentRunPersonas({
 
         <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
-            <span className="uppercase tracking-[0.3em] text-xs text-white/60">Epoch:</span>
-            <span className="whitespace-nowrap">{formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}</span>
+            <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+              Epoch:
+            </span>
+            <span className="whitespace-nowrap">
+              {formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}
+            </span>
           </div>
         </div>
       </section>

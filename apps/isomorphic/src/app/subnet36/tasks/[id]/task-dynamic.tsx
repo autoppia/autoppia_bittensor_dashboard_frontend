@@ -333,16 +333,18 @@ function TaskDetailsDynamic({
   const HIGHLIGHT_COLOR = "#FDF5E6";
 
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
-  const validatorImage = validatorInfo?.image
-    ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
-    : validatorDefaultImage;
+  const validatorImage =
+    validatorInfo?.image && validatorInfo.image.trim()
+      ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
+      : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
-    minerInfo?.isSota ? "/validators/Other.png" : "/images/autoppia-logo.png"
+    minerInfo?.isSota ? "/validators/Other.png" : "/miners/0.svg"
   );
-  const minerImage = minerInfo?.image
-    ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
-    : minerDefaultImage;
+  const minerImage =
+    minerInfo?.image && minerInfo.image.trim()
+      ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
+      : minerDefaultImage;
 
   // Display helpers for UID (ensure non-negative & string-safe)
   const displayValidatorUid = (() => {
@@ -1088,6 +1090,8 @@ function TaskResults() {
   const {
     actions,
     total: actionsTotal,
+    successCount,
+    failCount,
     isLoading: actionsLoading,
     error: actionsError,
     goToPage,
@@ -1149,8 +1153,7 @@ function TaskResults() {
   };
 
   const totalPages = Math.max(1, Math.ceil(actionsTotal / pageSize));
-  const successCount = actions.filter((a) => a.success).length;
-  const failCount = actions.filter((a) => a.error || !a.success).length;
+  // successCount and failCount now come from the API (total counts, not just current page)
 
   const handleDownloadAll = () => {
     if (!mediaItems || mediaItems.length === 0) return;

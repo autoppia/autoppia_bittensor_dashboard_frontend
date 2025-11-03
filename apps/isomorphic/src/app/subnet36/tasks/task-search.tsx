@@ -741,7 +741,7 @@ export default function TaskSearch() {
                   : "—";
 
               const validatorImageSrc = resolveAssetUrl(
-                relationships?.validator?.image,
+                (task as any).validatorImage || relationships?.validator?.image,
                 "/validators/Other.png"
               );
 
