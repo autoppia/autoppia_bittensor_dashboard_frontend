@@ -1813,13 +1813,13 @@ function RoundTopMinersInline({
         className={cn(
           tallCardClass,
           accentClass,
-          "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+          "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
           className
         )}
         headerClassName="px-3 pb-2"
         titleClassName="text-white text-xl font-bold"
       >
-        <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
+        <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3 flex items-center justify-center">
           <div className="text-center text-gray-300">
             <p className="text-lg font-semibold">No miners ranked yet</p>
             <p className="text-sm mt-2">
@@ -1839,13 +1839,13 @@ function RoundTopMinersInline({
       className={cn(
         tallCardClass,
         accentClass,
-        "relative overflow-hidden h-[650px] px-2 lg:px-4 w-full",
+        "relative overflow-hidden h-[450px] md:h-[550px] xl:h-[650px] px-2 lg:px-4 w-full",
         className
       )}
       headerClassName="px-3 pb-2"
       titleClassName="text-white text-xl font-bold"
     >
-      <div className="custom-scrollbar h-[560px] overflow-y-auto mt-3">
+      <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner: any, index: number) => {
             const agentHref =
