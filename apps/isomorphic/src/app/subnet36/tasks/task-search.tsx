@@ -1,7 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
 import type { TaskData, TaskRelationships } from "@/services/api/types/tasks";
@@ -19,6 +25,9 @@ import {
   PiCodeDuotone,
   PiCopySimpleDuotone,
 } from "react-icons/pi";
+
+const DEFAULT_LIMIT = 50;
+const LIMIT_OPTIONS = [25, 50, 100, 200];
 
 const formatLabel = (value: string) =>
   value
@@ -47,7 +56,7 @@ function extractRoundNumber(value?: string | null): number | null {
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
+  const handleCopy = async (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     try {
       await navigator.clipboard.writeText(text);
@@ -109,6 +118,9 @@ export default function TaskSearch() {
   const [availableWebsites, setAvailableWebsites] = useState<string[]>([]);
   const [availableUseCases, setAvailableUseCases] = useState<string[]>([]);
   const [results, setResults] = useState<TaskData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentLimit, setCurrentLimit] = useState(DEFAULT_LIMIT);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -118,6 +130,25 @@ export default function TaskSearch() {
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(total / currentLimit));
+
+  const startIndex =
+    results.length === 0 ? 0 : (currentPage - 1) * currentLimit + 1;
+
+  const endIndex = results.length === 0 ? 0 : startIndex + results.length - 1;
+
+  const canGoPrev = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
+
+  const limitOptions = useMemo(() => {
+    const options = new Set<number>(LIMIT_OPTIONS);
+    options.add(currentLimit);
+    return Array.from(options).sort((a, b) => a - b);
+  }, [currentLimit]);
+
+  const headerCount = total || results.length;
 
   useEffect(() => {
     let ignore = false;
@@ -153,13 +184,15 @@ export default function TaskSearch() {
 
       try {
         const response = await tasksService.searchTasks({
-          limit: 50, // Load recent tasks by default
+          page: currentPage,
+          limit: currentLimit,
         });
 
         if (ignore) return;
 
         const data = response.data;
         setResults(data?.tasks ?? []);
+        setTotal(data?.total ?? 0);
         setHasSearched(true);
 
         if (data?.facets) {
@@ -173,6 +206,7 @@ export default function TaskSearch() {
       } catch (error) {
         if (!ignore) {
           setResults([]);
+          setTotal(0);
           setSearchError(
             error instanceof Error ? error.message : "Failed to load tasks"
           );
@@ -189,7 +223,7 @@ export default function TaskSearch() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [currentPage, currentLimit]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -269,11 +303,34 @@ export default function TaskSearch() {
     };
   }, [results, relationshipsMap]);
 
+  const handlePageChange = (nextPage: number) => {
+    if (
+      nextPage < 1 ||
+      nextPage === currentPage ||
+      (totalPages > 0 && nextPage > totalPages)
+    ) {
+      return;
+    }
+
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    if (!Number.isFinite(newLimit) || newLimit <= 0) {
+      return;
+    }
+
+    setCurrentLimit(newLimit);
+    setCurrentPage(1); // Reset to page 1 when changing limit
+  };
+
   const handleSearch = async () => {
     setHasSearched(true);
     setIsSearching(true);
     setSearchError(null);
     setResults([]);
+    setCurrentPage(1); // Reset to page 1 when searching
 
     try {
       // If a Task ID is entered, try direct lookup first and navigate
@@ -293,11 +350,13 @@ export default function TaskSearch() {
         agentRunId: agentRunInput || undefined,
         website: selectedWebsite || undefined,
         useCase: selectedUseCase || undefined,
-        limit: 50,
+        page: 1, // Always search from page 1
+        limit: currentLimit,
       });
 
       const data = response.data;
       setResults(data?.tasks ?? []);
+      setTotal(data?.total ?? 0);
 
       if (data?.facets) {
         setAvailableWebsites(
@@ -313,6 +372,7 @@ export default function TaskSearch() {
       }
     } catch (error) {
       setResults([]);
+      setTotal(0);
       setSearchError(
         error instanceof Error ? error.message : "Failed to search tasks"
       );
@@ -331,6 +391,9 @@ export default function TaskSearch() {
     setHasSearched(false);
     setSearchError(null);
     setResults([]);
+    setTotal(0);
+    setCurrentPage(1);
+    setCurrentLimit(DEFAULT_LIMIT);
   };
 
   const hasActiveFilters =
@@ -405,7 +468,7 @@ export default function TaskSearch() {
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-visible">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300">
                   AGENT RUN
@@ -527,6 +590,33 @@ export default function TaskSearch() {
                   )}
                 </div>
               </div>
+
+              {/* Results Per Page */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-cyan-300">
+                  RESULTS PER PAGE
+                </label>
+                <div className="relative">
+                  <select
+                    value={currentLimit}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -619,10 +709,12 @@ export default function TaskSearch() {
         <div className="mt-6 relative z-0">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              {results.length} {results.length === 1 ? "TASK" : "TASKS"} FOUND
+              {headerCount} {headerCount === 1 ? "TASK" : "TASKS"} FOUND
             </h3>
             <p className="text-purple-200/80 text-sm">
-              Showing tasks matching your criteria
+              {`Showing ${startIndex}-${endIndex} of ${Number(
+                total ?? results.length
+              ).toLocaleString()} results`}
             </p>
           </div>
 
@@ -893,6 +985,39 @@ export default function TaskSearch() {
               );
             })}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && results.length > 0 && (
+            <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={!canGoPrev}
+                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  canGoPrev
+                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                Previous
+              </button>
+              <span className="text-sky-100">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={!canGoNext}
+                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  canGoNext
+                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
