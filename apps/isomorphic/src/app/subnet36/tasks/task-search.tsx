@@ -741,13 +741,13 @@ export default function TaskSearch() {
                   : "—";
 
               const validatorImageSrc = resolveAssetUrl(
-                relationships?.validator?.image,
+                (task as any).validatorImage || relationships?.validator?.image,
                 "/validators/Other.png"
               );
 
               const minerImageSrc = resolveAssetUrl(
-                relationships?.miner?.image,
-                "/images/autoppia-logo.png"
+                (task as any).minerImage || relationships?.miner?.image,
+                "/miners/0.svg"
               );
 
               const roundNumber =

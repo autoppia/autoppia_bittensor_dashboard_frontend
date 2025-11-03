@@ -6,7 +6,8 @@ const DEFAULT_ALLOWED_IMAGE_HOSTS = [
 ];
 
 const defaultAssetBase =
-  process.env.NEXT_PUBLIC_ASSET_BASE_URL || "https://infinitewebarena.autoppia.com";
+  process.env.NEXT_PUBLIC_ASSET_BASE_URL ||
+  "https://infinitewebarena.autoppia.com";
 
 let defaultAssetHost;
 try {
@@ -91,7 +92,48 @@ module.exports = {
     return config;
   },
   images: {
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/images-validator/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/images-miner/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/gifs/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/dev/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/production/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.amazonaws.com",
+        pathname: "/images-validator/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.amazonaws.com",
+        pathname: "/images-miner/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.amazonaws.com",
+        pathname: "/gifs/**",
+      },
+    ],
   },
   async redirects() {
     return [

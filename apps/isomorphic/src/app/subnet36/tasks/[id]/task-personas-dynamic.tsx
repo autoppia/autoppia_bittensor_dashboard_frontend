@@ -46,14 +46,15 @@ function formatUseCase(value?: string | null) {
 
 export default function TaskPersonasDynamic() {
   const { id } = useParams();
-  const taskId = Array.isArray(id) ? id[0] : id ?? "";
+  const taskId = Array.isArray(id) ? id[0] : (id ?? "");
   const { personas, isLoading, error } = useTaskPersonas(taskId);
 
   // Fetch full agent data to get UID and hotkey (when available)
   const { data: agentDetail } = useAgent(personas?.agent.id);
   const agentData = agentDetail?.agent;
   const canCopyHotkey =
-    typeof navigator !== "undefined" && typeof navigator.clipboard !== "undefined";
+    typeof navigator !== "undefined" &&
+    typeof navigator.clipboard !== "undefined";
 
   if (isLoading) {
     return <CardLoadingSkeleton count={4} className="mb-6" />;
@@ -70,13 +71,18 @@ export default function TaskPersonasDynamic() {
   }
 
   const roundStatusLabel = formatStatus(personas.round.status);
-  const validatorImage = personas.validator.image
-    ? resolveAssetUrl(personas.validator.image)
-    : resolveAssetUrl("/validators/Other.png");
-  const agentImage = personas.agent.image
-    ? resolveAssetUrl(personas.agent.image)
-    : "/images/autoppia-logo.png";
-  const agentUid = agentData?.uid != null ? `UID ${agentData.uid}` : "UID unavailable";
+  const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
+  const validatorImage =
+    personas.validator.image && personas.validator.image.trim()
+      ? resolveAssetUrl(personas.validator.image, validatorDefaultImage)
+      : validatorDefaultImage;
+  const agentDefaultImage = resolveAssetUrl("/miners/0.svg");
+  const agentImage =
+    personas.agent.image && personas.agent.image.trim()
+      ? resolveAssetUrl(personas.agent.image, agentDefaultImage)
+      : agentDefaultImage;
+  const agentUid =
+    agentData?.uid != null ? `UID ${agentData.uid}` : "UID unavailable";
   const agentHotkey = agentData?.hotkey;
   const taskUseCase = formatUseCase(personas.task.useCase);
 
@@ -91,7 +97,9 @@ export default function TaskPersonasDynamic() {
               <PiClock className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Round</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">
+                Round
+              </p>
               <p className="text-3xl font-semibold text-white leading-tight">
                 #{personas.round.id}
               </p>
@@ -103,15 +111,23 @@ export default function TaskPersonasDynamic() {
         </header>
         <dl className="relative mt-4 space-y-2 text-xs text-slate-300">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-slate-400">Starts</p>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">
+              Starts
+            </p>
             <p className="font-mono text-sm text-white">
-              {personas.round.startTime ? new Date(personas.round.startTime).toLocaleString() : "—"}
+              {personas.round.startTime
+                ? new Date(personas.round.startTime).toLocaleString()
+                : "—"}
             </p>
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-slate-400">Ends</p>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">
+              Ends
+            </p>
             <p className="font-mono text-sm text-white">
-              {personas.round.endTime ? new Date(personas.round.endTime).toLocaleString() : "—"}
+              {personas.round.endTime
+                ? new Date(personas.round.endTime).toLocaleString()
+                : "—"}
             </p>
           </div>
         </dl>
@@ -132,7 +148,9 @@ export default function TaskPersonasDynamic() {
             />
           </div>
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Validator</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">
+              Validator
+            </p>
             <p className="text-sm font-semibold text-white truncate">
               {personas.validator.name}
             </p>
@@ -226,7 +244,9 @@ export default function TaskPersonasDynamic() {
             <PiTarget className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Task</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">
+              Task
+            </p>
             <p className="text-sm font-semibold text-white truncate">
               {personas.task.website || "Unknown website"}
             </p>
@@ -240,9 +260,7 @@ export default function TaskPersonasDynamic() {
             <p className="text-[11px] uppercase tracking-wide text-slate-400">
               Use Case
             </p>
-            <p className="text-sm font-medium text-white">
-              {taskUseCase}
-            </p>
+            <p className="text-sm font-medium text-white">{taskUseCase}</p>
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-slate-400">

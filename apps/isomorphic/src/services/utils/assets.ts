@@ -5,6 +5,8 @@ const DEFAULT_ASSET_BASE =
 const DEFAULT_ALLOWED_IMAGE_HOSTS = [
   "infinitewebarena.autoppia.com",
   "dev-infinitewebarena.autoppia.com",
+  "autoppia-subnet.s3.eu-west-1.amazonaws.com", // S3 bucket for validators/miners/gifs
+  "autoppia-subnet.s3.amazonaws.com", // S3 default region URL
 ];
 
 const parseHosts = (value?: string | null): string[] =>
@@ -20,11 +22,13 @@ try {
   defaultAssetHost = "";
 }
 
-const allowedHosts = new Set<string>([
-  ...DEFAULT_ALLOWED_IMAGE_HOSTS,
-  ...parseHosts(process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS),
-  defaultAssetHost,
-].filter(Boolean));
+const allowedHosts = new Set<string>(
+  [
+    ...DEFAULT_ALLOWED_IMAGE_HOSTS,
+    ...parseHosts(process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS),
+    defaultAssetHost,
+  ].filter(Boolean)
+);
 
 const isAllowedHost = (hostname: string | null): boolean => {
   if (!hostname) {
@@ -63,7 +67,10 @@ const sanitizeUrl = (value?: string | null): string => {
     return candidate.startsWith("data:image/") ? candidate : "";
   }
 
-  if (candidate.startsWith("https://github.com/") && candidate.includes("/blob/")) {
+  if (
+    candidate.startsWith("https://github.com/") &&
+    candidate.includes("/blob/")
+  ) {
     const rewritten = candidate
       .replace("https://github.com/", "https://raw.githubusercontent.com/")
       .replace("/blob/", "/");
@@ -78,6 +85,10 @@ const sanitizeUrl = (value?: string | null): string => {
     try {
       const parsed = new URL(candidate);
       if (isAllowedHost(parsed.hostname)) {
+        // Block access to backups folder for security
+        if (parsed.pathname.startsWith("/backups/")) {
+          return "";
+        }
         return parsed.toString();
       }
     } catch (error) {
@@ -100,6 +111,14 @@ const rewriteToLocalAsset = (value: string): string => {
 
   // Skip rewriting when we already have a relative path or data URI
   if (value.startsWith("/") || value.startsWith("data:")) {
+    return value;
+  }
+
+  // S3 URLs should be returned as-is (not rewritten to local paths)
+  if (
+    value.includes("s3.amazonaws.com") ||
+    value.includes("s3.eu-west-1.amazonaws.com")
+  ) {
     return value;
   }
 
