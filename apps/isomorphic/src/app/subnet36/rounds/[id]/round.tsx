@@ -1596,7 +1596,7 @@ function RoundMinerScoresInline({
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold">
+            <span className="text-md sm:text-2xl font-bold">
               Miner Scores
               {selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}
             </span>
