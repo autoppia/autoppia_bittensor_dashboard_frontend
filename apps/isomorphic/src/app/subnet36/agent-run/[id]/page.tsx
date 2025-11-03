@@ -216,7 +216,7 @@ export default function Page() {
       <PageHeader
         title="Agent Run Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={((): string => {
                 const roundKey =
@@ -228,13 +228,13 @@ export default function Page() {
                   ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
                   : "#";
               })()}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
+              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Round
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
               </span>
               {data?.personas?.round?.name && (
@@ -245,13 +245,13 @@ export default function Page() {
               href={
                 runId ? `${routes.agent_run}/${encodeURIComponent(runId)}` : "#"
               }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Run
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(runId, 8)}
               </span>
               {!!runId && <IDCopyButton text={runId} />}
