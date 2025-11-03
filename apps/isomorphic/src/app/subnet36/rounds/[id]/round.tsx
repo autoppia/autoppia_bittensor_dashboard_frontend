@@ -1293,8 +1293,8 @@ function RoundMinerScoresInline({
     "(min-width: 768px) and (max-width: 1023px)",
     false
   );
-  const barSize = isSmallScreen ? 14 : isMediumScreen ? 20 : 25;
-  const minWidth = isSmallScreen ? 480 : isMediumScreen ? 640 : 840;
+  const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
+  const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
   const chartSource = expandedMinersData?.data ?? minersData?.data;
 
   const chartData = React.useMemo(() => {
@@ -1534,9 +1534,9 @@ function RoundMinerScoresInline({
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+            <div className="flex h-8 w-8 md:h-10 md:w-10 xl:h-12 xl:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
               <svg
-                className="h-6 w-6 text-white"
+                className="h-4 w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
