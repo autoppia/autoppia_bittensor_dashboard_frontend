@@ -1,7 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
 import type { TaskData, TaskRelationships } from "@/services/api/types/tasks";
@@ -19,6 +25,25 @@ import {
   PiCodeDuotone,
   PiCopySimpleDuotone,
 } from "react-icons/pi";
+
+const DEFAULT_LIMIT = 50;
+const LIMIT_OPTIONS = [25, 50, 100, 200];
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const formatLabel = (value: string) =>
   value
@@ -47,7 +72,7 @@ function extractRoundNumber(value?: string | null): number | null {
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
+  const handleCopy = async (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     try {
       await navigator.clipboard.writeText(text);
@@ -109,6 +134,9 @@ export default function TaskSearch() {
   const [availableWebsites, setAvailableWebsites] = useState<string[]>([]);
   const [availableUseCases, setAvailableUseCases] = useState<string[]>([]);
   const [results, setResults] = useState<TaskData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentLimit, setCurrentLimit] = useState(DEFAULT_LIMIT);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -119,48 +147,115 @@ export default function TaskSearch() {
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
 
+  const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
+  const debouncedFilters = useDebouncedValue(
+    useMemo(
+      () => ({
+        agentRun: agentRunInput.trim(),
+        website: selectedWebsite.trim(),
+        useCase: selectedUseCase.trim(),
+      }),
+      [agentRunInput, selectedWebsite, selectedUseCase]
+    ),
+    400
+  );
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(total / currentLimit));
+
+  const startIndex =
+    results.length === 0 ? 0 : (currentPage - 1) * currentLimit + 1;
+
+  const endIndex = results.length === 0 ? 0 : startIndex + results.length - 1;
+
+  const canGoPrev = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
+
+  const limitOptions = useMemo(() => {
+    const options = new Set<number>(LIMIT_OPTIONS);
+    options.add(currentLimit);
+    return Array.from(options).sort((a, b) => a - b);
+  }, [currentLimit]);
+
+  const headerCount = total || results.length;
+
+  // Auto-search when filters or search term changes
   useEffect(() => {
     let ignore = false;
 
-    const loadFacets = async () => {
-      try {
-        const response = await tasksService.searchTasks({ limit: 1 });
-        if (ignore) return;
-        const facets = response.data?.facets;
-        if (facets) {
-          setAvailableWebsites(facets.websites.map((item) => item.name).sort());
-          setAvailableUseCases(facets.useCases.map((item) => item.name).sort());
+    const performSearch = async () => {
+      // If there's a Task ID search term, handle it separately
+      if (debouncedSearchTerm !== "") {
+        setHasSearched(true);
+        setIsSearching(true);
+        setSearchError(null);
+
+        try {
+          const task = await tasksService.getTask(debouncedSearchTerm);
+          if (ignore) return;
+          setResults([task]);
+          setTotal(1);
+
+          // Fetch facets for filter options
+          const facetsResponse = await tasksService.searchTasks({ limit: 1 });
+          const facets = facetsResponse.data?.facets;
+          if (facets && !ignore) {
+            setAvailableWebsites(
+              facets.websites.map((item) => item.name).sort()
+            );
+            setAvailableUseCases(
+              facets.useCases.map((item) => item.name).sort()
+            );
+          }
+        } catch (err: any) {
+          if (!ignore) {
+            setResults([]);
+            setTotal(0);
+            const errorMessage = err?.message || String(err);
+            if (
+              errorMessage.includes("404") ||
+              errorMessage.includes("Not Found")
+            ) {
+              setSearchError(
+                `Task '${debouncedSearchTerm}' not found. The task ID might not exist or the format is incorrect. Try using filters instead.`
+              );
+            } else {
+              setSearchError(errorMessage);
+            }
+          }
+        } finally {
+          if (!ignore) {
+            setIsSearching(false);
+          }
         }
-      } catch (error) {
-        // ignore metadata errors – filters will populate after first search
+        return;
       }
-    };
 
-    loadFacets();
+      // When search term is empty, use filter-based search or load all
+      const hasFilters =
+        debouncedFilters.agentRun ||
+        debouncedFilters.website ||
+        debouncedFilters.useCase;
 
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  // Auto-load tasks on page load
-  useEffect(() => {
-    let ignore = false;
-
-    const loadInitialTasks = async () => {
+      // Always load tasks (either filtered or all)
+      setHasSearched(true);
       setIsSearching(true);
       setSearchError(null);
 
       try {
         const response = await tasksService.searchTasks({
-          limit: 50, // Load recent tasks by default
+          agentRunId: debouncedFilters.agentRun || undefined,
+          website: debouncedFilters.website || undefined,
+          useCase: debouncedFilters.useCase || undefined,
+          page: currentPage,
+          limit: currentLimit,
         });
 
         if (ignore) return;
 
         const data = response.data;
         setResults(data?.tasks ?? []);
-        setHasSearched(true);
+        setTotal(data?.total ?? 0);
 
         if (data?.facets) {
           setAvailableWebsites(
@@ -173,8 +268,9 @@ export default function TaskSearch() {
       } catch (error) {
         if (!ignore) {
           setResults([]);
+          setTotal(0);
           setSearchError(
-            error instanceof Error ? error.message : "Failed to load tasks"
+            error instanceof Error ? error.message : "Failed to search tasks"
           );
         }
       } finally {
@@ -184,12 +280,12 @@ export default function TaskSearch() {
       }
     };
 
-    loadInitialTasks();
+    performSearch();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -269,56 +365,26 @@ export default function TaskSearch() {
     };
   }, [results, relationshipsMap]);
 
-  const handleSearch = async () => {
-    setHasSearched(true);
-    setIsSearching(true);
-    setSearchError(null);
-    setResults([]);
-
-    try {
-      // If a Task ID is entered, try direct lookup first and navigate
-      const trimmed = (searchTerm || "").trim();
-      if (trimmed) {
-        try {
-          const direct = await tasksService.getTask(trimmed);
-          router.push(`${routes.tasks}/${direct.taskId}`);
-          return;
-        } catch {
-          // ignore and fall back to broader search
-        }
-      }
-
-      const response = await tasksService.searchTasks({
-        query: searchTerm || undefined,
-        agentRunId: agentRunInput || undefined,
-        website: selectedWebsite || undefined,
-        useCase: selectedUseCase || undefined,
-        limit: 50,
-      });
-
-      const data = response.data;
-      setResults(data?.tasks ?? []);
-
-      if (data?.facets) {
-        setAvailableWebsites(
-          data.facets.websites.map((item) => item.name).sort()
-        );
-        setAvailableUseCases(
-          data.facets.useCases.map((item) => item.name).sort()
-        );
-      }
-
-      if (data?.tasks?.length === 1) {
-        router.push(`${routes.tasks}/${data.tasks[0].taskId}`);
-      }
-    } catch (error) {
-      setResults([]);
-      setSearchError(
-        error instanceof Error ? error.message : "Failed to search tasks"
-      );
-    } finally {
-      setIsSearching(false);
+  const handlePageChange = (nextPage: number) => {
+    if (
+      nextPage < 1 ||
+      nextPage === currentPage ||
+      (totalPages > 0 && nextPage > totalPages)
+    ) {
+      return;
     }
+
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    if (!Number.isFinite(newLimit) || newLimit <= 0) {
+      return;
+    }
+
+    setCurrentLimit(newLimit);
+    setCurrentPage(1); // Reset to page 1 when changing limit
   };
 
   const clearFilters = () => {
@@ -331,6 +397,9 @@ export default function TaskSearch() {
     setHasSearched(false);
     setSearchError(null);
     setResults([]);
+    setTotal(0);
+    setCurrentPage(1);
+    setCurrentLimit(DEFAULT_LIMIT);
   };
 
   const hasActiveFilters =
@@ -384,12 +453,6 @@ export default function TaskSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleSearch();
-                  }
-                }}
                 placeholder="Enter Task ID or Prompt (e.g., 3413)"
                 className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
@@ -405,7 +468,7 @@ export default function TaskSearch() {
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-visible">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300">
                   AGENT RUN
@@ -527,18 +590,37 @@ export default function TaskSearch() {
                   )}
                 </div>
               </div>
+
+              {/* Results Per Page */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-cyan-300">
+                  RESULTS PER PAGE
+                </label>
+                <div className="relative">
+                  <select
+                    value={currentLimit}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="flex gap-4 flex-col sm:flex-row items-center justify-center z-50">
-            <button
-              onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
-            >
-              <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
-              SEARCH
-            </button>
-
             <button
               onClick={clearFilters}
               disabled={!hasActiveFilters && !hasSearched}
@@ -553,50 +635,6 @@ export default function TaskSearch() {
           </div>
         </div>
       </div>
-      {hasSearched && isSearching && (
-        <div className="mt-6 relative z-0">
-          <div className="text-center mb-6">
-            <div className="h-7 w-48 mx-auto rounded-full bg-purple-500/20 animate-pulse" />
-            <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={`task-skeleton-${index}`}
-                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
-              >
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-500/30" />
-                    <div className="space-y-2">
-                      <div className="h-3 w-24 rounded-full bg-purple-500/30" />
-                      <div className="h-2.5 w-32 rounded-full bg-purple-500/20" />
-                    </div>
-                  </div>
-                  <div className="h-6 w-28 rounded-full bg-purple-500/20" />
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                  <div className="h-6 w-24 rounded-full bg-blue-500/20" />
-                  <div className="h-5 w-12 rounded-full bg-emerald-500/30" />
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
-                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
-                  <div className="h-3 w-5/6 rounded-full bg-purple-500/15" />
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
-                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
-                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {hasSearched && !isSearching && searchError && (
         <div className="mt-6 relative z-0">
@@ -619,10 +657,12 @@ export default function TaskSearch() {
         <div className="mt-6 relative z-0">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              {results.length} {results.length === 1 ? "TASK" : "TASKS"} FOUND
+              {headerCount} {headerCount === 1 ? "TASK" : "TASKS"} FOUND
             </h3>
             <p className="text-purple-200/80 text-sm">
-              Showing tasks matching your criteria
+              {`Showing ${startIndex}-${endIndex} of ${Number(
+                total ?? results.length
+              ).toLocaleString()} results`}
             </p>
           </div>
 
@@ -893,6 +933,39 @@ export default function TaskSearch() {
               );
             })}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && results.length > 0 && (
+            <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={!canGoPrev}
+                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  canGoPrev
+                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                Previous
+              </button>
+              <span className="text-sky-100">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={!canGoNext}
+                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  canGoNext
+                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -911,6 +984,51 @@ export default function TaskSearch() {
                 Try adjusting your filters or search query.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {hasSearched && isSearching && (
+        <div className="mt-6 relative z-0">
+          <div className="text-center mb-6">
+            <div className="h-7 w-48 mx-auto rounded-full bg-purple-500/20 animate-pulse" />
+            <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={`task-skeleton-${index}`}
+                className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
+              >
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/30" />
+                    <div className="space-y-2">
+                      <div className="h-3 w-24 rounded-full bg-purple-500/30" />
+                      <div className="h-2.5 w-32 rounded-full bg-purple-500/20" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-28 rounded-full bg-purple-500/20" />
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-6 w-24 rounded-full bg-blue-500/20" />
+                  <div className="h-5 w-12 rounded-full bg-emerald-500/30" />
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
+                  <div className="h-3 w-full rounded-full bg-purple-500/15" />
+                  <div className="h-3 w-5/6 rounded-full bg-purple-500/15" />
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-purple-100/70">
+                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
+                  <div className="h-2.5 w-20 rounded-full bg-purple-500/20" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
