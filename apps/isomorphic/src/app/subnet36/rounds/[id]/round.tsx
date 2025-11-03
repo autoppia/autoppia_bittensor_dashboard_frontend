@@ -232,7 +232,7 @@ function RoundHeaderInline() {
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
 
-  const { data: round } = useRound(roundKey);
+  const { data: round, error: roundError } = useRound(roundKey);
   const { data: progressData } = useRoundProgress(roundKey);
   const { data: roundsData } = useRounds({
     page: 1,
@@ -243,6 +243,21 @@ function RoundHeaderInline() {
   const rawRounds = roundsData?.data?.rounds;
   const rounds = React.useMemo(() => rawRounds ?? [], [rawRounds]);
   const currentRoundFromList = (roundsData?.data as any)?.currentRound;
+
+  // Auto-redirect to latest round if current round doesn't exist (404)
+  React.useEffect(() => {
+    if (roundError && rounds.length > 0) {
+      const latestRound = rounds[0];
+      const latestRoundNumber =
+        latestRound?.roundNumber ?? latestRound?.round ?? latestRound?.id;
+      if (latestRoundNumber && latestRoundNumber !== roundNumber) {
+        console.warn(
+          `⚠️ Round ${roundNumber} not found (404) - redirecting to latest round: ${latestRoundNumber}`
+        );
+        router.replace(`/subnet36/rounds/round_${latestRoundNumber}`);
+      }
+    }
+  }, [roundError, rounds, roundNumber, router]);
 
   const resolveRoundNumber = (r: any) => r?.roundNumber ?? r?.round ?? r?.id;
   const resolveRoundKey = (r: any, fallbackNumber?: number) =>
@@ -2006,6 +2021,13 @@ export default function Round() {
 
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
+
+  // Determine round status for conditional rendering
+  const status = (round?.status ?? (round?.current ? "active" : "finished")) as
+    | "active"
+    | "finished"
+    | "pending"
+    | "evaluating_finished";
 
   // Selection state for validator-driven panels
   const [selectedValidator, setSelectedValidator] =
