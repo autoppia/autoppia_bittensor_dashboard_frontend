@@ -29,6 +29,22 @@ import {
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
 
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const formatLabel = (value: string) =>
   value
     .replace(/_/g, " ")
@@ -131,6 +147,19 @@ export default function TaskSearch() {
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
 
+  const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
+  const debouncedFilters = useDebouncedValue(
+    useMemo(
+      () => ({
+        agentRun: agentRunInput.trim(),
+        website: selectedWebsite.trim(),
+        useCase: selectedUseCase.trim(),
+      }),
+      [agentRunInput, selectedWebsite, selectedUseCase]
+    ),
+    400
+  );
+
   // Pagination calculations
   const totalPages = Math.max(1, Math.ceil(total / currentLimit));
 
@@ -150,17 +179,74 @@ export default function TaskSearch() {
 
   const headerCount = total || results.length;
 
-  // Auto-load tasks on page load
+  // Auto-search when filters or search term changes
   useEffect(() => {
     let ignore = false;
 
-    const loadInitialTasks = async () => {
+    const performSearch = async () => {
+      // If there's a Task ID search term, handle it separately
+      if (debouncedSearchTerm !== "") {
+        setHasSearched(true);
+        setIsSearching(true);
+        setSearchError(null);
+
+        try {
+          const task = await tasksService.getTask(debouncedSearchTerm);
+          if (ignore) return;
+          setResults([task]);
+          setTotal(1);
+
+          // Fetch facets for filter options
+          const facetsResponse = await tasksService.searchTasks({ limit: 1 });
+          const facets = facetsResponse.data?.facets;
+          if (facets && !ignore) {
+            setAvailableWebsites(
+              facets.websites.map((item) => item.name).sort()
+            );
+            setAvailableUseCases(
+              facets.useCases.map((item) => item.name).sort()
+            );
+          }
+        } catch (err: any) {
+          if (!ignore) {
+            setResults([]);
+            setTotal(0);
+            const errorMessage = err?.message || String(err);
+            if (
+              errorMessage.includes("404") ||
+              errorMessage.includes("Not Found")
+            ) {
+              setSearchError(
+                `Task '${debouncedSearchTerm}' not found. The task ID might not exist or the format is incorrect. Try using filters instead.`
+              );
+            } else {
+              setSearchError(errorMessage);
+            }
+          }
+        } finally {
+          if (!ignore) {
+            setIsSearching(false);
+          }
+        }
+        return;
+      }
+
+      // When search term is empty, use filter-based search or load all
+      const hasFilters =
+        debouncedFilters.agentRun ||
+        debouncedFilters.website ||
+        debouncedFilters.useCase;
+
+      // Always load tasks (either filtered or all)
       setHasSearched(true);
       setIsSearching(true);
       setSearchError(null);
 
       try {
         const response = await tasksService.searchTasks({
+          agentRunId: debouncedFilters.agentRun || undefined,
+          website: debouncedFilters.website || undefined,
+          useCase: debouncedFilters.useCase || undefined,
           page: currentPage,
           limit: currentLimit,
         });
@@ -168,8 +254,8 @@ export default function TaskSearch() {
         if (ignore) return;
 
         const data = response.data;
-        setResults(data.tasks);
-        setTotal(data.total);
+        setResults(data?.tasks ?? []);
+        setTotal(data?.total ?? 0);
 
         if (data?.facets) {
           setAvailableWebsites(
@@ -184,7 +270,7 @@ export default function TaskSearch() {
           setResults([]);
           setTotal(0);
           setSearchError(
-            error instanceof Error ? error.message : "Failed to load tasks"
+            error instanceof Error ? error.message : "Failed to search tasks"
           );
         }
       } finally {
@@ -194,12 +280,12 @@ export default function TaskSearch() {
       }
     };
 
-    loadInitialTasks();
+    performSearch();
 
     return () => {
       ignore = true;
     };
-  }, [currentPage, currentLimit]);
+  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -301,62 +387,6 @@ export default function TaskSearch() {
     setCurrentPage(1); // Reset to page 1 when changing limit
   };
 
-  const handleSearch = async () => {
-    setHasSearched(true);
-    setIsSearching(true);
-    setSearchError(null);
-    setResults([]);
-    setCurrentPage(1); // Reset to page 1 when searching
-
-    try {
-      // If a Task ID is entered, try direct lookup first and navigate
-      const trimmed = (searchTerm || "").trim();
-      if (trimmed) {
-        try {
-          const direct = await tasksService.getTask(trimmed);
-          router.push(`${routes.tasks}/${direct.taskId}`);
-          return;
-        } catch {
-          // ignore and fall back to broader search
-        }
-      }
-
-      const response = await tasksService.searchTasks({
-        query: searchTerm || undefined,
-        agentRunId: agentRunInput || undefined,
-        website: selectedWebsite || undefined,
-        useCase: selectedUseCase || undefined,
-        page: 1, // Always search from page 1
-        limit: currentLimit,
-      });
-
-      const data = response.data;
-      setResults(data?.tasks ?? []);
-      setTotal(data?.total ?? 0);
-
-      if (data?.facets) {
-        setAvailableWebsites(
-          data.facets.websites.map((item) => item.name).sort()
-        );
-        setAvailableUseCases(
-          data.facets.useCases.map((item) => item.name).sort()
-        );
-      }
-
-      if (data?.tasks?.length === 1) {
-        router.push(`${routes.tasks}/${data.tasks[0].taskId}`);
-      }
-    } catch (error) {
-      setResults([]);
-      setTotal(0);
-      setSearchError(
-        error instanceof Error ? error.message : "Failed to search tasks"
-      );
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const clearFilters = () => {
     setSearchTerm("");
     setAgentRunInput("");
@@ -423,12 +453,6 @@ export default function TaskSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleSearch();
-                  }
-                }}
                 placeholder="Enter Task ID or Prompt (e.g., 3413)"
                 className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
@@ -597,14 +621,6 @@ export default function TaskSearch() {
           </div>
 
           <div className="flex gap-4 flex-col sm:flex-row items-center justify-center z-50">
-            <button
-              onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500/60 to-purple-500/60 border-2 border-cyan-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-md group hover:from-cyan-500 hover:to-purple-500 hover:border-cyan-500"
-            >
-              <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
-              SEARCH
-            </button>
-
             <button
               onClick={clearFilters}
               disabled={!hasActiveFilters && !hasSearched}
