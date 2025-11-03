@@ -86,18 +86,16 @@ function AgentsLanding() {
           (round as any).validatorRoundCount ??
           (round as any).validator_round_count ??
           0;
-        return round.status === "completed" && validatorCount > 0;
+        return round.status === "finished" && validatorCount > 0;
       })
       .sort(
-        (a, b) =>
-          (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
+        (a, b) => (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
       );
     if (completed.length) {
       return completed;
     }
     return rounds.sort(
-      (a, b) =>
-        (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
+      (a, b) => (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
     );
   }, [roundsData]);
 
@@ -121,7 +119,9 @@ function AgentsLanding() {
     return roundSequence[0];
   }, [roundFromQuery, roundSequence]);
 
-  const [selectedRound, setSelectedRound] = useState<number | undefined>(initialRound);
+  const [selectedRound, setSelectedRound] = useState<number | undefined>(
+    initialRound
+  );
 
   useEffect(() => {
     if (!isFiniteNumber(roundFromQuery)) {
@@ -162,10 +162,7 @@ function AgentsLanding() {
   }, [minersData?.round, selectedRound]);
 
   useEffect(() => {
-    if (
-      isFiniteNumber(resolvedRound) &&
-      resolvedRound !== selectedRound
-    ) {
+    if (isFiniteNumber(resolvedRound) && resolvedRound !== selectedRound) {
       setSelectedRound(resolvedRound);
     }
   }, [resolvedRound, selectedRound]);
@@ -180,10 +177,7 @@ function AgentsLanding() {
     }
   }, [roundReady, roundSequence]);
 
-  const miners = useMemo(
-    () => minersData?.miners ?? [],
-    [minersData?.miners]
-  );
+  const miners = useMemo(() => minersData?.miners ?? [], [minersData?.miners]);
   const hasMiners = miners.length > 0;
   const pathname = usePathname();
   const effectiveRound = resolvedRound ?? selectedRound;
@@ -208,9 +202,7 @@ function AgentsLanding() {
       sortedMiners.find(
         (miner) => !miner.isSota && miner.uid !== undefined && miner.uid >= 0
       ) ??
-      sortedMiners.find(
-        (miner) => miner.uid !== undefined && miner.uid >= 0
-      ) ??
+      sortedMiners.find((miner) => miner.uid !== undefined && miner.uid >= 0) ??
       sortedMiners[0];
 
     if (!topMiner || topMiner.uid === undefined || topMiner.uid < 0) {
@@ -253,29 +245,42 @@ function AgentsLanding() {
   if (minersError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
-        <div className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
-        style={{
-          boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`
-        }}>
-          <h2 className="text-xl font-bold text-gray-900">Unable to load agents</h2>
+        <div
+          className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
+          style={{
+            boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`,
+          }}
+        >
+          <h2 className="text-xl font-bold text-gray-900">
+            Unable to load agents
+          </h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            {minersError}. Please try refreshing the page once the service is available again.
+            {minersError}. Please try refreshing the page once the service is
+            available again.
           </p>
         </div>
       </div>
     );
   }
 
-  if (!minersLoading && !minersError && isFiniteNumber(effectiveRound) && !hasMiners) {
+  if (
+    !minersLoading &&
+    !minersError &&
+    isFiniteNumber(effectiveRound) &&
+    !hasMiners
+  ) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
-        <div className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
-        style={{
-          boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`
-        }}>
+        <div
+          className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
+          style={{
+            boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`,
+          }}
+        >
           <h2 className="text-xl font-bold text-gray-900">No agents found</h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            Recent rounds did not return any miners. Try selecting a different round or refreshing once new data is available.
+            Recent rounds did not return any miners. Try selecting a different
+            round or refreshing once new data is available.
           </p>
         </div>
       </div>
