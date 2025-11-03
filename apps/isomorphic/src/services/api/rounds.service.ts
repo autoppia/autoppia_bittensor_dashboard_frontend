@@ -81,8 +81,25 @@ export class RoundsService {
     const startBlock = rawRound.startBlock ?? rawRound.start_block ?? 0;
     const endBlock = rawRound.endBlock ?? rawRound.end_block ?? startBlock;
     const currentBlock = rawRound.currentBlock ?? rawRound.current_block;
-    const status = (rawRound.status ??
-      (rawRound.current ? "active" : "completed")) as RoundData["status"];
+
+    // Normalize status from backend (handle both camelCase and snake_case)
+    let status: RoundData["status"];
+    const rawStatus = (rawRound.status ?? rawRound.Status)?.toLowerCase();
+    if (
+      rawStatus === "evaluating_finished" ||
+      rawStatus === "evaluating-finished"
+    ) {
+      status = "evaluating_finished";
+    } else if (rawStatus === "finished" || rawStatus === "completed") {
+      status = "finished";
+    } else if (rawStatus === "pending") {
+      status = "pending";
+    } else if (rawStatus === "active") {
+      status = "active";
+    } else {
+      // Fallback based on current flag
+      status = rawRound.current ? "active" : "finished";
+    }
 
     const ensureIso = (value?: string | null): string | undefined => {
       if (!value) {
@@ -112,10 +129,24 @@ export class RoundsService {
             validator.validatorHotkey ??
             validator.validator_hotkey ??
             validator.hotkey,
-          status: (validator.status ??
-            (validator.current
-              ? "active"
-              : "completed")) as ValidatorRoundData["status"],
+          status: (() => {
+            const vStatus = (
+              validator.status ?? validator.Status
+            )?.toLowerCase();
+            if (
+              vStatus === "evaluating_finished" ||
+              vStatus === "evaluating-finished"
+            ) {
+              return "evaluating_finished" as const;
+            } else if (vStatus === "finished" || vStatus === "completed") {
+              return "finished" as const;
+            } else if (vStatus === "pending") {
+              return "pending" as const;
+            } else if (vStatus === "active") {
+              return "active" as const;
+            }
+            return (validator.current ? "active" : "finished") as const;
+          })(),
           startTime:
             ensureIso(
               validator.startTime ??
