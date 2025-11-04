@@ -1344,7 +1344,7 @@ function TaskResults() {
 
         <div
           ref={recordingsRef}
-          className={`${isFullscreen ? "h-screen" : "h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
+          className={`${isFullscreen ? "h-screen" : "h-[250px] md:h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
         >
           {isMediaLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
