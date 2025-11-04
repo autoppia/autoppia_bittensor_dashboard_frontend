@@ -285,11 +285,39 @@ function RoundHeaderInline() {
     [router, roundKey]
   );
 
-  const status = (round?.status ??
-    (round?.current ? "active" : "completed")) as
-    | "active"
-    | "completed"
-    | "pending";
+  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
+  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
+  const currentBlock =
+    progressData?.currentBlock ?? round?.currentBlock ?? startBlock;
+  const blocksRemaining =
+    progressData?.blocksRemaining ??
+    (typeof endBlock === "number" && typeof currentBlock === "number"
+      ? Math.max(endBlock - currentBlock, 0)
+      : undefined);
+
+  // Determine actual round status - simplified and direct
+  const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
+  const isThisCurrentRound = normalizedCurrentNumber === currentRoundNumber;
+  const progressValue = progressData?.progress ?? round?.progress ?? 0;
+  
+  // First check backend status directly
+  let status: "active" | "completed" | "pending";
+  
+  if (round?.status === "pending") {
+    status = "pending";
+  } else if (
+    round?.status === "finished" ||
+    round?.status === "evaluating_finished" ||
+    (!round?.current && currentRoundNumber && normalizedCurrentNumber && currentRoundNumber > normalizedCurrentNumber) ||
+    progressValue >= 1 ||
+    (blocksRemaining !== undefined && blocksRemaining === 0) ||
+    (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock)
+  ) {
+    status = "completed";
+  } else {
+    status = "active";
+  }
+
   const isActive = status === "active";
   const statusLabel =
     status === "completed"
@@ -311,22 +339,11 @@ function RoundHeaderInline() {
     Math.min(100, Math.round(progressPercentageRaw))
   );
 
-  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
-  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
-  const currentBlock =
-    progressData?.currentBlock ?? round?.currentBlock ?? startBlock;
-  const blocksRemaining =
-    progressData?.blocksRemaining ??
-    (typeof endBlock === "number" && typeof currentBlock === "number"
-      ? Math.max(endBlock - currentBlock, 0)
-      : undefined);
-
   const previousKey = resolveRoundKey(neighborRounds.previous);
   const nextKey = resolveRoundKey(neighborRounds.next);
   const previousNumber = resolveRoundNumber(neighborRounds.previous);
   const nextNumber = resolveRoundNumber(neighborRounds.next);
   const currentRoundKey = resolveRoundKey(currentRoundFromList);
-  const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
 
   return (
     <section className="mb-10">
@@ -788,7 +805,7 @@ function RoundStatsInline({
     {
       key: "tasks",
       title: "Average Tasks",
-      value: formatNumber(averageTasks, 1),
+      value: formatNumber(averageTasks, 0),
       helper: "Tasks completed per validator",
       icon: PiListChecksDuotone,
       gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
@@ -2082,10 +2099,11 @@ export default function Round() {
 
   // Determine if round data is not yet available
   const { data: statistics } = useRoundStatistics(roundKey);
+  // Only show "no data" message for current/active rounds that truly have no data
+  const isCurrentRound = round?.current === true || round?.status === "active";
   const hasNoData =
-    !round || (!statistics?.totalMiners && !statistics?.totalTasks);
-  const isRoundStarting =
-    round?.status === "pending" || (round?.current && !statistics);
+    isCurrentRound && !statistics?.totalMiners && !statistics?.totalTasks;
+  const isRoundStarting = round?.status === "pending";
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
