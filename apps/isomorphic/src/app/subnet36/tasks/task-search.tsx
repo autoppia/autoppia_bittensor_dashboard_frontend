@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { tasksService } from "@/services/api/tasks.service";
-import type { TaskData, TaskRelationships } from "@/services/api/types/tasks";
+import type { TaskData } from "@/services/api/types/tasks";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -140,9 +140,6 @@ export default function TaskSearch() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [relationshipsMap, setRelationshipsMap] = useState<
-    Record<string, TaskRelationships>
-  >({});
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
@@ -197,7 +194,10 @@ export default function TaskSearch() {
           setTotal(1);
 
           // Fetch facets for filter options
-          const facetsResponse = await tasksService.searchTasks({ limit: 1 });
+          const facetsResponse = await tasksService.searchTasks({
+            limit: 1,
+            includeDetails: false,
+          });
           const facets = facetsResponse.data?.facets;
           if (facets && !ignore) {
             setAvailableWebsites(
@@ -249,6 +249,7 @@ export default function TaskSearch() {
           useCase: debouncedFilters.useCase || undefined,
           page: currentPage,
           limit: currentLimit,
+          includeDetails: false, // Omit actions/screenshots/logs for fast loading
         });
 
         if (ignore) return;
@@ -312,58 +313,7 @@ export default function TaskSearch() {
     };
   }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const missingTasks = results.filter(
-      (task) => !task.relationships && !relationshipsMap[task.taskId]
-    );
-
-    if (missingTasks.length === 0) {
-      return;
-    }
-
-    const fetchRelationships = async () => {
-      const settled = await Promise.allSettled(
-        missingTasks.map((task) =>
-          tasksService.getTask(task.taskId).then((data) => ({
-            taskId: task.taskId,
-            relationships: data.relationships,
-          }))
-        )
-      );
-
-      if (cancelled) return;
-
-      const updates: Record<string, TaskRelationships> = {};
-
-      settled.forEach((result) => {
-        if (result.status === "fulfilled" && result.value.relationships) {
-          updates[result.value.taskId] = result.value.relationships;
-        }
-      });
-
-      if (Object.keys(updates).length > 0) {
-        setRelationshipsMap((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          for (const [taskId, relationships] of Object.entries(updates)) {
-            if (!next[taskId]) {
-              next[taskId] = relationships;
-              changed = true;
-            }
-          }
-          return changed ? next : prev;
-        });
-      }
-    };
-
-    fetchRelationships();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [results, relationshipsMap]);
+  // Note: Removed fetchRelationships useEffect - now using validatorName/minerName directly from search response
 
   const handlePageChange = (nextPage: number) => {
     if (
@@ -671,17 +621,8 @@ export default function TaskSearch() {
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
 
-              const relationships =
-                task.relationships ?? relationshipsMap[task.taskId];
-
-              // Extract URL from navigate action if available
-              const navigateAction = task.actions?.find(
-                (action) => action.type === "navigate"
-              );
-              const taskUrl =
-                navigateAction?.value ||
-                navigateAction?.metadata?.url ||
-                task.website;
+              // Use task.website directly (actions are empty with includeDetails=false)
+              const taskUrl = task.website;
 
               // Extract port from URL to determine web project
               const getWebProject = (url: string) => {
@@ -725,15 +666,11 @@ export default function TaskSearch() {
                 ? `Validator ${validatorIdMatch[1]}`
                 : "Validator";
 
+              // Use data directly from task (no need for relationships fetch)
               const validatorName =
-                relationships?.validator?.name ||
-                relationships?.validator?.hotkey ||
-                fallbackValidator;
+                (task as any).validatorName || fallbackValidator;
 
-              const minerName =
-                relationships?.miner?.name ||
-                relationships?.miner?.hotkey ||
-                "Miner";
+              const minerName = (task as any).minerName || "Miner";
 
               const durationLabel =
                 typeof task.duration === "number" && task.duration >= 0
@@ -741,17 +678,17 @@ export default function TaskSearch() {
                   : "—";
 
               const validatorImageSrc = resolveAssetUrl(
-                (task as any).validatorImage || relationships?.validator?.image,
+                (task as any).validatorImage,
                 "/validators/Other.png"
               );
 
               const minerImageSrc = resolveAssetUrl(
-                relationships?.miner?.image,
+                (task as any).minerImage,
                 "/miners/30.svg "
               );
 
+              // Extract round number from IDs (no need for relationships)
               const roundNumber =
-                relationships?.round?.roundNumber ??
                 extractRoundNumber(task.taskId) ??
                 extractRoundNumber(task.agentRunId);
 

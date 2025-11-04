@@ -46,6 +46,7 @@ import {
   PiHash,
   PiDownloadSimple,
   PiArrowSquareOutDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
 import type { TaskAction, TaskDetails } from "@/services/api/types/tasks";
 
@@ -250,11 +251,13 @@ type TaskDetailsDynamicProps = {
   details?: TaskDetails | null;
   isLoading?: boolean;
   error?: string | null;
+  refetch?: () => void;
 };
 function TaskDetailsDynamic({
   details,
   isLoading = false,
   error,
+  refetch,
 }: TaskDetailsDynamicProps) {
   if (isLoading && !details) {
     return (
@@ -292,13 +295,39 @@ function TaskDetailsDynamic({
   }
   if ((error && !details) || !details) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-red-600/30 bg-transparent p-6 shadow-2xl mb-8">
-        <div className="relative text-center">
-          <div className="text-red-200 text-lg font-semibold mb-2">
-            Failed to load task overview
-          </div>
-          <div className="text-sm text-red-100/80">
-            {error || "An unexpected error occurred while fetching task data."}
+      <div className="mb-8">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+          <div className="relative px-8 py-12 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+              <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+            </div>
+            <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+              Task Data Not Available
+            </h3>
+            <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+              This task has not been evaluated yet or the evaluation is still in
+              progress. Data will appear here once the evaluation is complete.
+            </p>
+            <p className="text-sm text-white/50 font-semibold">
+              Please check back in a few minutes or navigate to a different
+              task.
+            </p>
+            <div className="mt-8 flex justify-center gap-4">
+              {refetch && (
+                <button
+                  onClick={refetch}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Retry
+                </button>
+              )}
+              <Link href={routes.tasks}>
+                <button className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                  View All Tasks
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -871,13 +900,13 @@ function TaskDetailsDynamic({
         </div>
 
         <div className="relative overflow-hidden rounded-2xl border border-[#5436a6]/40 bg-transparent p-4 text-white shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner flex-shrink-0">
               <PiFileText className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 overflow-x-auto custom-scrollbar">
+            <div className="min-w-0 flex-1">
               <p
-                className="font-mono text-sm text-white whitespace-nowrap"
+                className="font-mono text-sm text-white leading-relaxed break-words"
                 title={taskData.prompt || "Prompt not provided for this task."}
               >
                 {taskData.prompt || "Prompt not provided for this task."}
@@ -1421,7 +1450,7 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const taskId = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  const { details, isLoading, error } = useTaskDetails(taskId);
+  const { details, isLoading, error, refetch } = useTaskDetails(taskId);
   const runIdDisplay =
     details?.agentRunId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
@@ -1452,11 +1481,11 @@ export default function TaskDynamic() {
               }
               className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Run
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && (
@@ -1469,11 +1498,11 @@ export default function TaskDynamic() {
               href={`${routes.tasks}/${taskId}`}
               className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Task
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(taskId, 8)}
               </span>
               <span className="ml-auto">
@@ -1484,11 +1513,11 @@ export default function TaskDynamic() {
               href="#evaluation"
               className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Evaluation
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
               {details?.relationships?.evaluation?.evaluationId && (
@@ -1516,6 +1545,7 @@ export default function TaskDynamic() {
         details={details}
         isLoading={isLoading}
         error={error}
+        refetch={refetch}
       />
 
       <div className="mb-10">

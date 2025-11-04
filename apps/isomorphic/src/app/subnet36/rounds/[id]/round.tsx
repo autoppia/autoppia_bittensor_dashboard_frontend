@@ -45,6 +45,7 @@ import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
   useRound,
+  useRoundBasic,
   useRounds,
   useRoundProgress,
   useRoundValidators,
@@ -117,6 +118,8 @@ const chipCompleted =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
+const chipEvaluating =
+  "border-orange-400/70 bg-gradient-to-r from-orange-500/90 to-amber-500/90 text-white shadow-[0_4px_20px_rgba(251,146,60,0.4)] hover:shadow-[0_6px_30px_rgba(251,146,60,0.6)] hover:scale-105";
 const roundNavButton =
   "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
 const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
@@ -224,13 +227,17 @@ function CustomTooltip({ label, active, payload, className }: any) {
   );
 }
 
-function RoundHeaderInline() {
+function RoundHeaderInline({
+  round,
+  roundLoading,
+}: {
+  round?: any;
+  roundLoading?: boolean;
+}) {
   const { id } = useParams();
   const router = useRouter();
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
-
-  const { data: round, loading: roundLoading } = useRound(roundKey);
   const { data: progressData, loading: progressLoading } =
     useRoundProgress(roundKey);
   const { data: roundsData, loading: roundsLoading } = useRounds({
@@ -288,18 +295,74 @@ function RoundHeaderInline() {
     [router, roundKey]
   );
 
-  const status = (round?.status ??
-    (round?.current ? "active" : "completed")) as
-    | "active"
-    | "completed"
-    | "pending";
+  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
+  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
+  const currentBlock =
+    progressData?.currentBlock ?? round?.currentBlock ?? startBlock;
+  const blocksRemaining =
+    progressData?.blocksRemaining ??
+    (typeof endBlock === "number" && typeof currentBlock === "number"
+      ? Math.max(endBlock - currentBlock, 0)
+      : undefined);
+
+  // Determine actual round status - prioritize backend status
+  const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
+  const progressValue = progressData?.progress ?? round?.progress ?? 0;
+
+  // Check if validator rounds have evaluation results (tasks evaluated)
+  const validatorRounds = round?.validatorRounds ?? [];
+  const hasEvaluationsComplete = validatorRounds.some((vr) => {
+    // Check if this validator has finished evaluating
+    if (vr.status === "evaluating_finished" || vr.status === "finished") {
+      return true;
+    }
+    // Check if there are agent runs with evaluation results
+    const agentRuns = vr.agentEvaluationRuns ?? [];
+    return agentRuns.some((run) => {
+      const evalResults = run.evaluation_results ?? run.evaluationResults ?? [];
+      return (
+        evalResults.length > 0 &&
+        evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
+      );
+    });
+  });
+
+  // ALWAYS trust backend status first - it's the source of truth
+  const backendStatus = round?.status;
+  let status: "active" | "completed" | "pending";
+  let statusLabel: string;
+
+  if (backendStatus === "pending") {
+    status = "pending";
+    statusLabel = "Pending";
+  } else if (backendStatus === "finished") {
+    status = "completed";
+    statusLabel = "Finished";
+  } else if (backendStatus === "evaluating_finished") {
+    // Evaluating finished - waiting for consensus/weights
+    status = "active";
+    statusLabel = "Waiting for Consensus";
+  } else if (backendStatus === "active") {
+    // Active round - check if evaluations are done
+    if (hasEvaluationsComplete) {
+      status = "active";
+      statusLabel = "Waiting for Consensus";
+    } else {
+      status = "active";
+      statusLabel = "Running";
+    }
+  } else {
+    // No backend status - fallback to round.current flag
+    if (round?.current) {
+      status = "active";
+      statusLabel = "Running";
+    } else {
+      status = "completed";
+      statusLabel = "Finished";
+    }
+  }
+
   const isActive = status === "active";
-  const statusLabel =
-    status === "completed"
-      ? "Finished"
-      : status === "pending"
-        ? "Pending"
-        : "Running";
 
   const progressPercentageRaw =
     typeof progressData?.progress === "number"
@@ -314,22 +377,11 @@ function RoundHeaderInline() {
     Math.min(100, Math.round(progressPercentageRaw))
   );
 
-  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
-  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
-  const currentBlock =
-    progressData?.currentBlock ?? round?.currentBlock ?? startBlock;
-  const blocksRemaining =
-    progressData?.blocksRemaining ??
-    (typeof endBlock === "number" && typeof currentBlock === "number"
-      ? Math.max(endBlock - currentBlock, 0)
-      : undefined);
-
   const previousKey = resolveRoundKey(neighborRounds.previous);
   const nextKey = resolveRoundKey(neighborRounds.next);
   const previousNumber = resolveRoundNumber(neighborRounds.previous);
   const nextNumber = resolveRoundNumber(neighborRounds.next);
   const currentRoundKey = resolveRoundKey(currentRoundFromList);
-  const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
 
   if (isLoading) {
     return (
@@ -402,7 +454,12 @@ function RoundHeaderInline() {
                     chipBase,
                     status === "pending" && chipPending,
                     status === "completed" && chipCompleted,
-                    isActive && chipActive
+                    isActive &&
+                      statusLabel === "Waiting for Consensus" &&
+                      chipEvaluating,
+                    isActive &&
+                      statusLabel !== "Waiting for Consensus" &&
+                      chipActive
                   )}
                 >
                   <span
@@ -416,7 +473,11 @@ function RoundHeaderInline() {
                   {statusLabel}
                   {isActive && (
                     <span
-                      aria-label="Running"
+                      aria-label={
+                        statusLabel === "Waiting for Consensus"
+                          ? "Evaluating"
+                          : "Running"
+                      }
                       aria-live="polite"
                       className="ml-1 inline-block h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin"
                     />
@@ -710,23 +771,17 @@ function RoundHeaderInline() {
 
 function RoundStatsInline({
   selectedValidator,
+  statistics,
+  topMiners,
+  loading,
+  error,
 }: {
   selectedValidator?: ValidatorPerformance | null;
+  statistics?: any;
+  topMiners?: any[];
+  loading?: boolean;
+  error?: string;
 }) {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
-  const {
-    data: statistics,
-    loading: statsLoading,
-    error: statsError,
-  } = useRoundStatistics(roundKey);
-  const {
-    data: topMiners,
-    loading: minersLoading,
-    error: minersError,
-  } = useTopMiners(roundKey, 10);
-  const loading = statsLoading || minersLoading;
-  const error = statsError || minersError;
   const winnerUid = statistics?.winnerMinerUid ?? null;
 
   const topMiner = React.useMemo(() => {
@@ -835,7 +890,7 @@ function RoundStatsInline({
     {
       key: "tasks",
       title: "Average Tasks",
-      value: formatNumber(averageTasks, 1),
+      value: formatNumber(averageTasks, 0),
       helper: "Tasks completed per validator",
       icon: PiListChecksDuotone,
       gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
@@ -1226,13 +1281,20 @@ function RoundValidatorsInline({
 function RoundMinerScoresInline({
   className,
   selectedValidator,
+  roundInfo,
+  minersData,
+  loading,
+  error,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
+  roundInfo?: any;
+  minersData?: any;
+  loading?: boolean;
+  error?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1254,87 +1316,6 @@ function RoundMinerScoresInline({
       ),
     [accentClass, className]
   );
-
-  const {
-    data: minersData,
-    loading,
-    error,
-  } = useRoundMiners(roundKey, {
-    limit: 100,
-    sortBy: "score",
-    sortOrder: "desc",
-    minScore: 0,
-  });
-  const [expandedMinersData, setExpandedMinersData] = React.useState<
-    typeof minersData | null
-  >(null);
-  React.useEffect(() => {
-    let isMounted = true;
-    const basePayload = minersData?.data;
-    if (!basePayload) {
-      if (isMounted) setExpandedMinersData(null);
-      return () => {
-        isMounted = false;
-      };
-    }
-    if (!roundKey) {
-      if (isMounted) setExpandedMinersData(minersData);
-      return () => {
-        isMounted = false;
-      };
-    }
-    const baseMiners = Array.isArray(basePayload.miners)
-      ? basePayload.miners
-      : [];
-    const total =
-      typeof basePayload.total === "number"
-        ? basePayload.total
-        : baseMiners.length;
-    const limit =
-      basePayload.limit && basePayload.limit > 0
-        ? basePayload.limit
-        : baseMiners.length || 100;
-    if (total <= baseMiners.length) {
-      if (isMounted) setExpandedMinersData(minersData);
-      return () => {
-        isMounted = false;
-      };
-    }
-    (async () => {
-      const combinedMiners = [...baseMiners];
-      const totalPages = Math.ceil(total / limit);
-      for (let page = 2; page <= totalPages; page += 1) {
-        try {
-          const response = await roundsService.getRoundMiners(roundKey!, {
-            limit,
-            page,
-            sortBy: "score",
-            sortOrder: "desc",
-          });
-          const extra = Array.isArray(response.data?.miners)
-            ? response.data!.miners
-            : [];
-          combinedMiners.push(...extra);
-        } catch (fetchError) {
-          if (process.env.NODE_ENV !== "production")
-            console.error(
-              "[round-miner-scores] failed to expand miner list",
-              fetchError
-            );
-          break;
-        }
-      }
-      if (!isMounted) return;
-      setExpandedMinersData({
-        ...minersData,
-        data: { ...basePayload, miners: combinedMiners },
-      });
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [minersData, roundKey]);
-
   const isSmallScreen = useMedia("(max-width: 767px)", false);
   const isMediumScreen = useMedia(
     "(min-width: 768px) and (max-width: 1023px)",
@@ -1342,10 +1323,15 @@ function RoundMinerScoresInline({
   );
   const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
   const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
-  const chartSource = expandedMinersData?.data ?? minersData?.data;
+  const chartSource = minersData?.data;
 
   const chartData = React.useMemo(() => {
-    if (!chartSource?.miners) return [] as any[];
+    if (!chartSource?.miners) {
+      console.log("[RoundMinerScores] No miners in chartSource:", chartSource);
+      return [] as any[];
+    }
+    console.log("[RoundMinerScores] chartSource.miners:", chartSource.miners);
+    console.log("[RoundMinerScores] selectedValidator:", selectedValidator);
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
     const benchmarks: BenchmarkPerformance[] = chartSource.benchmarks || [];
@@ -1354,6 +1340,8 @@ function RoundMinerScoresInline({
           (miner) => miner.validatorId === selectedValidator.id
         )
       : chartSource.miners;
+    console.log("[RoundMinerScores] filteredMiners:", filteredMiners);
+    console.log("[RoundMinerScores] benchmarks:", benchmarks);
     const minerEntries = filteredMiners.map((miner: any) => {
       const score = normalizeScore(miner.score);
       const rawIsSota =
@@ -1431,7 +1419,7 @@ function RoundMinerScoresInline({
     return [...minerEntries, ...benchmarkEntries].sort(
       (a, b) => b.score - a.score
     );
-  }, [chartSource, selectedValidator]);
+  }, [minersData, selectedValidator]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
@@ -1705,14 +1693,21 @@ function RoundTopMinersInline({
   className,
   selectedValidator,
   roundNumber,
+  roundInfo,
+  minersData,
+  loading,
+  error,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
+  roundInfo?: any;
+  minersData?: any;
+  loading?: boolean;
+  error?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRound(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1724,33 +1719,17 @@ function RoundTopMinersInline({
       : roundStatus === "completed"
         ? roundAccentCompleted
         : roundAccentPending;
-  const minersQuery = React.useMemo(
-    () => ({
-      page: 1,
-      limit: 100,
-      sortBy: "score" as const,
-      sortOrder: "desc" as const,
-      minScore: 0,
-    }),
-    []
-  );
-  const {
-    data: roundMinersData,
-    loading,
-    error,
-  } = useRoundMiners(roundKey, minersQuery);
   const topMinersList = React.useMemo(() => {
     const miners =
-      roundMinersData?.data?.miners &&
-      Array.isArray(roundMinersData.data.miners)
-        ? roundMinersData.data.miners
+      minersData?.data?.miners && Array.isArray(minersData.data.miners)
+        ? minersData.data.miners
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
       (miner) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
-  }, [roundMinersData, selectedValidator]);
+  }, [minersData, selectedValidator]);
 
   if (loading) {
     return (
@@ -1992,7 +1971,7 @@ export default function Round() {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const { openModal } = useModal();
-  const { data: round, error } = useRound(roundKey);
+  const { data: round, error, refetch } = useRoundBasic(roundKey);
 
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
@@ -2021,9 +2000,42 @@ export default function Round() {
   const roundNumberForLinks = roundNumberFromData ?? roundNumberFromKey;
   const roundLabel = roundNumberForLinks ?? roundKey;
 
-  const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
-  const { loading: statsLoading } = useRoundStatistics(roundKey);
-  const { loading: validatorsLoading } = useRoundValidators(roundKey);
+  // Fetch data once at top level to avoid duplicate calls
+  // Load all miners data (used by chart, list, and stats)
+  const { data: allMinersData, loading: minersLoading } = useRoundMiners(
+    roundKey,
+    {
+      limit: 100,
+      sortBy: "score",
+      sortOrder: "desc",
+      minScore: 0,
+    }
+  );
+  const topMiners = React.useMemo(() => {
+    const miners = allMinersData?.data?.miners ?? [];
+    return Array.isArray(miners) ? miners.slice(0, 10) : [];
+  }, [allMinersData]);
+
+  const { data: statistics, loading: statsLoading } =
+    useRoundStatistics(roundKey);
+
+  // Determine if round is waiting for consensus
+  const validatorRounds = round?.validatorRounds ?? [];
+  const isWaitingForConsensus =
+    round?.status === "evaluating_finished" ||
+    (validatorRounds.some((vr) => {
+      if (vr.status === "evaluating_finished") return true;
+      const agentRuns = vr.agentEvaluationRuns ?? [];
+      return agentRuns.some((run) => {
+        const evalResults =
+          run.evaluation_results ?? run.evaluationResults ?? [];
+        return (
+          evalResults.length > 0 &&
+          evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
+        );
+      });
+    }) &&
+      round?.status === "active");
 
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
@@ -2130,6 +2142,13 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
+  // Determine if round data is not yet available (statistics already loaded above)
+  // Only show "no data" message for current/active rounds that truly have no data
+  const isCurrentRound = round?.current === true || round?.status === "active";
+  const hasNoData =
+    isCurrentRound && !statistics?.totalMiners && !statistics?.totalTasks;
+  const isRoundStarting = round?.status === "pending";
+
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
@@ -2140,116 +2159,162 @@ export default function Round() {
         </div>
       )}
 
-      {/* Header */}
-      <RoundHeaderInline />
-
-      {/* Recents removed: using Prev/Next navigation in header */}
-
-      {/* Round Progress removed: already shown in main header card */}
-
-      {/* Aggregated Metrics */}
-      <div className="mt-10 mb-6">
-        {statsLoading || minersLoading ? (
-          <div className="flex items-center gap-4 mb-5">
-            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-              <Skeleton className="h-3 w-64 bg-white/10" />
+      {/* Show "Data Not Available" message if round is starting or has no data */}
+      {!error && (isRoundStarting || hasNoData) ? (
+        <div className="mt-10 mb-10">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+            <div className="relative px-8 py-12 text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+                <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+              </div>
+              <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+                Round Data Not Available Yet
+              </h3>
+              <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+                This round is currently being processed by validators. Data will
+                appear here shortly once evaluations are complete.
+              </p>
+              <p className="text-sm text-white/50 font-semibold">
+                Please check back in a few minutes or navigate to a different
+                round.
+              </p>
+              <div className="mt-8 flex justify-center gap-4">
+                <Button
+                  onClick={refetch}
+                  className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                >
+                  Retry
+                </Button>
+                <Button
+                  onClick={() => router.push(routes.rounds)}
+                  className="!bg-gradient-to-r !from-amber-500 !to-orange-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                >
+                  View All Rounds
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-              <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
-            </div>
-            <div className="flex-1">
-              <Text className="text-base font-black text-white uppercase tracking-wider">
-                Aggregated Metrics
-              </Text>
-              <Text className="text-xs text-white/60 font-semibold">
-                Comprehensive stats across all validators
-              </Text>
-            </div>
-          </div>
-        )}
-        <RoundStatsInline selectedValidator={selectedValidator} />
-      </div>
-
-      {/* Validators selector */}
-      <div className="mt-10 mb-6">
-        {validatorsLoading ? (
-          <div className="flex items-center gap-4 mb-5">
-            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-              <Skeleton className="h-3 w-72 bg-white/10" />
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-              <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-            </div>
-            <div className="flex-1">
-              <Text className="text-base font-black text-white uppercase tracking-wider">
-                Multiple Validators
-              </Text>
-              <Text className="text-xs text-white/60 font-semibold">
-                Select a validator to view detailed performance metrics
-              </Text>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <RoundValidatorsInline
-        onValidatorSelect={handleValidatorSelect}
-        selectedValidatorId={selectedValidator?.id ?? null}
-        requestedValidatorId={requestedValidatorId}
-      />
-
-      {/* Selected validator metric cards */}
-      {minersLoading || !selectedValidator ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className={cn("h-36", skeletonCard)} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {selectedValidatorCards.map((card) => (
-            <MetricCard key={(card as any).key} card={card} />
-          ))}
-        </div>
-      )}
-
-      {/* Charts */}
-      <div className="flex flex-col xl:flex-row gap-6 mt-6">
-        <RoundMinerScoresInline
-          className="w-full xl:w-[calc(100%-400px)]"
-          selectedValidator={selectedValidator}
-        />
-        <RoundTopMinersInline
-          className="w-full xl:w-[400px]"
-          selectedValidator={selectedValidator}
-          roundNumber={roundNumberForLinks}
-        />
-      </div>
-
-      {/* Floating Glossary Button */}
-      <button
-        type="button"
-        onClick={handleOpenGlossary}
-        className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
-      >
-        <div className="relative">
-          <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
-          <div className="absolute inset-0 h-5 w-5 text-emerald-300 animate-ping opacity-0 group-hover:opacity-75">
-            <LuInfo className="h-5 w-5" />
           </div>
         </div>
-        <span className="uppercase tracking-wider">Glossary</span>
-      </button>
+      ) : !error ? (
+        <>
+          {/* Header */}
+          <RoundHeaderInline round={round} roundLoading={false} />
+
+          {/* Recents removed: using Prev/Next navigation in header */}
+
+          {/* Round Progress removed: already shown in main header card */}
+
+          {/* Aggregated Metrics */}
+          <div className="mt-10 mb-6">
+            {statsLoading || minersLoading ? (
+              <div className="flex items-center gap-4 mb-5">
+                <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+                  <Skeleton className="h-3 w-64 bg-white/10" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+                  <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+                </div>
+                <div className="flex-1">
+                  <Text className="text-base font-black text-white uppercase tracking-wider">
+                    Aggregated Metrics
+                  </Text>
+                  <Text className="text-xs text-white/60 font-semibold">
+                    {isWaitingForConsensus
+                      ? "⚠️ Provisional metrics - Waiting for validator consensus"
+                      : "Comprehensive stats across all validators"}
+                  </Text>
+                </div>
+              </div>
+            )}
+            <RoundStatsInline
+              selectedValidator={selectedValidator}
+              statistics={statistics}
+              topMiners={topMiners}
+              loading={statsLoading || minersLoading}
+            />
+          </div>
+
+          {/* Validators selector */}
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+                <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+              </div>
+              <div className="flex-1">
+                <Text className="text-base font-black text-white uppercase tracking-wider">
+                  Multiple Validators
+                </Text>
+                <Text className="text-xs text-white/60 font-semibold">
+                  Select a validator to view detailed performance metrics
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          <RoundValidatorsInline
+            onValidatorSelect={handleValidatorSelect}
+            selectedValidatorId={selectedValidator?.id ?? null}
+            requestedValidatorId={requestedValidatorId}
+          />
+
+          {/* Selected validator metric cards */}
+          {minersLoading || !selectedValidator ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className={cn("h-36", skeletonCard)} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+              {selectedValidatorCards.map((card) => (
+                <MetricCard key={(card as any).key} card={card} />
+              ))}
+            </div>
+          )}
+
+          {/* Charts */}
+          <div className="flex flex-col xl:flex-row gap-6 mt-6">
+            <RoundMinerScoresInline
+              className="w-full xl:w-[calc(100%-400px)]"
+              selectedValidator={selectedValidator}
+              roundInfo={round}
+              minersData={allMinersData}
+              loading={minersLoading}
+              error={undefined}
+            />
+            <RoundTopMinersInline
+              className="w-full xl:w-[400px]"
+              selectedValidator={selectedValidator}
+              roundNumber={roundNumberForLinks}
+              roundInfo={round}
+              minersData={allMinersData}
+              loading={minersLoading}
+              error={undefined}
+            />
+          </div>
+
+          {/* Floating Glossary Button */}
+          <button
+            type="button"
+            onClick={handleOpenGlossary}
+            className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
+          >
+            <div className="relative">
+              <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
+              <div className="absolute inset-0 h-5 w-5 text-emerald-300 animate-ping opacity-0 group-hover:opacity-75">
+                <LuInfo className="h-5 w-5" />
+              </div>
+            </div>
+            <span className="uppercase tracking-wider">Glossary</span>
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }

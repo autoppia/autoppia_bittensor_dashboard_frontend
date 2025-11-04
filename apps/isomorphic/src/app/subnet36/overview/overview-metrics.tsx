@@ -1,14 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import Link from "next/link";
 import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
-import {
-  useOverviewMetrics,
-  useLeaderboard,
-} from "@/services/hooks/useOverview";
+import { useOverviewMetrics } from "@/services/hooks/useOverview";
 
 const metricsData = [
   {
@@ -63,28 +60,16 @@ const metricsData = [
 ];
 
 export default function OverviewMetrics({ className }: { className?: string }) {
-  const { data: metrics, loading, error } = useOverviewMetrics();
-  const { data: leaderboardData, loading: leaderboardLoading } = useLeaderboard(
-    { timeRange: "all" }
-  );
+  const { data: metrics, loading, error, refetch } = useOverviewMetrics();
 
-  // Calculate actual top score from leaderboard data
-  const calculatedTopScore = useMemo(() => {
-    const apiLeaderboard = leaderboardData?.data?.leaderboard;
-    if (!Array.isArray(apiLeaderboard) || apiLeaderboard.length === 0) {
-      return null;
-    }
+  // Auto-refresh metrics every 30 seconds to update cards with latest round data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 seconds
 
-    let maxScore = -Infinity;
-    apiLeaderboard.forEach((entry: any) => {
-      const score = entry.subnet36;
-      if (typeof score === "number" && !Number.isNaN(score)) {
-        maxScore = Math.max(maxScore, score);
-      }
-    });
-
-    return Number.isFinite(maxScore) ? maxScore : null;
-  }, [leaderboardData]);
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
@@ -99,7 +84,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
   };
 
   // Show loading state
-  if (loading || leaderboardLoading) {
+  if (loading) {
     return (
       <div
         className={cn(
@@ -151,7 +136,7 @@ export default function OverviewMetrics({ className }: { className?: string }) {
 
   // Create dynamic metrics data from API with safe fallbacks
   const latestFinishedRound = metrics?.metricsRound ?? 0;
-  const topScoreValue = metrics?.topScore ?? calculatedTopScore ?? 0;
+  const topScoreValue = metrics?.topScore ?? 0;
   const topMinerInfo = metrics?.topMinerUid
     ? `${metrics.topMinerName || "Miner"} (UID ${metrics.topMinerUid})`
     : null;
