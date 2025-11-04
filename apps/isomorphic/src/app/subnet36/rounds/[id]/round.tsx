@@ -117,6 +117,8 @@ const chipCompleted =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
+const chipEvaluating =
+  "border-cyan-400/70 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 text-white shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_6px_30px_rgba(6,182,212,0.6)] hover:scale-105";
 const roundNavButton =
   "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
 const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
@@ -298,36 +300,84 @@ function RoundHeaderInline() {
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
-  // Determine actual round status - simplified and direct
+  // Determine actual round status - prioritize backend status
   const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
-  const isThisCurrentRound = normalizedCurrentNumber === currentRoundNumber;
   const progressValue = progressData?.progress ?? round?.progress ?? 0;
-  
-  // First check backend status directly
+
+  // Check if validator rounds have evaluation results (tasks evaluated)
+  const validatorRounds = round?.validatorRounds ?? [];
+  const hasEvaluationsComplete = validatorRounds.some((vr) => {
+    // Check if this validator has finished evaluating
+    if (vr.status === "evaluating_finished" || vr.status === "finished") {
+      return true;
+    }
+    // Check if there are agent runs with evaluation results
+    const agentRuns = vr.agentEvaluationRuns ?? [];
+    return agentRuns.some((run) => {
+      const evalResults = run.evaluation_results ?? run.evaluationResults ?? [];
+      return (
+        evalResults.length > 0 &&
+        evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
+      );
+    });
+  });
+
+  // ALWAYS trust backend status first, then check evaluation state
+  const backendStatus = round?.status;
   let status: "active" | "completed" | "pending";
-  
-  if (round?.status === "pending") {
+  let statusLabel: string;
+
+  if (backendStatus === "pending") {
     status = "pending";
+    statusLabel = "Pending";
   } else if (
-    round?.status === "finished" ||
-    round?.status === "evaluating_finished" ||
-    (!round?.current && currentRoundNumber && normalizedCurrentNumber && currentRoundNumber > normalizedCurrentNumber) ||
-    progressValue >= 1 ||
-    (blocksRemaining !== undefined && blocksRemaining === 0) ||
-    (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock)
+    backendStatus === "finished" ||
+    backendStatus === "evaluating_finished"
   ) {
+    // Backend explicitly says it's finished
     status = "completed";
+    statusLabel = "Finished";
+  } else if (backendStatus === "active") {
+    // Check if round is finished by blocks/progress
+    if (
+      progressValue >= 1 ||
+      (blocksRemaining !== undefined && blocksRemaining === 0) ||
+      (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock) ||
+      (!round?.current &&
+        currentRoundNumber &&
+        normalizedCurrentNumber &&
+        currentRoundNumber > normalizedCurrentNumber)
+    ) {
+      status = "completed";
+      statusLabel = "Finished";
+    } else if (hasEvaluationsComplete) {
+      // Evaluations done but round still active - waiting for consensus
+      status = "active";
+      statusLabel = "Waiting for Consensus";
+    } else {
+      status = "active";
+      statusLabel = "Running";
+    }
   } else {
-    status = "active";
+    // No backend status - compute from other indicators
+    if (
+      progressValue >= 1 ||
+      (blocksRemaining !== undefined && blocksRemaining === 0) ||
+      (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock) ||
+      (!round?.current &&
+        currentRoundNumber &&
+        normalizedCurrentNumber &&
+        currentRoundNumber > normalizedCurrentNumber)
+    ) {
+      status = "completed";
+      statusLabel = "Finished";
+    } else {
+      status = round?.current ? "active" : "completed";
+      statusLabel = round?.current ? "Running" : "Finished";
+    }
   }
 
   const isActive = status === "active";
-  const statusLabel =
-    status === "completed"
-      ? "Finished"
-      : status === "pending"
-        ? "Pending"
-        : "Running";
 
   const progressPercentageRaw =
     typeof progressData?.progress === "number"
@@ -419,7 +469,12 @@ function RoundHeaderInline() {
                     chipBase,
                     status === "pending" && chipPending,
                     status === "completed" && chipCompleted,
-                    isActive && chipActive
+                    isActive &&
+                      statusLabel === "Waiting for Consensus" &&
+                      chipEvaluating,
+                    isActive &&
+                      statusLabel !== "Waiting for Consensus" &&
+                      chipActive
                   )}
                 >
                   <span
@@ -433,7 +488,11 @@ function RoundHeaderInline() {
                   {statusLabel}
                   {isActive && (
                     <span
-                      aria-label="Running"
+                      aria-label={
+                        statusLabel === "Waiting for Consensus"
+                          ? "Evaluating"
+                          : "Running"
+                      }
                       aria-live="polite"
                       className="ml-1 inline-block h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin"
                     />
@@ -2042,6 +2101,22 @@ export default function Round() {
   const { loading: statsLoading } = useRoundStatistics(roundKey);
   const { loading: validatorsLoading } = useRoundValidators(roundKey);
 
+  // Determine if round is waiting for consensus
+  const validatorRounds = round?.validatorRounds ?? [];
+  const isWaitingForConsensus =
+    validatorRounds.some((vr) => {
+      if (vr.status === "evaluating_finished") return true;
+      const agentRuns = vr.agentEvaluationRuns ?? [];
+      return agentRuns.some((run) => {
+        const evalResults =
+          run.evaluation_results ?? run.evaluationResults ?? [];
+        return (
+          evalResults.length > 0 &&
+          evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
+        );
+      });
+    }) && round?.status === "active";
+
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
     return topMiners[0] ?? null;
@@ -2211,60 +2286,62 @@ export default function Round() {
 
           {/* Round Progress removed: already shown in main header card */}
 
-      {/* Aggregated Metrics */}
-      <div className="mt-10 mb-6">
-        {statsLoading || minersLoading ? (
-          <div className="flex items-center gap-4 mb-5">
-            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-              <Skeleton className="h-3 w-64 bg-white/10" />
-            </div>
+          {/* Aggregated Metrics */}
+          <div className="mt-10 mb-6">
+            {statsLoading || minersLoading ? (
+              <div className="flex items-center gap-4 mb-5">
+                <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+                  <Skeleton className="h-3 w-64 bg-white/10" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+                  <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+                </div>
+                <div className="flex-1">
+                  <Text className="text-base font-black text-white uppercase tracking-wider">
+                    Aggregated Metrics
+                  </Text>
+                  <Text className="text-xs text-white/60 font-semibold">
+                    {isWaitingForConsensus
+                      ? "⚠️ Provisional metrics - Waiting for validator consensus"
+                      : "Comprehensive stats across all validators"}
+                  </Text>
+                </div>
+              </div>
+            )}
+            <RoundStatsInline selectedValidator={selectedValidator} />
           </div>
-        ) : (
-          <div className="flex items-center gap-4 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-              <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
-            </div>
-            <div className="flex-1">
-              <Text className="text-base font-black text-white uppercase tracking-wider">
-                Aggregated Metrics
-              </Text>
-              <Text className="text-xs text-white/60 font-semibold">
-                Comprehensive stats across all validators
-              </Text>
-            </div>
-          </div>
-        )}
-        <RoundStatsInline selectedValidator={selectedValidator} />
-      </div>
 
-      {/* Validators selector */}
-      <div className="mt-10 mb-6">
-        {validatorsLoading ? (
-          <div className="flex items-center gap-4 mb-5">
-            <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-              <Skeleton className="h-3 w-72 bg-white/10" />
-            </div>
+          {/* Validators selector */}
+          <div className="mt-10 mb-6">
+            {validatorsLoading ? (
+              <div className="flex items-center gap-4 mb-5">
+                <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
+                  <Skeleton className="h-3 w-72 bg-white/10" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+                  <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
+                </div>
+                <div className="flex-1">
+                  <Text className="text-base font-black text-white uppercase tracking-wider">
+                    Multiple Validators
+                  </Text>
+                  <Text className="text-xs text-white/60 font-semibold">
+                    Select a validator to view detailed performance metrics
+                  </Text>
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-4 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-              <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-            </div>
-            <div className="flex-1">
-              <Text className="text-base font-black text-white uppercase tracking-wider">
-                Multiple Validators
-              </Text>
-              <Text className="text-xs text-white/60 font-semibold">
-                Select a validator to view detailed performance metrics
-              </Text>
-            </div>
-          </div>
-        )}
-      </div>
 
           <RoundValidatorsInline
             onValidatorSelect={handleValidatorSelect}
