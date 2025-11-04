@@ -216,7 +216,7 @@ export default function Page() {
       <PageHeader
         title="Agent Run Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={((): string => {
                 const roundKey =
@@ -228,7 +228,7 @@ export default function Page() {
                   ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
                   : "#";
               })()}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Round
@@ -238,14 +238,16 @@ export default function Page() {
                 {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
               </span>
               {data?.personas?.round?.name && (
-                <IDCopyButton text={data.personas.round.name} />
+                <span className="ml-auto">
+                  <IDCopyButton text={data.personas.round.name} />
+                </span>
               )}
             </Link>
             <Link
               href={
                 runId ? `${routes.agent_run}/${encodeURIComponent(runId)}` : "#"
               }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Run
@@ -254,7 +256,11 @@ export default function Page() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
                 {truncateMiddle(runId, 8)}
               </span>
-              {!!runId && <IDCopyButton text={runId} />}
+              {!!runId && (
+                <span className="ml-auto">
+                  <IDCopyButton text={runId} />
+                </span>
+              )}
             </Link>
           </div>
         }
