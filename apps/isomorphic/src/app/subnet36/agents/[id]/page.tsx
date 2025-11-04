@@ -183,7 +183,7 @@ function AgentStats({
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Success Rate",
@@ -199,13 +199,13 @@ function AgentStats({
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Current Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Validators",
@@ -217,41 +217,35 @@ function AgentStats({
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Best Ever Score",
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "TAO Earned",
-      metric: `${totalTaoEarned} τ`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
   ];
 
   // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Success Rate, Tasks Success, Tasks Failed, Alpha Earned (first row), Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned (second row)
+  // In historical view: show Success Rate, Best Score Ever, Alpha Earned
   const displayStats = (
     mode === "current"
       ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
-      : [stats[1], stats[6], stats[7], stats[8]]
+      : [stats[1], stats[6], stats[7]]
   ).filter(Boolean);
 
   return (
@@ -1871,13 +1865,13 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Avg Score",
@@ -1895,25 +1889,19 @@ export default function Page() {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "TAO Earned",
-      metric: `${totalTaoEarned} τ`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
   ];
 
@@ -1927,7 +1915,7 @@ export default function Page() {
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Tasks Success",
@@ -1948,7 +1936,7 @@ export default function Page() {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
     {
@@ -1956,7 +1944,7 @@ export default function Page() {
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Best Rank Ever",
@@ -1966,19 +1954,19 @@ export default function Page() {
           ? `Round ${(agent as any).bestRankRoundId}`
           : null,
       icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
