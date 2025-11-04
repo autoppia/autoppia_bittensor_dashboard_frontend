@@ -74,32 +74,12 @@ export default function AgentsSidebar() {
       }
       const candidate =
         (round as any).roundNumber ?? (round as any).round ?? (round as any).id;
-      const validatorCount =
-        (round as any).validatorRoundCount ??
-        (round as any).validator_round_count ??
-        undefined;
 
-      const hasCompletedValidator = (() => {
-        if (typeof validatorCount === "number" && validatorCount > 0) {
-          return true;
-        }
-        const validatorRounds =
-          (round as any).validatorRounds ?? (round as any).validator_rounds;
-        if (Array.isArray(validatorRounds)) {
-          return validatorRounds.some((entry: any) => {
-            const status = (entry?.status ?? entry?.roundStatus ?? "")
-              .toString()
-              .toLowerCase();
-            return status === "finished";
-          });
-        }
-        return false;
-      })();
-
+      // Add round if it has a valid round number (removed strict validator check)
       if (
         typeof candidate === "number" &&
         Number.isFinite(candidate) &&
-        hasCompletedValidator
+        candidate > 0
       ) {
         numbers.add(candidate);
       }
