@@ -142,28 +142,26 @@ export function useTaskDetails(taskId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchDetails = useCallback(async () => {
     if (!taskId) return;
 
-    const fetchDetails = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await tasksService.getTaskDetails(taskId);
-        setDetails(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch details"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDetails();
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await tasksService.getTaskDetails(taskId);
+      setDetails(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch details");
+    } finally {
+      setIsLoading(false);
+    }
   }, [taskId]);
 
-  return { details, isLoading, error };
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
+
+  return { details, isLoading, error, refetch: fetchDetails };
 }
 
 // Hook for getting task results only
