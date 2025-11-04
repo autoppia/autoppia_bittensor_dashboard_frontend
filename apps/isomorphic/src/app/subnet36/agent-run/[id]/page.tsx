@@ -1586,8 +1586,8 @@ function AgentRunSummary({
                   content={(props) => (
                     <CenterLabel
                       value={successRate.toFixed(0)}
-                      totalRequests={totalRequests.toFixed(0)}
-                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      totalRequests={Math.round(totalRequests).toString()}
+                      totalSuccesses={Math.round(totalSuccesses).toString()}
                       viewBox={(props as any).viewBox}
                     />
                   )}
@@ -1658,7 +1658,8 @@ function AgentRunSummary({
                       {item.value.toFixed(1)}%
                     </div>
                     <div className="text-xs text-white/70">
-                      {item.total} requests • {item.successCount} successes
+                      {Math.round(item.total)} requests •{" "}
+                      {Math.round(item.successCount)} successes
                       {selectedWebsite && (
                         <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
                       )}
