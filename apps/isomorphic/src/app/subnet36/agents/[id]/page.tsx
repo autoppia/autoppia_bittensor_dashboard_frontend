@@ -473,7 +473,7 @@ function AgentScoreChart({
         headerClassName="flex-row items-start space-between text-white pb-4"
         rounded="xl"
         className={className}
-        titleClassName="text-white"
+        titleClassName="text-sm md:text-base sm:text-lg text-white"
       >
         <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="relative flex h-[273px] items-center justify-center text-rose-200">
@@ -555,7 +555,9 @@ function AgentScoreChart({
   return (
     <WidgetCard
       title={
-        <span className="text-2xl font-black text-white">Score Over Time</span>
+        <span className="text-md lg:text-2xl font-black text-white">
+          Score Over Time
+        </span>
       }
       action={
         <ButtonGroupAction
