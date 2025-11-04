@@ -1092,7 +1092,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
       </div>
 
       {/* Success Rate - Main metric */}
-      <div className="mb-3 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
+      <div className="mb-3 p-1 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">
             Success Rate
@@ -1101,7 +1101,9 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
         </div>
-        <div className="text-2xl font-black text-white">{successRate}%</div>
+        <div className="text-md sm:text-2xl font-black text-white">
+          {successRate}%
+        </div>
       </div>
 
       {/* Task breakdown */}
@@ -1283,7 +1285,7 @@ function RoundWebsitesChart({
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
-            <span className="text-2xl font-black text-white">
+            <span className="text-xl sm:text-2xl font-black text-white">
               Performance per website
             </span>
           </div>
