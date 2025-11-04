@@ -2049,7 +2049,7 @@ export default function Round() {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const { openModal } = useModal();
-  const { data: round, error } = useRound(roundKey);
+  const { data: round, error, refetch } = useRound(roundKey);
 
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
@@ -2228,6 +2228,12 @@ export default function Round() {
                 round.
               </p>
               <div className="mt-8 flex justify-center gap-4">
+                <Button
+                  onClick={refetch}
+                  className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                >
+                  Retry
+                </Button>
                 <Button
                   onClick={() => router.push(routes.rounds)}
                   className="!bg-gradient-to-r !from-amber-500 !to-orange-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
