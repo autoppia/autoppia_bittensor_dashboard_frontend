@@ -1316,76 +1316,6 @@ function RoundMinerScoresInline({
       ),
     [accentClass, className]
   );
-  const [expandedMinersData, setExpandedMinersData] = React.useState<
-    typeof minersData | null
-  >(null);
-  React.useEffect(() => {
-    let isMounted = true;
-    const basePayload = minersData?.data;
-    if (!basePayload) {
-      if (isMounted) setExpandedMinersData(null);
-      return () => {
-        isMounted = false;
-      };
-    }
-    if (!roundKey) {
-      if (isMounted) setExpandedMinersData(minersData);
-      return () => {
-        isMounted = false;
-      };
-    }
-    const baseMiners = Array.isArray(basePayload.miners)
-      ? basePayload.miners
-      : [];
-    const total =
-      typeof basePayload.total === "number"
-        ? basePayload.total
-        : baseMiners.length;
-    const limit =
-      basePayload.limit && basePayload.limit > 0
-        ? basePayload.limit
-        : baseMiners.length || 100;
-    if (total <= baseMiners.length) {
-      if (isMounted) setExpandedMinersData(minersData);
-      return () => {
-        isMounted = false;
-      };
-    }
-    (async () => {
-      const combinedMiners = [...baseMiners];
-      const totalPages = Math.ceil(total / limit);
-      for (let page = 2; page <= totalPages; page += 1) {
-        try {
-          const response = await roundsService.getRoundMiners(roundKey!, {
-            limit,
-            page,
-            sortBy: "score",
-            sortOrder: "desc",
-          });
-          const extra = Array.isArray(response.data?.miners)
-            ? response.data!.miners
-            : [];
-          combinedMiners.push(...extra);
-        } catch (fetchError) {
-          if (process.env.NODE_ENV !== "production")
-            console.error(
-              "[round-miner-scores] failed to expand miner list",
-              fetchError
-            );
-          break;
-        }
-      }
-      if (!isMounted) return;
-      setExpandedMinersData({
-        ...minersData,
-        data: { ...basePayload, miners: combinedMiners },
-      });
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [minersData, roundKey]);
-
   const isSmallScreen = useMedia("(max-width: 767px)", false);
   const isMediumScreen = useMedia(
     "(min-width: 768px) and (max-width: 1023px)",
@@ -1393,10 +1323,15 @@ function RoundMinerScoresInline({
   );
   const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
   const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
-  const chartSource = expandedMinersData?.data ?? minersData?.data;
+  const chartSource = minersData?.data;
 
   const chartData = React.useMemo(() => {
-    if (!chartSource?.miners) return [] as any[];
+    if (!chartSource?.miners) {
+      console.log("[RoundMinerScores] No miners in chartSource:", chartSource);
+      return [] as any[];
+    }
+    console.log("[RoundMinerScores] chartSource.miners:", chartSource.miners);
+    console.log("[RoundMinerScores] selectedValidator:", selectedValidator);
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
     const benchmarks: BenchmarkPerformance[] = chartSource.benchmarks || [];
@@ -1405,6 +1340,8 @@ function RoundMinerScoresInline({
           (miner) => miner.validatorId === selectedValidator.id
         )
       : chartSource.miners;
+    console.log("[RoundMinerScores] filteredMiners:", filteredMiners);
+    console.log("[RoundMinerScores] benchmarks:", benchmarks);
     const minerEntries = filteredMiners.map((miner: any) => {
       const score = normalizeScore(miner.score);
       const rawIsSota =
@@ -1482,7 +1419,7 @@ function RoundMinerScoresInline({
     return [...minerEntries, ...benchmarkEntries].sort(
       (a, b) => b.score - a.score
     );
-  }, [chartSource, selectedValidator]);
+  }, [minersData, selectedValidator]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
