@@ -207,10 +207,9 @@ export default function Page() {
   });
 
   // Derived detail data from stats for charts/summary
-  const detailData = useMemo(
-    () => buildDetailDataFromStats(data.stats),
-    [data.stats]
-  );
+  const detailData = useMemo(() => {
+    return buildDetailDataFromStats(data.stats);
+  }, [data.stats]);
 
   // Check if agent run has no data yet
   const hasNoData =
@@ -348,58 +347,27 @@ export default function Page() {
             />
           )}
         </div>
-      ) : (
-        <>
-          {error && (
-            <div className="mb-4 rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm text-white/80">
-              Failed to refresh some sections. You can{" "}
-              <button
-                onClick={refetch}
-                className="font-semibold text-[#FDF5E6] underline underline-offset-4 hover:text-white"
-              >
-                retry
-              </button>{" "}
-              or wait a moment while data loads.
-            </div>
+        <div className="xl:col-span-4">
+          {data.loading.stats && data.loading.summary ? (
+            <AgentRunSummaryPlaceholder />
+          ) : (
+            <AgentRunSummary
+              selectedWebsite={selectedWebsite}
+              data={detailData}
+            />
           )}
+        </div>
+      </div>
 
-          <AgentRunPersonas personas={data.personas} summary={data.summary} />
-          <AgentRunStats stats={data.stats || null} />
+      <div className="mb-6">
+        <AgentRunTasksSection />
+      </div>
 
-          <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
-            <div className="xl:col-span-8">
-              {data.loading.stats && <AgentRunDetailPlaceholder />}
-              {!data.loading.stats && (
-                <AgentRunDetail
-                  selectedWebsite={selectedWebsite}
-                  setSelectedWebsite={setSelectedWebsite}
-                  data={detailData}
-                />
-              )}
-            </div>
-            <div className="xl:col-span-4">
-              {data.loading.stats && data.loading.summary ? (
-                <AgentRunSummaryPlaceholder />
-              ) : (
-                <AgentRunSummary
-                  selectedWebsite={selectedWebsite}
-                  data={detailData}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <AgentRunTasksSection />
-          </div>
-
-          {isAnyLoading && (
-            <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Updating data...</span>
-            </div>
-          )}
-        </>
+      {isAnyLoading && (
+        <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm">Updating data...</span>
+        </div>
       )}
     </div>
   );
