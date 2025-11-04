@@ -331,9 +331,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {stat.badge ? (
+                      {(stat as any).badge ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                          {stat.badge}
+                          {(stat as any).badge}
                         </span>
                       ) : null}
                     </div>
@@ -2209,25 +2209,25 @@ export default function Page() {
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 z-10">
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
                   >
                     {/* Card background with gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
                         stat.bgGradient
                       )}
                     />
 
                     {/* Animated shimmer effect */}
                     <div
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
+                      className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
                       style={{
                         backgroundSize: "200% 100%",
                         animation: "shimmer 3.5s linear infinite",
@@ -2237,7 +2237,7 @@ export default function Page() {
                     {/* Border gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl border transition-all duration-300",
+                        "absolute inset-0 rounded-xl md:rounded-2xl border transition-all duration-300",
                         stat.borderColor,
                         "group-hover:shadow-lg"
                       )}
@@ -2247,30 +2247,30 @@ export default function Page() {
                     />
 
                     {/* Content */}
-                    <div className="relative p-4 flex items-center gap-4">
+                    <div className="relative p-2.5 md:p-4 flex items-center gap-2 md:gap-4">
                       {/* Icon on left */}
                       <div
                         className={cn(
-                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
+                          "flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
                           "border border-white/40 group-hover:border-white/60",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow" />
+                        <Icon className="w-5 h-5 md:w-7 md:h-7 text-white drop-shadow" />
                       </div>
 
                       {/* Metrics in middle */}
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
+                      <div className="flex flex-col gap-0.5 md:gap-1 flex-1 min-w-0">
+                        <Text className="text-[9px] md:text-xs font-bold text-white/80 uppercase tracking-wider md:tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <div className="flex items-center gap-2">
-                          <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                        <div className="flex items-center gap-1 md:gap-2">
+                          <Text className="text-lg md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
-                          {stat.badge ? (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                              {stat.badge}
+                          {(stat as any).badge ? (
+                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                              {(stat as any).badge}
                             </span>
                           ) : null}
                         </div>
