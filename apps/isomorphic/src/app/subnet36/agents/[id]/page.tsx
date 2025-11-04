@@ -1026,18 +1026,18 @@ function AgentValidators({
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-3 bg-transparent border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-1 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3 gap-1 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-1 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
                           <div
                             key={stat.title}
-                            className="flex items-center gap-2.5 min-w-0"
+                            className="flex items-center sm:gap-2.5 gap-1 min-w-0"
                           >
                             <div
                               className={cn(
-                                "flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
+                                "flex items-center justify-center  w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
                                 stat.iconClassName
                               )}
                             >
@@ -1049,7 +1049,7 @@ function AgentValidators({
                               </Text>
                               <Text
                                 className={cn(
-                                  "font-bold text-base truncate text-white"
+                                  "font-bold text-xs sm:text-base truncate text-white"
                                 )}
                               >
                                 {stat.metric}
