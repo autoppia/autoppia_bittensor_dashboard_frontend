@@ -1601,7 +1601,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="ms-2 font-mono text-white"
+        className="ms-2 font-mono text-xs sm:text-sm text-white"
         title="View task details"
       >
         #{row.original.taskId}
@@ -1616,7 +1616,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="block max-w-[320px] break-words whitespace-pre-wrap font-medium text-slate-200"
+        className="block max-w-[200px] sm:max-w-[320px] break-words whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-200"
         title="View task details"
       >
         {row.original.prompt}
@@ -1631,7 +1631,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="inline-flex items-center rounded-md border border-blue-600 px-2 py-0.5 text-xs text-blue-300"
+        className="inline-flex items-center rounded-md border border-blue-600 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs text-blue-300"
         title="View task details"
       >
         {formatWebsiteName(row.original.website)}
@@ -1646,7 +1646,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="font-medium text-slate-300"
+        className="text-xs sm:text-sm font-medium text-slate-300"
         title="View task details"
       >
         {row.original.useCase
@@ -1670,7 +1670,7 @@ const agentRunTasksColumns = [
       return (
         <Link
           href={`${routes.tasks}/${row.original.taskId}`}
-          className={`font-medium ${scoreColor}`}
+          className={`text-xs sm:text-sm font-medium ${scoreColor}`}
           title="View task details"
         >
           {score.toFixed(2)}
@@ -1685,7 +1685,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="font-medium text-slate-300"
+        className="text-xs sm:text-sm font-medium text-slate-300"
         title="View task details"
       >
         {row.original.duration}s
@@ -1705,9 +1705,9 @@ const agentRunTasksColumns = [
         <Button
           variant="outline"
           size="sm"
-          className="relative z-20 border-slate-600 text-white hover:border-slate-400 hover:bg-transparent"
+          className="relative z-20 border-slate-600 text-white hover:border-slate-400 hover:bg-transparent text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
         >
-          <PiEyeBold className="me-1.5 size-4" />
+          <PiEyeBold className="me-1 sm:me-1.5 size-3 sm:size-4" />
           <span>Inspect</span>
         </Button>
       </Link>
@@ -1751,19 +1751,19 @@ function AgentRunTasksSection() {
 
   if (isLoading && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-        <div className="relative mb-6 flex items-center justify-between">
-          <Placeholder height="1.4rem" width="6rem" />
-          <Placeholder height="2.3rem" width="15rem" />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+        <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
+          <Placeholder height="1.2rem" width="5rem" />
+          <Placeholder height="2rem" width="12rem" />
         </div>
         <div className="relative mb-3">
           <div className="overflow-hidden rounded-2xl border border-slate-700/25">
-            <table className="w-full">
+            <table className="w-full text-xs sm:text-sm">
               <thead className="bg-transparent">
                 <tr>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <th key={i} className="px-4 py-3 text-left">
-                      <Placeholder height="1rem" width="4rem" />
+                    <th key={i} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
+                      <Placeholder height="0.875rem" width="3rem" />
                     </th>
                   ))}
                 </tr>
@@ -1776,12 +1776,12 @@ function AgentRunTasksSection() {
             </table>
           </div>
         </div>
-        <div className="relative flex items-center justify-between py-4">
-          <Placeholder height="1rem" width="8rem" />
+        <div className="relative flex items-center justify-between py-3 sm:py-4">
+          <Placeholder height="0.875rem" width="6rem" />
           <div className="flex items-center gap-2">
-            <Placeholder height="2rem" width="6rem" />
-            <Placeholder height="2rem" width="4rem" />
-            <Placeholder height="2rem" width="6rem" />
+            <Placeholder height="1.75rem" width="5rem" />
+            <Placeholder height="1.75rem" width="3rem" />
+            <Placeholder height="1.75rem" width="5rem" />
           </div>
         </div>
       </div>
@@ -1790,18 +1790,20 @@ function AgentRunTasksSection() {
 
   if (error && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-        <div className="relative mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">All Tasks</h2>
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+        <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
+          <h2 className="text-base sm:text-xl font-semibold text-white">
+            All Tasks
+          </h2>
         </div>
-        <div className="relative py-8 text-center">
-          <div className="mb-2 text-lg font-semibold text-red-400">
+        <div className="relative py-6 sm:py-8 text-center">
+          <div className="mb-2 text-base sm:text-lg font-semibold text-red-400">
             Failed to Load Tasks Data
           </div>
-          <div className="mb-4 text-sm text-red-300">{error}</div>
+          <div className="mb-4 text-xs sm:text-sm text-red-300">{error}</div>
           <button
             onClick={refetch}
-            className="rounded-lg bg-transparent border border-red-600 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-transparent"
+            className="rounded-lg bg-transparent border border-red-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-300 transition-colors hover:bg-transparent"
           >
             Retry
           </button>
@@ -1811,12 +1813,12 @@ function AgentRunTasksSection() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 border border-blue-500/30">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+      <div className="relative mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 border border-blue-500/30">
             <svg
-              className="w-5 h-5 text-blue-400"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -1829,10 +1831,10 @@ function AgentRunTasksSection() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
+          <h2 className="text-base sm:text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
             All Tasks
             {total > 0 && (
-              <span className="ml-2 text-sm font-normal text-blue-300/70">
+              <span className="ml-2 text-xs sm:text-sm font-normal text-blue-300/70">
                 ({total} total)
               </span>
             )}
@@ -1845,9 +1847,11 @@ function AgentRunTasksSection() {
             placeholder="Search task..."
             onClear={() => table.setGlobalFilter("")}
             value={(table.getState().globalFilter as string) ?? ""}
-            prefix={<PiMagnifyingGlassBold className="size-4 text-slate-400" />}
+            prefix={
+              <PiMagnifyingGlassBold className="size-3 sm:size-4 text-slate-400" />
+            }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
-            className="w-full xs:max-w-60"
+            className="w-full xs:max-w-60 text-xs sm:text-sm"
           />
         </div>
       </div>
@@ -1867,11 +1871,11 @@ function AgentRunTasksSection() {
             }}
           />
         ) : (
-          <div className="rounded-2xl border border-slate-700/25 bg-transparent p-8 text-center">
-            <div className="mb-2 text-lg font-medium text-slate-200">
+          <div className="rounded-2xl border border-slate-700/25 bg-transparent p-6 sm:p-8 text-center">
+            <div className="mb-2 text-base sm:text-lg font-medium text-slate-200">
               No Tasks Found
             </div>
-            <div className="text-sm text-slate-400">
+            <div className="text-xs sm:text-sm text-slate-400">
               No tasks are available for this agent run.
             </div>
           </div>
@@ -1881,15 +1885,15 @@ function AgentRunTasksSection() {
       {tasks && tasks.length > 0 && (
         <TablePagination
           table={table}
-          className="relative py-4 text-slate-300"
+          className="relative py-3 sm:py-4 text-slate-300 text-xs sm:text-sm"
         />
       )}
 
       {isLoading && tasks && (
-        <div className="relative flex items-center justify-center py-4">
+        <div className="relative flex items-center justify-center py-3 sm:py-4">
           <div className="flex items-center gap-2 text-slate-400">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
-            <span className="text-sm">Loading more tasks...</span>
+            <div className="h-3 w-3 sm:h-4 sm:w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+            <span className="text-xs sm:text-sm">Loading more tasks...</span>
           </div>
         </div>
       )}
