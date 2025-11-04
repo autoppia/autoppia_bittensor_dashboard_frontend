@@ -331,9 +331,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {stat.badge ? (
+                      {(stat as any).badge ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                          {stat.badge}
+                          {(stat as any).badge}
                         </span>
                       ) : null}
                     </div>
@@ -473,7 +473,7 @@ function AgentScoreChart({
         headerClassName="flex-row items-start space-between text-white pb-4"
         rounded="xl"
         className={className}
-        titleClassName="text-white"
+        titleClassName="text-sm md:text-base sm:text-lg text-white"
       >
         <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="relative flex h-[273px] items-center justify-center text-rose-200">
@@ -555,7 +555,9 @@ function AgentScoreChart({
   return (
     <WidgetCard
       title={
-        <span className="text-2xl font-black text-white">Score Over Time</span>
+        <span className="text-md lg:text-2xl font-black text-white">
+          Score Over Time
+        </span>
       }
       action={
         <ButtonGroupAction
@@ -753,7 +755,7 @@ function AgentValidators({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
-          <Text className="text-2xl text-center font-bold text-white">
+          <Text className="text-md sm:text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({Object.keys(runsByValidator).length})
             {selectedRound ? ` - Round ${selectedRound}` : ""}
           </Text>
@@ -995,7 +997,7 @@ function AgentValidators({
                     style={{ display: "none" }}
                   />
                   <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
                           <Image
@@ -1015,28 +1017,29 @@ function AgentValidators({
                           </Text>
                         </div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
-                        <PiHashDuotone className="w-4 h-4" />
-                        <span className="font-mono" title={latestRun.runId}>
-                          {latestRun.runId.length > 12
-                            ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}`
-                            : latestRun.runId}
+                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
+                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
+                        <span
+                          className="font-mono break-all"
+                          title={latestRun.runId}
+                        >
+                          {latestRun.runId}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-3 bg-transparent border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-1 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3 gap-1 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-1 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
                           <div
                             key={stat.title}
-                            className="flex items-center gap-2.5 min-w-0"
+                            className="flex items-center sm:gap-2.5 gap-1 min-w-0"
                           >
                             <div
                               className={cn(
-                                "flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
+                                "flex items-center justify-center  w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
                                 stat.iconClassName
                               )}
                             >
@@ -1048,7 +1051,7 @@ function AgentValidators({
                               </Text>
                               <Text
                                 className={cn(
-                                  "font-bold text-base truncate text-white"
+                                  "font-bold text-xs sm:text-base truncate text-white"
                                 )}
                               >
                                 {stat.metric}
@@ -1092,7 +1095,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
       </div>
 
       {/* Success Rate - Main metric */}
-      <div className="mb-3 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
+      <div className="mb-3 p-1 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">
             Success Rate
@@ -1101,7 +1104,9 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
         </div>
-        <div className="text-2xl font-black text-white">{successRate}%</div>
+        <div className="text-md sm:text-2xl font-black text-white">
+          {successRate}%
+        </div>
       </div>
 
       {/* Task breakdown */}
@@ -1283,7 +1288,7 @@ function RoundWebsitesChart({
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
-            <span className="text-2xl font-black text-white">
+            <span className="text-xl sm:text-2xl font-black text-white">
               Performance per website
             </span>
           </div>
@@ -2133,14 +2138,14 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="glass-card inline-flex items-center gap-1.5 p-1.5 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+              <div className="glass-card flex sm:inline-flex items-center gap-1.5 p-1.5 rounded-xl w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setViewMode("current")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "current"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2159,8 +2164,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("runs")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "runs"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2179,8 +2184,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("historical")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "historical"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2209,25 +2214,25 @@ export default function Page() {
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 z-10">
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
                   >
                     {/* Card background with gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
                         stat.bgGradient
                       )}
                     />
 
                     {/* Animated shimmer effect */}
                     <div
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
+                      className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
                       style={{
                         backgroundSize: "200% 100%",
                         animation: "shimmer 3.5s linear infinite",
@@ -2237,7 +2242,7 @@ export default function Page() {
                     {/* Border gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl border transition-all duration-300",
+                        "absolute inset-0 rounded-xl md:rounded-2xl border transition-all duration-300",
                         stat.borderColor,
                         "group-hover:shadow-lg"
                       )}
@@ -2247,30 +2252,30 @@ export default function Page() {
                     />
 
                     {/* Content */}
-                    <div className="relative p-4 flex items-center gap-4">
+                    <div className="relative p-2.5 md:p-4 flex items-center gap-2 md:gap-4">
                       {/* Icon on left */}
                       <div
                         className={cn(
-                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
+                          "flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
                           "border border-white/40 group-hover:border-white/60",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow" />
+                        <Icon className="w-5 h-5 md:w-7 md:h-7 text-white drop-shadow" />
                       </div>
 
                       {/* Metrics in middle */}
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
+                      <div className="flex flex-col gap-0.5 md:gap-1 flex-1 min-w-0">
+                        <Text className="text-[9px] md:text-xs font-bold text-white/80 uppercase tracking-wider md:tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <div className="flex items-center gap-2">
-                          <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                        <div className="flex items-center gap-1 md:gap-2">
+                          <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
-                          {stat.badge ? (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                              {stat.badge}
+                          {(stat as any).badge ? (
+                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                              {(stat as any).badge}
                             </span>
                           ) : null}
                         </div>
