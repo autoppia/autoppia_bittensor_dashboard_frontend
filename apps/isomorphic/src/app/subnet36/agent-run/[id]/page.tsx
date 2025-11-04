@@ -820,21 +820,21 @@ function AgentRunDetail({
       )}
     >
       <div className="relative mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30">
-              <PiChartBar className="w-6 h-6 text-emerald-400" />
+              <PiChartBar className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
                 Performance Analytics
               </h2>
-              <p className="text-sm text-emerald-200/70">
+              <p className="text-xs sm:text-sm text-emerald-200/70">
                 Success rates and performance metrics
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Select
               options={websiteOptions}
               value={websiteOptions.find(
@@ -845,7 +845,7 @@ function AgentRunDetail({
                   option.value === "__all__" ? null : option.value
                 )
               }
-              className="w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
+              className="w-full sm:w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
             />
           </div>
         </div>
