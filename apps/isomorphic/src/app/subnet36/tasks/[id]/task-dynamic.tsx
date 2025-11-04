@@ -979,9 +979,11 @@ const truncate = (value: string, max = 80) =>
   value.length > max ? `${value.slice(0, max).trim()}…` : value;
 
 const getStatusIcon = (success: boolean, error?: string) => {
-  if (error) return <PiCheckCircle className="w-4 h-4 text-red-500" />;
-  if (success) return <PiCheckCircle className="w-4 h-4 text-emerald-500" />;
-  return <PiWarning className="w-4 h-4 text-amber-500" />;
+  if (error)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-red-500" />;
+  if (success)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-emerald-500" />;
+  return <PiWarning className="w-4 h-4 flex-shrink-0 text-amber-500" />;
 };
 
 const formatActionDetails = (action: TaskAction) => {
@@ -1270,9 +1272,9 @@ function TaskResults() {
               return (
                 <div
                   key={action.id || index}
-                  className="flex items-center justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
+                  className="flex items-start justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     <div
                       className={`flex items-center justify-center h-10 w-10 min-w-[2.5rem] rounded-lg ${meta.badgeBg} flex-shrink-0`}
                     >
@@ -1285,11 +1287,14 @@ function TaskResults() {
                       {detailsList.length > 0 ? (
                         <ul className="mt-0.5 text-xs text-slate-400 list-disc pl-4 space-y-0.5">
                           {detailsList.slice(0, 4).map(([k, v], i) => (
-                            <li key={`${action.id || index}-d-${i}`}>
+                            <li
+                              key={`${action.id || index}-d-${i}`}
+                              className="break-words"
+                            >
                               <span className="text-slate-500">
                                 {formatKeyLabel(k)}:
                               </span>{" "}
-                              {truncate(String(v), 120)}
+                              <span className="break-all">{String(v)}</span>
                             </li>
                           ))}
                         </ul>
@@ -1300,7 +1305,7 @@ function TaskResults() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {getStatusIcon(action.success, action.error)}
                   </div>
                 </div>
