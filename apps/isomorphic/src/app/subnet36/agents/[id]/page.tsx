@@ -2133,14 +2133,14 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="glass-card inline-flex items-center gap-1.5 p-1.5 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+              <div className="glass-card flex sm:inline-flex items-center gap-1.5 p-1.5 rounded-xl w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setViewMode("current")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "current"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2159,8 +2159,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("runs")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "runs"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2179,8 +2179,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("historical")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "historical"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
