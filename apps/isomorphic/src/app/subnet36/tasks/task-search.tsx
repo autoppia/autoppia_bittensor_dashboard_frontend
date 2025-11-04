@@ -197,7 +197,10 @@ export default function TaskSearch() {
           setTotal(1);
 
           // Fetch facets for filter options
-          const facetsResponse = await tasksService.searchTasks({ limit: 1 });
+          const facetsResponse = await tasksService.searchTasks({
+            limit: 1,
+            includeDetails: false,
+          });
           const facets = facetsResponse.data?.facets;
           if (facets && !ignore) {
             setAvailableWebsites(
@@ -249,6 +252,7 @@ export default function TaskSearch() {
           useCase: debouncedFilters.useCase || undefined,
           page: currentPage,
           limit: currentLimit,
+          includeDetails: false, // Omit actions/screenshots/logs for fast loading
         });
 
         if (ignore) return;
