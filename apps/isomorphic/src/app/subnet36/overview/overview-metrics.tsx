@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import Link from "next/link";
 import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
@@ -60,7 +60,16 @@ const metricsData = [
 ];
 
 export default function OverviewMetrics({ className }: { className?: string }) {
-  const { data: metrics, loading, error } = useOverviewMetrics();
+  const { data: metrics, loading, error, refetch } = useOverviewMetrics();
+
+  // Auto-refresh metrics every 30 seconds to update cards with latest round data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
