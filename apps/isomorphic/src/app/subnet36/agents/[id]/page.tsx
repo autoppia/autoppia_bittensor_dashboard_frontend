@@ -1991,9 +1991,9 @@ export default function Page() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-1 mt-2 mb-2">
+      <div className="flex flex-col gap-1 mb-2">
         <div
-          className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group"
+          className="rounded-3xl flex flex-col gap-6 p-2 lg:p-3 group"
           style={{
             background: "transparent",
             border: "none",
