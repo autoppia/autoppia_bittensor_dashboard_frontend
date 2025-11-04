@@ -107,6 +107,20 @@ const isValidRoundIdentifier = (
 const identifierKey = (id?: RoundIdentifier): string =>
   id === undefined ? "" : String(id);
 
+// Hook for round IDs only (super fast, no nested data)
+export function useRoundIds(params?: {
+  limit?: number;
+  status?: string;
+  sortOrder?: string;
+}) {
+  const { paramsKey, stableParams } = useStableParams(params);
+  const request = useCallback(
+    () => roundsService.getRoundIds(stableParams),
+    [stableParams]
+  );
+  return useApiCall(request, `roundIds:${paramsKey}`);
+}
+
 // Hook for rounds list
 export function useRounds(params?: RoundsListQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);

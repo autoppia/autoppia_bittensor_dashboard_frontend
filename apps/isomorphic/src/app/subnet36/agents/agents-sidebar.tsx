@@ -22,7 +22,7 @@ import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
 import { useMinersList } from "@/services/hooks/useAgents";
-import { useRounds } from "@/services/hooks/useRounds";
+import { useRoundIds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type {
   MinimalAgentData,
@@ -51,8 +51,9 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const roundReady =
     typeof selectedRound === "number" && Number.isFinite(selectedRound);
 
-  const { data: roundsData } = useRounds({
-    limit: 50,
+  // Use lightweight endpoint to get only round IDs (not full data)
+  const { data: roundIdsData } = useRoundIds({
+    limit: 500,
     sortOrder: "desc",
   });
 
@@ -65,30 +66,16 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   );
 
   const roundOptions: SelectOption[] = useMemo(() => {
-    const numbers = new Set<number>();
-    const rounds = roundsData?.data?.rounds ?? [];
-    rounds.forEach((round) => {
-      if (!round) {
-        return;
-      }
-      const candidate =
-        (round as any).roundNumber ?? (round as any).round ?? (round as any).id;
+    const roundIds = roundIdsData?.roundIds ?? [];
+    if (roundIds.length === 0) {
+      return [];
+    }
 
-      // Add round if it has a valid round number (removed strict validator check)
-      if (
-        typeof candidate === "number" &&
-        Number.isFinite(candidate) &&
-        candidate > 0
-      ) {
-        numbers.add(candidate);
-      }
-    });
-    const values = Array.from(numbers).sort((a, b) => b - a);
-    return values.map((value) => ({
+    return roundIds.map((value) => ({
       label: `Round ${value}`,
       value,
     }));
-  }, [roundsData]);
+  }, [roundIdsData]);
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
