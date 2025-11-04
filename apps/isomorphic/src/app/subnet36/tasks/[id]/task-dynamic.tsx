@@ -872,12 +872,12 @@ function TaskDetailsDynamic({
 
         <div className="relative overflow-hidden rounded-2xl border border-[#5436a6]/40 bg-transparent p-4 text-white shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner flex-shrink-0">
               <PiFileText className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-x-auto custom-scrollbar">
               <p
-                className="font-mono text-sm text-white truncate"
+                className="font-mono text-sm text-white whitespace-nowrap"
                 title={taskData.prompt || "Prompt not provided for this task."}
               >
                 {taskData.prompt || "Prompt not provided for this task."}
