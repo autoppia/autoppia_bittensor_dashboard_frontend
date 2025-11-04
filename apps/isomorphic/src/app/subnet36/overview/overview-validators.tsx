@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
@@ -22,10 +23,7 @@ import {
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
-import {
-  useValidators,
-  useOverviewMetrics,
-} from "@/services/hooks/useOverview";
+import { useValidators } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 const DEFAULT_TASK_MESSAGES = new Set([
@@ -38,20 +36,28 @@ const DEFAULT_TASK_MESSAGES = new Set([
   "Round completed",
 ]);
 
-export default function OverviewValidators() {
+export default function OverviewValidators({
+  currentRound,
+}: { currentRound?: number | null } = {}) {
   const {
     data: validatorsData,
     loading: validatorsLoading,
     error: validatorsError,
+    refetch,
   } = useValidators({ limit: 6 });
-  const {
-    data: metricsData,
-    loading: roundLoading,
-    error: roundError,
-  } = useOverviewMetrics();
 
-  // Always show current round from blockchain (not from DB)
-  const roundNumber = metricsData?.currentRound ?? null;
+  // Auto-refresh validators every 20 seconds to show live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Use provided currentRound to avoid duplicate API call
+  const roundNumber = currentRound ?? null;
+  const roundLoading = false; // No longer loading round separately
   // Current round is always "active" (it's the one in progress)
   const isRoundActive = true;
 

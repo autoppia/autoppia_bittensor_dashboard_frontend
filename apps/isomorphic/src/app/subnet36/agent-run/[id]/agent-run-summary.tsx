@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Label,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 import type {
   AgentRunDetailData,
   AgentRunSummaryChartData,
@@ -225,7 +219,8 @@ export default function AgentRunSummary({
       {
         label: "All",
         value: 1,
-        average: (summaryTotals?.successRate ?? fallbackSummary.total ?? 0) / 100,
+        average:
+          (summaryTotals?.successRate ?? fallbackSummary.total ?? 0) / 100,
         total: summaryTotals?.totalRequests ?? 0,
         successCount: summaryTotals?.totalSuccesses ?? 0,
         avgSolutionTime: 0,
@@ -249,7 +244,11 @@ export default function AgentRunSummary({
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow-lg shadow-blue-500/25">
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
               <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
             </svg>
@@ -267,7 +266,7 @@ export default function AgentRunSummary({
       <div className="relative text-white/80">
         <div className="h-[240px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>              
+            <PieChart>
               <Pie
                 data={donutData}
                 innerRadius={85}
@@ -283,8 +282,8 @@ export default function AgentRunSummary({
                   content={(props) => (
                     <CenterLabel
                       value={successRate.toFixed(0)}
-                      totalRequests={totalRequests.toFixed(0)}
-                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      totalRequests={Math.round(totalRequests).toString()}
+                      totalSuccesses={Math.round(totalSuccesses).toString()}
                       viewBox={props.viewBox}
                     />
                   )}
@@ -325,7 +324,8 @@ export default function AgentRunSummary({
                     {item.value.toFixed(1)}%
                   </div>
                   <div className="text-xs text-white/70">
-                    {item.total} requests • {item.successCount} successes
+                    {Math.round(item.total)} requests •{" "}
+                    {Math.round(item.successCount)} successes
                     {selectedWebsite && (
                       <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
                     )}

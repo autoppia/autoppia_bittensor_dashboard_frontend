@@ -36,6 +36,7 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
+  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
@@ -206,10 +207,16 @@ export default function Page() {
   });
 
   // Derived detail data from stats for charts/summary
-  const detailData = useMemo(
-    () => buildDetailDataFromStats(data.stats),
-    [data.stats]
-  );
+  const detailData = useMemo(() => {
+    return buildDetailDataFromStats(data.stats);
+  }, [data.stats]);
+
+  // Check if agent run has no data yet
+  const hasNoData =
+    !data.loading.stats &&
+    error &&
+    (!data.stats ||
+      (data.stats.totalTasks === 0 && data.stats.overallScore === 0));
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -1008,9 +1015,16 @@ function AgentRunDetail({
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
       ? (() => {
+          console.log("🔍 Filtering by website:", selectedWebsite);
+          console.log(
+            "📊 Available websites:",
+            agentDetailsData.websites.map((w) => w.name)
+          );
           const selectedWeb = agentDetailsData.websites.find(
             (web) => web.name === selectedWebsite
           );
+          console.log("✅ Found website:", selectedWeb);
+          console.log("📋 Results:", selectedWeb?.results);
           return (
             selectedWeb?.results.map((result, idx) => ({
               website: formatUseCaseName(
@@ -1410,10 +1424,17 @@ function AgentRunSummary({
 
   const displayData = (() => {
     if (selectedWebsite) {
+      console.log("🎯 Summary: Filtering by website:", selectedWebsite);
+      console.log(
+        "🏢 Summary: Available websites:",
+        agentData.websites.map((w) => w.name)
+      );
       const selectedWeb = agentData.websites.find(
         (w) => w.name === selectedWebsite
       );
-      if (!selectedWeb)
+      console.log("✨ Summary: Found website:", selectedWeb);
+      if (!selectedWeb) {
+        console.warn("⚠️ Summary: Website not found!");
         return [] as {
           label: string;
           value: number;
@@ -1421,6 +1442,8 @@ function AgentRunSummary({
           successCount: number;
           avgSolutionTime: number;
         }[];
+      }
+      console.log("📋 Summary: Results:", selectedWeb.results);
       return selectedWeb.results.map((r) => ({
         label: formatUseCaseName(
           selectedWeb.useCases.find(
@@ -1563,8 +1586,8 @@ function AgentRunSummary({
                   content={(props) => (
                     <CenterLabel
                       value={successRate.toFixed(0)}
-                      totalRequests={totalRequests.toFixed(0)}
-                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      totalRequests={Math.round(totalRequests).toString()}
+                      totalSuccesses={Math.round(totalSuccesses).toString()}
                       viewBox={(props as any).viewBox}
                     />
                   )}
@@ -1635,7 +1658,8 @@ function AgentRunSummary({
                       {item.value.toFixed(1)}%
                     </div>
                     <div className="text-xs text-white/70">
-                      {item.total} requests • {item.successCount} successes
+                      {Math.round(item.total)} requests •{" "}
+                      {Math.round(item.successCount)} successes
                       {selectedWebsite && (
                         <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
                       )}
