@@ -260,6 +260,25 @@ export class RoundsService {
   }
 
   /**
+   * Get lightweight list of round IDs only (no nested data)
+   * Much faster than getRounds() - use for dropdowns and initial lists
+   */
+  async getRoundIds(params?: {
+    limit?: number;
+    status?: string;
+    sortOrder?: string;
+  }): Promise<{ roundIds: number[]; total: number }> {
+    const response = await apiClient.get<any>(
+      `${this.baseEndpoint}/ids`,
+      params
+    );
+    return {
+      roundIds: response.data?.data?.roundIds ?? response.data?.roundIds ?? [],
+      total: response.data?.data?.total ?? response.data?.total ?? 0,
+    };
+  }
+
+  /**
    * Get list of all rounds with optional filtering and pagination
    */
   async getRounds(params?: RoundsListQueryParams): Promise<RoundsListResponse> {
