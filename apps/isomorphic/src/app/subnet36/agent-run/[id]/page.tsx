@@ -36,6 +36,7 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
+  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
@@ -211,6 +212,13 @@ export default function Page() {
     [data.stats]
   );
 
+  // Check if agent run has no data yet
+  const hasNoData =
+    !data.loading.stats &&
+    error &&
+    (!data.stats ||
+      (data.stats.totalTasks === 0 && data.stats.overallScore === 0));
+
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
       <PageHeader
@@ -269,54 +277,94 @@ export default function Page() {
         </Link>
       </PageHeader>
 
-      {error && (
-        <div className="mb-4 rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm text-white/80">
-          Failed to refresh some sections. You can{" "}
-          <button
-            onClick={refetch}
-            className="font-semibold text-[#FDF5E6] underline underline-offset-4 hover:text-white"
-          >
-            retry
-          </button>{" "}
-          or wait a moment while data loads.
+      {/* Show "Data Not Available" message if agent run has no data */}
+      {hasNoData ? (
+        <div className="mt-10 mb-10">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+            <div className="relative px-8 py-12 text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+                <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+              </div>
+              <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+                Agent Run Data Not Available
+              </h3>
+              <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+                This agent run is currently being evaluated or has not completed
+                yet. Data will appear here once the evaluation is complete.
+              </p>
+              <p className="text-sm text-white/50 font-semibold">
+                Please check back in a few minutes or navigate to a different
+                run.
+              </p>
+              <div className="mt-8 flex justify-center gap-4">
+                <Button
+                  onClick={refetch}
+                  className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                >
+                  Retry
+                </Button>
+                <Link href={routes.agents}>
+                  <Button className="!bg-gradient-to-r !from-amber-500 !to-orange-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300">
+                    View All Agents
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      <AgentRunPersonas personas={data.personas} summary={data.summary} />
-      <AgentRunStats stats={data.stats || null} />
-
-      <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
-        <div className="xl:col-span-8">
-          {data.loading.stats && <AgentRunDetailPlaceholder />}
-          {!data.loading.stats && (
-            <AgentRunDetail
-              selectedWebsite={selectedWebsite}
-              setSelectedWebsite={setSelectedWebsite}
-              data={detailData}
-            />
+      ) : (
+        <>
+          {error && (
+            <div className="mb-4 rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm text-white/80">
+              Failed to refresh some sections. You can{" "}
+              <button
+                onClick={refetch}
+                className="font-semibold text-[#FDF5E6] underline underline-offset-4 hover:text-white"
+              >
+                retry
+              </button>{" "}
+              or wait a moment while data loads.
+            </div>
           )}
-        </div>
-        <div className="xl:col-span-4">
-          {data.loading.stats && data.loading.summary ? (
-            <AgentRunSummaryPlaceholder />
-          ) : (
-            <AgentRunSummary
-              selectedWebsite={selectedWebsite}
-              data={detailData}
-            />
+
+          <AgentRunPersonas personas={data.personas} summary={data.summary} />
+          <AgentRunStats stats={data.stats || null} />
+
+          <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
+            <div className="xl:col-span-8">
+              {data.loading.stats && <AgentRunDetailPlaceholder />}
+              {!data.loading.stats && (
+                <AgentRunDetail
+                  selectedWebsite={selectedWebsite}
+                  setSelectedWebsite={setSelectedWebsite}
+                  data={detailData}
+                />
+              )}
+            </div>
+            <div className="xl:col-span-4">
+              {data.loading.stats && data.loading.summary ? (
+                <AgentRunSummaryPlaceholder />
+              ) : (
+                <AgentRunSummary
+                  selectedWebsite={selectedWebsite}
+                  data={detailData}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <AgentRunTasksSection />
+          </div>
+
+          {isAnyLoading && (
+            <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">Updating data...</span>
+            </div>
           )}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <AgentRunTasksSection />
-      </div>
-
-      {isAnyLoading && (
-        <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm">Updating data...</span>
-        </div>
+        </>
       )}
     </div>
   );
