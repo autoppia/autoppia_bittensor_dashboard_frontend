@@ -11,19 +11,21 @@ import { FaPlay } from "react-icons/fa";
 import MinerAnimationModal from "@/app/shared/modal-views/miner-animation-modal";
 import OverviewAnnouncementModal from "@/app/shared/modal-views/overview-announcement-modal";
 import { useModal } from "@/app/shared/modal-views/use-modal";
-import { useOverviewData } from "@/services/hooks/useOverview";
+import { useOverviewMetrics } from "@/services/hooks/useOverview";
 
 const ANNOUNCEMENT_STORAGE_KEY = "overview-announcement-seen";
 
 export default function Overview() {
-  const { loading, error, refetch, data: overviewData } = useOverviewData();
   const { openModal } = useModal();
   const hasOpenedAnnouncement = useRef(false);
   const metricsColumnRef = useRef<HTMLDivElement | null>(null);
   const [metricsHeight, setMetricsHeight] = useState<number | undefined>(
     undefined
   );
-  const metricsRound = overviewData?.metrics?.metricsRound ?? null;
+
+  // Only load metrics for the "Latest finished round" label
+  const { data: metrics, loading } = useOverviewMetrics();
+  const metricsRound = metrics?.metricsRound ?? null;
 
   const openAnnouncementModal = useCallback(() => {
     openModal({ view: <OverviewAnnouncementModal />, size: "md" });
@@ -87,28 +89,7 @@ export default function Overview() {
 
   return (
     <>
-      {/* Global Error State */}
-      {error && (
-        <div className="mb-6 bg-red-900/20 border border-red-700/50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-400 font-medium">
-                Error loading overview data
-              </p>
-              <p className="text-red-300 text-sm mt-1">{error}</p>
-            </div>
-            <button
-              onClick={refetch}
-              disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Content - always render components, let them handle their own loading states */}
+      {/* Content - each component handles its own loading states */}
       <div className="flex flex-col lg:flex-row lg:items-stretch gap-6 min-w-0">
         <div className="w-full lg:w-[calc(100%-460px)] min-w-0 flex flex-col">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
@@ -166,7 +147,7 @@ export default function Overview() {
           <OverviewMetrics className="w-full min-w-0 flex-1" />
         </div>
       </div>
-      <OverviewValidators />
+      <OverviewValidators currentRound={metrics?.currentRound} />
       <button
         type="button"
         onClick={openAnnouncementModal}

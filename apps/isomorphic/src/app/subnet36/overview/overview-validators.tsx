@@ -22,10 +22,7 @@ import {
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
-import {
-  useValidators,
-  useOverviewMetrics,
-} from "@/services/hooks/useOverview";
+import { useValidators } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 const DEFAULT_TASK_MESSAGES = new Set([
@@ -38,20 +35,18 @@ const DEFAULT_TASK_MESSAGES = new Set([
   "Round completed",
 ]);
 
-export default function OverviewValidators() {
+export default function OverviewValidators({
+  currentRound,
+}: { currentRound?: number | null } = {}) {
   const {
     data: validatorsData,
     loading: validatorsLoading,
     error: validatorsError,
   } = useValidators({ limit: 6 });
-  const {
-    data: metricsData,
-    loading: roundLoading,
-    error: roundError,
-  } = useOverviewMetrics();
 
-  // Always show current round from blockchain (not from DB)
-  const roundNumber = metricsData?.currentRound ?? null;
+  // Use provided currentRound to avoid duplicate API call
+  const roundNumber = currentRound ?? null;
+  const roundLoading = false; // No longer loading round separately
   // Current round is always "active" (it's the one in progress)
   const isRoundActive = true;
 
