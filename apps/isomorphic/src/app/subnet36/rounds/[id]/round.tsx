@@ -2200,18 +2200,15 @@ export default function Round() {
     round &&
     (round.startBlock === 0 ||
       round.startBlock === null ||
-      round.totalValidators === 0 ||
-      round.totalAgentRuns === 0);
+      (round.validatorRounds && round.validatorRounds.length === 0) ||
+      round.totalTasks === 0);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
-      {/* Header with progress - always show */}
-      <RoundHeaderInline />
-
       {/* Show "Data Not Available" message if round is starting or has no data */}
-      {(isRoundStarting || hasNoData) && (
+      {isRoundStarting || hasNoData ? (
         <div className="mt-10 mb-10">
           <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
@@ -2241,11 +2238,11 @@ export default function Round() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Only show content if we have data */}
-      {!isRoundStarting && !hasNoData && (
+      ) : (
         <>
+          {/* Header with progress - only show when we have data */}
+          <RoundHeaderInline />
+
           {/* Aggregated Metrics */}
           <div className="mt-10 mb-6">
             {statsLoading || minersLoading ? (
