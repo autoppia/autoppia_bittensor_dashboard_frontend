@@ -864,53 +864,57 @@ function AgentRunDetail({
             return (
               <div
                 key={`${item.website}-${index}`}
-                className="group relative rounded-xl border p-5 transition-all duration-300 hover:shadow-2xl"
+                className="group relative rounded-xl border p-3 sm:p-5 transition-all duration-300 hover:shadow-2xl"
                 style={{
                   boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
                   borderColor: `${projectColors.mainColor}99`, // 60% opacity
                   background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`, // 15% to 10% opacity
                 }}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     <div
-                      className="w-3 h-3 rounded-full shadow-sm"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
                       style={{ backgroundColor: projectColors.dotColor }}
                     />
-                    <span className="text-lg font-semibold text-white">
+                    <span className="text-base sm:text-lg font-semibold text-white">
                       {item.website}
                     </span>
                     {isHighPerformance && (
                       <div
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium border"
+                        className="flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border"
                         style={{
                           backgroundColor: "rgba(253, 245, 230, 0.2)",
                           borderColor: "rgba(253, 245, 230, 0.45)",
                           color: HIGHLIGHT_COLOR,
                         }}
                       >
-                        <PiTrendUp className="w-3 h-3" />
-                        Excellent
+                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">Excellent</span>
+                        <span className="sm:hidden">Top</span>
                       </div>
                     )}
                     {isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 text-indigo-100 rounded-full text-xs font-medium border border-indigo-400/30 bg-transparent">
-                        <PiTrendUp className="w-3 h-3" />
+                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-indigo-100 rounded-full text-[10px] sm:text-xs font-medium border border-indigo-400/30 bg-transparent">
+                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         Good
                       </div>
                     )}
                     {!isHighPerformance && !isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 text-red-200 rounded-full text-xs font-medium border border-red-400/40 bg-transparent">
-                        <PiTrendDown className="w-3 h-3" />
-                        Needs Improvement
+                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-red-200 rounded-full text-[10px] sm:text-xs font-medium border border-red-400/40 bg-transparent">
+                        <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">
+                          Needs Improvement
+                        </span>
+                        <span className="sm:hidden">Low</span>
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-white">
+                  <div className="text-left sm:text-right">
+                    <div className="text-xl sm:text-2xl font-bold text-white">
                       {item.average.toFixed(1)}%
                     </div>
-                    <div className="text-sm text-slate-400">
+                    <div className="text-xs sm:text-sm text-slate-400">
                       {item.total} requests • {item.successCount} successful
                     </div>
                   </div>
@@ -918,7 +922,7 @@ function AgentRunDetail({
 
                 {item.average > 0 ? (
                   <div className="relative">
-                    <div className="h-4 w-full rounded-full bg-transparent overflow-hidden">
+                    <div className="h-3 sm:h-4 w-full rounded-full bg-transparent overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                         style={{
@@ -929,7 +933,7 @@ function AgentRunDetail({
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
                         <div
-                          className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-sm"
                           style={{
                             backgroundColor: HIGHLIGHT_COLOR,
                             opacity: item.average > 5 ? 1 : 0,
@@ -937,29 +941,29 @@ function AgentRunDetail({
                         />
                       </div>
                     </div>
-                    <div className="flex justify-between mt-2 text-xs text-white/60">
+                    <div className="flex justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-white/60">
                       <span>0%</span>
-                      <span>25%</span>
+                      <span className="hidden sm:inline">25%</span>
                       <span>50%</span>
-                      <span>75%</span>
+                      <span className="hidden sm:inline">75%</span>
                       <span>100%</span>
                     </div>
                   </div>
                 ) : (
                   <div className="relative text-center py-2">
-                    <div className="text-sm text-white/50 italic">
+                    <div className="text-xs sm:text-sm text-white/50 italic">
                       No success rate to display
                     </div>
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-lg border border-white/10 bg-white/5">
-                  <div className="flex items-center gap-3">
-                    <PiTarget className="w-6 h-6 text-emerald-400" />
-                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiTarget className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
                       Score
                     </span>
-                    <span className="text-xl font-bold text-white">
+                    <span className="text-lg sm:text-xl font-bold text-white">
                       {(
                         (item.successCount / Math.max(item.total, 1)) *
                         100
@@ -967,12 +971,12 @@ function AgentRunDetail({
                       %
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <PiClock className="w-6 h-6 text-blue-400" />
-                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiClock className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
                       Time
                     </span>
-                    <span className="text-xl font-bold text-white">
+                    <span className="text-lg sm:text-xl font-bold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
                     </span>
                   </div>
