@@ -227,13 +227,17 @@ function CustomTooltip({ label, active, payload, className }: any) {
   );
 }
 
-function RoundHeaderInline() {
+function RoundHeaderInline({
+  round,
+  roundLoading,
+}: {
+  round?: any;
+  roundLoading?: boolean;
+}) {
   const { id } = useParams();
   const router = useRouter();
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
-
-  const { data: round, loading: roundLoading } = useRoundBasic(roundKey);
   const { data: progressData, loading: progressLoading } =
     useRoundProgress(roundKey);
   const { data: roundsData, loading: roundsLoading } = useRounds({
@@ -323,7 +327,7 @@ function RoundHeaderInline() {
     });
   });
 
-  // ALWAYS trust backend status first, then check evaluation state
+  // ALWAYS trust backend status first - it's the source of truth
   const backendStatus = round?.status;
   let status: "active" | "completed" | "pending";
   let statusLabel: string;
@@ -331,28 +335,16 @@ function RoundHeaderInline() {
   if (backendStatus === "pending") {
     status = "pending";
     statusLabel = "Pending";
-  } else if (
-    backendStatus === "finished" ||
-    backendStatus === "evaluating_finished"
-  ) {
-    // Backend explicitly says it's finished
+  } else if (backendStatus === "finished") {
     status = "completed";
     statusLabel = "Finished";
+  } else if (backendStatus === "evaluating_finished") {
+    // Evaluating finished - waiting for consensus/weights
+    status = "active";
+    statusLabel = "Waiting for Consensus";
   } else if (backendStatus === "active") {
-    // Check if round is finished by blocks/progress
-    if (
-      progressValue >= 1 ||
-      (blocksRemaining !== undefined && blocksRemaining === 0) ||
-      (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock) ||
-      (!round?.current &&
-        currentRoundNumber &&
-        normalizedCurrentNumber &&
-        currentRoundNumber > normalizedCurrentNumber)
-    ) {
-      status = "completed";
-      statusLabel = "Finished";
-    } else if (hasEvaluationsComplete) {
-      // Evaluations done but round still active - waiting for consensus
+    // Active round - check if evaluations are done
+    if (hasEvaluationsComplete) {
       status = "active";
       statusLabel = "Waiting for Consensus";
     } else {
@@ -360,21 +352,13 @@ function RoundHeaderInline() {
       statusLabel = "Running";
     }
   } else {
-    // No backend status - compute from other indicators
-    if (
-      progressValue >= 1 ||
-      (blocksRemaining !== undefined && blocksRemaining === 0) ||
-      (currentBlock > 0 && endBlock > 0 && currentBlock >= endBlock) ||
-      (!round?.current &&
-        currentRoundNumber &&
-        normalizedCurrentNumber &&
-        currentRoundNumber > normalizedCurrentNumber)
-    ) {
+    // No backend status - fallback to round.current flag
+    if (round?.current) {
+      status = "active";
+      statusLabel = "Running";
+    } else {
       status = "completed";
       statusLabel = "Finished";
-    } else {
-      status = round?.current ? "active" : "completed";
-      statusLabel = round?.current ? "Running" : "Finished";
     }
   }
 
@@ -1297,13 +1281,14 @@ function RoundValidatorsInline({
 function RoundMinerScoresInline({
   className,
   selectedValidator,
+  roundInfo,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
+  roundInfo?: any;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRoundBasic(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1776,14 +1761,15 @@ function RoundTopMinersInline({
   className,
   selectedValidator,
   roundNumber,
+  roundInfo,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
+  roundInfo?: any;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRoundBasic(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -2099,7 +2085,6 @@ export default function Round() {
   );
   const { data: statistics, loading: statsLoading } =
     useRoundStatistics(roundKey);
-  const { loading: validatorsLoading } = useRoundValidators(roundKey);
 
   // Determine if round is waiting for consensus
   const validatorRounds = round?.validatorRounds ?? [];
@@ -2279,7 +2264,7 @@ export default function Round() {
       ) : !error ? (
         <>
           {/* Header */}
-          <RoundHeaderInline />
+          <RoundHeaderInline round={round} roundLoading={false} />
 
           {/* Recents removed: using Prev/Next navigation in header */}
 
@@ -2322,29 +2307,19 @@ export default function Round() {
 
           {/* Validators selector */}
           <div className="mt-10 mb-6">
-            {validatorsLoading ? (
-              <div className="flex items-center gap-4 mb-5">
-                <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-                  <Skeleton className="h-3 w-72 bg-white/10" />
-                </div>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+                <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
               </div>
-            ) : (
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-                  <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-                </div>
-                <div className="flex-1">
-                  <Text className="text-base font-black text-white uppercase tracking-wider">
-                    Multiple Validators
-                  </Text>
-                  <Text className="text-xs text-white/60 font-semibold">
-                    Select a validator to view detailed performance metrics
-                  </Text>
-                </div>
+              <div className="flex-1">
+                <Text className="text-base font-black text-white uppercase tracking-wider">
+                  Multiple Validators
+                </Text>
+                <Text className="text-xs text-white/60 font-semibold">
+                  Select a validator to view detailed performance metrics
+                </Text>
               </div>
-            )}
+            </div>
           </div>
 
           <RoundValidatorsInline
@@ -2373,11 +2348,13 @@ export default function Round() {
             <RoundMinerScoresInline
               className="w-full xl:w-[calc(100%-400px)]"
               selectedValidator={selectedValidator}
+              roundInfo={round}
             />
             <RoundTopMinersInline
               className="w-full xl:w-[400px]"
               selectedValidator={selectedValidator}
               roundNumber={roundNumberForLinks}
+              roundInfo={round}
             />
           </div>
 
