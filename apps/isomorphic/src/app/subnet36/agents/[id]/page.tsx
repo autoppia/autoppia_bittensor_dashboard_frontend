@@ -995,7 +995,7 @@ function AgentValidators({
                     style={{ display: "none" }}
                   />
                   <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
                           <Image
@@ -1015,12 +1015,13 @@ function AgentValidators({
                           </Text>
                         </div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
-                        <PiHashDuotone className="w-4 h-4" />
-                        <span className="font-mono" title={latestRun.runId}>
-                          {latestRun.runId.length > 12
-                            ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}`
-                            : latestRun.runId}
+                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
+                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
+                        <span
+                          className="font-mono break-all"
+                          title={latestRun.runId}
+                        >
+                          {latestRun.runId}
                         </span>
                       </div>
                     </div>
