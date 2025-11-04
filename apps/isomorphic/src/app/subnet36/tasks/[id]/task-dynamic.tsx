@@ -46,6 +46,7 @@ import {
   PiHash,
   PiDownloadSimple,
   PiArrowSquareOutDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
 import type { TaskAction, TaskDetails } from "@/services/api/types/tasks";
 
@@ -292,13 +293,31 @@ function TaskDetailsDynamic({
   }
   if ((error && !details) || !details) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-red-600/30 bg-transparent p-6 shadow-2xl mb-8">
-        <div className="relative text-center">
-          <div className="text-red-200 text-lg font-semibold mb-2">
-            Failed to load task overview
-          </div>
-          <div className="text-sm text-red-100/80">
-            {error || "An unexpected error occurred while fetching task data."}
+      <div className="mb-8">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+          <div className="relative px-8 py-12 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+              <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+            </div>
+            <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+              Task Data Not Available
+            </h3>
+            <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+              This task has not been evaluated yet or the evaluation is still in
+              progress. Data will appear here once the evaluation is complete.
+            </p>
+            <p className="text-sm text-white/50 font-semibold">
+              Please check back in a few minutes or navigate to a different
+              task.
+            </p>
+            <div className="mt-8 flex justify-center gap-4">
+              <Link href={routes.tasks}>
+                <button className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                  View All Tasks
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
