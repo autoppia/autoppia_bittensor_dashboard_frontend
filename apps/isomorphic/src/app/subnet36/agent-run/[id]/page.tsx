@@ -36,6 +36,7 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
+  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
@@ -211,6 +212,13 @@ export default function Page() {
     [data.stats]
   );
 
+  // Check if agent run has no data yet
+  const hasNoData =
+    !data.loading.stats &&
+    error &&
+    (!data.stats ||
+      (data.stats.totalTasks === 0 && data.stats.overallScore === 0));
+
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
       <PageHeader
@@ -340,27 +348,58 @@ export default function Page() {
             />
           )}
         </div>
-        <div className="xl:col-span-4">
-          {data.loading.stats && data.loading.summary ? (
-            <AgentRunSummaryPlaceholder />
-          ) : (
-            <AgentRunSummary
-              selectedWebsite={selectedWebsite}
-              data={detailData}
-            />
+      ) : (
+        <>
+          {error && (
+            <div className="mb-4 rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm text-white/80">
+              Failed to refresh some sections. You can{" "}
+              <button
+                onClick={refetch}
+                className="font-semibold text-[#FDF5E6] underline underline-offset-4 hover:text-white"
+              >
+                retry
+              </button>{" "}
+              or wait a moment while data loads.
+            </div>
           )}
-        </div>
-      </div>
 
-      <div className="mb-6">
-        <AgentRunTasksSection />
-      </div>
+          <AgentRunPersonas personas={data.personas} summary={data.summary} />
+          <AgentRunStats stats={data.stats || null} />
 
-      {isAnyLoading && (
-        <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm">Updating data...</span>
-        </div>
+          <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
+            <div className="xl:col-span-8">
+              {data.loading.stats && <AgentRunDetailPlaceholder />}
+              {!data.loading.stats && (
+                <AgentRunDetail
+                  selectedWebsite={selectedWebsite}
+                  setSelectedWebsite={setSelectedWebsite}
+                  data={detailData}
+                />
+              )}
+            </div>
+            <div className="xl:col-span-4">
+              {data.loading.stats && data.loading.summary ? (
+                <AgentRunSummaryPlaceholder />
+              ) : (
+                <AgentRunSummary
+                  selectedWebsite={selectedWebsite}
+                  data={detailData}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <AgentRunTasksSection />
+          </div>
+
+          {isAnyLoading && (
+            <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">Updating data...</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -1008,9 +1047,16 @@ function AgentRunDetail({
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
       ? (() => {
+          console.log("🔍 Filtering by website:", selectedWebsite);
+          console.log(
+            "📊 Available websites:",
+            agentDetailsData.websites.map((w) => w.name)
+          );
           const selectedWeb = agentDetailsData.websites.find(
             (web) => web.name === selectedWebsite
           );
+          console.log("✅ Found website:", selectedWeb);
+          console.log("📋 Results:", selectedWeb?.results);
           return (
             selectedWeb?.results.map((result, idx) => ({
               website: formatUseCaseName(
@@ -1410,10 +1456,17 @@ function AgentRunSummary({
 
   const displayData = (() => {
     if (selectedWebsite) {
+      console.log("🎯 Summary: Filtering by website:", selectedWebsite);
+      console.log(
+        "🏢 Summary: Available websites:",
+        agentData.websites.map((w) => w.name)
+      );
       const selectedWeb = agentData.websites.find(
         (w) => w.name === selectedWebsite
       );
-      if (!selectedWeb)
+      console.log("✨ Summary: Found website:", selectedWeb);
+      if (!selectedWeb) {
+        console.warn("⚠️ Summary: Website not found!");
         return [] as {
           label: string;
           value: number;
@@ -1421,6 +1474,8 @@ function AgentRunSummary({
           successCount: number;
           avgSolutionTime: number;
         }[];
+      }
+      console.log("📋 Summary: Results:", selectedWeb.results);
       return selectedWeb.results.map((r) => ({
         label: formatUseCaseName(
           selectedWeb.useCases.find(
