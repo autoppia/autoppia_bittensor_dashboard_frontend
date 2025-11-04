@@ -216,53 +216,82 @@ export default function Page() {
       <PageHeader
         title="Agent Run Details"
         description={
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
-            <Link
-              href={((): string => {
-                const roundKey =
-                  typeof data?.summary?.roundId === "number" &&
-                  Number.isFinite(data.summary.roundId)
-                    ? `round_${data.summary.roundId}`
-                    : (data?.personas?.round?.name ?? "");
-                return roundKey
-                  ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
-                  : "#";
-              })()}
-              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Round
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
-              </span>
-              {data?.personas?.round?.name && (
-                <span className="ml-auto">
-                  <IDCopyButton text={data.personas.round.name} />
+          data.loading.personas || data.loading.summary ? (
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+              <div className="inline-flex w-full sm:w-auto items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Round
                 </span>
-              )}
-            </Link>
-            <Link
-              href={
-                runId ? `${routes.agent_run}/${encodeURIComponent(runId)}` : "#"
-              }
-              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Run
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(runId, 8)}
-              </span>
-              {!!runId && (
-                <span className="ml-auto">
-                  <IDCopyButton text={runId} />
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <Placeholder
+                  height="0.875rem"
+                  width="6rem"
+                  className="bg-white/10"
+                />
+              </div>
+              <div className="inline-flex w-full sm:w-auto items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Run
                 </span>
-              )}
-            </Link>
-          </div>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <Placeholder
+                  height="0.875rem"
+                  width="6rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+              <Link
+                href={((): string => {
+                  const roundKey =
+                    typeof data?.summary?.roundId === "number" &&
+                    Number.isFinite(data.summary.roundId)
+                      ? `round_${data.summary.roundId}`
+                      : (data?.personas?.round?.name ?? "");
+                  return roundKey
+                    ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
+                    : "#";
+                })()}
+                className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Round
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                  {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
+                </span>
+                {data?.personas?.round?.name && (
+                  <span className="ml-auto">
+                    <IDCopyButton text={data.personas.round.name} />
+                  </span>
+                )}
+              </Link>
+              <Link
+                href={
+                  runId
+                    ? `${routes.agent_run}/${encodeURIComponent(runId)}`
+                    : "#"
+                }
+                className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Run
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                  {truncateMiddle(runId, 8)}
+                </span>
+                {!!runId && (
+                  <span className="ml-auto">
+                    <IDCopyButton text={runId} />
+                  </span>
+                )}
+              </Link>
+            </div>
+          )
         }
         className="mt-4"
       >
@@ -288,8 +317,17 @@ export default function Page() {
         </div>
       )}
 
-      <AgentRunPersonas personas={data.personas} summary={data.summary} />
-      <AgentRunStats stats={data.stats || null} />
+      {data.loading.personas ? (
+        <AgentRunPersonasPlaceholder />
+      ) : (
+        <AgentRunPersonas personas={data.personas} summary={data.summary} />
+      )}
+
+      {data.loading.stats ? (
+        <AgentRunStatsPlaceholder />
+      ) : (
+        <AgentRunStats stats={data.stats || null} />
+      )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
@@ -596,6 +634,67 @@ function AgentRunPersonas({
   );
 }
 
+// Personas placeholder
+function AgentRunPersonasPlaceholder() {
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <section
+          key={`persona-placeholder-${idx}`}
+          className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-transparent p-5 shadow-lg"
+        >
+          <header className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Placeholder
+                variant="circular"
+                width={56}
+                height={56}
+                className="rounded-xl bg-white/10"
+              />
+              <div className="space-y-2">
+                <Placeholder
+                  height="0.75rem"
+                  width="4rem"
+                  className="bg-white/10"
+                />
+                <Placeholder
+                  height="1.25rem"
+                  width="8rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Placeholder
+                height="1.75rem"
+                width="4rem"
+                className="rounded-full bg-white/10"
+              />
+            </div>
+          </header>
+
+          <div className="mt-4">
+            <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
+                <Placeholder
+                  height="0.875rem"
+                  width="5rem"
+                  className="bg-white/10"
+                />
+                <Placeholder
+                  height="1rem"
+                  width="8rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 // Stats cards
 function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const numberFormatter = new Intl.NumberFormat("en-US");
@@ -751,6 +850,130 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
         </div>
         <div className="grid grid-cols-2 gap-6">
           {cards.slice(2).map((c) => renderCard(c))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Stats placeholder
+function AgentRunStatsPlaceholder() {
+  return (
+    <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/15 bg-transparent p-6 text-white">
+      {/* Mobile layout */}
+      <div className="flex flex-col space-y-6 md:hidden relative">
+        <div className="flex flex-col items-center justify-center">
+          <Placeholder
+            height="3rem"
+            width="8rem"
+            className="rounded-lg bg-white/10"
+          />
+          <Placeholder
+            height="0.875rem"
+            width="12rem"
+            className="mt-2 bg-white/10"
+          />
+          <Placeholder
+            height="0.75rem"
+            width="16rem"
+            className="mt-1 bg-white/10"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div
+              key={`stats-mobile-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop layout */}
+      <div className="hidden md:flex items-center justify-between relative">
+        <div className="grid grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <div
+              key={`stats-left-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col items-center justify-center mx-8">
+          <Placeholder
+            height="3.75rem"
+            width="8rem"
+            className="rounded-lg bg-white/10"
+          />
+          <Placeholder
+            height="0.875rem"
+            width="12rem"
+            className="mt-2 bg-white/10"
+          />
+          <Placeholder
+            height="0.75rem"
+            width="10rem"
+            className="mt-1 bg-white/10"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <div
+              key={`stats-right-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>
