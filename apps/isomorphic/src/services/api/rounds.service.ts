@@ -304,7 +304,37 @@ export class RoundsService {
   }
 
   /**
-   * Get details for a specific round by ID
+   * Get basic round info (without nested tasks/solutions/evaluations)
+   * Use this for round page header and status - much faster than getRound()
+   */
+  async getRoundBasic(identifier: string | number): Promise<RoundData> {
+    const { path, fallbackId } = this.buildRoundPath(identifier);
+    const response = await apiClient.get<any>(
+      `${this.baseEndpoint}/${path}/basic`
+    );
+    const raw = response.data;
+    const payloadCandidates = [
+      raw?.data?.round,
+      raw?.round,
+      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
+      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
+      raw,
+    ];
+
+    const payload =
+      payloadCandidates.find(
+        (candidate) =>
+          candidate &&
+          typeof candidate === "object" &&
+          !Array.isArray(candidate)
+      ) ?? {};
+
+    return this.normalizeRoundData(payload, fallbackId);
+  }
+
+  /**
+   * Get full details for a specific round by ID (includes all nested data)
+   * WARNING: This is SLOW (25+ seconds) - use getRoundBasic() when possible
    */
   async getRound(identifier: string | number): Promise<RoundData> {
     const { path, fallbackId } = this.buildRoundPath(identifier);

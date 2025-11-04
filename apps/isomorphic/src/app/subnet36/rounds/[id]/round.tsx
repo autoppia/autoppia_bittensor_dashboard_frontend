@@ -45,6 +45,7 @@ import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
   useRound,
+  useRoundBasic,
   useRounds,
   useRoundProgress,
   useRoundValidators,
@@ -232,7 +233,7 @@ function RoundHeaderInline() {
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
 
-  const { data: round, loading: roundLoading } = useRound(roundKey);
+  const { data: round, loading: roundLoading } = useRoundBasic(roundKey);
   const { data: progressData, loading: progressLoading } =
     useRoundProgress(roundKey);
   const { data: roundsData, loading: roundsLoading } = useRounds({
@@ -1302,7 +1303,7 @@ function RoundMinerScoresInline({
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRound(roundKey);
+  const { data: roundInfo } = useRoundBasic(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1782,7 +1783,7 @@ function RoundTopMinersInline({
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: roundInfo } = useRound(roundKey);
+  const { data: roundInfo } = useRoundBasic(roundKey);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -2062,7 +2063,7 @@ export default function Round() {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const { openModal } = useModal();
-  const { data: round, error, refetch } = useRound(roundKey);
+  const { data: round, error, refetch } = useRoundBasic(roundKey);
 
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
