@@ -568,7 +568,7 @@ function AgentScoreChart({
       headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
       className={cn(
-        "flex flex-col min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none",
+        "flex flex-col min-h-[350px] md:min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none",
         className
       )}
       titleClassName="text-white"
@@ -585,8 +585,8 @@ function AgentScoreChart({
         </div>
       )}
       <div className="relative custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
-        <div className={cn("h-full w-full pt-2 min-h-[360px]")}>
-          <ResponsiveContainer width="100%" height={360} minWidth={600}>
+        <div className={cn("w-full pt-2 h-[250px] md:h-[360px]")}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={displayData}
               margin={{ top: 10, left: -10, bottom: 20 }}
@@ -762,13 +762,15 @@ function AgentValidators({
         </div>
         <button
           onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-          className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm"
+          className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
         >
-          <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
-            <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
+              <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span>How it works</span>
           </div>
-          <span>How it works</span>
-          <div className="ml-1 transition-transform duration-300 group-hover:scale-110">
+          <div className="transition-transform duration-300 group-hover:scale-110">
             {isInfoExpanded ? (
               <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
             ) : (
@@ -780,7 +782,7 @@ function AgentValidators({
 
       {isInfoExpanded && (
         <div
-          className="mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500"
+          className="mb-4 md:mb-6 rounded-2xl p-3 md:p-6 animate-in slide-in-from-top-2 duration-500"
           style={{
             background: "transparent",
             border: "none",
@@ -788,98 +790,104 @@ function AgentValidators({
           }}
         >
           <div className="pulse-bg-rounded-2xl" style={{ display: "none" }} />
-          <div className="relative z-10 flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
-              <PiInfoDuotone className="w-5 h-5" />
+          <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+            <div className="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <PiInfoDuotone className="w-4 h-4 md:w-5 md:h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-sm md:text-lg font-bold text-white">
                 How Agent Evaluation Works
               </h3>
-              <p className="text-sm text-white/70">
+              <p className="text-xs md:text-sm text-white/70">
                 Understanding the validation process
               </p>
             </div>
           </div>
-          <div className="relative z-10 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative z-10 space-y-2 md:space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiTrophyDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Validators</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Validators
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Each validator runs independent evaluations of your agent
                   across different tasks and scenarios to ensure fair and
                   comprehensive testing.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiChartLineUpDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Scoring</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Scoring
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Agents are scored based on task completion accuracy, response
                   quality, and execution efficiency across multiple evaluation
                   criteria.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiListChecksDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Ranking</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Ranking
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Your final rank is determined by your average performance
                   across all validators in each round, providing a comprehensive
                   ranking system.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiTimerDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">
+                  <h4 className="font-bold text-white text-sm md:text-base">
                     Response Time
                   </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Faster response times with maintained quality result in higher
                   scores, balancing speed and accuracy in the evaluation
                   process.
@@ -1294,7 +1302,7 @@ function RoundWebsitesChart({
           </div>
 
           {/* Bar Chart */}
-          <div className="relative h-[450px] w-full">
+          <div className="relative h-[300px] md:h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartRows}
