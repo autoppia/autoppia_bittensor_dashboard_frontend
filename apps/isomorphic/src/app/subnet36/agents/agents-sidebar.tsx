@@ -22,7 +22,7 @@ import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
 import { useMinersList } from "@/services/hooks/useAgents";
-import { useRounds } from "@/services/hooks/useRounds";
+import { useRoundIds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type {
   MinimalAgentData,
@@ -51,8 +51,9 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const roundReady =
     typeof selectedRound === "number" && Number.isFinite(selectedRound);
 
-  const { data: roundsData } = useRounds({
-    limit: 50,
+  // Use lightweight endpoint to get only round IDs (not full data)
+  const { data: roundIdsData } = useRoundIds({
+    limit: 500,
     sortOrder: "desc",
   });
 
@@ -65,50 +66,16 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   );
 
   const roundOptions: SelectOption[] = useMemo(() => {
-    const numbers = new Set<number>();
-    const rounds = roundsData?.data?.rounds ?? [];
-    rounds.forEach((round) => {
-      if (!round) {
-        return;
-      }
-      const candidate =
-        (round as any).roundNumber ?? (round as any).round ?? (round as any).id;
-      const validatorCount =
-        (round as any).validatorRoundCount ??
-        (round as any).validator_round_count ??
-        undefined;
+    const roundIds = roundIdsData?.roundIds ?? [];
+    if (roundIds.length === 0) {
+      return [];
+    }
 
-      const hasCompletedValidator = (() => {
-        if (typeof validatorCount === "number" && validatorCount > 0) {
-          return true;
-        }
-        const validatorRounds =
-          (round as any).validatorRounds ?? (round as any).validator_rounds;
-        if (Array.isArray(validatorRounds)) {
-          return validatorRounds.some((entry: any) => {
-            const status = (entry?.status ?? entry?.roundStatus ?? "")
-              .toString()
-              .toLowerCase();
-            return status === "finished";
-          });
-        }
-        return false;
-      })();
-
-      if (
-        typeof candidate === "number" &&
-        Number.isFinite(candidate) &&
-        hasCompletedValidator
-      ) {
-        numbers.add(candidate);
-      }
-    });
-    const values = Array.from(numbers).sort((a, b) => b - a);
-    return values.map((value) => ({
+    return roundIds.map((value) => ({
       label: `Round ${value}`,
       value,
     }));
-  }, [roundsData]);
+  }, [roundIdsData]);
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
@@ -286,7 +253,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
+        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-6 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
           <div className="flex flex-col gap-2">
             <div className="mb-1">
               <Select
