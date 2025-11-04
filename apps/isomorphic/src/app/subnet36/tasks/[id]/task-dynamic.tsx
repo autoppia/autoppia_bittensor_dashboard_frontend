@@ -358,7 +358,7 @@ function TaskDetailsDynamic({
       : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
-    minerInfo?.isSota ? "/validators/Other.png" : "/miners/0.svg"
+    minerInfo?.isSota ? "/miners/30.svg" : "/miners/0.svg"
   );
   const minerImage =
     minerInfo?.image && minerInfo.image.trim()
@@ -891,12 +891,12 @@ function TaskDetailsDynamic({
 
         <div className="relative overflow-hidden rounded-2xl border border-[#5436a6]/40 bg-transparent p-4 text-white shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner flex-shrink-0">
               <PiFileText className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-x-auto custom-scrollbar">
               <p
-                className="font-mono text-sm text-white truncate"
+                className="font-mono text-sm text-white whitespace-nowrap"
                 title={taskData.prompt || "Prompt not provided for this task."}
               >
                 {taskData.prompt || "Prompt not provided for this task."}
@@ -998,9 +998,11 @@ const truncate = (value: string, max = 80) =>
   value.length > max ? `${value.slice(0, max).trim()}…` : value;
 
 const getStatusIcon = (success: boolean, error?: string) => {
-  if (error) return <PiCheckCircle className="w-4 h-4 text-red-500" />;
-  if (success) return <PiCheckCircle className="w-4 h-4 text-emerald-500" />;
-  return <PiWarning className="w-4 h-4 text-amber-500" />;
+  if (error)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-red-500" />;
+  if (success)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-emerald-500" />;
+  return <PiWarning className="w-4 h-4 flex-shrink-0 text-amber-500" />;
 };
 
 const formatActionDetails = (action: TaskAction) => {
@@ -1289,9 +1291,9 @@ function TaskResults() {
               return (
                 <div
                   key={action.id || index}
-                  className="flex items-center justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
+                  className="flex items-start justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     <div
                       className={`flex items-center justify-center h-10 w-10 min-w-[2.5rem] rounded-lg ${meta.badgeBg} flex-shrink-0`}
                     >
@@ -1304,11 +1306,14 @@ function TaskResults() {
                       {detailsList.length > 0 ? (
                         <ul className="mt-0.5 text-xs text-slate-400 list-disc pl-4 space-y-0.5">
                           {detailsList.slice(0, 4).map(([k, v], i) => (
-                            <li key={`${action.id || index}-d-${i}`}>
+                            <li
+                              key={`${action.id || index}-d-${i}`}
+                              className="break-words"
+                            >
                               <span className="text-slate-500">
                                 {formatKeyLabel(k)}:
                               </span>{" "}
-                              {truncate(String(v), 120)}
+                              <span className="break-all">{String(v)}</span>
                             </li>
                           ))}
                         </ul>
@@ -1319,7 +1324,7 @@ function TaskResults() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {getStatusIcon(action.success, action.error)}
                   </div>
                 </div>
@@ -1363,7 +1368,7 @@ function TaskResults() {
 
         <div
           ref={recordingsRef}
-          className={`${isFullscreen ? "h-screen" : "h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
+          className={`${isFullscreen ? "h-screen" : "h-[180px] md:h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
         >
           {isMediaLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1457,14 +1462,14 @@ export default function TaskDynamic() {
       <PageHeader
         title="Task Details"
         description={
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={
                 details?.agentRunId
                   ? `${routes.agent_run}/${encodeURIComponent(details.agentRunId)}`
                   : "#"
               }
-              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Run
@@ -1474,12 +1479,14 @@ export default function TaskDynamic() {
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && (
-                <IDCopyButton text={details.agentRunId} />
+                <span className="ml-auto">
+                  <IDCopyButton text={details.agentRunId} />
+                </span>
               )}
             </Link>
             <Link
               href={`${routes.tasks}/${taskId}`}
-              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Task
@@ -1488,11 +1495,13 @@ export default function TaskDynamic() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(taskId, 8)}
               </span>
-              <IDCopyButton text={taskId} />
+              <span className="ml-auto">
+                <IDCopyButton text={taskId} />
+              </span>
             </Link>
             <a
               href="#evaluation"
-              className="flex w-full sm:w-auto sm:inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Evaluation
@@ -1502,9 +1511,11 @@ export default function TaskDynamic() {
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
               {details?.relationships?.evaluation?.evaluationId && (
-                <IDCopyButton
-                  text={details.relationships.evaluation.evaluationId}
-                />
+                <span className="ml-auto">
+                  <IDCopyButton
+                    text={details.relationships.evaluation.evaluationId}
+                  />
+                </span>
               )}
             </a>
           </div>
