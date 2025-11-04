@@ -32,7 +32,7 @@ import { routes } from "@/config/routes";
 import { GLASS_STYLES } from "@/config/theme-styles";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-export default function AgentsSidebar() {
+export default function AgentsSidebar({ className }: { className?: string }) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -53,7 +53,6 @@ export default function AgentsSidebar() {
 
   const { data: roundsData } = useRounds({
     limit: 50,
-    sortBy: "roundNumber",
     sortOrder: "desc",
   });
 
@@ -230,7 +229,8 @@ export default function AgentsSidebar() {
     return (
       <aside
         className={cn(
-          "hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+          "fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
+          className
         )}
       >
         <div className="text-center px-6">
@@ -246,10 +246,16 @@ export default function AgentsSidebar() {
   return (
     <aside
       className={cn(
-        "hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+        "fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
+        className
       )}
     >
-      <div className="h-full flex flex-col overflow-hidden pt-[90px]">
+      <div
+        className={cn(
+          "h-full flex flex-col overflow-hidden",
+          !className && "pt-[90px]"
+        )}
+      >
         <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10 bg-gray-0/80 dark:bg-gray-50/50">
           <div className="flex items-center gap-3 pl-4 pr-3 py-4">
             <div className="flex items-center gap-2">
@@ -287,7 +293,6 @@ export default function AgentsSidebar() {
                 disabled={!roundOptions.length}
                 placeholder="Select round"
                 className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                menuPortalTarget={undefined}
               />
             </div>
             <div className="mb-2">
