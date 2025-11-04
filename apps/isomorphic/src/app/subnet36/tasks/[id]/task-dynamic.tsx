@@ -1438,30 +1438,14 @@ export default function TaskDynamic() {
       <PageHeader
         title="Task Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href={
-                roundKeyForHeader
-                  ? `${routes.rounds}/${encodeURIComponent(roundKeyForHeader)}`
-                  : "#"
-              }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Round
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(roundKeyForHeader || "-", 8)}
-              </span>
-            </Link>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={
                 details?.agentRunId
                   ? `${routes.agent_run}/${encodeURIComponent(details.agentRunId)}`
                   : "#"
               }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Run
@@ -1471,12 +1455,14 @@ export default function TaskDynamic() {
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && (
-                <IDCopyButton text={details.agentRunId} />
+                <span className="ml-auto">
+                  <IDCopyButton text={details.agentRunId} />
+                </span>
               )}
             </Link>
             <Link
               href={`${routes.tasks}/${taskId}`}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Task
@@ -1485,11 +1471,13 @@ export default function TaskDynamic() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
                 {truncateMiddle(taskId, 8)}
               </span>
-              <IDCopyButton text={taskId} />
+              <span className="ml-auto">
+                <IDCopyButton text={taskId} />
+              </span>
             </Link>
             <a
               href="#evaluation"
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Evaluation
@@ -1499,9 +1487,11 @@ export default function TaskDynamic() {
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
               {details?.relationships?.evaluation?.evaluationId && (
-                <IDCopyButton
-                  text={details.relationships.evaluation.evaluationId}
-                />
+                <span className="ml-auto">
+                  <IDCopyButton
+                    text={details.relationships.evaluation.evaluationId}
+                  />
+                </span>
               )}
             </a>
           </div>
