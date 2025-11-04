@@ -183,7 +183,7 @@ function AgentStats({
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Success Rate",
@@ -199,13 +199,13 @@ function AgentStats({
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Current Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Validators",
@@ -217,20 +217,20 @@ function AgentStats({
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Best Ever Score",
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Alpha Earned",
@@ -247,11 +247,11 @@ function AgentStats({
   ];
 
   // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Success Rate, Tasks Success, Tasks Failed, Alpha Earned (first row), Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned (second row)
+  // In historical view: show Success Rate, Best Score Ever, Alpha Earned
   const displayStats = (
     mode === "current"
       ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
-      : [stats[1], stats[6], stats[7], stats[8]]
+      : [stats[1], stats[6], stats[7]]
   ).filter(Boolean);
 
   return (
@@ -1867,6 +1867,7 @@ export default function Page() {
     Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0)
   );
   const currentStats = [
+    // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
@@ -1891,6 +1892,7 @@ export default function Page() {
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.blue,
     },
+    // Segunda fila: Validators, Avg Tasks Per Validator, Websites
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
@@ -1918,7 +1920,7 @@ export default function Page() {
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Tasks Failed, Alpha Earned
+    // Primera fila: Success Rate, Tasks Success, Best Rank Ever, Alpha Earned
     {
       title: "Success Rate",
       metric: (() => {
@@ -1950,13 +1952,13 @@ export default function Page() {
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.green,
     },
-    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
+    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
     {
       title: "Best Score Ever",
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Best Rank Ever",
@@ -2004,8 +2006,8 @@ export default function Page() {
           <div className="pulse-bg-rounded-3xl" style={{ display: "none" }} />
 
           {/* Header Section */}
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
-            <div className="flex items-center gap-4">
+          <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 z-10">
+            <div className="flex items-center gap-4 flex-1">
               <div className="relative">
                 <Image
                   src={agentImgSrc}
@@ -2146,7 +2148,7 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center lg:items-start gap-2 w-full lg:w-auto lg:flex-shrink-0">
               <div className="glass-card flex sm:inline-flex items-center gap-1.5 p-1.5 rounded-xl w-full sm:w-auto">
                 <button
                   type="button"

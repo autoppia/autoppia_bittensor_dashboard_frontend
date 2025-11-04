@@ -146,7 +146,8 @@ export interface AgentRunStats {
       averageDuration: number;
     }[];
   }[];
-  performanceByUseCase: {
+  // Legacy field - kept for backwards compatibility with old agent runs
+  performanceByUseCase?: {
     useCase: string;
     tasks: number;
     successful: number;
