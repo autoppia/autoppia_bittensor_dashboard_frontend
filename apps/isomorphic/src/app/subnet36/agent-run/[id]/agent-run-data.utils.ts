@@ -116,14 +116,85 @@ export function transformStatsToDetailData(
         fallbackByName.get(site.website.toLowerCase())) ??
       fallbackWebsites[index];
 
-    const fallbackResults = fallbackMatch?.results ?? [];
-    const fallbackUseCases = fallbackMatch?.useCases ?? [];
+    const fallbackResults = (fallbackMatch?.results ?? []).map((result) => ({
+      ...result,
+    }));
+    const fallbackUseCases = (fallbackMatch?.useCases ?? []).map((useCase) => ({
+      ...useCase,
+    }));
+
+    const fallbackResultLookup = new Map(
+      fallbackResults.map((result) => [
+        normalizeLabel(result.name),
+        result,
+      ])
+    );
+
+    const fallbackUseCaseLookup = new Map(
+      fallbackUseCases.map((useCase) => [
+        normalizeLabel(useCase.name),
+        useCase,
+      ])
+    );
+
+    const siteUseCases = site.useCases ?? [];
+
+    const computedUseCases = siteUseCases.length
+      ? siteUseCases.map((entry, idx) => {
+          const normalized = normalizeLabel(
+            entry.useCase ?? `use-case-${idx}`
+          );
+          const fallbackUseCase = fallbackUseCaseLookup.get(normalized);
+          return {
+            id:
+              fallbackUseCase?.id ??
+              entry.useCase ??
+              `use-case-${idx}`,
+            name:
+              fallbackUseCase?.name ??
+              entry.useCase ??
+              `Use Case ${idx + 1}`,
+          };
+        })
+      : fallbackUseCases.map((useCase) => ({ ...useCase }));
 
     let results: AgentRunResult[] = [];
-    if (fallbackResults.length) {
+
+    if (siteUseCases.length) {
+      results = siteUseCases.map((entry, idx) => {
+        const normalized = normalizeLabel(
+          entry.useCase ?? `use-case-${idx}`
+        );
+        const fallbackResult = fallbackResultLookup.get(normalized);
+        const meta =
+          computedUseCases[idx] ?? {
+            id: entry.useCase ?? `use-case-${idx}`,
+            name: entry.useCase ?? `Use Case ${idx + 1}`,
+          };
+
+        return {
+          useCaseId: meta.id,
+          name: meta.name,
+          successRate:
+            typeof entry.averageScore === "number"
+              ? entry.averageScore
+              : fallbackResult?.successRate ?? 0,
+          total: entry.tasks ?? fallbackResult?.total ?? 0,
+          successCount:
+            entry.successful ?? fallbackResult?.successCount ?? 0,
+          avgSolutionTime:
+            typeof entry.averageDuration === "number"
+              ? entry.averageDuration
+              : fallbackResult?.avgSolutionTime ?? 0,
+        };
+      });
+    } else if (fallbackResults.length) {
       const statsLookup = new Map(
         useCaseStats.map((entry) => [
-          normalizeLabel(entry.useCase ?? `use-case-${entry.tasks}-${entry.successful}`),
+          normalizeLabel(
+            entry.useCase ??
+              `use-case-${entry.tasks}-${entry.successful}`
+          ),
           entry,
         ])
       );
@@ -143,7 +214,8 @@ export function transformStatsToDetailData(
               ? matched.averageScore
               : result.successRate,
           total: matched.tasks ?? result.total,
-          successCount: matched.successful ?? result.successCount,
+          successCount:
+            matched.successful ?? result.successCount,
           avgSolutionTime:
             typeof matched.averageDuration === "number"
               ? matched.averageDuration
@@ -156,7 +228,7 @@ export function transformStatsToDetailData(
 
     return {
       name: site.website || fallbackMatch?.name || `Website ${index + 1}`,
-      useCases: fallbackUseCases,
+      useCases: computedUseCases,
       results,
       overall: {
         successRate:
