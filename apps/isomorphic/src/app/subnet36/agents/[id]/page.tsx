@@ -753,7 +753,7 @@ function AgentValidators({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
-          <Text className="text-2xl text-center font-bold text-white">
+          <Text className="text-md sm:text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({Object.keys(runsByValidator).length})
             {selectedRound ? ` - Round ${selectedRound}` : ""}
           </Text>
@@ -2267,7 +2267,7 @@ export default function Page() {
                           {stat.title}
                         </Text>
                         <div className="flex items-center gap-1 md:gap-2">
-                          <Text className="text-[10px] sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                          <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
                           {(stat as any).badge ? (
