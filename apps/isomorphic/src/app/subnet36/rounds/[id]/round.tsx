@@ -119,7 +119,7 @@ const chipCompleted =
 const chipPending =
   "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
 const chipEvaluating =
-  "border-cyan-400/70 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 text-white shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_6px_30px_rgba(6,182,212,0.6)] hover:scale-105";
+  "border-orange-400/70 bg-gradient-to-r from-orange-500/90 to-amber-500/90 text-white shadow-[0_4px_20px_rgba(251,146,60,0.4)] hover:shadow-[0_6px_30px_rgba(251,146,60,0.6)] hover:scale-105";
 const roundNavButton =
   "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
 const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
@@ -1282,10 +1282,16 @@ function RoundMinerScoresInline({
   className,
   selectedValidator,
   roundInfo,
+  minersData,
+  loading,
+  error,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundInfo?: any;
+  minersData?: any;
+  loading?: boolean;
+  error?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -1310,17 +1316,6 @@ function RoundMinerScoresInline({
       ),
     [accentClass, className]
   );
-
-  const {
-    data: minersData,
-    loading,
-    error,
-  } = useRoundMiners(roundKey, {
-    limit: 100,
-    sortBy: "score",
-    sortOrder: "desc",
-    minScore: 0,
-  });
   const [expandedMinersData, setExpandedMinersData] = React.useState<
     typeof minersData | null
   >(null);
@@ -1762,11 +1757,17 @@ function RoundTopMinersInline({
   selectedValidator,
   roundNumber,
   roundInfo,
+  minersData,
+  loading,
+  error,
 }: {
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
   roundInfo?: any;
+  minersData?: any;
+  loading?: boolean;
+  error?: string;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
@@ -1781,33 +1782,17 @@ function RoundTopMinersInline({
       : roundStatus === "completed"
         ? roundAccentCompleted
         : roundAccentPending;
-  const minersQuery = React.useMemo(
-    () => ({
-      page: 1,
-      limit: 100,
-      sortBy: "score" as const,
-      sortOrder: "desc" as const,
-      minScore: 0,
-    }),
-    []
-  );
-  const {
-    data: roundMinersData,
-    loading,
-    error,
-  } = useRoundMiners(roundKey, minersQuery);
   const topMinersList = React.useMemo(() => {
     const miners =
-      roundMinersData?.data?.miners &&
-      Array.isArray(roundMinersData.data.miners)
-        ? roundMinersData.data.miners
+      minersData?.data?.miners && Array.isArray(minersData.data.miners)
+        ? minersData.data.miners
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
       (miner) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
-  }, [roundMinersData, selectedValidator]);
+  }, [minersData, selectedValidator]);
 
   if (loading) {
     return (
@@ -2079,17 +2064,29 @@ export default function Round() {
   const roundLabel = roundNumberForLinks ?? roundKey;
 
   // Fetch data once at top level to avoid duplicate calls
-  const { data: topMiners, loading: minersLoading } = useTopMiners(
+  // Load all miners data (used by chart, list, and stats)
+  const { data: allMinersData, loading: minersLoading } = useRoundMiners(
     roundKey,
-    10
+    {
+      limit: 100,
+      sortBy: "score",
+      sortOrder: "desc",
+      minScore: 0,
+    }
   );
+  const topMiners = React.useMemo(() => {
+    const miners = allMinersData?.data?.miners ?? [];
+    return Array.isArray(miners) ? miners.slice(0, 10) : [];
+  }, [allMinersData]);
+
   const { data: statistics, loading: statsLoading } =
     useRoundStatistics(roundKey);
 
   // Determine if round is waiting for consensus
   const validatorRounds = round?.validatorRounds ?? [];
   const isWaitingForConsensus =
-    validatorRounds.some((vr) => {
+    round?.status === "evaluating_finished" ||
+    (validatorRounds.some((vr) => {
       if (vr.status === "evaluating_finished") return true;
       const agentRuns = vr.agentEvaluationRuns ?? [];
       return agentRuns.some((run) => {
@@ -2100,7 +2097,8 @@ export default function Round() {
           evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
         );
       });
-    }) && round?.status === "active";
+    }) &&
+      round?.status === "active");
 
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
@@ -2349,12 +2347,18 @@ export default function Round() {
               className="w-full xl:w-[calc(100%-400px)]"
               selectedValidator={selectedValidator}
               roundInfo={round}
+              minersData={allMinersData}
+              loading={minersLoading}
+              error={undefined}
             />
             <RoundTopMinersInline
               className="w-full xl:w-[400px]"
               selectedValidator={selectedValidator}
               roundNumber={roundNumberForLinks}
               roundInfo={round}
+              minersData={allMinersData}
+              loading={minersLoading}
+              error={undefined}
             />
           </div>
 
