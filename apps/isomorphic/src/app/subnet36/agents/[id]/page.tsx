@@ -236,7 +236,7 @@ function AgentStats({
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.purple,
     },
     {
       title: "TAO Earned",
@@ -1871,7 +1871,7 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Rank",
@@ -1895,13 +1895,13 @@ export default function Page() {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Websites",
@@ -1913,7 +1913,7 @@ export default function Page() {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -1927,13 +1927,13 @@ export default function Page() {
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Success",
       metric: (agent.completedTasks ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Failed",
@@ -1942,13 +1942,13 @@ export default function Page() {
         (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
       ).toLocaleString(),
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.indigo,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
     {
@@ -1966,19 +1966,19 @@ export default function Page() {
           ? `Round ${(agent as any).bestRankRoundId}`
           : null,
       icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.green,
     },
   ];
 
@@ -2228,12 +2228,12 @@ export default function Page() {
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer isolate"
                   >
                     {/* Card background with gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-100 z-0",
                         stat.bgGradient
                       )}
                     />
