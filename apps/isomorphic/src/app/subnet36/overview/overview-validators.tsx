@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
@@ -42,7 +43,17 @@ export default function OverviewValidators({
     data: validatorsData,
     loading: validatorsLoading,
     error: validatorsError,
+    refetch,
   } = useValidators({ limit: 6 });
+
+  // Auto-refresh validators every 20 seconds to show live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   // Use provided currentRound to avoid duplicate API call
   const roundNumber = currentRound ?? null;

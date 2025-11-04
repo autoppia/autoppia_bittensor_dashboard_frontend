@@ -24,8 +24,21 @@ export default function Overview() {
   );
 
   // Only load metrics for the "Latest finished round" label
-  const { data: metrics, loading } = useOverviewMetrics();
+  const {
+    data: metrics,
+    loading,
+    refetch: refetchMetrics,
+  } = useOverviewMetrics();
   const metricsRound = metrics?.metricsRound ?? null;
+
+  // Auto-refresh metrics every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchMetrics();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetchMetrics]);
 
   const openAnnouncementModal = useCallback(() => {
     openModal({ view: <OverviewAnnouncementModal />, size: "md" });

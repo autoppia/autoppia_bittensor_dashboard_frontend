@@ -100,7 +100,17 @@ export default function MinerChart({
     data: leaderboardData,
     loading,
     error,
+    refetch,
   } = useLeaderboard({ timeRange: apiTimeRange });
+
+  // Auto-refresh leaderboard every 30 seconds to show latest scores
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
   const chartContainerStyle = useMemo<CSSProperties>(
     () => ({
       minHeight: CHART_HEIGHT,
