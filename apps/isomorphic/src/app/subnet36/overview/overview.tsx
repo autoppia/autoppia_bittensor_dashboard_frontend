@@ -145,13 +145,13 @@ export default function Overview() {
               </span>
             </span>
             <div className="flex items-center justify-end gap-2 min-w-0">
-              <button
+              {/* <button
                 onClick={handleOpenTimeline}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-black shadow-sm transition hover:border-gray-300 hover:text-black flex-shrink-0"
               >
                 <FaPlay className="h-3.5 w-3.5 text-black" />
                 Replay
-              </button>
+              </button> */}
               <Link
                 href="https://github.com/autoppia/autoppia_web_agents_subnet"
                 target="_blank"

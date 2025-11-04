@@ -786,23 +786,17 @@ function RoundHeaderInline() {
 
 function RoundStatsInline({
   selectedValidator,
+  statistics,
+  topMiners,
+  loading,
+  error,
 }: {
   selectedValidator?: ValidatorPerformance | null;
+  statistics?: any;
+  topMiners?: any[];
+  loading?: boolean;
+  error?: string;
 }) {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
-  const {
-    data: statistics,
-    loading: statsLoading,
-    error: statsError,
-  } = useRoundStatistics(roundKey);
-  const {
-    data: topMiners,
-    loading: minersLoading,
-    error: minersError,
-  } = useTopMiners(roundKey, 10);
-  const loading = statsLoading || minersLoading;
-  const error = statsError || minersError;
   const winnerUid = statistics?.winnerMinerUid ?? null;
 
   const topMiner = React.useMemo(() => {
@@ -2097,8 +2091,13 @@ export default function Round() {
   const roundNumberForLinks = roundNumberFromData ?? roundNumberFromKey;
   const roundLabel = roundNumberForLinks ?? roundKey;
 
-  const { data: topMiners, loading: minersLoading } = useTopMiners(roundKey, 5);
-  const { loading: statsLoading } = useRoundStatistics(roundKey);
+  // Fetch data once at top level to avoid duplicate calls
+  const { data: topMiners, loading: minersLoading } = useTopMiners(
+    roundKey,
+    10
+  );
+  const { data: statistics, loading: statsLoading } =
+    useRoundStatistics(roundKey);
   const { loading: validatorsLoading } = useRoundValidators(roundKey);
 
   // Determine if round is waiting for consensus
@@ -2222,8 +2221,7 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
-  // Determine if round data is not yet available
-  const { data: statistics } = useRoundStatistics(roundKey);
+  // Determine if round data is not yet available (statistics already loaded above)
   // Only show "no data" message for current/active rounds that truly have no data
   const isCurrentRound = round?.current === true || round?.status === "active";
   const hasNoData =
@@ -2313,7 +2311,12 @@ export default function Round() {
                 </div>
               </div>
             )}
-            <RoundStatsInline selectedValidator={selectedValidator} />
+            <RoundStatsInline
+              selectedValidator={selectedValidator}
+              statistics={statistics}
+              topMiners={topMiners}
+              loading={statsLoading || minersLoading}
+            />
           </div>
 
           {/* Validators selector */}
