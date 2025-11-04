@@ -251,11 +251,13 @@ type TaskDetailsDynamicProps = {
   details?: TaskDetails | null;
   isLoading?: boolean;
   error?: string | null;
+  refetch?: () => void;
 };
 function TaskDetailsDynamic({
   details,
   isLoading = false,
   error,
+  refetch,
 }: TaskDetailsDynamicProps) {
   if (isLoading && !details) {
     return (
@@ -312,6 +314,14 @@ function TaskDetailsDynamic({
               task.
             </p>
             <div className="mt-8 flex justify-center gap-4">
+              {refetch && (
+                <button
+                  onClick={refetch}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Retry
+                </button>
+              )}
               <Link href={routes.tasks}>
                 <button className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
                   View All Tasks
@@ -1435,7 +1445,7 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const taskId = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  const { details, isLoading, error } = useTaskDetails(taskId);
+  const { details, isLoading, error, refetch } = useTaskDetails(taskId);
   const runIdDisplay =
     details?.agentRunId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
@@ -1524,6 +1534,7 @@ export default function TaskDynamic() {
         details={details}
         isLoading={isLoading}
         error={error}
+        refetch={refetch}
       />
 
       <div className="mb-10">
