@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import AgentsSidebar from "./agents-sidebar";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import { useDrawer } from "@/app/shared/drawer-views/use-drawer";
-import { BsChevronCompactRight } from "react-icons/bs";
+import { BsChevronCompactLeft } from "react-icons/bs";
 import { ActionIcon } from "rizzui";
 
 export default function AgentsLayout({
@@ -22,7 +22,7 @@ export default function AgentsLayout({
       </Suspense>
 
       {/* Mobile Hamburger Button */}
-      <div className="lg:hidden fixed top-1/2 -translate-y-1/2 -left-3 z-[60]">
+      <div className="lg:hidden fixed top-1/2 -translate-y-1/2 -right-3 z-[60]">
         <ActionIcon
           aria-label="Open Agents Menu"
           variant="text"
@@ -38,7 +38,7 @@ export default function AgentsLayout({
             })
           }
         >
-          <BsChevronCompactRight
+          <BsChevronCompactLeft
             className="h-16"
             style={{ strokeWidth: 1, width: "auto" }}
           />
