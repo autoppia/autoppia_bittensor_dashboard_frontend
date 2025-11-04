@@ -243,6 +243,9 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     );
   }
 
+  // Check if this is in a drawer (mobile) vs fixed sidebar (desktop)
+  const isInDrawer = className?.includes("static");
+
   return (
     <aside
       className={cn(
@@ -253,7 +256,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       <div
         className={cn(
           "h-full flex flex-col overflow-hidden",
-          !className && "pt-[90px]"
+          !isInDrawer && "pt-[90px]"
         )}
       >
         <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10 bg-gray-0/80 dark:bg-gray-50/50">
