@@ -90,11 +90,11 @@ export const METRIC_CARD_GRADIENTS = {
     glowColor: "rgba(139,92,246,0.5)",
   },
   purple: {
-    gradient: "from-purple-500/40 via-fuchsia-500/35 to-pink-500/40",
-    bgGradient: "from-purple-500/30 via-fuchsia-500/20 to-pink-500/15",
+    gradient: "from-purple-600/50 via-fuchsia-500/45 to-pink-500/50",
+    bgGradient: "from-purple-600/40 via-fuchsia-500/30 to-pink-500/25",
     iconGradient: "from-purple-400 via-fuchsia-500 to-pink-500",
-    borderColor: "border-fuchsia-400/60",
-    glowColor: "rgba(217,70,239,0.6)",
+    borderColor: "border-fuchsia-400/70",
+    glowColor: "rgba(217,70,239,0.7)",
   },
   orange: {
     gradient: "from-orange-500/30 via-rose-500/25 to-orange-600/30",
