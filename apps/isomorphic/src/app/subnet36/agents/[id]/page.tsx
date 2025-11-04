@@ -1908,7 +1908,7 @@ export default function Page() {
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Tasks Failed, Alpha Earned
+    // Primera fila: Success Rate, Tasks Success, Best Rank Ever, Alpha Earned
     {
       title: "Success Rate",
       metric: (() => {
@@ -1926,12 +1926,13 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Tasks Failed",
-      metric: Math.max(
-        0,
-        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
-      ).toLocaleString(),
-      icon: LuTarget,
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      badge:
+        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
+          ? `Round ${(agent as any).bestRankRoundId}`
+          : null,
+      icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.purple,
     },
     {
@@ -1940,7 +1941,7 @@ export default function Page() {
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
-    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
+    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
     {
       title: "Best Score Ever",
       metric: bestEverScorePercentage,
@@ -1949,13 +1950,12 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.blue,
     },
     {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
-      badge:
-        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
-          ? `Round ${(agent as any).bestRankRoundId}`
-          : null,
-      icon: LuCrown,
+      title: "Tasks Failed",
+      metric: Math.max(
+        0,
+        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
+      ).toLocaleString(),
+      icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
