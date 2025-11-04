@@ -2267,7 +2267,7 @@ export default function Page() {
                           {stat.title}
                         </Text>
                         <div className="flex items-center gap-1 md:gap-2">
-                          <Text className="text-lg md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                          <Text className="text-[10px] sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
                           {(stat as any).badge ? (
