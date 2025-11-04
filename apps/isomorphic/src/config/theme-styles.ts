@@ -10,21 +10,29 @@
 export const GLASS_STYLES = {
   // Base glass card background
   base: "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-2xl",
-  
+
   // Accent color variations for different states
-  active: "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]",
-  completed: "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]",
-  pending: "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]",
-  
+  active:
+    "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]",
+  completed:
+    "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]",
+  pending:
+    "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]",
+
   // Card type variations
-  metric: "rounded-3xl p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] hover:border-white/30",
+  metric:
+    "rounded-3xl p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] hover:border-white/30",
   tall: "rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]",
-  
+
   // Animated effects
-  pulseBackground: "absolute inset-0 rounded-3xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none",
-  pulseBackgroundRounded2xl: "absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none",
-  shineEffect: "absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
-  shineEffectRounded2xl: "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+  pulseBackground:
+    "absolute inset-0 rounded-3xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none",
+  pulseBackgroundRounded2xl:
+    "absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none",
+  shineEffect:
+    "absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+  shineEffectRounded2xl:
+    "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
 };
 
 /**
@@ -82,9 +90,9 @@ export const METRIC_CARD_GRADIENTS = {
     glowColor: "rgba(139,92,246,0.5)",
   },
   purple: {
-    gradient: "from-purple-500/30 via-violet-500/25 to-purple-600/30",
-    bgGradient: "from-purple-500/20 via-violet-500/15 to-purple-600/10",
-    iconGradient: "from-purple-400 via-violet-500 to-purple-600",
+    gradient: "from-purple-500/30 via-violet-500/25 to-fuchsia-500/30",
+    bgGradient: "from-purple-500/20 via-violet-500/15 to-fuchsia-500/10",
+    iconGradient: "from-purple-400 via-violet-500 to-fuchsia-500",
     borderColor: "border-purple-400/50",
     glowColor: "rgba(168,85,247,0.5)",
   },
@@ -159,8 +167,8 @@ export const TEXT_STYLES = {
  */
 export function createGlowEffect(glowColor: string) {
   return {
-    maskImage: 'radial-gradient(white, transparent)',
-    WebkitMaskImage: 'radial-gradient(white, transparent)',
+    maskImage: "radial-gradient(white, transparent)",
+    WebkitMaskImage: "radial-gradient(white, transparent)",
     background: `radial-gradient(circle, ${glowColor}, transparent 70%)`,
   };
 }
@@ -171,7 +179,8 @@ export function createGlowEffect(glowColor: string) {
  */
 export function createShineEffect() {
   return {
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)',
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)",
   };
 }
 
@@ -180,32 +189,38 @@ export function createShineEffect() {
  */
 export const CHIP_STYLES = {
   base: "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-lg transition-all duration-300",
-  active: "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105",
-  completed: "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105",
-  pending: "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105",
+  active:
+    "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105",
+  completed:
+    "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105",
+  pending:
+    "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105",
 };
 
 /**
  * Button styles
  */
 export const BUTTON_STYLES = {
-  navButton: "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100 backdrop-blur-sm",
+  navButton:
+    "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100 backdrop-blur-sm",
 };
 
 /**
  * Section header style
  */
-export const SECTION_HEADER = "rounded-2xl border-white/30 px-8 py-4 text-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center gap-4 hover:border-white/40 transition-all duration-300";
+export const SECTION_HEADER =
+  "rounded-2xl border-white/30 px-8 py-4 text-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center gap-4 hover:border-white/40 transition-all duration-300";
 
 /**
  * List row styles
  */
 export const LIST_ROW_STYLES = {
-  hover: "hover:bg-white/15 hover:shadow-lg hover:border-white/30 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
+  hover:
+    "hover:bg-white/15 hover:shadow-lg hover:border-white/30 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
 };
 
 /**
  * Skeleton/Loading styles
  */
-export const SKELETON_CARD = "rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm animate-pulse";
-
+export const SKELETON_CARD =
+  "rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm animate-pulse";
