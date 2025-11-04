@@ -1996,8 +1996,8 @@ export default function Page() {
           <div className="pulse-bg-rounded-3xl" style={{ display: "none" }} />
 
           {/* Header Section */}
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
-            <div className="flex items-center gap-4">
+          <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 z-10">
+            <div className="flex items-center gap-4 flex-1">
               <div className="relative">
                 <Image
                   src={agentImgSrc}
@@ -2138,7 +2138,7 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center lg:items-start gap-2 w-full lg:w-auto lg:flex-shrink-0">
               <div className="glass-card flex sm:inline-flex items-center gap-1.5 p-1.5 rounded-xl w-full sm:w-auto">
                 <button
                   type="button"
