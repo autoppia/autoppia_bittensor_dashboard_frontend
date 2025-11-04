@@ -339,7 +339,7 @@ function TaskDetailsDynamic({
       : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
-    minerInfo?.isSota ? "/validators/Other.png" : "/miners/0.svg"
+    minerInfo?.isSota ? "/miners/30.svg" : "/miners/0.svg"
   );
   const minerImage =
     minerInfo?.image && minerInfo.image.trim()
