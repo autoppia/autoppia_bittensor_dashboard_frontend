@@ -905,7 +905,7 @@ function AgentValidators({
           No runs available for the selected round.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
             const scorePct = Math.round((latestRun.score ?? 0) * 100);
@@ -1036,14 +1036,14 @@ function AgentValidators({
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-1 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-1 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-1 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-2 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3  gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
                           <div
                             key={stat.title}
-                            className="flex items-center sm:gap-2.5 gap-1 min-w-0"
+                            className="flex items-center sm:gap-2.5 gap-2 min-w-0"
                           >
                             <div
                               className={cn(
@@ -1993,7 +1993,7 @@ export default function Page() {
     <div className="flex flex-col">
       <div className="flex flex-col gap-1 mb-2">
         <div
-          className="rounded-3xl flex flex-col gap-6 p-2 lg:p-3 group"
+          className="rounded-3xl flex flex-col gap-1 sm:gap-6 p-1 sm:p-3 group"
           style={{
             background: "transparent",
             border: "none",
