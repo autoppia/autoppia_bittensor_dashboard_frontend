@@ -836,15 +836,15 @@ function MetricCard({ card }: { card: any }) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-3xl p-8 shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
+        "group relative overflow-hidden rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
         card.borderColor,
         card.bgGradient
       )}
     >
-      <div className="relative flex h-full flex-col gap-7">
-        <div className="flex items-start gap-4">
+      <div className="relative flex h-full flex-col gap-4 md:gap-7">
+        <div className="flex items-start gap-2 md:gap-4">
           {isWinner ? (
-            <div className="relative h-24 w-24 overflow-hidden rounded-2xl border-3 border-amber-300/70 shadow-2xl ring-6 ring-amber-400/30 transition-all duration-300 group-hover:scale-110 group-hover:ring-amber-400/50 group-hover:rotate-3">
+            <div className="relative h-16 w-16 md:h-24 md:w-24 overflow-hidden rounded-xl md:rounded-2xl border-2 md:border-3 border-amber-300/70 shadow-2xl ring-4 md:ring-6 ring-amber-400/30 transition-all duration-300 group-hover:scale-110 group-hover:ring-amber-400/50 group-hover:rotate-3">
               <Image
                 src={winnerAvatar}
                 alt={`UID ${card.uid ?? "winner"}`}
@@ -852,20 +852,20 @@ function MetricCard({ card }: { card: any }) {
                 sizes="(max-width: 768px) 100vw"
                 className="object-cover"
               />
-              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-2.5 shadow-2xl ring-3 ring-white/30 animate-pulse">
-                <PiCrownDuotone className="h-6 w-6 text-white" />
+              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 md:p-2.5 shadow-2xl ring-2 md:ring-3 ring-white/30 animate-pulse">
+                <PiCrownDuotone className="h-4 w-4 md:h-6 md:w-6 text-white" />
               </div>
             </div>
           ) : (
             <div
               className={cn(
-                "relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-3 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:border-white/50",
+                "relative flex h-16 w-16 md:h-24 md:w-24 items-center justify-center overflow-hidden rounded-xl md:rounded-2xl border-2 md:border-3 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:border-white/50",
                 "bg-gradient-to-br",
                 card.iconGradient
               )}
             >
-              <Icon className="h-12 w-12 text-white" />
-              <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
+              <Icon className="h-8 w-8 md:h-12 md:w-12 text-white" />
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
             </div>
           )}
           <div className="flex flex-col items-end gap-2 flex-1">
