@@ -108,7 +108,7 @@ export default function Overview() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
             <Title
               as="h2"
-              className="flex items-center gap-3 text-[22px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
+              className="flex items-center gap-3 text-[14px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
             >
               Subnet 36 - Web Agents
               <Link

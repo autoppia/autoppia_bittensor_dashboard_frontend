@@ -938,12 +938,98 @@ function MetricCard({ card }: { card: any }) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-3xl p-8 shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
+        "group relative overflow-hidden rounded-2xl md:rounded-3xl p-3 md:p-8 shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border-2 bg-gradient-to-br",
         card.borderColor,
         card.bgGradient
       )}
     >
-      <div className="relative flex h-full flex-col gap-7">
+      {/* Mobile Layout */}
+      <div className="relative flex md:hidden h-full flex-col gap-2.5">
+        <div className="flex items-start gap-2">
+          {isWinner ? (
+            <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-amber-300/70 shadow-2xl ring-4 ring-amber-400/30 transition-all duration-300 group-hover:scale-110 group-hover:ring-amber-400/50 group-hover:rotate-3 flex-shrink-0">
+              <Image
+                src={winnerAvatar}
+                alt={`UID ${card.uid ?? "winner"}`}
+                fill
+                sizes="(max-width: 768px) 100vw"
+                className="object-cover"
+              />
+              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 shadow-2xl ring-2 ring-white/30 animate-pulse">
+                <PiCrownDuotone className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:border-white/50 flex-shrink-0",
+                "bg-gradient-to-br",
+                card.iconGradient
+              )}
+            >
+              <Icon className="h-8 w-8 text-white" />
+              <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5 flex-1 min-w-0 items-end">
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/80 group-hover:text-white transition-colors duration-300 text-right">
+              {card.title}
+            </span>
+            <div
+              className={cn(
+                "font-black text-white transition-all duration-300 group-hover:scale-105",
+                card.valueClass
+              )}
+            >
+              {card.value}
+            </div>
+            {isWinner && typeof card.uid === "number" && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-white/60">
+                  UID
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/40 text-white font-black text-sm shadow-lg">
+                  {card.uid}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        {isWinner && card.hotkey ? (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/60">
+              Hotkey
+            </span>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-white/15 to-white/10 border-2 border-white/30 shadow-lg group-hover:border-white/40 transition-all duration-300">
+              <span className="text-xs font-mono font-bold text-white/95 truncate flex-1">
+                {card.hotkey.slice(0, 10)}...{card.hotkey.slice(-10)}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopyHotkey(card.hotkey);
+                }}
+                className="flex-shrink-0 p-2 rounded-lg bg-white/15 hover:bg-white/25 transition-all duration-200 hover:scale-110 active:scale-95 shadow-md"
+                title="Copy full hotkey"
+              >
+                {copied ? (
+                  <PiCheckDuotone className="h-4 w-4 text-emerald-300" />
+                ) : (
+                  <PiCopyDuotone className="h-4 w-4 text-white" />
+                )}
+              </button>
+            </div>
+          </div>
+        ) : card.helper ? (
+          <p className="text-xs font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-relaxed">
+            {card.helper}
+          </p>
+        ) : null}
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="relative hidden md:flex h-full flex-col gap-7">
         <div className="flex items-start gap-4">
           {isWinner ? (
             <div className="relative h-24 w-24 overflow-hidden rounded-2xl border-3 border-amber-300/70 shadow-2xl ring-6 ring-amber-400/30 transition-all duration-300 group-hover:scale-110 group-hover:ring-amber-400/50 group-hover:rotate-3">
@@ -2083,7 +2169,7 @@ export default function Round() {
           iconGradient: "from-amber-400 to-orange-500",
           borderColor: "border-amber-400/50",
           glowColor: "rgba(251,191,36,0.5)",
-          valueClass: "text-2xl",
+          valueClass: "text-base md:text-2xl",
         },
         {
           key: "score",
@@ -2096,7 +2182,7 @@ export default function Round() {
           iconGradient: "from-emerald-400 to-teal-500",
           borderColor: "border-emerald-400/50",
           glowColor: "rgba(16,185,129,0.5)",
-          valueClass: "text-4xl",
+          valueClass: "text-lg md:text-4xl",
         },
         {
           key: "miners",
@@ -2109,7 +2195,7 @@ export default function Round() {
           iconGradient: "from-violet-400 to-fuchsia-500",
           borderColor: "border-violet-400/50",
           glowColor: "rgba(139,92,246,0.5)",
-          valueClass: "text-4xl",
+          valueClass: "text-lg md:text-4xl",
         },
         {
           key: "tasks",
@@ -2122,7 +2208,7 @@ export default function Round() {
           iconGradient: "from-blue-400 to-indigo-500",
           borderColor: "border-blue-400/50",
           glowColor: "rgba(59,130,246,0.5)",
-          valueClass: "text-4xl",
+          valueClass: "text-lg md:text-4xl",
         },
       ]
     : [];
