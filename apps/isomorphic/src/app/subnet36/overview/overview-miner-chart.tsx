@@ -26,7 +26,7 @@ import {
 import { useLeaderboard } from "@/services/hooks/useOverview";
 import type { LeaderboardData } from "@/services/api/types/overview";
 
-const filterOptions = ["7D", "15D", "All"] as const;
+const filterOptions = ["7D", "15D", "30D", "All"] as const;
 type FilterOption = (typeof filterOptions)[number];
 const CHART_HEIGHT = 200;
 const MAX_CHART_HEIGHT = 460;
@@ -245,6 +245,7 @@ export default function MinerChart({
     const rangeToLimit: Record<Exclude<FilterOption, "All">, number> = {
       "7D": 7,
       "15D": 15,
+      "30D": 30,
     };
     const totalDays = rangeToLimit[timeRange] ?? chartData.length;
     return chartData.slice(-totalDays);
