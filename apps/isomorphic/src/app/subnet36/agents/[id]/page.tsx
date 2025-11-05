@@ -230,7 +230,7 @@ function AgentStats({
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Alpha Earned",
@@ -1946,6 +1946,7 @@ export default function Page() {
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
+
     {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
@@ -1970,6 +1971,7 @@ export default function Page() {
       icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.amber,
     },
+
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
