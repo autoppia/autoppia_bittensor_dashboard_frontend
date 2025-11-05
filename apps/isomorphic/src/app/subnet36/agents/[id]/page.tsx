@@ -236,7 +236,13 @@ function AgentStats({
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.indigo,
+      ...METRIC_CARD_GRADIENTS.purple,
+    },
+    {
+      title: "TAO Earned",
+      metric: `${totalTaoEarned} τ`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.purple,
     },
   ];
 
@@ -899,7 +905,7 @@ function AgentValidators({
           No runs available for the selected round.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
             const scorePct = Math.round((latestRun.score ?? 0) * 100);
@@ -1030,14 +1036,14 @@ function AgentValidators({
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-1 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-1 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-1 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-2 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3  gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
                           <div
                             key={stat.title}
-                            className="flex items-center sm:gap-2.5 gap-1 min-w-0"
+                            className="flex items-center sm:gap-2.5 gap-2 min-w-0"
                           >
                             <div
                               className={cn(
@@ -1891,25 +1897,25 @@ export default function Page() {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -1923,23 +1929,22 @@ export default function Page() {
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Success",
       metric: (agent.completedTasks ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
-      badge:
-        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
-          ? `Round ${(agent as any).bestRankRoundId}`
-          : null,
-      icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.violet,
+      title: "Tasks Failed",
+      metric: Math.max(
+        0,
+        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
+      ).toLocaleString(),
+      icon: LuTarget,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
 
     {
@@ -1957,12 +1962,13 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.blue,
     },
     {
-      title: "Tasks Failed",
-      metric: Math.max(
-        0,
-        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
-      ).toLocaleString(),
-      icon: LuTarget,
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      badge:
+        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
+          ? `Round ${(agent as any).bestRankRoundId}`
+          : null,
+      icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.amber,
     },
 
@@ -1989,9 +1995,9 @@ export default function Page() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-1 mt-2 mb-2">
+      <div className="flex flex-col gap-1 mb-2">
         <div
-          className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group"
+          className="rounded-3xl flex flex-col gap-1 sm:gap-6 p-1 sm:p-3 group"
           style={{
             background: "transparent",
             border: "none",
@@ -2226,12 +2232,12 @@ export default function Page() {
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer isolate"
                   >
                     {/* Card background with gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-100 z-0",
                         stat.bgGradient
                       )}
                     />
