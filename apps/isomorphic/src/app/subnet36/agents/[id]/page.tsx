@@ -959,7 +959,7 @@ function AgentValidators({
                 metricClassName: "text-emerald-600",
               },
               {
-                title: "Response Time",
+                title: "Time",
                 metric: `${responseTimeSeconds}s`,
                 icon: PiTimerDuotone,
                 iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
@@ -1909,12 +1909,6 @@ export default function Page() {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "TAO Earned",
-      metric: `${totalTaoEarned} τ`,
-      icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
