@@ -17,7 +17,7 @@ export interface AgentRunData {
   validatorImage: string;
   startTime: string;
   endTime?: string;
-  status: 'running' | 'completed' | 'failed' | 'timeout';
+  status: "running" | "completed" | "failed" | "timeout";
   totalTasks: number;
   completedTasks: number;
   successfulTasks: number;
@@ -58,7 +58,7 @@ export interface AgentRunListItem {
   validatorId: string;
   validatorName?: string;
   validatorImage?: string;
-  status: 'running' | 'completed' | 'failed' | 'timeout';
+  status: "running" | "completed" | "failed" | "timeout";
   startTime: string;
   endTime?: string | null;
   totalTasks: number;
@@ -76,7 +76,7 @@ export interface AgentRunTaskData {
   website: string;
   useCase: string;
   prompt: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: "pending" | "running" | "completed" | "failed";
   score: number;
   duration: number;
   startTime: string;
@@ -92,19 +92,19 @@ export interface AgentRunTaskData {
 export interface TaskAction {
   id: string;
   type:
-    | 'navigate'
-    | 'click'
-    | 'type'
-    | 'input'
-    | 'search'
-    | 'extract'
-    | 'submit'
-    | 'open_tab'
-    | 'close_tab'
-    | 'wait'
-    | 'scroll'
-    | 'screenshot'
-    | 'other';
+    | "navigate"
+    | "click"
+    | "type"
+    | "input"
+    | "search"
+    | "extract"
+    | "submit"
+    | "open_tab"
+    | "close_tab"
+    | "wait"
+    | "scroll"
+    | "screenshot"
+    | "other";
   selector?: string;
   value?: string;
   timestamp: string;
@@ -126,9 +126,9 @@ export interface AgentRunStats {
   successRate: number;
   scoreDistribution: {
     excellent: number; // 0.9-1.0
-    good: number;      // 0.7-0.89
-    average: number;   // 0.5-0.69
-    poor: number;      // 0.0-0.49
+    good: number; // 0.7-0.89
+    average: number; // 0.5-0.69
+    poor: number; // 0.0-0.49
   };
   performanceByWebsite: {
     website: string;
@@ -137,8 +137,17 @@ export interface AgentRunStats {
     failed: number;
     averageScore: number;
     averageDuration: number;
+    useCases?: {
+      useCase: string;
+      tasks: number;
+      successful: number;
+      failed: number;
+      averageScore: number;
+      averageDuration: number;
+    }[];
   }[];
-  performanceByUseCase: {
+  // Legacy field - kept for backwards compatibility with old agent runs
+  performanceByUseCase?: {
     useCase: string;
     tasks: number;
     successful: number;
@@ -188,7 +197,7 @@ export interface AgentRunPersonas {
   round: {
     id: number;
     name: string;
-    status: 'active' | 'completed' | 'upcoming';
+    status: "active" | "completed" | "upcoming";
     startTime: string;
     endTime?: string;
   };
@@ -274,9 +283,9 @@ export interface AgentRunQueryParams {
   includePersonas?: boolean;
   website?: string;
   useCase?: string;
-  status?: 'pending' | 'running' | 'completed' | 'failed';
-  sortBy?: 'startTime' | 'score' | 'duration' | 'ranking';
-  sortOrder?: 'asc' | 'desc';
+  status?: "pending" | "running" | "completed" | "failed";
+  sortBy?: "startTime" | "score" | "duration" | "ranking";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface AgentRunTasksQueryParams {
@@ -284,9 +293,9 @@ export interface AgentRunTasksQueryParams {
   limit?: number;
   website?: string;
   useCase?: string;
-  status?: 'pending' | 'running' | 'completed' | 'failed';
-  sortBy?: 'startTime' | 'score' | 'duration';
-  sortOrder?: 'asc' | 'desc';
+  status?: "pending" | "running" | "completed" | "failed";
+  sortBy?: "startTime" | "score" | "duration";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface AgentRunsListQueryParams {
@@ -296,9 +305,9 @@ export interface AgentRunsListQueryParams {
   roundId?: number;
   validatorId?: string;
   agentId?: string;
-  status?: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
-  sortBy?: 'startTime' | 'score' | 'duration' | 'ranking';
-  sortOrder?: 'asc' | 'desc';
+  status?: "pending" | "running" | "completed" | "failed" | "timeout";
+  sortBy?: "startTime" | "score" | "duration" | "ranking";
+  sortOrder?: "asc" | "desc";
   startDate?: string;
   endDate?: string;
 }

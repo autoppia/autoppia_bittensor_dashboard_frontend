@@ -144,7 +144,7 @@ export default function Header() {
           >
             <Image
               src="/logo.webp"
-              alt="Logo"
+              alt="Autoppia Logo"
               width={155}
               height={36}
               style={{ width: "auto", maxWidth: "100%" }}
