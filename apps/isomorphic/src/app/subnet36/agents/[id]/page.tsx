@@ -1875,38 +1875,38 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Avg Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     // Segunda fila: Validators, Avg Tasks Per Validator, Websites
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Websites",
@@ -1932,6 +1932,32 @@ export default function Page() {
       title: "Tasks Success",
       metric: (agent.completedTasks ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
+      ...METRIC_CARD_GRADIENTS.violet,
+    },
+
+    {
+      title: "Best Score Ever",
+      metric: bestEverScorePercentage,
+      badge: bestRoundBadge,
+      icon: LuStar,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "Alpha Earned",
+      metric: `${totalAlphaEarned} α`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
+
+    {
+      title: "Best Rank Ever",
+      metric: bestRankEver,
+      badge:
+        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
+          ? `Round ${(agent as any).bestRankRoundId}`
+          : null,
+      icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
@@ -1941,39 +1967,14 @@ export default function Page() {
         (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
       ).toLocaleString(),
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.amber,
-    },
-
-    {
-      title: "Alpha Earned",
-      metric: `${totalAlphaEarned} α`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
-    {
-      title: "Best Score Ever",
-      metric: bestEverScorePercentage,
-      badge: bestRoundBadge,
-      icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.blue,
-    },
-    {
-      title: "Best Rank Ever",
-      metric: bestRankEver,
-      badge:
-        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
-          ? `Round ${(agent as any).bestRankRoundId}`
-          : null,
-      icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
 
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "TAO Earned",
