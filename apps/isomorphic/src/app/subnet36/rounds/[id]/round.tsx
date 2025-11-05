@@ -1991,7 +1991,7 @@ function RoundTopMinersInline({
                               : "text-white group-hover:scale-105"
                           )}
                         >
-                          {isSota && miner.name
+                          {miner.name && miner.name.trim()
                             ? miner.name
                             : `Miner ${miner.uid}`}
                         </RizzText>
