@@ -1914,36 +1914,13 @@ export default function Page() {
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Tasks Success",
       metric: (agent.completedTasks ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.emerald,
-    },
-    {
-      title: "Tasks Failed",
-      metric: Math.max(
-        0,
-        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
-      ).toLocaleString(),
-      icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Alpha Earned",
-      metric: `${totalAlphaEarned} α`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
-    },
-    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
-    {
-      title: "Best Score Ever",
-      metric: bestEverScorePercentage,
-      badge: bestRoundBadge,
-      icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Best Rank Ever",
@@ -1953,19 +1930,44 @@ export default function Page() {
           ? `Round ${(agent as any).bestRankRoundId}`
           : null,
       icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
+
+    {
+      title: "Alpha Earned",
+      metric: `${totalAlphaEarned} α`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
+    {
+      title: "Best Score Ever",
+      metric: bestEverScorePercentage,
+      badge: bestRoundBadge,
+      icon: LuStar,
+      ...METRIC_CARD_GRADIENTS.blue,
+    },
+    {
+      title: "Tasks Failed",
+      metric: Math.max(
+        0,
+        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
+      ).toLocaleString(),
+      icon: LuTarget,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
+
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.green,
     },
   ];
 
