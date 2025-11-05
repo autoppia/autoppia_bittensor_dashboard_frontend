@@ -199,7 +199,7 @@ function AgentStats({
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.yellow,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Current Score",
@@ -230,7 +230,7 @@ function AgentStats({
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Alpha Earned",
@@ -1858,7 +1858,7 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Rank",
@@ -1882,25 +1882,25 @@ export default function Page() {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.cyan,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
   ];
 
