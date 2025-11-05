@@ -36,6 +36,7 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
+  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
@@ -150,38 +151,41 @@ function buildDetailDataFromStats(
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
 
-  const useCases: AgentRunUseCase[] = (stats.performanceByUseCase || []).map(
-    (u, idx) => ({
-      id: u.useCase || idx,
-      name: u.useCase || `Use Case ${idx + 1}`,
-    })
-  );
-
-  const genericResults: AgentRunResult[] = (
-    stats.performanceByUseCase || []
-  ).map((u, idx) => ({
-    useCaseId: u.useCase || idx,
-    name: u.useCase || `Use Case ${idx + 1}`,
-    successRate: typeof u.averageScore === "number" ? u.averageScore : 0,
-    total: u.tasks || 0,
-    successCount: u.successful || 0,
-    avgSolutionTime: u.averageDuration || 0,
-  }));
-
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
-    (w, i) => ({
-      name: w.website || `Website ${i + 1}`,
-      useCases,
-      // Note: Per-website use-case breakdown may not be available; use global as a reasonable approximation
-      results: genericResults,
-      overall: {
-        successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
-        total: w.tasks || 0,
-        successCount: w.successful || 0,
-        avgSolutionTime:
-          typeof w.averageDuration === "number" ? w.averageDuration : 0,
-      },
-    })
+    (w, i) => {
+      // Extract use cases specific to this website from the backend
+      const websiteUseCases: AgentRunUseCase[] = (w.useCases || []).map(
+        (uc, idx) => ({
+          id: uc.useCase || idx,
+          name: uc.useCase || `Use Case ${idx + 1}`,
+        })
+      );
+
+      const websiteResults: AgentRunResult[] = (w.useCases || []).map(
+        (uc, idx) => ({
+          useCaseId: uc.useCase || idx,
+          name: uc.useCase || `Use Case ${idx + 1}`,
+          successRate:
+            typeof uc.averageScore === "number" ? uc.averageScore : 0,
+          total: uc.tasks || 0,
+          successCount: uc.successful || 0,
+          avgSolutionTime: uc.averageDuration || 0,
+        })
+      );
+
+      return {
+        name: w.website || `Website ${i + 1}`,
+        useCases: websiteUseCases,
+        results: websiteResults,
+        overall: {
+          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
+          total: w.tasks || 0,
+          successCount: w.successful || 0,
+          avgSolutionTime:
+            typeof w.averageDuration === "number" ? w.averageDuration : 0,
+        },
+      };
+    }
   );
 
   return { websites };
@@ -203,57 +207,98 @@ export default function Page() {
   });
 
   // Derived detail data from stats for charts/summary
-  const detailData = useMemo(
-    () => buildDetailDataFromStats(data.stats),
-    [data.stats]
-  );
+  const detailData = useMemo(() => {
+    return buildDetailDataFromStats(data.stats);
+  }, [data.stats]);
+
+  // Check if agent run has no data yet
+  const hasNoData =
+    !data.loading.stats &&
+    error &&
+    (!data.stats ||
+      (data.stats.totalTasks === 0 && data.stats.overallScore === 0));
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
       <PageHeader
         title="Agent Run Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href={((): string => {
-                const roundKey =
-                  typeof data?.summary?.roundId === "number" &&
-                  Number.isFinite(data.summary.roundId)
-                    ? `round_${data.summary.roundId}`
-                    : (data?.personas?.round?.name ?? "");
-                return roundKey
-                  ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
-                  : "#";
-              })()}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Round
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
-              </span>
-              {data?.personas?.round?.name && (
-                <IDCopyButton text={data.personas.round.name} />
-              )}
-            </Link>
-            <Link
-              href={
-                runId ? `${routes.agent_run}/${encodeURIComponent(runId)}` : "#"
-              }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Run
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(runId, 8)}
-              </span>
-              {!!runId && <IDCopyButton text={runId} />}
-            </Link>
-          </div>
+          data.loading.personas || data.loading.summary ? (
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+              <div className="inline-flex w-full sm:w-auto items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Round
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <Placeholder
+                  height="0.875rem"
+                  width="6rem"
+                  className="bg-white/10"
+                />
+              </div>
+              <div className="inline-flex w-full sm:w-auto items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Run
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <Placeholder
+                  height="0.875rem"
+                  width="6rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+              <Link
+                href={((): string => {
+                  const roundKey =
+                    typeof data?.summary?.roundId === "number" &&
+                    Number.isFinite(data.summary.roundId)
+                      ? `round_${data.summary.roundId}`
+                      : (data?.personas?.round?.name ?? "");
+                  return roundKey
+                    ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
+                    : "#";
+                })()}
+                className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Round
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                  {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
+                </span>
+                {data?.personas?.round?.name && (
+                  <span className="ml-auto">
+                    <IDCopyButton text={data.personas.round.name} />
+                  </span>
+                )}
+              </Link>
+              <Link
+                href={
+                  runId
+                    ? `${routes.agent_run}/${encodeURIComponent(runId)}`
+                    : "#"
+                }
+                className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Run
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+                  {truncateMiddle(runId, 8)}
+                </span>
+                {!!runId && (
+                  <span className="ml-auto">
+                    <IDCopyButton text={runId} />
+                  </span>
+                )}
+              </Link>
+            </div>
+          )
         }
         className="mt-4"
       >
@@ -279,8 +324,17 @@ export default function Page() {
         </div>
       )}
 
-      <AgentRunPersonas personas={data.personas} summary={data.summary} />
-      <AgentRunStats stats={data.stats || null} />
+      {data.loading.personas ? (
+        <AgentRunPersonasPlaceholder />
+      ) : (
+        <AgentRunPersonas personas={data.personas} summary={data.summary} />
+      )}
+
+      {data.loading.stats ? (
+        <AgentRunStatsPlaceholder />
+      ) : (
+        <AgentRunStats stats={data.stats || null} />
+      )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
@@ -408,7 +462,7 @@ function AgentRunPersonas({
   const epochEndFixed = toEpochSeconds(roundData.endTime ?? summary?.endTime);
   const epochEndLive = epochEndFixed ?? Math.floor(Date.now() / 1000);
   const formatEpoch = (value: number | null) =>
-    typeof value === 'number' && Number.isFinite(value) ? String(value) : '—';
+    typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -444,8 +498,12 @@ function AgentRunPersonas({
 
         <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
-            <span className="uppercase tracking-[0.3em] text-xs text-white/60">Epoch:</span>
-            <span className="whitespace-nowrap">{formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}</span>
+            <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+              Epoch:
+            </span>
+            <span className="whitespace-nowrap">
+              {formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}
+            </span>
           </div>
         </div>
       </section>
@@ -579,6 +637,67 @@ function AgentRunPersonas({
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// Personas placeholder
+function AgentRunPersonasPlaceholder() {
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <section
+          key={`persona-placeholder-${idx}`}
+          className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-transparent p-5 shadow-lg"
+        >
+          <header className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Placeholder
+                variant="circular"
+                width={56}
+                height={56}
+                className="rounded-xl bg-white/10"
+              />
+              <div className="space-y-2">
+                <Placeholder
+                  height="0.75rem"
+                  width="4rem"
+                  className="bg-white/10"
+                />
+                <Placeholder
+                  height="1.25rem"
+                  width="8rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Placeholder
+                height="1.75rem"
+                width="4rem"
+                className="rounded-full bg-white/10"
+              />
+            </div>
+          </header>
+
+          <div className="mt-4">
+            <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
+                <Placeholder
+                  height="0.875rem"
+                  width="5rem"
+                  className="bg-white/10"
+                />
+                <Placeholder
+                  height="1rem"
+                  width="8rem"
+                  className="bg-white/10"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
@@ -744,6 +863,130 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   );
 }
 
+// Stats placeholder
+function AgentRunStatsPlaceholder() {
+  return (
+    <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/15 bg-transparent p-6 text-white">
+      {/* Mobile layout */}
+      <div className="flex flex-col space-y-6 md:hidden relative">
+        <div className="flex flex-col items-center justify-center">
+          <Placeholder
+            height="3rem"
+            width="8rem"
+            className="rounded-lg bg-white/10"
+          />
+          <Placeholder
+            height="0.875rem"
+            width="12rem"
+            className="mt-2 bg-white/10"
+          />
+          <Placeholder
+            height="0.75rem"
+            width="16rem"
+            className="mt-1 bg-white/10"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div
+              key={`stats-mobile-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop layout */}
+      <div className="hidden md:flex items-center justify-between relative">
+        <div className="grid grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <div
+              key={`stats-left-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col items-center justify-center mx-8">
+          <Placeholder
+            height="3.75rem"
+            width="8rem"
+            className="rounded-lg bg-white/10"
+          />
+          <Placeholder
+            height="0.875rem"
+            width="12rem"
+            className="mt-2 bg-white/10"
+          />
+          <Placeholder
+            height="0.75rem"
+            width="10rem"
+            className="mt-1 bg-white/10"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <div
+              key={`stats-right-placeholder-${idx}`}
+              className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
+            >
+              <Placeholder
+                variant="circular"
+                width={24}
+                height={24}
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="2rem"
+                width="4rem"
+                className="mx-auto mb-2 bg-white/10"
+              />
+              <Placeholder
+                height="0.875rem"
+                width="5rem"
+                className="mx-auto bg-white/10"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Detail panel (bar list)
 function AgentRunDetail({
   className,
@@ -772,9 +1015,16 @@ function AgentRunDetail({
   const chartData =
     selectedWebsite && selectedWebsite !== "__all__"
       ? (() => {
+          console.log("🔍 Filtering by website:", selectedWebsite);
+          console.log(
+            "📊 Available websites:",
+            agentDetailsData.websites.map((w) => w.name)
+          );
           const selectedWeb = agentDetailsData.websites.find(
             (web) => web.name === selectedWebsite
           );
+          console.log("✅ Found website:", selectedWeb);
+          console.log("📋 Results:", selectedWeb?.results);
           return (
             selectedWeb?.results.map((result, idx) => ({
               website: formatUseCaseName(
@@ -807,21 +1057,21 @@ function AgentRunDetail({
       )}
     >
       <div className="relative mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30">
-              <PiChartBar className="w-6 h-6 text-emerald-400" />
+              <PiChartBar className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
                 Performance Analytics
               </h2>
-              <p className="text-sm text-emerald-200/70">
+              <p className="text-xs sm:text-sm text-emerald-200/70">
                 Success rates and performance metrics
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Select
               options={websiteOptions}
               value={websiteOptions.find(
@@ -832,7 +1082,7 @@ function AgentRunDetail({
                   option.value === "__all__" ? null : option.value
                 )
               }
-              className="w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
+              className="w-full sm:w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
             />
           </div>
         </div>
@@ -851,53 +1101,57 @@ function AgentRunDetail({
             return (
               <div
                 key={`${item.website}-${index}`}
-                className="group relative rounded-xl border p-5 transition-all duration-300 hover:shadow-2xl"
+                className="group relative rounded-xl border p-3 sm:p-5 transition-all duration-300 hover:shadow-2xl"
                 style={{
                   boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
                   borderColor: `${projectColors.mainColor}99`, // 60% opacity
                   background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`, // 15% to 10% opacity
                 }}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     <div
-                      className="w-3 h-3 rounded-full shadow-sm"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
                       style={{ backgroundColor: projectColors.dotColor }}
                     />
-                    <span className="text-lg font-semibold text-white">
+                    <span className="text-base sm:text-lg font-semibold text-white">
                       {item.website}
                     </span>
                     {isHighPerformance && (
                       <div
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium border"
+                        className="flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border"
                         style={{
                           backgroundColor: "rgba(253, 245, 230, 0.2)",
                           borderColor: "rgba(253, 245, 230, 0.45)",
                           color: HIGHLIGHT_COLOR,
                         }}
                       >
-                        <PiTrendUp className="w-3 h-3" />
-                        Excellent
+                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">Excellent</span>
+                        <span className="sm:hidden">Top</span>
                       </div>
                     )}
                     {isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 text-indigo-100 rounded-full text-xs font-medium border border-indigo-400/30 bg-transparent">
-                        <PiTrendUp className="w-3 h-3" />
+                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-indigo-100 rounded-full text-[10px] sm:text-xs font-medium border border-indigo-400/30 bg-transparent">
+                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         Good
                       </div>
                     )}
                     {!isHighPerformance && !isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-2 py-1 text-red-200 rounded-full text-xs font-medium border border-red-400/40 bg-transparent">
-                        <PiTrendDown className="w-3 h-3" />
-                        Needs Improvement
+                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-red-200 rounded-full text-[10px] sm:text-xs font-medium border border-red-400/40 bg-transparent">
+                        <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">
+                          Needs Improvement
+                        </span>
+                        <span className="sm:hidden">Low</span>
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-white">
+                  <div className="text-left sm:text-right">
+                    <div className="text-xl sm:text-2xl font-bold text-white">
                       {item.average.toFixed(1)}%
                     </div>
-                    <div className="text-sm text-slate-400">
+                    <div className="text-xs sm:text-sm text-slate-400">
                       {item.total} requests • {item.successCount} successful
                     </div>
                   </div>
@@ -905,7 +1159,7 @@ function AgentRunDetail({
 
                 {item.average > 0 ? (
                   <div className="relative">
-                    <div className="h-4 w-full rounded-full bg-transparent overflow-hidden">
+                    <div className="h-3 sm:h-4 w-full rounded-full bg-transparent overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                         style={{
@@ -916,7 +1170,7 @@ function AgentRunDetail({
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
                         <div
-                          className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-sm"
                           style={{
                             backgroundColor: HIGHLIGHT_COLOR,
                             opacity: item.average > 5 ? 1 : 0,
@@ -924,29 +1178,29 @@ function AgentRunDetail({
                         />
                       </div>
                     </div>
-                    <div className="flex justify-between mt-2 text-xs text-white/60">
+                    <div className="flex justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-white/60">
                       <span>0%</span>
-                      <span>25%</span>
+                      <span className="hidden sm:inline">25%</span>
                       <span>50%</span>
-                      <span>75%</span>
+                      <span className="hidden sm:inline">75%</span>
                       <span>100%</span>
                     </div>
                   </div>
                 ) : (
                   <div className="relative text-center py-2">
-                    <div className="text-sm text-white/50 italic">
+                    <div className="text-xs sm:text-sm text-white/50 italic">
                       No success rate to display
                     </div>
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-lg border border-white/10 bg-white/5">
-                  <div className="flex items-center gap-3">
-                    <PiTarget className="w-6 h-6 text-emerald-400" />
-                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiTarget className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
                       Score
                     </span>
-                    <span className="text-xl font-bold text-white">
+                    <span className="text-lg sm:text-xl font-bold text-white">
                       {(
                         (item.successCount / Math.max(item.total, 1)) *
                         100
@@ -954,12 +1208,12 @@ function AgentRunDetail({
                       %
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <PiClock className="w-6 h-6 text-blue-400" />
-                    <span className="text-sm text-white/70 uppercase tracking-wide">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiClock className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
                       Time
                     </span>
-                    <span className="text-xl font-bold text-white">
+                    <span className="text-lg sm:text-xl font-bold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
                     </span>
                   </div>
@@ -1170,10 +1424,17 @@ function AgentRunSummary({
 
   const displayData = (() => {
     if (selectedWebsite) {
+      console.log("🎯 Summary: Filtering by website:", selectedWebsite);
+      console.log(
+        "🏢 Summary: Available websites:",
+        agentData.websites.map((w) => w.name)
+      );
       const selectedWeb = agentData.websites.find(
         (w) => w.name === selectedWebsite
       );
-      if (!selectedWeb)
+      console.log("✨ Summary: Found website:", selectedWeb);
+      if (!selectedWeb) {
+        console.warn("⚠️ Summary: Website not found!");
         return [] as {
           label: string;
           value: number;
@@ -1181,6 +1442,8 @@ function AgentRunSummary({
           successCount: number;
           avgSolutionTime: number;
         }[];
+      }
+      console.log("📋 Summary: Results:", selectedWeb.results);
       return selectedWeb.results.map((r) => ({
         label: formatUseCaseName(
           selectedWeb.useCases.find(
@@ -1323,8 +1586,8 @@ function AgentRunSummary({
                   content={(props) => (
                     <CenterLabel
                       value={successRate.toFixed(0)}
-                      totalRequests={totalRequests.toFixed(0)}
-                      totalSuccesses={totalSuccesses.toFixed(0)}
+                      totalRequests={Math.round(totalRequests).toString()}
+                      totalSuccesses={Math.round(totalSuccesses).toString()}
                       viewBox={(props as any).viewBox}
                     />
                   )}
@@ -1395,7 +1658,8 @@ function AgentRunSummary({
                       {item.value.toFixed(1)}%
                     </div>
                     <div className="text-xs text-white/70">
-                      {item.total} requests • {item.successCount} successes
+                      {Math.round(item.total)} requests •{" "}
+                      {Math.round(item.successCount)} successes
                       {selectedWebsite && (
                         <span> • {item.avgSolutionTime.toFixed(2)}s avg</span>
                       )}
@@ -1584,7 +1848,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="ms-2 font-mono text-white"
+        className="ms-2 font-mono text-xs sm:text-sm text-white"
         title="View task details"
       >
         #{row.original.taskId}
@@ -1599,7 +1863,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="block max-w-[320px] break-words whitespace-pre-wrap font-medium text-slate-200"
+        className="block max-w-[200px] sm:max-w-[320px] break-words whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-200"
         title="View task details"
       >
         {row.original.prompt}
@@ -1614,7 +1878,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="inline-flex items-center rounded-md border border-blue-600 px-2 py-0.5 text-xs text-blue-300"
+        className="inline-flex items-center rounded-md border border-blue-600 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs text-blue-300"
         title="View task details"
       >
         {formatWebsiteName(row.original.website)}
@@ -1629,7 +1893,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="font-medium text-slate-300"
+        className="text-xs sm:text-sm font-medium text-slate-300"
         title="View task details"
       >
         {row.original.useCase
@@ -1653,7 +1917,7 @@ const agentRunTasksColumns = [
       return (
         <Link
           href={`${routes.tasks}/${row.original.taskId}`}
-          className={`font-medium ${scoreColor}`}
+          className={`text-xs sm:text-sm font-medium ${scoreColor}`}
           title="View task details"
         >
           {score.toFixed(2)}
@@ -1668,7 +1932,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
-        className="font-medium text-slate-300"
+        className="text-xs sm:text-sm font-medium text-slate-300"
         title="View task details"
       >
         {row.original.duration}s
@@ -1688,9 +1952,9 @@ const agentRunTasksColumns = [
         <Button
           variant="outline"
           size="sm"
-          className="relative z-20 border-slate-600 text-white hover:border-slate-400 hover:bg-transparent"
+          className="relative z-20 border-slate-600 text-white hover:border-slate-400 hover:bg-transparent text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
         >
-          <PiEyeBold className="me-1.5 size-4" />
+          <PiEyeBold className="me-1 sm:me-1.5 size-3 sm:size-4" />
           <span>Inspect</span>
         </Button>
       </Link>
@@ -1734,19 +1998,19 @@ function AgentRunTasksSection() {
 
   if (isLoading && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-        <div className="relative mb-6 flex items-center justify-between">
-          <Placeholder height="1.4rem" width="6rem" />
-          <Placeholder height="2.3rem" width="15rem" />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+        <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
+          <Placeholder height="1.2rem" width="5rem" />
+          <Placeholder height="2rem" width="12rem" />
         </div>
         <div className="relative mb-3">
           <div className="overflow-hidden rounded-2xl border border-slate-700/25">
-            <table className="w-full">
+            <table className="w-full text-xs sm:text-sm">
               <thead className="bg-transparent">
                 <tr>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <th key={i} className="px-4 py-3 text-left">
-                      <Placeholder height="1rem" width="4rem" />
+                    <th key={i} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
+                      <Placeholder height="0.875rem" width="3rem" />
                     </th>
                   ))}
                 </tr>
@@ -1759,12 +2023,12 @@ function AgentRunTasksSection() {
             </table>
           </div>
         </div>
-        <div className="relative flex items-center justify-between py-4">
-          <Placeholder height="1rem" width="8rem" />
+        <div className="relative flex items-center justify-between py-3 sm:py-4">
+          <Placeholder height="0.875rem" width="6rem" />
           <div className="flex items-center gap-2">
-            <Placeholder height="2rem" width="6rem" />
-            <Placeholder height="2rem" width="4rem" />
-            <Placeholder height="2rem" width="6rem" />
+            <Placeholder height="1.75rem" width="5rem" />
+            <Placeholder height="1.75rem" width="3rem" />
+            <Placeholder height="1.75rem" width="5rem" />
           </div>
         </div>
       </div>
@@ -1773,18 +2037,20 @@ function AgentRunTasksSection() {
 
   if (error && !tasks) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-        <div className="relative mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">All Tasks</h2>
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+        <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
+          <h2 className="text-base sm:text-xl font-semibold text-white">
+            All Tasks
+          </h2>
         </div>
-        <div className="relative py-8 text-center">
-          <div className="mb-2 text-lg font-semibold text-red-400">
+        <div className="relative py-6 sm:py-8 text-center">
+          <div className="mb-2 text-base sm:text-lg font-semibold text-red-400">
             Failed to Load Tasks Data
           </div>
-          <div className="mb-4 text-sm text-red-300">{error}</div>
+          <div className="mb-4 text-xs sm:text-sm text-red-300">{error}</div>
           <button
             onClick={refetch}
-            className="rounded-lg bg-transparent border border-red-600 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-transparent"
+            className="rounded-lg bg-transparent border border-red-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-300 transition-colors hover:bg-transparent"
           >
             Retry
           </button>
@@ -1794,12 +2060,12 @@ function AgentRunTasksSection() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-6">
-      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 border border-blue-500/30">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
+      <div className="relative mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 border border-blue-500/30">
             <svg
-              className="w-5 h-5 text-blue-400"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -1812,10 +2078,10 @@ function AgentRunTasksSection() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
+          <h2 className="text-base sm:text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
             All Tasks
             {total > 0 && (
-              <span className="ml-2 text-sm font-normal text-blue-300/70">
+              <span className="ml-2 text-xs sm:text-sm font-normal text-blue-300/70">
                 ({total} total)
               </span>
             )}
@@ -1828,9 +2094,11 @@ function AgentRunTasksSection() {
             placeholder="Search task..."
             onClear={() => table.setGlobalFilter("")}
             value={(table.getState().globalFilter as string) ?? ""}
-            prefix={<PiMagnifyingGlassBold className="size-4 text-slate-400" />}
+            prefix={
+              <PiMagnifyingGlassBold className="size-3 sm:size-4 text-slate-400" />
+            }
             onChange={(e) => table.setGlobalFilter(e.target.value)}
-            className="w-full xs:max-w-60"
+            className="w-full xs:max-w-60 text-xs sm:text-sm"
           />
         </div>
       </div>
@@ -1850,11 +2118,11 @@ function AgentRunTasksSection() {
             }}
           />
         ) : (
-          <div className="rounded-2xl border border-slate-700/25 bg-transparent p-8 text-center">
-            <div className="mb-2 text-lg font-medium text-slate-200">
+          <div className="rounded-2xl border border-slate-700/25 bg-transparent p-6 sm:p-8 text-center">
+            <div className="mb-2 text-base sm:text-lg font-medium text-slate-200">
               No Tasks Found
             </div>
-            <div className="text-sm text-slate-400">
+            <div className="text-xs sm:text-sm text-slate-400">
               No tasks are available for this agent run.
             </div>
           </div>
@@ -1864,15 +2132,15 @@ function AgentRunTasksSection() {
       {tasks && tasks.length > 0 && (
         <TablePagination
           table={table}
-          className="relative py-4 text-slate-300"
+          className="relative py-3 sm:py-4 text-slate-300 text-xs sm:text-sm"
         />
       )}
 
       {isLoading && tasks && (
-        <div className="relative flex items-center justify-center py-4">
+        <div className="relative flex items-center justify-center py-3 sm:py-4">
           <div className="flex items-center gap-2 text-slate-400">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
-            <span className="text-sm">Loading more tasks...</span>
+            <div className="h-3 w-3 sm:h-4 sm:w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+            <span className="text-xs sm:text-sm">Loading more tasks...</span>
           </div>
         </div>
       )}

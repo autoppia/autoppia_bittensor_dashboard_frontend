@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
@@ -22,26 +23,43 @@ import {
 import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
-import { useValidators, useCurrentRound } from "@/services/hooks/useOverview";
+import { useValidators } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-export default function OverviewValidators() {
+const DEFAULT_TASK_MESSAGES = new Set([
+  "Awaiting round start",
+  "Validator connected – awaiting task upload",
+  "Distributing tasks to agent runs",
+  "Evaluating miner submissions",
+  "Waiting for consensus",
+  "No activity detected recently",
+  "Round completed",
+]);
+
+export default function OverviewValidators({
+  currentRound,
+}: { currentRound?: number | null } = {}) {
   const {
     data: validatorsData,
     loading: validatorsLoading,
     error: validatorsError,
+    refetch,
   } = useValidators({ limit: 6 });
-  const {
-    data: currentRound,
-    loading: roundLoading,
-    error: roundError,
-  } = useCurrentRound();
-  const roundNumber = currentRound?.id ?? null;
-  const isRoundActive =
-    !!currentRound &&
-    (currentRound.current ||
-      currentRound.status === "active" ||
-      currentRound.status === "pending");
+
+  // Auto-refresh validators every 20 seconds to show live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Use provided currentRound to avoid duplicate API call
+  const roundNumber = currentRound ?? null;
+  const roundLoading = false; // No longer loading round separately
+  // Current round is always "active" (it's the one in progress)
+  const isRoundActive = true;
 
   const headerTitle = "What's happening on the subnet";
   const headerDescription =
@@ -49,7 +67,7 @@ export default function OverviewValidators() {
 
   const statusColorClasses: Record<string, string> = {
     "Sending Tasks": "bg-blue-500/20 text-blue-500",
-    Evaluating: "bg-orange-500/20 text-orange-500",
+    Evaluating: "bg-amber-500/20 text-amber-400",
     Waiting: "bg-purple-500/20 text-purple-500",
     Finished: "bg-emerald-600/15 text-emerald-600",
     "Not Started": "bg-slate-500/20 text-slate-200",
@@ -228,16 +246,17 @@ export default function OverviewValidators() {
 
           const normalizedStatus =
             validator.status === "Evaluating"
-              ? "Evaluating..."
+              ? "Evaluating"
               : validator.status === "Finished"
                 ? "Finished"
                 : validator.status === "Not Started"
                   ? "Not Started"
                   : validator.status;
 
+          const rawCurrentTask = validator.currentTask?.trim() ?? "";
           const showCurrentTask =
-            normalizedStatus === "Evaluating" &&
-            (validator.currentTask?.trim() || "");
+            rawCurrentTask.length > 0 &&
+            !DEFAULT_TASK_MESSAGES.has(rawCurrentTask);
 
           const resolvedRoundNumber =
             typeof validator.roundNumber === "number"
@@ -331,10 +350,9 @@ export default function OverviewValidators() {
                   <div className="border border-muted rounded-lg p-3">
                     <div className="flex items-center justify-center gap-2 mb-2.5">
                       {(() => {
+                        // Show website/use case whenever they exist, regardless of status
                         const hasLiveMeta =
-                          normalizedStatus === "Evaluating" &&
-                          (validator.currentWebsite ||
-                            validator.currentUseCase);
+                          validator.currentWebsite || validator.currentUseCase;
                         const websiteText =
                           hasLiveMeta && validator.currentWebsite
                             ? validator.currentWebsite
@@ -475,9 +493,9 @@ export default function OverviewValidators() {
                 <div className="border border-muted rounded-lg p-3">
                   <div className="flex items-center justify-center gap-2 mb-2.5">
                     {(() => {
+                      // Show website/use case whenever they exist, regardless of status
                       const hasLiveMeta =
-                        normalizedStatus === "Evaluating" &&
-                        (validator.currentWebsite || validator.currentUseCase);
+                        validator.currentWebsite || validator.currentUseCase;
                       const websiteText =
                         hasLiveMeta && validator.currentWebsite
                           ? validator.currentWebsite

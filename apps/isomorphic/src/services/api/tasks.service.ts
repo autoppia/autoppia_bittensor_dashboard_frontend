@@ -296,6 +296,8 @@ export class TasksService {
   ): Promise<{
     actions: any[];
     total: number;
+    successCount: number;
+    failCount: number;
     page: number;
     limit: number;
   }> {
@@ -303,11 +305,21 @@ export class TasksService {
       data: {
         actions: any[];
         total: number;
+        successCount?: number;
+        failCount?: number;
         page: number;
         limit: number;
       };
     }>(`${this.baseEndpoint}/${taskId}/actions`, params);
-    return response.data.data;
+    const data = response.data.data;
+    return {
+      actions: data.actions,
+      total: data.total,
+      successCount: data.successCount ?? 0,
+      failCount: data.failCount ?? 0,
+      page: data.page,
+      limit: data.limit,
+    };
   }
 
   /**

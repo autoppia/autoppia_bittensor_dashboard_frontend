@@ -11,7 +11,7 @@ export interface TaskData {
   seed?: string | null;
   useCase: string;
   prompt: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: "pending" | "running" | "completed" | "failed";
   score: number;
   successRate: number;
   duration: number;
@@ -39,19 +39,19 @@ export interface TaskData {
 export interface TaskAction {
   id: string;
   type:
-    | 'navigate'
-    | 'click'
-    | 'type'
-    | 'input'
-    | 'search'
-    | 'extract'
-    | 'submit'
-    | 'open_tab'
-    | 'close_tab'
-    | 'wait'
-    | 'scroll'
-    | 'screenshot'
-    | 'other';
+    | "navigate"
+    | "click"
+    | "type"
+    | "input"
+    | "search"
+    | "extract"
+    | "submit"
+    | "open_tab"
+    | "close_tab"
+    | "wait"
+    | "scroll"
+    | "screenshot"
+    | "other";
   selector?: string;
   value?: string;
   timestamp: string;
@@ -157,7 +157,7 @@ export interface TaskEvaluationSummary {
   finalScore: number;
   rawScore: number;
   evaluationTime: number;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   validatorUid: number;
   minerUid?: number | null;
   webAgentId?: string | null;
@@ -226,7 +226,7 @@ export interface TaskPersonas {
   round: {
     id: number;
     name: string;
-    status: 'active' | 'completed' | 'upcoming';
+    status: "active" | "completed" | "upcoming";
     startTime: string;
     endTime?: string;
   };
@@ -347,9 +347,9 @@ export interface TasksListQueryParams {
   agentRunId?: string;
   website?: string;
   useCase?: string;
-  status?: 'pending' | 'running' | 'completed' | 'failed';
-  sortBy?: 'startTime' | 'score' | 'duration' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  status?: "pending" | "running" | "completed" | "failed";
+  sortBy?: "startTime" | "score" | "duration" | "createdAt";
+  sortOrder?: "asc" | "desc";
   startDate?: string;
   endDate?: string;
 }
@@ -388,7 +388,8 @@ export interface TaskSearchParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
+  includeDetails?: boolean; // If false, omits actions/screenshots/logs (MUCH faster)
 }
 
 export interface TaskSearchResponse {
