@@ -2220,7 +2220,7 @@ export default function Page() {
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 z-10">
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
@@ -2258,7 +2258,7 @@ export default function Page() {
                     />
 
                     {/* Content */}
-                    <div className="relative p-2.5 md:p-4 flex items-center gap-2 md:gap-4">
+                    <div className="relative p-4 flex items-center gap-2 md:gap-4">
                       {/* Icon on left */}
                       <div
                         className={cn(
