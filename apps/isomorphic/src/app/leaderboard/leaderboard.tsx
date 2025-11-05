@@ -247,7 +247,7 @@ const benchmarkTasks = [
   },
 ];
 
-const lastBenchmarkUpdate = "October 17, 2024";
+const lastBenchmarkUpdate = "November 1, 2025";
 const evaluatedBenchmarks = benchmarkTasks.length;
 
 /* -------------------- HELPERS -------------------- */
@@ -862,14 +862,14 @@ export default function App() {
                       strokeWidth={2}
                       strokeDasharray="12 10"
                       label={{
-                        value: `AVG • ${avg}%`,
+                        value: `AVG ${avg}%`,
                         fill: "#bae6fd",
                         fontWeight: 800,
-                        letterSpacing: "0.32em",
-                        position: isMobile ? "insideTopLeft" : "insideTopRight",
-                        fontSize: isMobile ? 10 : 12,
-                        dx: isMobile ? -10 : 0,
-                        dy: -12,
+                        letterSpacing: "0.1em",
+                        position: "top",
+                        fontSize: isMobile ? 11 : 13,
+                        dx: 0,
+                        dy: -8,
                       }}
                     />
 
