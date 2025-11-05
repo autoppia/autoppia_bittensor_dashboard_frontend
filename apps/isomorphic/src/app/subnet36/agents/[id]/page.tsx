@@ -230,7 +230,7 @@ function AgentStats({
       metric: bestEverScorePercentage,
       badge: bestRoundBadge,
       icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Alpha Earned",
@@ -1866,7 +1866,7 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Rank",
@@ -1891,7 +1891,7 @@ export default function Page() {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Avg Tasks Per Validator",
@@ -1903,7 +1903,13 @@ export default function Page() {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    {
+      title: "TAO Earned",
+      metric: `${totalTaoEarned} τ`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
   ];
 
@@ -1933,13 +1939,14 @@ export default function Page() {
           ? `Round ${(agent as any).bestRankRoundId}`
           : null,
       icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
+
     {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
     {
@@ -1958,17 +1965,18 @@ export default function Page() {
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
+
     {
       title: "Rounds Won",
       metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
       icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.green,
     },
   ];
 
