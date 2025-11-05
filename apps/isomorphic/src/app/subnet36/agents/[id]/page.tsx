@@ -959,7 +959,7 @@ function AgentValidators({
                 metricClassName: "text-emerald-600",
               },
               {
-                title: "Response Time",
+                title: "Time",
                 metric: `${responseTimeSeconds}s`,
                 icon: PiTimerDuotone,
                 iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
@@ -1872,44 +1872,44 @@ export default function Page() {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Avg Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     // Segunda fila: Validators, Avg Tasks Per Validator, Websites
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
   ];
 
