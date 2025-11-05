@@ -3,21 +3,36 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import cn from "@core/utils/class-names";
-import { Text, Input, Checkbox, Select, Tooltip, type SelectOption } from "rizzui";
+import {
+  Text,
+  Input,
+  Checkbox,
+  Select,
+  Tooltip,
+  type SelectOption,
+} from "rizzui";
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
 import { useMinersList } from "@/services/hooks/useAgents";
-import { useRounds } from "@/services/hooks/useRounds";
+import { useRoundIds } from "@/services/hooks/useRounds";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
-import type { MinimalAgentData, MinimalAgentsListQueryParams } from "@/services/api/types/agents";
+import type {
+  MinimalAgentData,
+  MinimalAgentsListQueryParams,
+} from "@/services/api/types/agents";
 import { routes } from "@/config/routes";
 import { GLASS_STYLES } from "@/config/theme-styles";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-export default function AgentsSidebar() {
+export default function AgentsSidebar({ className }: { className?: string }) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -33,11 +48,12 @@ export default function AgentsSidebar() {
     const parsed = Number.parseInt(roundParam, 10);
     return Number.isFinite(parsed) ? parsed : undefined;
   }, [roundParam]);
-  const roundReady = typeof selectedRound === "number" && Number.isFinite(selectedRound);
+  const roundReady =
+    typeof selectedRound === "number" && Number.isFinite(selectedRound);
 
-  const { data: roundsData } = useRounds({
-    limit: 50,
-    sortBy: "roundNumber",
+  // Use lightweight endpoint to get only round IDs (not full data)
+  const { data: roundIdsData } = useRoundIds({
+    limit: 500,
     sortOrder: "desc",
   });
 
@@ -50,45 +66,16 @@ export default function AgentsSidebar() {
   );
 
   const roundOptions: SelectOption[] = useMemo(() => {
-    const numbers = new Set<number>();
-    const rounds = roundsData?.data?.rounds ?? [];
-    rounds.forEach((round) => {
-      if (!round) {
-        return;
-      }
-      const candidate =
-        (round as any).roundNumber ??
-        (round as any).round ??
-        (round as any).id;
-      const validatorCount =
-        (round as any).validatorRoundCount ??
-        (round as any).validator_round_count ??
-        undefined;
+    const roundIds = roundIdsData?.roundIds ?? [];
+    if (roundIds.length === 0) {
+      return [];
+    }
 
-      const hasCompletedValidator = (() => {
-        if (typeof validatorCount === "number" && validatorCount > 0) {
-          return true;
-        }
-        const validatorRounds = (round as any).validatorRounds ?? (round as any).validator_rounds;
-        if (Array.isArray(validatorRounds)) {
-          return validatorRounds.some((entry: any) => {
-            const status = (entry?.status ?? entry?.roundStatus ?? "").toString().toLowerCase();
-            return status === "completed";
-          });
-        }
-        return false;
-      })();
-
-      if (typeof candidate === "number" && Number.isFinite(candidate) && hasCompletedValidator) {
-        numbers.add(candidate);
-      }
-    });
-    const values = Array.from(numbers).sort((a, b) => b - a);
-    return values.map((value) => ({
+    return roundIds.map((value) => ({
       label: `Round ${value}`,
       value,
     }));
-  }, [roundsData]);
+  }, [roundIdsData]);
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
@@ -129,9 +116,10 @@ export default function AgentsSidebar() {
     if (!option || option.value === loadingRoundOption.value) {
       return;
     }
-    const value = typeof option.value === "number"
-      ? option.value
-      : Number.parseInt(String(option.value), 10);
+    const value =
+      typeof option.value === "number"
+        ? option.value
+        : Number.parseInt(String(option.value), 10);
 
     if (!Number.isFinite(value) || value === selectedRound) {
       return;
@@ -139,7 +127,8 @@ export default function AgentsSidebar() {
 
     const params = new URLSearchParams(searchParamsString);
     params.set("round", String(value));
-    const agentParam = searchParams.get("agent") ?? (id ? String(id) : undefined);
+    const agentParam =
+      searchParams.get("agent") ?? (id ? String(id) : undefined);
     if (agentParam) {
       params.set("agent", agentParam);
     }
@@ -162,12 +151,12 @@ export default function AgentsSidebar() {
   useEffect(() => {
     if (minersData?.miners) {
       let filtered = minersData.miners;
-      
+
       // Optionally exclude SOTA benchmarks when toggled off
       if (!includeSota) {
         filtered = filtered.filter((miner) => !miner.isSota);
       }
-      
+
       setFilteredAgents(filtered);
     }
   }, [minersData, includeSota]);
@@ -179,20 +168,21 @@ export default function AgentsSidebar() {
     if (!minersData?.miners) return;
 
     let filtered = minersData.miners;
-    
+
     // Optionally exclude SOTA benchmarks when toggled off
     if (!includeSota) {
       filtered = filtered.filter((miner) => !miner.isSota);
     }
-    
+
     // Then apply search filter
     if (query.trim() !== "") {
-      filtered = filtered.filter((miner) =>
-        miner.name.toLowerCase().includes(query.toLowerCase()) ||
-        miner.uid.toString().includes(query.toLowerCase())
+      filtered = filtered.filter(
+        (miner) =>
+          miner.name.toLowerCase().includes(query.toLowerCase()) ||
+          miner.uid.toString().includes(query.toLowerCase())
       );
     }
-    
+
     setFilteredAgents(filtered);
   };
 
@@ -206,24 +196,36 @@ export default function AgentsSidebar() {
     return (
       <aside
         className={cn(
-          "hidden lg:block fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+          "fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
+          className
         )}
       >
         <div className="text-center px-6">
-          <div className="text-red-400 text-sm font-semibold">Error loading agents</div>
+          <div className="text-red-400 text-sm font-semibold">
+            Error loading agents
+          </div>
           <div className="text-white/70 text-xs mt-2">{error}</div>
         </div>
       </aside>
     );
   }
 
+  // Check if this is in a drawer (mobile) vs fixed sidebar (desktop)
+  const isInDrawer = className?.includes("static");
+
   return (
     <aside
       className={cn(
-        "hidden lg:block fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50"
+        "fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
+        className
       )}
     >
-      <div className="h-full flex flex-col overflow-hidden pt-[90px]">
+      <div
+        className={cn(
+          "h-full flex flex-col overflow-hidden",
+          !isInDrawer && "pt-[90px]"
+        )}
+      >
         <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10 bg-gray-0/80 dark:bg-gray-50/50">
           <div className="flex items-center gap-3 pl-4 pr-3 py-4">
             <div className="flex items-center gap-2">
@@ -251,7 +253,7 @@ export default function AgentsSidebar() {
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-2 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
+        <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-6 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
           <div className="flex flex-col gap-2">
             <div className="mb-1">
               <Select
@@ -261,7 +263,6 @@ export default function AgentsSidebar() {
                 disabled={!roundOptions.length}
                 placeholder="Select round"
                 className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-                menuPortalTarget={undefined}
               />
             </div>
             <div className="mb-2">
@@ -288,7 +289,9 @@ export default function AgentsSidebar() {
             </div>
             {filteredAgents.map((miner) => {
               const isActive = miner.uid.toString() === id;
-              const firstNonSotaUid = filteredAgents.find((agent) => !agent.isSota)?.uid;
+              const firstNonSotaUid = filteredAgents.find(
+                (agent) => !agent.isSota
+              )?.uid;
               const isTopRanked = miner.ranking === 1;
               const showCrown = includeSota
                 ? isTopRanked
@@ -296,7 +299,9 @@ export default function AgentsSidebar() {
               const highlightTop =
                 (!includeSota && firstNonSotaUid === miner.uid) ||
                 (includeSota && isTopRanked);
-              const displayRank = Number.isFinite(miner.ranking) ? miner.ranking : undefined;
+              const displayRank = Number.isFinite(miner.ranking)
+                ? miner.ranking
+                : undefined;
               const showRankBadge = typeof displayRank === "number";
               const rankBadgePalette = (() => {
                 switch (displayRank) {
@@ -326,8 +331,8 @@ export default function AgentsSidebar() {
                       isActive
                         ? "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]"
                         : highlightTop
-                        ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                        : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
+                          ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
+                          : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
                     )}
                   >
                     {/* Animated gradient shimmer for active state */}
@@ -336,7 +341,7 @@ export default function AgentsSidebar() {
                         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
                       </>
                     )}
-                    
+
                     {/* Crown badge for top agent */}
                     {showCrown && (
                       <div className="absolute -top-1 -right-1 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 border-amber-300 animate-pulse">
@@ -345,14 +350,22 @@ export default function AgentsSidebar() {
                       </div>
                     )}
 
-                    <div className={cn(
-                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
-                      isActive ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50" : highlightTop ? "ring-2 ring-amber-400/50" : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
-                    )}>
+                    <div
+                      className={cn(
+                        "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
+                        isActive
+                          ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50"
+                          : highlightTop
+                            ? "ring-2 ring-amber-400/50"
+                            : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
+                      )}
+                    >
                       <Image
                         src={resolveAssetUrl(
                           miner.imageUrl,
-                          resolveAssetUrl(`/miners/${Math.abs(miner.uid % 50)}.svg`)
+                          resolveAssetUrl(
+                            `/miners/${Math.abs(miner.uid % 50)}.svg`
+                          )
                         )}
                         alt={miner.name}
                         fill
@@ -375,12 +388,14 @@ export default function AgentsSidebar() {
                           {miner.name}
                         </span>
                         {miner.isSota && (
-                          <span className={cn(
-                            "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
-                            isActive 
-                              ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
-                              : "bg-purple-500/30 text-purple-100 border-purple-400/60"
-                          )}>
+                          <span
+                            className={cn(
+                              "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
+                              isActive
+                                ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
+                                : "bg-purple-500/30 text-purple-100 border-purple-400/60"
+                            )}
+                          >
                             SOTA
                           </span>
                         )}
@@ -389,14 +404,14 @@ export default function AgentsSidebar() {
                         {showRankBadge && (
                           <span
                             className={cn(
-                            "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300",
-                            rankBadgePalette,
-                            isActive && displayRank
+                              "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300",
+                              rankBadgePalette,
+                              isActive && displayRank
                                 ? "ring-2 ring-white/40 shadow-md"
                                 : highlightTop && displayRank
                                   ? "ring-1 ring-amber-400/50 shadow-sm"
                                   : ""
-                          )}
+                            )}
                           >
                             #{displayRank}
                           </span>
@@ -427,7 +442,6 @@ export default function AgentsSidebar() {
                         </span>
                       </div>
                     </div>
-
                   </div>
                 </Link>
               );

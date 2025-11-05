@@ -183,7 +183,7 @@ function AgentStats({
       title: "Rank",
       metric: currentRankValue,
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Success Rate",
@@ -205,7 +205,7 @@ function AgentStats({
       title: "Current Score",
       metric: currentScorePercentage,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
     {
       title: "Validators",
@@ -217,13 +217,13 @@ function AgentStats({
       title: "Avg Response Time",
       metric: preAvg?.avgResp ?? "0s",
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.purple,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Avg Task Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.orange,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Best Ever Score",
@@ -236,7 +236,7 @@ function AgentStats({
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.purple,
     },
     {
       title: "TAO Earned",
@@ -247,11 +247,11 @@ function AgentStats({
   ];
 
   // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Success Rate, Tasks Success, Tasks Failed, Alpha Earned (first row), Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned (second row)
+  // In historical view: show Success Rate, Best Score Ever, Alpha Earned
   const displayStats = (
     mode === "current"
       ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
-      : [stats[1], stats[6], stats[7], stats[8]]
+      : [stats[1], stats[6], stats[7]]
   ).filter(Boolean);
 
   return (
@@ -331,9 +331,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {stat.badge ? (
+                      {(stat as any).badge ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                          {stat.badge}
+                          {(stat as any).badge}
                         </span>
                       ) : null}
                     </div>
@@ -473,7 +473,7 @@ function AgentScoreChart({
         headerClassName="flex-row items-start space-between text-white pb-4"
         rounded="xl"
         className={className}
-        titleClassName="text-white"
+        titleClassName="text-sm md:text-base sm:text-lg text-white"
       >
         <div className="absolute inset-0 rounded-2xl opacity-30 bg-gradient-to-br from-white/5 via-transparent to-white/5 animate-pulse pointer-events-none" />
         <div className="relative flex h-[273px] items-center justify-center text-rose-200">
@@ -555,7 +555,9 @@ function AgentScoreChart({
   return (
     <WidgetCard
       title={
-        <span className="text-2xl font-black text-white">Score Over Time</span>
+        <span className="text-md lg:text-2xl font-black text-white">
+          Score Over Time
+        </span>
       }
       action={
         <ButtonGroupAction
@@ -566,7 +568,7 @@ function AgentScoreChart({
       headerClassName="flex-row items-start space-between pb-2"
       rounded="xl"
       className={cn(
-        "flex flex-col min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none",
+        "flex flex-col min-h-[350px] md:min-h-[500px] p-4 lg:p-5 !bg-transparent !border-transparent !shadow-none",
         className
       )}
       titleClassName="text-white"
@@ -583,8 +585,8 @@ function AgentScoreChart({
         </div>
       )}
       <div className="relative custom-scrollbar flex-1 overflow-x-auto scroll-smooth">
-        <div className={cn("h-full w-full pt-2 min-h-[360px]")}>
-          <ResponsiveContainer width="100%" height={360} minWidth={600}>
+        <div className={cn("w-full pt-2 h-[250px] md:h-[360px]")}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={600}>
             <ComposedChart
               data={displayData}
               margin={{ top: 10, left: -10, bottom: 20 }}
@@ -753,20 +755,22 @@ function AgentValidators({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
-          <Text className="text-2xl text-center font-bold text-white">
+          <Text className="text-md sm:text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({Object.keys(runsByValidator).length})
             {selectedRound ? ` - Round ${selectedRound}` : ""}
           </Text>
         </div>
         <button
           onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-          className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm"
+          className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
         >
-          <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
-            <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
+              <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span>How it works</span>
           </div>
-          <span>How it works</span>
-          <div className="ml-1 transition-transform duration-300 group-hover:scale-110">
+          <div className="transition-transform duration-300 group-hover:scale-110">
             {isInfoExpanded ? (
               <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
             ) : (
@@ -778,7 +782,7 @@ function AgentValidators({
 
       {isInfoExpanded && (
         <div
-          className="mb-6 rounded-2xl p-6 animate-in slide-in-from-top-2 duration-500"
+          className="mb-4 md:mb-6 rounded-2xl p-3 md:p-6 animate-in slide-in-from-top-2 duration-500"
           style={{
             background: "transparent",
             border: "none",
@@ -786,98 +790,104 @@ function AgentValidators({
           }}
         >
           <div className="pulse-bg-rounded-2xl" style={{ display: "none" }} />
-          <div className="relative z-10 flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
-              <PiInfoDuotone className="w-5 h-5" />
+          <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+            <div className="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <PiInfoDuotone className="w-4 h-4 md:w-5 md:h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-sm md:text-lg font-bold text-white">
                 How Agent Evaluation Works
               </h3>
-              <p className="text-sm text-white/70">
+              <p className="text-xs md:text-sm text-white/70">
                 Understanding the validation process
               </p>
             </div>
           </div>
-          <div className="relative z-10 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative z-10 space-y-2 md:space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiTrophyDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiTrophyDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Validators</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Validators
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Each validator runs independent evaluations of your agent
                   across different tasks and scenarios to ensure fair and
                   comprehensive testing.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiChartLineUpDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiChartLineUpDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Scoring</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Scoring
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Agents are scored based on task completion accuracy, response
                   quality, and execution efficiency across multiple evaluation
                   criteria.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiListChecksDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiListChecksDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">Ranking</h4>
+                  <h4 className="font-bold text-white text-sm md:text-base">
+                    Ranking
+                  </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Your final rank is determined by your average performance
                   across all validators in each round, providing a comprehensive
                   ranking system.
                 </p>
               </div>
               <div
-                className="rounded-xl p-5 hover:scale-[1.02] transition-all duration-300 group"
+                className="rounded-lg md:rounded-xl p-3 md:p-5 hover:scale-[1.02] transition-all duration-300 group"
                 style={{
                   background: "transparent",
                   border: "none",
                   boxShadow: "none",
                 }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
-                    <PiTimerDuotone className="w-4.5 h-4.5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiTimerDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
-                  <h4 className="font-bold text-white text-base">
+                  <h4 className="font-bold text-white text-sm md:text-base">
                     Response Time
                   </h4>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Faster response times with maintained quality result in higher
                   scores, balancing speed and accuracy in the evaluation
                   process.
@@ -895,7 +905,7 @@ function AgentValidators({
           No runs available for the selected round.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
             const scorePct = Math.round((latestRun.score ?? 0) * 100);
@@ -995,7 +1005,7 @@ function AgentValidators({
                     style={{ display: "none" }}
                   />
                   <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
                           <Image
@@ -1015,28 +1025,29 @@ function AgentValidators({
                           </Text>
                         </div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40">
-                        <PiHashDuotone className="w-4 h-4" />
-                        <span className="font-mono" title={latestRun.runId}>
-                          {latestRun.runId.length > 12
-                            ? `${latestRun.runId.slice(0, 6)}...${latestRun.runId.slice(-6)}`
-                            : latestRun.runId}
+                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
+                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
+                        <span
+                          className="font-mono break-all"
+                          title={latestRun.runId}
+                        >
+                          {latestRun.runId}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-3 bg-transparent border border-white/15 rounded-xl p-4 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-2 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3  gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                       {secondaryStats.map((stat) => {
                         const Icon = stat.icon as any;
                         return (
                           <div
                             key={stat.title}
-                            className="flex items-center gap-2.5 min-w-0"
+                            className="flex items-center sm:gap-2.5 gap-2 min-w-0"
                           >
                             <div
                               className={cn(
-                                "flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
+                                "flex items-center justify-center  w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
                                 stat.iconClassName
                               )}
                             >
@@ -1048,7 +1059,7 @@ function AgentValidators({
                               </Text>
                               <Text
                                 className={cn(
-                                  "font-bold text-base truncate text-white"
+                                  "font-bold text-xs sm:text-base truncate text-white"
                                 )}
                               >
                                 {stat.metric}
@@ -1092,7 +1103,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
       </div>
 
       {/* Success Rate - Main metric */}
-      <div className="mb-3 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
+      <div className="mb-3 p-1 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/40">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">
             Success Rate
@@ -1101,7 +1112,9 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
         </div>
-        <div className="text-2xl font-black text-white">{successRate}%</div>
+        <div className="text-md sm:text-2xl font-black text-white">
+          {successRate}%
+        </div>
       </div>
 
       {/* Task breakdown */}
@@ -1283,13 +1296,13 @@ function RoundWebsitesChart({
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
-            <span className="text-2xl font-black text-white">
+            <span className="text-xl sm:text-2xl font-black text-white">
               Performance per website
             </span>
           </div>
 
           {/* Bar Chart */}
-          <div className="relative h-[450px] w-full">
+          <div className="relative h-[300px] md:h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartRows}
@@ -1854,6 +1867,7 @@ export default function Page() {
     Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0)
   );
   const currentStats = [
+    // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
       title: "Round",
       metric: currentRound ? `${currentRound}` : "N/A",
@@ -1878,34 +1892,35 @@ export default function Page() {
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.blue,
     },
+    // Segunda fila: Validators, Avg Tasks Per Validator, Websites
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Tasks Per Validator",
       metric: preAvg?.avgTasks ?? "0",
       icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Websites",
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${totalTaoEarned} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Tasks Failed, Alpha Earned
+    // Primera fila: Success Rate, Tasks Success, Best Rank Ever, Alpha Earned
     {
       title: "Success Rate",
       metric: (() => {
@@ -1914,13 +1929,37 @@ export default function Page() {
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.blue,
+      ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Success",
       metric: (agent.completedTasks ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
+      ...METRIC_CARD_GRADIENTS.indigo,
+    },
+    {
+      title: "Tasks Failed",
+      metric: Math.max(
+        0,
+        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
+      ).toLocaleString(),
+      icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
+    },
+
+    {
+      title: "Alpha Earned",
+      metric: `${totalAlphaEarned} α`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
+    {
+      title: "Best Score Ever",
+      metric: bestEverScorePercentage,
+      badge: bestRoundBadge,
+      icon: LuStar,
+      ...METRIC_CARD_GRADIENTS.blue,
     },
     {
       title: "Best Rank Ever",
@@ -1930,30 +1969,6 @@ export default function Page() {
           ? `Round ${(agent as any).bestRankRoundId}`
           : null,
       icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-
-    {
-      title: "Alpha Earned",
-      metric: `${totalAlphaEarned} α`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-    // Segunda fila: Best Score Ever, Best Rank Ever, Rounds Won, TAO Earned
-    {
-      title: "Best Score Ever",
-      metric: bestEverScorePercentage,
-      badge: bestRoundBadge,
-      icon: LuStar,
-      ...METRIC_CARD_GRADIENTS.blue,
-    },
-    {
-      title: "Tasks Failed",
-      metric: Math.max(
-        0,
-        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
-      ).toLocaleString(),
-      icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
 
@@ -1980,9 +1995,9 @@ export default function Page() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-1 mt-2 mb-2">
+      <div className="flex flex-col gap-1 mb-2">
         <div
-          className="rounded-3xl flex flex-col gap-6 p-5 lg:p-7 group"
+          className="rounded-3xl flex flex-col gap-1 sm:gap-6 p-1 sm:p-3 group"
           style={{
             background: "transparent",
             border: "none",
@@ -1993,8 +2008,8 @@ export default function Page() {
           <div className="pulse-bg-rounded-3xl" style={{ display: "none" }} />
 
           {/* Header Section */}
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 z-10">
-            <div className="flex items-center gap-4">
+          <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 z-10">
+            <div className="flex items-center gap-4 flex-1">
               <div className="relative">
                 <Image
                   src={agentImgSrc}
@@ -2135,14 +2150,14 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="glass-card inline-flex items-center gap-1.5 p-1.5 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center lg:items-start gap-2 w-full lg:w-auto lg:flex-shrink-0">
+              <div className="glass-card flex sm:inline-flex items-center gap-1.5 p-1.5 rounded-xl w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setViewMode("current")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "current"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2161,8 +2176,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("runs")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "runs"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2181,8 +2196,8 @@ export default function Page() {
                   type="button"
                   onClick={() => setViewMode("historical")}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg",
-                    "flex items-center gap-2",
+                    "relative px-4 py-2 text-sm font-semibold transition-all duration-300 overflow-hidden group rounded-lg flex-1 sm:flex-none",
+                    "flex items-center justify-center gap-2",
                     viewMode === "historical"
                       ? "bg-gradient-to-br from-white to-white/95 text-black shadow-lg scale-[1.02] border border-white/80"
                       : "text-white hover:text-white hover:bg-white/10 border border-transparent"
@@ -2211,25 +2226,25 @@ export default function Page() {
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 z-10">
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer isolate"
                   >
                     {/* Card background with gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl opacity-80 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-90",
+                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-100 z-0",
                         stat.bgGradient
                       )}
                     />
 
                     {/* Animated shimmer effect */}
                     <div
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
+                      className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
                       style={{
                         backgroundSize: "200% 100%",
                         animation: "shimmer 3.5s linear infinite",
@@ -2239,7 +2254,7 @@ export default function Page() {
                     {/* Border gradient */}
                     <div
                       className={cn(
-                        "absolute inset-0 rounded-2xl border transition-all duration-300",
+                        "absolute inset-0 rounded-xl md:rounded-2xl border transition-all duration-300",
                         stat.borderColor,
                         "group-hover:shadow-lg"
                       )}
@@ -2249,30 +2264,30 @@ export default function Page() {
                     />
 
                     {/* Content */}
-                    <div className="relative p-4 flex items-center gap-4">
+                    <div className="relative p-2.5 md:p-4 flex items-center gap-2 md:gap-4">
                       {/* Icon on left */}
                       <div
                         className={cn(
-                          "flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
+                          "flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
                           "border border-white/40 group-hover:border-white/60",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow" />
+                        <Icon className="w-5 h-5 md:w-7 md:h-7 text-white drop-shadow" />
                       </div>
 
                       {/* Metrics in middle */}
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <Text className="text-xs font-bold text-white/80 uppercase tracking-widest leading-tight">
+                      <div className="flex flex-col gap-0.5 md:gap-1 flex-1 min-w-0">
+                        <Text className="text-[9px] md:text-xs font-bold text-white/80 uppercase tracking-wider md:tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <div className="flex items-center gap-2">
-                          <Text className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                        <div className="flex items-center gap-1 md:gap-2">
+                          <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
-                          {stat.badge ? (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
-                              {stat.badge}
+                          {(stat as any).badge ? (
+                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                              {(stat as any).badge}
                             </span>
                           ) : null}
                         </div>

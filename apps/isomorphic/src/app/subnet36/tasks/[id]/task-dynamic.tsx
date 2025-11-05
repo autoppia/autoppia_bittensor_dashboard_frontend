@@ -46,6 +46,7 @@ import {
   PiHash,
   PiDownloadSimple,
   PiArrowSquareOutDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
 import type { TaskAction, TaskDetails } from "@/services/api/types/tasks";
 
@@ -250,11 +251,13 @@ type TaskDetailsDynamicProps = {
   details?: TaskDetails | null;
   isLoading?: boolean;
   error?: string | null;
+  refetch?: () => void;
 };
 function TaskDetailsDynamic({
   details,
   isLoading = false,
   error,
+  refetch,
 }: TaskDetailsDynamicProps) {
   if (isLoading && !details) {
     return (
@@ -292,13 +295,39 @@ function TaskDetailsDynamic({
   }
   if ((error && !details) || !details) {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-red-600/30 bg-transparent p-6 shadow-2xl mb-8">
-        <div className="relative text-center">
-          <div className="text-red-200 text-lg font-semibold mb-2">
-            Failed to load task overview
-          </div>
-          <div className="text-sm text-red-100/80">
-            {error || "An unexpected error occurred while fetching task data."}
+      <div className="mb-8">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+          <div className="relative px-8 py-12 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+              <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+            </div>
+            <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+              Task Data Not Available
+            </h3>
+            <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+              This task has not been evaluated yet or the evaluation is still in
+              progress. Data will appear here once the evaluation is complete.
+            </p>
+            <p className="text-sm text-white/50 font-semibold">
+              Please check back in a few minutes or navigate to a different
+              task.
+            </p>
+            <div className="mt-8 flex justify-center gap-4">
+              {refetch && (
+                <button
+                  onClick={refetch}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Retry
+                </button>
+              )}
+              <Link href={routes.tasks}>
+                <button className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                  View All Tasks
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -333,16 +362,18 @@ function TaskDetailsDynamic({
   const HIGHLIGHT_COLOR = "#FDF5E6";
 
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
-  const validatorImage = validatorInfo?.image
-    ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
-    : validatorDefaultImage;
+  const validatorImage =
+    validatorInfo?.image && validatorInfo.image.trim()
+      ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
+      : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
-    minerInfo?.isSota ? "/validators/Other.png" : "/images/autoppia-logo.png"
+    minerInfo?.isSota ? "/miners/30.svg" : "/miners/0.svg"
   );
-  const minerImage = minerInfo?.image
-    ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
-    : minerDefaultImage;
+  const minerImage =
+    minerInfo?.image && minerInfo.image.trim()
+      ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
+      : minerDefaultImage;
 
   // Display helpers for UID (ensure non-negative & string-safe)
   const displayValidatorUid = (() => {
@@ -578,312 +609,308 @@ function TaskDetailsDynamic({
   ];
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-[28px] border border-[#262d49]/70 bg-transparent shadow-[0_26px_80px_rgba(3,7,18,0.52)]">
-      <div className="relative grid gap-10 p-6 sm:p-8 lg:gap-12 lg:px-10 lg:py-8">
-        {/* Main content column */}
-        <div className="space-y-8">
-          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {/* Round */}
-            <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
-              <header className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
-                    <PiClock className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                      Round
-                    </p>
-                    <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                      #
-                      {roundInfo?.roundNumber != null
-                        ? roundInfo.roundNumber
-                        : roundInfo?.validatorRoundId
-                          ? truncateMiddle(roundInfo.validatorRoundId, 6)
-                          : "—"}
-                    </p>
-                  </div>
+    <div className="relative mb-8 overflow-hidden rounded-[28px] bg-transparent shadow-[0_26px_80px_rgba(3,7,18,0.52)]">
+      {/* Main content column */}
+      <div className="space-y-8">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Round */}
+          <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
+            <header className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
+                  <PiClock className="h-6 w-6" />
                 </div>
-                <span
-                  className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                    Round
+                  </p>
+                  <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                    #
+                    {roundInfo?.roundNumber != null
+                      ? roundInfo.roundNumber
+                      : roundInfo?.validatorRoundId
+                        ? truncateMiddle(roundInfo.validatorRoundId, 6)
+                        : "—"}
+                  </p>
+                </div>
+              </div>
+              <span
+                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                style={{
+                  borderColor: "rgba(253, 245, 230, 0.45)",
+                  backgroundColor: "rgba(253, 245, 230, 0.12)",
+                  color: HIGHLIGHT_COLOR,
+                }}
+              >
+                {formatLabel(roundInfo?.status ?? "Active")}
+              </span>
+            </header>
+
+            <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                  Epochs:
+                </span>
+                <span className="font-mono text-sm text-white whitespace-nowrap">
+                  {roundInfo?.startEpoch ?? "—"} -{" "}
+                  {roundInfo?.endEpoch ??
+                    (roundInfo?.status &&
+                    String(roundInfo.status).toLowerCase() === "active"
+                      ? "Active"
+                      : "—")}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Validator */}
+          <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
+            <header className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Image
+                  alt={validatorInfo?.name ?? "Validator"}
+                  src={validatorImage}
+                  width={48}
+                  height={48}
+                  unoptimized
+                  className="h-12 w-12 rounded-xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1"
+                />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                    Validator
+                  </p>
+                  <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                    {validatorInfo?.name ??
+                      truncateMiddle(validatorInfo?.hotkey)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {displayValidatorUid !== "—" && (
+                  <span
+                    className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                    style={{
+                      borderColor: "rgba(59, 130, 246, 0.45)",
+                      backgroundColor: "rgba(59, 130, 246, 0.12)",
+                      color: "#60A5FA",
+                    }}
+                  >
+                    UID {displayValidatorUid}
+                  </span>
+                )}
+              </div>
+            </header>
+
+            <div className="mt-4">
+              <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                      Hotkey:
+                    </span>
+                    <span className="font-mono text-sm text-white">
+                      {displayValidatorHotkey}
+                    </span>
+                  </div>
+                  {validatorInfo?.hotkey && (
+                    <IDCopyButton text={validatorInfo.hotkey} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Miner */}
+          <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
+            <header className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Image
+                  alt={minerInfo?.name ?? "Miner"}
+                  src={minerImage}
+                  width={48}
+                  height={48}
+                  unoptimized
+                  className="h-12 w-12 rounded-xl object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1"
+                />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                    {minerInfo?.isSota ? "SOTA Agent" : "Miner"}
+                  </p>
+                  <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                    {minerInfo?.name ?? "—"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {displayMinerUid !== "—" && (
+                  <span
+                    className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                    style={{
+                      borderColor: "rgba(16, 185, 129, 0.45)",
+                      backgroundColor: "rgba(16, 185, 129, 0.12)",
+                      color: "#34D399",
+                    }}
+                  >
+                    UID {displayMinerUid}
+                  </span>
+                )}
+              </div>
+            </header>
+
+            <div className="mt-4">
+              <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                      Hotkey:
+                    </span>
+                    <span className="font-mono text-sm text-white">
+                      {displayMinerHotkey}
+                    </span>
+                  </div>
+                  {minerInfo?.hotkey && (
+                    <IDCopyButton text={minerInfo.hotkey} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Agent Run style stats with Task Score centered */}
+        {agentRunInfo ? (
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-transparent p-5 text-white">
+            {/* Mobile */}
+            <div className="flex flex-col space-y-6 md:hidden">
+              <div className="flex flex-col items-center justify-center">
+                <div
+                  className="text-4xl font-extrabold bg-gradient-to-r from-emerald-300 via-emerald-200 to-green-300 bg-clip-text text-transparent"
                   style={{
-                    borderColor: "rgba(253, 245, 230, 0.45)",
-                    backgroundColor: "rgba(253, 245, 230, 0.12)",
-                    color: HIGHLIGHT_COLOR,
+                    WebkitTextStroke: "0.4px rgba(249, 250, 251, 0.15)",
                   }}
                 >
-                  {formatLabel(roundInfo?.status ?? "Active")}
-                </span>
-              </header>
-
-              <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                    Epochs:
-                  </span>
-                  <span className="font-mono text-sm text-white whitespace-nowrap">
-                    {roundInfo?.startEpoch ?? "—"} -{" "}
-                    {roundInfo?.endEpoch ??
-                      (roundInfo?.status &&
-                      String(roundInfo.status).toLowerCase() === "active"
-                        ? "Active"
-                        : "—")}
-                  </span>
+                  {evaluationScore}
+                </div>
+                <div className="mt-2 text-sm font-medium text-white/70">
+                  Task Score
                 </div>
               </div>
-            </section>
-
-            {/* Validator */}
-            <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
-              <header className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Image
-                    alt={validatorInfo?.name ?? "Validator"}
-                    src={validatorImage}
-                    width={48}
-                    height={48}
-                    unoptimized
-                    className="h-12 w-12 rounded-xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1"
-                  />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                      Validator
-                    </p>
-                    <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                      {validatorInfo?.name ??
-                        truncateMiddle(validatorInfo?.hotkey)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {displayValidatorUid !== "—" && (
-                    <span
-                      className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                      style={{
-                        borderColor: "rgba(59, 130, 246, 0.45)",
-                        backgroundColor: "rgba(59, 130, 246, 0.12)",
-                        color: "#60A5FA",
-                      }}
-                    >
-                      UID {displayValidatorUid}
-                    </span>
+              <div className="grid grid-cols-2 gap-4">
+                <RunStatCard
+                  label="Duration"
+                  value={String(evaluationDuration)}
+                  color="blue"
+                  Icon={PiTimer}
+                />
+                <RunStatCard
+                  label="Actions"
+                  value={String(
+                    (details as any)?.performance?.totalActions ?? "—"
                   )}
-                </div>
-              </header>
-
-              <div className="mt-4">
-                <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                        Hotkey:
-                      </span>
-                      <span className="font-mono text-sm text-white">
-                        {displayValidatorHotkey}
-                      </span>
-                    </div>
-                    {validatorInfo?.hotkey && (
-                      <IDCopyButton text={validatorInfo.hotkey} />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Miner */}
-            <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
-              <header className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Image
-                    alt={minerInfo?.name ?? "Miner"}
-                    src={minerImage}
-                    width={48}
-                    height={48}
-                    unoptimized
-                    className="h-12 w-12 rounded-xl object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1"
-                  />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                      {minerInfo?.isSota ? "SOTA Agent" : "Miner"}
-                    </p>
-                    <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                      {minerInfo?.name ?? "—"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {displayMinerUid !== "—" && (
-                    <span
-                      className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                      style={{
-                        borderColor: "rgba(16, 185, 129, 0.45)",
-                        backgroundColor: "rgba(16, 185, 129, 0.12)",
-                        color: "#34D399",
-                      }}
-                    >
-                      UID {displayMinerUid}
-                    </span>
+                  color="amber"
+                  Icon={PiPlay}
+                />
+                <RunStatCard
+                  label="Successful"
+                  value={String(agentRunInfo.completedTasks ?? "—")}
+                  color="emerald"
+                  Icon={PiCheckCircle}
+                />
+                <RunStatCard
+                  label="Failed"
+                  value={String(
+                    agentRunInfo.failedTasks ??
+                      Math.max(
+                        (agentRunInfo.taskCount ?? 0) -
+                          (agentRunInfo.completedTasks ?? 0),
+                        0
+                      )
                   )}
-                </div>
-              </header>
-
-              <div className="mt-4">
-                <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                        Hotkey:
-                      </span>
-                      <span className="font-mono text-sm text-white">
-                        {displayMinerHotkey}
-                      </span>
-                    </div>
-                    {minerInfo?.hotkey && (
-                      <IDCopyButton text={minerInfo.hotkey} />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Agent Run style stats with Task Score centered */}
-          {agentRunInfo ? (
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-transparent p-5 text-white">
-              {/* Mobile */}
-              <div className="flex flex-col space-y-6 md:hidden">
-                <div className="flex flex-col items-center justify-center">
-                  <div
-                    className="text-4xl font-extrabold bg-gradient-to-r from-emerald-300 via-emerald-200 to-green-300 bg-clip-text text-transparent"
-                    style={{
-                      WebkitTextStroke: "0.4px rgba(249, 250, 251, 0.15)",
-                    }}
-                  >
-                    {evaluationScore}
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-white/70">
-                    Task Score
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <RunStatCard
-                    label="Duration"
-                    value={String(evaluationDuration)}
-                    color="blue"
-                    Icon={PiTimer}
-                  />
-                  <RunStatCard
-                    label="Actions"
-                    value={String(
-                      (details as any)?.performance?.totalActions ?? "—"
-                    )}
-                    color="amber"
-                    Icon={PiPlay}
-                  />
-                  <RunStatCard
-                    label="Successful"
-                    value={String(agentRunInfo.completedTasks ?? "—")}
-                    color="emerald"
-                    Icon={PiCheckCircle}
-                  />
-                  <RunStatCard
-                    label="Failed"
-                    value={String(
-                      agentRunInfo.failedTasks ??
-                        Math.max(
-                          (agentRunInfo.taskCount ?? 0) -
-                            (agentRunInfo.completedTasks ?? 0),
-                          0
-                        )
-                    )}
-                    color="rose"
-                    Icon={PiXCircle}
-                  />
-                </div>
-              </div>
-
-              {/* Desktop: left 2 cards • centered score • right 2 cards */}
-              <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
-                <div className="grid grid-cols-2 gap-4 justify-start">
-                  <RunStatCard
-                    label="Duration"
-                    value={String(evaluationDuration)}
-                    color="blue"
-                    Icon={PiTimer}
-                  />
-                  <RunStatCard
-                    label="Actions"
-                    value={String(
-                      (details as any)?.performance?.totalActions ?? "—"
-                    )}
-                    color="amber"
-                    Icon={PiPlay}
-                  />
-                </div>
-                <div className="flex flex-col items-center justify-center mx-4">
-                  <div
-                    className="bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-400 bg-clip-text text-5xl font-extrabold text-transparent"
-                    style={{
-                      WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)",
-                    }}
-                  >
-                    {evaluationScore}
-                  </div>
-                  <div className="mt-1 text-xs font-medium text-white/70">
-                    Task Score
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 justify-end">
-                  <RunStatCard
-                    label="Successful"
-                    value={String(agentRunInfo.completedTasks ?? "—")}
-                    color="emerald"
-                    Icon={PiCheckCircle}
-                  />
-                  <RunStatCard
-                    label="Failed"
-                    value={String(
-                      agentRunInfo.failedTasks ??
-                        Math.max(
-                          (agentRunInfo.taskCount ?? 0) -
-                            (agentRunInfo.completedTasks ?? 0),
-                          0
-                        )
-                    )}
-                    color="rose"
-                    Icon={PiXCircle}
-                  />
-                </div>
+                  color="rose"
+                  Icon={PiXCircle}
+                />
               </div>
             </div>
-          ) : null}
 
-          <div className="space-y-4">
-            <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70 font-bold">
-              Task Context
-            </span>
-            <div className="grid gap-4 md:grid-cols-3">
-              {metaCards.map((card) => (
-                <StatCard key={card.label} {...card} />
-              ))}
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-2xl border border-[#5436a6]/40 bg-transparent p-4 text-white shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner">
-                <PiFileText className="h-5 w-5" />
+            {/* Desktop: left 2 cards • centered score • right 2 cards */}
+            <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
+              <div className="grid grid-cols-2 gap-4 justify-start">
+                <RunStatCard
+                  label="Duration"
+                  value={String(evaluationDuration)}
+                  color="blue"
+                  Icon={PiTimer}
+                />
+                <RunStatCard
+                  label="Actions"
+                  value={String(
+                    (details as any)?.performance?.totalActions ?? "—"
+                  )}
+                  color="amber"
+                  Icon={PiPlay}
+                />
               </div>
-              <div className="min-w-0 flex-1">
-                <p
-                  className="font-mono text-sm text-white truncate"
-                  title={
-                    taskData.prompt || "Prompt not provided for this task."
-                  }
+              <div className="flex flex-col items-center justify-center mx-4">
+                <div
+                  className="bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-400 bg-clip-text text-5xl font-extrabold text-transparent"
+                  style={{
+                    WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)",
+                  }}
                 >
-                  {taskData.prompt || "Prompt not provided for this task."}
-                </p>
+                  {evaluationScore}
+                </div>
+                <div className="mt-1 text-xs font-medium text-white/70">
+                  Task Score
+                </div>
               </div>
+              <div className="grid grid-cols-2 gap-4 justify-end">
+                <RunStatCard
+                  label="Successful"
+                  value={String(agentRunInfo.completedTasks ?? "—")}
+                  color="emerald"
+                  Icon={PiCheckCircle}
+                />
+                <RunStatCard
+                  label="Failed"
+                  value={String(
+                    agentRunInfo.failedTasks ??
+                      Math.max(
+                        (agentRunInfo.taskCount ?? 0) -
+                          (agentRunInfo.completedTasks ?? 0),
+                        0
+                      )
+                  )}
+                  color="rose"
+                  Icon={PiXCircle}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="space-y-4">
+          <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70 font-bold">
+            Task Context
+          </span>
+          <div className="grid gap-4 md:grid-cols-3">
+            {metaCards.map((card) => (
+              <StatCard key={card.label} {...card} />
+            ))}
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl border border-[#5436a6]/40 bg-transparent p-4 text-white shadow-[0_16px_44px_rgba(4,8,20,0.6)] backdrop-blur-md">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/70 text-white shadow-inner flex-shrink-0">
+              <PiFileText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className="font-mono text-sm text-white leading-relaxed break-words"
+                title={taskData.prompt || "Prompt not provided for this task."}
+              >
+                {taskData.prompt || "Prompt not provided for this task."}
+              </p>
             </div>
           </div>
         </div>
@@ -981,9 +1008,11 @@ const truncate = (value: string, max = 80) =>
   value.length > max ? `${value.slice(0, max).trim()}…` : value;
 
 const getStatusIcon = (success: boolean, error?: string) => {
-  if (error) return <PiCheckCircle className="w-4 h-4 text-red-500" />;
-  if (success) return <PiCheckCircle className="w-4 h-4 text-emerald-500" />;
-  return <PiWarning className="w-4 h-4 text-amber-500" />;
+  if (error)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-red-500" />;
+  if (success)
+    return <PiCheckCircle className="w-4 h-4 flex-shrink-0 text-emerald-500" />;
+  return <PiWarning className="w-4 h-4 flex-shrink-0 text-amber-500" />;
 };
 
 const formatActionDetails = (action: TaskAction) => {
@@ -1092,6 +1121,8 @@ function TaskResults() {
   const {
     actions,
     total: actionsTotal,
+    successCount,
+    failCount,
     isLoading: actionsLoading,
     error: actionsError,
     goToPage,
@@ -1153,8 +1184,7 @@ function TaskResults() {
   };
 
   const totalPages = Math.max(1, Math.ceil(actionsTotal / pageSize));
-  const successCount = actions.filter((a) => a.success).length;
-  const failCount = actions.filter((a) => a.error || !a.success).length;
+  // successCount and failCount now come from the API (total counts, not just current page)
 
   const handleDownloadAll = () => {
     if (!mediaItems || mediaItems.length === 0) return;
@@ -1271,9 +1301,9 @@ function TaskResults() {
               return (
                 <div
                   key={action.id || index}
-                  className="flex items-center justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
+                  className="flex items-start justify-between p-3 rounded-lg border border-slate-700/40 bg-transparent"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     <div
                       className={`flex items-center justify-center h-10 w-10 min-w-[2.5rem] rounded-lg ${meta.badgeBg} flex-shrink-0`}
                     >
@@ -1286,11 +1316,14 @@ function TaskResults() {
                       {detailsList.length > 0 ? (
                         <ul className="mt-0.5 text-xs text-slate-400 list-disc pl-4 space-y-0.5">
                           {detailsList.slice(0, 4).map(([k, v], i) => (
-                            <li key={`${action.id || index}-d-${i}`}>
+                            <li
+                              key={`${action.id || index}-d-${i}`}
+                              className="break-words"
+                            >
                               <span className="text-slate-500">
                                 {formatKeyLabel(k)}:
                               </span>{" "}
-                              {truncate(String(v), 120)}
+                              <span className="break-all">{String(v)}</span>
                             </li>
                           ))}
                         </ul>
@@ -1301,7 +1334,7 @@ function TaskResults() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {getStatusIcon(action.success, action.error)}
                   </div>
                 </div>
@@ -1345,7 +1378,7 @@ function TaskResults() {
 
         <div
           ref={recordingsRef}
-          className={`${isFullscreen ? "h-screen" : "h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
+          className={`${isFullscreen ? "h-screen" : "h-[180px] md:h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
         >
           {isMediaLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1417,7 +1450,7 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const taskId = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  const { details, isLoading, error } = useTaskDetails(taskId);
+  const { details, isLoading, error, refetch } = useTaskDetails(taskId);
   const runIdDisplay =
     details?.agentRunId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
@@ -1439,70 +1472,60 @@ export default function TaskDynamic() {
       <PageHeader
         title="Task Details"
         description={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href={
-                roundKeyForHeader
-                  ? `${routes.rounds}/${encodeURIComponent(roundKeyForHeader)}`
-                  : "#"
-              }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Round
-              </span>
-              <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                {truncateMiddle(roundKeyForHeader || "-", 8)}
-              </span>
-            </Link>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
             <Link
               href={
                 details?.agentRunId
                   ? `${routes.agent_run}/${encodeURIComponent(details.agentRunId)}`
                   : "#"
               }
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Run
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
               {details?.agentRunId && (
-                <IDCopyButton text={details.agentRunId} />
+                <span className="ml-auto">
+                  <IDCopyButton text={details.agentRunId} />
+                </span>
               )}
             </Link>
             <Link
               href={`${routes.tasks}/${taskId}`}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Task
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(taskId, 8)}
               </span>
-              <IDCopyButton text={taskId} />
+              <span className="ml-auto">
+                <IDCopyButton text={taskId} />
+              </span>
             </Link>
             <a
               href="#evaluation"
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
+              className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-indigo-400/60 hover:bg-indigo-500/10"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
                 Evaluation
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
-              <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
+              <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
               {details?.relationships?.evaluation?.evaluationId && (
-                <IDCopyButton
-                  text={details.relationships.evaluation.evaluationId}
-                />
+                <span className="ml-auto">
+                  <IDCopyButton
+                    text={details.relationships.evaluation.evaluationId}
+                  />
+                </span>
               )}
             </a>
           </div>
@@ -1522,6 +1545,7 @@ export default function TaskDynamic() {
         details={details}
         isLoading={isLoading}
         error={error}
+        refetch={refetch}
       />
 
       <div className="mb-10">

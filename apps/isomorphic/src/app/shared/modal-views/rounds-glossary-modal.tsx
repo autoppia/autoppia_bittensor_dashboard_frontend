@@ -46,12 +46,12 @@ export default function RoundsGlossaryModal() {
   const { closeModal } = useModal();
 
   return (
-    <div className="m-auto w-full max-w-[95vw] rounded-2xl border border-black/10 bg-white px-12 pb-9 pt-6 text-black lg:max-w-[1600px] sm:px-14 sm:pt-7">
+    <div className="m-auto w-full max-w-[95vw] rounded-2xl border border-black/10 bg-white px-1 sm:px-12 pb-9 pt-6 text-black lg:max-w-[1600px] sm:px-14 sm:pt-7">
       <div className="mb-6 flex items-start justify-between gap-4 border-b border-black/10 pb-4">
         <div>
           <Title
             as="h3"
-            className="inline-block rounded-full border border-black/10 bg-black px-3 py-1 text-lg font-semibold tracking-tight text-white"
+            className="inline-block rounded-md border border-black/10 bg-black px-3 py-1 text-lg font-semibold tracking-tight text-white"
           >
             Round Lifecycle Glossary
           </Title>
@@ -79,7 +79,7 @@ export default function RoundsGlossaryModal() {
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-3">
-                <Text className="rounded-full border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-black">
+                <Text className="rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-black">
                   {item.term}
                 </Text>
                 <Text className="text-xs font-medium italic text-black">
@@ -94,11 +94,11 @@ export default function RoundsGlossaryModal() {
         ))}
       </div>
 
-      <div className="mt-6 border-t border-black/10 pt-4 text-sm text-black">
+      <div className="mt-6 px-2 border-t border-black/10 pt-4 text-sm text-black">
         Validators follow the same flow every round:{" "}
         <span className="font-semibold text-black">
-          start round → request tasks → collect task solutions → run
-          evaluations → publish weights.
+          start round → request tasks → collect task solutions → run evaluations
+          → publish weights.
         </span>{" "}
         Understanding where a metric comes from makes debugging and comparing
         miners much easier.

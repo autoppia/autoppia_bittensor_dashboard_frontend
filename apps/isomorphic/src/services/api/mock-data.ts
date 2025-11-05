@@ -9,14 +9,17 @@ import type {
   OverviewRoundData,
   LeaderboardData,
   SubnetStatistics,
-} from './types/overview';
+} from "./types/overview";
 
 export const mockOverviewMetrics: OverviewMetrics = {
   topScore: 0.95,
+  topMinerUid: 80,
+  topMinerName: "Achilles",
   totalWebsites: 13,
   totalValidators: 6,
   totalMiners: 156,
   currentRound: 42,
+  metricsRound: 41,
   subnetVersion: "7.0.0",
   lastUpdated: new Date().toISOString(),
 };
@@ -32,7 +35,8 @@ export const mockValidators: ValidatorData[] = [
     trust: 1.0,
     version: 7,
     totalTasks: 5787,
-    currentTask: "Login for the following username:user<web_agent_id> and password:password123. Modify your profile to ensure that your favorite genres are NOT in the list 'Sci-Fi'.",
+    currentTask:
+      "Login for the following username:user<web_agent_id> and password:password123. Modify your profile to ensure that your favorite genres are NOT in the list 'Sci-Fi'.",
     lastSeen: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
     uptime: 99.8,
     stake: 1250000.0,
@@ -48,11 +52,12 @@ export const mockValidators: ValidatorData[] = [
     trust: 0.9687,
     version: 4,
     totalTasks: 2465,
-    currentTask: "Show details for a movie that was NOT released in the year '1990'",
+    currentTask:
+      "Show details for a movie that was NOT released in the year '1990'",
     lastSeen: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago
     uptime: 98.5,
     stake: 1000000.0,
-    emission: 0.80,
+    emission: 0.8,
   },
   {
     id: "roundtable21",
@@ -64,7 +69,8 @@ export const mockValidators: ValidatorData[] = [
     trust: 0.9676,
     version: 5,
     totalTasks: 3465,
-    currentTask: "Fill out the contact form with a name equal to 'Linda', a message that does not contain 'Just a quick question', and an email that contains 'jane@doe.com'.",
+    currentTask:
+      "Fill out the contact form with a name equal to 'Linda', a message that does not contain 'Just a quick question', and an email that contains 'jane@doe.com'.",
     lastSeen: new Date(Date.now() - 1 * 60 * 1000).toISOString(), // 1 minute ago
     uptime: 97.2,
     stake: 800000.0,
@@ -80,11 +86,12 @@ export const mockValidators: ValidatorData[] = [
     trust: 0.9665,
     version: 5,
     totalTasks: 2465,
-    currentTask: "Delete a film whose year is NOT in the list [2014, 1990, 1994] and whose name is NOT equal to 'The Matrix' with a rating equal to 4.6.",
+    currentTask:
+      "Delete a film whose year is NOT in the list [2014, 1990, 1994] and whose name is NOT equal to 'The Matrix' with a rating equal to 4.6.",
     lastSeen: new Date(Date.now() - 3 * 60 * 1000).toISOString(), // 3 minutes ago
     uptime: 96.8,
     stake: 600000.0,
-    emission: 0.70,
+    emission: 0.7,
   },
   {
     id: "kraken",
@@ -116,7 +123,7 @@ export const mockValidators: ValidatorData[] = [
     lastSeen: new Date(Date.now() - 6 * 60 * 1000).toISOString(), // 6 minutes ago
     uptime: 94.1,
     stake: 400000.0,
-    emission: 0.60,
+    emission: 0.6,
   },
 ];
 
@@ -148,7 +155,7 @@ export const mockLeaderboard: LeaderboardData[] = [
     subnet36: 0.92,
     openai_cua: 0.85,
     anthropic_cua: 0.87,
-    browser_use: 0.90,
+    browser_use: 0.9,
     timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
   },
   {
@@ -190,8 +197,8 @@ export const mockSubnetStatistics: SubnetStatistics = {
 };
 
 export const mockNetworkStatus = {
-  status: 'healthy' as const,
-  message: 'All systems operational',
+  status: "healthy" as const,
+  message: "All systems operational",
   lastChecked: new Date().toISOString(),
   activeValidators: 6,
   networkLatency: 45,
@@ -277,7 +284,7 @@ export const mockPerformanceTrends = {
     },
     {
       date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.80,
+      averageScore: 0.8,
       totalTasks: 1240,
       activeValidators: 6,
       networkUptime: 99.4,
