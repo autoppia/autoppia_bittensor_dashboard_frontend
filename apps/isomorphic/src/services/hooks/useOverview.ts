@@ -3,8 +3,8 @@
  * Provides easy-to-use hooks for fetching overview data with loading states and error handling
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { overviewService } from '../api/overview.service';
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { overviewService } from "../api/overview.service";
 import type {
   OverviewMetrics,
   ValidatorData,
@@ -14,14 +14,14 @@ import type {
   ValidatorsQueryParams,
   LeaderboardQueryParams,
   RoundsQueryParams,
-} from '../api/types/overview';
+} from "../api/types/overview";
 
 type SerializableParams = Record<string, any> | undefined;
 
 function useStableParams<T extends SerializableParams>(params: T) {
   const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
   const paramsRef = useRef<{ key: string; value: T | undefined }>({
-    key: '',
+    key: "",
     value: undefined,
   });
 
@@ -66,7 +66,7 @@ function useApiCall<T>(
         setData(result);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || "An error occurred");
     } finally {
       if (initialFetchRef.current) {
         initialFetchRef.current = false;
@@ -76,7 +76,7 @@ function useApiCall<T>(
   }, [apiCall]);
 
   useEffect(() => {
-    const key = dependencyKey ?? '__default__';
+    const key = dependencyKey ?? "__default__";
     if (lastDependencyKeyRef.current === key && !initialFetchRef.current) {
       return;
     }
@@ -95,7 +95,7 @@ function useApiCall<T>(
       return;
     }
 
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -113,7 +113,7 @@ function useApiCall<T>(
 export function useOverviewMetrics(options?: UseApiCallOptions) {
   const { stableParams: stableOptions } = useStableParams(options);
   const request = useCallback(() => overviewService.getMetrics(), []);
-  return useApiCall(request, 'metrics', stableOptions);
+  return useApiCall(request, "metrics", stableOptions);
 }
 
 // Hook for validators
@@ -148,7 +148,7 @@ export function useValidatorFilterOptions() {
 // Hook for current round
 export function useCurrentRound() {
   const request = useCallback(() => overviewService.getCurrentRound(), []);
-  return useApiCall(request, 'current-round');
+  return useApiCall(request, "current-round");
 }
 
 // Hook for rounds
@@ -180,13 +180,13 @@ export function useLeaderboard(params?: LeaderboardQueryParams) {
 // Hook for subnet statistics
 export function useSubnetStatistics() {
   const request = useCallback(() => overviewService.getSubnetStatistics(), []);
-  return useApiCall(request, 'subnet-stats');
+  return useApiCall(request, "subnet-stats");
 }
 
 // Hook for network status
 export function useNetworkStatus() {
   const request = useCallback(() => overviewService.getNetworkStatus(), []);
-  return useApiCall(request, 'network-status');
+  return useApiCall(request, "network-status");
 }
 
 // Hook for recent activity
@@ -212,14 +212,19 @@ export function useOverviewData() {
   const metrics = useOverviewMetrics();
   const validators = useValidators({ limit: 10 });
   const currentRound = useCurrentRound();
-  const leaderboard = useLeaderboard({ timeRange: '7D' });
+  const leaderboard = useLeaderboard({ timeRange: "7R" });
   const statistics = useSubnetStatistics();
   const networkStatus = useNetworkStatus();
   const recentActivity = useRecentActivity(5);
 
-  const loading = metrics.loading || validators.loading || currentRound.loading || 
-                  leaderboard.loading || statistics.loading || networkStatus.loading || 
-                  recentActivity.loading;
+  const loading =
+    metrics.loading ||
+    validators.loading ||
+    currentRound.loading ||
+    leaderboard.loading ||
+    statistics.loading ||
+    networkStatus.loading ||
+    recentActivity.loading;
 
   // Only mark core overview endpoints as critical failures
   const error = metrics.error || validators.error || leaderboard.error;
@@ -228,15 +233,20 @@ export function useOverviewData() {
     statistics.error,
     networkStatus.error,
     recentActivity.error,
-  ].filter((message): message is string => typeof message === 'string' && message.length > 0);
+  ].filter(
+    (message): message is string =>
+      typeof message === "string" && message.length > 0
+  );
 
-  const optionalErrorsSignature = optionalErrors.join(' | ');
+  const optionalErrorsSignature = optionalErrors.join(" | ");
 
   useEffect(() => {
     if (!optionalErrorsSignature) {
       return;
     }
-    console.warn(`[Overview] Non-critical data fetch failed: ${optionalErrorsSignature}`);
+    console.warn(
+      `[Overview] Non-critical data fetch failed: ${optionalErrorsSignature}`
+    );
   }, [optionalErrorsSignature]);
 
   const refetch = useCallback(() => {
@@ -247,7 +257,15 @@ export function useOverviewData() {
     statistics.refetch();
     networkStatus.refetch();
     recentActivity.refetch();
-  }, [metrics, validators, currentRound, leaderboard, statistics, networkStatus, recentActivity]);
+  }, [
+    metrics,
+    validators,
+    currentRound,
+    leaderboard,
+    statistics,
+    networkStatus,
+    recentActivity,
+  ]);
 
   return {
     data: {

@@ -360,8 +360,8 @@ function AgentStats({
   );
 }
 
-// Score over time chart
-const filterOptions = ["7D", "15D", "30D", "All"];
+// Score over time char
+const filterOptions = ["7R", "15R", "30R", "All"];
 const BENCHMARK_COLORS: Record<string, string> = {
   openai: "#2563EB",
   anthropic: "#F97316",
@@ -390,7 +390,7 @@ function AgentScoreChart({
   loading?: boolean;
   error?: string | null;
 }) {
-  const [timeRange, setTimeRange] = useState<"7d" | "15d" | "30d" | "all">(
+  const [timeRange, setTimeRange] = useState<"7r" | "15r" | "30r" | "all">(
     "all"
   );
 
@@ -453,9 +453,9 @@ function AgentScoreChart({
   }, [scoreRoundData]);
 
   function handleFilterBy(option: string) {
-    if (option === "7D") setTimeRange("7d");
-    else if (option === "15D") setTimeRange("15d");
-    else if (option === "30D") setTimeRange("30d");
+    if (option === "7R") setTimeRange("7r");
+    else if (option === "15R") setTimeRange("15r");
+    else if (option === "30R") setTimeRange("30r");
     else setTimeRange("all");
   }
 
@@ -494,7 +494,7 @@ function AgentScoreChart({
   const getFilteredData = (data: any[]) => {
     if (data.length === 0 || timeRange === "all") return data;
     const maxRound = Math.max(...data.map((d) => d.round));
-    const roundsToShow = timeRange === "7d" ? 7 : timeRange === "15d" ? 15 : 30;
+    const roundsToShow = timeRange === "7r" ? 7 : timeRange === "15r" ? 15 : 30;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
@@ -1942,6 +1942,7 @@ export default function Page() {
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.amber,
     },
+    // Columna 4 (VERDE): Alpha Earned
     {
       title: "Alpha Earned",
       metric: `${totalAlphaEarned} α`,
