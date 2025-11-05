@@ -171,7 +171,7 @@ export interface ValidatorsQueryParams {
 }
 
 export interface LeaderboardQueryParams {
-  timeRange?: "7D" | "15D" | "30D" | "all";
+  timeRange?: "7R" | "15R" | "30R" | "all";
   limit?: number;
   offset?: number;
 }
