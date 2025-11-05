@@ -361,7 +361,7 @@ function AgentStats({
 }
 
 // Score over time chart
-const filterOptions = ["7D", "15D", "All"];
+const filterOptions = ["7D", "15D", "30D", "All"];
 const BENCHMARK_COLORS: Record<string, string> = {
   openai: "#2563EB",
   anthropic: "#F97316",
@@ -390,7 +390,9 @@ function AgentScoreChart({
   loading?: boolean;
   error?: string | null;
 }) {
-  const [timeRange, setTimeRange] = useState<"7d" | "15d" | "all">("all");
+  const [timeRange, setTimeRange] = useState<"7d" | "15d" | "30d" | "all">(
+    "all"
+  );
 
   const { processedRows, benchmarkSeries } = useMemo(() => {
     const seriesMap = new Map<string, { label: string; color: string }>();
@@ -453,6 +455,7 @@ function AgentScoreChart({
   function handleFilterBy(option: string) {
     if (option === "7D") setTimeRange("7d");
     else if (option === "15D") setTimeRange("15d");
+    else if (option === "30D") setTimeRange("30d");
     else setTimeRange("all");
   }
 
@@ -491,7 +494,7 @@ function AgentScoreChart({
   const getFilteredData = (data: any[]) => {
     if (data.length === 0 || timeRange === "all") return data;
     const maxRound = Math.max(...data.map((d) => d.round));
-    const roundsToShow = timeRange === "7d" ? 7 : 15;
+    const roundsToShow = timeRange === "7d" ? 7 : timeRange === "15d" ? 15 : 30;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
