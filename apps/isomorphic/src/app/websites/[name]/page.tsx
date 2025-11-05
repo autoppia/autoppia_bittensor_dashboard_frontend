@@ -223,7 +223,7 @@ export default function WebsiteDetailPage() {
                       href={getWebsiteUrlWithSeed(website.href, seed)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group/btn flex-1"
+                      className="group/btn w-full sm:w-auto"
                     >
                       <Button
                         size="lg"
