@@ -101,7 +101,17 @@ module.exports = {
       {
         protocol: "https",
         hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/images-validators/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
         pathname: "/images-miner/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.eu-west-1.amazonaws.com",
+        pathname: "/images-miners/**",
       },
       {
         protocol: "https",
@@ -126,7 +136,17 @@ module.exports = {
       {
         protocol: "https",
         hostname: "autoppia-subnet.s3.amazonaws.com",
+        pathname: "/images-validators/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.amazonaws.com",
         pathname: "/images-miner/**",
+      },
+      {
+        protocol: "https",
+        hostname: "autoppia-subnet.s3.amazonaws.com",
+        pathname: "/images-miners/**",
       },
       {
         protocol: "https",
