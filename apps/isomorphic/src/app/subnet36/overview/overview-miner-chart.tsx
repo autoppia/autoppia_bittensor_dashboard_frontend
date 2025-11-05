@@ -10,7 +10,6 @@ import {
 } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import cn from "@core/utils/class-names";
 import { Checkbox, CheckboxGroup } from "rizzui";
@@ -26,7 +25,7 @@ import {
 import { useLeaderboard } from "@/services/hooks/useOverview";
 import type { LeaderboardData } from "@/services/api/types/overview";
 
-const filterOptions = ["7D", "15D", "All"] as const;
+const filterOptions = ["7R", "15R", "All"] as const;
 type FilterOption = (typeof filterOptions)[number];
 const CHART_HEIGHT = 200;
 const MAX_CHART_HEIGHT = 460;
@@ -53,7 +52,11 @@ const sotaAgents = [
 ];
 
 type LeaderboardSource = LeaderboardData & Record<string, unknown>;
-type NormalizedLeaderboardDatum = LeaderboardData & { roundLabel: string };
+type NormalizedLeaderboardDatum = LeaderboardData & {
+  roundLabel: string;
+  winnerUid?: number | null;
+  winnerName?: string | null;
+};
 
 const resolveRoundNumber = (value: unknown): number | undefined => {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -97,7 +100,17 @@ export default function MinerChart({
     data: leaderboardData,
     loading,
     error,
+    refetch,
   } = useLeaderboard({ timeRange: apiTimeRange });
+
+  // Auto-refresh leaderboard every 30 seconds to show latest scores
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
   const chartContainerStyle = useMemo<CSSProperties>(
     () => ({
       minHeight: CHART_HEIGHT,
@@ -157,6 +170,9 @@ export default function MinerChart({
             ...entry,
             round: normalizedRound,
             roundLabel: deriveRoundLabel(labelSource, normalizedRound),
+            // Explicitly preserve winner fields (support both camelCase and snake_case)
+            winnerUid: entry.winnerUid ?? (entry as any).winner_uid,
+            winnerName: entry.winnerName ?? (entry as any).winner_name,
           };
         })
         .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
@@ -183,6 +199,33 @@ export default function MinerChart({
       browser_use: scaleScoreValue((entry as any).browser_use),
     }));
   }, [rawChartData]);
+
+  // Generate X-axis ticks every 4 rounds
+  const xAxisTicks = useMemo<number[]>(() => {
+    if (!chartData.length) {
+      return [];
+    }
+    const rounds = chartData.map((d) => d.round);
+    const minRound = Math.min(...rounds);
+    const maxRound = Math.max(...rounds);
+
+    const ticks: number[] = [];
+    // Start from the first multiple of 4 >= minRound
+    const startTick = Math.ceil(minRound / 4) * 4;
+    for (let i = startTick; i <= maxRound; i += 4) {
+      ticks.push(i);
+    }
+
+    // Always include min and max if not already included
+    if (!ticks.includes(minRound)) {
+      ticks.unshift(minRound);
+    }
+    if (!ticks.includes(maxRound)) {
+      ticks.push(maxRound);
+    }
+
+    return ticks.sort((a, b) => a - b);
+  }, [chartData]);
 
   const availableSotaSeries = useMemo<string[]>(() => {
     if (!chartData.length) {
@@ -243,11 +286,11 @@ export default function MinerChart({
       return chartData;
     }
     const rangeToLimit: Record<Exclude<FilterOption, "All">, number> = {
-      "7D": 7,
-      "15D": 15,
+      "7R": 7,
+      "15R": 15,
     };
-    const totalDays = rangeToLimit[timeRange] ?? chartData.length;
-    return chartData.slice(-totalDays);
+    const totalRounds = rangeToLimit[timeRange] ?? chartData.length;
+    return chartData.slice(-totalRounds);
   }, [chartData, timeRange]);
 
   const roundLabelMap = useMemo(() => {
@@ -330,6 +373,82 @@ export default function MinerChart({
       return "Round";
     },
     [roundLabelMap]
+  );
+
+  // Custom tooltip to show winner info
+  const CustomLeaderboardTooltip = useCallback(
+    ({ active, payload, label }: any) => {
+      if (!active || !payload || !payload.length) return null;
+
+      const data = payload[0].payload as NormalizedLeaderboardDatum;
+      const roundNum = data.round;
+      const score = data.subnet36;
+      const winnerName = data.winnerName || (data as any).winner_name;
+      const winnerUid = data.winnerUid ?? (data as any).winner_uid;
+
+      return (
+        <div
+          style={{
+            backgroundColor: "rgba(17, 24, 39, 0.98)", // gray-900 with high opacity
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+          className="rounded-lg border border-gray-700 px-4 py-3 shadow-2xl"
+        >
+          <div className="flex flex-col gap-2">
+            {/* Round number */}
+            <p
+              style={{ color: "#ffffff", borderBottomColor: "#374151" }}
+              className="text-sm font-semibold border-b pb-2"
+            >
+              Round {roundNum}
+            </p>
+
+            {/* Winner info */}
+            {winnerName && winnerUid !== null && winnerUid !== undefined && (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span style={{ color: "#9ca3af" }} className="text-xs">
+                    Miner:
+                  </span>
+                  <span
+                    style={{ color: "#ffffff" }}
+                    className="text-sm font-medium"
+                  >
+                    {winnerName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: "#9ca3af" }} className="text-xs">
+                    UID:
+                  </span>
+                  <span
+                    style={{ color: "#10b981" }}
+                    className="text-sm font-medium"
+                  >
+                    {winnerUid}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Score */}
+            <div
+              style={{ borderTopColor: "#374151" }}
+              className="flex items-center gap-2 pt-2 border-t"
+            >
+              <span style={{ color: "#9ca3af" }} className="text-xs">
+                Score:
+              </span>
+              <span style={{ color: "#10b981" }} className="text-lg font-bold">
+                {score.toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    },
+    []
   );
 
   function handleFilterBy(option: string) {
@@ -463,11 +582,12 @@ export default function MinerChart({
                 allowDuplicatedCategory={false}
                 type="number"
                 domain={["dataMin", "dataMax"]}
+                ticks={xAxisTicks}
                 tickFormatter={xAxisTickFormatter}
                 label={{
                   value: "Rounds",
                   position: "insideBottom",
-                  offset: 0,
+                  offset: -10,
                   fill: "#94a3b8",
                   fontSize: 12,
                 }}
@@ -478,10 +598,7 @@ export default function MinerChart({
                 domain={yAxisDomain}
                 tick={<CustomYAxisTick postfix="%" decimals={0} />}
               />
-              <Tooltip
-                content={<CustomTooltip postfix="%" decimals={1} />}
-                labelFormatter={tooltipLabelFormatter}
-              />
+              <Tooltip content={<CustomLeaderboardTooltip />} />
               <Area
                 type="monotone"
                 dataKey="Score"
@@ -546,11 +663,6 @@ export default function MinerChart({
             />
           ))}
         </CheckboxGroup>
-        {availableSotaSeries.length === 0 && (
-          <div className="text-xs text-gray-400">
-            Benchmark agent data not available for this range.
-          </div>
-        )}
       </div>
     </WidgetCard>
   );
