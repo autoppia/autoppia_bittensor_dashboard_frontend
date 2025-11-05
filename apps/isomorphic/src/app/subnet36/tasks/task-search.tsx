@@ -404,7 +404,7 @@ export default function TaskSearch() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter Task ID or Prompt (e.g., 3413)"
-                className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                className="w-full px-4 py-3 placeholder:text-sm bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <PiHashDuotone className="w-5 h-5 text-cyan-400" />
@@ -687,10 +687,12 @@ export default function TaskSearch() {
                 "/miners/30.svg "
               );
 
-              // Extract round number from IDs (no need for relationships)
+              // Try to get round number from multiple sources
               const roundNumber =
-                extractRoundNumber(task.taskId) ??
-                extractRoundNumber(task.agentRunId);
+                (task as any).roundNumber ?? // Direct field from backend
+                task.relationships?.round?.roundNumber ?? // From relationships if included
+                extractRoundNumber(task.taskId) ?? // Extract from task ID
+                extractRoundNumber(task.agentRunId); // Extract from agent run ID
 
               const roundDisplay =
                 typeof roundNumber === "number" && Number.isFinite(roundNumber)

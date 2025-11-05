@@ -191,7 +191,7 @@ export default function WebsiteDetailPage() {
 
               {!website.isComingSoon && website.href !== "#" && (
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                  <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-start">
                     {/* Seed Input */}
                     <div
                       className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 backdrop-blur-sm"
@@ -223,11 +223,11 @@ export default function WebsiteDetailPage() {
                       href={getWebsiteUrlWithSeed(website.href, seed)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group/btn flex-1"
+                      className="group/btn w-full sm:w-auto"
                     >
                       <Button
                         size="lg"
-                        className="w-full text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
+                        className="w-full sm:w-auto text-white group-hover/btn:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border-2"
                         style={{
                           backgroundColor: website.color,
                           borderColor: website.color,
@@ -244,7 +244,7 @@ export default function WebsiteDetailPage() {
                     href={getGitHubUrl(website.name)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/github"
+                    className="group/github w-full sm:w-auto"
                   >
                     <Button
                       size="lg"
