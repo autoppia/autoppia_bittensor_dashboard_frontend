@@ -687,10 +687,12 @@ export default function TaskSearch() {
                 "/miners/30.svg "
               );
 
-              // Extract round number from IDs (no need for relationships)
+              // Try to get round number from multiple sources
               const roundNumber =
-                extractRoundNumber(task.taskId) ??
-                extractRoundNumber(task.agentRunId);
+                (task as any).roundNumber ?? // Direct field from backend
+                task.relationships?.round?.roundNumber ?? // From relationships if included
+                extractRoundNumber(task.taskId) ?? // Extract from task ID
+                extractRoundNumber(task.agentRunId); // Extract from agent run ID
 
               const roundDisplay =
                 typeof roundNumber === "number" && Number.isFinite(roundNumber)
