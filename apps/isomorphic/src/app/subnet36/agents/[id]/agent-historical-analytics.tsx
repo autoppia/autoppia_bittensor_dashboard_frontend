@@ -45,6 +45,14 @@ interface UseCaseStats {
   avgTime: number;
 }
 
+// Helper function to get color based on percentage
+function getPercentageColor(percentage: number): string {
+  if (percentage >= 75) return "#22C55E"; // green-500
+  if (percentage >= 50) return "#EAB308"; // yellow-500
+  if (percentage >= 25) return "#F97316"; // orange-500
+  return "#EF4444"; // red-500
+}
+
 export default function AgentHistoricalAnalytics({
   agentId,
   className,
@@ -807,14 +815,6 @@ export default function AgentHistoricalAnalytics({
                       Success Rate
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-base sm:text-lg font-bold text-white">
-                      {ws.avgScore.toFixed(1)}%
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
-                      Avg Score
-                    </div>
-                  </div>
                   <div className="flex items-center gap-1 text-white/70">
                     <PiClock className="w-4 h-4" />
                     <span className="text-xs sm:text-sm font-medium">
@@ -900,9 +900,21 @@ export default function AgentHistoricalAnalytics({
                                   <Text className="text-xs sm:text-sm font-semibold text-white">
                                     {uc.useCase}
                                   </Text>
-                                  <Text className="text-[10px] sm:text-xs text-white/60 mt-0.5">
-                                    {uc.completedTasks}/{uc.totalTasks} tasks
-                                  </Text>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Text className="text-[10px] sm:text-xs text-white/60">
+                                      {uc.completedTasks}/{uc.totalTasks} tasks
+                                    </Text>
+                                    <span
+                                      className="text-[10px] sm:text-xs font-bold"
+                                      style={{
+                                        color: getPercentageColor(
+                                          uc.successRate
+                                        ),
+                                      }}
+                                    >
+                                      {uc.successRate.toFixed(1)}%
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
 
@@ -1081,13 +1093,23 @@ export default function AgentHistoricalAnalytics({
                             key={`${uc.useCase}-${ucIndex}`}
                             className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <Text className="text-xs sm:text-sm font-medium text-white truncate flex-1">
                                 {uc.useCase}
                               </Text>
-                              <Text className="text-xs text-white/60 ml-2">
-                                {uc.completedTasks}/{uc.totalTasks} tasks
-                              </Text>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Text className="text-xs text-white/60">
+                                  {uc.completedTasks}/{uc.totalTasks}
+                                </Text>
+                                <span
+                                  className="text-xs font-bold"
+                                  style={{
+                                    color: getPercentageColor(uc.successRate),
+                                  }}
+                                >
+                                  {uc.successRate.toFixed(1)}%
+                                </span>
+                              </div>
                             </div>
                           </div>
                         ))}
