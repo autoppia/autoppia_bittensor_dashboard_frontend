@@ -45,7 +45,7 @@ export default function AgentsLayout({
         </ActionIcon>
       </div>
 
-      <div className="ml-0 lg:ml-[300px] pt-6">{children}</div>
+      <div className="ml-0 lg:ml-[300px]">{children}</div>
     </>
   );
 }
