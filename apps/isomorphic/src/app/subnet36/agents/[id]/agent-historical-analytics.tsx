@@ -45,6 +45,14 @@ interface UseCaseStats {
   avgTime: number;
 }
 
+// Helper function to get color based on percentage
+function getPercentageColor(percentage: number): string {
+  if (percentage >= 75) return "#22C55E"; // green-500
+  if (percentage >= 50) return "#EAB308"; // yellow-500
+  if (percentage >= 25) return "#F97316"; // orange-500
+  return "#EF4444"; // red-500
+}
+
 export default function AgentHistoricalAnalytics({
   agentId,
   className,
@@ -425,8 +433,113 @@ export default function AgentHistoricalAnalytics({
 
   if (loading) {
     return (
-      <div className={cn("space-y-4", className)}>
-        <Placeholder className="h-[400px] rounded-xl" />
+      <div className={cn("space-y-6", className)}>
+        {/* Header Skeleton */}
+        <div
+          className="relative overflow-hidden rounded-xl border p-4 sm:p-6 backdrop-blur-md animate-pulse"
+          style={{
+            borderColor: "#10B98166",
+            background:
+              "linear-gradient(to bottom right, #10B98126, #10B9811A)",
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 w-10 h-10" />
+              <div className="space-y-2">
+                <div className="h-7 w-64 bg-white/10 rounded" />
+                <div className="h-4 w-48 bg-white/10 rounded" />
+              </div>
+            </div>
+            <div className="h-10 w-full sm:w-[180px] bg-white/10 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Pie Chart Skeleton */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm animate-pulse">
+          <div className="mb-4">
+            <div className="h-6 w-52 bg-white/10 rounded mb-2" />
+            <div className="h-4 w-64 bg-white/10 rounded" />
+          </div>
+          <div className="flex justify-center items-center h-[240px]">
+            <div className="w-[200px] h-[200px] rounded-full border-8 border-white/10" />
+          </div>
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
+              >
+                <div className="w-3 h-3 rounded-full bg-white/10 flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-20 bg-white/10 rounded" />
+                  <div className="h-3 w-16 bg-white/10 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Website Cards Skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="relative rounded-xl border p-3 sm:p-5 animate-pulse"
+              style={{
+                borderColor: "rgba(100, 116, 139, 0.6)",
+                background:
+                  "linear-gradient(to bottom right, rgba(100, 116, 139, 0.15), rgba(100, 116, 139, 0.1))",
+              }}
+            >
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-3 h-3 rounded-full bg-white/10" />
+                  <div className="h-5 w-32 bg-white/10 rounded" />
+                  <div className="h-4 w-16 bg-white/10 rounded" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="space-y-1">
+                    <div className="h-5 w-16 bg-white/10 rounded ml-auto" />
+                    <div className="h-3 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-5 w-16 bg-white/10 rounded ml-auto" />
+                    <div className="h-3 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-4 w-12 bg-white/10 rounded" />
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="relative h-2 sm:h-3 rounded-full bg-white/10 overflow-hidden mb-4">
+                <div className="absolute top-0 left-0 h-full w-2/3 rounded-full bg-white/20" />
+              </div>
+
+              {/* Use Cases Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-3 w-24 bg-white/10 rounded" />
+                  <div className="h-6 w-24 bg-white/10 rounded" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div
+                      key={j}
+                      className="rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 w-24 bg-white/10 rounded" />
+                        <div className="h-3 w-12 bg-white/10 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -478,13 +591,45 @@ export default function AgentHistoricalAnalytics({
       </div>
 
       {/* Performance Breakdown Pie Chart */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm">
+      <div
+        className="relative overflow-hidden rounded-2xl border p-6 backdrop-blur-sm"
+        style={
+          selectedWebsite && displayedWebsites[0]
+            ? (() => {
+                const projectColors = getProjectColors(
+                  displayedWebsites[0].website
+                );
+                return {
+                  borderColor: `${projectColors.mainColor}99`,
+                  background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`,
+                };
+              })()
+            : {
+                borderColor: "rgba(255, 255, 255, 0.15)",
+                background: "rgba(255, 255, 255, 0.05)",
+              }
+        }
+      >
         <div className="mb-4">
-          <h3 className="text-lg font-bold text-white">
-            Performance Breakdown
-          </h3>
+          <div className="flex items-center gap-2">
+            {selectedWebsite && displayedWebsites[0] && (
+              <div
+                className="w-3 h-3 rounded-full shadow-sm flex-shrink-0"
+                style={{
+                  backgroundColor: getProjectColors(
+                    displayedWebsites[0].website
+                  ).dotColor,
+                }}
+              />
+            )}
+            <h3 className="text-lg font-bold text-white">
+              Performance Breakdown
+            </h3>
+          </div>
           <p className="text-xs text-white/60">
-            Overall success rate distribution
+            {selectedWebsite
+              ? "Success rate by use case"
+              : "Success rate by website"}
           </p>
         </div>
 
@@ -501,18 +646,66 @@ export default function AgentHistoricalAnalytics({
           const overallSuccessRate =
             totalTasks > 0 ? (totalCompleted / totalTasks) * 100 : 0;
 
-          // Prepare donut data for each website using their specific colors
-          const donutData = displayedWebsites.map((ws) => {
-            const projectColors = getProjectColors(ws.website);
-            return {
-              name: ws.displayName,
-              value: ws.completedTasks,
-              fill: projectColors.mainColor,
-              stroke: projectColors.mainColor,
-              percentage:
-                ws.totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
-            };
-          });
+          // Helper function to generate color variations
+          const generateColorVariations = (
+            baseColor: string,
+            count: number
+          ) => {
+            // Convert hex to RGB
+            const hex = baseColor.replace("#", "");
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+
+            const colors: string[] = [];
+            for (let i = 0; i < count; i++) {
+              // Generate variations by adjusting brightness
+              const factor = 0.6 + (i / Math.max(count - 1, 1)) * 0.7; // Range from 0.6 to 1.3
+              const newR = Math.min(255, Math.round(r * factor));
+              const newG = Math.min(255, Math.round(g * factor));
+              const newB = Math.min(255, Math.round(b * factor));
+              colors.push(
+                `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`
+              );
+            }
+            return colors;
+          };
+
+          // Prepare donut data based on selection
+          // If website is selected, show use cases; otherwise show websites
+          const donutData = selectedWebsite
+            ? // Show use cases for selected website with color variations
+              (() => {
+                const selectedWs = displayedWebsites[0];
+                if (!selectedWs) return [];
+
+                const projectColors = getProjectColors(selectedWs.website);
+                const colorVariations = generateColorVariations(
+                  projectColors.mainColor,
+                  filteredUseCases.length
+                );
+
+                return filteredUseCases.map((uc, idx) => ({
+                  name: uc.useCase,
+                  value: uc.completedTasks,
+                  fill: colorVariations[idx] || projectColors.mainColor,
+                  stroke: colorVariations[idx] || projectColors.mainColor,
+                  percentage:
+                    totalTasks > 0 ? (uc.completedTasks / totalTasks) * 100 : 0,
+                }));
+              })()
+            : // Show websites with their specific colors
+              displayedWebsites.map((ws) => {
+                const projectColors = getProjectColors(ws.website);
+                return {
+                  name: ws.displayName,
+                  value: ws.completedTasks,
+                  fill: projectColors.mainColor,
+                  stroke: projectColors.mainColor,
+                  percentage:
+                    totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
+                };
+              });
 
           return (
             <div className="relative text-white/80">
@@ -622,14 +815,6 @@ export default function AgentHistoricalAnalytics({
                       Success Rate
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-base sm:text-lg font-bold text-white">
-                      {ws.avgScore.toFixed(1)}%
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
-                      Avg Score
-                    </div>
-                  </div>
                   <div className="flex items-center gap-1 text-white/70">
                     <PiClock className="w-4 h-4" />
                     <span className="text-xs sm:text-sm font-medium">
@@ -715,17 +900,112 @@ export default function AgentHistoricalAnalytics({
                                   <Text className="text-xs sm:text-sm font-semibold text-white">
                                     {uc.useCase}
                                   </Text>
-                                  <Text className="text-[10px] sm:text-xs text-white/60 mt-0.5">
-                                    {uc.completedTasks}/{uc.totalTasks} tasks
-                                  </Text>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Text className="text-[10px] sm:text-xs text-white/60">
+                                      {uc.completedTasks}/{uc.totalTasks} tasks
+                                    </Text>
+                                    <span
+                                      className="text-[10px] sm:text-xs font-bold"
+                                      style={{
+                                        color: getPercentageColor(
+                                          uc.successRate
+                                        ),
+                                      }}
+                                    >
+                                      {uc.successRate.toFixed(1)}%
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
                                 {taskData?.loading ? (
-                                  <div className="p-4">
-                                    <Placeholder className="h-[200px] rounded-lg" />
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm table-fixed min-w-[700px]">
+                                      <thead className="bg-white/5">
+                                        <tr>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                                            Task ID
+                                          </th>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                            Prompt
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                                            Score
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                                            Duration
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
+                                            Action
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                          <tr
+                                            key={i}
+                                            className="border-t border-white/5 animate-pulse"
+                                          >
+                                            <td className="p-2 sm:p-3">
+                                              <div
+                                                className="h-4 rounded"
+                                                style={{
+                                                  backgroundColor: `${projectColors.mainColor}20`,
+                                                }}
+                                              />
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="space-y-2">
+                                                <div
+                                                  className="h-3 rounded w-3/4"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                                <div
+                                                  className="h-3 rounded w-1/2"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-12 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-4 w-10 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-16 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 ) : taskData?.tasks?.length > 0 ? (
                                   <>
@@ -896,13 +1176,23 @@ export default function AgentHistoricalAnalytics({
                             key={`${uc.useCase}-${ucIndex}`}
                             className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <Text className="text-xs sm:text-sm font-medium text-white truncate flex-1">
                                 {uc.useCase}
                               </Text>
-                              <Text className="text-xs text-white/60 ml-2">
-                                {uc.completedTasks}/{uc.totalTasks} tasks
-                              </Text>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Text className="text-xs text-white/60">
+                                  {uc.completedTasks}/{uc.totalTasks}
+                                </Text>
+                                <span
+                                  className="text-xs font-bold"
+                                  style={{
+                                    color: getPercentageColor(uc.successRate),
+                                  }}
+                                >
+                                  {uc.successRate.toFixed(1)}%
+                                </span>
+                              </div>
                             </div>
                           </div>
                         ))}
