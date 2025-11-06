@@ -95,7 +95,7 @@ const leaderboardData = [
 const benchmarkTasks = [
   {
     id: 1,
-    project: "Autoppia AutoZone",
+    project: "AutoZone",
     task: "SEARCH_PRODUCT",
     prompt: "Search for products where the query contains 'rtabl'",
     success: false,
@@ -105,7 +105,7 @@ const benchmarkTasks = [
   },
   {
     id: 2,
-    project: "Autoppia AutoZone",
+    project: "AutoZone",
     task: "CAROUSEL_SCROLL",
     prompt:
       "Scroll right in the 'Top Sellers In Home' carousel where the direction is NOT 'LEFT'",
@@ -116,7 +116,7 @@ const benchmarkTasks = [
   },
   {
     id: 3,
-    project: "Autobooks Dashboard",
+    project: "AutoBooks Dashboard",
     task: "CREATE_INVOICE",
     prompt:
       "Create a new invoice for customer 'Acme Corp' with amount $1,250.00",
@@ -127,7 +127,7 @@ const benchmarkTasks = [
   },
   {
     id: 4,
-    project: "Autocinema Booking",
+    project: "AutoCinema Booking",
     task: "BOOK_TICKETS",
     prompt: "Book 2 tickets for 'The Matrix' showing at 7:30 PM on Friday",
     success: true,
@@ -137,7 +137,7 @@ const benchmarkTasks = [
   },
   {
     id: 5,
-    project: "Autobooks Expenses",
+    project: "AutoBooks Expenses",
     task: "ADD_EXPENSE",
     prompt: "Add a business expense for office supplies totaling $89.99",
     success: true,
@@ -147,7 +147,7 @@ const benchmarkTasks = [
   },
   {
     id: 6,
-    project: "Autocinema Search",
+    project: "AutoCinema Search",
     task: "FILTER_MOVIES",
     prompt: "Filter movies by genre 'Action' and rating above 4 stars",
     success: false,
@@ -157,7 +157,7 @@ const benchmarkTasks = [
   },
   {
     id: 7,
-    project: "Autoppia Shopping",
+    project: "AutoZone Shopping",
     task: "ADD_TO_CART",
     prompt: "Add 'Wireless Mouse' to shopping cart and proceed to checkout",
     success: true,
@@ -167,7 +167,7 @@ const benchmarkTasks = [
   },
   {
     id: 8,
-    project: "Autobooks Reports",
+    project: "AutoBooks Reports",
     task: "GENERATE_REPORT",
     prompt: "Generate quarterly sales report for Q4 2024",
     success: true,
@@ -177,7 +177,7 @@ const benchmarkTasks = [
   },
   {
     id: 9,
-    project: "Autocinema Profile",
+    project: "AutoCinema Profile",
     task: "UPDATE_PREFERENCES",
     prompt: "Update notification preferences to enable email alerts",
     success: true,
@@ -187,7 +187,7 @@ const benchmarkTasks = [
   },
   {
     id: 10,
-    project: "Autoppia Reviews",
+    project: "AutoZone Reviews",
     task: "SUBMIT_REVIEW",
     prompt: "Submit a 5-star review for 'Premium Headphones' with comment",
     success: false,
@@ -197,7 +197,7 @@ const benchmarkTasks = [
   },
   {
     id: 11,
-    project: "Autobooks Customers",
+    project: "AutoBooks Customers",
     task: "ADD_CUSTOMER",
     prompt: "Add new customer 'Tech Solutions Inc' with contact details",
     success: true,
@@ -207,7 +207,7 @@ const benchmarkTasks = [
   },
   {
     id: 12,
-    project: "Autocinema Recommendations",
+    project: "AutoCinema Recommendations",
     task: "VIEW_SUGGESTED",
     prompt: "Navigate to recommended movies section and view top 5 suggestions",
     success: true,
@@ -217,7 +217,7 @@ const benchmarkTasks = [
   },
   {
     id: 13,
-    project: "Autoppia Wishlist",
+    project: "AutoZone Wishlist",
     task: "MANAGE_WISHLIST",
     prompt: "Add 3 items to wishlist and remove 1 existing item",
     success: false,
@@ -227,7 +227,7 @@ const benchmarkTasks = [
   },
   {
     id: 14,
-    project: "Autobooks Payments",
+    project: "AutoBooks Payments",
     task: "PROCESS_PAYMENT",
     prompt: "Process payment of $2,450.00 for invoice #INV-2024-1234",
     success: true,
@@ -237,7 +237,7 @@ const benchmarkTasks = [
   },
   {
     id: 15,
-    project: "Autocinema Ratings",
+    project: "AutoCinema Ratings",
     task: "RATE_MOVIE",
     prompt: "Rate 'Inception' with 4.5 stars and mark as favorite",
     success: true,
@@ -966,6 +966,15 @@ export default function App() {
                           {task.project}
                         </h3>
                       </div>
+                    </div>
+
+                    {/* Use Case */}
+                    <div className="mb-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/30">
+                        <span className="text-xs font-bold uppercase tracking-wide text-cyan-300">
+                          {task.task}
+                        </span>
+                      </span>
                     </div>
 
                     {/* Prompt */}

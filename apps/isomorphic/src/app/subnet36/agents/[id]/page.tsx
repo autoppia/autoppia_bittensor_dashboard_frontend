@@ -35,6 +35,7 @@ import {
   AgentScoreChartPlaceholder,
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
+import AgentHistoricalAnalytics from "./agent-historical-analytics";
 import { useAgent } from "@/services/hooks/useAgents";
 import { agentsService } from "@/services/api/agents.service";
 import type {
@@ -2318,12 +2319,16 @@ export default function Page() {
                     />
                   </div>
                 ) : (
-                  <div>
+                  <div className="space-y-6">
                     <AgentScoreChart
                       className="w-full"
                       scoreRoundData={scoreRoundData}
                       loading={loading}
                       error={error}
+                    />
+                    <AgentHistoricalAnalytics
+                      agentId={agentIdForQuery ?? trimmedId}
+                      className="w-full"
                     />
                   </div>
                 )}

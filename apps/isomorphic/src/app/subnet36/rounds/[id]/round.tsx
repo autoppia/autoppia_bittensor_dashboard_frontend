@@ -2284,15 +2284,15 @@ export default function Round() {
         </div>
       ) : !error ? (
         <>
-          {/* Header */}
+      {/* Header */}
           <RoundHeaderInline round={round} roundLoading={false} />
 
-          {/* Recents removed: using Prev/Next navigation in header */}
+      {/* Recents removed: using Prev/Next navigation in header */}
 
-          {/* Round Progress removed: already shown in main header card */}
+      {/* Round Progress removed: already shown in main header card */}
 
-          {/* Aggregated Metrics */}
-          <div className="mt-10 mb-6">
+      {/* Aggregated Metrics */}
+      <div className="mt-10 mb-6">
             {statsLoading || minersLoading ? (
               <div className="flex items-center gap-4 mb-5">
                 <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
@@ -2302,21 +2302,21 @@ export default function Round() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-                  <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
-                </div>
-                <div className="flex-1">
-                  <Text className="text-base font-black text-white uppercase tracking-wider">
-                    Aggregated Metrics
-                  </Text>
-                  <Text className="text-xs text-white/60 font-semibold">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
+            <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+          </div>
+          <div className="flex-1">
+            <Text className="text-base font-black text-white uppercase tracking-wider">
+              Aggregated Metrics
+            </Text>
+            <Text className="text-xs text-white/60 font-semibold">
                     {isWaitingForConsensus
                       ? "⚠️ Provisional metrics - Waiting for validator consensus"
                       : "Comprehensive stats across all validators"}
-                  </Text>
-                </div>
-              </div>
+            </Text>
+          </div>
+        </div>
             )}
             <RoundStatsInline
               selectedValidator={selectedValidator}
@@ -2324,81 +2324,81 @@ export default function Round() {
               topMiners={topMiners}
               loading={statsLoading || minersLoading}
             />
+      </div>
+
+      {/* Validators selector */}
+      <div className="mt-10 mb-6">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
+            <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
           </div>
-
-          {/* Validators selector */}
-          <div className="mt-10 mb-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-                <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-              </div>
-              <div className="flex-1">
-                <Text className="text-base font-black text-white uppercase tracking-wider">
-                  Multiple Validators
-                </Text>
-                <Text className="text-xs text-white/60 font-semibold">
-                  Select a validator to view detailed performance metrics
-                </Text>
-              </div>
-            </div>
+          <div className="flex-1">
+            <Text className="text-base font-black text-white uppercase tracking-wider">
+              Multiple Validators
+            </Text>
+            <Text className="text-xs text-white/60 font-semibold">
+              Select a validator to view detailed performance metrics
+            </Text>
           </div>
+        </div>
+      </div>
 
-          <RoundValidatorsInline
-            onValidatorSelect={handleValidatorSelect}
-            selectedValidatorId={selectedValidator?.id ?? null}
-            requestedValidatorId={requestedValidatorId}
-          />
+      <RoundValidatorsInline
+        onValidatorSelect={handleValidatorSelect}
+        selectedValidatorId={selectedValidator?.id ?? null}
+        requestedValidatorId={requestedValidatorId}
+      />
 
-          {/* Selected validator metric cards */}
-          {minersLoading || !selectedValidator ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-              {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className={cn("h-36", skeletonCard)} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-              {selectedValidatorCards.map((card) => (
-                <MetricCard key={(card as any).key} card={card} />
-              ))}
-            </div>
-          )}
+      {/* Selected validator metric cards */}
+      {minersLoading || !selectedValidator ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className={cn("h-36", skeletonCard)} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+          {selectedValidatorCards.map((card) => (
+            <MetricCard key={(card as any).key} card={card} />
+          ))}
+        </div>
+      )}
 
-          {/* Charts */}
-          <div className="flex flex-col xl:flex-row gap-6 mt-6">
-            <RoundMinerScoresInline
-              className="w-full xl:w-[calc(100%-400px)]"
-              selectedValidator={selectedValidator}
+      {/* Charts */}
+      <div className="flex flex-col xl:flex-row gap-6 mt-6">
+        <RoundMinerScoresInline
+          className="w-full xl:w-[calc(100%-400px)]"
+          selectedValidator={selectedValidator}
               roundInfo={round}
               minersData={allMinersData}
               loading={minersLoading}
               error={undefined}
-            />
-            <RoundTopMinersInline
-              className="w-full xl:w-[400px]"
-              selectedValidator={selectedValidator}
-              roundNumber={roundNumberForLinks}
+        />
+        <RoundTopMinersInline
+          className="w-full xl:w-[400px]"
+          selectedValidator={selectedValidator}
+          roundNumber={roundNumberForLinks}
               roundInfo={round}
               minersData={allMinersData}
               loading={minersLoading}
               error={undefined}
-            />
-          </div>
+        />
+      </div>
 
-          {/* Floating Glossary Button */}
-          <button
-            type="button"
-            onClick={handleOpenGlossary}
-            className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
-          >
-            <div className="relative">
-              <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
-              <div className="absolute inset-0 h-5 w-5 text-emerald-300 animate-ping opacity-0 group-hover:opacity-75">
-                <LuInfo className="h-5 w-5" />
-              </div>
-            </div>
-            <span className="uppercase tracking-wider">Glossary</span>
-          </button>
+      {/* Floating Glossary Button */}
+      <button
+        type="button"
+        onClick={handleOpenGlossary}
+        className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
+      >
+        <div className="relative">
+          <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
+          <div className="absolute inset-0 h-5 w-5 text-emerald-300 animate-ping opacity-0 group-hover:opacity-75">
+            <LuInfo className="h-5 w-5" />
+          </div>
+        </div>
+        <span className="uppercase tracking-wider">Glossary</span>
+      </button>
         </>
       ) : null}
     </div>

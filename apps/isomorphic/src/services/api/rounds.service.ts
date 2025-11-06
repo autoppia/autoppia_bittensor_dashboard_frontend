@@ -329,7 +329,7 @@ export class RoundsService {
   async getRoundBasic(identifier: string | number): Promise<RoundData> {
     const { path, fallbackId } = this.buildRoundPath(identifier);
     const response = await apiClient.get<any>(
-      `${this.baseEndpoint}/${path}/summary`
+      `${this.baseEndpoint}/${path}/basic`
     );
     const raw = response.data;
     const payloadCandidates = [

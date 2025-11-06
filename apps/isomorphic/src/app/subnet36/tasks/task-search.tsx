@@ -930,7 +930,9 @@ export default function TaskSearch() {
       {hasSearched && isSearching && (
         <div className="mt-6 relative z-0">
           <div className="text-center mb-6">
-            <div className="h-7 w-48 mx-auto rounded-full bg-purple-500/20 animate-pulse" />
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-3 animate-pulse">
+              Loading tasks...
+            </h3>
             <div className="h-4 w-64 mx-auto mt-3 rounded-full bg-purple-500/10 animate-pulse" />
           </div>
 
