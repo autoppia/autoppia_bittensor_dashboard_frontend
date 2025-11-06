@@ -787,7 +787,7 @@ export default function App() {
                     data={chartData}
                     layout="vertical"
                     margin={{
-                      top: 4,
+                      top: 24,
                       right: isMobile ? 20 : 40, // reduce right margin for smaller screens
                       left: 20, // small fixed left margin to remove empty space
                       bottom: 4,
