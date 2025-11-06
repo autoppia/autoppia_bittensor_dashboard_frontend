@@ -259,6 +259,17 @@ function TaskDetailsDynamic({
   error,
   refetch,
 }: TaskDetailsDynamicProps) {
+  // Get task actions to show correct success/fail counts
+  const params = useParams();
+  const taskId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const {
+    total: actionsTotal,
+    successCount,
+    failCount,
+  } = useTaskActions(taskId as string, {
+    page: 1,
+    limit: 1, // We only need the counts, not the actual actions
+  });
   if (isLoading && !details) {
     return (
       <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-transparent p-8 shadow-2xl backdrop-blur-sm">
@@ -804,28 +815,19 @@ function TaskDetailsDynamic({
                 />
                 <RunStatCard
                   label="Actions"
-                  value={String(
-                    (details as any)?.performance?.totalActions ?? "—"
-                  )}
+                  value={String(actionsTotal ?? "—")}
                   color="amber"
                   Icon={PiPlay}
                 />
                 <RunStatCard
                   label="Successful"
-                  value={String(agentRunInfo.completedTasks ?? "—")}
+                  value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
                   label="Failed"
-                  value={String(
-                    agentRunInfo.failedTasks ??
-                      Math.max(
-                        (agentRunInfo.taskCount ?? 0) -
-                          (agentRunInfo.completedTasks ?? 0),
-                        0
-                      )
-                  )}
+                  value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
                 />
@@ -843,9 +845,7 @@ function TaskDetailsDynamic({
                 />
                 <RunStatCard
                   label="Actions"
-                  value={String(
-                    (details as any)?.performance?.totalActions ?? "—"
-                  )}
+                  value={String(actionsTotal ?? "—")}
                   color="amber"
                   Icon={PiPlay}
                 />
@@ -866,20 +866,13 @@ function TaskDetailsDynamic({
               <div className="grid grid-cols-2 gap-4 justify-end">
                 <RunStatCard
                   label="Successful"
-                  value={String(agentRunInfo.completedTasks ?? "—")}
+                  value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
                   label="Failed"
-                  value={String(
-                    agentRunInfo.failedTasks ??
-                      Math.max(
-                        (agentRunInfo.taskCount ?? 0) -
-                          (agentRunInfo.completedTasks ?? 0),
-                        0
-                      )
-                  )}
+                  value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
                 />
