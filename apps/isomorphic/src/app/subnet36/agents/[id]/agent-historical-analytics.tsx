@@ -921,8 +921,91 @@ export default function AgentHistoricalAnalytics({
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
                                 {taskData?.loading ? (
-                                  <div className="p-4">
-                                    <Placeholder className="h-[200px] rounded-lg" />
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm table-fixed min-w-[700px]">
+                                      <thead className="bg-white/5">
+                                        <tr>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                                            Task ID
+                                          </th>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                            Prompt
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                                            Score
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                                            Duration
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
+                                            Action
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                          <tr
+                                            key={i}
+                                            className="border-t border-white/5 animate-pulse"
+                                          >
+                                            <td className="p-2 sm:p-3">
+                                              <div
+                                                className="h-4 rounded"
+                                                style={{
+                                                  backgroundColor: `${projectColors.mainColor}20`,
+                                                }}
+                                              />
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="space-y-2">
+                                                <div
+                                                  className="h-3 rounded w-3/4"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                                <div
+                                                  className="h-3 rounded w-1/2"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-12 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-4 w-10 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-16 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 ) : taskData?.tasks?.length > 0 ? (
                                   <>
