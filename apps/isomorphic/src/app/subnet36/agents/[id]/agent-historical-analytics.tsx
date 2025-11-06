@@ -425,8 +425,113 @@ export default function AgentHistoricalAnalytics({
 
   if (loading) {
     return (
-      <div className={cn("space-y-4", className)}>
-        <Placeholder className="h-[400px] rounded-xl" />
+      <div className={cn("space-y-6", className)}>
+        {/* Header Skeleton */}
+        <div
+          className="relative overflow-hidden rounded-xl border p-4 sm:p-6 backdrop-blur-md animate-pulse"
+          style={{
+            borderColor: "#10B98166",
+            background:
+              "linear-gradient(to bottom right, #10B98126, #10B9811A)",
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 w-10 h-10" />
+              <div className="space-y-2">
+                <div className="h-7 w-64 bg-white/10 rounded" />
+                <div className="h-4 w-48 bg-white/10 rounded" />
+              </div>
+            </div>
+            <div className="h-10 w-full sm:w-[180px] bg-white/10 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Pie Chart Skeleton */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm animate-pulse">
+          <div className="mb-4">
+            <div className="h-6 w-52 bg-white/10 rounded mb-2" />
+            <div className="h-4 w-64 bg-white/10 rounded" />
+          </div>
+          <div className="flex justify-center items-center h-[240px]">
+            <div className="w-[200px] h-[200px] rounded-full border-8 border-white/10" />
+          </div>
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
+              >
+                <div className="w-3 h-3 rounded-full bg-white/10 flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-20 bg-white/10 rounded" />
+                  <div className="h-3 w-16 bg-white/10 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Website Cards Skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="relative rounded-xl border p-3 sm:p-5 animate-pulse"
+              style={{
+                borderColor: "rgba(100, 116, 139, 0.6)",
+                background:
+                  "linear-gradient(to bottom right, rgba(100, 116, 139, 0.15), rgba(100, 116, 139, 0.1))",
+              }}
+            >
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-3 h-3 rounded-full bg-white/10" />
+                  <div className="h-5 w-32 bg-white/10 rounded" />
+                  <div className="h-4 w-16 bg-white/10 rounded" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="space-y-1">
+                    <div className="h-5 w-16 bg-white/10 rounded ml-auto" />
+                    <div className="h-3 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-5 w-16 bg-white/10 rounded ml-auto" />
+                    <div className="h-3 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-4 w-12 bg-white/10 rounded" />
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="relative h-2 sm:h-3 rounded-full bg-white/10 overflow-hidden mb-4">
+                <div className="absolute top-0 left-0 h-full w-2/3 rounded-full bg-white/20" />
+              </div>
+
+              {/* Use Cases Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-3 w-24 bg-white/10 rounded" />
+                  <div className="h-6 w-24 bg-white/10 rounded" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div
+                      key={j}
+                      className="rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 w-24 bg-white/10 rounded" />
+                        <div className="h-3 w-12 bg-white/10 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
