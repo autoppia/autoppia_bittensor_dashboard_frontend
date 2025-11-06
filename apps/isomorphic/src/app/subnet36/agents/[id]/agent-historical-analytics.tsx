@@ -148,15 +148,10 @@ export default function AgentHistoricalAnalytics({
     aggregatedData.stats.forEach((stats) => {
       const performanceByWebsite = stats.performanceByWebsite || [];
 
-      console.log("Processing stats from run:", stats.runId);
-      console.log("Performance by website:", performanceByWebsite);
-
       // Process website-level stats
       performanceByWebsite.forEach((ws) => {
         const website = ws.website;
         if (!website) return;
-
-        console.log(`Processing website: "${website}"`);
 
         const existing = websiteMap.get(website) || {
           website, // Original lowercase name for API calls
@@ -192,10 +187,6 @@ export default function AgentHistoricalAnalytics({
 
         // Process use case stats
         const useCases = ws.useCases || [];
-        console.log(
-          `  Use cases for ${website}:`,
-          useCases.map((uc) => uc.useCase)
-        );
         useCases.forEach((uc) => {
           const useCase = uc.useCase;
           if (!useCase) return;
@@ -341,11 +332,6 @@ export default function AgentHistoricalAnalytics({
 
         // Fetch tasks from all agent runs using the agent-runs endpoint
         // This endpoint supports website and useCase filtering
-        console.log(
-          `Fetching tasks for website: "${website}", useCase: "${useCase}"`
-        );
-        console.log(`Agent run IDs:`, aggregatedData.runIds);
-
         const tasksPerRun = await Promise.all(
           aggregatedData.runIds.map((runId) =>
             agentRunsService
@@ -356,9 +342,6 @@ export default function AgentHistoricalAnalytics({
               })
               .then((res) => {
                 const tasks = (res.tasks || []) as TaskData[];
-                console.log(
-                  `Tasks from run ${runId}: ${tasks.length} tasks (${website} / ${useCase})`
-                );
                 return tasks;
               })
               .catch((err) => {
@@ -366,12 +349,6 @@ export default function AgentHistoricalAnalytics({
                 return [];
               })
           )
-        );
-
-        const totalTasks = tasksPerRun.flat().length;
-        console.log(
-          `Total tasks fetched for ${website}/${useCase}:`,
-          totalTasks
         );
 
         // Flatten and sort all tasks by score
@@ -524,15 +501,18 @@ export default function AgentHistoricalAnalytics({
           const overallSuccessRate =
             totalTasks > 0 ? (totalCompleted / totalTasks) * 100 : 0;
 
-          // Prepare donut data for each website
-          const donutData = displayedWebsites.map((ws, idx) => ({
-            name: ws.displayName,
-            value: ws.completedTasks,
-            fill: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-            stroke: PROGRESS_COLORS[idx % PROGRESS_COLORS.length],
-            percentage:
-              ws.totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
-          }));
+          // Prepare donut data for each website using their specific colors
+          const donutData = displayedWebsites.map((ws) => {
+            const projectColors = getProjectColors(ws.website);
+            return {
+              name: ws.displayName,
+              value: ws.completedTasks,
+              fill: projectColors.mainColor,
+              stroke: projectColors.mainColor,
+              percentage:
+                ws.totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
+            };
+          });
 
           return (
             <div className="relative text-white/80">
@@ -546,8 +526,6 @@ export default function AgentHistoricalAnalytics({
                       paddingAngle={donutData.length > 1 ? 5 : 0}
                       cornerRadius={30}
                       dataKey="value"
-                      stroke="#1e293b"
-                      strokeWidth={2}
                       isAnimationActive={true}
                     >
                       <Label
@@ -667,18 +645,8 @@ export default function AgentHistoricalAnalytics({
                   className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${ws.successRate}%`,
-                    background: isHighPerformance
-                      ? "linear-gradient(to right, #10B981, #34D399)"
-                      : isMediumPerformance
-                        ? "linear-gradient(to right, #F59E0B, #FBBF24)"
-                        : "linear-gradient(to right, #EF4444, #F87171)",
-                    boxShadow: `0 0 12px ${
-                      isHighPerformance
-                        ? "#10B98166"
-                        : isMediumPerformance
-                          ? "#F59E0B66"
-                          : "#EF444466"
-                    }`,
+                    backgroundColor: projectColors.mainColor,
+                    boxShadow: `0 0 12px ${projectColors.mainColor}66`,
                   }}
                 />
               </div>

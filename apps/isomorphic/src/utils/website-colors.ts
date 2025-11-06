@@ -34,18 +34,10 @@ export function formatWebsiteName(name?: string | null): string {
   const portMatch = name.match(/localhost:(\d+)/);
   if (portMatch) {
     const port = portMatch[1];
-    const result = LOCALHOST_PORT_MAPPING[port] || `Web Project (${port})`;
-    // Debug temporal
-    if (port === "8000") {
-      console.log("🔄 Converting localhost:8000 to:", result);
-    }
-    return result;
+    return LOCALHOST_PORT_MAPPING[port] || `Web Project (${port})`;
   }
 
-  const result = name.charAt(0).toUpperCase() + name.slice(1);
-  // Debug temporal para ver qué nombres llegan
-  console.log("🏷️ Formatting website name:", name, "->", result);
-  return result;
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 export interface ProjectColors {
@@ -83,21 +75,10 @@ function hexToTailwindColor(hex: string): string {
  * Retorna el color hex principal y el color dotColor
  */
 export function getProjectColors(projectName: string): ProjectColors {
-  // Buscar en websitesData por nombre
-  const website = websitesData.find((w) => w.name === projectName);
-
-  // Debug temporal
-  if (projectName === "AutoCinema") {
-    console.log("🎬 AutoCinema color from websitesData:", website?.color);
-  }
-
-  // Forzar púrpura para AutoCinema temporalmente
-  if (projectName === "AutoCinema") {
-    return {
-      dotColor: "#9333EA",
-      mainColor: "#9333EA",
-    };
-  }
+  // Buscar en websitesData por nombre (case-insensitive)
+  const website = websitesData.find(
+    (w) => w.name.toLowerCase() === projectName.toLowerCase()
+  );
 
   if (website?.color) {
     return {
@@ -117,7 +98,9 @@ export function getProjectColors(projectName: string): ProjectColors {
  * Obtiene solo el color principal del proyecto
  */
 export function getProjectMainColor(projectName: string): string {
-  const website = websitesData.find((w) => w.name === projectName);
+  const website = websitesData.find(
+    (w) => w.name.toLowerCase() === projectName.toLowerCase()
+  );
   return website?.color || "#64748b";
 }
 
@@ -125,7 +108,9 @@ export function getProjectMainColor(projectName: string): string {
  * Obtiene información completa del proyecto por nombre
  */
 export function getProjectInfo(projectName: string) {
-  return websitesData.find((w) => w.name === projectName);
+  return websitesData.find(
+    (w) => w.name.toLowerCase() === projectName.toLowerCase()
+  );
 }
 
 /**
