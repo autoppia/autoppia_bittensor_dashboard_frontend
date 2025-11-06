@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Select, Text } from "rizzui";
-import { PiChartBar, PiClock } from "react-icons/pi";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Select, Text, Button } from "rizzui";
+import {
+  PiChartBar,
+  PiClock,
+  PiCaretDown,
+  PiCaretRight,
+  PiEyeDuotone,
+} from "react-icons/pi";
+import { useRouter } from "next/navigation";
 import cn from "@core/utils/class-names";
 import { formatWebsiteName, getProjectColors } from "@/utils/website-colors";
 import { agentRunsService } from "@/services/api/agent-runs.service";
+import { tasksService } from "@/services/api/tasks.service";
 import type { AgentRunStats } from "@/services/api/types/agent-runs";
+import type { TaskData } from "@/services/api/types/tasks";
+import { routes } from "@/config/routes";
 import Placeholder from "@/app/shared/placeholder";
 
 interface AgentHistoricalAnalyticsProps {
@@ -15,7 +25,8 @@ interface AgentHistoricalAnalyticsProps {
 }
 
 interface WebsiteStats {
-  website: string;
+  website: string; // Original website name for API calls
+  displayName: string; // Formatted name for display
   totalTasks: number;
   completedTasks: number;
   successRate: number;
@@ -25,7 +36,7 @@ interface WebsiteStats {
 
 interface UseCaseStats {
   useCase: string;
-  website: string;
+  website: string; // Original website name for API calls
   totalTasks: number;
   completedTasks: number;
   successRate: number;
@@ -37,12 +48,31 @@ export default function AgentHistoricalAnalytics({
   agentId,
   className,
 }: AgentHistoricalAnalyticsProps) {
+  const router = useRouter();
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [aggregatedData, setAggregatedData] = useState<{
     stats: AgentRunStats[];
+    runIds: string[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Expandable state
+  const [expandedWebsite, setExpandedWebsite] = useState<string | null>(null);
+  const [expandedUseCase, setExpandedUseCase] = useState<string | null>(null);
+
+  // Task data state
+  const [useCaseTasks, setUseCaseTasks] = useState<{
+    [key: string]: {
+      allTasks: TaskData[]; // All fetched tasks
+      tasks: TaskData[]; // Current page tasks
+      loading: boolean;
+      total: number;
+      page: number;
+    };
+  }>({});
+
+  const TASKS_PER_PAGE = 10;
 
   // Fetch all agent runs and their stats for this agent
   useEffect(() => {
@@ -63,10 +93,13 @@ export default function AgentHistoricalAnalytics({
         if (!isMounted) return;
 
         if (!runsResponse?.runs || runsResponse.runs.length === 0) {
-          setAggregatedData({ stats: [] });
+          setAggregatedData({ stats: [], runIds: [] });
           setLoading(false);
           return;
         }
+
+        // Extract run IDs for task filtering
+        const runIds = runsResponse.runs.map((run) => run.runId);
 
         // Fetch stats for each run (in batches to avoid overwhelming the API)
         const statsPromises = runsResponse.runs.map((run) =>
@@ -82,7 +115,7 @@ export default function AgentHistoricalAnalytics({
           (stats): stats is NonNullable<typeof stats> => stats !== null
         );
 
-        setAggregatedData({ stats: validStats });
+        setAggregatedData({ stats: validStats, runIds });
       } catch (err) {
         if (isMounted) {
           setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -114,13 +147,19 @@ export default function AgentHistoricalAnalytics({
     aggregatedData.stats.forEach((stats) => {
       const performanceByWebsite = stats.performanceByWebsite || [];
 
+      console.log("Processing stats from run:", stats.runId);
+      console.log("Performance by website:", performanceByWebsite);
+
       // Process website-level stats
       performanceByWebsite.forEach((ws) => {
         const website = ws.website;
         if (!website) return;
 
+        console.log(`Processing website: "${website}"`);
+
         const existing = websiteMap.get(website) || {
-          website,
+          website, // Original lowercase name for API calls
+          displayName: formatWebsiteName(website), // Formatted name for display
           totalTasks: 0,
           completedTasks: 0,
           successRate: 0,
@@ -130,7 +169,7 @@ export default function AgentHistoricalAnalytics({
 
         const tasks = ws.tasks || 0;
         const completed = ws.successful || 0;
-        const score = (ws.averageScore || 0) * 100; // Convert to percentage
+        const score = ws.averageScore || 0; // Already a percentage from backend
         const time = ws.averageDuration || 0;
 
         const prevTotal = existing.totalTasks;
@@ -152,6 +191,10 @@ export default function AgentHistoricalAnalytics({
 
         // Process use case stats
         const useCases = ws.useCases || [];
+        console.log(
+          `  Use cases for ${website}:`,
+          useCases.map((uc) => uc.useCase)
+        );
         useCases.forEach((uc) => {
           const useCase = uc.useCase;
           if (!useCase) return;
@@ -169,7 +212,7 @@ export default function AgentHistoricalAnalytics({
 
           const ucTasks = uc.tasks || 0;
           const ucCompleted = uc.successful || 0;
-          const ucScore = (uc.averageScore || 0) * 100; // Convert to percentage
+          const ucScore = uc.averageScore || 0; // Already a percentage from backend
           const ucTime = uc.averageDuration || 0;
 
           const prevUCTotal = existingUC.totalTasks;
@@ -226,6 +269,181 @@ export default function AgentHistoricalAnalytics({
     });
     return options;
   }, [websiteStats]);
+
+  // Fetch tasks for a specific use case
+  const fetchUseCaseTasks = useCallback(
+    async (website: string, useCase: string, page: number = 1) => {
+      const key = `${website}:${useCase}`;
+
+      if (!aggregatedData?.runIds || aggregatedData.runIds.length === 0) {
+        setUseCaseTasks((prev) => ({
+          ...prev,
+          [key]: {
+            allTasks: [],
+            tasks: [],
+            loading: false,
+            total: 0,
+            page,
+          },
+        }));
+        return;
+      }
+
+      // Check if we already have cached tasks - if so, just paginate
+      setUseCaseTasks((prev) => {
+        const cached = prev[key];
+        if (cached?.allTasks && cached.allTasks.length > 0) {
+          // Just paginate through cached results
+          const startIndex = (page - 1) * TASKS_PER_PAGE;
+          const endIndex = startIndex + TASKS_PER_PAGE;
+          const paginatedTasks = cached.allTasks.slice(startIndex, endIndex);
+
+          return {
+            ...prev,
+            [key]: {
+              ...cached,
+              tasks: paginatedTasks,
+              page,
+              loading: false,
+            },
+          };
+        }
+
+        // Not cached, set loading state
+        return {
+          ...prev,
+          [key]: {
+            ...prev[key],
+            allTasks: [],
+            tasks: [],
+            loading: true,
+            total: 0,
+            page,
+          },
+        };
+      });
+
+      try {
+        // Wait a tick to ensure state is updated
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Double-check if data was cached while we waited
+        let shouldFetch = true;
+        setUseCaseTasks((prev) => {
+          if (prev[key]?.allTasks && prev[key].allTasks.length > 0) {
+            shouldFetch = false;
+          }
+          return prev;
+        });
+
+        if (!shouldFetch) return;
+
+        // Fetch tasks from all agent runs using the agent-runs endpoint
+        // This endpoint supports website and useCase filtering
+        console.log(
+          `Fetching tasks for website: "${website}", useCase: "${useCase}"`
+        );
+        console.log(`Agent run IDs:`, aggregatedData.runIds);
+
+        const tasksPerRun = await Promise.all(
+          aggregatedData.runIds.map((runId) =>
+            agentRunsService
+              .getAgentRunTasks(runId, {
+                limit: 1000, // Get all tasks from this run
+                website,
+                useCase,
+              })
+              .then((res) => {
+                const tasks = (res.tasks || []) as TaskData[];
+                console.log(
+                  `Tasks from run ${runId}: ${tasks.length} tasks (${website} / ${useCase})`
+                );
+                return tasks;
+              })
+              .catch((err) => {
+                console.error(`Error fetching tasks from run ${runId}:`, err);
+                return [];
+              })
+          )
+        );
+
+        const totalTasks = tasksPerRun.flat().length;
+        console.log(
+          `Total tasks fetched for ${website}/${useCase}:`,
+          totalTasks
+        );
+
+        // Flatten and sort all tasks by score
+        const allTasks = tasksPerRun
+          .flat()
+          .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        // Paginate client-side
+        const startIndex = (page - 1) * TASKS_PER_PAGE;
+        const endIndex = startIndex + TASKS_PER_PAGE;
+        const paginatedTasks = allTasks.slice(startIndex, endIndex);
+
+        setUseCaseTasks((prev) => ({
+          ...prev,
+          [key]: {
+            allTasks, // Cache all tasks
+            tasks: paginatedTasks,
+            loading: false,
+            total: allTasks.length,
+            page,
+          },
+        }));
+      } catch (err) {
+        console.error("Failed to fetch tasks:", err);
+        setUseCaseTasks((prev) => ({
+          ...prev,
+          [key]: {
+            allTasks: [],
+            tasks: [],
+            loading: false,
+            total: 0,
+            page,
+          },
+        }));
+      }
+    },
+    [aggregatedData?.runIds]
+  );
+
+  // Toggle use case expansion
+  const toggleUseCase = useCallback(
+    (website: string, useCase: string) => {
+      const key = `${website}:${useCase}`;
+
+      if (expandedUseCase === key) {
+        setExpandedUseCase(null);
+      } else {
+        setExpandedUseCase(key);
+        // Fetch tasks if not already loaded
+        if (!useCaseTasks[key]) {
+          fetchUseCaseTasks(website, useCase, 1);
+        }
+      }
+    },
+    [expandedUseCase, useCaseTasks, fetchUseCaseTasks]
+  );
+
+  // Handle page change
+  const handlePageChange = useCallback(
+    (website: string, useCase: string, newPage: number) => {
+      const key = `${website}:${useCase}`;
+      const taskData = useCaseTasks[key];
+
+      if (!taskData) {
+        fetchUseCaseTasks(website, useCase, newPage);
+        return;
+      }
+
+      // Since we fetch all tasks at once, we just need to re-slice for pagination
+      fetchUseCaseTasks(website, useCase, newPage);
+    },
+    [fetchUseCaseTasks, useCaseTasks]
+  );
 
   if (loading) {
     return (
@@ -307,7 +525,7 @@ export default function AgentHistoricalAnalytics({
                     style={{ backgroundColor: projectColors.dotColor }}
                   />
                   <span className="text-base sm:text-lg font-semibold text-white">
-                    {formatWebsiteName(ws.website)}
+                    {ws.displayName}
                   </span>
                   <span className="text-xs sm:text-sm text-white/60 font-medium">
                     {ws.totalTasks} {ws.totalTasks === 1 ? "task" : "tasks"}
@@ -364,38 +582,260 @@ export default function AgentHistoricalAnalytics({
               {/* Use Cases Breakdown */}
               {filteredUseCases.filter((uc) => uc.website === ws.website)
                 .length > 0 && (
-                <div className="space-y-2">
-                  <Text className="text-xs font-semibold text-white/70 uppercase tracking-wider">
-                    Use Cases
-                  </Text>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
-                    {filteredUseCases
-                      .filter((uc) => uc.website === ws.website)
-                      .map((uc, ucIndex) => (
-                        <div
-                          key={`${uc.useCase}-${ucIndex}`}
-                          className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <Text className="text-xs sm:text-sm font-medium text-white truncate flex-1">
-                              {uc.useCase}
-                            </Text>
-                            <Text className="text-xs font-semibold text-white ml-2">
-                              {uc.successRate.toFixed(0)}%
-                            </Text>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] sm:text-xs text-white/60">
-                            <span>
-                              {uc.completedTasks}/{uc.totalTasks} tasks
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <PiClock className="w-3 h-3" />
-                              {uc.avgTime.toFixed(1)}s
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Text className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                      Use Cases
+                    </Text>
+                    <Button
+                      size="sm"
+                      variant="text"
+                      onClick={() => {
+                        const newState =
+                          expandedWebsite === ws.website ? null : ws.website;
+                        setExpandedWebsite(newState);
+
+                        // Auto-load tasks for all use cases when expanding
+                        if (newState === ws.website) {
+                          filteredUseCases
+                            .filter((uc) => uc.website === ws.website)
+                            .forEach((uc) => {
+                              const key = `${uc.website}:${uc.useCase}`;
+                              // Only fetch if not already loaded
+                              if (!useCaseTasks[key]) {
+                                fetchUseCaseTasks(uc.website, uc.useCase, 1);
+                              }
+                            });
+                        }
+                      }}
+                      className="text-white/60 hover:text-white text-xs flex items-center gap-1"
+                    >
+                      {expandedWebsite === ws.website ? (
+                        <>
+                          <PiCaretDown className="w-4 h-4" />
+                          Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <PiCaretRight className="w-4 h-4" />
+                          Show Details
+                        </>
+                      )}
+                    </Button>
                   </div>
+
+                  {expandedWebsite === ws.website ? (
+                    <div className="space-y-2">
+                      {filteredUseCases
+                        .filter((uc) => uc.website === ws.website)
+                        .map((uc, ucIndex) => {
+                          const key = `${uc.website}:${uc.useCase}`;
+                          const taskData = useCaseTasks[key];
+
+                          return (
+                            <div
+                              key={`${uc.useCase}-${ucIndex}`}
+                              className="relative rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+                            >
+                              {/* Use Case Header - Simplified */}
+                              <div className="p-3 flex items-center justify-between bg-white/5">
+                                <div className="flex-1">
+                                  <Text className="text-xs sm:text-sm font-semibold text-white">
+                                    {uc.useCase}
+                                  </Text>
+                                  <Text className="text-[10px] sm:text-xs text-white/60 mt-0.5">
+                                    {uc.completedTasks}/{uc.totalTasks} tasks
+                                  </Text>
+                                </div>
+                              </div>
+
+                              {/* Task Table - Always show when website is expanded */}
+                              <div className="border-t border-white/10 bg-black/20">
+                                {taskData?.loading ? (
+                                  <div className="p-4">
+                                    <Placeholder className="h-[200px] rounded-lg" />
+                                  </div>
+                                ) : taskData?.tasks?.length > 0 ? (
+                                  <>
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm table-fixed min-w-[700px]">
+                                        <thead className="bg-white/5">
+                                          <tr>
+                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                                              Task ID
+                                            </th>
+                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                              Prompt
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                                              Score
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                                              Duration
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
+                                              Action
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {taskData.tasks.map((task) => (
+                                            <tr
+                                              key={task.taskId}
+                                              className="border-t border-white/5 hover:bg-white/5 transition-colors"
+                                            >
+                                              <td className="p-2 sm:p-3">
+                                                <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
+                                                  {task.taskId}
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3">
+                                                <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
+                                                  {task.prompt || "—"}
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <span
+                                                  className={cn(
+                                                    "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold",
+                                                    (task.score || 0) >= 0.8
+                                                      ? "bg-emerald-500/20 text-emerald-300"
+                                                      : (task.score || 0) >= 0.5
+                                                        ? "bg-yellow-500/20 text-yellow-300"
+                                                        : "bg-red-500/20 text-red-300"
+                                                  )}
+                                                >
+                                                  {Math.round(
+                                                    (task.score || 0) * 100
+                                                  )}
+                                                  %
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <span className="text-[10px] sm:text-xs text-white/70">
+                                                  {task.duration?.toFixed(1) ||
+                                                    "—"}
+                                                  s
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <Button
+                                                  size="sm"
+                                                  variant="text"
+                                                  onClick={() =>
+                                                    router.push(
+                                                      `${routes.tasks}/${task.taskId}`
+                                                    )
+                                                  }
+                                                  className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+                                                >
+                                                  <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                  <span className="hidden sm:inline">
+                                                    Inspect
+                                                  </span>
+                                                  <span className="sm:hidden">
+                                                    View
+                                                  </span>
+                                                </Button>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+
+                                    {/* Pagination */}
+                                    {taskData.total > TASKS_PER_PAGE && (
+                                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
+                                        <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
+                                          Showing{" "}
+                                          {(taskData.page - 1) *
+                                            TASKS_PER_PAGE +
+                                            1}{" "}
+                                          to{" "}
+                                          {Math.min(
+                                            taskData.page * TASKS_PER_PAGE,
+                                            taskData.total
+                                          )}{" "}
+                                          of {taskData.total} tasks
+                                        </Text>
+                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() =>
+                                              handlePageChange(
+                                                uc.website,
+                                                uc.useCase,
+                                                taskData.page - 1
+                                              )
+                                            }
+                                            disabled={taskData.page === 1}
+                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+                                          >
+                                            Previous
+                                          </Button>
+                                          <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
+                                            Page {taskData.page} of{" "}
+                                            {Math.ceil(
+                                              taskData.total / TASKS_PER_PAGE
+                                            )}
+                                          </span>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() =>
+                                              handlePageChange(
+                                                uc.website,
+                                                uc.useCase,
+                                                taskData.page + 1
+                                              )
+                                            }
+                                            disabled={
+                                              taskData.page >=
+                                              Math.ceil(
+                                                taskData.total / TASKS_PER_PAGE
+                                              )
+                                            }
+                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+                                          >
+                                            Next
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="p-4 text-center text-white/60 text-sm">
+                                    No tasks found for this use case
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+                      {filteredUseCases
+                        .filter((uc) => uc.website === ws.website)
+                        .map((uc, ucIndex) => (
+                          <div
+                            key={`${uc.useCase}-${ucIndex}`}
+                            className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                          >
+                            <div className="flex items-center justify-between">
+                              <Text className="text-xs sm:text-sm font-medium text-white truncate flex-1">
+                                {uc.useCase}
+                              </Text>
+                              <Text className="text-xs text-white/60 ml-2">
+                                {uc.completedTasks}/{uc.totalTasks} tasks
+                              </Text>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
