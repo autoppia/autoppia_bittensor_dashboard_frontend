@@ -707,16 +707,31 @@ export default function AgentHistoricalAnalytics({
                 };
               });
 
+          // If no data or all values are 0, show a neutral empty state
+          const hasData =
+            donutData.length > 0 && donutData.some((d) => d.value > 0);
+          const displayData = hasData
+            ? donutData
+            : [
+                {
+                  name: "No Data",
+                  value: 1,
+                  fill: "#64748B", // slate-500
+                  stroke: "#64748B",
+                  percentage: 0,
+                },
+              ];
+
           return (
             <div className="relative text-white/80">
               <div className="h-[240px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={donutData}
+                      data={displayData}
                       innerRadius={85}
                       outerRadius={100}
-                      paddingAngle={donutData.length > 1 ? 5 : 0}
+                      paddingAngle={hasData && displayData.length > 1 ? 5 : 0}
                       cornerRadius={30}
                       dataKey="value"
                       isAnimationActive={true}
@@ -732,7 +747,7 @@ export default function AgentHistoricalAnalytics({
                           />
                         )}
                       />
-                      {donutData.map((entry, idx) => (
+                      {displayData.map((entry, idx) => (
                         <Cell
                           key={`cell-${idx}`}
                           fill={entry.fill}
@@ -746,9 +761,9 @@ export default function AgentHistoricalAnalytics({
               </div>
 
               {/* Legend */}
-              {donutData.length > 0 && (
+              {hasData && (
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {donutData.map((item, idx) => (
+                  {displayData.map((item, idx) => (
                     <div
                       key={idx}
                       className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
@@ -768,6 +783,9 @@ export default function AgentHistoricalAnalytics({
                     </div>
                   ))}
                 </div>
+              )}
+              {!hasData && (
+                <div className="mt-6 text-center text-white/40 text-sm"></div>
               )}
             </div>
           );
