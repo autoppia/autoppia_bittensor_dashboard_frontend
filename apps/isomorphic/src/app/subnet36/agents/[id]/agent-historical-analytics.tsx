@@ -583,13 +583,45 @@ export default function AgentHistoricalAnalytics({
       </div>
 
       {/* Performance Breakdown Pie Chart */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm">
+      <div
+        className="relative overflow-hidden rounded-2xl border p-6 backdrop-blur-sm"
+        style={
+          selectedWebsite && displayedWebsites[0]
+            ? (() => {
+                const projectColors = getProjectColors(
+                  displayedWebsites[0].website
+                );
+                return {
+                  borderColor: `${projectColors.mainColor}99`,
+                  background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`,
+                };
+              })()
+            : {
+                borderColor: "rgba(255, 255, 255, 0.15)",
+                background: "rgba(255, 255, 255, 0.05)",
+              }
+        }
+      >
         <div className="mb-4">
-          <h3 className="text-lg font-bold text-white">
-            Performance Breakdown
-          </h3>
+          <div className="flex items-center gap-2">
+            {selectedWebsite && displayedWebsites[0] && (
+              <div
+                className="w-3 h-3 rounded-full shadow-sm flex-shrink-0"
+                style={{
+                  backgroundColor: getProjectColors(
+                    displayedWebsites[0].website
+                  ).dotColor,
+                }}
+              />
+            )}
+            <h3 className="text-lg font-bold text-white">
+              Performance Breakdown
+            </h3>
+          </div>
           <p className="text-xs text-white/60">
-            Overall success rate distribution
+            {selectedWebsite
+              ? "Success rate by use case"
+              : "Success rate by website"}
           </p>
         </div>
 
@@ -606,18 +638,66 @@ export default function AgentHistoricalAnalytics({
           const overallSuccessRate =
             totalTasks > 0 ? (totalCompleted / totalTasks) * 100 : 0;
 
-          // Prepare donut data for each website using their specific colors
-          const donutData = displayedWebsites.map((ws) => {
-            const projectColors = getProjectColors(ws.website);
-            return {
-              name: ws.displayName,
-              value: ws.completedTasks,
-              fill: projectColors.mainColor,
-              stroke: projectColors.mainColor,
-              percentage:
-                ws.totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
-            };
-          });
+          // Helper function to generate color variations
+          const generateColorVariations = (
+            baseColor: string,
+            count: number
+          ) => {
+            // Convert hex to RGB
+            const hex = baseColor.replace("#", "");
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+
+            const colors: string[] = [];
+            for (let i = 0; i < count; i++) {
+              // Generate variations by adjusting brightness
+              const factor = 0.6 + (i / Math.max(count - 1, 1)) * 0.7; // Range from 0.6 to 1.3
+              const newR = Math.min(255, Math.round(r * factor));
+              const newG = Math.min(255, Math.round(g * factor));
+              const newB = Math.min(255, Math.round(b * factor));
+              colors.push(
+                `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`
+              );
+            }
+            return colors;
+          };
+
+          // Prepare donut data based on selection
+          // If website is selected, show use cases; otherwise show websites
+          const donutData = selectedWebsite
+            ? // Show use cases for selected website with color variations
+              (() => {
+                const selectedWs = displayedWebsites[0];
+                if (!selectedWs) return [];
+
+                const projectColors = getProjectColors(selectedWs.website);
+                const colorVariations = generateColorVariations(
+                  projectColors.mainColor,
+                  filteredUseCases.length
+                );
+
+                return filteredUseCases.map((uc, idx) => ({
+                  name: uc.useCase,
+                  value: uc.completedTasks,
+                  fill: colorVariations[idx] || projectColors.mainColor,
+                  stroke: colorVariations[idx] || projectColors.mainColor,
+                  percentage:
+                    totalTasks > 0 ? (uc.completedTasks / totalTasks) * 100 : 0,
+                }));
+              })()
+            : // Show websites with their specific colors
+              displayedWebsites.map((ws) => {
+                const projectColors = getProjectColors(ws.website);
+                return {
+                  name: ws.displayName,
+                  value: ws.completedTasks,
+                  fill: projectColors.mainColor,
+                  stroke: projectColors.mainColor,
+                  percentage:
+                    totalTasks > 0 ? (ws.completedTasks / totalTasks) * 100 : 0,
+                };
+              });
 
           return (
             <div className="relative text-white/80">
