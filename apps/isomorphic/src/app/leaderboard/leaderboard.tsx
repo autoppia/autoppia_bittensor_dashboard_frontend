@@ -968,6 +968,15 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Use Case */}
+                    <div className="mb-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/30">
+                        <span className="text-xs font-bold uppercase tracking-wide text-cyan-300">
+                          {task.task}
+                        </span>
+                      </span>
+                    </div>
+
                     {/* Prompt */}
                     <div className="relative mt-1 rounded-xl border border-cyan-400/20 bg-slate-900/40 p-3 h-full">
                       <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">
