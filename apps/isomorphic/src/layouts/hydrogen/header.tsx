@@ -143,7 +143,7 @@ export default function Header() {
             className="w-[120px] sm:w-[155px] me-2 sm:me-3 xl:me-5 flex-shrink-0"
           >
             <Image
-              src="/logo.webp"
+              src="/iwap_logo.webp"
               alt="Autoppia Logo"
               width={155}
               height={36}

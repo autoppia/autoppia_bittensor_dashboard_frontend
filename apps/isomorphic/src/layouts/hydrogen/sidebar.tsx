@@ -21,7 +21,12 @@ export default function Sidebar({ className }: { className?: string }) {
           aria-label="Site Logo"
           className="text-slate-100 transition-colors hover:text-white"
         >
-          <Image src="/logo.webp" alt="Autoppia Logo" width={155} height={36} />
+          <Image
+            src="/iwap_logo.webp"
+            alt="Autoppia Logo"
+            width={155}
+            height={36}
+          />
         </Link>
       </div>
 
