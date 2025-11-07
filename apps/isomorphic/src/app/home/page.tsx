@@ -68,7 +68,6 @@ const IWA_CONSTRAINTS: string[] = [
   "Expensive scaling: growing coverage requires proportional human effort.",
 ];
 
-
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
@@ -165,25 +164,19 @@ export default function LandingPage() {
             )}
           >
             <Link href={routes.overview} className="w-full sm:w-auto">
-              <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-[#20b2aa] hover:bg-[#15968f] hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-teal-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-200/70"
-              >
+              <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-[#20b2aa] hover:bg-[#15968f] hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-teal-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-200/70">
                 <LuNetwork className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
                 SUBNET 36
               </button>
             </Link>
             <Link href={routes.leaderboard} className="w-full sm:w-auto">
-              <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] hover:from-[#8b5f00] hover:via-[#a16207] hover:to-[#c2410c] hover:scale-105 hover:shadow-lg hover:shadow-amber-600/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-300/70"
-              >
+              <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] hover:from-[#8b5f00] hover:via-[#a16207] hover:to-[#c2410c] hover:scale-105 hover:shadow-lg hover:shadow-amber-600/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-300/70">
                 <LuTrophy className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
                 LEADERBOARD
               </button>
             </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
-              <button
-                className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-purple-500/70 via-pink-500/70 to-rose-500/70 border border-purple-500/40 hover:from-purple-500 hover:via-pink-500 hover:to-rose-500 hover:border-purple-400 hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-pink-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-300/70"
-              >
+              <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-purple-500/70 via-pink-500/70 to-rose-500/70 border border-purple-500/40 hover:from-purple-500 hover:via-pink-500 hover:to-rose-500 hover:border-purple-400 hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-pink-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-300/70">
                 <PiFlaskDuotone className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
                 PLAYGROUND
               </button>
@@ -513,8 +506,8 @@ export default function LandingPage() {
           <span className="text-yellow-300 font-bold sm:bg-yellow-400/20 sm:px-3 sm:py-1.5 rounded-lg sm:border sm:border-yellow-400/30">
             {websitesData.length} Demo Websites
           </span>{" "}
-          that mirror popular real-world properties and cover e-commerce,
-          dining, CRM, email, delivery, lodging, and professional networking.
+          that mirror popular real-world platforms across e-commerce, dining,
+          CRM, email, delivery, lodging, and professional networking.
           <span className="ml-1 font-bold">Mirrored</span> experiences preserve
           authentic UI flows while keeping experiments safe. Here&apos;s a
           preview of our projects:
@@ -611,7 +604,6 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
           </div>
