@@ -195,7 +195,7 @@ export default function LandingPage() {
               className="w-[120px] sm:w-[155px]"
             >
               <Image
-                src="/logo.webp"
+                src="/iwap_logo.webp"
                 alt="Autoppia Logo"
                 width={155}
                 height={36}
