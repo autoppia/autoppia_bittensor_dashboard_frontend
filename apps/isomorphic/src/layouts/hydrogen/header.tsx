@@ -184,24 +184,64 @@ export default function Header() {
             {navItems.map((item) => {
               const href = item.href;
               const isActive =
-                pathname === href ||
-                (href !== "/" && pathname.startsWith(href));
+                !item.disabled &&
+                (pathname === href ||
+                  (href !== "/" && pathname.startsWith(href)));
+
+              const itemContent = (
+                <div
+                  className={cn(
+                    "px-2 xl:px-2.5 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-1.5 text-xs xl:text-sm whitespace-nowrap",
+                    item.disabled
+                      ? "cursor-not-allowed select-none text-gray-400 bg-gray-100/60 border border-dashed border-gray-300/70 shadow-none"
+                      : isActive
+                        ? "bg-white text-black"
+                        : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
+                  )}
+                >
+                  {item.icon && (
+                    <span
+                      className={cn(
+                        "text-sm xl:text-base",
+                        item.disabled ? "text-gray-400" : undefined
+                      )}
+                    >
+                      {item.icon}
+                    </span>
+                  )}
+                  <span className="hidden 2xl:flex items-center gap-2">
+                    <span>{item.name}</span>
+                    {item.disabled && (
+                      <span className="rounded-full border border-gray-300/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-gray-500">
+                        Not available yet
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+
+              if (item.disabled) {
+                return (
+                  <Tooltip
+                    key={item.name}
+                    content={item.disabledLabel ?? "Not available yet"}
+                    placement="bottom"
+                  >
+                    <div
+                      className="flex-shrink-0 cursor-not-allowed select-none"
+                      role="link"
+                      aria-disabled="true"
+                      tabIndex={-1}
+                    >
+                      {itemContent}
+                    </div>
+                  </Tooltip>
+                );
+              }
 
               return (
                 <Link key={item.name} href={href} className="flex-shrink-0">
-                  <div
-                    className={cn(
-                      "px-2 xl:px-2.5 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-1.5 text-xs xl:text-sm whitespace-nowrap",
-                      isActive
-                        ? "bg-white text-black"
-                        : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
-                    )}
-                  >
-                    {item.icon && (
-                      <span className="text-sm xl:text-base">{item.icon}</span>
-                    )}
-                    <span className="hidden 2xl:inline">{item.name}</span>
-                  </div>
+                  {itemContent}
                 </Link>
               );
             })}

@@ -11,6 +11,7 @@ import {
   NAV_COLLECTION_EVENT,
   NAV_COLLECTION_STORAGE_KEY,
 } from "@/layouts/hydrogen/menu-items";
+import { Tooltip } from "rizzui";
 
 export function SidebarMenu() {
   const pathname = usePathname();
@@ -108,61 +109,90 @@ export function SidebarMenu() {
       {navItems.map((item) => {
         const href = item.href;
         const isActive =
-          pathname === href || (href !== "/" && pathname.startsWith(href));
+          !item.disabled &&
+          (pathname === href || (href !== "/" && pathname.startsWith(href)));
+
+        const wrapperClass = cn(
+          "relative mx-3 my-1 flex items-center px-4 py-4 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2 font-medium text-base",
+          item.disabled
+            ? "cursor-not-allowed select-none text-slate-400 rounded-md border border-white/10 bg-white/5"
+            : [
+                "group",
+                isActive
+                  ? "text-emerald-300"
+                  : "text-slate-300 hover:text-emerald-200",
+              ]
+        );
+
+        const iconClass = cn(
+          "relative z-10 mr-3 flex-shrink-0 transition-all duration-300 text-lg",
+          item.disabled
+            ? "text-slate-500"
+            : isActive
+              ? "text-emerald-300"
+              : "text-slate-400 group-hover:text-emerald-200"
+        );
+
+        const labelClass = cn(
+          "relative z-10 transition-all duration-300 flex items-center gap-2",
+          item.disabled
+            ? "font-medium text-slate-300"
+            : isActive
+              ? "font-semibold text-white"
+              : "font-medium text-slate-200 group-hover:text-white group-hover:font-semibold"
+        );
+
+        const activeIndicatorClass = cn(
+          "absolute left-0 top-1/2 z-0 h-10 w-1 -translate-y-1/2 transform rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300 shadow-[4px_0_16px_rgba(16,185,129,0.4)]",
+          item.disabled
+            ? "hidden"
+            : isActive
+              ? "opacity-100 scale-y-100"
+              : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
+        );
+
+        const hoverGlowClass = cn(
+          "absolute inset-0 z-0 rounded-md bg-emerald-400/10 backdrop-blur-[1px] transition-all duration-300",
+          item.disabled
+            ? "hidden"
+            : isActive
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100"
+        );
+
+        const itemBody = (
+          <div className={wrapperClass}>
+            {item.icon && <span className={iconClass}>{item.icon}</span>}
+            <span className={labelClass}>
+              {item.name}
+              {item.disabled && (
+                <span className="rounded-full border border-slate-400/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-300">
+                  Not available yet
+                </span>
+              )}
+            </span>
+            <div className={activeIndicatorClass}></div>
+            <div className={hoverGlowClass}></div>
+          </div>
+        );
+
+        if (item.disabled) {
+          return (
+            <Tooltip
+              key={item.name}
+              content={item.disabledLabel ?? "Not available yet"}
+              placement="right"
+            >
+              <div role="link" aria-disabled="true" tabIndex={-1}>
+                {itemBody}
+              </div>
+            </Tooltip>
+          );
+        }
 
         return (
-          <Link
-            key={item.name}
-            href={href}
-            className={cn(
-              "group relative mx-3 my-1 flex items-center px-4 py-4 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2",
-              "font-medium text-base",
-              isActive
-                ? "text-emerald-300"
-                : "text-slate-300 hover:text-emerald-200"
-            )}
-          >
-            {item.icon && (
-              <span
-                className={cn(
-                  "relative z-10 mr-3 flex-shrink-0 transition-all duration-300",
-                  "text-lg",
-                  isActive
-                    ? "text-emerald-300"
-                    : "text-slate-400 group-hover:text-emerald-200"
-                )}
-              >
-                {item.icon}
-              </span>
-            )}
-
-            <span
-              className={cn(
-                "relative z-10 transition-all duration-300",
-                isActive
-                  ? "font-semibold text-white"
-                  : "font-medium text-slate-200 group-hover:text-white group-hover:font-semibold"
-              )}
-            >
-              {item.name}
-            </span>
-
-            <div
-              className={cn(
-                "absolute left-0 top-1/2 z-0 h-10 w-1 -translate-y-1/2 transform rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300",
-                "shadow-[4px_0_16px_rgba(16,185,129,0.4)]",
-                isActive
-                  ? "opacity-100 scale-y-100"
-                  : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
-              )}
-            ></div>
-
-            <div
-              className={cn(
-                "absolute inset-0 z-0 rounded-md bg-emerald-400/10 backdrop-blur-[1px] transition-all duration-300",
-                isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              )}
-            ></div>
+          <Link key={item.name} href={href}>
+            {itemBody}
           </Link>
         );
       })}

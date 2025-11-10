@@ -14,6 +14,8 @@ export type MenuItemType = {
   name: string;
   href: string;
   icon: React.ReactNode;
+  disabled?: boolean;
+  disabledLabel?: string;
 };
 
 export type MenuNamespace = "subnet36" | "iwa";
@@ -54,6 +56,8 @@ export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
       name: "Leaderboard",
       href: routes.leaderboard,
       icon: <LuTrophy />,
+      disabled: true,
+      disabledLabel: "Not available yet",
     },
 
     {
