@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import type { IconType } from "react-icons";
 import { Title, Text } from "rizzui/typography";
-import { Button } from "rizzui";
+import { Button, Tooltip } from "rizzui";
 import Link from "next/link";
 import Image from "next/image";
 import { routes } from "@/config/routes";
@@ -169,12 +169,23 @@ export default function LandingPage() {
                 SUBNET 36
               </button>
             </Link>
-            <Link href={routes.leaderboard} className="w-full sm:w-auto">
-              <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] hover:from-[#8b5f00] hover:via-[#a16207] hover:to-[#c2410c] hover:scale-105 hover:shadow-lg hover:shadow-amber-600/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-300/70">
-                <LuTrophy className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
-                LEADERBOARD
-              </button>
-            </Link>
+            <Tooltip content="Leaderboard not available yet" placement="top">
+              <div className="w-full sm:w-auto">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] cursor-not-allowed opacity-60 shadow-sm border border-amber-500/40"
+                >
+                  <LuTrophy className="h-5 w-5 text-white" />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>LEADERBOARD</span>
+                    <span className="text-[10px] uppercase font-semibold tracking-[0.28em] text-white/80">
+                      Coming soon
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </Tooltip>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
               <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-purple-500/70 via-pink-500/70 to-rose-500/70 border border-purple-500/40 hover:from-purple-500 hover:via-pink-500 hover:to-rose-500 hover:border-purple-400 hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-pink-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-300/70">
                 <PiFlaskDuotone className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
@@ -654,13 +665,25 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <Link href={routes.leaderboard}>
-                <button className="px-2 sm:px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm group hover:from-yellow-500 hover:to-orange-500 hover:border-yellow-500 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/50">
-                  <LuTrophy className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  VIEW LEADERBOARD
-                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+              <Tooltip
+                content="Leaderboard not available yet"
+                placement="top"
+              >
+                <button
+                  type="button"
+                  disabled
+                  className="px-2 sm:px-8 py-4 bg-gradient-to-r from-yellow-500/60 to-orange-500/60 border-2 border-yellow-500/60 rounded-xl text-white font-bold flex items-center gap-2 backdrop-blur-sm cursor-not-allowed opacity-70"
+                >
+                  <LuTrophy className="h-5 w-5 text-white" />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>VIEW LEADERBOARD</span>
+                    <span className="text-[10px] uppercase font-semibold tracking-[0.28em] text-white/80">
+                      Coming soon
+                    </span>
+                  </span>
+                  <FaArrowRight />
                 </button>
-              </Link>
+              </Tooltip>
             </div>
 
             <div className="relative">
