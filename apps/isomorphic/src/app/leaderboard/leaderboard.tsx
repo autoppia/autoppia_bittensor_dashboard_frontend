@@ -254,6 +254,45 @@ const benchmarkTasks = [
 const lastBenchmarkUpdate = "November 1, 2025";
 const evaluatedBenchmarks = benchmarkTasks.length;
 
+const logoByAgentName = leaderboardData.reduce<Record<string, string>>(
+  (acc, item) => {
+    acc[item.name.toLowerCase()] = item.logoUrl;
+    return acc;
+  },
+  {}
+);
+
+const previewAgents = [
+  {
+    name: "Browser Use GPT-5",
+    tagline: "Preview agent • GPT stack",
+    accent: "from-cyan-500/30 to-blue-500/20 border-cyan-400/40",
+    logoUrl:
+      logoByAgentName["browser use gpt-5"] ??
+      "/images/icons/validators/gpt5.png",
+  },
+  {
+    name: "Anthropic CUA",
+    tagline: "Preview agent • Anthropic",
+    accent: "from-amber-500/25 to-orange-500/15 border-amber-300/40",
+    logoUrl:
+      logoByAgentName["anthropic cua"] ?? "/images/icons/validators/ac.png",
+  },
+  {
+    name: "OpenAI CUA",
+    tagline: "Preview agent • OpenAI",
+    accent: "from-violet-500/25 to-purple-500/20 border-violet-300/40",
+    logoUrl:
+      logoByAgentName["openai cua"] ?? "/images/icons/validators/openai.png",
+  },
+  {
+    name: "Automata",
+    tagline: "Preview agent • Autonomous runner",
+    accent: "from-emerald-500/25 to-teal-500/15 border-emerald-300/40",
+    logoUrl: "/images/icons/validators/Autoppia.png",
+  },
+];
+
 /* -------------------- HELPERS -------------------- */
 const baseData = leaderboardData.map((d) => ({
   label: d.name,
@@ -494,539 +533,575 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Background accents */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
+      </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Header */}
 
-        <div className="relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-3xl p-8 sm:p-12 mb-12 backdrop-blur-sm transition-all duration-300 shadow-xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
-
-          <div className="relative z-10 text-center">
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-4 mb-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <FaTrophy className="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <Title
-                as="h1"
-                className="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
-              >
-                Infinite Web Arena Leaderboard
-              </Title>
-            </div>
-            <Text className="text-base sm:text-lg text-cyan-300 max-w-3xl mx-auto mb-6">
-              Top performing web agents evaluated with IWA Benchmark
-            </Text>
+        <div className="relative bg-gradient-to-br from-slate-900/70 via-slate-900/40 to-slate-900/80 border border-cyan-400/20 rounded-3xl p-8 sm:p-12 mb-12 backdrop-blur-lg shadow-[0_35px_120px_rgba(14,165,233,0.18)] overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.25),transparent_55%),radial-gradient(circle_at_85%_30%,rgba(168,85,247,0.35),transparent_60%)]" />
+          <div className="relative z-10 text-center space-y-6">
             <div className="flex justify-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-200">
+                <FaTrophy className="h-3.5 w-3.5" /> Coming soon
+              </span>
+            </div>
+            <Title
+              as="h1"
+              className="text-3xl sm:text-4xl md:text-[2.9rem] font-black leading-tight bg-gradient-to-r from-cyan-200 via-blue-200 to-purple-200 bg-clip-text text-transparent"
+            >
+              Infinite Web Arena leaderboard is almost here
+            </Title>
+            <Text className="text-base sm:text-lg text-slate-200/90 max-w-3xl mx-auto">
+              We are finalising the competitive arena for autonomous web agents
+              with richer insights, evidence and APIs. Explore the subnet
+              metrics or keep training your agent while we polish the finishing
+              touches.
+            </Text>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
+              <Link
+                href={routes.overview}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400/90 to-cyan-500/90 px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.24em] text-slate-900 shadow-lg transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_40px_rgba(45,212,191,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-200/70 focus:ring-offset-2 focus:ring-offset-slate-900"
+              >
+                View Subnet 36
+              </Link>
               <Link
                 href={routes.testAgent}
-                className="group relative inline-flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold text-white uppercase tracking-[0.24em] rounded-full transition-transform duration-300 hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="inline-flex items-center gap-2 rounded-full border border-blue-400/60 px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.24em] text-blue-100 transition-all duration-300 hover:-translate-y-[2px] hover:bg-blue-500/10 focus:outline-none focus:ring-2 focus:ring-blue-200/70 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
-                <span className="absolute inset-0 rounded-full bg-cyan-400/20 group-hover:bg-cyan-400/30 transition-colors duration-300" />
-                <span className="relative z-10 flex items-center gap-2">
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white/90 animate-ping" />
-                  test your agent
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white/90 animate-ping" />
-                </span>
+                Test your agent
               </Link>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-8">
+              {previewAgents.map((agent) => (
+                <div
+                  key={agent.name}
+                  className={`rounded-2xl border bg-gradient-to-br ${agent.accent} backdrop-blur-md px-5 py-5 text-left shadow-[0_25px_60px_rgba(15,23,42,0.35)]`}
+                >
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950/70 ring-1 ring-white/20 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={agent.logoUrl}
+                      alt={agent.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-base font-bold text-white tracking-wide">
+                    {agent.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-200/80 leading-relaxed">
+                    {agent.tagline}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
-        >
-          <div className="relative group h-full">
-            <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center shadow-[0_18px_38px_rgba(251,191,36,0.45)]">
-                  <FaCrown className="w-6 h-6 text-black" />
-                </div>
-                <p className="text-sm sm:text-base font-extrabold text-amber-200 uppercase tracking-[0.28em]">
-                  Current Winner
-                </p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xl sm:text-[2.5rem] font-black text-white tracking-tight leading-9">
-                  {leaderboardData[0].name}
-                </span>
-                <span className="inline-flex items-center gap-1 px-4 py-1.5 text-base sm:text-lg font-black tracking-widest text-amber-100 bg-amber-400/10 border border-amber-300/30 rounded-full">
-                  #{leaderboardData[0].rank}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative group h-full">
-            <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center shadow-lg">
-                  <FaChartBar className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm sm:text-base font-extrabold text-blue-200 uppercase tracking-[0.28em]">
-                    Top Score
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
-                  {leaderboardData[0].score}
-                </span>
-                <span className="text-2xl sm:text-[2rem] font-bold text-blue-400">
-                  %
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative group h-full">
-            <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shadow-lg">
-                  <FaBolt className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm sm:text-base font-extrabold text-purple-200 uppercase tracking-[0.28em]">
-                    Total Agents
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-[3.25rem] font-black text-white">
-                  {leaderboardData.length}
-                </span>
-                <span className="text-2xl sm:text-[2rem] font-bold text-purple-400">
-                  Agents
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Chart Section (UPDATED with your chart code) */}
-
-        {isMobile ? (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="relative mb-6 sm:mb-10"
-          >
-            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
-
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
-
-              {/* Header */}
-              <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
-                    <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
-                    <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl text-center sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
-                      IWA Performance Score
-                    </h2>
-                    <p className="text-xs text-center sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
-                      Real-time rankings
+        {/* Stats, charts, and benchmarks temporarily disabled */}
+        {false && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
+            >
+              <div className="relative group h-full">
+                <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center shadow-[0_18px_38px_rgba(251,191,36,0.45)]">
+                      <FaCrown className="w-6 h-6 text-black" />
+                    </div>
+                    <p className="text-sm sm:text-base font-extrabold text-amber-200 uppercase tracking-[0.28em]">
+                      Current Winner
                     </p>
                   </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xl sm:text-[2.5rem] font-black text-white tracking-tight leading-9">
+                      {leaderboardData[0].name}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-4 py-1.5 text-base sm:text-lg font-black tracking-widest text-amber-100 bg-amber-400/10 border border-amber-300/30 rounded-full">
+                      #{leaderboardData[0].rank}
+                    </span>
+                  </div>
                 </div>
-                <dl className="flex flex-col items-start xl:items-end gap-2 text-center sm:text-right">
-                  <div className="flex items-center gap-2">
-                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                      Last Update
-                    </dt>
-                    <dd className="text-xs sm:text-sm font-black text-white">
-                      {lastBenchmarkUpdate}
-                    </dd>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                      Tasks Evaluated
-                    </dt>
-                    <dd className="text-xs sm:text-sm font-black text-white">
-                      {evaluatedBenchmarks}
-                    </dd>
-                  </div>
-                </dl>
               </div>
 
-              {/* Mobile Leaderboard Chart */}
-              {isMobile ? (
-                <div className="relative z-10 grid grid-cols-1 gap-3">
-                  {chartData.map((item, index) => {
-                    // Medal for top 3
-                    const medal =
-                      index === 0
-                        ? "🥇"
-                        : index === 1
-                          ? "🥈"
-                          : index === 2
-                            ? "🥉"
-                            : index + 1;
+              <div className="relative group h-full">
+                <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center shadow-lg">
+                      <FaChartBar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm sm:text-base font-extrabold text-blue-200 uppercase tracking-[0.28em]">
+                        Top Score
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-[3.25rem] font-black text-white">
+                      {leaderboardData[0].score}
+                    </span>
+                    <span className="text-2xl sm:text-[2rem] font-bold text-blue-400">
+                      %
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                    return (
-                      <div
-                        key={item.label}
-                        className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-800/10 via-blue-800/10 to-emerald-800/10 rounded-xl border border-cyan-500/20 shadow-md"
+              <div className="relative group h-full">
+                <div className="relative h-full min-h-[190px] bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shadow-lg">
+                      <FaBolt className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm sm:text-base font-extrabold text-purple-200 uppercase tracking-[0.28em]">
+                        Total Agents
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-[3.25rem] font-black text-white">
+                      {leaderboardData.length}
+                    </span>
+                    <span className="text-2xl sm:text-[2rem] font-bold text-purple-400">
+                      Agents
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Chart Section (UPDATED with your chart code) */}
+
+            {isMobile ? (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative mb-6 sm:mb-10"
+              >
+                <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
+
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
+
+                  {/* Header */}
+                  <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
+                        <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
+                        <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <h2 className="text-2xl text-center sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
+                          IWA Performance Score
+                        </h2>
+                        <p className="text-xs text-center sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
+                          Real-time rankings
+                        </p>
+                      </div>
+                    </div>
+                    <dl className="flex flex-col items-start xl:items-end gap-2 text-center sm:text-right">
+                      <div className="flex items-center gap-2">
+                        <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                          Last Update
+                        </dt>
+                        <dd className="text-xs sm:text-sm font-black text-white">
+                          {lastBenchmarkUpdate}
+                        </dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                          Tasks Evaluated
+                        </dt>
+                        <dd className="text-xs sm:text-sm font-black text-white">
+                          {evaluatedBenchmarks}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {/* Mobile Leaderboard Chart */}
+                  {isMobile ? (
+                    <div className="relative z-10 grid grid-cols-1 gap-3">
+                      {chartData.map((item, index) => {
+                        // Medal for top 3
+                        const medal =
+                          index === 0
+                            ? "🥇"
+                            : index === 1
+                              ? "🥈"
+                              : index === 2
+                                ? "🥉"
+                                : index + 1;
+
+                        return (
+                          <div
+                            key={item.label}
+                            className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-800/10 via-blue-800/10 to-emerald-800/10 rounded-xl border border-cyan-500/20 shadow-md"
+                          >
+                            <span className="text-lg">{medal}</span>
+                            <div className="flex-1 flex flex-col">
+                              <span className="text-white font-semibold truncate">
+                                {item.label}
+                              </span>
+                              <div className="w-full bg-slate-800 h-3 rounded-full mt-1 overflow-hidden">
+                                <div
+                                  className="h-3 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-500"
+                                  style={{ width: `${item.score}%` }}
+                                />
+                              </div>
+                            </div>
+                            <span className="text-cyan-200 font-bold ml-2">
+                              {item.score}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    // Desktop chart stays as-is
+                    <div className="relative z-10">
+                      <ResponsiveContainer width="100%" height={chartHeight}>
+                        <BarChart
+                          data={chartData}
+                          layout="vertical"
+                          margin={{
+                            top: 4,
+                            right: isMobile ? 20 : 40,
+                            left: 20,
+                            bottom: 4,
+                          }}
+                          barSize={isMobile ? 14 : barSize}
+                          barCategoryGap={isMobile ? "10%" : "16%"}
+                        >
+                          {/* ... your existing desktop chart code ... */}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+                        <span className="text-slate-400 font-medium">
+                          Live data • Updated real-time
+                        </span>
+                      </div>
+                      <span className="text-slate-500 font-medium hidden sm:block">
+                        {isMobile
+                          ? "Names shortened"
+                          : "Full rankings displayed"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative mb-6 sm:mb-10"
+              >
+                <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
+
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
+
+                  <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
+                        <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
+                        <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <h2 className="text-2xl sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
+                          IWA Performance Score
+                        </h2>
+                        <p className="text-xs sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
+                          Real-time rankings
+                        </p>
+                      </div>
+                    </div>
+                    <dl className="flex flex-col items-start xl:items-end gap-2 text-right">
+                      <div className="flex items-center gap-2">
+                        <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                          Last Update
+                        </dt>
+                        <dd className="text-xs sm:text-sm font-black text-white">
+                          {lastBenchmarkUpdate}
+                        </dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
+                          Tasks Evaluated
+                        </dt>
+                        <dd className="text-xs sm:text-sm font-black text-white">
+                          {evaluatedBenchmarks}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="relative z-10">
+                    <ResponsiveContainer width="100%" height={chartHeight}>
+                      <BarChart
+                        data={chartData}
+                        layout="vertical"
+                        margin={{
+                          top: 24,
+                          right: isMobile ? 20 : 40, // reduce right margin for smaller screens
+                          left: 20, // small fixed left margin to remove empty space
+                          bottom: 4,
+                        }}
+                        barSize={isMobile ? 14 : barSize}
+                        barCategoryGap={isMobile ? "10%" : "16%"}
                       >
-                        <span className="text-lg">{medal}</span>
-                        <div className="flex-1 flex flex-col">
-                          <span className="text-white font-semibold truncate">
-                            {item.label}
-                          </span>
-                          <div className="w-full bg-slate-800 h-3 rounded-full mt-1 overflow-hidden">
-                            <div
-                              className="h-3 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-500"
-                              style={{ width: `${item.score}%` }}
-                            />
+                        <defs>
+                          <linearGradient
+                            id="coolBar"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                          >
+                            <stop offset="0%" stopColor="#1d4ed8" />
+                            <stop offset="30%" stopColor="#0ea5e9" />
+                            <stop offset="65%" stopColor="#14b8a6" />
+                            <stop offset="100%" stopColor="#22d3ee" />
+                          </linearGradient>
+                          <filter
+                            id="barGlow"
+                            x="-50%"
+                            y="-50%"
+                            width="200%"
+                            height="200%"
+                          >
+                            <feGaussianBlur stdDeviation="3.5" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+
+                        <CartesianGrid
+                          horizontal
+                          vertical={false}
+                          stroke="#0f172a"
+                          strokeOpacity={0.6}
+                          strokeWidth={1}
+                        />
+
+                        <XAxis
+                          type="number"
+                          domain={[0, 100]}
+                          ticks={[0, 25, 50, 75, 100]}
+                          tick={{
+                            fill: "#8fb0d6",
+                            fontSize: isMobile ? 10 : 12,
+                            fontWeight: 700,
+                            letterSpacing: "0.12em",
+                          }}
+                          axisLine={{ stroke: "#122135", strokeWidth: 1 }}
+                          tickLine={{ stroke: "#122135", strokeWidth: 1 }}
+                        />
+
+                        <YAxis
+                          type="category"
+                          dataKey="label"
+                          width={isMobile ? 90 : 120} // responsive width
+                          axisLine={false}
+                          tickLine={false}
+                          interval={0}
+                          tick={<LogoYAxisTick />}
+                        />
+
+                        <Tooltip
+                          cursor={{ fill: "rgba(6,182,212,0.08)" }}
+                          content={<FlatTooltip />}
+                          wrapperStyle={{ outline: "none" }}
+                        />
+
+                        <ReferenceLine
+                          x={avg}
+                          stroke="#22d3ee"
+                          strokeOpacity={0.6}
+                          strokeWidth={2}
+                          strokeDasharray="12 10"
+                          label={{
+                            value: `AVG ${avg}%`,
+                            fill: "#bae6fd",
+                            fontWeight: 800,
+                            letterSpacing: "0.1em",
+                            position: "top",
+                            fontSize: isMobile ? 11 : 13,
+                            dx: 0,
+                            dy: -8,
+                          }}
+                        />
+
+                        <Bar
+                          dataKey="score"
+                          fill="url(#coolBar)"
+                          radius={[16, 16, 16, 16]}
+                          filter="url(#barGlow)"
+                          isAnimationActive
+                          animationBegin={120}
+                          animationDuration={1600}
+                          animationEasing="ease"
+                        >
+                          <LabelList content={<NameInsideBarLabel />} />
+                          <LabelList
+                            dataKey="score"
+                            content={<ScorePillLabel />}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+                        <span className="text-slate-400 font-medium">
+                          Live data • Updated real-time
+                        </span>
+                      </div>
+                      <span className="text-slate-500 font-medium">
+                        {isMobile
+                          ? "Names shortened"
+                          : "Full rankings displayed"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            {/* Benchmark Tasks — ONLY Project + Prompt (Card Grid) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="relative mb-8 sm:mb-12"
+            >
+              <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border border-slate-700/50 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-center justify-between mb-6 sm:mb-8">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                      <FaFire className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl text-center sm:text-left sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
+                        Benchmark Tasks
+                      </h2>
+                      <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
+                        Web project and its benchmark prompt
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={downloadTasks}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    <span>Download</span>
+                  </button>
+                </div>
+
+                {/* Grid: 1 → 2 → 3 → 4 columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {displayedTasks.map((task, i) => (
+                    <motion.article
+                      key={task.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.02 * i }}
+                      className="group relative h-full rounded-2xl border-2 border-cyan-400/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 overflow-hidden transition-all duration-300 hover:border-cyan-400/60 hover:shadow-[0_20px_60px_-20px_rgba(56,189,248,.35)]"
+                    >
+                      {/* subtle glow */}
+                      <div
+                        className="pointer-events-none absolute -inset-1 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-30"
+                        style={{
+                          background:
+                            "radial-gradient(120px 120px at 20% 10%, rgba(34,211,238,.25), transparent 60%)",
+                        }}
+                      />
+                      <div className="relative flex h-full flex-col p-4 sm:p-5">
+                        {/* Project */}
+                        <div className="mb-3 flex items-center gap-3">
+                          <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-md">
+                            <FaMedal className="h-5 w-5 text-white opacity-90" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-base sm:text-lg font-extrabold text-white leading-snug">
+                              {task.project}
+                            </h3>
                           </div>
                         </div>
-                        <span className="text-cyan-200 font-bold ml-2">
-                          {item.score}%
-                        </span>
+
+                        {/* Use Case */}
+                        <div className="mb-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/30">
+                            <span className="text-xs font-bold uppercase tracking-wide text-cyan-300">
+                              {task.task}
+                            </span>
+                          </span>
+                        </div>
+
+                        {/* Prompt */}
+                        <div className="relative mt-1 rounded-xl border border-cyan-400/20 bg-slate-900/40 p-3 h-full">
+                          <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">
+                            Prompt
+                          </span>
+                          <p className="text-sm text-slate-200">
+                            {task.prompt}
+                          </p>
+                        </div>
+
+                        <div className="mt-auto pt-3" />
                       </div>
-                    );
-                  })}
+                    </motion.article>
+                  ))}
                 </div>
-              ) : (
-                // Desktop chart stays as-is
-                <div className="relative z-10">
-                  <ResponsiveContainer width="100%" height={chartHeight}>
-                    <BarChart
-                      data={chartData}
-                      layout="vertical"
-                      margin={{
-                        top: 4,
-                        right: isMobile ? 20 : 40,
-                        left: 20,
-                        bottom: 4,
-                      }}
-                      barSize={isMobile ? 14 : barSize}
-                      barCategoryGap={isMobile ? "10%" : "16%"}
-                    >
-                      {/* ... your existing desktop chart code ... */}
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
 
-              {/* Footer */}
-              <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-                    <span className="text-slate-400 font-medium">
-                      Live data • Updated real-time
-                    </span>
-                  </div>
-                  <span className="text-slate-500 font-medium hidden sm:block">
-                    {isMobile ? "Names shortened" : "Full rankings displayed"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="relative mb-6 sm:mb-10"
-          >
-            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.18),transparent_70%)] blur-lg" />
-
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 p-4 sm:p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-purple-900/10" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.14),transparent_65%)] opacity-70" />
-
-              <div className="relative z-10 flex flex-col xl:flex-row gap-4 xl:gap-0 items-center justify-between mb-6 sm:mb-8">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="relative flex  h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/30 via-blue-500/40 to-emerald-500/30 shadow-[0_18px_40px_rgba(45,212,191,0.45)]">
-                    <span className="absolute inset-0 rounded-2xl bg-white/10 blur-sm opacity-60" />
-                    <FaChartBar className="relative z-[1] h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl sm:text-3xl lg:text-[2.75rem] font-black text-white tracking-tight">
-                      IWA Performance Score
-                    </h2>
-                    <p className="text-xs sm:text-sm font-semibold tracking-[0.24em] text-cyan-200 uppercase">
-                      Real-time rankings
-                    </p>
-                  </div>
-                </div>
-                <dl className="flex flex-col items-start xl:items-end gap-2 text-right">
-                  <div className="flex items-center gap-2">
-                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                      Last Update
-                    </dt>
-                    <dd className="text-xs sm:text-sm font-black text-white">
-                      {lastBenchmarkUpdate}
-                    </dd>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                      Tasks Evaluated
-                    </dt>
-                    <dd className="text-xs sm:text-sm font-black text-white">
-                      {evaluatedBenchmarks}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div className="relative z-10">
-                <ResponsiveContainer width="100%" height={chartHeight}>
-                  <BarChart
-                    data={chartData}
-                    layout="vertical"
-                    margin={{
-                      top: 24,
-                      right: isMobile ? 20 : 40, // reduce right margin for smaller screens
-                      left: 20, // small fixed left margin to remove empty space
-                      bottom: 4,
-                    }}
-                    barSize={isMobile ? 14 : barSize}
-                    barCategoryGap={isMobile ? "10%" : "16%"}
-                  >
-                    <defs>
-                      <linearGradient id="coolBar" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#1d4ed8" />
-                        <stop offset="30%" stopColor="#0ea5e9" />
-                        <stop offset="65%" stopColor="#14b8a6" />
-                        <stop offset="100%" stopColor="#22d3ee" />
-                      </linearGradient>
-                      <filter
-                        id="barGlow"
-                        x="-50%"
-                        y="-50%"
-                        width="200%"
-                        height="200%"
+                {/* Show More */}
+                {!showAllTasks &&
+                  benchmarkTasks.length > displayedTasks.length && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={() => setShowAllTasks(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
                       >
-                        <feGaussianBlur stdDeviation="3.5" result="blur" />
-                        <feMerge>
-                          <feMergeNode in="blur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
-
-                    <CartesianGrid
-                      horizontal
-                      vertical={false}
-                      stroke="#0f172a"
-                      strokeOpacity={0.6}
-                      strokeWidth={1}
-                    />
-
-                    <XAxis
-                      type="number"
-                      domain={[0, 100]}
-                      ticks={[0, 25, 50, 75, 100]}
-                      tick={{
-                        fill: "#8fb0d6",
-                        fontSize: isMobile ? 10 : 12,
-                        fontWeight: 700,
-                        letterSpacing: "0.12em",
-                      }}
-                      axisLine={{ stroke: "#122135", strokeWidth: 1 }}
-                      tickLine={{ stroke: "#122135", strokeWidth: 1 }}
-                    />
-
-                    <YAxis
-                      type="category"
-                      dataKey="label"
-                      width={isMobile ? 90 : 120} // responsive width
-                      axisLine={false}
-                      tickLine={false}
-                      interval={0}
-                      tick={<LogoYAxisTick />}
-                    />
-
-                    <Tooltip
-                      cursor={{ fill: "rgba(6,182,212,0.08)" }}
-                      content={<FlatTooltip />}
-                      wrapperStyle={{ outline: "none" }}
-                    />
-
-                    <ReferenceLine
-                      x={avg}
-                      stroke="#22d3ee"
-                      strokeOpacity={0.6}
-                      strokeWidth={2}
-                      strokeDasharray="12 10"
-                      label={{
-                        value: `AVG ${avg}%`,
-                        fill: "#bae6fd",
-                        fontWeight: 800,
-                        letterSpacing: "0.1em",
-                        position: "top",
-                        fontSize: isMobile ? 11 : 13,
-                        dx: 0,
-                        dy: -8,
-                      }}
-                    />
-
-                    <Bar
-                      dataKey="score"
-                      fill="url(#coolBar)"
-                      radius={[16, 16, 16, 16]}
-                      filter="url(#barGlow)"
-                      isAnimationActive
-                      animationBegin={120}
-                      animationDuration={1600}
-                      animationEasing="ease"
-                    >
-                      <LabelList content={<NameInsideBarLabel />} />
-                      <LabelList dataKey="score" content={<ScorePillLabel />} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-emerald-500/20">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-                    <span className="text-slate-400 font-medium">
-                      Live data • Updated real-time
-                    </span>
-                  </div>
-                  <span className="text-slate-500 font-medium">
-                    {isMobile ? "Names shortened" : "Full rankings displayed"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-        {/* Benchmark Tasks — ONLY Project + Prompt (Card Grid) */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="relative mb-8 sm:mb-12"
-        >
-          <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border border-slate-700/50 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl">
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-center justify-between mb-6 sm:mb-8">
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                  <FaFire className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl text-center sm:text-left sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-100">
-                    Benchmark Tasks
-                  </h2>
-                  <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
-                    Web project and its benchmark prompt
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={downloadTasks}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
-              >
-                <FaDownload className="w-4 h-4" />
-                <span>Download</span>
-              </button>
-            </div>
-
-            {/* Grid: 1 → 2 → 3 → 4 columns */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {displayedTasks.map((task, i) => (
-                <motion.article
-                  key={task.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.02 * i }}
-                  className="group relative h-full rounded-2xl border-2 border-cyan-400/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 overflow-hidden transition-all duration-300 hover:border-cyan-400/60 hover:shadow-[0_20px_60px_-20px_rgba(56,189,248,.35)]"
-                >
-                  {/* subtle glow */}
-                  <div
-                    className="pointer-events-none absolute -inset-1 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-30"
-                    style={{
-                      background:
-                        "radial-gradient(120px 120px at 20% 10%, rgba(34,211,238,.25), transparent 60%)",
-                    }}
-                  />
-                  <div className="relative flex h-full flex-col p-4 sm:p-5">
-                    {/* Project */}
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-md">
-                        <FaMedal className="h-5 w-5 text-white opacity-90" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-base sm:text-lg font-extrabold text-white leading-snug">
-                          {task.project}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Use Case */}
-                    <div className="mb-3">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/30">
-                        <span className="text-xs font-bold uppercase tracking-wide text-cyan-300">
-                          {task.task}
+                        <span>Show More Tasks</span>
+                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs">
+                          +{benchmarkTasks.length - displayedTasks.length}
                         </span>
-                      </span>
+                      </button>
                     </div>
-
-                    {/* Prompt */}
-                    <div className="relative mt-1 rounded-xl border border-cyan-400/20 bg-slate-900/40 p-3 h-full">
-                      <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">
-                        Prompt
-                      </span>
-                      <p className="text-sm text-slate-200">{task.prompt}</p>
-                    </div>
-
-                    <div className="mt-auto pt-3" />
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-
-            {/* Show More */}
-            {!showAllTasks && benchmarkTasks.length > displayedTasks.length && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={() => setShowAllTasks(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
-                >
-                  <span>Show More Tasks</span>
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs">
-                    +{benchmarkTasks.length - displayedTasks.length}
-                  </span>
-                </button>
+                  )}
               </div>
-            )}
-          </div>
-        </motion.div>
+            </motion.div>
+          </>
+        )}
 
         {/* Footer */}
-        {/* <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 sm:mt-10 text-center"
-        >
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-slate-900/60 backdrop-blur-xl border border-slate-700/50">
-            <FaStar className="w-5 h-5 text-cyan-400" />
-            <span className="text-sm sm:text-base text-slate-300 font-bold">
-              Official IWA Leaderboard • {leaderboardData.length} AI Agents
-              Tracked • {benchmarkTasks.length} Benchmark Tasks
-            </span>
-          </div>
-        </motion.div> */}
       </div>
     </div>
   );
