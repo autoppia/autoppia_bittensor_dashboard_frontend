@@ -169,7 +169,7 @@ export default function LandingPage() {
                 SUBNET 36
               </button>
             </Link>
-            <Tooltip content="Leaderboard not available yet" placement="top">
+            <Tooltip content="Leaderboard coming soon" placement="top">
               <div className="w-full sm:w-auto">
                 <button
                   type="button"
@@ -179,9 +179,6 @@ export default function LandingPage() {
                   <LuTrophy className="h-5 w-5 text-white" />
                   <span className="flex flex-col items-start leading-tight">
                     <span>LEADERBOARD</span>
-                    <span className="text-[10px] uppercase font-semibold tracking-[0.28em] text-white/80">
-                      Coming soon
-                    </span>
                   </span>
                 </button>
               </div>
