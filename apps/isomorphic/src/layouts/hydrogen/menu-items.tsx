@@ -56,8 +56,6 @@ export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
       name: "Leaderboard",
       href: routes.leaderboard,
       icon: <LuTrophy />,
-      disabled: true,
-      disabledLabel: "Not available yet",
     },
 
     {
