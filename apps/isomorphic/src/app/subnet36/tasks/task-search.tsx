@@ -29,6 +29,40 @@ import {
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
 
+const WEBSITE_DEFINITIONS = websitesData;
+const BASE_WEBSITE_SLUGS = Array.from(
+  new Set(WEBSITE_DEFINITIONS.map((website) => website.slug))
+).sort((a, b) => a.localeCompare(b));
+
+const BASE_USE_CASES_BY_WEBSITE = WEBSITE_DEFINITIONS.reduce<
+  Record<string, string[]>
+>((acc, website) => {
+  acc[website.slug] = website.useCases
+    .map((useCase) => useCase.name)
+    .sort((a, b) => a.localeCompare(b));
+  return acc;
+}, {});
+
+const BASE_USE_CASES = Array.from(
+  new Set(
+    WEBSITE_DEFINITIONS.flatMap((website) =>
+      website.useCases.map((useCase) => useCase.name)
+    )
+  )
+).sort((a, b) => a.localeCompare(b));
+
+const mergeAndSortUnique = (lists: Array<string[]>) =>
+  Array.from(
+    lists.reduce((set, list) => {
+      list.forEach((item) => {
+        if (item) {
+          set.add(item);
+        }
+      });
+      return set;
+    }, new Set<string>())
+  ).sort((a, b) => a.localeCompare(b));
+
 function useDebouncedValue<T>(value: T, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -131,8 +165,10 @@ export default function TaskSearch() {
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
-  const [availableWebsites, setAvailableWebsites] = useState<string[]>([]);
-  const [availableUseCases, setAvailableUseCases] = useState<string[]>([]);
+  const [availableWebsites, setAvailableWebsites] =
+    useState<string[]>(BASE_WEBSITE_SLUGS);
+  const [availableUseCases, setAvailableUseCases] =
+    useState<string[]>(BASE_USE_CASES);
   const [results, setResults] = useState<TaskData[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -200,11 +236,21 @@ export default function TaskSearch() {
           });
           const facets = facetsResponse.data?.facets;
           if (facets && !ignore) {
-            setAvailableWebsites(
-              facets.websites.map((item) => item.name).sort()
+            setAvailableWebsites((prev) =>
+              mergeAndSortUnique([
+                prev,
+                BASE_WEBSITE_SLUGS,
+                facets.websites.map((item) => item.name),
+              ])
             );
-            setAvailableUseCases(
-              facets.useCases.map((item) => item.name).sort()
+            setAvailableUseCases((prev) =>
+              mergeAndSortUnique([
+                prev,
+                selectedWebsite
+                  ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
+                  : BASE_USE_CASES,
+                facets.useCases.map((item) => item.name),
+              ])
             );
           }
         } catch (err: any) {
@@ -259,11 +305,21 @@ export default function TaskSearch() {
         setTotal(data?.total ?? 0);
 
         if (data?.facets) {
-          setAvailableWebsites(
-            data.facets.websites.map((item) => item.name).sort()
+          setAvailableWebsites((prev) =>
+            mergeAndSortUnique([
+              prev,
+              BASE_WEBSITE_SLUGS,
+              data.facets.websites.map((item) => item.name),
+            ])
           );
-          setAvailableUseCases(
-            data.facets.useCases.map((item) => item.name).sort()
+          setAvailableUseCases((prev) =>
+            mergeAndSortUnique([
+              prev,
+              selectedWebsite
+                ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
+                : BASE_USE_CASES,
+              data.facets.useCases.map((item) => item.name),
+            ])
           );
         }
       } catch (error) {
@@ -313,6 +369,18 @@ export default function TaskSearch() {
     };
   }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
 
+  useEffect(() => {
+    const baseUseCases = selectedWebsite
+      ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
+      : BASE_USE_CASES;
+
+    setAvailableUseCases(baseUseCases);
+
+    if (selectedUseCase && !baseUseCases.includes(selectedUseCase)) {
+      setSelectedUseCase("");
+    }
+  }, [selectedWebsite, selectedUseCase]);
+
   // Note: Removed fetchRelationships useEffect - now using validatorName/minerName directly from search response
 
   const handlePageChange = (nextPage: number) => {
@@ -350,6 +418,8 @@ export default function TaskSearch() {
     setTotal(0);
     setCurrentPage(1);
     setCurrentLimit(DEFAULT_LIMIT);
+    setAvailableWebsites(BASE_WEBSITE_SLUGS);
+    setAvailableUseCases(BASE_USE_CASES);
   };
 
   const hasActiveFilters =
