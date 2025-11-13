@@ -1,23 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
 import { Title } from "rizzui/typography";
 import Link from "next/link";
-import { PiGithubLogoDuotone, PiInfoBold } from "react-icons/pi";
-import { FaPlay } from "react-icons/fa";
-import MinerAnimationModal from "@/app/shared/modal-views/miner-animation-modal";
-import OverviewAnnouncementModal from "@/app/shared/modal-views/overview-announcement-modal";
-import { useModal } from "@/app/shared/modal-views/use-modal";
+import { PiGithubLogoDuotone } from "react-icons/pi";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
 
-const ANNOUNCEMENT_STORAGE_KEY = "overview-announcement-seen";
-
 export default function Overview() {
-  const { openModal } = useModal();
-  const hasOpenedAnnouncement = useRef(false);
   const metricsColumnRef = useRef<HTMLDivElement | null>(null);
   const [metricsHeight, setMetricsHeight] = useState<number | undefined>(
     undefined
@@ -39,42 +31,6 @@ export default function Overview() {
 
     return () => clearInterval(interval);
   }, [refetchMetrics]);
-
-  const openAnnouncementModal = useCallback(() => {
-    openModal({ view: <OverviewAnnouncementModal />, size: "md" });
-  }, [openModal]);
-
-  useEffect(() => {
-    if (hasOpenedAnnouncement.current) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      try {
-        const hasSeen = window.localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
-        if (hasSeen) {
-          hasOpenedAnnouncement.current = true;
-          return;
-        }
-      } catch {
-        // ignore storage read errors and proceed to show the modal once
-      }
-
-      openAnnouncementModal();
-      hasOpenedAnnouncement.current = true;
-      try {
-        window.localStorage.setItem(ANNOUNCEMENT_STORAGE_KEY, "true");
-      } catch {
-        // ignore storage write errors; modal has already been shown
-      }
-    }, 150);
-
-    return () => window.clearTimeout(timer);
-  }, [openAnnouncementModal]);
-
-  function handleOpenTimeline() {
-    openModal({ view: <MinerAnimationModal />, customSize: 1260, size: "xl" });
-  }
 
   useEffect(() => {
     const element = metricsColumnRef.current;
@@ -161,14 +117,6 @@ export default function Overview() {
         </div>
       </div>
       <OverviewValidators currentRound={metrics?.currentRound} />
-      <button
-        type="button"
-        onClick={openAnnouncementModal}
-        className="fixed bottom-6 left-6 z-40 inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-[#070c16]/90 px-4 py-2 text-sm font-semibold text-cyan-100 shadow-[0_12px_30px_rgba(8,47,73,0.35)] backdrop-blur-sm transition hover:border-cyan-300 hover:text-white"
-      >
-        <PiInfoBold className="h-4 w-4" />
-        IM Update
-      </button>
     </>
   );
 }
