@@ -13,10 +13,10 @@ import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 import cn from "@core/utils/class-names";
 import { formatWebsiteName, getProjectColors } from "@/utils/website-colors";
-import { agentRunsService } from "@/services/api/agent-runs.service";
-import { tasksService } from "@/services/api/tasks.service";
-import type { AgentRunStats } from "@/services/api/types/agent-runs";
-import type { TaskData } from "@/services/api/types/tasks";
+import { agentRunsRepository } from "@/repositories/agent-runs/agent-runs.repository";
+import { tasksRepository } from "@/repositories/tasks/tasks.repository";
+import type { AgentRunStats } from "@/repositories/agent-runs/agent-runs.types";
+import type { TaskData } from "@/repositories/tasks/tasks.types";
 import { routes } from "@/config/routes";
 import Placeholder from "@/app/shared/placeholder";
 
@@ -93,7 +93,7 @@ export default function AgentHistoricalAnalytics({
         setError(null);
 
         // First, get list of runs for this agent
-        const runsResponse = await agentRunsService.listAgentRuns({
+        const runsResponse = await agentRunsRepository.listAgentRuns({
           agentId: agentId.toString(),
           limit: 100, // Get recent 100 runs
           status: "completed",
@@ -112,7 +112,7 @@ export default function AgentHistoricalAnalytics({
 
         // Fetch stats for each run (in batches to avoid overwhelming the API)
         const statsPromises = runsResponse.runs.map((run) =>
-          agentRunsService.getAgentRunStats(run.runId).catch(() => null)
+          agentRunsRepository.getAgentRunStats(run.runId).catch(() => null)
         );
 
         const allStats = await Promise.all(statsPromises);
@@ -342,7 +342,7 @@ export default function AgentHistoricalAnalytics({
         // This endpoint supports website and useCase filtering
         const tasksPerRun = await Promise.all(
           aggregatedData.runIds.map((runId) =>
-            agentRunsService
+            agentRunsRepository
               .getAgentRunTasks(runId, {
                 limit: 1000, // Get all tasks from this run
                 website,

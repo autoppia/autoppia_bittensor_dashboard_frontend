@@ -120,37 +120,6 @@ export interface AgentPerformanceMetrics {
   }[];
 }
 
-// ===== AGENT RUN DATA =====
-export interface AgentRunData {
-  runId: string;
-  agentId: string;
-  roundId: number;
-  validatorId: string;
-  validatorName: string;
-  validatorImage: string;
-  startTime: string;
-  endTime?: string | null;
-  status: 'running' | 'completed' | 'failed' | 'timeout';
-  totalTasks: number;
-  completedTasks: number;
-  successfulTasks: number;
-  failedTasks: number;
-  score: number;
-  overallScore: number;
-  duration: number;
-  ranking?: number;
-  averageEvaluationTime?: number | null;
-  websites: {
-    website: string;
-    tasks: number;
-    successful: number;
-    failed: number;
-    score: number;
-  }[];
-  tasks: AgentRunTaskData[];
-  metadata: Record<string, any>;
-}
-
 export interface AgentRunOverview {
   runId: string;
   agentId: string;
@@ -305,13 +274,6 @@ export interface AgentRunsResponse {
     limit: number;
     availableRounds?: number[];
     selectedRound?: number | null;
-  };
-}
-
-export interface AgentRunDetailsResponse {
-  success: boolean;
-  data: {
-    run: AgentRunData;
   };
 }
 

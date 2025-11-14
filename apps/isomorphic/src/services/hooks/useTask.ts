@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { tasksService } from "../api/tasks.service";
+import { tasksRepository } from "@/repositories/tasks/tasks.repository";
 import {
   TaskData,
   TaskDetails,
@@ -11,7 +11,7 @@ import {
   TaskPersonas,
   TaskStatistics,
   TaskPartialData,
-} from "../api/types/tasks";
+} from "@/repositories/tasks/tasks.types";
 
 // Hook for getting task data with progressive loading
 export function useTask(
@@ -54,7 +54,7 @@ export function useTask(
       setIsLoading(true);
       setError(null);
 
-      const result = await tasksService.getTaskPartialData(taskId, {
+      const result = await tasksRepository.getTaskPartialData(taskId, {
         includePersonas,
         includeDetails,
         includeResults,
@@ -119,7 +119,7 @@ export function useTaskPersonas(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await tasksService.getTaskPersonas(taskId);
+        const data = await tasksRepository.getTaskPersonas(taskId);
         setPersonas(data);
       } catch (err) {
         setError(
@@ -148,7 +148,7 @@ export function useTaskDetails(taskId: string) {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await tasksService.getTaskDetails(taskId);
+      const data = await tasksRepository.getTaskDetails(taskId);
       setDetails(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch details");
@@ -177,7 +177,7 @@ export function useTaskResults(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await tasksService.getTaskResults(taskId);
+        const data = await tasksRepository.getTaskResults(taskId);
         setResults(data);
       } catch (err) {
         setError(
@@ -207,7 +207,7 @@ export function useTaskStatistics(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await tasksService.getTaskStatistics(taskId);
+        const data = await tasksRepository.getTaskStatistics(taskId);
         setStatistics(data);
       } catch (err) {
         setError(
@@ -265,7 +265,7 @@ export function useTaskActions(
     try {
       setIsLoading(true);
       setError(null);
-      const result = await tasksService.getTaskActions(taskId, {
+      const result = await tasksRepository.getTaskActions(taskId, {
         ...stableParams,
         page,
         limit,
@@ -333,7 +333,7 @@ export function useTaskScreenshots(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await tasksService.getTaskScreenshots(taskId);
+        const result = await tasksRepository.getTaskScreenshots(taskId);
         setScreenshots(result.screenshots);
       } catch (err) {
         setError(
@@ -372,7 +372,7 @@ export function useTaskLogs(
       try {
         setIsLoading(true);
         setError(null);
-        const result = await tasksService.getTaskLogs(taskId, params);
+        const result = await tasksRepository.getTaskLogs(taskId, params);
         setLogs(result.logs);
         setTotal(result.total);
       } catch (err) {
@@ -401,7 +401,7 @@ export function useTaskMetrics(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await tasksService.getTaskMetrics(taskId);
+        const result = await tasksRepository.getTaskMetrics(taskId);
         setMetrics(result.metrics);
       } catch (err) {
         setError(
@@ -431,7 +431,7 @@ export function useTaskTimeline(taskId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await tasksService.getTaskTimeline(taskId);
+        const result = await tasksRepository.getTaskTimeline(taskId);
         setTimeline(result.timeline);
       } catch (err) {
         setError(
@@ -498,7 +498,7 @@ export function useTasksList(
     try {
       setIsLoading(true);
       setError(null);
-      const result = await tasksService.getTasks({
+      const result = await tasksRepository.getTasks({
         ...stableParams,
         page,
         limit,
@@ -574,7 +574,7 @@ export function useTaskSearch(params: {
     try {
       setIsLoading(true);
       setError(null);
-      const result = await tasksService.searchTasks(params);
+      const result = await tasksRepository.searchTasks(params);
       setResults(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to search tasks");

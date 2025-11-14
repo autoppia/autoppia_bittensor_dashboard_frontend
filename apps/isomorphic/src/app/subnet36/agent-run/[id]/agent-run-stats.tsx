@@ -1,7 +1,7 @@
 "use client";
 
 import { PiCheckCircle, PiXCircle, PiClock, PiGlobe } from "react-icons/pi";
-import type { AgentRunStats as AgentRunStatsData } from "@/services/api/types/agent-runs";
+import type { AgentRunStats as AgentRunStatsData } from "@/repositories/agent-runs/agent-runs.types";
 import cn from "@core/utils/class-names";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
