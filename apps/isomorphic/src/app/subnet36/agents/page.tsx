@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRounds } from "@/services/hooks/useRounds";
 import { useMinersList } from "@/services/hooks/useAgents";
-import type { MinimalAgentsListQueryParams } from "@/services/api/types/agents";
+import type { MinimalAgentsListQueryParams } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import {
   AgentHeaderPlaceholder,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { overviewService } from "@/services/api/overview.service";
+import { overviewRepository } from "@/repositories/overview/overview.repository";
 
 export default function ApiTest() {
   const [testResults, setTestResults] = useState<any>({});
@@ -28,18 +28,18 @@ export default function ApiTest() {
   const runAllTests = async () => {
     setTestResults({});
 
-    await testEndpoint("Metrics", () => overviewService.getMetrics());
+    await testEndpoint("Metrics", () => overviewRepository.getMetrics());
     await testEndpoint("Validators", () =>
-      overviewService.getValidators({ limit: 5 })
+      overviewRepository.getValidators({ limit: 5 })
     );
     await testEndpoint("Current Round", () =>
-      overviewService.getCurrentRound()
+      overviewRepository.getCurrentRound()
     );
     await testEndpoint("Leaderboard", () =>
-      overviewService.getLeaderboard({ timeRange: "7R" })
+      overviewRepository.getLeaderboard({ timeRange: "7R" })
     );
     await testEndpoint("Network Status", () =>
-      overviewService.getNetworkStatus()
+      overviewRepository.getNetworkStatus()
     );
   };
 

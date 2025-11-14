@@ -37,13 +37,13 @@ import {
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
 import { useAgent } from "@/services/hooks/useAgents";
-import { agentsService } from "@/services/api/agents.service";
+import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
   AgentData,
   AgentRoundMetrics,
   AgentRunOverview,
-} from "@/services/api/types/agents";
+} from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
@@ -103,7 +103,7 @@ async function fetchAllAgentRuns(
   let total = 0;
 
   while (true) {
-    const response = await agentsService.getAgentRuns(agentId, {
+    const response = await agentsRepository.getAgentRuns(agentId, {
       ...params,
       page,
       limit: RUNS_PAGE_SIZE,
@@ -1218,7 +1218,7 @@ function RoundWebsitesChart({
         const details = await Promise.all(
           runsForRound.map(async (run) => {
             try {
-              return await agentsService.getAgentRun(agentId, run.runId);
+              return await agentsRepository.getAgentRun(agentId, run.runId);
             } catch (e) {
               return null;
             }

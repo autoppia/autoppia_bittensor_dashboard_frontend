@@ -53,12 +53,12 @@ import {
   useRoundStatistics,
   useRoundMiners,
 } from "@/services/hooks/useRounds";
-import { roundsService } from "@/services/api/rounds.service";
+import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
   ValidatorPerformance,
   MinerPerformance,
   BenchmarkPerformance,
-} from "@/services/api/types/rounds";
+} from "@/repositories/rounds/rounds.types";
 
 // ============================================================================
 // UTILITY FUNCTIONS - Inline from round-identifier.ts

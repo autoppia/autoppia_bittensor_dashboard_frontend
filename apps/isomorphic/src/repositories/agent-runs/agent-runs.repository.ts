@@ -3,7 +3,7 @@
  * Handles all API calls related to agent evaluation runs
  */
 
-import { apiClient } from "./client";
+import { apiClient } from "../client";
 import type {
   AgentRunData,
   AgentRunStats,
@@ -21,9 +21,10 @@ import type {
   AgentRunListItem,
   AgentRunsListQueryParams,
   AgentRunsListResponse,
-} from "./types/agent-runs";
+  PaginatedResult,
+} from "./agent-runs.types";
 
-export class AgentRunsService {
+export class AgentRunsRepository {
   private readonly baseEndpoint = "/api/v1/agent-runs";
 
   /**
@@ -172,12 +173,7 @@ export class AgentRunsService {
       sortBy?: string;
       sortOrder?: "asc" | "desc";
     }
-  ): Promise<{
-    runs: AgentRunData[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+  ): Promise<PaginatedResult<AgentRunListItem>> {
     const response = await apiClient.get<AgentRunsListResponse>(
       this.baseEndpoint,
       { ...(params ?? {}), agentId }
@@ -808,4 +804,4 @@ export class AgentRunsService {
 }
 
 // Create a singleton instance
-export const agentRunsService = new AgentRunsService();
+export const agentRunsRepository = new AgentRunsRepository();

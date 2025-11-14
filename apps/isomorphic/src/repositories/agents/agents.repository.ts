@@ -3,13 +3,12 @@
  * Handles all API calls related to the agents section of the dashboard
  */
 
-import { apiClient } from './client';
+import { apiClient } from '../client';
 import {
   AgentsListResponse,
   AgentDetailsResponse,
   AgentPerformanceResponse,
   AgentRunsResponse,
-  AgentRunDetailsResponse,
   AgentComparisonResponse,
   AgentStatisticsResponse,
   AgentActivityResponse,
@@ -24,16 +23,19 @@ import {
   AgentData,
   MinimalAgentData,
   AgentPerformanceMetrics,
-  AgentRunData,
   AgentRunOverview,
   AgentComparison,
   AgentStatistics,
   ScoreRoundDataPoint,
   AgentActivity,
   AgentRoundMetrics,
-} from './types/agents';
+} from './agents.types';
+import type {
+  AgentRunData,
+  AgentRunDetailsResponse,
+} from '../agent-runs/agent-runs.types';
 
-export class AgentsService {
+export class AgentsRepository {
   private readonly baseEndpoint = '/api/v1/agents';
   private readonly minerListEndpoint = '/api/v1/miner-list';
 
@@ -467,4 +469,4 @@ export class AgentsService {
 }
 
 // Create a singleton instance
-export const agentsService = new AgentsService();
+export const agentsRepository = new AgentsRepository();

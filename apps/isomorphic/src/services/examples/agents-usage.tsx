@@ -5,7 +5,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { agentsService } from '../api/agents.service';
+import { agentsRepository } from '../api/agents.service';
 import {
   useAgents,
   useAgent,
@@ -408,7 +408,7 @@ export function DirectApiUsageExample() {
   const handleGetAgents = async () => {
     setLoading(true);
     try {
-      const agents = await agentsService.getAgents({ limit: 5 });
+      const agents = await agentsRepository.getAgents({ limit: 5 });
       setResult(agents);
     } catch (error) {
       setResult({ error: error.message });
@@ -420,7 +420,7 @@ export function DirectApiUsageExample() {
   const handleGetTopAgents = async () => {
     setLoading(true);
     try {
-      const topAgents = await agentsService.getTopAgents(3);
+      const topAgents = await agentsRepository.getTopAgents(3);
       setResult(topAgents);
     } catch (error) {
       setResult({ error: error.message });
@@ -432,7 +432,7 @@ export function DirectApiUsageExample() {
   const handleGetStatistics = async () => {
     setLoading(true);
     try {
-      const stats = await agentsService.getAgentStatistics();
+      const stats = await agentsRepository.getAgentStatistics();
       setResult(stats);
     } catch (error) {
       setResult({ error: error.message });

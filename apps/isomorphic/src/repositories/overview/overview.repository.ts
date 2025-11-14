@@ -3,7 +3,7 @@
  * Handles all API calls related to the overview section of the dashboard
  */
 
-import { apiClient } from './client';
+import { apiClient } from '../client';
 import {
   OverviewMetricsResponse,
   ValidatorsResponse,
@@ -20,9 +20,9 @@ import {
   LeaderboardData,
   OverviewMetrics,
   SubnetStatistics,
-} from './types/overview';
+} from './overview.types';
 
-export class OverviewService {
+export class OverviewRepository {
   private readonly baseEndpoint = '/api/v1/overview';
   private readonly validatorsFilterEndpoint = `${this.baseEndpoint}/validators/filter`;
 
@@ -350,4 +350,4 @@ export class OverviewService {
 }
 
 // Create a singleton instance
-export const overviewService = new OverviewService();
+export const overviewRepository = new OverviewRepository();

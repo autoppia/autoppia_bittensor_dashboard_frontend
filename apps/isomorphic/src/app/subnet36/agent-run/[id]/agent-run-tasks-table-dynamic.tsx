@@ -13,7 +13,7 @@ import { Table as RTable } from "rizzui";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
-import { AgentRunTaskData } from "@/services/api/types/agent-runs";
+import { AgentRunTaskData } from "@/repositories/agent-runs/agent-runs.types";
 import { routes } from "@/config/routes";
 import { useRouter } from "next/navigation";
 import { flexRender } from "@tanstack/react-table";

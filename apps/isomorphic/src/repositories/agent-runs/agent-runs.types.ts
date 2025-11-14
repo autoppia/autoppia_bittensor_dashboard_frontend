@@ -3,6 +3,14 @@
  * These types define the structure of data for agent evaluation runs
  */
 
+export interface PaginatedResult<T> {
+  runs: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+
 // ===== AGENT RUN DATA =====
 export interface AgentRunData {
   runId: string;
