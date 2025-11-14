@@ -48,7 +48,7 @@ import {
   PiArrowSquareOutDuotone,
   PiInfoDuotone,
 } from "react-icons/pi";
-import type { TaskAction, TaskDetails } from "@/services/api/types/tasks";
+import type { TaskAction, TaskDetails } from "@/repositories/tasks/tasks.types";
 
 // Shared helpers
 function truncateMiddle(value?: string | null, visible: number = 8) {

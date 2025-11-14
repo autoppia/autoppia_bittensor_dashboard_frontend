@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { agentRunsService } from '../api/agent-runs.service';
+import { agentRunsRepository } from '@/repositories/agent-runs/agent-runs.repository';
 import type {
   AgentRunData,
   AgentRunStats,
@@ -14,7 +14,8 @@ import type {
   AgentRunListItem,
   AgentRunsListQueryParams,
   AgentRunsListResponse,
-} from '../api/types/agent-runs';
+  AgentRunTasksQueryParams,
+} from '@/repositories/agent-runs/agent-runs.types';
 
 // Hook for listing agent runs with filters
 export function useAgentRunsList(params?: AgentRunsListQueryParams) {
@@ -40,7 +41,7 @@ export function useAgentRunsList(params?: AgentRunsListQueryParams) {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await agentRunsService.listAgentRuns(stableParams);
+      const response = await agentRunsRepository.listAgentRuns(stableParams);
       setRuns(response.runs);
       setTotal(response.total);
       setPage(response.page);
@@ -115,7 +116,7 @@ export function useAgentRun(
       setIsLoading(true);
       setError(null);
 
-      const result = await agentRunsService.getAgentRunPartialData(runId, {
+      const result = await agentRunsRepository.getAgentRunPartialData(runId, {
         includePersonas,
         includeStats,
         includeSummary,
@@ -172,7 +173,7 @@ export function useAgentRunPersonas(runId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await agentRunsService.getAgentRunPersonas(runId);
+        const data = await agentRunsRepository.getAgentRunPersonas(runId);
         setPersonas(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch personas');
@@ -200,7 +201,7 @@ export function useAgentRunStats(runId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await agentRunsService.getAgentRunStats(runId);
+        const data = await agentRunsRepository.getAgentRunStats(runId);
         setStats(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch stats');
@@ -228,7 +229,7 @@ export function useAgentRunSummary(runId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await agentRunsService.getAgentRunSummary(runId);
+        const data = await agentRunsRepository.getAgentRunSummary(runId);
         setSummary(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch summary');
@@ -268,10 +269,10 @@ export function useAgentRunTasks(
     [params]
   );
 
-  const stableParams = useMemo(
-    () => JSON.parse(serializedParams) as typeof params,
-    [serializedParams]
-  );
+const stableParams = useMemo<AgentRunTasksQueryParams>(
+  () => JSON.parse(serializedParams),
+  [serializedParams]
+);
 
   const fetchTasks = useCallback(async () => {
     if (!runId) return;
@@ -279,7 +280,8 @@ export function useAgentRunTasks(
     try {
       setIsLoading(true);
       setError(null);
-      const result = await agentRunsService.getAgentRunTasks(runId, {
+
+      const result = await agentRunsRepository.getAgentRunTasks(runId, {
         ...stableParams,
         page,
         limit,
@@ -336,7 +338,7 @@ export function useAgentRunTimeline(runId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await agentRunsService.getAgentRunTimeline(runId);
+        const result = await agentRunsRepository.getAgentRunTimeline(runId);
         setTimeline(result.events);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch timeline');
@@ -364,7 +366,7 @@ export function useAgentRunMetrics(runId: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await agentRunsService.getAgentRunMetrics(runId);
+        const result = await agentRunsRepository.getAgentRunMetrics(runId);
         setMetrics(result.metrics);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch metrics');

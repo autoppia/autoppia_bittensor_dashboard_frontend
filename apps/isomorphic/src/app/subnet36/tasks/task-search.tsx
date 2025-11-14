@@ -9,8 +9,8 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { tasksService } from "@/services/api/tasks.service";
-import type { TaskData } from "@/services/api/types/tasks";
+import { tasksRepository } from "@/repositories/tasks/tasks.repository";
+import type { TaskData } from "@/repositories/tasks/tasks.types";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -224,13 +224,13 @@ export default function TaskSearch() {
         setSearchError(null);
 
         try {
-          const task = await tasksService.getTask(debouncedSearchTerm);
+          const task = await tasksRepository.getTask(debouncedSearchTerm);
           if (ignore) return;
           setResults([task]);
           setTotal(1);
 
           // Fetch facets for filter options
-          const facetsResponse = await tasksService.searchTasks({
+          const facetsResponse = await tasksRepository.searchTasks({
             limit: 1,
             includeDetails: false,
           });
@@ -289,7 +289,7 @@ export default function TaskSearch() {
       setSearchError(null);
 
       try {
-        const response = await tasksService.searchTasks({
+        const response = await tasksRepository.searchTasks({
           agentRunId: debouncedFilters.agentRun || undefined,
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,

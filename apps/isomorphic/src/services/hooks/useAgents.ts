@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { agentsService } from '../api/agents.service';
+import { agentsRepository } from '@/repositories/agents/agents.repository';
 import type {
   AgentData,
   MinimalAgentData,
@@ -21,7 +21,7 @@ import type {
   AgentPerformanceQueryParams,
   AgentActivityQueryParams,
   AgentComparisonQueryParams,
-} from '../api/types/agents';
+} from '@/repositories/agents/agents.types';
 
 type SerializableParams = Record<string, any> | undefined;
 
@@ -87,7 +87,7 @@ function useApiCall<T>(
 export function useMinersList(params?: MinimalAgentsListQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinersList(stableParams),
+    () => agentsRepository.getMinersList(stableParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -97,7 +97,7 @@ export function useMinersList(params?: MinimalAgentsListQueryParams) {
 export function useMinerDetails(uid: number, params?: { round?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinerDetails(uid, stableParams),
+    () => agentsRepository.getMinerDetails(uid, stableParams),
     [uid, stableParams]
   );
   return useApiCall(request, `${uid}:${paramsKey}`);
@@ -110,7 +110,7 @@ export function useMinerPerformance(
 ) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getMinerPerformance(uid, stableParams),
+    () => agentsRepository.getMinerPerformance(uid, stableParams),
     [uid, stableParams]
   );
   return useApiCall(request, `${uid}:${paramsKey}`);
@@ -120,7 +120,7 @@ export function useMinerPerformance(
 export function useAgents(params?: AgentsListQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgents(stableParams),
+    () => agentsRepository.getAgents(stableParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -140,7 +140,7 @@ export function useAgent(id?: string | null, params?: { round?: number }) {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
-    return agentsService.getAgent(id, stableParams);
+    return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);
   return useApiCall(request, id ? `${id}:${paramsKey}` : 'agent:none');
 }
@@ -152,7 +152,7 @@ export function useAgentPerformance(
 ) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentPerformance(id, stableParams),
+    () => agentsRepository.getAgentPerformance(id, stableParams),
     [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
@@ -165,7 +165,7 @@ export function useAgentRuns(
 ) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentRuns(id, stableParams),
+    () => agentsRepository.getAgentRuns(id, stableParams),
     [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
@@ -174,7 +174,7 @@ export function useAgentRuns(
 // Hook for specific agent run
 export function useAgentRun(agentId: string, runId: string) {
   const request = useCallback(
-    () => agentsService.getAgentRun(agentId, runId),
+    () => agentsRepository.getAgentRun(agentId, runId),
     [agentId, runId]
   );
   return useApiCall(request, `${agentId}:${runId}`);
@@ -187,7 +187,7 @@ export function useAgentActivity(
 ) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAgentActivity(id, stableParams),
+    () => agentsRepository.getAgentActivity(id, stableParams),
     [id, stableParams]
   );
   return useApiCall(request, `${id}:${paramsKey}`);
@@ -197,7 +197,7 @@ export function useAgentActivity(
 export function useAgentComparison(params: AgentComparisonQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.compareAgents(stableParams as AgentComparisonQueryParams),
+    () => agentsRepository.compareAgents(stableParams as AgentComparisonQueryParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -205,7 +205,7 @@ export function useAgentComparison(params: AgentComparisonQueryParams) {
 
 // Hook for agent statistics
 export function useAgentStatistics() {
-  const request = useCallback(() => agentsService.getAgentStatistics(), []);
+  const request = useCallback(() => agentsRepository.getAgentStatistics(), []);
   return useApiCall(request, 'agent-statistics');
 }
 
@@ -213,7 +213,7 @@ export function useAgentStatistics() {
 export function useAllAgentActivity(params?: AgentActivityQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => agentsService.getAllAgentActivity(stableParams),
+    () => agentsRepository.getAllAgentActivity(stableParams),
     [stableParams]
   );
   return useApiCall(request, `all-activity:${paramsKey}`);
@@ -221,13 +221,13 @@ export function useAllAgentActivity(params?: AgentActivityQueryParams) {
 
 // Hook for top performing agents
 export function useTopAgents(limit: number = 10) {
-  const request = useCallback(() => agentsService.getTopAgents(limit), [limit]);
+  const request = useCallback(() => agentsRepository.getTopAgents(limit), [limit]);
   return useApiCall(request, `top-agents:${limit}`);
 }
 
 // Hook for most active agents
 export function useMostActiveAgents(limit: number = 10) {
-  const request = useCallback(() => agentsService.getMostActiveAgents(limit), [limit]);
+  const request = useCallback(() => agentsRepository.getMostActiveAgents(limit), [limit]);
   return useApiCall(request, `most-active:${limit}`);
 }
 
@@ -235,14 +235,14 @@ export function useMostActiveAgents(limit: number = 10) {
 export function useAgentsByType(
   type: 'autoppia' | 'openai' | 'anthropic' | 'browser-use' | 'custom'
 ) {
-  const request = useCallback(() => agentsService.getAgentsByType(type), [type]);
+  const request = useCallback(() => agentsRepository.getAgentsByType(type), [type]);
   return useApiCall(request, `agents-type:${type}`);
 }
 
 // Hook for agent search
 export function useAgentSearch(query: string, limit: number = 20) {
   const request = useCallback(
-    () => agentsService.searchAgents(query, limit),
+    () => agentsRepository.searchAgents(query, limit),
     [query, limit]
   );
   return useApiCall(request, `agent-search:${query}:${limit}`);
@@ -254,7 +254,7 @@ export function useAgentPerformanceTrends(
   timeRange: '7d' | '30d' | '90d' = '30d'
 ) {
   const request = useCallback(
-    () => agentsService.getAgentPerformanceTrends(id, timeRange),
+    () => agentsRepository.getAgentPerformanceTrends(id, timeRange),
     [id, timeRange]
   );
   return useApiCall(request, `agent-trends:${id}:${timeRange}`);
@@ -262,7 +262,7 @@ export function useAgentPerformanceTrends(
 
 // Hook for agent score distribution
 export function useAgentScoreDistribution(id: string) {
-  const request = useCallback(() => agentsService.getAgentScoreDistribution(id), [id]);
+  const request = useCallback(() => agentsRepository.getAgentScoreDistribution(id), [id]);
   return useApiCall(request, `agent-score-distribution:${id}`);
 }
 
@@ -273,7 +273,7 @@ export function useAgentRunHistory(
   limit: number = 20
 ) {
   const request = useCallback(
-    () => agentsService.getAgentRunHistory(id, page, limit),
+    () => agentsRepository.getAgentRunHistory(id, page, limit),
     [id, page, limit]
   );
   return useApiCall(request, `agent-run-history:${id}:${page}:${limit}`);
@@ -281,7 +281,7 @@ export function useAgentRunHistory(
 
 // Hook for comprehensive agent summary
 export function useAgentSummary(id: string) {
-  const request = useCallback(() => agentsService.getAgentSummary(id), [id]);
+  const request = useCallback(() => agentsRepository.getAgentSummary(id), [id]);
   return useApiCall(request, `agent-summary:${id}`);
 }
 
@@ -303,7 +303,7 @@ export function useAgentRealtime(id: string, interval: number = 30000) {
 
   const fetchRealtimeData = useCallback(async () => {
     try {
-      const summary = await agentsService.getAgentSummary(id);
+      const summary = await agentsRepository.getAgentSummary(id);
       setData({
         agent: summary.agent,
         performance: summary.recentPerformance,
@@ -349,7 +349,7 @@ export function useAgentPerformanceComparison(
       setError(null);
       
       const promises = agentIds.map(async (agentId) => {
-        const trends = await agentsService.getAgentPerformanceTrends(agentId, timeRange);
+        const trends = await agentsRepository.getAgentPerformanceTrends(agentId, timeRange);
         return { agentId, trends };
       });
       

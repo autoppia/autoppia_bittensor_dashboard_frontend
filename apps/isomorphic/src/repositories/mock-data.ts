@@ -9,7 +9,7 @@ import type {
   OverviewRoundData,
   LeaderboardData,
   SubnetStatistics,
-} from "./types/overview";
+} from "./overview/overview.types";
 
 export const mockOverviewMetrics: OverviewMetrics = {
   topScore: 0.95,

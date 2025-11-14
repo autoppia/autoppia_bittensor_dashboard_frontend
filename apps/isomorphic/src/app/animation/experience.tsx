@@ -24,53 +24,13 @@ import {
   FaStepForward,
 } from "react-icons/fa";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
-import { apiClient } from "@/services/api/client";
-
-type ApiMinerRosterEntry = {
-  miner_id: string;
-  display_name: string;
-  color_hex: string;
-  avatar_url: string;
-  order?: number;
-};
-
-type ApiTimelineSnapshot = {
-  miner_id: string;
-  score: number;
-  rank: number;
-  rank_change?: number;
-  score_change?: number;
-  previous_rank?: number | null;
-};
-
-type ApiTimelinePoint = {
-  round: number;
-  timestamp: string;
-  snapshots: ApiTimelineSnapshot[];
-};
-
-type SubnetTimelineMeta = {
-  subnet_id: string;
-  start_round: number;
-  end_round: number;
-  round_count: number;
-  round_duration_seconds: number;
-  generated_at: string;
-  query: {
-    rounds: number | null;
-    end_round: number | null;
-    seconds_back: number | null;
-    miners: number | null;
-  };
-  inferred_round_count: number;
-};
-
-type SubnetTimelineResponse = {
-  subnet_id: string;
-  roster: ApiMinerRosterEntry[];
-  timeline: ApiTimelinePoint[];
-  meta: SubnetTimelineMeta;
-};
+import { subnetsRepository } from "@/repositories/subnets/subnets.repository";
+import type {
+  ApiMinerRosterEntry,
+  ApiTimelinePoint,
+  SubnetTimelineMeta,
+  SubnetTimelineResponse,
+} from "@/repositories/subnets/subnets.types";
 
 type MinerProfile = {
   id: string;
@@ -419,11 +379,10 @@ export function MinerAnimationExperience({
       }
 
       try {
-        const response = await apiClient.get<SubnetTimelineResponse>(
-          `/api/v1/subnets/${encodeURIComponent(subnetId)}/timeline`,
-          { rounds: Math.max(1, Math.floor(rounds)) }
-        );
-        const processed = transformTimelineResponse(response.data);
+        const response = await subnetsRepository.getSubnetTimeline(subnetId, {
+          rounds: Math.max(1, Math.floor(rounds)),
+        });
+        const processed = transformTimelineResponse(response);
         setData(processed);
         setError(null);
 

@@ -23,7 +23,7 @@ import {
   Area,
 } from "recharts";
 import { useLeaderboard } from "@/services/hooks/useOverview";
-import type { LeaderboardData } from "@/services/api/types/overview";
+import type { LeaderboardData } from "@/repositories/overview/overview.types";
 
 const filterOptions = ["7R", "15R", "30R", "All"] as const;
 type FilterOption = (typeof filterOptions)[number];

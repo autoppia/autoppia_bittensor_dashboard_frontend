@@ -3,7 +3,7 @@
  * Handles all API calls related to the rounds section of the dashboard
  */
 
-import { apiClient } from "./client";
+import { apiClient } from "../client";
 import {
   RoundsListResponse,
   RoundDetailsResponse,
@@ -21,9 +21,9 @@ import {
   ValidatorPerformance,
   RoundActivity,
   RoundProgress,
-} from "./types/rounds";
+} from "./rounds.types";
 
-export class RoundsService {
+export class RoundsRepository {
   private readonly baseEndpoint = "/api/v1/rounds";
 
   private buildRoundPath(identifier: string | number): {
@@ -600,4 +600,4 @@ export class RoundsService {
 }
 
 // Create a singleton instance
-export const roundsService = new RoundsService();
+export const roundsRepository = new RoundsRepository();

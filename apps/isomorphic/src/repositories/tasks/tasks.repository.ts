@@ -3,7 +3,7 @@
  * Handles all API calls related to task management
  */
 
-import { apiClient } from './client';
+import { apiClient } from '../client';
 import {
   TaskData,
   TaskDetails,
@@ -21,9 +21,9 @@ import {
   TaskPartialData,
   TaskSearchParams,
   TaskSearchResponse,
-} from './types/tasks';
+} from './tasks.types';
 
-export class TasksService {
+export class TasksRepository {
   private readonly baseEndpoint = '/api/v1/tasks';
 
   /**
@@ -464,4 +464,4 @@ export class TasksService {
 }
 
 // Create a singleton instance
-export const tasksService = new TasksService();
+export const tasksRepository = new TasksRepository();

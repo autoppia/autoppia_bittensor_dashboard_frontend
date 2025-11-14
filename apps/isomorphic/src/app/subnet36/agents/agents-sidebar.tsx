@@ -27,7 +27,7 @@ import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeho
 import type {
   MinimalAgentData,
   MinimalAgentsListQueryParams,
-} from "@/services/api/types/agents";
+} from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { GLASS_STYLES } from "@/config/theme-styles";
 import { resolveAssetUrl } from "@/services/utils/assets";

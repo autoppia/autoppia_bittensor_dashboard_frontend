@@ -2,8 +2,8 @@ import { metaObject } from "@/config/site.config";
 import { notFound, redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import Round from "./round";
-import { overviewService } from "@/services/api/overview.service";
-import { roundsService } from "@/services/api/rounds.service";
+import { overviewRepository } from "@/repositories/overview/overview.repository";
+import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export default async function Page({ params }: PageProps) {
     };
 
     try {
-      const currentRound = await roundsService.getCurrentRound();
+      const currentRound = await roundsRepository.getCurrentRound();
       const resolved = normalizeRoundIdentifier(currentRound);
       if (resolved) {
         return resolved;
@@ -59,7 +59,7 @@ export default async function Page({ params }: PageProps) {
     }
 
     try {
-      const roundsResponse = await roundsService.getRounds({
+      const roundsResponse = await roundsRepository.getRounds({
         page: 1,
         limit: 1,
         sortBy: "round",
@@ -81,7 +81,7 @@ export default async function Page({ params }: PageProps) {
     }
 
     try {
-      const metrics = await overviewService.getMetrics();
+      const metrics = await overviewRepository.getMetrics();
       if (metrics?.currentRound) {
         return metrics.currentRound.toString().startsWith("round_")
           ? metrics.currentRound.toString()
@@ -92,7 +92,7 @@ export default async function Page({ params }: PageProps) {
     }
 
     try {
-      const roundsResponse: any = await overviewService.getRounds({ limit: 1, includeCurrent: true });
+      const roundsResponse: any = await overviewRepository.getRounds({ limit: 1, includeCurrent: true });
       const roundsArray = roundsResponse?.data?.rounds || roundsResponse?.rounds;
       if (Array.isArray(roundsArray) && roundsArray.length > 0) {
         const resolved = normalizeRoundIdentifier(roundsArray[0]);
