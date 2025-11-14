@@ -8,7 +8,7 @@ import type {
 import type {
   AgentRunStats,
   AgentRunSummary,
-} from "@/services/api/types/agent-runs";
+} from "@/repositories/agent-runs/agent-runs.types";
 import {
   getMockAgentRunDetailData,
   getMockAgentRunSummaryData,

@@ -24,7 +24,7 @@ import Placeholder, {
   TextPlaceholder,
   ListItemPlaceholder,
 } from "@/app/shared/placeholder";
-import { TaskAction } from "@/services/api/types/tasks";
+import { TaskAction } from "@/repositories/tasks/tasks.types";
 import { useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 

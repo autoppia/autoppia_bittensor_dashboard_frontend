@@ -43,7 +43,7 @@ import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
 import type {
   AgentRunStats as AgentRunStatsData,
   AgentRunTaskData,
-} from "@/services/api/types/agent-runs";
+} from "@/repositories/agent-runs/agent-runs.types";
 import { createColumnHelper } from "@tanstack/react-table";
 import { resolveAssetUrl } from "@/services/utils/assets";
 

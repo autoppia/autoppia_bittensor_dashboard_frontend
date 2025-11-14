@@ -4,17 +4,12 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { overviewService } from "../api/overview.service";
+import { overviewRepository } from "@/repositories/overview/overview.repository";
 import type {
-  OverviewMetrics,
-  ValidatorData,
-  RoundData,
-  LeaderboardData,
-  SubnetStatistics,
   ValidatorsQueryParams,
   LeaderboardQueryParams,
   RoundsQueryParams,
-} from "../api/types/overview";
+} from "@/repositories/overview/overview.types";
 
 type SerializableParams = Record<string, any> | undefined;
 
@@ -112,7 +107,7 @@ function useApiCall<T>(
 // Hook for overview metrics
 export function useOverviewMetrics(options?: UseApiCallOptions) {
   const { stableParams: stableOptions } = useStableParams(options);
-  const request = useCallback(() => overviewService.getMetrics(), []);
+  const request = useCallback(() => overviewRepository.getMetrics(), []);
   return useApiCall(request, "metrics", stableOptions);
 }
 
@@ -120,7 +115,7 @@ export function useOverviewMetrics(options?: UseApiCallOptions) {
 export function useValidators(params?: ValidatorsQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => overviewService.getValidators(stableParams),
+    () => overviewRepository.getValidators(stableParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -128,13 +123,13 @@ export function useValidators(params?: ValidatorsQueryParams) {
 
 // Hook for a specific validator
 export function useValidator(id: string) {
-  const request = useCallback(() => overviewService.getValidator(id), [id]);
+  const request = useCallback(() => overviewRepository.getValidator(id), [id]);
   return useApiCall(request, id);
 }
 
 // Hook for validator filter options
 export function useValidatorFilterOptions() {
-  const request = useCallback(() => overviewService.getValidatorFilters(), []);
+  const request = useCallback(() => overviewRepository.getValidatorFilters(), []);
   const { data, loading, error, refetch } = useApiCall(request);
 
   return {
@@ -147,7 +142,7 @@ export function useValidatorFilterOptions() {
 
 // Hook for current round
 export function useCurrentRound() {
-  const request = useCallback(() => overviewService.getCurrentRound(), []);
+  const request = useCallback(() => overviewRepository.getCurrentRound(), []);
   return useApiCall(request, "current-round");
 }
 
@@ -155,7 +150,7 @@ export function useCurrentRound() {
 export function useRounds(params?: RoundsQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => overviewService.getRounds(stableParams),
+    () => overviewRepository.getRounds(stableParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -163,7 +158,7 @@ export function useRounds(params?: RoundsQueryParams) {
 
 // Hook for a specific round
 export function useRound(id: number) {
-  const request = useCallback(() => overviewService.getRound(id), [id]);
+  const request = useCallback(() => overviewRepository.getRound(id), [id]);
   return useApiCall(request, String(id));
 }
 
@@ -171,7 +166,7 @@ export function useRound(id: number) {
 export function useLeaderboard(params?: LeaderboardQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
-    () => overviewService.getLeaderboard(stableParams),
+    () => overviewRepository.getLeaderboard(stableParams),
     [stableParams]
   );
   return useApiCall(request, paramsKey);
@@ -179,20 +174,20 @@ export function useLeaderboard(params?: LeaderboardQueryParams) {
 
 // Hook for subnet statistics
 export function useSubnetStatistics() {
-  const request = useCallback(() => overviewService.getSubnetStatistics(), []);
+  const request = useCallback(() => overviewRepository.getSubnetStatistics(), []);
   return useApiCall(request, "subnet-stats");
 }
 
 // Hook for network status
 export function useNetworkStatus() {
-  const request = useCallback(() => overviewService.getNetworkStatus(), []);
+  const request = useCallback(() => overviewRepository.getNetworkStatus(), []);
   return useApiCall(request, "network-status");
 }
 
 // Hook for recent activity
 export function useRecentActivity(limit: number = 10) {
   const request = useCallback(
-    () => overviewService.getRecentActivity(limit),
+    () => overviewRepository.getRecentActivity(limit),
     [limit]
   );
   return useApiCall(request, `recent-activity:${limit}`);
@@ -201,7 +196,7 @@ export function useRecentActivity(limit: number = 10) {
 // Hook for performance trends
 export function usePerformanceTrends(days: number = 7) {
   const request = useCallback(
-    () => overviewService.getPerformanceTrends(days),
+    () => overviewRepository.getPerformanceTrends(days),
     [days]
   );
   return useApiCall(request, `performance-trends:${days}`);

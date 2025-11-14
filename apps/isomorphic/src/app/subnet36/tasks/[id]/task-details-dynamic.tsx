@@ -18,7 +18,7 @@ import {
   PiTimer,
   PiUserCircle,
 } from "react-icons/pi";
-import type { TaskDetails } from "@/services/api/types/tasks";
+import type { TaskDetails } from "@/repositories/tasks/tasks.types";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
 

@@ -8,8 +8,8 @@ import type {
   AgentRunData,
   AgentRunListItem,
   AgentRunsListQueryParams,
-} from "@/services/api/types/agent-runs";
-import { agentRunsService } from "@/services/api/agent-runs.service";
+} from "@/repositories/agent-runs/agent-runs.types";
+import { agentRunsRepository } from "@/repositories/agent-runs/agent-runs.repository";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -17,7 +17,7 @@ import {
   PiRobotDuotone,
   PiCaretDownDuotone,
 } from "react-icons/pi";
-import { overviewService } from "@/services/api/overview.service";
+import { overviewRepository } from "@/repositories/overview/overview.repository";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
 
@@ -239,7 +239,7 @@ export default function AgentRunSearch() {
     setValidatorLoading(true);
     setValidatorError(null);
 
-    overviewService
+    overviewRepository
       .getValidatorFilters()
       .then((response) => {
         if (!isActive) return;
@@ -418,7 +418,7 @@ export default function AgentRunSearch() {
         setManualError(null);
         try {
           console.log(`Auto-searching for agent run: ${trimmedRunId}`);
-          const run = await agentRunsService.getAgentRun(trimmedRunId);
+          const run = await agentRunsRepository.getAgentRun(trimmedRunId);
           setManualResults([mapRunDetailToListItem(run)]);
         } catch (err: any) {
           console.error("Agent run auto-search error:", err);
@@ -561,7 +561,7 @@ export default function AgentRunSearch() {
         console.log(`Searching for agent run: ${trimmedRunId}`);
         console.log(`API endpoint: /api/v1/agent-runs/${trimmedRunId}`);
 
-        const run = await agentRunsService.getAgentRun(trimmedRunId);
+        const run = await agentRunsRepository.getAgentRun(trimmedRunId);
         setManualResults([mapRunDetailToListItem(run)]);
       } catch (err: any) {
         console.error("Agent run search error:", err);

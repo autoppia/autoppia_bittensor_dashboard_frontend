@@ -19,6 +19,8 @@ import {
   PiSparkle,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
+import { playgroundRepository } from "@/repositories/playground/playground.repository";
+import type { RunAgentBenchmarkPayload } from "@/repositories/playground/playground.types";
 
 type TestResult = {
   project: string;
@@ -30,8 +32,6 @@ type TestResult = {
   actions?: any[];
   gif?: string | null;
 };
-const TEST_AGENT_API = "https://api-benchmark.autoppia.com/test-your-agent";
-
 export default function TestAgent() {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
@@ -238,7 +238,7 @@ export default function TestAgent() {
 
     try {
       // ✅ payload exactly like your curl (but built from UI)
-      const payload = {
+      const payload: RunAgentBenchmarkPayload = {
         ip, // "<your_public_ip_or_ngrok>"
         port, // e.g., 5000
         projects: selectedProjects, // e.g., ["autobooks"]
@@ -252,16 +252,7 @@ export default function TestAgent() {
         should_record_gif: false,
       };
 
-      const res = await fetch(TEST_AGENT_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
-      }
-      const data = await res.json();
+      const data = await playgroundRepository.runAgentBenchmark(payload);
       setApiResponse(data);
 
       // Parse the nested structure: Project -> AgentRun -> use_cases -> UseCase -> TaskId -> details
