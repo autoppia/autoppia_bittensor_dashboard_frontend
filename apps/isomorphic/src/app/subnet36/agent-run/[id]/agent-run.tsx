@@ -17,47 +17,50 @@ import { routes } from "@/config/routes";
 const HIGHLIGHT_COLOR = "#FDF5E6";
 export default function AgentRun() {
   const { id } = useParams();
-  const runId = Array.isArray(id) ? id[0] : id ?? "";
+  const runId = Array.isArray(id) ? id[0] : (id ?? "");
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [period, setPeriod] = useState<string | null>(null);
 
   // Use the partial loading hook with progressive data fetching
-  const { data, error, refetch, isAnyLoading } = useAgentRun(
-    runId,
-    {
-      includePersonas: true,
-      includeStats: true,
-      includeSummary: true,
-      includeTasks: true,
-      autoRefresh: true, // Enable auto-refresh for real-time updates
-      refreshInterval: 120000, // Refresh every 2 minutes (reduced from 30s for performance)
-    }
-  );
+  const { data, error, refetch, isAnyLoading } = useAgentRun(runId, {
+    includePersonas: true,
+    includeStats: true,
+    includeSummary: true,
+    includeTasks: true,
+    autoRefresh: true, // Enable auto-refresh for real-time updates
+    refreshInterval: 120000, // Refresh every 2 minutes (reduced from 30s for performance)
+  });
 
   return (
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={
-          (() => {
-            const roundId = (data?.summary?.roundId ?? data?.personas?.round?.id ?? "") as any;
-            const roundLabel = typeof roundId === 'number' || (typeof roundId === 'string' && roundId)
+        description={(() => {
+          const roundId = (data?.summary?.roundId ??
+            data?.personas?.round?.id ??
+            "") as any;
+          const roundLabel =
+            typeof roundId === "number" ||
+            (typeof roundId === "string" && roundId)
               ? String(roundId)
               : "—";
-            return (
-              <span className="flex flex-wrap items-center gap-2">
-                <span>Validator Round ID:</span>
-                <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1 font-mono`}>
-                  {roundLabel}
-                </span>
-                <span className="ms-2">Agent Run ID:</span>
-                <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.completed} !px-3 !py-1 font-mono`}>
-                  {runId}
-                </span>
+          return (
+            <span className="flex flex-wrap items-center gap-2">
+              <span>Validator Round ID:</span>
+              <span
+                className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1 font-mono`}
+              >
+                {roundLabel}
               </span>
-            );
-          })()
-        }
+              <span className="ms-2">Agent Run ID:</span>
+              <span
+                className={`${CHIP_STYLES.base} ${CHIP_STYLES.completed} !px-3 !py-1 font-mono`}
+              >
+                {runId}
+              </span>
+            </span>
+          );
+        })()}
         className="mt-4"
       >
         <Link
@@ -102,9 +105,7 @@ export default function AgentRun() {
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic
-            selectedWebsite={selectedWebsite}
-          />
+          <AgentRunSummaryDynamic selectedWebsite={selectedWebsite} />
         </div>
       </div>
 

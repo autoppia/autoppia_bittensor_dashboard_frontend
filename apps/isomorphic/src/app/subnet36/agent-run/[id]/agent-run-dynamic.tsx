@@ -50,8 +50,8 @@ export default function AgentRunDynamic() {
             <span className="ms-1">Back to Agents</span>
           </Link>
         </PageHeader>
-        <LoadingScreen 
-          title="Loading Agent Run Data" 
+        <LoadingScreen
+          title="Loading Agent Run Data"
           subtitle="Fetching evaluation run details..."
           size="lg"
         />
