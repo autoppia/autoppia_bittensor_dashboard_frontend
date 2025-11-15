@@ -27,7 +27,7 @@ export default function Overview() {
   useEffect(() => {
     const interval = setInterval(() => {
       refetchMetrics();
-    }, 30000); // 30 seconds
+    }, 120000); // 120 seconds (2 minutes) - reduced from 30s for performance
 
     return () => clearInterval(interval);
   }, [refetchMetrics]);
