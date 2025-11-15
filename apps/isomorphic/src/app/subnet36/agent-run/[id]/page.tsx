@@ -203,7 +203,7 @@ export default function Page() {
     includeSummary: true,
     includeTasks: true,
     autoRefresh: true,
-    refreshInterval: 30000,
+    refreshInterval: 120000, // 2 minutes (reduced from 30s for performance)
   });
 
   // Derived detail data from stats for charts/summary

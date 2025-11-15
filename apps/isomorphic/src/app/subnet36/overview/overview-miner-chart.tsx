@@ -93,7 +93,7 @@ export default function MinerChart({
   className,
   targetHeight,
 }: MinerChartProps) {
-  const [timeRange, setTimeRange] = useState<FilterOption>("All");
+  const [timeRange, setTimeRange] = useState<FilterOption>("15R"); // Changed from "All" to "15R" for better performance
   // Get leaderboard data from API
   const apiTimeRange = timeRange === "All" ? "all" : timeRange;
   const {
@@ -103,11 +103,11 @@ export default function MinerChart({
     refetch,
   } = useLeaderboard({ timeRange: apiTimeRange });
 
-  // Auto-refresh leaderboard every 30 seconds to show latest scores
+  // Auto-refresh leaderboard every 2 minutes (reduced from 30s for performance)
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 30000); // 30 seconds
+    }, 120000); // 120 seconds (2 minutes)
 
     return () => clearInterval(interval);
   }, [refetch]);
