@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { inter, lexendDeca } from "@/app/fonts";
 import cn from "@core/utils/class-names";
 import NextProgress from "@core/components/next-progress";
@@ -50,7 +51,9 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <NextProgress />
-          <NavigationLoader />
+          <Suspense fallback={null}>
+            <NavigationLoader />
+          </Suspense>
           <JotaiProvider>
             <HydrogenLayout>{children}</HydrogenLayout>
             <GlobalDrawer />
