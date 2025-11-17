@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NavLink from "@core/components/nav-link";
 import Image from "next/image";
 import React from "react";
 import { usePathname } from "next/navigation";
@@ -240,9 +241,9 @@ export default function Header() {
               }
 
               return (
-                <Link key={item.name} href={href} className="flex-shrink-0">
+                <NavLink key={item.name} href={href} className="flex-shrink-0">
                   {itemContent}
-                </Link>
+                </NavLink>
               );
             })}
           </div>

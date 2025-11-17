@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import NavLink from "@core/components/nav-link";
 import Image from "next/image";
 import {
   useParams,
@@ -317,7 +318,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               })();
 
               return (
-                <Link
+                <NavLink
                   key={`miner-menu-${miner.uid}`}
                   href={
                     typeof effectiveRound === "number"
@@ -443,7 +444,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       </div>
                     </div>
                   </div>
-                </Link>
+                </NavLink>
               );
             })}
           </div>
