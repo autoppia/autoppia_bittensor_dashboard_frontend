@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NavLink from "@core/components/nav-link";
 import React from "react";
 import { usePathname } from "next/navigation";
 import cn from "@core/utils/class-names";
@@ -191,9 +192,9 @@ export function SidebarMenu() {
         }
 
         return (
-          <Link key={item.name} href={href}>
+          <NavLink key={item.name} href={href}>
             {itemBody}
-          </Link>
+          </NavLink>
         );
       })}
     </div>
