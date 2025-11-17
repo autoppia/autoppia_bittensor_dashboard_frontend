@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { inter, lexendDeca } from "@/app/fonts";
 import cn from "@core/utils/class-names";
 import NextProgress from "@core/components/next-progress";
+import NavigationLoader from "@/app/shared/navigation-loader";
 import HydrogenLayout from "@/layouts/hydrogen/layout";
 import { ThemeProvider, JotaiProvider } from "@/app/shared/theme-provider";
 import GlobalDrawer from "@/app/shared/drawer-views/container";
@@ -49,6 +50,7 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <NextProgress />
+          <NavigationLoader />
           <JotaiProvider>
             <HydrogenLayout>{children}</HydrogenLayout>
             <GlobalDrawer />
