@@ -153,9 +153,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     if (minersData?.miners) {
       let filtered = minersData.miners;
 
-      // Optionally exclude SOTA benchmarks when toggled off
+      // Only exclude "Browser Use" agent when SOTA is toggled off
       if (!includeSota) {
-        filtered = filtered.filter((miner) => !miner.isSota);
+        filtered = filtered.filter((miner) => 
+          miner.name.toLowerCase() !== "browser use"
+        );
       }
 
       setFilteredAgents(filtered);
@@ -170,9 +172,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
     let filtered = minersData.miners;
 
-    // Optionally exclude SOTA benchmarks when toggled off
+    // Only exclude "Browser Use" agent when SOTA is toggled off
     if (!includeSota) {
-      filtered = filtered.filter((miner) => !miner.isSota);
+      filtered = filtered.filter((miner) => 
+        miner.name.toLowerCase() !== "browser use"
+      );
     }
 
     // Then apply search filter
