@@ -217,24 +217,33 @@ export default function TaskSearch() {
     let ignore = false;
 
     const performSearch = async () => {
-      // If there's a Task ID search term, handle it separately
+      // If there's a search term, use text-based search instead of ID lookup
+      // This allows searching by prompt text, not just task ID
       if (debouncedSearchTerm !== "") {
         setHasSearched(true);
         setIsSearching(true);
         setSearchError(null);
 
         try {
-          const task = await tasksRepository.getTask(debouncedSearchTerm);
-          if (ignore) return;
-          setResults([task]);
-          setTotal(1);
-
-          // Fetch facets for filter options
-          const facetsResponse = await tasksRepository.searchTasks({
-            limit: 1,
+          // Use searchTasks with query parameter for text search
+          const response = await tasksRepository.searchTasks({
+            query: debouncedSearchTerm,
+            agentRunId: debouncedFilters.agentRun || undefined,
+            website: debouncedFilters.website || undefined,
+            useCase: debouncedFilters.useCase || undefined,
+            page: currentPage,
+            limit: currentLimit,
             includeDetails: false,
           });
-          const facets = facetsResponse.data?.facets;
+          
+          if (ignore) return;
+          
+          const tasks = response.data?.tasks ?? [];
+          const facets = response.data?.facets;
+          
+          setResults(tasks);
+          setTotal(response.data?.total ?? tasks.length);
+          
           if (facets && !ignore) {
             setAvailableWebsites((prev) =>
               mergeAndSortUnique([
@@ -258,16 +267,9 @@ export default function TaskSearch() {
             setResults([]);
             setTotal(0);
             const errorMessage = err?.message || String(err);
-            if (
-              errorMessage.includes("404") ||
-              errorMessage.includes("Not Found")
-            ) {
-              setSearchError(
-                `Task '${debouncedSearchTerm}' not found. The task ID might not exist or the format is incorrect. Try using filters instead.`
-              );
-            } else {
-              setSearchError(errorMessage);
-            }
+            setSearchError(
+              errorMessage || `Failed to search for '${debouncedSearchTerm}'`
+            );
           }
         } finally {
           if (!ignore) {

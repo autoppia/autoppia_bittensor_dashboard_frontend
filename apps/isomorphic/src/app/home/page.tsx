@@ -71,9 +71,9 @@ const IWA_CONSTRAINTS: string[] = [
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Infinite Web Arena Platform";
-  const highlightWord = "Platform";
-  const highlightStart = fullText.indexOf(highlightWord);
+  const fullText = "Infinite Web Agents";
+  const highlightWord = "";
+  const highlightStart = -1;
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState(0);
 
