@@ -171,12 +171,14 @@ function AgentStats({
   const roundsParticipated = (
     agent.roundsParticipated || agent.totalRuns
   ).toLocaleString();
-  const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0);
+
+    // Multiplicando por el 7.5% solicitado por robert
+  const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0) * 0.075;
   const totalAlphaEarned = Math.round(totalAlphaValue);
   const totalTaoEarned = (() => {
     const v = (agent as any).taoWonInPrizes;
-    if (typeof v === "number") return Math.round(v);
-    return Math.round(Number(agent.alphaWonInPrizes ?? 0));
+    if (typeof v === "number") return Math.round(v * 0.075);
+    return Math.round(Number(agent.alphaWonInPrizes ?? 0) * 0.075);
   })();
 
   const stats = [
@@ -1534,9 +1536,9 @@ function RoundWebsitesChart({
                   {chartRows.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={`url(#barGradient${index})`}
+                      fill={`url(#barGradient${index % 9})`}
                       filter={
-                        activeIndex === index ? `url(#glow${index})` : undefined
+                        activeIndex === index ? `url(#glow${index % 9})` : undefined
                       }
                       fillOpacity={
                         activeIndex === null
@@ -1866,9 +1868,10 @@ export default function Page() {
     agent.totalRuns ||
     0
   ).toLocaleString();
-  const totalAlphaEarned = Math.round(Number(agent.alphaWonInPrizes ?? 0));
+  // Multiplicando por el 7.5% solicitado por robert
+  const totalAlphaEarned = Math.round(Number(agent.alphaWonInPrizes ?? 0) * 0.075);
   const totalTaoEarned = Math.round(
-    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0)
+    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
   );
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
