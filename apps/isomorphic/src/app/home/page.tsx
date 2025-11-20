@@ -73,7 +73,7 @@ export default function LandingPage() {
   const [displayedText, setDisplayedText] = useState("");
   const fullText = "Infinite Web Arena Platform";
   const highlightWord = "Platform";
-  const highlightStart = fullText.indexOf(highlightWord);
+  const highlightStart = -1;
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState(0);
 
@@ -147,10 +147,7 @@ export default function LandingPage() {
           >
             <Text className="text-base sm:text-lg md:text-xl lg:text-2xl text-cyan-100 my-6 sm:my-8 leading-relaxed px-2">
               The most advanced Web Operation benchmark designed to rigorously
-              test and evaluate{" "}
-              <span className="text-cyan-300 font-bold bg-cyan-400/20 px-3 py-1.5 rounded-lg animate-glow border border-cyan-400/30">
-                Web Agents
-              </span>{" "}
+              test and evaluate Web Agents              
               across dynamic, ever-changing web environments.
             </Text>
           </div>

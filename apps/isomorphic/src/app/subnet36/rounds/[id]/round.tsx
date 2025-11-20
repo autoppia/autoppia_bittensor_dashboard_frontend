@@ -784,21 +784,16 @@ function RoundStatsInline({
 }) {
   const winnerUid = statistics?.winnerMinerUid ?? null;
 
+  // Aggregated winner should NOT change when validator is selected
+  // It always shows the overall round winner
   const topMiner = React.useMemo(() => {
-    if (selectedValidator?.topMiner) return selectedValidator.topMiner;
     if (!Array.isArray(topMiners) || topMiners.length === 0) return undefined;
-    if (selectedValidator?.id) {
-      const filtered = topMiners.filter(
-        (miner) => miner.validatorId === selectedValidator.id
-      );
-      if (filtered.length > 0) return filtered[0];
-    }
     if (winnerUid !== null) {
       const winnerEntry = topMiners.find((miner) => miner.uid === winnerUid);
       if (winnerEntry) return winnerEntry;
     }
     return topMiners[0];
-  }, [topMiners, selectedValidator, winnerUid]);
+  }, [topMiners, winnerUid]);
 
   if (loading || !statistics || !topMiners) {
     return (

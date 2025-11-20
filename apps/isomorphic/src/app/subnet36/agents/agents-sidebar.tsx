@@ -43,6 +43,22 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const [includeSota, setIncludeSota] = useState<boolean>(false);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
+  const SOTA_ALLOWED_NAMES = ["openai cua", "anthropic cua", "browser use"];
+
+  const applySotaFilter = (
+    miners: MinimalAgentData[],
+    includeSota: boolean
+  ) => {
+    if (includeSota) {
+      return miners.filter((m) =>
+        SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
+      );
+    }
+    return miners.filter(
+      (m) => !SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
+    );
+  };
+
   const roundParam = searchParams.get("round");
   const selectedRound = useMemo(() => {
     if (!roundParam) return undefined;
@@ -148,39 +164,39 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   const { data: minersData, loading, error } = useMinersList(minersParams);
 
-  // Update filtered agents when data changes
+  // Update filtered agents when data / SOTA / query changes
   useEffect(() => {
     if (minersData?.miners) {
-      let filtered = minersData.miners;
+      let filtered = applySotaFilter(minersData.miners, includeSota);
 
-      // Optionally exclude SOTA benchmarks when toggled off
-      if (!includeSota) {
-        filtered = filtered.filter((miner) => !miner.isSota);
+      // Apply search filter on top
+      if (query.trim() !== "") {
+        const q = query.toLowerCase();
+        filtered = filtered.filter(
+          (miner) =>
+            miner.name.toLowerCase().includes(q) ||
+            miner.uid.toString().includes(q)
+        );
       }
 
       setFilteredAgents(filtered);
     }
-  }, [minersData, includeSota]);
+  }, [minersData, includeSota, query]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
-    setQuery(query);
+    const nextQuery = event.target.value;
+    setQuery(nextQuery);
 
     if (!minersData?.miners) return;
 
-    let filtered = minersData.miners;
+    let filtered = applySotaFilter(minersData.miners, includeSota);
 
-    // Optionally exclude SOTA benchmarks when toggled off
-    if (!includeSota) {
-      filtered = filtered.filter((miner) => !miner.isSota);
-    }
-
-    // Then apply search filter
-    if (query.trim() !== "") {
+    if (nextQuery.trim() !== "") {
+      const q = nextQuery.toLowerCase();
       filtered = filtered.filter(
         (miner) =>
-          miner.name.toLowerCase().includes(query.toLowerCase()) ||
-          miner.uid.toString().includes(query.toLowerCase())
+          miner.name.toLowerCase().includes(q) ||
+          miner.uid.toString().includes(q)
       );
     }
 
@@ -254,6 +270,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
             </div>
           </div>
         </div>
+
         <div className="flex-1 overflow-y-auto px-2 mt-0.5 pt-6 pb-2 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar]:opacity-0 hover:[&::-webkit-scrollbar]:opacity-100 transition-opacity">
           <div className="flex flex-col gap-2">
             <div className="mb-1">
@@ -266,6 +283,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
               />
             </div>
+
             <div className="mb-2">
               <Input
                 prefix={<LuSearch className="w-4 text-white/60" />}
@@ -276,11 +294,10 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 onClear={() => {
                   setQuery("");
                   if (minersData?.miners) {
-                    let filtered = minersData.miners;
-                    // Optionally exclude SOTA benchmarks when toggled off
-                    if (!includeSota) {
-                      filtered = filtered.filter((miner) => !miner.isSota);
-                    }
+                    const filtered = applySotaFilter(
+                      minersData.miners,
+                      includeSota
+                    );
                     setFilteredAgents(filtered);
                   }
                 }}
@@ -288,6 +305,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 inputClassName="!bg-transparent !text-white placeholder:!text-white/50"
               />
             </div>
+
             {filteredAgents.map((miner) => {
               const isActive = miner.uid.toString() === id;
               const firstNonSotaUid = filteredAgents.find(
@@ -304,16 +322,21 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 ? miner.ranking
                 : undefined;
               const showRankBadge = typeof displayRank === "number";
+
               const rankBadgePalette = (() => {
                 switch (displayRank) {
                   case 1:
+                    // Oro
                     return "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-black shadow-sm";
                   case 2:
+                    // Plata
                     return "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-black shadow-sm";
                   case 3:
-                    return "bg-gradient-to-r from-amber-200 via-amber-300 to-orange-400 text-black shadow-sm";
+                    // Bronce (sin amarillo)
+                    return "bg-gradient-to-r from-amber-800 via-amber-700 to-orange-800 text-white shadow-sm";
                   default:
-                    return "bg-white/10 text-white border border-white/20";
+                    // Resto grises
+                    return "bg-gray-700 text-gray-100 border border-gray-500";
                 }
               })();
 
@@ -332,15 +355,13 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       isActive
                         ? "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]"
                         : highlightTop
-                          ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                          : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
+                        ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
+                        : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
                     )}
                   >
                     {/* Animated gradient shimmer for active state */}
                     {isActive && (
-                      <>
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
-                      </>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
                     )}
 
                     {/* Crown badge for top agent */}
@@ -357,8 +378,8 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                         isActive
                           ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50"
                           : highlightTop
-                            ? "ring-2 ring-amber-400/50"
-                            : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
+                          ? "ring-2 ring-amber-400/50"
+                          : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
                       )}
                     >
                       <Image
@@ -374,6 +395,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                         className="object-cover"
                       />
                     </div>
+
                     <div className="flex flex-col min-w-0 flex-1 relative z-10">
                       <div className="flex items-center gap-2">
                         <span
@@ -382,12 +404,13 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                             isActive
                               ? "text-white drop-shadow-sm"
                               : highlightTop
-                                ? "text-amber-200 font-extrabold"
-                                : "text-white/90 group-hover:text-white"
+                              ? "text-amber-200 font-extrabold"
+                              : "text-white/90 group-hover:text-white"
                           )}
                         >
                           {miner.name}
                         </span>
+
                         {miner.isSota && (
                           <span
                             className={cn(
@@ -401,6 +424,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           </span>
                         )}
                       </div>
+
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {showRankBadge && (
                           <span
@@ -410,33 +434,35 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                               isActive && displayRank
                                 ? "ring-2 ring-white/40 shadow-md"
                                 : highlightTop && displayRank
-                                  ? "ring-1 ring-amber-400/50 shadow-sm"
-                                  : ""
+                                ? "ring-1 ring-amber-400/50 shadow-sm"
+                                : ""
                             )}
                           >
                             #{displayRank}
                           </span>
                         )}
+
                         <span
                           className={cn(
                             "text-[11px] font-mono font-medium transition-all duration-300",
                             isActive
                               ? "text-emerald-200"
                               : highlightTop
-                                ? "text-amber-300"
-                                : "text-white/70 group-hover:text-white/90"
+                              ? "text-amber-300"
+                              : "text-white/70 group-hover:text-white/90"
                           )}
                         >
                           UID: {miner.uid}
                         </span>
+
                         <span
                           className={cn(
                             "text-[11px] font-semibold transition-all duration-300",
                             isActive
                               ? "text-emerald-200"
                               : highlightTop
-                                ? "text-amber-300"
-                                : "text-white/70 group-hover:text-white/90"
+                              ? "text-amber-300"
+                              : "text-white/70 group-hover:text-white/90"
                           )}
                         >
                           {(miner.score * 100).toFixed(1)}%
