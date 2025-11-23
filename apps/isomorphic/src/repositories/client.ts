@@ -24,6 +24,13 @@ const normalizeBaseUrl = (value: string | undefined) => {
 };
 
 const resolveBaseUrl = () => {
+  // For SSR (server-side), use local API to avoid Cloudflare timeouts
+  if (typeof window === 'undefined') {
+    // Server-side: use local API
+    return process.env.API_BASE_URL || 'http://127.0.0.1:8080';
+  }
+
+  // Client-side (browser): use public API through Cloudflare
   const envBaseUrl =
     normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL) ||
