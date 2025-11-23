@@ -24,13 +24,6 @@ const normalizeBaseUrl = (value: string | undefined) => {
 };
 
 const resolveBaseUrl = () => {
-  // For SSR (server-side), use local API to avoid Cloudflare timeouts
-  if (typeof window === 'undefined') {
-    // Server-side: use local API
-    return process.env.API_BASE_URL || 'http://127.0.0.1:8080';
-  }
-
-  // Client-side (browser): use public API through Cloudflare
   const envBaseUrl =
     normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL) ||
@@ -60,32 +53,36 @@ export class ApiClient {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw {
-        message: errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        message:
+          errorData.message ||
+          `HTTP ${response.status}: ${response.statusText}`,
         status: response.status,
         code: errorData.code,
       } as ApiError;
     }
 
     const data = await response.json();
-    
+
     // Check if the API response indicates failure
-    if (data && typeof data === 'object' && data.success === false) {
+    if (data && typeof data === "object" && data.success === false) {
       // Handle specific error cases
-      if (data.code === 'AGENT_RUN_NOT_FOUND') {
+      if (data.code === "AGENT_RUN_NOT_FOUND") {
         throw {
-          message: data.error || `Agent run with ID '${this.extractRunIdFromUrl(response.url)}' not found`,
+          message:
+            data.error ||
+            `Agent run with ID '${this.extractRunIdFromUrl(response.url)}' not found`,
           status: 404,
-          code: 'AGENT_RUN_NOT_FOUND',
+          code: "AGENT_RUN_NOT_FOUND",
         } as ApiError;
       }
-      
+
       throw {
-        message: data.error || data.message || 'API request failed',
+        message: data.error || data.message || "API request failed",
         status: response.status,
-        code: data.code || 'API_ERROR',
+        code: data.code || "API_ERROR",
       } as ApiError;
     }
-    
+
     return {
       data,
       success: true,
@@ -94,35 +91,45 @@ export class ApiClient {
 
   private extractRunIdFromUrl(url: string): string {
     const match = url.match(/\/agent-runs\/([^\/\?]+)/);
-    return match ? match[1] : 'unknown';
+    return match ? match[1] : "unknown";
   }
 
-  private async handleNetworkError<T>(endpoint: string): Promise<ApiResponse<T>> {
+  private async handleNetworkError<T>(
+    endpoint: string
+  ): Promise<ApiResponse<T>> {
     // Instead of using mock data, throw an error to trigger loading states
-    console.warn(`Backend not available for ${endpoint}, will show loading state`);
-    
+    console.warn(
+      `Backend not available for ${endpoint}, will show loading state`
+    );
+
     throw {
       message: `Backend service unavailable for ${endpoint}`,
       status: 503,
-      code: 'SERVICE_UNAVAILABLE',
+      code: "SERVICE_UNAVAILABLE",
     } as ApiError;
   }
 
-  private async handleAgentRunNotFound<T>(endpoint: string, runId: string): Promise<ApiResponse<T>> {
+  private async handleAgentRunNotFound<T>(
+    endpoint: string,
+    runId: string
+  ): Promise<ApiResponse<T>> {
     // Handle specific case where agent run is not found
     console.warn(`Agent run ${runId} not found for ${endpoint}`);
-    
+
     throw {
       message: `Agent run '${runId}' not found. Please check the URL or try a different run ID.`,
       status: 404,
-      code: 'AGENT_RUN_NOT_FOUND',
+      code: "AGENT_RUN_NOT_FOUND",
     } as ApiError;
   }
 
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, any>
+  ): Promise<ApiResponse<T>> {
     try {
       const url = new URL(`${this.baseUrl}${endpoint}`);
-      
+
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -171,7 +178,7 @@ export class ApiClient {
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: this.defaultHeaders,
     });
 
@@ -179,11 +186,11 @@ export class ApiClient {
   }
 
   setAuthToken(token: string) {
-    this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+    this.defaultHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   removeAuthToken() {
-    delete this.defaultHeaders['Authorization'];
+    delete this.defaultHeaders["Authorization"];
   }
 }
 
