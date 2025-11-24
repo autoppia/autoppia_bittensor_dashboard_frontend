@@ -257,10 +257,8 @@ export default function MinerChart({
       return;
     }
 
-    // Don't auto-select any SOTA agents by default
-    // Users can manually select which ones they want to compare
     if (!userTouchedSeries && compareWith.length === 0) {
-      // Keep empty - no auto-selection
+      setCompareWith(availableSotaSeries);
       return;
     }
 
