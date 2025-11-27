@@ -92,11 +92,11 @@ export default function AgentHistoricalAnalytics({
         setLoading(true);
         setError(null);
 
-        // First, get list of runs for this agent
         const runsResponse = await agentRunsRepository.listAgentRuns({
           agentId: agentId.toString(),
-          limit: 100, // Get recent 100 runs
+          limit: 100,
           status: "completed",
+          includeStats: true,
         });
 
         if (!isMounted) return;
@@ -110,19 +110,9 @@ export default function AgentHistoricalAnalytics({
         // Extract run IDs for task filtering
         const runIds = runsResponse.runs.map((run) => run.runId);
 
-        // Fetch stats for each run (in batches to avoid overwhelming the API)
-        const statsPromises = runsResponse.runs.map((run) =>
-          agentRunsRepository.getAgentRunStats(run.runId).catch(() => null)
-        );
-
-        const allStats = await Promise.all(statsPromises);
-
-        if (!isMounted) return;
-
-        // Filter out failed requests
-        const validStats = allStats.filter(
-          (stats): stats is NonNullable<typeof stats> => stats !== null
-        );
+        const validStats = runsResponse.runs
+          .map((run) => run.stats)
+          .filter((stats): stats is AgentRunStats => stats !== null && stats !== undefined);
 
         setAggregatedData({ stats: validStats, runIds });
       } catch (err) {

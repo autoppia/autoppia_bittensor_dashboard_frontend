@@ -150,8 +150,19 @@ export class AgentRunsRepository {
       this.baseEndpoint,
       params
     );
+    
+    const runs = response.data.data.runs.map((run) => {
+      if (run.stats) {
+        return {
+          ...run,
+          stats: this.normalizeStats(run.stats as AgentRunStats),
+        };
+      }
+      return run;
+    });
+    
     return {
-      runs: response.data.data.runs,
+      runs,
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,

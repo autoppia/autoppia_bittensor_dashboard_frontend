@@ -76,6 +76,7 @@ export interface AgentRunListItem {
   successRate?: number | null;
   ranking?: number;
   averageEvaluationTime?: number | null;
+  stats?: AgentRunStats;
 }
 
 // ===== AGENT RUN TASK DATA =====
@@ -318,6 +319,7 @@ export interface AgentRunsListQueryParams {
   sortOrder?: "asc" | "desc";
   startDate?: string;
   endDate?: string;
+  includeStats?: boolean; // Include statistics for each run
 }
 
 // ===== PARTIAL LOADING TYPES =====
