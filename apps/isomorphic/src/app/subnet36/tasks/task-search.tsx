@@ -235,15 +235,15 @@ export default function TaskSearch() {
             limit: currentLimit,
             includeDetails: false,
           });
-          
+
           if (ignore) return;
-          
+
           const tasks = response.data?.tasks ?? [];
           const facets = response.data?.facets;
-          
+
           setResults(tasks);
           setTotal(response.data?.total ?? tasks.length);
-          
+
           if (facets && !ignore) {
             setAvailableWebsites((prev) =>
               mergeAndSortUnique([
@@ -667,7 +667,7 @@ export default function TaskSearch() {
                 <PiPlayDuotone className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
-                FAILED TO LOAD TASKS
+                FAILED TO LOAD EVALUATIONS
               </h3>
               <p className="text-red-200 text-sm">{searchError}</p>
             </div>
@@ -679,7 +679,8 @@ export default function TaskSearch() {
         <div className="mt-6 relative z-0">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
-              {headerCount} {headerCount === 1 ? "TASK" : "TASKS"} FOUND
+              {headerCount} {headerCount === 1 ? "EVALUATION" : "EVALUATIONS"}{" "}
+              FOUND
             </h3>
             <p className="text-purple-200/80 text-sm">
               {`Showing ${startIndex}-${endIndex} of ${Number(
@@ -775,7 +776,7 @@ export default function TaskSearch() {
                 <div
                   key={task.evaluationId || task.taskId}
                   onClick={() => {
-                    const url = task.evaluationId 
+                    const url = task.evaluationId
                       ? `/subnet36/evaluations/${task.evaluationId}`
                       : `${routes.tasks}/${task.taskId}`;
                     router.push(url);
@@ -994,7 +995,7 @@ export default function TaskSearch() {
                 <PiPlayDuotone className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-                NO TASKS FOUND
+                NO EVALUATIONS FOUND
               </h3>
               <p className="text-purple-200 text-sm">
                 Try adjusting your filters or search query.
