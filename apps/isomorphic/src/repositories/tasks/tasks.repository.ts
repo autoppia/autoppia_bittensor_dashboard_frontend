@@ -44,44 +44,60 @@ export class TasksRepository {
    * Get detailed information for a specific task
    */
   async getTaskDetails(
-    taskId: string,
+    taskIdOrEvaluationId: string,
     params?: TaskDetailQueryParams
   ): Promise<TaskDetails> {
+    // If the ID starts with "evaluation_", it's an evaluation_id
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/task-details`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/details`;
+    
     const response = await apiClient.get<{
       data: {
         details: TaskDetails;
       };
-    }>(`${this.baseEndpoint}/${taskId}/details`, params);
+    }>(endpoint, params);
     return response.data.data.details;
   }
 
   /**
-   * Get results for a specific task
+   * Get results for a specific task or evaluation
    */
-  async getTaskResults(taskId: string): Promise<TaskResults> {
-    const response = await apiClient.get<TaskResultsResponse>(
-      `${this.baseEndpoint}/${taskId}/results`
-    );
+  async getTaskResults(taskIdOrEvaluationId: string): Promise<TaskResults> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/results`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/results`;
+    
+    const response = await apiClient.get<TaskResultsResponse>(endpoint);
     return response.data.data.results;
   }
 
   /**
-   * Get personas data for a task (round, validator, agent, task info)
+   * Get personas data for a task or evaluation
    */
-  async getTaskPersonas(taskId: string): Promise<TaskPersonas> {
-    const response = await apiClient.get<TaskPersonasResponse>(
-      `${this.baseEndpoint}/${taskId}/personas`
-    );
+  async getTaskPersonas(taskIdOrEvaluationId: string): Promise<TaskPersonas> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/personas`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/personas`;
+    
+    const response = await apiClient.get<TaskPersonasResponse>(endpoint);
     return response.data.data.personas;
   }
 
   /**
-   * Get statistics for a specific task
+   * Get statistics for a specific task or evaluation
    */
-  async getTaskStatistics(taskId: string): Promise<TaskStatistics> {
-    const response = await apiClient.get<TaskStatisticsResponse>(
-      `${this.baseEndpoint}/${taskId}/statistics`
-    );
+  async getTaskStatistics(taskIdOrEvaluationId: string): Promise<TaskStatistics> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/statistics`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/statistics`;
+    
+    const response = await apiClient.get<TaskStatisticsResponse>(endpoint);
     return response.data.data.statistics;
   }
 
@@ -285,7 +301,7 @@ export class TasksRepository {
    * Get task actions with pagination
    */
   async getTaskActions(
-    taskId: string,
+    taskIdOrEvaluationId: string,
     params?: {
       page?: number;
       limit?: number;
@@ -301,6 +317,11 @@ export class TasksRepository {
     page: number;
     limit: number;
   }> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/actions`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/actions`;
+    
     const response = await apiClient.get<{
       data: {
         actions: any[];
@@ -310,7 +331,7 @@ export class TasksRepository {
         page: number;
         limit: number;
       };
-    }>(`${this.baseEndpoint}/${taskId}/actions`, params);
+    }>(endpoint, params);
     const data = response.data.data;
     return {
       actions: data.actions,
@@ -323,9 +344,9 @@ export class TasksRepository {
   }
 
   /**
-   * Get task screenshots
+   * Get task or evaluation screenshots
    */
-  async getTaskScreenshots(taskId: string): Promise<{
+  async getTaskScreenshots(taskIdOrEvaluationId: string): Promise<{
     screenshots: {
       id: string;
       url: string;
@@ -334,19 +355,24 @@ export class TasksRepository {
       description?: string;
     }[];
   }> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/screenshots`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/screenshots`;
+    
     const response = await apiClient.get<{
       data: {
         screenshots: any[];
       };
-    }>(`${this.baseEndpoint}/${taskId}/screenshots`);
+    }>(endpoint);
     return response.data.data;
   }
 
   /**
-   * Get task logs
+   * Get task or evaluation logs
    */
   async getTaskLogs(
-    taskId: string,
+    taskIdOrEvaluationId: string,
     params?: {
       level?: 'info' | 'warn' | 'error' | 'debug';
       limit?: number;
@@ -361,19 +387,24 @@ export class TasksRepository {
     }[];
     total: number;
   }> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/logs`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/logs`;
+    
     const response = await apiClient.get<{
       data: {
         logs: any[];
         total: number;
       };
-    }>(`${this.baseEndpoint}/${taskId}/logs`, params);
+    }>(endpoint, params);
     return response.data.data;
   }
 
   /**
-   * Get task performance metrics
+   * Get task or evaluation performance metrics
    */
-  async getTaskMetrics(taskId: string): Promise<{
+  async getTaskMetrics(taskIdOrEvaluationId: string): Promise<{
     metrics: {
       duration: number;
       actionsPerSecond: number;
@@ -384,18 +415,23 @@ export class TasksRepository {
       cpuUsage: { timestamp: string; value: number }[];
     };
   }> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/metrics`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/metrics`;
+    
     const response = await apiClient.get<{
       data: {
         metrics: any;
       };
-    }>(`${this.baseEndpoint}/${taskId}/metrics`);
+    }>(endpoint);
     return response.data.data;
   }
 
   /**
-   * Get task timeline
+   * Get task or evaluation timeline
    */
-  async getTaskTimeline(taskId: string): Promise<{
+  async getTaskTimeline(taskIdOrEvaluationId: string): Promise<{
     timeline: {
       timestamp: string;
       action: string;
@@ -404,11 +440,16 @@ export class TasksRepository {
       metadata?: Record<string, any>;
     }[];
   }> {
+    const isEvaluationId = taskIdOrEvaluationId.startsWith("evaluation_");
+    const endpoint = isEvaluationId
+      ? `/api/v1/evaluations/${taskIdOrEvaluationId}/timeline`
+      : `${this.baseEndpoint}/${taskIdOrEvaluationId}/timeline`;
+    
     const response = await apiClient.get<{
       data: {
         timeline: any[];
       };
-    }>(`${this.baseEndpoint}/${taskId}/timeline`);
+    }>(endpoint);
     return response.data.data;
   }
 

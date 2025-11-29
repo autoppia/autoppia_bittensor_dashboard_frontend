@@ -137,25 +137,25 @@ export function useTaskPersonas(taskId: string) {
 }
 
 // Hook for getting task details only
-export function useTaskDetails(taskId: string) {
+export function useTaskDetails(taskIdOrEvaluationId: string) {
   const [details, setDetails] = useState<TaskDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDetails = useCallback(async () => {
-    if (!taskId) return;
+    if (!taskIdOrEvaluationId) return;
 
     try {
       setIsLoading(true);
       setError(null);
-      const data = await tasksRepository.getTaskDetails(taskId);
+      const data = await tasksRepository.getTaskDetails(taskIdOrEvaluationId);
       setDetails(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch details");
     } finally {
       setIsLoading(false);
     }
-  }, [taskId]);
+  }, [taskIdOrEvaluationId]);
 
   useEffect(() => {
     fetchDetails();
