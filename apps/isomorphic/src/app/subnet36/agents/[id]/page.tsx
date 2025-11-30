@@ -172,13 +172,13 @@ function AgentStats({
     agent.roundsParticipated || agent.totalRuns
   ).toLocaleString();
 
-    // Multiplicando por el 7.5% solicitado por robert
+  // Multiplicando por el 7.5% solicitado por robert
   const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0) * 0.075;
   const totalAlphaEarned = Math.round(totalAlphaValue);
   const totalTaoEarned = (() => {
     const v = (agent as any).taoWonInPrizes;
-    if (typeof v === "number") return Math.round(v * 0.075);
-    return Math.round(Number(agent.alphaWonInPrizes ?? 0) * 0.075);
+    if (typeof v === "number") return (v * 0.075).toFixed(2);
+    return (Number(agent.alphaWonInPrizes ?? 0) * 0.075).toFixed(2);
   })();
 
   const stats = [
@@ -330,12 +330,12 @@ function AgentStats({
                     </div>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center justify-between gap-2 mb-2">
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
                       {(stat as any).badge ? (
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
                           {(stat as any).badge}
                         </span>
                       ) : null}
@@ -1538,7 +1538,9 @@ function RoundWebsitesChart({
                       key={`cell-${index}`}
                       fill={`url(#barGradient${index % 9})`}
                       filter={
-                        activeIndex === index ? `url(#glow${index % 9})` : undefined
+                        activeIndex === index
+                          ? `url(#glow${index % 9})`
+                          : undefined
                       }
                       fillOpacity={
                         activeIndex === null
@@ -1869,10 +1871,12 @@ export default function Page() {
     0
   ).toLocaleString();
   // Multiplicando por el 7.5% solicitado por robert
-  const totalAlphaEarned = Math.round(Number(agent.alphaWonInPrizes ?? 0) * 0.075);
-  const totalTaoEarned = Math.round(
-    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
+  const totalAlphaEarned = Math.round(
+    Number(agent.alphaWonInPrizes ?? 0) * 0.075
   );
+  const totalTaoEarned = (
+    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
+  ).toFixed(2);
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
@@ -2284,12 +2288,12 @@ export default function Page() {
                         <Text className="text-[9px] md:text-xs font-bold text-white/80 uppercase tracking-wider md:tracking-widest leading-tight">
                           {stat.title}
                         </Text>
-                        <div className="flex items-center gap-1 md:gap-2">
+                        <div className="flex items-center justify-between gap-1 md:gap-2">
                           <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
                           {(stat as any).badge ? (
-                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm">
+                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
                               {(stat as any).badge}
                             </span>
                           ) : null}
