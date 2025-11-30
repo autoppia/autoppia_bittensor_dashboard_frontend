@@ -1877,6 +1877,14 @@ export default function Page() {
   const totalTaoEarned = (
     Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
   ).toFixed(2);
+  // Calculate Success Rate for current round: completed tasks / total tasks
+  const roundSuccessRate = (() => {
+    const total = roundMetrics?.totalTasks ?? 0;
+    const completed = roundMetrics?.completedTasks ?? 0;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return total > 0 ? `${completed}/${total} = ${percentage}%  ` : "0% (0/0)";
+  })();
+
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
@@ -1892,18 +1900,19 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
-      title: "Avg Score",
+      title: "Score",
       metric: currentScorePercentage,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Avg Response Time",
-      metric: preAvg?.avgResp ?? "0s",
-      icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      title: "Success Rate",
+      metric: roundSuccessRate,
+      icon: PiCheckDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
     },
-    // Segunda fila: Validators, Avg Tasks Per Validator, Websites
+
+    // Segunda fila: Validators, Avg Tasks Per Validator, Websites, Success Rate (debajo de Avg Response Time)
     {
       title: "Validators",
       metric: (roundMetrics?.totalValidators ?? 0).toString(),
@@ -1921,6 +1930,12 @@ export default function Page() {
       metric: websitesSummary.unique.toString(),
       icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "Avg Response Time",
+      metric: preAvg?.avgResp ?? "0s",
+      icon: PiTimerDuotone,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
