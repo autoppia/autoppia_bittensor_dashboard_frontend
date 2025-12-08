@@ -217,6 +217,16 @@ export function useRoundProgress(roundId?: RoundIdentifier) {
   return useApiCall(request, identifierKey(roundId), enabled);
 }
 
+// Hook for new simplified get-round endpoint
+export function useGetRound(roundNumber?: number) {
+  const enabled = typeof roundNumber === "number" && Number.isFinite(roundNumber) && roundNumber > 0;
+  const request = useCallback(
+    () => roundsRepository.getRound(roundNumber as number),
+    [roundNumber]
+  );
+  return useApiCall(request, `round-${roundNumber}`, enabled);
+}
+
 // Hook for top miners
 export function useTopMiners(roundId?: RoundIdentifier, limit: number = 10) {
   const enabled = isValidRoundIdentifier(roundId);
