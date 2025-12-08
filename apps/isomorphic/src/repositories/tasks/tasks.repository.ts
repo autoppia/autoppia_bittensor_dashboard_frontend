@@ -44,29 +44,35 @@ export class TasksRepository {
    * Get all evaluation data in a single call (similar to get-round)
    */
   async getEvaluationComplete(evaluationId: string): Promise<{
-    details: TaskDetails;
-    personas: TaskPersonas;
-    results: TaskResults;
     actions: any[];
     screenshots: any[];
-    logs: any[];
-    timeline: any[];
-    metrics: any;
-    statistics: TaskStatistics;
+    task_details: TaskDetails;
+    results: TaskResults;
+    info: {
+      evaluationId: string;
+      taskId: string;
+      miner_run_id: string;
+      round: any;
+      validator: any;
+      miner: any;
+    };
   }> {
     const endpoint = `/api/v1/evaluations/${evaluationId}/get-evaluation`;
     const response = await apiClient.get<{
       success: boolean;
       data: {
-        details: TaskDetails;
-        personas: TaskPersonas;
-        results: TaskResults;
         actions: any[];
         screenshots: any[];
-        logs: any[];
-        timeline: any[];
-        metrics: any;
-        statistics: TaskStatistics;
+        task_details: TaskDetails;
+        results: TaskResults;
+        info: {
+          evaluationId: string;
+          taskId: string;
+          miner_run_id: string;
+          round: any;
+          validator: any;
+          miner: any;
+        };
       };
     }>(endpoint);
     return response.data.data;

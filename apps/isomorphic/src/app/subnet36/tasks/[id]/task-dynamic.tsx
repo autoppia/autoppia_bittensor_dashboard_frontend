@@ -12,10 +12,6 @@ import Placeholder, {
 } from "@/app/shared/placeholder";
 import { routes } from "@/config/routes";
 import {
-  useTaskDetails,
-  useTaskResults,
-  useTaskActions,
-  useTaskScreenshots,
   useEvaluationComplete,
 } from "@/services/hooks/useTask";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -253,24 +249,19 @@ type TaskDetailsDynamicProps = {
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
+  actionsTotal?: number;
+  successCount?: number;
+  failCount?: number;
 };
 function TaskDetailsDynamic({
   details,
   isLoading = false,
   error,
   refetch,
+  actionsTotal,
+  successCount,
+  failCount,
 }: TaskDetailsDynamicProps) {
-  // Get task actions to show correct success/fail counts
-  const params = useParams();
-  const taskId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const {
-    total: actionsTotal,
-    successCount,
-    failCount,
-  } = useTaskActions(taskId as string, {
-    page: 1,
-    limit: 1, // We only need the counts, not the actual actions
-  });
   if (isLoading && !details) {
     return (
       <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-transparent p-8 shadow-2xl backdrop-blur-sm">
@@ -1102,35 +1093,45 @@ const formatKeyLabel = (k: string) =>
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join(" ");
 
-function TaskResults() {
-  const params = useParams();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+type TaskResultsProps = {
+  evaluationData: {
+    results: TaskResults | null;
+    actions: any[];
+    screenshots: any[];
+    isLoading: boolean;
+    error: string | null;
+  };
+};
+
+function TaskResults({ evaluationData }: TaskResultsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  const {
-    results,
-    isLoading: resultsLoading,
-    error: resultsError,
-  } = useTaskResults(id as string);
-  const {
-    actions,
-    total: actionsTotal,
-    successCount,
-    failCount,
-    isLoading: actionsLoading,
-    error: actionsError,
-    goToPage,
-  } = useTaskActions(id as string, {
-    page: currentPage,
-    limit: pageSize,
-    sortBy: "timestamp",
-    sortOrder: "asc",
-  });
-  const {
-    screenshots,
-    isLoading: screenshotsLoading,
-    error: screenshotsError,
-  } = useTaskScreenshots(id as string);
+  
+  // Use data from evaluationData (always from get-evaluation endpoint)
+  const results = evaluationData.results;
+  const resultsLoading = evaluationData.isLoading;
+  const resultsError = evaluationData.error;
+  
+  // Paginate actions
+  const allActions = evaluationData.actions || [];
+  const actionsTotal = allActions.length;
+  const successCount = allActions.filter((a: any) => a.success).length;
+  const failCount = allActions.filter((a: any) => !a.success || a.error).length;
+  const actionsLoading = evaluationData.isLoading;
+  const actionsError = evaluationData.error;
+  
+  // Paginate actions
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const actions = allActions.slice(start, end);
+  
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const screenshots = evaluationData.screenshots || [];
+  const screenshotsLoading = evaluationData.isLoading;
+  const screenshotsError = evaluationData.error;
 
   const hasApiScreenshots = screenshots.length > 0;
   const fallbackScreenshots = useMemo(() => {
@@ -1444,7 +1445,14 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const idParam = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  const { details, isLoading, error, refetch } = useTaskDetails(idParam);
+  
+  // Always use the complete evaluation endpoint
+  const evaluationData = useEvaluationComplete(idParam);
+  
+  const details = evaluationData.details;
+  const isLoading = evaluationData.isLoading;
+  const error = evaluationData.error;
+  const refetch = evaluationData.refetch;
   
   // Extract actual IDs from the details response
   const taskId = details?.taskId ?? (isLoading ? "Loading…" : "—");
@@ -1464,9 +1472,7 @@ export default function TaskDynamic() {
     ? `${routes.agent_run}/${details.agentRunId}`
     : routes.agent_run;
 
-  // Detect if we're viewing an evaluation (id starts with "evaluation_")
-  const isEvaluationView = idParam.startsWith("evaluation_");
-  const pageTitle = isEvaluationView ? "Evaluation Details" : "Task Details";
+  const pageTitle = "Evaluation Details";
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -1549,10 +1555,21 @@ export default function TaskDynamic() {
         isLoading={isLoading}
         error={error}
         refetch={refetch}
+        actionsTotal={evaluationData.actions.length}
+        successCount={evaluationData.actions.filter((a: any) => a.success).length}
+        failCount={evaluationData.actions.filter((a: any) => !a.success || a.error).length}
       />
 
       <div className="mb-10">
-        <TaskResults />
+        <TaskResults 
+          evaluationData={{
+            results: evaluationData.results,
+            actions: evaluationData.actions,
+            screenshots: evaluationData.screenshots,
+            isLoading: evaluationData.isLoading,
+            error: evaluationData.error,
+          }}
+        />
       </div>
     </div>
   );
