@@ -46,8 +46,8 @@ export const NAV_COLLECTIONS: Record<MenuNamespace, MenuItemType[]> = {
       icon: <LuPackageCheck />,
     },
     {
-      name: "Tasks",
-      href: routes.tasks,
+      name: "Evaluations",
+      href: routes.evaluations,
       icon: <LuBoxes />,
     },
   ],

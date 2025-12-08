@@ -461,11 +461,11 @@ export default function TaskSearch() {
                 <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                TASK SEARCH
+                EVALUATION SEARCH
               </h2>
             </div>
             <p className="text-cyan-300 text-sm">
-              Search by Task ID or filter by Agent Run, Website, and Use Case
+              Search by Evaluation ID or filter by Agent Run, Website, and Use Case
             </p>
           </div>
 
@@ -475,7 +475,7 @@ export default function TaskSearch() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter Task ID or Prompt (e.g., 3413)"
+                placeholder="Enter Evaluation ID or Prompt (e.g., 3413)"
                 className="w-full px-4 py-3 placeholder:text-sm bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -789,13 +789,13 @@ export default function TaskSearch() {
 
                   {/* Content container */}
                   <div className="relative flex h-full flex-col p-5 gap-4">
-                    {/* Task ID and Run ID - Same Row */}
+                    {/* Evaluation ID and Run ID - Same Row */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <CopyButton text={task.taskId} />
                         <div className="flex-1 min-w-0">
                           <div className="text-[9px] uppercase tracking-wider text-cyan-400 font-semibold mb-0.5">
-                            Task ID
+                            Evaluation ID
                           </div>
                           <div className="font-mono text-xs font-bold text-cyan-100 truncate">
                             {truncateMiddle(task.taskId, 6)}
