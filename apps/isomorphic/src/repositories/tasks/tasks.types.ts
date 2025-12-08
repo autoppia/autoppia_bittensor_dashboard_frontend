@@ -68,6 +68,7 @@ export interface TaskDetails {
   agentRunId: string;
   website: string;
   seed?: string | null;
+  webVersion?: string | null;
   useCase: string;
   prompt: string;
   status: string;
