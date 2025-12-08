@@ -268,17 +268,18 @@ function CustomTooltip({ label, active, payload, className }: any) {
 function RoundHeaderInline({
   round,
   roundLoading,
+  progressData,
+  progressLoading,
 }: {
   round?: any;
   roundLoading?: boolean;
+  progressData?: any;
+  progressLoading?: boolean;
 }) {
   const { id } = useParams();
   const router = useRouter();
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
-  // ✅ Solo usar progress - ahora incluye status, nextRound, previousRound
-  const { data: progressData, loading: progressLoading } =
-    useRoundProgress(roundKey);
 
   const isLoading = roundLoading || progressLoading;
 
@@ -1462,15 +1463,46 @@ function RoundMinerScoresInline({
   
   // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo)
   const chartSource = React.useMemo(() => {
-    // Si tenemos roundData y un selectedValidator, usar esos datos
-    if (roundData?.validators && selectedValidator?.id) {
-      const validatorUid = selectedValidator.id.replace("validator-", "");
-      const validator = roundData.validators.find(
-        (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
-      );
-      if (validator?.miners) {
+    if (roundData?.validators) {
+      let miners: any[] = [];
+      
+      if (selectedValidator?.id) {
+        // Si hay selectedValidator, usar solo sus miners
+        const validatorUid = selectedValidator.id.replace("validator-", "");
+        const validator = roundData.validators.find(
+          (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+        );
+        if (validator?.miners) {
+          miners = validator.miners;
+        }
+      } else {
+        // Si no hay selectedValidator, usar todos los miners de todos los validators
+        // (usar los del primer validator o agregar todos)
+        for (const validator of roundData.validators) {
+          if (validator?.miners && Array.isArray(validator.miners)) {
+            miners = [...miners, ...validator.miners];
+          }
+        }
+        // Eliminar duplicados por uid
+        const uniqueMiners = new Map();
+        for (const miner of miners) {
+          if (miner.uid && !uniqueMiners.has(miner.uid)) {
+            uniqueMiners.set(miner.uid, miner);
+          }
+        }
+        miners = Array.from(uniqueMiners.values());
+      }
+      
+      // ✅ Mapear los miners al formato esperado (agregar score desde local_avg_reward)
+      const mappedMiners = miners.map((miner: any) => ({
+        ...miner,
+        score: miner.local_avg_reward ?? miner.reward ?? 0, // ✅ score para el gráfico
+        validatorId: selectedValidator?.id || `validator-${roundData.validators[0]?.validator_uid}`, // ✅ Agregar validatorId
+      }));
+      
+      if (mappedMiners.length > 0) {
         return {
-          miners: validator.miners,
+          miners: mappedMiners,
           benchmarks: [], // Los benchmarks vienen del endpoint antiguo si es necesario
         };
       }
@@ -1489,11 +1521,8 @@ function RoundMinerScoresInline({
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
     const benchmarks: BenchmarkPerformance[] = chartSource.benchmarks || [];
-    const filteredMiners = selectedValidator?.id
-      ? chartSource.miners.filter(
-          (miner) => miner.validatorId === selectedValidator.id
-        )
-      : chartSource.miners;
+    // ✅ Los miners ya vienen filtrados desde chartSource según selectedValidator
+    const filteredMiners = chartSource.miners;
     console.log("[RoundMinerScores] filteredMiners:", filteredMiners);
     console.log("[RoundMinerScores] benchmarks:", benchmarks);
     const minerEntries = filteredMiners.map((miner: any) => {
@@ -2318,7 +2347,20 @@ export default function Round() {
         {
           key: "miners",
           title: "Miners Participated",
-          value: formatNumber(selectedValidator.totalMiners ?? 0),
+          value: formatNumber((() => {
+            // ✅ Obtener desde roundData.validators[selectedValidator].miners.length o local_miners_evaluated
+            if (roundData?.validators && selectedValidator?.id) {
+              const validatorUid = selectedValidator.id.replace("validator-", "");
+              const validator = roundData.validators.find(
+                (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+              );
+              if (validator) {
+                // Priorizar local_miners_evaluated, sino usar length de miners
+                return validator.local_miners_evaluated ?? validator.miners?.length ?? 0;
+              }
+            }
+            return selectedValidator.totalMiners ?? 0;
+          })()),
           helper: "Unique miners assessed this round",
           icon: PiUsersThreeDuotone,
           gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30",
@@ -2331,7 +2373,19 @@ export default function Round() {
         {
           key: "tasks",
           title: "Tasks",
-          value: formatNumber(selectedValidator.totalTasks ?? 0),
+          value: formatNumber((() => {
+            // ✅ Obtener desde roundData.validators[selectedValidator].local_tasks_evaluated
+            if (roundData?.validators && selectedValidator?.id) {
+              const validatorUid = selectedValidator.id.replace("validator-", "");
+              const validator = roundData.validators.find(
+                (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+              );
+              if (validator) {
+                return validator.local_tasks_evaluated ?? 0;
+              }
+            }
+            return selectedValidator.totalTasks ?? 0;
+          })()),
           helper: "Total tasks executed by this validator",
           icon: PiListChecksDuotone,
           gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
@@ -2416,7 +2470,12 @@ export default function Round() {
       ) : !roundDataError ? (
         <>
       {/* Header */}
-          <RoundHeaderInline round={round} roundLoading={false} />
+          <RoundHeaderInline 
+            round={round} 
+            roundLoading={roundDataLoading}
+            progressData={progressData}
+            progressLoading={progressLoading}
+          />
 
       {/* Recents removed: using Prev/Next navigation in header */}
 
