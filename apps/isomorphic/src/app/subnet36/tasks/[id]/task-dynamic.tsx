@@ -252,6 +252,14 @@ type TaskDetailsDynamicProps = {
   actionsTotal?: number;
   successCount?: number;
   failCount?: number;
+  info?: {
+    evaluationId?: string;
+    taskId?: string;
+    miner_run_id?: string;
+    round?: any;
+    validator?: any;
+    miner?: any;
+  } | null;
 };
 function TaskDetailsDynamic({
   details,
@@ -261,6 +269,7 @@ function TaskDetailsDynamic({
   actionsTotal,
   successCount,
   failCount,
+  info,
 }: TaskDetailsDynamicProps) {
   if (isLoading && !details) {
     return (
@@ -338,13 +347,13 @@ function TaskDetailsDynamic({
   }
 
   const taskData = details;
-  const relationships = taskData.relationships;
-  const roundInfo = relationships?.round;
-  const validatorInfo = relationships?.validator;
-  const minerInfo = relationships?.miner;
-  const agentRunInfo = relationships?.agentRun;
-  const evaluationInfo = relationships?.evaluation;
-  const solutionInfo = relationships?.solution;
+  // Use info object if available (from get-evaluation endpoint), otherwise fallback to relationships
+  const roundInfo = info?.round ?? taskData.relationships?.round;
+  const validatorInfo = info?.validator ?? taskData.relationships?.validator;
+  const minerInfo = info?.miner ?? taskData.relationships?.miner;
+  const agentRunInfo = taskData.relationships?.agentRun;
+  const evaluationInfo = taskData.relationships?.evaluation;
+  const solutionInfo = taskData.relationships?.solution;
 
   const evaluationScore =
     typeof evaluationInfo?.finalScore === "number"
@@ -1450,26 +1459,29 @@ export default function TaskDynamic() {
   const evaluationData = useEvaluationComplete(idParam);
   
   const details = evaluationData.details;
+  const info = evaluationData.info;
   const isLoading = evaluationData.isLoading;
   const error = evaluationData.error;
   const refetch = evaluationData.refetch;
   
-  // Extract actual IDs from the details response
-  const taskId = details?.taskId ?? (isLoading ? "Loading…" : "—");
+  // Extract actual IDs from the info object (preferred) or details response
+  const taskId = info?.taskId ?? details?.taskId ?? (isLoading ? "Loading…" : "—");
   const runIdDisplay =
+    info?.miner_run_id ??
     details?.agentRunId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
   const evaluationIdDisplay =
+    info?.evaluationId ??
     details?.relationships?.evaluation?.evaluationId ??
     (isLoading ? "Loading…" : error ? "Unavailable" : "—");
   const roundKeyForHeader = (() => {
-    const r = details?.relationships?.round;
+    const r = info?.round ?? details?.relationships?.round;
     if (!r) return "";
     if (typeof r?.roundNumber === "number") return `round_${r.roundNumber}`;
     return r?.validatorRoundId ?? "";
   })();
-  const backHref = details?.agentRunId
-    ? `${routes.agent_run}/${details.agentRunId}`
+  const backHref = (info?.miner_run_id ?? details?.agentRunId)
+    ? `${routes.agent_run}/${encodeURIComponent(info?.miner_run_id ?? details?.agentRunId ?? "")}`
     : routes.agent_run;
 
   const pageTitle = "Evaluation Details";
@@ -1491,18 +1503,16 @@ export default function TaskDynamic() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(evaluationIdDisplay as string, 8)}
               </span>
-              {details?.relationships?.evaluation?.evaluationId && (
+              {info?.evaluationId && (
                 <span className="ml-auto">
-                  <IDCopyButton
-                    text={details.relationships.evaluation.evaluationId}
-                  />
+                  <IDCopyButton text={info.evaluationId} />
                 </span>
               )}
             </a>
             <Link
               href={
-                details?.agentRunId
-                  ? `${routes.agent_run}/${encodeURIComponent(details.agentRunId)}`
+                (info?.miner_run_id ?? details?.agentRunId)
+                  ? `${routes.agent_run}/${encodeURIComponent(info?.miner_run_id ?? details?.agentRunId ?? "")}`
                   : "#"
               }
               className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-emerald-400/60 hover:bg-emerald-500/10"
@@ -1514,14 +1524,14 @@ export default function TaskDynamic() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(runIdDisplay as string, 8)}
               </span>
-              {details?.agentRunId && (
+              {(info?.miner_run_id ?? details?.agentRunId) && (
                 <span className="ml-auto">
-                  <IDCopyButton text={details.agentRunId} />
+                  <IDCopyButton text={info?.miner_run_id ?? details?.agentRunId ?? ""} />
                 </span>
               )}
             </Link>
             <Link
-              href={details?.taskId ? `${routes.tasks}/${details.taskId}` : "#"}
+              href={(info?.taskId ?? details?.taskId) ? `${routes.tasks}/${info?.taskId ?? details?.taskId}` : "#"}
               className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-cyan-400/60 hover:bg-cyan-500/10"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
@@ -1531,9 +1541,9 @@ export default function TaskDynamic() {
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
                 {truncateMiddle(taskId as string, 8)}
               </span>
-              {details?.taskId && (
+              {(info?.taskId ?? details?.taskId) && (
                 <span className="ml-auto">
-                  <IDCopyButton text={details.taskId} />
+                  <IDCopyButton text={info?.taskId ?? details?.taskId ?? ""} />
                 </span>
               )}
             </Link>
@@ -1558,6 +1568,7 @@ export default function TaskDynamic() {
         actionsTotal={evaluationData.actions.length}
         successCount={evaluationData.actions.filter((a: any) => a.success).length}
         failCount={evaluationData.actions.filter((a: any) => !a.success || a.error).length}
+        info={info}
       />
 
       <div className="mb-10">
