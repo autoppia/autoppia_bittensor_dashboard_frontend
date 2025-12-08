@@ -151,6 +151,9 @@ export interface RoundProgress {
     seconds: number;
   };
   lastUpdated: string;
+  status: string; // active, finished, pending, evaluating_finished
+  nextRound: number | null; // Número del siguiente round
+  previousRound: number | null; // Número del round anterior
 }
 
 // ===== API RESPONSE TYPES =====

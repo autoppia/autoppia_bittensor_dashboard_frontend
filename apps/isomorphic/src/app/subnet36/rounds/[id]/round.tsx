@@ -46,7 +46,6 @@ import { resolveAssetUrl } from "@/services/utils/assets";
 import {
   useRoundProgress,
   useGetRound,
-  useRounds,
 } from "@/services/hooks/useRounds";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
@@ -277,54 +276,21 @@ function RoundHeaderInline({
   const router = useRouter();
   const roundKey = extractRoundIdentifier(id);
   const roundNumber = extractRoundNumber(roundKey);
+  // ✅ Solo usar progress - ahora incluye status, nextRound, previousRound
   const { data: progressData, loading: progressLoading } =
     useRoundProgress(roundKey);
-  const { data: roundsData, loading: roundsLoading } = useRounds({
-    page: 1,
-    limit: 30,
-    sortBy: "startTime",
-    sortOrder: "desc",
-  });
-  const rawRounds = roundsData?.data?.rounds;
-  const rounds = React.useMemo(() => rawRounds ?? [], [rawRounds]);
-  const currentRoundFromList = (roundsData?.data as any)?.currentRound;
 
   const isLoading = roundLoading || progressLoading;
 
-  const resolveRoundNumber = (r: any) => r?.roundNumber ?? r?.round ?? r?.id;
-  const resolveRoundKey = (r: any, fallbackNumber?: number) =>
-    r?.roundKey ??
-    ((resolveRoundNumber(r) ?? fallbackNumber)
-      ? `round_${resolveRoundNumber(r) ?? fallbackNumber}`
-      : undefined);
-
-  const normalizedCurrentNumber =
-    typeof roundNumber === "number" && Number.isFinite(roundNumber)
-      ? roundNumber
-      : resolveRoundNumber(round);
-
+  // ✅ Obtener neighborRounds desde progressData
   const neighborRounds = React.useMemo(() => {
-    if (normalizedCurrentNumber === undefined)
-      return { previous: null as any, next: null as any };
-    let previous: any = null;
-    let next: any = null;
-    rounds.forEach((candidate: any) => {
-      const candidateNumber = resolveRoundNumber(candidate);
-      if (
-        candidateNumber === undefined ||
-        candidateNumber === normalizedCurrentNumber
-      )
-        return;
-      if (candidateNumber < normalizedCurrentNumber) {
-        if (!previous || resolveRoundNumber(previous) < candidateNumber)
-          previous = candidate;
-      } else if (candidateNumber > normalizedCurrentNumber) {
-        if (!next || resolveRoundNumber(next) > candidateNumber)
-          next = candidate;
-      }
-    });
-    return { previous, next };
-  }, [normalizedCurrentNumber, rounds]);
+    const previousRound = progressData?.previousRound;
+    const nextRound = progressData?.nextRound;
+    return {
+      previous: previousRound ? { roundNumber: previousRound, roundKey: `round_${previousRound}` } : null,
+      next: nextRound ? { roundNumber: nextRound, roundKey: `round_${nextRound}` } : null,
+    };
+  }, [progressData]);
 
   const goToRound = React.useCallback(
     (targetKey?: string) => {
@@ -344,9 +310,9 @@ function RoundHeaderInline({
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
-  // Determine actual round status - prioritize backend status
-  const currentRoundNumber = resolveRoundNumber(currentRoundFromList);
+  // ✅ Usar status desde progressData
   const progressValue = progressData?.progress ?? round?.progress ?? 0;
+  const backendStatus = progressData?.status ?? round?.status;
 
   // Check if validator rounds have evaluation results (tasks evaluated)
   const validatorRounds = round?.validatorRounds ?? [];
@@ -366,8 +332,7 @@ function RoundHeaderInline({
     });
   });
 
-  // ALWAYS trust backend status first - it's the source of truth
-  const backendStatus = round?.status;
+  // ✅ Status ya viene de progressData
   let status: "active" | "completed" | "pending";
   let statusLabel: string;
 
@@ -416,11 +381,12 @@ function RoundHeaderInline({
     Math.min(100, Math.round(progressPercentageRaw))
   );
 
-  const previousKey = resolveRoundKey(neighborRounds.previous);
-  const nextKey = resolveRoundKey(neighborRounds.next);
-  const previousNumber = resolveRoundNumber(neighborRounds.previous);
-  const nextNumber = resolveRoundNumber(neighborRounds.next);
-  const currentRoundKey = resolveRoundKey(currentRoundFromList);
+  // ✅ Obtener keys desde neighborRounds (ya incluyen roundKey)
+  const previousKey = neighborRounds.previous?.roundKey;
+  const nextKey = neighborRounds.next?.roundKey;
+  const previousNumber = neighborRounds.previous?.roundNumber;
+  const nextNumber = neighborRounds.next?.roundNumber;
+  const currentRoundKey = roundKey;
 
   if (isLoading) {
     return (
@@ -574,7 +540,7 @@ function RoundHeaderInline({
                   className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
-                  Current (Round {currentRoundNumber ?? "—"})
+                  Current (Round {roundNumber ?? "—"})
                 </Link>
               )}
             </div>
