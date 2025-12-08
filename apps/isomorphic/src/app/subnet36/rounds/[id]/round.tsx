@@ -452,7 +452,7 @@ function RoundHeaderInline({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
-                  Round {normalizedCurrentNumber ?? "—"}
+                  Round {roundNumber ?? progressData?.roundId ?? "—"}
                 </h1>
                 <span
                   className={cn(
