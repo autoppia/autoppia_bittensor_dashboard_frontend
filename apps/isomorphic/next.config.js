@@ -179,8 +179,13 @@ module.exports = {
         permanent: false,
       },
       {
-        source: "/tasks/:path*",
+        source: "/evaluations/:path*",
         destination: "/subnet36/tasks/:path*",
+        permanent: false,
+      },
+      {
+        source: "/tasks/:path*",
+        destination: "/subnet36/evaluations/:path*",
         permanent: false,
       },
       {
