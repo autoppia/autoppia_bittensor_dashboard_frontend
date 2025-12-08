@@ -777,8 +777,8 @@ export default function TaskSearch() {
                   key={task.evaluationId || task.taskId}
                   onClick={() => {
                     const url = task.evaluationId
-                      ? `/subnet36/evaluations/${task.evaluationId}`
-                      : `${routes.tasks}/${task.taskId}`;
+                      ? `${routes.evaluations}/${task.evaluationId}`
+                      : `${routes.evaluations}/${task.taskId}`;
                     router.push(url);
                   }}
                   className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"

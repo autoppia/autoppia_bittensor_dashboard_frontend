@@ -136,6 +136,59 @@ export function useTaskPersonas(taskId: string) {
   return { personas, isLoading, error };
 }
 
+// Hook for getting all evaluation data in a single call (similar to get-round)
+export function useEvaluationComplete(evaluationId: string) {
+  const [data, setData] = useState<{
+    details: TaskDetails | null;
+    personas: TaskPersonas | null;
+    results: TaskResults | null;
+    actions: any[];
+    screenshots: any[];
+    logs: any[];
+    timeline: any[];
+    metrics: any;
+    statistics: TaskStatistics | null;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchComplete = useCallback(async () => {
+    if (!evaluationId) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const completeData = await tasksRepository.getEvaluationComplete(evaluationId);
+      setData(completeData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch evaluation data");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [evaluationId]);
+
+  useEffect(() => {
+    fetchComplete();
+  }, [fetchComplete]);
+
+  return { 
+    data, 
+    isLoading, 
+    error, 
+    refetch: fetchComplete,
+    // Convenience getters
+    details: data?.details ?? null,
+    personas: data?.personas ?? null,
+    results: data?.results ?? null,
+    actions: data?.actions ?? [],
+    screenshots: data?.screenshots ?? [],
+    logs: data?.logs ?? [],
+    timeline: data?.timeline ?? [],
+    metrics: data?.metrics ?? null,
+    statistics: data?.statistics ?? null,
+  };
+}
+
 // Hook for getting task details only
 export function useTaskDetails(taskIdOrEvaluationId: string) {
   const [details, setDetails] = useState<TaskDetails | null>(null);

@@ -16,6 +16,7 @@ import {
   useTaskResults,
   useTaskActions,
   useTaskScreenshots,
+  useEvaluationComplete,
 } from "@/services/hooks/useTask";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { websitesData } from "@/data/websites-data";
