@@ -247,6 +247,54 @@ export class AgentRunsRepository {
   }
 
   /**
+   * Get all agent run data in a single call
+   */
+  async getAgentRunComplete(runId: string): Promise<{
+    run: AgentRunData;
+    personas: AgentRunPersonas;
+    statistics: AgentRunStats | null;
+    summary: AgentRunSummary;
+    tasks: AgentRunTaskData[];
+    timeline: any[];
+    logs: any[];
+    metrics: any | null;
+    info: {
+      agentRunId: string;
+      round: any;
+      validator: any;
+      miner: any;
+    };
+  }> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {
+          run: AgentRunData;
+          personas: AgentRunPersonas;
+          statistics: AgentRunStats | null;
+          summary: AgentRunSummary;
+          tasks: AgentRunTaskData[];
+          timeline: any[];
+          logs: any[];
+          metrics: any | null;
+          info: {
+            agentRunId: string;
+            round: any;
+            validator: any;
+            miner: any;
+          };
+        };
+      }>(`${this.baseEndpoint}/${runId}/get-agent-run`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(error?.message || "Failed to fetch agent run complete data");
+    }
+  }
+
+  /**
    * Get partial data for an agent run (for progressive loading)
    */
   async getAgentRunPartialData(

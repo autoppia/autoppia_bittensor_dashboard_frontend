@@ -75,7 +75,65 @@ export function useAgentRunsList(params?: AgentRunsListQueryParams) {
   };
 }
 
-// Hook for getting agent run data with progressive loading
+// Hook for getting agent run data with complete endpoint
+export function useAgentRunComplete(runId: string) {
+  const [data, setData] = useState<{
+    run: AgentRunData | null;
+    personas: AgentRunPersonas | null;
+    statistics: AgentRunStats | null;
+    summary: AgentRunSummary | null;
+    tasks: AgentRunTaskData[];
+    timeline: any[];
+    logs: any[];
+    metrics: any | null;
+    info: {
+      agentRunId: string;
+      round: any;
+      validator: any;
+      miner: any;
+    } | null;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchComplete = useCallback(async () => {
+    if (!runId) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const completeData = await agentRunsRepository.getAgentRunComplete(runId);
+      setData(completeData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch agent run data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [runId]);
+
+  useEffect(() => {
+    fetchComplete();
+  }, [fetchComplete]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchComplete,
+    // Convenience getters
+    run: data?.run ?? null,
+    personas: data?.personas ?? null,
+    statistics: data?.statistics ?? null,
+    summary: data?.summary ?? null,
+    tasks: data?.tasks ?? [],
+    timeline: data?.timeline ?? [],
+    logs: data?.logs ?? [],
+    metrics: data?.metrics ?? null,
+    info: data?.info ?? null,
+  };
+}
+
+// Hook for getting agent run data with progressive loading (legacy)
 export function useAgentRun(
   runId: string,
   options: {
