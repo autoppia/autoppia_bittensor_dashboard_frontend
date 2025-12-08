@@ -44,15 +44,9 @@ import {
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
-  useRound,
-  useRoundBasic,
-  useRounds,
   useRoundProgress,
   useGetRound,
-  useRoundValidators,
-  useTopMiners,
-  useRoundStatistics,
-  useRoundMiners,
+  useRounds,
 } from "@/services/hooks/useRounds";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
@@ -179,9 +173,12 @@ function CustomTooltip({ label, active, payload, className }: any) {
   const minerData = payload[0]?.payload;
   
   // ✅ Obtener datos del miner (eval_score, eval_time, reward)
-  const evalScore = minerData?.eval_score ?? minerData?.score ?? 0;
-  const evalTime = minerData?.eval_time ?? minerData?.avgTime ?? null;
-  const reward = minerData?.reward ?? minerData?.score ?? 0;
+  // Score: usar eval_score específico, NO score (que puede ser reward)
+  const evalScore = minerData?.eval_score ?? minerData?.local_avg_eval_score ?? 0;
+  // Time: usar eval_time específico
+  const evalTime = minerData?.eval_time ?? minerData?.local_avg_eval_time ?? minerData?.avgTime ?? null;
+  // Reward: usar reward específico, NUNCA score como fallback
+  const reward = minerData?.reward ?? minerData?.local_avg_reward ?? 0;
   
   return (
     <div
@@ -218,8 +215,8 @@ function CustomTooltip({ label, active, payload, className }: any) {
           </Text>
         </div>
         
-        {/* Time (eval_time) */}
-        {evalTime != null && (
+        {/* Time (eval_time) - SIEMPRE mostrar si está disponible */}
+        {evalTime != null && Number(evalTime) > 0 && (
           <div className="chart-tooltip-item flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <span
@@ -1190,15 +1187,34 @@ function RoundValidatorsInline({
   onValidatorSelect,
   selectedValidatorId: externalSelectedId = null,
   requestedValidatorId = null,
+  roundData,
+  loading,
+  error,
 }: {
   className?: string;
   onValidatorSelect?: (v: ValidatorPerformance) => void;
   selectedValidatorId?: string | null;
   requestedValidatorId?: string | null;
+  roundData?: any;
+  loading?: boolean;
+  error?: string | null;
 }) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
-  const { data: validatorsData, loading, error } = useRoundValidators(roundKey);
+  // ✅ Validators ahora vienen de roundData (useGetRound)
+  const validatorsData = React.useMemo(() => {
+    if (!roundData?.validators) return [];
+    // Convertir roundData.validators al formato esperado
+    return roundData.validators.map((v: any) => ({
+      id: `validator-${v.validator_uid}`,
+      uid: v.validator_uid,
+      name: v.validator_name || `Validator ${v.validator_uid}`,
+      icon: v.validator_image || `/validators/Other.png`,
+      topScore: v.topScore || 0,
+      topMiner: v.winner,
+      // Agregar otros campos necesarios
+    })) as ValidatorPerformance[];
+  }, [roundData]);
   const [selectedValidatorId, setSelectedValidatorId] = React.useState<
     string | null
   >(requestedValidatorId ?? externalSelectedId);
@@ -1435,6 +1451,7 @@ function RoundMinerScoresInline({
   selectedValidator,
   roundInfo,
   minersData,
+  roundData,
   loading,
   error,
 }: {
@@ -1442,6 +1459,7 @@ function RoundMinerScoresInline({
   selectedValidator?: ValidatorPerformance | null;
   roundInfo?: any;
   minersData?: any;
+  roundData?: any;
   loading?: boolean;
   error?: string;
 }) {
@@ -1475,7 +1493,25 @@ function RoundMinerScoresInline({
   );
   const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
   const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
-  const chartSource = minersData?.data;
+  
+  // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo)
+  const chartSource = React.useMemo(() => {
+    // Si tenemos roundData y un selectedValidator, usar esos datos
+    if (roundData?.validators && selectedValidator?.id) {
+      const validatorUid = selectedValidator.id.replace("validator-", "");
+      const validator = roundData.validators.find(
+        (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+      );
+      if (validator?.miners) {
+        return {
+          miners: validator.miners,
+          benchmarks: [], // Los benchmarks vienen del endpoint antiguo si es necesario
+        };
+      }
+    }
+    // Fallback al endpoint antiguo
+    return minersData?.data;
+  }, [roundData, selectedValidator, minersData]);
 
   const chartData = React.useMemo(() => {
     if (!chartSource?.miners) {
@@ -1538,9 +1574,10 @@ function RoundMinerScoresInline({
         provider: miner.provider,
         xAxisLabel: isSota ? "" : uidLabel,
         // ✅ Agregar datos para el tooltip
-        eval_score: miner.local_avg_eval_score ?? miner.eval_score ?? miner.score, // Score (eval_score)
-        eval_time: miner.local_avg_eval_time ?? miner.avgTime ?? miner.eval_time, // Time (eval_time)
-        reward: miner.local_avg_reward ?? miner.reward ?? miner.score, // Reward (reward)
+        // Priorizar datos del nuevo endpoint (roundData) que ya vienen con local_avg_*
+        eval_score: miner.local_avg_eval_score ?? miner.eval_score ?? 0, // Score (eval_score)
+        eval_time: miner.local_avg_eval_time ?? miner.avgTime ?? miner.eval_time ?? null, // Time (eval_time)
+        reward: miner.local_avg_reward ?? miner.reward ?? 0, // Reward (reward) - NUNCA usar score como fallback
       };
     });
     const benchmarkEntries = benchmarks.map((benchmark) => {
@@ -2153,7 +2190,6 @@ export default function Round() {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const { openModal } = useModal();
-  const { data: round, error, refetch } = useRoundBasic(roundKey);
 
   const handleOpenGlossary = () =>
     openModal({ view: <RoundsGlossaryModal />, size: "lg", customSize: 1400 });
@@ -2166,43 +2202,51 @@ export default function Round() {
   const searchParams = useSearchParams();
   const requestedValidatorId = searchParams?.get("validator") ?? null;
 
-  // Top/context labels
-  const roundNumberFromData =
-    typeof round?.roundNumber === "number"
-      ? round.roundNumber
-      : typeof round?.round === "number"
-        ? round.round
-        : typeof round?.id === "number"
-          ? round.id
-          : undefined;
+  // Top/context labels - primero extraer roundNumber del key
   const roundNumberFromKey = React.useMemo(
     () => extractRoundNumber(roundKey),
     [roundKey]
   );
-  const roundNumberForLinks = roundNumberFromData ?? roundNumberFromKey;
-  const roundLabel = roundNumberForLinks ?? roundKey;
 
-  // Fetch data from new simplified endpoint
-  const { data: roundData, loading: roundDataLoading } = useGetRound(roundNumberForLinks);
+  // ✅ Solo estas dos llamadas: get-round y progress
+  const { data: roundData, loading: roundDataLoading, error: roundDataError } = useGetRound(roundNumberFromKey);
   const { data: progressData, loading: progressLoading } = useRoundProgress(roundKey);
   
-  // Legacy data for backward compatibility (can be removed later)
-  const { data: allMinersData, loading: minersLoading } = useRoundMiners(
-    roundKey,
-    {
-      limit: 100,
-      sortBy: "score",
-      sortOrder: "desc",
-      minScore: 0,
-    }
-  );
+  // ✅ Construir round desde roundData
+  const round = React.useMemo(() => {
+    if (!roundData) return null;
+    const roundNumber = roundNumberFromKey;
+    return {
+      roundNumber,
+      round: roundNumber,
+      id: roundNumber,
+      status: roundData.post_consensus_summary ? "completed" : "active",
+      validatorRounds: [], // Ya no necesario, todo viene de roundData.validators
+    };
+  }, [roundData, roundNumberFromKey]) as any;
+  
+  const roundNumberForLinks = roundNumberFromKey;
+  const roundLabel = roundNumberForLinks ?? roundKey;
   const topMiners = React.useMemo(() => {
-    const miners = allMinersData?.data?.miners ?? [];
-    return Array.isArray(miners) ? miners.slice(0, 10) : [];
-  }, [allMinersData]);
-
-  const { data: statistics, loading: statsLoading } =
-    useRoundStatistics(roundKey);
+    // Obtener top miners de roundData.post_consensus_summary.winner o de validators
+    if (roundData?.post_consensus_summary?.winner) {
+      return [roundData.post_consensus_summary.winner];
+    }
+    return [];
+  }, [roundData]);
+  
+  const statistics = React.useMemo(() => {
+    // Construir statistics desde roundData
+    if (!roundData) return null;
+    return {
+      winnerUid: roundData.post_consensus_summary?.winner?.uid,
+      winnerAverage: roundData.post_consensus_summary?.winner?.avg_reward,
+      topScore: roundData.post_consensus_summary?.winner?.avg_reward,
+      avgEvalTime: roundData.post_consensus_summary?.winner?.avg_eval_time,
+      minersEvaluated: roundData.post_consensus_summary?.miners_evaluated,
+      tasksEvaluated: roundData.post_consensus_summary?.tasks_evaluated,
+    };
+  }, [roundData]);
 
   // Determine if round is waiting for consensus
   const validatorRounds = round?.validatorRounds ?? [];
@@ -2360,14 +2404,14 @@ export default function Round() {
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
-      {error && (
+      {roundDataError && (
         <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 mb-6 text-rose-200">
-          <p className="text-sm">⚠️ Failed to load round data: {error}</p>
+          <p className="text-sm">⚠️ Failed to load round data: {roundDataError}</p>
         </div>
       )}
 
       {/* Show "Data Not Available" message if round is starting or has no data */}
-      {!error && (isRoundStarting || hasNoData) ? (
+      {!roundDataError && (isRoundStarting || hasNoData) ? (
         <div className="mt-10 mb-10">
           <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
@@ -2388,7 +2432,7 @@ export default function Round() {
               </p>
               <div className="mt-8 flex justify-center gap-4">
                 <Button
-                  onClick={refetch}
+                  onClick={() => window.location.reload()}
                   className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
                 >
                   Retry
@@ -2403,7 +2447,7 @@ export default function Round() {
             </div>
           </div>
         </div>
-      ) : !error ? (
+      ) : !roundDataError ? (
         <>
       {/* Header */}
           <RoundHeaderInline round={round} roundLoading={false} />
@@ -2414,7 +2458,7 @@ export default function Round() {
 
       {/* Aggregated Metrics */}
       <div className="mt-10 mb-6">
-            {statsLoading || minersLoading ? (
+            {roundDataLoading ? (
               <div className="flex items-center gap-4 mb-5">
                 <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
                 <div className="flex-1">
@@ -2444,8 +2488,8 @@ export default function Round() {
               statistics={statistics}
               topMiners={topMiners}
               postConsensusSummary={roundData?.post_consensus_summary ?? null}
-              loading={roundDataLoading || statsLoading || minersLoading}
-              error={roundDataLoading ? undefined : (statistics?.error || allMinersData?.error)}
+              loading={roundDataLoading}
+              error={roundDataError}
             />
       </div>
 
@@ -2470,10 +2514,13 @@ export default function Round() {
         onValidatorSelect={handleValidatorSelect}
         selectedValidatorId={selectedValidator?.id ?? null}
         requestedValidatorId={requestedValidatorId}
+        roundData={roundData}
+        loading={roundDataLoading}
+        error={roundDataError}
       />
 
       {/* Selected validator metric cards */}
-      {minersLoading || !selectedValidator ? (
+      {roundDataLoading || !selectedValidator ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
           {Array.from({ length: 4 }, (_, index) => (
             <div key={index} className={cn("h-36", skeletonCard)} />
@@ -2492,20 +2539,21 @@ export default function Round() {
         <RoundMinerScoresInline
           className="w-full xl:w-[calc(100%-400px)]"
           selectedValidator={selectedValidator}
-              roundInfo={round}
-              minersData={allMinersData}
-              loading={minersLoading}
-              error={undefined}
+          roundInfo={round}
+          minersData={undefined}
+          roundData={roundData}
+          loading={roundDataLoading}
+          error={roundDataError}
         />
         <RoundTopMinersInline
           className="w-full xl:w-[400px]"
           selectedValidator={selectedValidator}
           roundNumber={roundNumberForLinks}
           roundInfo={round}
-          minersData={allMinersData}
+          minersData={undefined}
           roundData={roundData} // ✅ Pasar roundData
-          loading={minersLoading}
-          error={undefined}
+          loading={roundDataLoading}
+          error={roundDataError}
         />
       </div>
 
