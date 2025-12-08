@@ -48,6 +48,7 @@ import {
   useRoundBasic,
   useRounds,
   useRoundProgress,
+  useGetRound,
   useRoundValidators,
   useTopMiners,
   useRoundStatistics,
@@ -176,6 +177,12 @@ const DEFAULT_BENCHMARK_COLORS = [
 function CustomTooltip({ label, active, payload, className }: any) {
   if (!active || !payload?.length) return null;
   const minerData = payload[0]?.payload;
+  
+  // ✅ Obtener datos del miner (eval_score, eval_time, reward)
+  const evalScore = minerData?.eval_score ?? minerData?.score ?? 0;
+  const evalTime = minerData?.eval_time ?? minerData?.avgTime ?? null;
+  const reward = minerData?.reward ?? minerData?.score ?? 0;
+  
   return (
     <div
       className={cn(
@@ -187,41 +194,76 @@ function CustomTooltip({ label, active, payload, className }: any) {
         {minerData?.name}
       </Text>
       <div className="px-4 py-3 text-sm space-y-2">
-        {payload.map((item: any, index: number) => (
-          <div
-            key={item.dataKey + index}
-            className="chart-tooltip-item flex items-center justify-between gap-4"
-          >
+        {/* Score (eval_score) */}
+        <div className="chart-tooltip-item flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+              style={{
+                backgroundColor: "#3B82F6", // Blue for score
+              }}
+            />
+            <Text
+              as="span"
+              className="capitalize text-white/90 font-semibold"
+            >
+              Score:
+            </Text>
+          </div>
+          <Text as="span" className="font-black text-white text-base">
+            {(() => {
+              const truncated = truncateDecimal(evalScore, 4);
+              return (truncated * 100).toFixed(2) + "%";
+            })()}
+          </Text>
+        </div>
+        
+        {/* Time (eval_time) */}
+        {evalTime != null && (
+          <div className="chart-tooltip-item flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <span
                 className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
                 style={{
-                  backgroundColor:
-                    item.payload?.color || item.fill || "#10B981",
+                  backgroundColor: "#10B981", // Green for time
                 }}
               />
               <Text
                 as="span"
                 className="capitalize text-white/90 font-semibold"
               >
-                Score:
+                Time:
               </Text>
             </div>
             <Text as="span" className="font-black text-white text-base">
-              {(Number(item.value) * 100).toFixed(2)}%
-            </Text>
-          </div>
-        ))}
-        {minerData?.avgTime != null && (
-          <div className="chart-tooltip-item flex items-center justify-between gap-4 pt-1 border-t border-white/10">
-            <Text as="span" className="capitalize text-white/90 font-semibold">
-              Avg Time:
-            </Text>
-            <Text as="span" className="font-black text-white text-base">
-              {Number(minerData.avgTime).toFixed(2)}s
+              {Number(evalTime).toFixed(2)}s
             </Text>
           </div>
         )}
+        
+        {/* Reward */}
+        <div className="chart-tooltip-item flex items-center justify-between gap-4 pt-1 border-t border-white/10">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+              style={{
+                backgroundColor: "#F59E0B", // Amber for reward
+              }}
+            />
+            <Text
+              as="span"
+              className="capitalize text-white/90 font-semibold"
+            >
+              Reward:
+            </Text>
+          </div>
+          <Text as="span" className="font-black text-white text-base">
+            {(() => {
+              const truncated = truncateDecimal(reward, 4);
+              return (truncated * 100).toFixed(2) + "%";
+            })()}
+          </Text>
+        </div>
       </div>
     </div>
   );
@@ -769,33 +811,69 @@ function RoundHeaderInline({
   );
 } */
 
+// ✅ Función para truncar decimales sin redondear (disponible para todos los componentes)
+const truncateDecimal = (value: number, decimals: number = 4): number => {
+  if (value === undefined || value === null || Number.isNaN(value)) return 0;
+  const multiplier = Math.pow(10, decimals);
+  return Math.floor(value * multiplier) / multiplier;
+};
+
 function RoundStatsInline({
   selectedValidator,
   statistics,
   topMiners,
+  postConsensusSummary,
   loading,
   error,
 }: {
   selectedValidator?: ValidatorPerformance | null;
   statistics?: any;
   topMiners?: any[];
+  postConsensusSummary?: {
+    winner: {
+      uid: number;
+      name: string;
+      image: string | null;
+      hotkey: string | null;
+      avg_reward: number;
+      avg_eval_score: number;
+      avg_eval_time: number;
+    } | null;
+    miners_evaluated: number;
+    tasks_evaluated: number;
+  } | null;
   loading?: boolean;
   error?: string;
 }) {
-  const winnerUid = statistics?.winnerMinerUid ?? null;
+  // ✅ Usar datos de post_consensus_summary si están disponibles
+  const winner = postConsensusSummary?.winner;
+  const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
+  const winnerEvalScore = winner?.avg_eval_score ?? 0;
+  const averageEvalTime = winner?.avg_eval_time ?? 0;
+  const minersEvaluated = postConsensusSummary?.miners_evaluated ?? statistics?.totalMiners ?? 0;
+  const winnerUid = winner?.uid ?? statistics?.winnerMinerUid ?? null;
 
   // Aggregated winner should NOT change when validator is selected
   // It always shows the overall round winner
   const topMiner = React.useMemo(() => {
+    // ✅ Priorizar winner de post_consensus_summary
+    if (winner) {
+      return {
+        uid: winner.uid,
+        name: winner.name,
+        hotkey: winner.hotkey,
+        imageUrl: winner.image,
+      };
+    }
     if (!Array.isArray(topMiners) || topMiners.length === 0) return undefined;
     if (winnerUid !== null) {
       const winnerEntry = topMiners.find((miner) => miner.uid === winnerUid);
       if (winnerEntry) return winnerEntry;
     }
     return topMiners[0];
-  }, [topMiners, winnerUid]);
+  }, [winner, topMiners, winnerUid]);
 
-  if (loading || !statistics || !topMiners) {
+  if (loading || (!postConsensusSummary && !statistics) || (!topMiner && !topMiners)) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {Array.from({ length: 4 }, (_, index) => (
@@ -816,18 +894,6 @@ function RoundStatsInline({
     );
   }
 
-  const totalValidators = statistics.totalValidators || 0;
-  const averageTasks =
-    statistics.averageTasksPerValidator != null
-      ? statistics.averageTasksPerValidator
-      : totalValidators
-        ? statistics.totalTasks / totalValidators
-        : 0;
-  const topMinerLabel = topMiner
-    ? topMiner.name && topMiner.name.trim().length > 0
-      ? topMiner.name
-      : `Miner ${topMiner.uid ?? "pending"}`
-    : "Top miner pending";
   const formatNumber = (value: number | undefined | null, digits = 0) => {
     if (value === undefined || value === null || Number.isNaN(value))
       return "0";
@@ -836,8 +902,10 @@ function RoundStatsInline({
       maximumFractionDigits: digits,
     });
   };
-  const winnerAverageScore =
-    statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
+  
+  const topMinerLabel = topMiner
+    ? (topMiner.name?.trim() || `Miner ${topMiner.uid ?? "pending"}`)
+    : "Top miner pending";
 
   const aggregatedCards = [
     {
@@ -857,10 +925,13 @@ function RoundStatsInline({
       valueClass: "text-2xl",
     },
     {
-      key: "winnerAverageScore",
-      title: "Winner Average Score",
-      value: `${formatNumber(winnerAverageScore * 100, 1)}%`,
-      helper: "Average score achieved by the winning miner across validators",
+      key: "winnerAverageReward",
+      title: "Winner Average Reward",
+      value: `${(() => {
+        const truncated = truncateDecimal(winnerAverageReward, 4); // ✅ Truncar a 4 decimales
+        return formatNumber(truncated * 100, 2);
+      })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
+      helper: "Average reward achieved by the winning miner across validators",
       icon: PiTrophyDuotone,
       gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
       bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
@@ -870,29 +941,29 @@ function RoundStatsInline({
       valueClass: "text-4xl",
     },
     {
-      key: "miners",
-      title: "Miners Evaluated",
-      value: formatNumber(statistics.totalMiners ?? 0),
-      helper: "Unique miners participating this round",
-      icon: PiUsersThreeDuotone,
-      gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30",
-      bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10",
-      iconGradient: "from-violet-400 to-fuchsia-500",
-      borderColor: "border-violet-400/50",
-      glowColor: "rgba(139,92,246,0.5)",
-      valueClass: "text-4xl",
-    },
-    {
-      key: "tasks",
-      title: "Average Tasks",
-      value: formatNumber(averageTasks, 0),
-      helper: "Tasks completed per validator",
-      icon: PiListChecksDuotone,
+      key: "averageTime",
+      title: "Average Time",
+      value: `${formatNumber(averageEvalTime, 1)}s`,
+      helper: "Average evaluation time for the winner miner across validators",
+      icon: PiClockDuotone,
       gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
       bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10",
       iconGradient: "from-blue-400 to-indigo-500",
       borderColor: "border-blue-400/50",
       glowColor: "rgba(59,130,246,0.5)",
+      valueClass: "text-4xl",
+    },
+    {
+      key: "miners",
+      title: "Miners Evaluated",
+      value: formatNumber(minersEvaluated, 0),
+      helper: "Unique miners participating this round",
+      icon: PiUsersThreeDuotone,
+      gradient: "from-purple-500/30 via-violet-500/25 to-fuchsia-500/30",
+      bgGradient: "from-purple-500/20 via-violet-500/15 to-fuchsia-500/10",
+      iconGradient: "from-purple-400 to-violet-500",
+      borderColor: "border-purple-400/50",
+      glowColor: "rgba(168,85,247,0.5)",
       valueClass: "text-4xl",
     },
   ];
@@ -1466,6 +1537,10 @@ function RoundMinerScoresInline({
         color,
         provider: miner.provider,
         xAxisLabel: isSota ? "" : uidLabel,
+        // ✅ Agregar datos para el tooltip
+        eval_score: miner.local_avg_eval_score ?? miner.eval_score ?? miner.score, // Score (eval_score)
+        eval_time: miner.local_avg_eval_time ?? miner.avgTime ?? miner.eval_time, // Time (eval_time)
+        reward: miner.local_avg_reward ?? miner.reward ?? miner.score, // Reward (reward)
       };
     });
     const benchmarkEntries = benchmarks.map((benchmark) => {
@@ -1776,6 +1851,7 @@ function RoundTopMinersInline({
   roundNumber,
   roundInfo,
   minersData,
+  roundData, // ✅ Agregar roundData como prop
   loading,
   error,
 }: {
@@ -1784,6 +1860,7 @@ function RoundTopMinersInline({
   roundNumber?: number;
   roundInfo?: any;
   minersData?: any;
+  roundData?: any; // ✅ Agregar roundData al tipo
   loading?: boolean;
   error?: string;
 }) {
@@ -1800,7 +1877,27 @@ function RoundTopMinersInline({
       : roundStatus === "completed"
         ? roundAccentCompleted
         : roundAccentPending;
+  // ✅ Usar roundData.validators[selectedValidator].miners si está disponible
   const topMinersList = React.useMemo(() => {
+    // Si tenemos roundData y un validator seleccionado, usar sus miners
+    if (roundData?.validators && selectedValidator?.id) {
+      const validatorUid = selectedValidator.id.replace("validator-", "");
+      const validator = roundData.validators.find(
+        (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+      );
+      if (validator?.miners && Array.isArray(validator.miners)) {
+        return validator.miners.map((miner: any) => ({
+          uid: miner.uid,
+          name: miner.name,
+          imageUrl: miner.image,
+          hotkey: miner.hotkey,
+          score: miner.local_avg_reward, // ✅ Usar local_avg_reward con 2 decimales
+          ranking: miner.local_rank,
+          validatorId: selectedValidator.id,
+        }));
+      }
+    }
+    // Fallback al endpoint antiguo
     const miners =
       minersData?.data?.miners && Array.isArray(minersData.data.miners)
         ? minersData.data.miners
@@ -1810,7 +1907,7 @@ function RoundTopMinersInline({
       (miner) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
-  }, [minersData, selectedValidator]);
+  }, [roundData, minersData, selectedValidator]);
 
   if (loading) {
     return (
@@ -2010,7 +2107,7 @@ function RoundTopMinersInline({
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-end gap-1">
                         <RizzText className="text-xs text-white/60 font-bold uppercase tracking-wider">
-                          Score
+                          Reward
                         </RizzText>
                         <div
                           className={cn(
@@ -2018,7 +2115,11 @@ function RoundTopMinersInline({
                             index === 0 ? "text-amber-300" : "text-cyan-300"
                           )}
                         >
-                          {(miner.score * 100).toFixed(1)}%
+                          {(() => {
+                            const reward = Number(miner.score ?? miner.local_avg_reward ?? 0);
+                            const truncated = truncateDecimal(reward, 4); // ✅ Truncar a 4 decimales (0.7458)
+                            return (truncated * 100).toFixed(2) + "%"; // ✅ Mostrar como porcentaje con 2 decimales (74.58%)
+                          })()}
                         </div>
                       </div>
                       <div className="text-white transition-all duration-300 group-hover:translate-x-1">
@@ -2081,8 +2182,11 @@ export default function Round() {
   const roundNumberForLinks = roundNumberFromData ?? roundNumberFromKey;
   const roundLabel = roundNumberForLinks ?? roundKey;
 
-  // Fetch data once at top level to avoid duplicate calls
-  // Load all miners data (used by chart, list, and stats)
+  // Fetch data from new simplified endpoint
+  const { data: roundData, loading: roundDataLoading } = useGetRound(roundNumberForLinks);
+  const { data: progressData, loading: progressLoading } = useRoundProgress(roundKey);
+  
+  // Legacy data for backward compatibility (can be removed later)
   const { data: allMinersData, loading: minersLoading } = useRoundMiners(
     roundKey,
     {
@@ -2123,15 +2227,30 @@ export default function Round() {
     return topMiners[0] ?? null;
   }, [topMiners]);
 
-  const winnerLabel = selectedValidator?.topMiner
-    ? selectedValidator.topMiner.name?.trim() ||
-      `Miner ${selectedValidator.topMiner.uid ?? "unknown"}`
+  // ✅ Usar winner de roundData.validators[selectedValidator] si está disponible
+  const selectedValidatorWinner = React.useMemo(() => {
+    if (roundData?.validators && selectedValidator?.id) {
+      const validatorUid = selectedValidator.id.replace("validator-", "");
+      const validator = roundData.validators.find(
+        (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+      );
+      if (validator?.winner) {
+        return validator.winner;
+      }
+    }
+    // Fallback al endpoint antiguo
+    return selectedValidator?.topMiner ?? null;
+  }, [roundData, selectedValidator]);
+
+  const winnerLabel = selectedValidatorWinner
+    ? selectedValidatorWinner.name?.trim() ||
+      `Miner ${selectedValidatorWinner.uid ?? "unknown"}`
     : aggregatedTopMiner
       ? aggregatedTopMiner.name?.trim() ||
         `Miner ${aggregatedTopMiner.uid ?? "unknown"}`
       : "No winner yet";
   const winnerUidVal =
-    selectedValidator?.topMiner?.uid ?? aggregatedTopMiner?.uid;
+    selectedValidatorWinner?.uid ?? aggregatedTopMiner?.uid;
 
   const formatNumber = (value: number | undefined | null, digits = 0) =>
     value === undefined || value === null || Number.isNaN(value)
@@ -2148,8 +2267,9 @@ export default function Round() {
           title: "Validator Winner",
           value: winnerLabel,
           uid: winnerUidVal,
-          hotkey: selectedValidator?.topMiner?.hotkey,
+          hotkey: selectedValidatorWinner?.hotkey ?? selectedValidator?.topMiner?.hotkey,
           imageUrl:
+            selectedValidatorWinner?.image ??
             selectedValidator?.topMiner?.imageUrl ??
             aggregatedTopMiner?.imageUrl,
           helper:
@@ -2168,8 +2288,14 @@ export default function Round() {
         },
         {
           key: "score",
-          title: "Top Score",
-          value: `${formatNumber((selectedValidator.topScore ?? selectedValidator.averageScore ?? 0) * 100, 1)}%`,
+          title: "Top Reward",
+          value: `${(() => {
+            const score = roundData?.validators?.find(
+              (v: any) => v.validator_uid?.toString() === selectedValidator.id.replace("validator-", "") || v.validator_uid?.toString() === selectedValidator.id
+            )?.local_avg_winner_score ?? selectedValidator.topScore ?? selectedValidator.averageScore ?? 0;
+            const truncated = truncateDecimal(score, 4); // ✅ Truncar a 4 decimales
+            return formatNumber(truncated * 100, 2);
+          })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
           helper: "Best run recorded by this validator",
           icon: PiTrophyDuotone,
           gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
@@ -2317,7 +2443,9 @@ export default function Round() {
               selectedValidator={selectedValidator}
               statistics={statistics}
               topMiners={topMiners}
-              loading={statsLoading || minersLoading}
+              postConsensusSummary={roundData?.post_consensus_summary ?? null}
+              loading={roundDataLoading || statsLoading || minersLoading}
+              error={roundDataLoading ? undefined : (statistics?.error || allMinersData?.error)}
             />
       </div>
 
@@ -2373,10 +2501,11 @@ export default function Round() {
           className="w-full xl:w-[400px]"
           selectedValidator={selectedValidator}
           roundNumber={roundNumberForLinks}
-              roundInfo={round}
-              minersData={allMinersData}
-              loading={minersLoading}
-              error={undefined}
+          roundInfo={round}
+          minersData={allMinersData}
+          roundData={roundData} // ✅ Pasar roundData
+          loading={minersLoading}
+          error={undefined}
         />
       </div>
 

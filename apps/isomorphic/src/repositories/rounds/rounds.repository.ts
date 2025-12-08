@@ -480,6 +480,86 @@ export class RoundsRepository {
   }
 
   /**
+   * Get aggregated metrics and validators data from the new simplified endpoint
+   */
+  async getRound(roundNumber: number): Promise<{
+    round_number: number;
+    aggregated: {
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+      } | null;
+      avg_winner_score: number;
+      avg_eval_time: number;
+      miners_evaluated: number;
+      tasks_evaluated: number;
+    };
+    validators: Array<{
+      validator_uid: number;
+      validator_name: string;
+      validator_hotkey: string;
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+      } | null;
+      local_avg_winner_score: number;
+      local_avg_eval_time: number;
+      local_miners_evaluated: number;
+      local_tasks_evaluated: number;
+    }>;
+  }> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: {
+        round_number: number;
+        post_consensus_summary: {
+          winner: {
+            uid: number;
+            name: string;
+            image: string | null;
+            hotkey: string | null;
+            avg_reward: number;
+            avg_eval_score: number;
+            avg_eval_time: number;
+          } | null;
+          miners_evaluated: number;
+          tasks_evaluated: number;
+        };
+        validators: Array<{
+          validator_uid: number;
+          validator_name: string;
+          validator_hotkey: string;
+          winner: {
+            uid: number;
+            name: string;
+            image: string | null;
+            hotkey: string | null;
+          } | null;
+          local_avg_winner_score: number;
+          local_avg_eval_time: number;
+          local_miners_evaluated: number;
+          local_tasks_evaluated: number;
+          miners: Array<{
+            uid: number;
+            name: string;
+            hotkey: string | null;
+            image: string | null;
+            local_rank: number | null;
+            local_avg_reward: number;
+            local_avg_eval_score: number;
+            local_avg_eval_time: number;
+          }>;
+        }>;
+      };
+    }>(`${this.baseEndpoint}/get-round`, { round_number: roundNumber });
+    return response.data.data;
+  }
+
+  /**
    * Get top performing miners for a round
    */
   async getTopMiners(
