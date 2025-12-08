@@ -1547,6 +1547,20 @@ export default function TaskDynamic() {
                 </span>
               )}
             </Link>
+            {details?.webVersion && (
+              <div className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-purple-400/60 hover:bg-purple-500/10">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+                  Web Version
+                </span>
+                <div className="h-3.5 w-px bg-slate-600/70" />
+                <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
+                  {details.webVersion}
+                </span>
+                <span className="ml-auto">
+                  <IDCopyButton text={details.webVersion} />
+                </span>
+              </div>
+            )}
           </div>
         }
         className="mt-2"
