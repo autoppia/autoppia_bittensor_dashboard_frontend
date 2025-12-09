@@ -42,6 +42,25 @@ export class AgentsRepository {
   private readonly minerListEndpoint = '/api/v1/miner-list';
 
   /**
+   * Get the latest round number and top miner for initial redirect
+   */
+  async getLatestRoundTopMiner(): Promise<{
+    round: number;
+    miner_uid: number;
+    miner_hotkey: string | null;
+  }> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: {
+        round: number;
+        miner_uid: number;
+        miner_hotkey: string | null;
+      };
+    }>(`${this.baseEndpoint}/latest-round-top-miner`);
+    return response.data.data;
+  }
+
+  /**
    * Get rounds data with optional miners for selected round (new unified endpoint)
    */
   async getRoundsData(roundNumber?: number): Promise<{
