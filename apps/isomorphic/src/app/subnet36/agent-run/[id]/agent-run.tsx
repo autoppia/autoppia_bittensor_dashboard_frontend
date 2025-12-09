@@ -28,13 +28,9 @@ export default function AgentRun() {
     error, 
     refetch,
     run,
-    personas,
     statistics,
     summary,
     tasks,
-    timeline,
-    logs,
-    metrics,
     info,
   } = useAgentRunComplete(runId);
 
@@ -46,7 +42,6 @@ export default function AgentRun() {
           const roundId = (info?.round?.roundNumber ??
             info?.round?.validatorRoundId ??
             summary?.roundId ??
-            personas?.round?.id ??
             "") as any;
           const roundLabel =
             typeof roundId === "number" ||
@@ -94,12 +89,6 @@ export default function AgentRun() {
         </div>
       )}
 
-      {/* Personas Section */}
-      <AgentRunPersonasDynamic 
-        personas={personas}
-        isLoading={isLoading}
-        error={error}
-      />
 
       {/* Stats Section */}
       <AgentRunStatsDynamic 
