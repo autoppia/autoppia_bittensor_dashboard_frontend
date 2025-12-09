@@ -79,7 +79,7 @@ function AgentsLanding() {
     data: latestRoundTopMiner,
     loading: latestRoundLoading,
     error: latestRoundError,
-  } = useLatestRoundTopMiner();
+  } = useLatestRoundTopMiner(needsRedirect);
 
   // Get rounds list from useRoundsData (without round_number to get all rounds)
   const {
@@ -200,7 +200,7 @@ function AgentsLanding() {
   // Redirect using latest round and top miner from API (fast path)
   // This is the primary redirect mechanism - instant redirect when data is available
   useEffect(() => {
-    // Only redirect if we need to (on landing page, no params)
+    // Only redirect if we need to (on landing page, no agent param)
     if (!needsRedirect) {
       hasRedirectedRef.current = false;
       return;
@@ -211,13 +211,13 @@ function AgentsLanding() {
       return;
     }
 
-    // Wait for data to load
-    if (latestRoundLoading || !latestRoundTopMiner) {
+    // Wait for data to load (but don't wait if there's an error - use fallback)
+    if (latestRoundLoading) {
       return;
     }
 
-    // If there's an error, fall through to fallback mechanism
-    if (latestRoundError) {
+    // If there's an error or no data, fall through to fallback mechanism
+    if (latestRoundError || !latestRoundTopMiner) {
       return;
     }
 
@@ -230,10 +230,15 @@ function AgentsLanding() {
     params.set("round", String(latestRoundTopMiner.round));
     params.set("agent", String(latestRoundTopMiner.miner_uid));
 
-    // Redirect immediately to the normal URL format
-    router.replace(`${targetPath}?${params.toString()}`);
+    const targetUrl = `${targetPath}?${params.toString()}`;
+    console.log(`[AgentsLanding] Redirecting from ${pathname} to: ${targetUrl}`);
+    
+    // Redirect immediately to the normal URL format with full page reload
+    // Using window.location.href instead of router.replace to force a full page reload
+    window.location.href = targetUrl;
   }, [
     needsRedirect,
+    pathname,
     latestRoundLoading,
     latestRoundError,
     latestRoundTopMiner,
@@ -292,7 +297,10 @@ function AgentsLanding() {
 
     // Build the target URL: /subnet36/agents/{miner_uid}?round={round}&agent={miner_uid}
     const targetPath = `${routes.agents}/${topMiner.uid}`;
-    router.replace(`${targetPath}?${params.toString()}`);
+    const targetUrl = `${targetPath}?${params.toString()}`;
+    
+    // Redirect with full page reload
+    window.location.href = targetUrl;
   }, [
     needsRedirect,
     latestRoundTopMiner,

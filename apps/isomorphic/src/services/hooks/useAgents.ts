@@ -123,12 +123,12 @@ export function useRoundsData(roundNumber?: number) {
 }
 
 // Hook for latest round and top miner (for initial redirect)
-export function useLatestRoundTopMiner() {
+export function useLatestRoundTopMiner(enabled: boolean = true) {
   const request = useCallback(
     () => agentsRepository.getLatestRoundTopMiner(),
     []
   );
-  return useApiCall(request, 'latest-round-top-miner');
+  return useApiCall(request, 'latest-round-top-miner', enabled);
 }
 
 // Hook for miner round details
