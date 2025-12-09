@@ -10,7 +10,7 @@ import { useOverviewMetrics } from "@/services/hooks/useOverview";
 const metricsData = [
   {
     id: "score-to-win",
-    title: "Top Score",
+    title: "Top Reward",
     value: 0.95,
     icon: LuTrophy,
     bgColor:
@@ -170,7 +170,7 @@ export default function OverviewMetrics({
   const dynamicMetricsData = [
     {
       id: "score-to-win",
-      title: "Top Score",
+      title: "Top Reward",
       value: formatPercentage(topScoreValue),
       topLabel: topMinerInfo,
       bottomLabel: `Round ${latestFinishedRound}`,
