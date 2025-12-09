@@ -10,6 +10,7 @@ import type {
   AgentRunSummary,
   AgentRunPersonas,
   AgentRunTaskData,
+  AgentRunEvaluationData, // Added
   AgentRunPartialData,
   AgentRunListItem,
   AgentRunsListQueryParams,
@@ -79,7 +80,7 @@ export function useAgentRunsList(params?: AgentRunsListQueryParams) {
 export function useAgentRunComplete(runId: string) {
   const [data, setData] = useState<{
     statistics: AgentRunStats | null;
-    tasks: AgentRunTaskData[];
+    evaluations: AgentRunEvaluationData[]; // Changed from tasks to evaluations
     info: {
       agentRunId: string;
       round: any;
@@ -116,7 +117,7 @@ export function useAgentRunComplete(runId: string) {
     refetch: fetchComplete,
     // Convenience getters
     statistics: data?.statistics ?? null,
-    tasks: data?.tasks ?? [],
+    evaluations: data?.evaluations ?? [], // Changed from tasks to evaluations
     info: data?.info ?? null,
   };
 }

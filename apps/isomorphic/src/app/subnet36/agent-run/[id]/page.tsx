@@ -43,6 +43,7 @@ import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import type {
   AgentRunStats as AgentRunStatsData,
   AgentRunTaskData,
+  AgentRunEvaluationData,
 } from "@/repositories/agent-runs/agent-runs.types";
 import { createColumnHelper } from "@tanstack/react-table";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -188,7 +189,7 @@ export default function Page() {
     error,
     refetch,
     statistics: stats,
-    tasks,
+    evaluations,
     info,
   } = useAgentRunComplete(runId);
 
@@ -317,6 +318,13 @@ export default function Page() {
         <AgentRunStats stats={stats || null} />
       )}
 
+      {/* Personas cards (Round, Validator, Miner) */}
+      {isLoading ? (
+        <AgentRunPersonasPlaceholder />
+      ) : (
+        <AgentRunPersonasFromInfo info={info} />
+      )}
+
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
           {isLoading && <AgentRunDetailPlaceholder />}
@@ -341,7 +349,7 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection tasks={tasks} isLoading={isLoading} error={error} refetch={refetch} />
+        <AgentRunTasksSection evaluations={evaluations} isLoading={isLoading} error={error} refetch={refetch} />
       </div>
 
       {isLoading && (
@@ -354,7 +362,275 @@ export default function Page() {
   );
 }
 
-// Personas card group
+// Personas card group - adapted to use info object
+function AgentRunPersonasFromInfo({
+  info,
+}: {
+  info: {
+    agentRunId: string;
+    round: any;
+    validator: any;
+    miner: any;
+  } | null;
+}) {
+  function extractUidNumber(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value))
+      return Math.max(0, Math.abs(value));
+    if (typeof value === "string") {
+      const match = value.match(/\d+/);
+      if (match) {
+        const parsed = Number.parseInt(match[0], 10);
+        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
+      }
+    }
+    return null;
+  }
+
+  if (!info) {
+    return <AgentRunPersonasPlaceholder />;
+  }
+
+  const roundData = info.round || {
+    roundNumber: null,
+    validatorRoundId: null,
+    status: "Active",
+    startedAt: null,
+    endedAt: null,
+    startEpoch: null,
+    endEpoch: null,
+  };
+
+  const validatorData = info.validator || {
+    uid: null,
+    hotkey: null,
+    name: "Autoppia Validator",
+    image: "/validators/Autoppia.png",
+    coldkey: null,
+    stake: 0,
+    vtrust: 0,
+    version: null,
+  };
+
+  const minerData = info.miner || {
+    uid: null,
+    hotkey: null,
+    name: "Unknown Miner",
+    image: null,
+    github: null,
+    isSota: false,
+  };
+
+  const validatorHotkey = validatorData.hotkey || validatorData.name || "—";
+  const validatorUid = validatorData.uid ?? extractUidNumber(validatorHotkey);
+  const taoStatsUrl = validatorHotkey && validatorHotkey !== "—"
+    ? `https://taostats.io/validators/${validatorHotkey}`
+    : null;
+
+  const minerUid = minerData.uid ?? extractUidNumber(minerData.hotkey);
+  const minerHotkey = minerData.hotkey || "—";
+
+  const fallbackMinerImage = (() => {
+    const uidCandidate = minerUid;
+    if (uidCandidate === null) return "/images/autoppia-logo.png";
+    const normalized = Math.abs(uidCandidate % 50);
+    return `/miners/${normalized}.svg`;
+  })();
+
+  const minerImageSrc = minerData.image
+    ? resolveAssetUrl(minerData.image)
+    : resolveAssetUrl(fallbackMinerImage);
+  const validatorImageSrc = validatorData.image
+    ? resolveAssetUrl(validatorData.image)
+    : resolveAssetUrl("/validators/Other.png");
+
+  // Epoch helpers
+  const epochStart = roundData.startEpoch ?? null;
+  const epochEnd = roundData.endEpoch ?? null;
+  const formatEpoch = (value: number | null) =>
+    typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
+  
+  // Round number/ID
+  const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
+  const roundStatus = roundData.status || "Active";
+
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Round */}
+      <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
+              <PiClock className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                Round
+              </p>
+              <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                #{roundNumber}
+              </p>
+            </div>
+          </div>
+          <span
+            className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+            style={{
+              borderColor: "rgba(253, 245, 230, 0.45)",
+              backgroundColor: "rgba(253, 245, 230, 0.12)",
+              color: HIGHLIGHT_COLOR,
+            }}
+          >
+            {roundStatus.replace(/^\w/, (c: string) =>
+              c.toUpperCase()
+            )}
+          </span>
+        </header>
+
+        <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
+            <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+              Epoch:
+            </span>
+            <span className="whitespace-nowrap">
+              {formatEpoch(epochStart)} - {formatEpoch(epochEnd ?? Math.floor(Date.now() / 1000))}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Validator */}
+      <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Image
+              alt={validatorData.name || "Validator"}
+              src={validatorImageSrc}
+              width={56}
+              height={56}
+              unoptimized
+              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1"
+            />
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                Validator
+              </p>
+              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                {validatorData.name || "Unknown Validator"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {validatorUid !== null && (
+              <span
+                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                style={{
+                  borderColor: "rgba(59, 130, 246, 0.45)",
+                  backgroundColor: "rgba(59, 130, 246, 0.12)",
+                  color: "#60A5FA",
+                }}
+              >
+                UID {validatorUid}
+              </span>
+            )}
+            {taoStatsUrl ? (
+              <a
+                href={taoStatsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-400 text-black shadow hover:bg-sky-300"
+                title="Open TaoStats"
+              >
+                <PiArrowSquareOutDuotone className="h-4 w-4" />
+              </a>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="mt-4">
+          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                  Hotkey:
+                </span>
+                <span className="font-mono text-sm text-white">
+                  {truncateMiddle(validatorHotkey)}
+                </span>
+              </div>
+              {validatorHotkey && validatorHotkey !== "—" && <IDCopyButton text={validatorHotkey} />}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Miner */}
+      <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Image
+              alt={minerData.name || "Miner"}
+              src={minerImageSrc}
+              width={56}
+              height={56}
+              unoptimized
+              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1"
+            />
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                Miner
+              </p>
+              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
+                {minerData.name || "Unknown Miner"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {minerUid !== null && (
+              <span
+                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
+                style={{
+                  borderColor: "rgba(16, 185, 129, 0.45)",
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  color: "#34D399",
+                }}
+              >
+                UID {minerUid}
+              </span>
+            )}
+            {minerData.github ? (
+              <a
+                href={minerData.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300"
+                title="Open GitHub"
+              >
+                <PiGithubLogoDuotone className="h-4 w-4" />
+              </a>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="mt-4">
+          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
+                  Hotkey:
+                </span>
+                <span className="font-mono text-sm text-white">
+                  {truncateMiddle(minerHotkey)}
+                </span>
+              </div>
+              {minerHotkey && minerHotkey !== "—" && <IDCopyButton text={minerHotkey} />}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// Personas card group (legacy - kept for backward compatibility)
 function AgentRunPersonas({
   personas,
   summary,
@@ -419,31 +695,28 @@ function AgentRunPersonas({
     summary?.agentId;
 
   const fallbackMinerImage = (() => {
-    const uidCandidate = agentUid ?? extractUidNumber(summary?.minerUid);
+    const uidCandidate = minerUid;
     if (uidCandidate === null) return "/images/autoppia-logo.png";
     const normalized = Math.abs(uidCandidate % 50);
     return `/miners/${normalized}.svg`;
   })();
 
-  const minerImageSrc = agentData.image
-    ? resolveAssetUrl(agentData.image)
+  const minerImageSrc = minerData.image
+    ? resolveAssetUrl(minerData.image)
     : resolveAssetUrl(fallbackMinerImage);
   const validatorImageSrc = validatorData.image
     ? resolveAssetUrl(validatorData.image)
     : resolveAssetUrl("/validators/Other.png");
 
-  // Epoch seconds helpers (Unix time)
-  const toEpochSeconds = (value?: string | null): number | null => {
-    if (!value) return null;
-    const ts = Date.parse(value);
-    if (Number.isNaN(ts)) return null;
-    return Math.floor(ts / 1000);
-  };
-  const epochStart = toEpochSeconds(roundData.startTime);
-  const epochEndFixed = toEpochSeconds(roundData.endTime ?? summary?.endTime);
-  const epochEndLive = epochEndFixed ?? Math.floor(Date.now() / 1000);
+  // Epoch helpers
+  const epochStart = roundData.startEpoch ?? null;
+  const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
+  
+  // Round number/ID
+  const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
+  const roundStatus = roundData.status || "Active";
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -459,7 +732,7 @@ function AgentRunPersonas({
                 Round
               </p>
               <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                #{roundData.id ?? summary?.roundId ?? "—"}
+                #{roundNumber}
               </p>
             </div>
           </div>
@@ -471,7 +744,7 @@ function AgentRunPersonas({
               color: HIGHLIGHT_COLOR,
             }}
           >
-            {(roundData.status || "Active").replace(/^\w/, (c: string) =>
+            {roundStatus.replace(/^\w/, (c: string) =>
               c.toUpperCase()
             )}
           </span>
@@ -483,7 +756,7 @@ function AgentRunPersonas({
               Epoch:
             </span>
             <span className="whitespace-nowrap">
-              {formatEpoch(epochStart)} - {formatEpoch(epochEndLive)}
+              {formatEpoch(epochStart)} - {formatEpoch(epochEnd ?? Math.floor(Date.now() / 1000))}
             </span>
           </div>
         </div>
@@ -506,12 +779,12 @@ function AgentRunPersonas({
                 Validator
               </p>
               <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {validatorData.name}
+                {validatorData.name || "Unknown Validator"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {validatorUid && (
+            {validatorUid !== null && (
               <span
                 className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
                 style={{
@@ -548,7 +821,7 @@ function AgentRunPersonas({
                   {truncateMiddle(validatorHotkey)}
                 </span>
               </div>
-              {validatorHotkey && <IDCopyButton text={validatorHotkey} />}
+              {validatorHotkey && validatorHotkey !== "—" && <IDCopyButton text={validatorHotkey} />}
             </div>
           </div>
         </div>
@@ -571,12 +844,12 @@ function AgentRunPersonas({
                 Miner
               </p>
               <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {agentData.name}
+                {minerData.name || "Unknown Miner"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {agentUid && (
+            {minerUid !== null && (
               <span
                 className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
                 style={{
@@ -585,12 +858,12 @@ function AgentRunPersonas({
                   color: "#34D399",
                 }}
               >
-                UID {agentUid}
+                UID {minerUid}
               </span>
             )}
-            {agentData.github ? (
+            {minerData.github ? (
               <a
-                href={agentData.github}
+                href={minerData.github}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300"
@@ -610,10 +883,10 @@ function AgentRunPersonas({
                   Hotkey:
                 </span>
                 <span className="font-mono text-sm text-white">
-                  {truncateMiddle(agentHotkey)}
+                  {truncateMiddle(minerHotkey)}
                 </span>
               </div>
-              {agentHotkey && <IDCopyButton text={agentHotkey} />}
+              {minerHotkey && minerHotkey !== "—" && <IDCopyButton text={minerHotkey} />}
             </div>
           </div>
         </div>
@@ -1822,20 +2095,20 @@ function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
   );
 }
 
-// Tasks table with pagination
-const columnHelper = createColumnHelper<AgentRunTaskData>();
+// Evaluations table with pagination
+const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 const agentRunTasksColumns = [
   columnHelper.display({
-    id: "taskId",
+    id: "evaluationId",
     size: 80,
-    header: "Task Id",
+    header: "Evaluation Id",
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="ms-2 font-mono text-xs sm:text-sm text-white"
-        title="View task details"
+        title="View evaluation details"
       >
-        #{row.original.taskId}
+        #{row.original.evaluationId}
       </Link>
     ),
   }),
@@ -1846,9 +2119,9 @@ const agentRunTasksColumns = [
     enableSorting: false,
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="block max-w-[200px] sm:max-w-[320px] break-words whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-200"
-        title="View task details"
+        title="View evaluation details"
       >
         {row.original.prompt}
       </Link>
@@ -1861,9 +2134,9 @@ const agentRunTasksColumns = [
     enableSorting: true,
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="inline-flex items-center rounded-md border border-blue-600 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs text-blue-300"
-        title="View task details"
+        title="View evaluation details"
       >
         {formatWebsiteName(row.original.website)}
       </Link>
@@ -1876,9 +2149,9 @@ const agentRunTasksColumns = [
     enableSorting: true,
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="text-xs sm:text-sm font-medium text-slate-300"
-        title="View task details"
+        title="View evaluation details"
       >
         {row.original.useCase
           .split("_")
@@ -1893,18 +2166,16 @@ const agentRunTasksColumns = [
     header: "Score",
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
-      let scoreColor = "text-slate-300";
-      if (eval_score >= 1) scoreColor = "text-green-400";
-      else if (score >= 0.6) scoreColor = "text-yellow-400";
-      else if (score >= 0.4) scoreColor = "text-orange-400";
-      else scoreColor = "text-red-400";
+      const isPassed = eval_score >= 1;
+      const scoreColor = isPassed ? "text-green-400" : "text-red-400";
+      const scoreValue = isPassed ? "100%" : "0%";
       return (
         <Link
-          href={`${routes.tasks}/${row.original.taskId}`}
+          href={`${routes.evaluations}/${row.original.evaluationId}`}
           className={`text-xs sm:text-sm font-medium ${scoreColor}`}
-          title="View task details"
+          title="View evaluation details"
         >
-          {eval_score === 1 ? "✓" : "✗"}
+          {scoreValue}
         </Link>
       );
     },
@@ -1915,9 +2186,9 @@ const agentRunTasksColumns = [
     header: "Time",
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="text-xs sm:text-sm font-medium text-slate-300"
-        title="View task details"
+        title="View evaluation details"
       >
         {row.original.eval_time?.toFixed(2) ?? 0}s
       </Link>
@@ -1929,9 +2200,9 @@ const agentRunTasksColumns = [
     header: "Action",
     cell: ({ row }) => (
       <Link
-        href={`${routes.tasks}/${row.original.taskId}`}
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
-        title="Inspect task"
+        title="Inspect evaluation"
       >
         <Button
           variant="outline"
@@ -1947,23 +2218,23 @@ const agentRunTasksColumns = [
 ];
 
 function AgentRunTasksSection({ 
-  tasks: providedTasks = [], 
+  evaluations: providedEvaluations = [], 
   isLoading = false, 
   error,
   refetch,
 }: {
-  tasks?: any[];
+  evaluations?: any[];
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
 }) {
-  const tasks = providedTasks;
-  const total = tasks.length;
+  const evaluations = providedEvaluations;
+  const total = evaluations.length;
   const page = 1;
   const limit = 10;
 
-  const { table, setData } = useTanStackTable<AgentRunTaskData>({
-    tableData: tasks || [],
+  const { table, setData } = useTanStackTable<AgentRunEvaluationData>({
+    tableData: evaluations || [],
     columnConfig: agentRunTasksColumns,
     options: {
       initialState: {
@@ -1975,10 +2246,10 @@ function AgentRunTasksSection({
   });
 
   useEffect(() => {
-    if (tasks) setData(tasks);
-  }, [tasks, setData]);
+    if (evaluations) setData(evaluations);
+  }, [evaluations, setData]);
 
-  if (isLoading && !tasks) {
+  if (isLoading && !evaluations) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
         <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
@@ -2061,7 +2332,7 @@ function AgentRunTasksSection({
             </svg>
           </div>
           <h2 className="text-base sm:text-xl font-semibold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
-            All Tasks
+            All Evaluations
             {total > 0 && (
               <span className="ml-2 text-xs sm:text-sm font-normal text-blue-300/70">
                 ({total} total)
@@ -2073,7 +2344,7 @@ function AgentRunTasksSection({
           <Input
             type="search"
             clearable
-            placeholder="Search task..."
+            placeholder="Search evaluation..."
             onClear={() => table.setGlobalFilter("")}
             value={(table.getState().globalFilter as string) ?? ""}
             prefix={
@@ -2086,7 +2357,7 @@ function AgentRunTasksSection({
       </div>
 
       <div className="relative mb-2">
-        {tasks && tasks.length > 0 ? (
+        {evaluations && evaluations.length > 0 ? (
           <Table
             table={table}
             variant="modern"
@@ -2102,27 +2373,27 @@ function AgentRunTasksSection({
         ) : (
           <div className="rounded-2xl border border-slate-700/25 bg-transparent p-6 sm:p-8 text-center">
             <div className="mb-2 text-base sm:text-lg font-medium text-slate-200">
-              No Tasks Found
+              No Evaluations Found
             </div>
             <div className="text-xs sm:text-sm text-slate-400">
-              No tasks are available for this agent run.
+              No evaluations are available for this agent run.
             </div>
           </div>
         )}
       </div>
 
-      {tasks && tasks.length > 0 && (
+      {evaluations && evaluations.length > 0 && (
         <TablePagination
           table={table}
           className="relative py-3 sm:py-4 text-slate-300 text-xs sm:text-sm"
         />
       )}
 
-      {isLoading && tasks && (
+      {isLoading && evaluations && (
         <div className="relative flex items-center justify-center py-3 sm:py-4">
           <div className="flex items-center gap-2 text-slate-400">
             <div className="h-3 w-3 sm:h-4 sm:w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
-            <span className="text-xs sm:text-sm">Loading more tasks...</span>
+            <span className="text-xs sm:text-sm">Loading more evaluations...</span>
           </div>
         </div>
       )}
