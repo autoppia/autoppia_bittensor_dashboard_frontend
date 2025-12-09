@@ -355,13 +355,33 @@ function TaskDetailsDynamic({
   const evaluationInfo = taskData.relationships?.evaluation;
   const solutionInfo = taskData.relationships?.solution;
 
-  const evaluationScore =
-    typeof evaluationInfo?.finalScore === "number"
-      ? formatPercent(evaluationInfo.finalScore)
-      : formatPercent((taskData as any).score);
-  const evaluationDuration = evaluationInfo
-    ? formatDuration(evaluationInfo.evaluationTime)
-    : formatDuration((taskData as any).duration);
+  // Calculate evaluationScore from evaluationInfo, taskData.score, or details.score
+  const evaluationScore = (() => {
+    if (typeof evaluationInfo?.finalScore === "number") {
+      return formatPercent(evaluationInfo.finalScore);
+    }
+    if (typeof (taskData as any)?.score === "number") {
+      return formatPercent((taskData as any).score);
+    }
+    if (typeof (taskData as any)?.eval_score === "number") {
+      return formatPercent((taskData as any).eval_score);
+    }
+    return "0%";
+  })();
+  
+  // Calculate evaluationDuration from evaluationInfo, taskData.duration, or details.duration
+  const evaluationDuration = (() => {
+    if (evaluationInfo?.evaluationTime != null) {
+      return formatDuration(evaluationInfo.evaluationTime);
+    }
+    if ((taskData as any)?.duration != null) {
+      return formatDuration((taskData as any).duration);
+    }
+    if ((taskData as any)?.eval_time != null) {
+      return formatDuration((taskData as any).eval_time);
+    }
+    return "—";
+  })();
   const agentRunDuration = agentRunInfo?.duration
     ? formatDuration(agentRunInfo.duration)
     : formatDuration((taskData as any).duration);
@@ -790,7 +810,7 @@ function TaskDetailsDynamic({
         </div>
 
         {/* Agent Run style stats with Task Score centered */}
-        {agentRunInfo ? (
+        {(agentRunInfo || evaluationInfo || details) ? (
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-transparent p-5 text-white">
             {/* Mobile */}
             <div className="flex flex-col space-y-6 md:hidden">
