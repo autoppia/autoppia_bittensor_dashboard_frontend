@@ -1570,7 +1570,7 @@ function AgentRunSummary({
                   position="center"
                   content={(props) => (
                     <CenterLabel
-                      value={successRate.toFixed(0)}
+                      value={(successRate * 100).toFixed(0)}
                       totalRequests={Math.round(totalRequests).toString()}
                       totalSuccesses={Math.round(totalSuccesses).toString()}
                       viewBox={(props as any).viewBox}
@@ -1640,7 +1640,7 @@ function AgentRunSummary({
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-white">
-                      {item.value.toFixed(1)}%
+                      {(item.value * 100).toFixed(1)}%
                     </div>
                     <div className="text-xs text-white/70">
                       {Math.round(item.total)} requests •{" "}
