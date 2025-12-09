@@ -42,15 +42,10 @@ export interface AgentRunData {
     failed: number;
     score: number;
   }[];
-  tasks: AgentRunTaskData[];
   metadata: {
-    environment: string;
-    version: string;
-    resources: {
-      cpu: number;
-      memory: number;
-      storage: number;
-    };
+    agentImage?: string;
+    agentDescription?: string;
+    [key: string]: any;
   };
 }
 
@@ -90,10 +85,7 @@ export interface AgentRunTaskData {
   startTime: string;
   endTime?: string;
   error?: string;
-  actions: TaskAction[];
-  screenshots?: string[];
-  logs?: string[];
-  extras?: Record<string, any>;
+  // actions, screenshots, logs removed - not needed in simplified response
 }
 
 // ===== TASK ACTION =====
@@ -124,20 +116,13 @@ export interface TaskAction {
 
 // ===== AGENT RUN STATS =====
 export interface AgentRunStats {
-  runId: string;
-  overallScore: number;
   totalTasks: number;
+  websites: number;
+  reward: number; // This is the score/reward
+  duration: number;
+  avgTaskDuration: number;
   successfulTasks: number;
   failedTasks: number;
-  websites: number;
-  averageTaskDuration: number;
-  successRate: number;
-  scoreDistribution: {
-    excellent: number; // 0.9-1.0
-    good: number; // 0.7-0.89
-    average: number; // 0.5-0.69
-    poor: number; // 0.0-0.49
-  };
   performanceByWebsite: {
     website: string;
     tasks: number;
