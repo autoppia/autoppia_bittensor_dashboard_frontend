@@ -1887,8 +1887,8 @@ const agentRunTasksColumns = [
       </Link>
     ),
   }),
-  columnHelper.accessor("score", {
-    id: "score",
+  columnHelper.accessor("eval_score", {
+    id: "eval_score",
     size: 100,
     header: "Score",
     cell: ({ row }) => {
@@ -1904,15 +1904,15 @@ const agentRunTasksColumns = [
           className={`text-xs sm:text-sm font-medium ${scoreColor}`}
           title="View task details"
         >
-          {score.toFixed(2)}
+          {eval_score === 1 ? "✓" : "✗"}
         </Link>
       );
     },
   }),
-  columnHelper.accessor("duration", {
-    id: "duration",
+  columnHelper.accessor("eval_time", {
+    id: "eval_time",
     size: 100,
-    header: "Duration",
+    header: "Time",
     cell: ({ row }) => (
       <Link
         href={`${routes.tasks}/${row.original.taskId}`}
