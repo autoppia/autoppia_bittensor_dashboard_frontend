@@ -835,14 +835,17 @@ function AgentValidators({
     );
   }
 
-  if (!runs.length) {
-    return (
-      <div className="mt-6">
-        <div className="text-center py-12 text-white/70">
-          No validator runs found for this agent
+  // Check if we have validators from minerRoundDetails, even if runs is empty
+  if (!effectiveValidators || effectiveValidators.length === 0) {
+    if (!runs.length) {
+      return (
+        <div className="mt-6">
+          <div className="text-center py-12 text-white/70">
+            No validator runs found for this agent
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   const filteredRuns =
@@ -1895,20 +1898,16 @@ export default function Page() {
     "current"
   );
 
-  // Only fetch agent details if not in historical mode
-  const {
-    data: agentDetail,
-    loading,
-    error,
-  } = useAgent(
-    viewMode !== "historical" ? agentIdForQuery : null,
-    viewMode !== "historical" && selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
-  );
+  // Removed useAgent call - we use useMinerRoundDetails and useMinerHistorical instead
+  // This eliminates the unnecessary /api/v1/agents/{id}?round=X call
+  const agentDetail = null;
+  const loading = false;
+  const error = null;
 
-  const agent = agentDetail?.agent ?? null;
-  const roundMetrics = agentDetail?.roundMetrics ?? null;
-  const availableRounds = agentDetail?.availableRounds ?? [];
-  const apiScoreRoundData = agentDetail?.scoreRoundData ?? [];
+  const agent = null;
+  const roundMetrics = null;
+  const availableRounds: number[] = [];
+  const apiScoreRoundData: ScoreRoundDataPoint[] = [];
   
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
@@ -1930,12 +1929,15 @@ export default function Page() {
   } = useMinerHistorical(viewMode === "historical" ? numericUidFromParam : undefined);
   
   // Use minerHistorical data if available in historical mode
+  // In other modes, try to construct from minerRoundDetails if available
   const effectiveAgent: AgentData | null = viewMode === "historical" && minerHistorical
     ? {
+        id: minerHistorical.miner.uid.toString(),
         uid: minerHistorical.miner.uid,
         name: minerHistorical.miner.name,
         hotkey: minerHistorical.miner.hotkey,
-        imageUrl: minerHistorical.miner.image,
+        type: "autoppia",
+        imageUrl: minerHistorical.miner.image ?? "",
         isSota: false,
         totalTasks: minerHistorical.summary.totalTasks,
         completedTasks: minerHistorical.summary.totalTasksSuccessful,
@@ -1960,7 +1962,39 @@ export default function Page() {
         githubUrl: undefined,
         taostatsUrl: undefined,
       }
-    : agent;
+    : minerRoundDetails && minerRoundDetails.miner
+      ? {
+          id: minerRoundDetails.miner.uid.toString(),
+          uid: minerRoundDetails.miner.uid,
+          name: minerRoundDetails.miner.name,
+          hotkey: minerRoundDetails.miner.hotkey ?? null,
+          type: "autoppia",
+          imageUrl: minerRoundDetails.miner.image ?? "",
+          isSota: false,
+          totalTasks: minerRoundDetails.tasks_received ?? 0,
+          completedTasks: minerRoundDetails.tasks_success ?? 0,
+          currentScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentTopScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentRank: minerRoundDetails.post_consensus_rank ?? null,
+          bestRankEver: minerRoundDetails.post_consensus_rank ?? null,
+          bestRankRoundId: selectedRoundFromQuery ?? null,
+          roundsParticipated: 0,
+          roundsWon: 0,
+          alphaWonInPrizes: 0,
+          taoWonInPrizes: 0,
+          bestRoundScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          bestRoundId: selectedRoundFromQuery ?? null,
+          totalRuns: 0,
+          successfulRuns: 0,
+          averageResponseTime: minerRoundDetails.post_consensus_avg_eval_time ?? 0,
+          lastSeen: "",
+          createdAt: "",
+          updatedAt: "",
+          status: "active" as const,
+          githubUrl: undefined,
+          taostatsUrl: undefined,
+        }
+      : null;
   
   const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
   const taoStatsAvailable = Boolean(
@@ -2057,156 +2091,63 @@ export default function Page() {
     });
   }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData]);
 
-  const canFetchRuns = useMemo(() => {
-    // Don't fetch runs in historical mode
-    if (viewMode === "historical") return false;
-    if (!agentIdForQuery) return false;
-    return /\d+/.test(agentIdForQuery);
-  }, [agentIdForQuery, viewMode]);
-
-  const [runsState, setRunsState] = useState<{
-    loading: boolean;
-    runs: AgentRunOverview[];
-    error: string | null;
-    validators?: AgentRunsResponse['data']['validators'];
-    post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
-  }>({
-    loading: true,
-    runs: [],
-    error: null,
-  });
-
-  useEffect(() => {
-    // Don't fetch runs in historical mode
-    if (viewMode === "historical") {
-      setRunsState({ loading: false, runs: [], error: null });
-      return;
-    }
-
-    if (
-      !agentIdForQuery ||
-      !currentRound ||
-      !Number.isFinite(currentRound) ||
-      !canFetchRuns
-    ) {
-      setRunsState({ loading: false, runs: [], error: null });
-      return;
-    }
-
-    // Create AbortController for this fetch
-    const abortController = new AbortController();
-    const signal = abortController.signal;
-
-    setRunsState({ loading: true, runs: [], error: null });
-
-    (async () => {
-      try {
-        const { runs, validators, post_consensus_summary } = await fetchAllAgentRuns(agentIdForQuery, {
-          roundId: currentRound,
-        }, signal);
-        // Only update state if not aborted
-        if (!signal.aborted) {
-          setRunsState({ 
-            loading: false, 
-            runs, 
-            error: null,
-            validators,
-            post_consensus_summary,
-          });
-        }
-      } catch (err: any) {
-        // Only update error state if not aborted (aborted is expected)
-        if (!signal.aborted && err?.message !== 'Request cancelled') {
-          setRunsState({
-            loading: false,
-            runs: [],
-            error: err?.message || "Failed to load validator runs",
-          });
-        } else if (!signal.aborted) {
-          // Request was cancelled, just reset loading state
-          setRunsState({ loading: false, runs: [], error: null });
-        }
-      }
-    })();
-
-    return () => {
-      // Cancel the request when dependencies change or component unmounts
-      abortController.abort();
-    };
-  }, [agentIdForQuery, canFetchRuns, currentRound, viewMode]);
-
-  const preAvg = useMemo(() => {
-    const runs = runsState.runs;
-    const rankingValues = runs
-      .map((run) =>
-        typeof run.ranking === "number" &&
-        Number.isFinite(run.ranking) &&
-        run.ranking > 0
-          ? run.ranking
-          : null
-      )
-      .filter((v): v is number => v !== null);
-    const avgRankVal =
-      rankingValues.length > 0
-        ? rankingValues.reduce((sum, v) => sum + v, 0) / rankingValues.length
-        : null;
-    const scoreValues = runs
-      .map((run) =>
-        typeof run.score === "number" && Number.isFinite(run.score)
-          ? run.score
-          : null
-      )
-      .filter((v): v is number => v !== null);
-    const avgScoreVal =
-      scoreValues.length > 0
-        ? Math.round(
-            (scoreValues.reduce((s, v) => s + v, 0) / scoreValues.length) * 100
-          )
-        : 0;
-    const responseTimeValues = runs
-      .map((run) => {
-        if (
-          typeof run.averageEvaluationTime === "number" &&
-          Number.isFinite(run.averageEvaluationTime)
-        )
-          return Math.abs(run.averageEvaluationTime);
-        if (typeof run.duration === "number" && Number.isFinite(run.duration))
-          return Math.abs(run.duration);
-        return null;
-      })
-      .filter((v): v is number => v !== null);
-    const avgResp =
-      responseTimeValues.length > 0
-        ? Math.round(
-            responseTimeValues.reduce((s, v) => s + v, 0) /
-              responseTimeValues.length
-          )
-        : 0;
-    const taskValues = runs
-      .map((run) =>
-        typeof run.completedTasks === "number" &&
-        Number.isFinite(run.completedTasks)
-          ? run.completedTasks
-          : null
-      )
-      .filter((v): v is number => v !== null);
-    const avgTasksVal =
-      taskValues.length > 0
-        ? Math.round(taskValues.reduce((s, v) => s + v, 0) / taskValues.length)
-        : 0;
+  // Removed fetchAllAgentRuns call - we use minerRoundDetails instead
+  // This eliminates the unnecessary /api/v1/agent-runs call
+  const runsState = useMemo(() => {
+    // Use validators and post_consensus_summary from minerRoundDetails if available
+    const validators = minerRoundDetails?.validators?.map((v: any) => ({
+      validatorId: v.validator_uid?.toString() ?? "",
+      validatorName: v.validator_name ?? "",
+      validatorImage: v.validator_image ?? null,
+      runs: [] // Empty runs array since we don't need individual runs
+    })) ?? [];
+    
+    const post_consensus_summary = minerRoundDetails?.post_consensus_summary ?? undefined;
+    
     return {
-      avgRank: avgRankVal !== null ? avgRankVal.toFixed(1) : "N/A",
-      avgScore: `${avgScoreVal}%`,
-      avgResp: `${avgResp}s`,
-      avgTasks: `${avgTasksVal}`,
+      loading: false,
+      runs: [], // Empty runs array - we use minerRoundDetails.validators instead
+      error: null,
+      validators: validators.length > 0 ? validators : undefined,
+      post_consensus_summary,
     };
-  }, [runsState.runs]);
+  }, [minerRoundDetails]);
+
+  // Calculate preAvg from minerRoundDetails instead of runs
+  const preAvg = useMemo(() => {
+    // Use minerRoundDetails data if available
+    if (minerRoundDetails) {
+      const avgRank = minerRoundDetails.post_consensus_rank ?? null;
+      const avgScore = minerRoundDetails.post_consensus_avg_reward ?? 0;
+      const avgResp = minerRoundDetails.post_consensus_avg_eval_time ?? 0;
+      const avgTasks = minerRoundDetails.avg_tasks_per_validator ?? 0;
+      
+      return {
+        avgRank: avgRank !== null ? avgRank.toFixed(1) : "N/A",
+        avgScore: `${Math.round(avgScore * 100)}%`,
+        avgResp: `${Math.round(avgResp)}s`,
+        avgTasks: `${Math.round(avgTasks)}`,
+      };
+    }
+    
+    // Fallback to empty values if no data
+    return {
+      avgRank: "N/A",
+      avgScore: "0%",
+      avgResp: "0s",
+      avgTasks: "0",
+    };
+  }, [minerRoundDetails]);
 
   // In historical mode, we can use minerHistorical data even if agent is null
   const hasHistoricalData = viewMode === "historical" && minerHistorical;
+  // In current/runs mode, we can use minerRoundDetails data
+  const hasRoundDetailsData = viewMode !== "historical" && minerRoundDetails;
   
-  // Show loading only if not in historical mode or if historical data is still loading
-  const isLoading = loading && (viewMode !== "historical" || minerHistoricalLoading);
+  // Show loading only if we don't have data yet
+  const isLoading = 
+    (viewMode === "historical" && minerHistoricalLoading) ||
+    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
   
   if (isLoading) {
     return (
@@ -2224,7 +2165,8 @@ export default function Page() {
     );
   }
   
-  if ((error || !agent) && !hasHistoricalData) {
+  // Show error only if we don't have any data source available
+  if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

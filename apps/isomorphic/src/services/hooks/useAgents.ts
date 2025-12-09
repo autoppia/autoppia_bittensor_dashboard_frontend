@@ -45,7 +45,8 @@ function useStableParams<T extends SerializableParams>(params: T) {
 // Generic hook for API calls with loading and error states
 function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencyKey?: string
+  dependencyKey?: string,
+  enabled: boolean = true
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +79,14 @@ function useApiCall<T>(
   }, [apiCall]);
 
   useEffect(() => {
+    // Don't fetch if disabled
+    if (!enabled) {
+      setLoading(false);
+      setData(null);
+      setError(null);
+      return;
+    }
+    
     const key = dependencyKey ?? '__default__';
     // Cancel previous fetch if dependency key changed
     if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
@@ -93,11 +102,13 @@ function useApiCall<T>(
     return () => {
       cancelledRef.current = true;
     };
-  }, [fetchData, dependencyKey]);
+  }, [fetchData, dependencyKey, enabled]);
 
   const refetch = useCallback(() => {
-    fetchData();
-  }, [fetchData]);
+    if (enabled) {
+      fetchData();
+    }
+  }, [fetchData, enabled]);
 
   return { data, loading, error, refetch };
 }
@@ -192,18 +203,22 @@ type AgentDetailPayload = {
 
 export function useAgent(id?: string | null, params?: { round?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
-  // If id is null/undefined, use a special key that won't trigger API calls
+  // If id is null/undefined, don't make any API calls
   const shouldFetch = !!id;
+  
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);
+  
   // Use a different dependency key when id is null to ensure the hook re-runs
   // but the key should be stable when id is null to avoid unnecessary re-fetches
   const dependencyKey = shouldFetch ? `${id}:${paramsKey}` : `agent:disabled:${paramsKey}`;
-  return useApiCall(request, dependencyKey);
+  
+  // Pass enabled=false when id is null to prevent any API calls
+  return useApiCall(request, dependencyKey, shouldFetch);
 }
 
 // Hook for agent performance metrics

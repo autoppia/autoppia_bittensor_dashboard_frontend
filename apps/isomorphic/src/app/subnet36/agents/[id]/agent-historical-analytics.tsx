@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Select, Text, Button } from "rizzui";
 import {
   PiChartBar,
@@ -86,76 +86,21 @@ export default function AgentHistoricalAnalytics({
   }>({});
 
   const TASKS_PER_PAGE = 10;
+  const hasInitializedRef = useRef(false);
 
-  // Use external historical data if provided, otherwise fetch
+  // Use external historical data - never fetch from agent-runs
+  // This component should only be used when minerHistorical is provided
   useEffect(() => {
-    if (minerHistorical) {
-      // Use provided historical data - no need to fetch from agent-runs
-      setLoading(false);
-      setError(null);
-      // Set empty aggregatedData since we're using minerHistorical directly
-      setAggregatedData({ stats: [], runIds: [] });
-      return;
-    }
-
-    // Only fetch if no external data provided
-    let isMounted = true;
-
-    async function fetchData() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // First, get list of runs for this agent
-        const runsResponse = await agentRunsRepository.listAgentRuns({
-          agentId: agentId.toString(),
-          limit: 100, // Get recent 100 runs
-          status: "completed",
-        });
-
-        if (!isMounted) return;
-
-        if (!runsResponse?.runs || runsResponse.runs.length === 0) {
-          setAggregatedData({ stats: [], runIds: [] });
-          setLoading(false);
-          return;
-        }
-
-        // Extract run IDs for task filtering
-        const runIds = runsResponse.runs.map((run) => run.runId);
-
-        // Fetch stats for each run (in batches to avoid overwhelming the API)
-        const statsPromises = runsResponse.runs.map((run) =>
-          agentRunsRepository.getAgentRunStats(run.runId).catch(() => null)
-        );
-
-        const allStats = await Promise.all(statsPromises);
-
-        if (!isMounted) return;
-
-        // Filter out failed requests
-        const validStats = allStats.filter(
-          (stats): stats is NonNullable<typeof stats> => stats !== null
-        );
-
-        setAggregatedData({ stats: validStats, runIds });
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : "Failed to fetch data");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [agentId, minerHistorical]);
+    // Prevent double execution in React Strict Mode
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    
+    // Always use minerHistorical if available - never fetch from agent-runs
+    setLoading(false);
+    setError(null);
+    // Set empty aggregatedData since we're using minerHistorical directly
+    setAggregatedData({ stats: [], runIds: [] });
+  }, [minerHistorical]);
 
   // Aggregate data by website and use case - use minerHistorical if available
   const { websiteStats, useCaseStats } = useMemo(() => {
@@ -436,62 +381,20 @@ export default function AgentHistoricalAnalytics({
           return;
         }
 
-        // Fetch tasks from all agent runs using the agent-runs endpoint
-        // This endpoint supports website and useCase filtering
-        // Only fetch if we don't have minerHistorical data
-        if (!aggregatedData?.runIds || aggregatedData.runIds.length === 0) {
-          setUseCaseTasks((prev) => ({
-            ...prev,
-            [key]: {
-              allTasks: [],
-              tasks: [],
-              loading: false,
-              total: 0,
-              page,
-            },
-          }));
-          return;
-        }
-
-        const tasksPerRun = await Promise.all(
-          aggregatedData.runIds.map((runId) =>
-            agentRunsRepository
-              .getAgentRunTasks(runId, {
-                limit: 1000, // Get all tasks from this run
-                website,
-                useCase,
-              })
-              .then((res) => {
-                const tasks = (res.tasks || []) as TaskData[];
-                return tasks;
-              })
-              .catch((err) => {
-                console.error(`Error fetching tasks from run ${runId}:`, err);
-                return [];
-              })
-          )
-        );
-
-        // Flatten and sort all tasks by score
-        const allTasks = tasksPerRun
-          .flat()
-          .sort((a, b) => (b.score || 0) - (a.score || 0));
-
-        // Paginate client-side
-        const startIndex = (page - 1) * TASKS_PER_PAGE;
-        const endIndex = startIndex + TASKS_PER_PAGE;
-        const paginatedTasks = allTasks.slice(startIndex, endIndex);
-
+        // REMOVED: Fetch tasks from agent-runs endpoint
+        // We should only use minerHistorical data - no individual task fetching needed
+        // The historical endpoint already provides all aggregated data we need
         setUseCaseTasks((prev) => ({
           ...prev,
           [key]: {
-            allTasks, // Cache all tasks
-            tasks: paginatedTasks,
+            allTasks: [], // No individual task details available from historical endpoint
+            tasks: [],
             loading: false,
-            total: allTasks.length,
+            total: 0,
             page,
           },
         }));
+        return;
       } catch (err) {
         console.error("Failed to fetch tasks:", err);
         setUseCaseTasks((prev) => ({
