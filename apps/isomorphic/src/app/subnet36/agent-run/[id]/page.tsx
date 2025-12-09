@@ -829,13 +829,13 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             className="bg-gradient-to-r from-amber-300 via-yellow-200 to-yellow-400 bg-clip-text text-6xl font-extrabold text-transparent drop-shadow-[0_18px_38px_rgba(244,197,94,0.5)]"
             style={{ WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)" }}
           >
-            {displayOverallScore}
+            {displayOverallReward}
           </div>
           <div className="mt-2 text-sm font-medium text-white/70">
-            Overall evaluation score
+            Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Overall reward {displayOverallReward} • Avg duration {displayAverageDuration}
+            Score {displayOverallScore} • Time {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
