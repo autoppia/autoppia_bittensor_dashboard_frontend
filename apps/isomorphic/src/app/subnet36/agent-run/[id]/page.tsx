@@ -162,7 +162,8 @@ function buildDetailDataFromStats(
         useCases: websiteUseCases,
         results: websiteResults,
         overall: {
-          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
+          // averageScore is already a percentage (0-100), convert to 0-1 for consistency
+          successRate: typeof w.averageScore === "number" ? w.averageScore / 100 : 0,
           total: w.tasks || 0,
           successCount: w.successful || 0,
           avgSolutionTime:
@@ -704,7 +705,9 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const formatDuration = (v: number | null | undefined) =>
     v && v > 0 ? `${percentageFormatter.format(v)}s` : "—";
 
-  const overallScore = clampPercentage(stats?.overallScore);
+  // Use new fields: avg_score, avg_reward, avg_time
+  const overallScore = clampPercentage((stats?.avg_score ?? 0) * 100);
+  const overallReward = clampPercentage((stats?.avg_reward ?? 0) * 100);
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
@@ -715,12 +718,12 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
   );
   const successRate = clampPercentage(
-    stats?.successRate ??
-      (totalTasks ? (successfulTasks / totalTasks) * 100 : 0)
+    totalTasks ? (successfulTasks / totalTasks) * 100 : 0
   );
-  const averageDuration = stats?.averageTaskDuration ?? 0;
+  const averageDuration = stats?.avg_time ?? 0;
 
   const displayOverallScore = formatPercentage(overallScore);
+  const displayOverallReward = formatPercentage(overallReward);
   const displaySuccessRate = formatPercentage(successRate);
   const displayAverageDuration = formatDuration(averageDuration);
 
@@ -808,7 +811,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             Overall evaluation score
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Success rate {displaySuccessRate} • Avg duration{" "}
+            Overall reward {displayOverallReward} • Avg duration{" "}
             {displayAverageDuration}
           </div>
         </div>
@@ -832,7 +835,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             Overall evaluation score
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Avg duration {displayAverageDuration}
+            Overall reward {displayOverallReward} • Avg duration {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
@@ -1012,7 +1015,8 @@ function AgentRunDetail({
                   (uc) => String(uc.id) === String(result.useCaseId)
                 )?.name || `Use Case ${result.useCaseId}`
               ),
-              average: Number((result.successRate ?? 0).toFixed(3)),
+              // successRate is 0-1, convert to 0-100 for display
+              average: Number(((result.successRate ?? 0) * 100).toFixed(1)),
               total: result.total,
               successCount: result.successCount,
               avgSolutionTime: result.avgSolutionTime,
@@ -1022,7 +1026,8 @@ function AgentRunDetail({
         })()
       : agentDetailsData.websites.map((web, idx) => ({
           website: formatWebsiteName(web.name),
-          average: Number((web.overall.successRate ?? 0).toFixed(3)),
+          // successRate is 0-1, convert to 0-100 for display
+          average: Number(((web.overall.successRate ?? 0) * 100).toFixed(1)),
           total: web.overall.total ?? 0,
           successCount: web.overall.successCount ?? 0,
           avgSolutionTime: web.overall.avgSolutionTime ?? 0,
