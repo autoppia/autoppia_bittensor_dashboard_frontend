@@ -73,13 +73,19 @@ export interface OverviewRoundData {
 // ===== LEADERBOARD DATA =====
 export interface LeaderboardData {
   round: number;
-  subnet36: number;
+  subnet36: number; // post_consensus_avg_reward (mantener por compatibilidad)
+  post_consensus_reward: number; // post_consensus_avg_reward
   winnerUid?: number | null;
   winnerName?: string | null;
   openai_cua?: number | null;
   anthropic_cua?: number | null;
   browser_use?: number | null;
   timestamp: string;
+  post_consensus_eval_score?: number | null; // post_consensus_avg_eval_score
+  post_consensus_eval_time?: number | null; // post_consensus_avg_eval_time
+  // Campos legacy (mantener por compatibilidad)
+  score?: number | null; // post_consensus_avg_eval_score (alias)
+  time?: number | null; // post_consensus_avg_eval_time (alias)
 }
 
 // ===== MINER PERFORMANCE DATA =====

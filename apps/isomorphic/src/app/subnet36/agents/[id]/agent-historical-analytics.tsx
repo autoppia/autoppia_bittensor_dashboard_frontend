@@ -109,7 +109,7 @@ export default function AgentHistoricalAnalytics({
       const websiteMap = new Map<string, WebsiteStats>();
       const useCaseMap = new Map<string, UseCaseStats>();
 
-      minerHistorical.performanceByWebsite.forEach((ws) => {
+      minerHistorical.performanceByWebsite.forEach((ws: any) => {
         const website = ws.website;
         if (!website) return;
 
@@ -134,7 +134,7 @@ export default function AgentHistoricalAnalytics({
 
         // Process use cases
         if (ws.useCases) {
-          ws.useCases.forEach((uc) => {
+          ws.useCases.forEach((uc: any) => {
             const useCase = uc.useCase;
             if (!useCase) return;
 
@@ -221,8 +221,8 @@ export default function AgentHistoricalAnalytics({
         websiteMap.set(website, existing);
 
         // Process use case stats
-        const useCases = ws.useCases || [];
-        useCases.forEach((uc) => {
+        const useCases = (ws as any).useCases || [];
+        useCases.forEach((uc: any) => {
           const useCase = uc.useCase;
           if (!useCase) return;
 

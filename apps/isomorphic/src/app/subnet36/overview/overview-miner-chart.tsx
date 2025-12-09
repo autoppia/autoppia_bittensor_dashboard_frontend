@@ -433,13 +433,13 @@ export default function MinerChart({
               </div>
             )}
 
-            {/* Score */}
+            {/* Reward */}
             <div
               style={{ borderTopColor: "#374151" }}
               className="flex items-center gap-2 pt-2 border-t"
             >
               <span style={{ color: "#9ca3af" }} className="text-xs">
-                Score:
+                Reward:
               </span>
               <span style={{ color: "#10b981" }} className="text-lg font-bold">
                 {score.toFixed(1)}%
@@ -463,7 +463,7 @@ export default function MinerChart({
     return (
       <div className={wrapperClassName} style={wrapperStyle}>
         <WidgetCard
-          title="Top Miner Score"
+          title="Top Miner Reward"
           action={
             <ButtonGroupAction
               options={filterOptions}
@@ -510,7 +510,7 @@ export default function MinerChart({
     return (
       <div className={wrapperClassName} style={wrapperStyle}>
         <WidgetCard
-          title="Top Miner Score"
+          title="Top Miner Reward"
           action={
             <ButtonGroupAction
               options={filterOptions}
