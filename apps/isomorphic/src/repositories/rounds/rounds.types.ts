@@ -240,3 +240,58 @@ export interface RoundActivityQueryParams {
   type?: string;
   since?: string;
 }
+
+// ===== GET ROUND RESPONSE (with validators local and post-consensus) =====
+export interface ValidatorMinerData {
+  uid: number;
+  name: string;
+  hotkey: string | null;
+  image: string | null;
+  local_rank: number | null;
+  local_avg_reward: number;
+  local_avg_eval_score: number;
+  local_avg_eval_time: number;
+}
+
+export interface ValidatorWinnerData {
+  uid: number;
+  name: string;
+  image: string | null;
+  hotkey: string | null;
+}
+
+export interface ValidatorRoundData {
+  validator_uid: number;
+  validator_name: string;
+  validator_hotkey: string | null;
+  local_avg_winner_score: number;
+  topScore: number;
+  local_avg_eval_time: number;
+  local_miners_evaluated: number;
+  local_tasks_evaluated: number;
+  miners: ValidatorMinerData[];
+  winner?: ValidatorWinnerData;
+}
+
+export interface PostConsensusSummary {
+  winner: {
+    uid: number;
+    name: string;
+    image: string | null;
+    hotkey: string | null;
+    avg_reward: number;
+    avg_eval_score: number;
+    avg_eval_time: number;
+  } | null;
+  miners_evaluated: number;
+  tasks_evaluated: number;
+}
+
+export interface GetRoundResponse {
+  success: boolean;
+  data: {
+    round_number: number;
+    post_consensus_summary: PostConsensusSummary;
+    validators: ValidatorRoundData[];
+  };
+}
