@@ -65,34 +65,24 @@ const agentRunTasksColumns = [
     ),
   }),
   columnHelper.accessor("score", {
-    id: "score",
+    id: "eval_score",
     size: 100,
     header: "Score",
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
-      let scoreColor = "text-gray-600"; // Default color
-      
-      if (score >= 0.8) {
-        scoreColor = "text-green-500"; // High performance - green
-      } else if (score >= 0.6) {
-        scoreColor = "text-yellow-500"; // Medium performance - yellow
-      } else if (score >= 0.4) {
-        scoreColor = "text-orange-500"; // Low performance - orange
-      } else {
-        scoreColor = "text-red-500"; // Poor performance - red
-      }
+      const scoreColor = eval_score >= 1 ? "text-green-500" : "text-red-500";
       
       return (
         <Text className={`font-medium ${scoreColor}`}>
-          {score.toFixed(2)}
+          {eval_score === 1 ? "✓" : "✗"}
         </Text>
       );
     },
   }),
-  columnHelper.accessor("duration", {
-    id: "duration",
+  columnHelper.accessor("eval_time", {
+    id: "eval_time",
     size: 100,
-    header: "Duration",
+    header: "Time",
     cell: ({ row }) => (
       <Text className="font-medium text-gray-600">
         {row.original.eval_time?.toFixed(2) ?? 0}s
