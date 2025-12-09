@@ -154,9 +154,23 @@ function buildDetailDataFromStats(
 
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      // useCases removed from backend response, so we create empty arrays
-      const websiteUseCases: AgentRunUseCase[] = [];
-      const websiteResults: AgentRunResult[] = [];
+      // Build useCases and results from statsByUsecase if available
+      const statsByUsecase = (w as any).statsByUsecase || [];
+      
+      const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
+        id: idx,
+        name: uc.useCase || `Use Case ${idx + 1}`,
+      }));
+      
+      const websiteResults: AgentRunResult[] = statsByUsecase.map((uc: any, idx: number) => ({
+        useCaseId: idx,
+        name: uc.useCase || `Use Case ${idx + 1}`,
+        // avgScore is success rate (0-1) from backend
+        successRate: typeof uc.avgScore === "number" ? uc.avgScore : 0,
+        total: uc.total || 0,
+        successCount: uc.successful || 0,
+        avgSolutionTime: typeof uc.avgTime === "number" ? uc.avgTime : 0,
+      }));
 
       return {
         name: w.website || `Website ${i + 1}`,
@@ -312,17 +326,17 @@ export default function Page() {
       )}
 
 
-      {isLoading ? (
-        <AgentRunStatsPlaceholder />
-      ) : (
-        <AgentRunStats stats={stats || null} />
-      )}
-
       {/* Personas cards (Round, Validator, Miner) */}
       {isLoading ? (
         <AgentRunPersonasPlaceholder />
       ) : (
         <AgentRunPersonasFromInfo info={info} />
+      )}
+
+      {isLoading ? (
+        <AgentRunStatsPlaceholder />
+      ) : (
+        <AgentRunStats stats={stats || null} />
       )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
