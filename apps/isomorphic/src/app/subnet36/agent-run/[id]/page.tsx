@@ -1892,9 +1892,9 @@ const agentRunTasksColumns = [
     size: 100,
     header: "Score",
     cell: ({ row }) => {
-      const score = row.original.score;
+      const eval_score = row.original.eval_score ?? 0;
       let scoreColor = "text-slate-300";
-      if (score >= 0.8) scoreColor = "text-green-400";
+      if (eval_score >= 1) scoreColor = "text-green-400";
       else if (score >= 0.6) scoreColor = "text-yellow-400";
       else if (score >= 0.4) scoreColor = "text-orange-400";
       else scoreColor = "text-red-400";
@@ -1919,7 +1919,7 @@ const agentRunTasksColumns = [
         className="text-xs sm:text-sm font-medium text-slate-300"
         title="View task details"
       >
-        {row.original.duration}s
+        {row.original.eval_time?.toFixed(2) ?? 0}s
       </Link>
     ),
   }),

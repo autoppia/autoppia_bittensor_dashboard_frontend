@@ -69,7 +69,7 @@ const agentRunTasksColumns = [
     size: 100,
     header: "Score",
     cell: ({ row }) => {
-      const score = row.original.score;
+      const eval_score = row.original.eval_score ?? 0;
       let scoreColor = "text-gray-600"; // Default color
       
       if (score >= 0.8) {
@@ -95,7 +95,7 @@ const agentRunTasksColumns = [
     header: "Duration",
     cell: ({ row }) => (
       <Text className="font-medium text-gray-600">
-        {row.original.duration}s
+        {row.original.eval_time?.toFixed(2) ?? 0}s
       </Text>
     ),
   }),
