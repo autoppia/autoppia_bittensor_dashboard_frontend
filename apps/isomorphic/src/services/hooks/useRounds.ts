@@ -15,6 +15,7 @@ import type {
   RoundsListQueryParams,
   RoundMinersQueryParams,
   RoundActivityQueryParams,
+  GetRoundResponse,
 } from "@/repositories/rounds/rounds.types";
 
 type SerializableParams = Record<string, any> | undefined;
@@ -362,4 +363,18 @@ export function useRoundsList() {
     error,
     refetch,
   };
+}
+
+// Hook for getting round with validators data (local and post-consensus)
+export function useRoundWithValidators(roundNumber: number | undefined) {
+  const request = useCallback(
+    () => {
+      if (!roundNumber) {
+        return Promise.resolve(null);
+      }
+      return roundsRepository.getRoundWithValidators(roundNumber);
+    },
+    [roundNumber]
+  );
+  return useApiCall(request, `round-with-validators:${roundNumber ?? 'none'}`, roundNumber !== undefined);
 }

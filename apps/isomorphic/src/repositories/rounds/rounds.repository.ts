@@ -21,6 +21,7 @@ import {
   ValidatorPerformance,
   RoundActivity,
   RoundProgress,
+  GetRoundResponse,
 } from "./rounds.types";
 
 export class RoundsRepository {
@@ -676,6 +677,19 @@ export class RoundsRepository {
       };
     }>(`${this.baseEndpoint}/${path}/summary`);
     return response.data.data;
+  }
+
+  /**
+   * Get round details with validators local and post-consensus data
+   */
+  async getRoundWithValidators(
+    roundNumber: number
+  ): Promise<GetRoundResponse> {
+    const response = await apiClient.get<GetRoundResponse>(
+      `${this.baseEndpoint}/get-round`,
+      { round_number: roundNumber }
+    );
+    return response.data;
   }
 }
 

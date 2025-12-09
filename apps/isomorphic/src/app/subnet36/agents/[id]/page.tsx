@@ -719,6 +719,7 @@ function AgentValidators({
   error?: string | null;
 }) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const { data: roundValidatorsData, loading: validatorsLoading } = useRoundWithValidators(selectedRound ?? undefined);
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -906,7 +907,166 @@ function AgentValidators({
 
       {/* Removed duplicate Avg cards from validators section */}
 
-      {filteredRuns.length === 0 ? (
+      {/* Show validators with local and post-consensus data if available */}
+      {roundValidatorsData?.data?.validators && roundValidatorsData.data.validators.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
+          {roundValidatorsData.data.validators
+            .sort((a, b) => {
+              // Sort: Autoppia (UID 83 or 124) first, then others
+              const aIsAutoppia = a.validator_uid === 83 || a.validator_uid === 124;
+              const bIsAutoppia = b.validator_uid === 83 || b.validator_uid === 124;
+              if (aIsAutoppia && !bIsAutoppia) return -1;
+              if (!aIsAutoppia && bIsAutoppia) return 1;
+              return 0;
+            })
+            .map((validator) => {
+            const isAutoppia = validator.validator_uid === 83 || validator.validator_uid === 124;
+            const validatorImage = resolveAssetUrl(
+              `/validators/${validator.validator_uid}.png` || "/validators/default.png"
+            );
+            
+            // Find corresponding run for this validator
+            const validatorRuns = filteredRuns.filter(
+              (run) => String(run.validatorId) === String(validator.validator_uid)
+            );
+            const latestRun = validatorRuns[0];
+            
+            // Find miner data for current agent in this validator's miners list
+            const currentMinerData = validator.miners.find(
+              (m) => m.uid === numericUidFromParam
+            );
+            
+            const secondaryStats = [
+              {
+                title: "Round",
+                metric: selectedRound ?? "N/A",
+                icon: PiClockDuotone,
+                iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600",
+              },
+              {
+                title: "Rank",
+                metric: currentMinerData?.local_rank 
+                  ? `#${currentMinerData.local_rank}` 
+                  : "N/A",
+                icon: PiHashDuotone,
+                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
+              },
+              {
+                title: "Reward",
+                metric: currentMinerData?.local_avg_reward 
+                  ? `${(currentMinerData.local_avg_reward * 100).toFixed(1)}%` 
+                  : "N/A",
+                icon: PiChartLineUpDuotone,
+                iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600",
+              },
+              {
+                title: "Time",
+                metric: currentMinerData?.local_avg_eval_time 
+                  ? `${currentMinerData.local_avg_eval_time.toFixed(1)}s` 
+                  : "N/A",
+                icon: PiTimerDuotone,
+                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
+              },
+              {
+                title: "Tasks",
+                metric: `${validator.local_tasks_evaluated}`,
+                icon: PiListChecksDuotone,
+                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
+              },
+              {
+                title: "Miners",
+                metric: validator.local_miners_evaluated,
+                icon: PiChartBarDuotone,
+                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
+              },
+            ];
+            
+            return (
+              <div
+                key={`validator-${validator.validator_uid}`}
+                className={cn(
+                  "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
+                  isAutoppia 
+                    ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent" 
+                    : "border-white/20 hover:border-white/40"
+                )}
+                style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
+              >
+                {isAutoppia && (
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border-2 border-emerald-400/50 z-50">
+                    AUTOPPIA
+                  </div>
+                )}
+                <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
+                        <Image
+                          src={validatorImage}
+                          alt={validator.validator_name}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
+                          {validator.validator_name}
+                        </Text>
+                        <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
+                          {validator.validator_hotkey 
+                            ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
+                            : `UID: ${validator.validator_uid}`}
+                        </Text>
+                      </div>
+                    </div>
+                    {latestRun && (
+                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
+                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
+                        <span className="font-mono break-all" title={latestRun.runId}>
+                          {latestRun.runId}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="relative p-2 sm:p-5 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                    {secondaryStats.map((stat) => {
+                      const Icon = stat.icon as any;
+                      return (
+                        <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                          <div className={cn(
+                            "flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
+                            stat.iconClassName
+                          )}>
+                            <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
+                              {stat.title}
+                            </Text>
+                            <Text className="font-bold text-xs sm:text-base truncate text-white">
+                              {stat.metric}
+                            </Text>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {latestRun && (
+                    <Link href={`${routes.agent_run}/${latestRun.runId}`} className="block">
+                      <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
+                        View Agent Run Details
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : filteredRuns.length === 0 ? (
         <div className="mt-6 text-center text-white/70">
           No runs available for the selected round.
         </div>
@@ -2356,6 +2516,7 @@ export default function Page() {
                 runs={runsState.runs}
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}
+                numericUidFromParam={numericUidFromParam}
               />
             ) : (
               <>
