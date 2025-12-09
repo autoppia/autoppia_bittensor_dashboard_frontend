@@ -52,28 +52,47 @@ function useApiCall<T>(
   const [error, setError] = useState<string | null>(null);
   const lastDependencyKeyRef = useRef<string | undefined>(undefined);
   const hasFetchedRef = useRef(false);
+  const cancelledRef = useRef(false);
 
   const fetchData = useCallback(async () => {
+    // Reset cancelled flag for new fetch
+    cancelledRef.current = false;
     try {
       setLoading(true);
       setError(null);
       const result = await apiCall();
-      setData(result);
+      // Only update state if not cancelled
+      if (!cancelledRef.current) {
+        setData(result);
+      }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // Only update error if not cancelled
+      if (!cancelledRef.current) {
+        setError(err.message || 'An error occurred');
+      }
     } finally {
-      setLoading(false);
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
     }
   }, [apiCall]);
 
   useEffect(() => {
     const key = dependencyKey ?? '__default__';
+    // Cancel previous fetch if dependency key changed
+    if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
+      cancelledRef.current = true;
+    }
     if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
       return;
     }
     lastDependencyKeyRef.current = key;
     hasFetchedRef.current = true;
     fetchData();
+    
+    return () => {
+      cancelledRef.current = true;
+    };
   }, [fetchData, dependencyKey]);
 
   const refetch = useCallback(() => {
@@ -173,13 +192,18 @@ type AgentDetailPayload = {
 
 export function useAgent(id?: string | null, params?: { round?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
+  // If id is null/undefined, use a special key that won't trigger API calls
+  const shouldFetch = !!id;
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);
-  return useApiCall(request, id ? `${id}:${paramsKey}` : 'agent:none');
+  // Use a different dependency key when id is null to ensure the hook re-runs
+  // but the key should be stable when id is null to avoid unnecessary re-fetches
+  const dependencyKey = shouldFetch ? `${id}:${paramsKey}` : `agent:disabled:${paramsKey}`;
+  return useApiCall(request, dependencyKey);
 }
 
 // Hook for agent performance metrics

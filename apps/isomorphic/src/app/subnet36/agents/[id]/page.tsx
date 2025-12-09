@@ -97,7 +97,8 @@ const RUNS_PAGE_SIZE = 100;
 
 async function fetchAllAgentRuns(
   agentId: string,
-  params: { roundId?: number; validatorId?: string } = {}
+  params: { roundId?: number; validatorId?: string } = {},
+  signal?: AbortSignal
 ): Promise<{ 
   runs: AgentRunOverview[]; 
   total: number;
@@ -111,6 +112,11 @@ async function fetchAllAgentRuns(
   let post_consensus_summary: AgentRunsResponse['data']['post_consensus_summary'] | undefined;
 
   while (true) {
+    // Check if cancelled before making the request
+    if (signal?.aborted) {
+      throw new Error('Request cancelled');
+    }
+    
     const response = await agentsRepository.getAgentRuns(agentId, {
       ...params,
       page,
@@ -118,6 +124,12 @@ async function fetchAllAgentRuns(
       sortBy: "startTime",
       sortOrder: "desc",
     });
+    
+    // Check again after the request (in case it was cancelled during the request)
+    if (signal?.aborted) {
+      throw new Error('Request cancelled');
+    }
+    
     const payload = response?.data;
     const batch = payload?.runs ?? [];
     if (page === 1) {
@@ -1899,12 +1911,14 @@ export default function Page() {
   const apiScoreRoundData = agentDetail?.scoreRoundData ?? [];
   
   // Get miner round details when round and miner UID are available
+  // In historical mode, we still need round-details if a round is selected
+  // But we don't need it if we're just viewing historical summary
   const {
     data: minerRoundDetails,
     loading: minerRoundDetailsLoading,
     error: minerRoundDetailsError,
   } = useMinerRoundDetails(
-    selectedRoundFromQuery,
+    selectedRoundFromQuery, // Always fetch if round is selected (needed for round-details)
     numericUidFromParam
   );
   
@@ -2063,7 +2077,11 @@ export default function Page() {
   });
 
   useEffect(() => {
-    let cancelled = false;
+    // Don't fetch runs in historical mode
+    if (viewMode === "historical") {
+      setRunsState({ loading: false, runs: [], error: null });
+      return;
+    }
 
     if (
       !agentIdForQuery ||
@@ -2075,14 +2093,19 @@ export default function Page() {
       return;
     }
 
+    // Create AbortController for this fetch
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     setRunsState({ loading: true, runs: [], error: null });
 
     (async () => {
       try {
         const { runs, validators, post_consensus_summary } = await fetchAllAgentRuns(agentIdForQuery, {
           roundId: currentRound,
-        });
-        if (!cancelled) {
+        }, signal);
+        // Only update state if not aborted
+        if (!signal.aborted) {
           setRunsState({ 
             loading: false, 
             runs, 
@@ -2092,20 +2115,25 @@ export default function Page() {
           });
         }
       } catch (err: any) {
-        if (!cancelled) {
+        // Only update error state if not aborted (aborted is expected)
+        if (!signal.aborted && err?.message !== 'Request cancelled') {
           setRunsState({
             loading: false,
             runs: [],
             error: err?.message || "Failed to load validator runs",
           });
+        } else if (!signal.aborted) {
+          // Request was cancelled, just reset loading state
+          setRunsState({ loading: false, runs: [], error: null });
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      // Cancel the request when dependencies change or component unmounts
+      abortController.abort();
     };
-  }, [agentIdForQuery, canFetchRuns, currentRound]);
+  }, [agentIdForQuery, canFetchRuns, currentRound, viewMode]);
 
   const preAvg = useMemo(() => {
     const runs = runsState.runs;
@@ -2856,44 +2884,6 @@ export default function Page() {
           </div>
         </div>
         
-        {/* Historical Data Debug Section */}
-        {minerHistorical && (
-          <div className="mt-8 p-6 bg-white/5 border border-white/20 rounded-xl">
-            <h3 className="text-xl font-bold text-white mb-4">📊 Historical Data (Debug)</h3>
-            <div className="space-y-4 text-sm text-white/80">
-              <div>
-                <strong className="text-white">Summary:</strong>
-                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs">
-                  {JSON.stringify(minerHistorical.summary, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <strong className="text-white">Performance by Website:</strong>
-                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs max-h-64">
-                  {JSON.stringify(minerHistorical.performanceByWebsite, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <strong className="text-white">Rounds History (first 3):</strong>
-                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs max-h-64">
-                  {JSON.stringify(minerHistorical.roundsHistory.slice(0, 3), null, 2)}
-                </pre>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {minerHistoricalLoading && (
-          <div className="mt-8 p-6 bg-white/5 border border-white/20 rounded-xl">
-            <p className="text-white/60">Cargando datos históricos...</p>
-          </div>
-        )}
-        
-        {minerHistoricalError && (
-          <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400">Error cargando datos históricos: {String(minerHistoricalError)}</p>
-          </div>
-        )}
       </div>
     </div>
   );

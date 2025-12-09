@@ -90,11 +90,11 @@ export default function AgentHistoricalAnalytics({
   // Use external historical data if provided, otherwise fetch
   useEffect(() => {
     if (minerHistorical) {
-      // Use provided historical data - no need to fetch
+      // Use provided historical data - no need to fetch from agent-runs
       setLoading(false);
       setError(null);
-      // Convert minerHistorical.performanceByWebsite to the format expected by the component
-      // We'll handle this in the useMemo below
+      // Set empty aggregatedData since we're using minerHistorical directly
+      setAggregatedData({ stats: [], runIds: [] });
       return;
     }
 
@@ -420,8 +420,39 @@ export default function AgentHistoricalAnalytics({
 
         if (!shouldFetch) return;
 
+        // If we have minerHistorical data, we don't need to fetch tasks from agent-runs
+        // The historical endpoint already provides all the aggregated data we need
+        if (minerHistorical) {
+          setUseCaseTasks((prev) => ({
+            ...prev,
+            [key]: {
+              allTasks: [], // No individual task details available from historical endpoint
+              tasks: [],
+              loading: false,
+              total: 0,
+              page,
+            },
+          }));
+          return;
+        }
+
         // Fetch tasks from all agent runs using the agent-runs endpoint
         // This endpoint supports website and useCase filtering
+        // Only fetch if we don't have minerHistorical data
+        if (!aggregatedData?.runIds || aggregatedData.runIds.length === 0) {
+          setUseCaseTasks((prev) => ({
+            ...prev,
+            [key]: {
+              allTasks: [],
+              tasks: [],
+              loading: false,
+              total: 0,
+              page,
+            },
+          }));
+          return;
+        }
+
         const tasksPerRun = await Promise.all(
           aggregatedData.runIds.map((runId) =>
             agentRunsRepository
