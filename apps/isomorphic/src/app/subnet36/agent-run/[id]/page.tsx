@@ -39,7 +39,7 @@ import {
   PiInfoDuotone,
 } from "react-icons/pi";
 
-import { useAgentRun, useAgentRunTasks } from "@/services/hooks/useAgentRun";
+import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import type {
   AgentRunStats as AgentRunStatsData,
   AgentRunTaskData,
@@ -197,33 +197,39 @@ export default function Page() {
 
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
 
-  const { data, error, refetch, isAnyLoading } = useAgentRun(runId, {
-    includePersonas: true,
-    includeStats: true,
-    includeSummary: true,
-    includeTasks: true,
-    autoRefresh: true,
-    refreshInterval: 120000, // 2 minutes (reduced from 30s for performance)
-  });
+  const { 
+    data: agentRunData,
+    isLoading,
+    error,
+    refetch,
+    personas,
+    statistics: stats,
+    summary,
+    tasks,
+    timeline,
+    logs,
+    metrics,
+    info,
+  } = useAgentRunComplete(runId);
 
   // Derived detail data from stats for charts/summary
   const detailData = useMemo(() => {
-    return buildDetailDataFromStats(data.stats);
-  }, [data.stats]);
+    return buildDetailDataFromStats(stats);
+  }, [stats]);
 
   // Check if agent run has no data yet
   const hasNoData =
-    !data.loading.stats &&
+    !isLoading &&
     error &&
-    (!data.stats ||
-      (data.stats.totalTasks === 0 && data.stats.overallScore === 0));
+    (!stats ||
+      (stats.totalTasks === 0 && stats.overallScore === 0));
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
       <PageHeader
         title="Agent Run Details"
         description={
-          data.loading.personas || data.loading.summary ? (
+          isLoading ? (
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
               <div className="inline-flex w-full sm:w-auto items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -253,10 +259,10 @@ export default function Page() {
               <Link
                 href={((): string => {
                   const roundKey =
-                    typeof data?.summary?.roundId === "number" &&
-                    Number.isFinite(data.summary.roundId)
-                      ? `round_${data.summary.roundId}`
-                      : (data?.personas?.round?.name ?? "");
+                    typeof info?.round?.roundNumber === "number" &&
+                    Number.isFinite(info.round.roundNumber)
+                      ? `round_${info.round.roundNumber}`
+                      : (info?.round?.validatorRoundId ?? personas?.round?.name ?? "");
                   return roundKey
                     ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
                     : "#";
@@ -268,11 +274,11 @@ export default function Page() {
                 </span>
                 <div className="h-3.5 w-px bg-slate-600/70" />
                 <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                  {truncateMiddle(data?.personas?.round?.name ?? "—", 8)}
+                  {truncateMiddle(info?.round?.validatorRoundId ?? personas?.round?.name ?? "—", 8)}
                 </span>
-                {data?.personas?.round?.name && (
+                {(info?.round?.validatorRoundId ?? personas?.round?.name) && (
                   <span className="ml-auto">
-                    <IDCopyButton text={data.personas.round.name} />
+                    <IDCopyButton text={info?.round?.validatorRoundId ?? personas?.round?.name ?? ""} />
                   </span>
                 )}
               </Link>
@@ -324,22 +330,22 @@ export default function Page() {
         </div>
       )}
 
-      {data.loading.personas ? (
+      {isLoading ? (
         <AgentRunPersonasPlaceholder />
       ) : (
-        <AgentRunPersonas personas={data.personas} summary={data.summary} />
+        <AgentRunPersonas personas={personas} summary={summary} />
       )}
 
-      {data.loading.stats ? (
+      {isLoading ? (
         <AgentRunStatsPlaceholder />
       ) : (
-        <AgentRunStats stats={data.stats || null} />
+        <AgentRunStats stats={stats || null} />
       )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
-          {data.loading.stats && <AgentRunDetailPlaceholder />}
-          {!data.loading.stats && (
+          {isLoading && <AgentRunDetailPlaceholder />}
+          {!isLoading && (
             <AgentRunDetail
               selectedWebsite={selectedWebsite}
               setSelectedWebsite={setSelectedWebsite}
@@ -348,7 +354,7 @@ export default function Page() {
           )}
         </div>
         <div className="xl:col-span-4">
-          {data.loading.stats && data.loading.summary ? (
+          {isLoading ? (
             <AgentRunSummaryPlaceholder />
           ) : (
             <AgentRunSummary
@@ -360,10 +366,10 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection />
+        <AgentRunTasksSection tasks={tasks} isLoading={isLoading} error={error} refetch={refetch} />
       </div>
 
-      {isAnyLoading && (
+      {isLoading && (
         <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm">Updating data...</span>
@@ -1962,19 +1968,21 @@ const agentRunTasksColumns = [
   }),
 ];
 
-function AgentRunTasksSection() {
-  const { id } = useParams();
-  const {
-    tasks,
-    total,
-    page,
-    limit,
-    isLoading,
-    error,
-    refetch,
-    goToPage,
-    changeLimit,
-  } = useAgentRunTasks(id as string, { page: 1, limit: 10 });
+function AgentRunTasksSection({ 
+  tasks: providedTasks = [], 
+  isLoading = false, 
+  error,
+  refetch,
+}: {
+  tasks?: any[];
+  isLoading?: boolean;
+  error?: string | null;
+  refetch?: () => void;
+}) {
+  const tasks = providedTasks;
+  const total = tasks.length;
+  const page = 1;
+  const limit = 10;
 
   const { table, setData } = useTanStackTable<AgentRunTaskData>({
     tableData: tasks || [],
@@ -1984,11 +1992,7 @@ function AgentRunTasksSection() {
         pagination: { pageIndex: (page || 1) - 1, pageSize: limit || 10 },
       },
       enableColumnResizing: false,
-      manualPagination: true,
-      pageCount: Math.max(
-        1,
-        Math.ceil((total || 0) / Math.max(1, limit || 10))
-      ),
+      manualPagination: false,
     },
   });
 
