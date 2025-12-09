@@ -60,7 +60,7 @@ export default function AgentRunSummaryDynamic({
     return <AgentRunSummaryPlaceholder className={className} />;
   }
 
-  if ((summaryError && !summary) || (statsError && !stats)) {
+  if ((summaryError && !summary) || (summaryError && !stats)) {
     return <AgentRunSummaryPlaceholder className={className} />;
   }
 
