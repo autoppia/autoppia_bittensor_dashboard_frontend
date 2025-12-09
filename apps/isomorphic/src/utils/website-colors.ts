@@ -75,9 +75,11 @@ function hexToTailwindColor(hex: string): string {
  * Retorna el color hex principal y el color dotColor
  */
 export function getProjectColors(projectName: string): ProjectColors {
-  // Buscar en websitesData por nombre (case-insensitive)
+  // Buscar en websitesData por nombre o slug (case-insensitive)
   const website = websitesData.find(
-    (w) => w.name.toLowerCase() === projectName.toLowerCase()
+    (w) => 
+      w.name.toLowerCase() === projectName.toLowerCase() ||
+      w.slug?.toLowerCase() === projectName.toLowerCase()
   );
 
   if (website?.color) {
