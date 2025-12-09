@@ -29,6 +29,7 @@ import {
   ScoreRoundDataPoint,
   AgentActivity,
   AgentRoundMetrics,
+  MinerRoundDetailsResponse,
 } from './agents.types';
 import type {
   AgentRunData,
@@ -72,6 +73,20 @@ export class AgentsRepository {
         } | null;
       };
     }>(`${this.baseEndpoint}/rounds`, params);
+    return response.data.data;
+  }
+
+  /**
+   * Get detailed information about a specific miner in a specific round
+   */
+  async getMinerRoundDetails(
+    round: number,
+    miner_uid: number
+  ): Promise<MinerRoundDetailsResponse['data']> {
+    const response = await apiClient.get<MinerRoundDetailsResponse>(
+      `${this.baseEndpoint}/round-details`,
+      { round, miner_uid }
+    );
     return response.data.data;
   }
 
