@@ -63,9 +63,10 @@ export interface AgentRunListItem {
   averageEvaluationTime?: number | null;
 }
 
-// ===== AGENT RUN TASK DATA =====
-export interface AgentRunTaskData {
-  taskId: string;
+// ===== AGENT RUN EVALUATION DATA =====
+export interface AgentRunEvaluationData {
+  evaluationId: string; // Primary identifier
+  taskId: string; // Reference to task
   website: string;
   useCase: string;
   prompt: string;

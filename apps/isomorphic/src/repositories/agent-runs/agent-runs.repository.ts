@@ -10,6 +10,7 @@ import type {
   AgentRunSummary,
   AgentRunPersonas,
   AgentRunTaskData,
+  AgentRunEvaluationData, // Added
   AgentRunDetailsResponse,
   AgentRunStatsResponse,
   AgentRunSummaryResponse,
@@ -251,7 +252,7 @@ export class AgentRunsRepository {
    */
   async getAgentRunComplete(runId: string): Promise<{
     statistics: AgentRunStats | null;
-    tasks: AgentRunTaskData[];
+    evaluations: AgentRunEvaluationData[]; // Changed from tasks to evaluations
     info: {
       agentRunId: string;
       round: any;
@@ -264,7 +265,7 @@ export class AgentRunsRepository {
         success: boolean;
         data: {
           statistics: AgentRunStats | null;
-          tasks: AgentRunTaskData[];
+          evaluations: AgentRunEvaluationData[]; // Changed from tasks to evaluations
           info: {
             agentRunId: string;
             round: any;
