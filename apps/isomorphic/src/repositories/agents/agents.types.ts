@@ -113,6 +113,33 @@ export interface MinerRoundDetailsResponse {
       tasks_success: number;
       success_rate: number;
     }>;
+    validators?: Array<{
+      validator_uid: number;
+      validator_name: string;
+      validator_hotkey: string | null;
+      validator_image: string | null;
+      local_rank: number | null;
+      local_avg_reward: number;
+      local_avg_eval_score: number;
+      local_avg_eval_time: number;
+      local_tasks_received: number;
+      local_tasks_success: number;
+      local_miners_evaluated: number;
+      agent_run_id?: string;
+    }>;
+    post_consensus_summary?: {
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+        avg_reward: number;
+        avg_eval_score: number;
+        avg_eval_time: number;
+      } | null;
+      miners_evaluated: number;
+      tasks_evaluated: number;
+    };
   };
 }
 

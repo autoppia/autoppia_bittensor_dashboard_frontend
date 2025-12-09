@@ -726,6 +726,7 @@ function AgentValidators({
   numericUidFromParam,
   validators,
   post_consensus_summary,
+  minerRoundDetailsValidators,
 }: {
   selectedRound?: number | null;
   runs: AgentRunOverview[];
@@ -734,8 +735,25 @@ function AgentValidators({
   numericUidFromParam?: number;
   validators?: AgentRunsResponse['data']['validators'];
   post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
+  minerRoundDetailsValidators?: Array<{
+    validator_uid: number;
+    validator_name: string;
+    validator_hotkey: string | null;
+    validator_image: string | null;
+    local_rank: number | null;
+    local_avg_reward: number;
+    local_avg_eval_score: number;
+    local_avg_eval_time: number;
+    local_tasks_received: number;
+    local_tasks_success: number;
+    local_miners_evaluated: number;
+    agent_run_id?: string;
+  }>;
 }) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  
+  // Prefer validators from minerRoundDetails (round-details endpoint) over validators from runs
+  const effectiveValidators = minerRoundDetailsValidators || validators;
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -924,9 +942,9 @@ function AgentValidators({
       {/* Removed duplicate Avg cards from validators section */}
 
       {/* Show validators with local and post-consensus data if available */}
-      {validators && validators.length > 0 ? (
+      {effectiveValidators && effectiveValidators.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {validators
+          {effectiveValidators
             .sort((a, b) => {
               // Sort: Autoppia (UID 83 or 124) first, then others
               const aIsAutoppia = a.validator_uid === 83 || a.validator_uid === 124;
@@ -935,22 +953,52 @@ function AgentValidators({
               if (!aIsAutoppia && bIsAutoppia) return 1;
               return 0;
             })
-            .map((validator) => {
+            .map((validator: any) => {
             const isAutoppia = validator.validator_uid === 83 || validator.validator_uid === 124;
-            const validatorImage = resolveAssetUrl(
-              `/validators/${validator.validator_uid}.png` || "/validators/default.png"
-            );
             
-            // Find corresponding run for this validator
+            // Check if this is from minerRoundDetails (has validator_image) or from runs (has miners array)
+            const isFromRoundDetails = 'validator_image' in validator;
+            
+            // Use validator_image if available (from round-details), otherwise fallback
+            const validatorImage = isFromRoundDetails && validator.validator_image
+              ? resolveAssetUrl(validator.validator_image)
+              : resolveAssetUrl(`/validators/${validator.validator_uid}.png` || "/validators/default.png");
+            
+            // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
               (run) => String(run.validatorId) === String(validator.validator_uid)
             );
             const latestRun = validatorRuns[0];
+            const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
             
-            // Find miner data for current agent in this validator's miners list
-            const currentMinerData = validator.miners.find(
-              (m) => m.uid === numericUidFromParam
-            );
+            // Use direct validator data (from round-details) or fallback to miners list
+            let localRank: number | null = null;
+            let localAvgReward: number = 0;
+            let localAvgEvalTime: number = 0;
+            let localTasksReceived: number = 0;
+            let localTasksSuccess: number = 0;
+            let localMinersEvaluated: number = 0;
+            
+            if (isFromRoundDetails) {
+              // Data from round-details endpoint (direct fields)
+              localRank = validator.local_rank;
+              localAvgReward = validator.local_avg_reward ?? 0;
+              localAvgEvalTime = validator.local_avg_eval_time ?? 0;
+              localTasksReceived = validator.local_tasks_received ?? 0;
+              localTasksSuccess = validator.local_tasks_success ?? 0;
+              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
+            } else {
+              // Data from runs endpoint (need to find miner in miners array)
+              const currentMinerData = validator.miners?.find(
+                (m: any) => m.uid === numericUidFromParam
+              );
+              localRank = currentMinerData?.local_rank ?? null;
+              localAvgReward = currentMinerData?.local_avg_reward ?? 0;
+              localAvgEvalTime = currentMinerData?.local_avg_eval_time ?? 0;
+              localTasksReceived = validator.local_tasks_evaluated ?? 0;
+              localTasksSuccess = validator.local_tasks_evaluated ?? 0; // Fallback, should be calculated
+              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
+            }
             
             const secondaryStats = [
               {
@@ -961,37 +1009,37 @@ function AgentValidators({
               },
               {
                 title: "Rank",
-                metric: currentMinerData?.local_rank 
-                  ? `#${currentMinerData.local_rank}` 
+                metric: localRank 
+                  ? `#${localRank}` 
                   : "N/A",
                 icon: PiHashDuotone,
                 iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
               },
               {
                 title: "Reward",
-                metric: currentMinerData?.local_avg_reward 
-                  ? `${(currentMinerData.local_avg_reward * 100).toFixed(1)}%` 
+                metric: localAvgReward 
+                  ? `${(localAvgReward * 100).toFixed(2)}%` 
                   : "N/A",
                 icon: PiChartLineUpDuotone,
                 iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600",
               },
               {
                 title: "Time",
-                metric: currentMinerData?.local_avg_eval_time 
-                  ? `${currentMinerData.local_avg_eval_time.toFixed(1)}s` 
+                metric: localAvgEvalTime 
+                  ? `${localAvgEvalTime.toFixed(2)}s` 
                   : "N/A",
                 icon: PiTimerDuotone,
                 iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
               },
               {
                 title: "Tasks",
-                metric: `${validator.local_tasks_evaluated}`,
+                metric: `${localTasksSuccess}/${localTasksReceived}`,
                 icon: PiListChecksDuotone,
                 iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
               },
               {
                 title: "Miners",
-                metric: validator.local_miners_evaluated,
+                metric: localMinersEvaluated,
                 icon: PiChartBarDuotone,
                 iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
               },
