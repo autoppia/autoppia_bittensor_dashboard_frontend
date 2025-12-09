@@ -36,7 +36,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
@@ -1617,6 +1617,17 @@ export default function Page() {
   const roundMetrics = agentDetail?.roundMetrics ?? null;
   const availableRounds = agentDetail?.availableRounds ?? [];
   const apiScoreRoundData = agentDetail?.scoreRoundData ?? [];
+  
+  // Get miner round details when round and miner UID are available
+  const {
+    data: minerRoundDetails,
+    loading: minerRoundDetailsLoading,
+    error: minerRoundDetailsError,
+  } = useMinerRoundDetails(
+    selectedRoundFromQuery,
+    numericUidFromParam
+  );
+  
   const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
   const taoStatsAvailable = Boolean(
     !agent?.isSota && (agent?.taostatsUrl || agent?.hotkey)
@@ -1877,12 +1888,25 @@ export default function Page() {
   const totalTaoEarned = (
     Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
   ).toFixed(2);
+  // Use minerRoundDetails if available, otherwise fallback to roundMetrics
+  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? agent.currentRank;
+  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundMetrics?.score ?? agent.currentScore;
+  const effectiveEvalScore = minerRoundDetails?.post_consensus_avg_eval_score ?? null;
+  const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
+  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
+  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
+  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
+  const effectiveAvgTasksPerValidator = minerRoundDetails?.avg_tasks_per_validator ?? null;
+  const effectivePerformanceByWebsite = minerRoundDetails?.performanceByWebsite ?? [];
+  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0 
+    ? effectivePerformanceByWebsite.length 
+    : websitesSummary.unique;
+
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
-    const total = roundMetrics?.totalTasks ?? 0;
-    const completed = roundMetrics?.completedTasks ?? 0;
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return total > 0 ? `${completed}/${total} = ${percentage}%  ` : "0% (0/0)";
+    const total = effectiveTasksReceived;
+    const completed = effectiveTasksSuccess;
+    return total > 0 ? `${completed}/${total}` : "0/0";
   })();
 
   const currentStats = [
@@ -1895,13 +1919,13 @@ export default function Page() {
     },
     {
       title: "Rank",
-      metric: currentRankValue,
+      metric: effectiveRank && effectiveRank > 0 ? `#${effectiveRank}` : "N/A",
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
-      title: "Score",
-      metric: currentScorePercentage,
+      title: "Reward",
+      metric: `${((effectiveScore ?? 0) * 100).toFixed(1)}%`,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
@@ -1915,25 +1939,29 @@ export default function Page() {
     // Segunda fila: Validators, Avg Tasks Per Validator, Websites, Success Rate (debajo de Avg Response Time)
     {
       title: "Validators",
-      metric: (roundMetrics?.totalValidators ?? 0).toString(),
+      metric: effectiveValidatorsCount.toString(),
       icon: PiTrophyDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Avg Tasks Per Validator",
-      metric: preAvg?.avgTasks ?? "0",
+      title: "Task Per Validator",
+      metric: effectiveAvgTasksPerValidator !== null 
+        ? effectiveAvgTasksPerValidator.toFixed(1) 
+        : (preAvg?.avgTasks ?? "0"),
       icon: PiListChecksDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Websites",
-      metric: websitesSummary.unique.toString(),
+      metric: effectiveWebsitesCount.toString(),
       icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Response Time",
-      metric: preAvg?.avgResp ?? "0s",
+      metric: effectiveEvalTime !== null 
+        ? `${effectiveEvalTime.toFixed(1)}s` 
+        : (preAvg?.avgResp ?? "0s"),
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
@@ -2333,12 +2361,126 @@ export default function Page() {
               <>
                 {viewMode === "current" ? (
                   <div>
-                    <RoundWebsitesChart
-                      agentId={agentIdForQuery ?? trimmedId}
-                      selectedRound={currentRound ?? null}
-                      runs={runsState.runs}
-                      onSummaryChange={handleSummaryChange}
-                    />
+                    {minerRoundDetails && effectivePerformanceByWebsite.length > 0 ? (
+                      <div className="relative">
+                        {minerRoundDetailsLoading ? (
+                          <div className="relative flex h-[420px] items-center justify-center text-white/70">
+                            Loading website stats…
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mb-6">
+                              <h3 className="text-xl font-bold text-white mb-2">
+                                Performance per website
+                              </h3>
+                              <p className="text-sm text-white/60">
+                                Task success rate by website for this round
+                              </p>
+                            </div>
+                            <div className="relative h-[300px] md:h-[450px] w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                  data={effectivePerformanceByWebsite.map((website) => {
+                                    const websiteName = website.website;
+                                    const formattedName = formatWebsiteName(websiteName);
+                                    return {
+                                      website: formattedName,
+                                      websiteOriginal: websiteName,
+                                      successRate: website.success_rate * 100,
+                                      successful: website.tasks_success,
+                                      total: website.tasks_received,
+                                    };
+                                  })}
+                                  margin={{ top: 20, left: -10 }}
+                                >
+                                  <defs>
+                                    {effectivePerformanceByWebsite.map((entry, index) => {
+                                      const colors = getProjectColors(entry.website);
+                                      return (
+                                        <linearGradient
+                                          key={`barGradient${index}`}
+                                          id={`barGradient${index}`}
+                                          x1="0"
+                                          y1="0"
+                                          x2="0"
+                                          y2="1"
+                                        >
+                                          <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
+                                          <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
+                                          <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
+                                        </linearGradient>
+                                      );
+                                    })}
+                                  </defs>
+                                  <CartesianGrid
+                                    vertical={false}
+                                    strokeDasharray="3 3"
+                                    stroke="rgba(148,163,184,0.15)"
+                                  />
+                                  <XAxis
+                                    dataKey="website"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                      fill: "rgba(226,232,240,0.9)",
+                                      fontSize: 13,
+                                      fontWeight: 500,
+                                    }}
+                                  />
+                                  <YAxis
+                                    domain={[0, 100]}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={<CustomYAxisTick postfix="%" />}
+                                    stroke="rgba(148,163,184,0.3)"
+                                  />
+                                  <Tooltip
+                                    content={<WebsitePerformanceTooltip />}
+                                    cursor={{
+                                      fill: "rgba(255, 255, 255, 0.08)",
+                                    }}
+                                    wrapperStyle={{
+                                      outline: "none",
+                                      zIndex: 1000,
+                                    }}
+                                  />
+                                  <Bar
+                                    dataKey="successRate"
+                                    radius={[12, 12, 0, 0]}
+                                    maxBarSize={80}
+                                    animationDuration={800}
+                                    animationEasing="ease-out"
+                                  >
+                                    {effectivePerformanceByWebsite.map((entry, index) => {
+                                      const colors = getProjectColors(entry.website);
+                                      return (
+                                        <Cell
+                                          key={`cell-${index}`}
+                                          fill={`url(#barGradient${index})`}
+                                          fillOpacity={0.9}
+                                          style={{
+                                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                            cursor: "pointer",
+                                            transformOrigin: "center bottom",
+                                          }}
+                                        />
+                                      );
+                                    })}
+                                  </Bar>
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <RoundWebsitesChart
+                        agentId={agentIdForQuery ?? trimmedId}
+                        selectedRound={currentRound ?? null}
+                        runs={runsState.runs}
+                        onSummaryChange={handleSummaryChange}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-6">

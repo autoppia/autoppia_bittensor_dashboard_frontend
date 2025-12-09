@@ -92,6 +92,20 @@ export function useRoundsData(roundNumber?: number) {
   return useApiCall(request, `rounds-data:${roundNumber ?? 'all'}`);
 }
 
+// Hook for miner round details
+export function useMinerRoundDetails(round: number | undefined, miner_uid: number | undefined) {
+  const request = useCallback(
+    () => {
+      if (!round || !miner_uid) {
+        return Promise.resolve(null);
+      }
+      return agentsRepository.getMinerRoundDetails(round, miner_uid);
+    },
+    [round, miner_uid]
+  );
+  return useApiCall(request, `miner-round-details:${round ?? 'none'}:${miner_uid ?? 'none'}`);
+}
+
 // Hook for minimal miners list (optimized for sidebar) - DEPRECATED
 // Use useRoundsData instead
 export function useMinersList(params?: MinimalAgentsListQueryParams) {

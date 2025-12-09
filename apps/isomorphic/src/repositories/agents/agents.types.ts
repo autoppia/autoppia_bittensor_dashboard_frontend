@@ -88,6 +88,34 @@ export interface AgentRoundMetrics {
   averageResponseTime: number;
 }
 
+// ===== MINER ROUND DETAILS =====
+export interface MinerRoundDetailsResponse {
+  success: boolean;
+  data: {
+    miner: {
+      uid: number;
+      name: string;
+      hotkey: string | null;
+      image: string | null;
+    };
+    round: number;
+    post_consensus_rank: number;
+    post_consensus_avg_reward: number;
+    post_consensus_avg_eval_score: number;
+    post_consensus_avg_eval_time: number;
+    tasks_received: number;
+    tasks_success: number;
+    validators_count: number;
+    avg_tasks_per_validator: number;
+    performanceByWebsite: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+  };
+}
+
 // ===== AGENT PERFORMANCE METRICS =====
 export interface AgentPerformanceMetrics {
   agentId: string;
