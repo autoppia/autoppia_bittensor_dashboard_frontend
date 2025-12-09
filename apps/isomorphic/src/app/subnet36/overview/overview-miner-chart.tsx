@@ -93,7 +93,7 @@ export default function MinerChart({
   className,
   targetHeight,
 }: MinerChartProps) {
-  const [timeRange, setTimeRange] = useState<FilterOption>("15R"); // Changed from "All" to "15R" for better performance
+  const [timeRange, setTimeRange] = useState<FilterOption>("7R"); // Default to 7R
   // Get leaderboard data from API
   const apiTimeRange = timeRange === "All" ? "all" : timeRange;
   const {

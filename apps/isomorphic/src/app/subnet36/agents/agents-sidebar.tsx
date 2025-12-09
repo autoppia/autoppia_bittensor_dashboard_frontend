@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import NavLink from "@core/components/nav-link";
 import Image from "next/image";
@@ -85,19 +85,35 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       return [];
     }
 
-    return rounds.map((value) => ({
+    // Asegurar que los rounds estén ordenados de mayor a menor (más reciente primero)
+    const sortedRounds = [...rounds].sort((a, b) => b - a);
+
+    return sortedRounds.map((value) => ({
       label: `Round ${value}`,
       value,
     }));
   }, [roundsData?.rounds]);
 
-  const defaultRound = roundOptions[0]?.value;
+  // La última round es la primera en la lista ordenada (mayor número)
+  const latestRound = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) {
+      return undefined;
+    }
+    // Obtener el round más alto (más reciente)
+    return Math.max(...rounds);
+  }, [roundsData?.rounds]);
+
+  const defaultRound = latestRound;
   const effectiveRound = selectedRound ?? defaultRound;
   const selectOptions =
     roundOptions.length > 0 ? roundOptions : [loadingRoundOption];
   const [roundSelectValue, setRoundSelectValue] = useState<SelectOption>(
     selectOptions[0]
   );
+
+  // Ref para evitar loops infinitos en la redirección
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     if (!roundOptions.length) {
@@ -114,17 +130,40 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     );
   }, [effectiveRound, loadingRoundOption, roundOptions]);
 
+  // Redirigir a la última round solo una vez cuando no hay round en la URL
   useEffect(() => {
-    if (roundReady || defaultRound === undefined) {
+    // Si ya hay un round en la URL, resetear el flag y no hacer nada
+    if (roundReady) {
+      hasRedirectedRef.current = false;
       return;
     }
-    const params = new URLSearchParams(searchParamsString);
-    params.set("round", String(defaultRound));
-    if (!params.get("agent") && id) {
-      params.set("agent", String(id));
+
+    // Si no hay última round disponible o está cargando, no hacer nada
+    if (latestRound === undefined || roundsLoading) {
+      return;
     }
+
+    // Si ya redirigimos, no volver a redirigir
+    if (hasRedirectedRef.current) {
+      return;
+    }
+
+    // Marcar que vamos a redirigir ANTES de hacer la redirección
+    hasRedirectedRef.current = true;
+
+    // Construir los parámetros de la URL
+    const params = new URLSearchParams();
+    params.set("round", String(latestRound));
+    
+    // Preservar el parámetro agent si existe, o usar el id de la ruta
+    const agentParam = searchParams.get("agent") ?? (id ? String(id) : null);
+    if (agentParam) {
+      params.set("agent", agentParam);
+    }
+    
+    // Hacer la redirección
     router.replace(`${pathname}?${params.toString()}`);
-  }, [defaultRound, id, pathname, roundReady, router, searchParamsString]);
+  }, [latestRound, id, pathname, roundReady, router, roundsLoading, roundParam, searchParams]);
 
   const handleRoundChange = (option: SelectOption | null) => {
     if (!option || option.value === loadingRoundOption.value) {
