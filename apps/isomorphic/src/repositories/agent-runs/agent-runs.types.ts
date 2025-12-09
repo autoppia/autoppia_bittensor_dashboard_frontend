@@ -35,18 +35,8 @@ export interface AgentRunData {
   duration: number;
   overallScore: number;
   averageEvaluationTime?: number | null;
-  websites: {
-    website: string;
-    tasks: number;
-    successful: number;
-    failed: number;
-    score: number;
-  }[];
-  metadata: {
-    agentImage?: string;
-    agentDescription?: string;
-    [key: string]: any;
-  };
+  // websites removed - already in statistics
+  // metadata removed - validator info already in info
 }
 
 // ===== AGENT RUN LIST ITEM =====
