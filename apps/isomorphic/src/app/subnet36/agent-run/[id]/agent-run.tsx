@@ -27,9 +27,7 @@ export default function AgentRun() {
     isLoading, 
     error, 
     refetch,
-    run,
     statistics,
-    summary,
     tasks,
     info,
   } = useAgentRunComplete(runId);
@@ -41,7 +39,6 @@ export default function AgentRun() {
         description={(() => {
           const roundId = (info?.round?.roundNumber ??
             info?.round?.validatorRoundId ??
-            summary?.roundId ??
             "") as any;
           const roundLabel =
             typeof roundId === "number" ||
