@@ -78,9 +78,7 @@ export function useAgentRunsList(params?: AgentRunsListQueryParams) {
 // Hook for getting agent run data with complete endpoint
 export function useAgentRunComplete(runId: string) {
   const [data, setData] = useState<{
-    run: AgentRunData | null;
     statistics: AgentRunStats | null;
-    summary: AgentRunSummary | null;
     tasks: AgentRunTaskData[];
     info: {
       agentRunId: string;
@@ -117,9 +115,7 @@ export function useAgentRunComplete(runId: string) {
     error,
     refetch: fetchComplete,
     // Convenience getters
-    run: data?.run ?? null,
     statistics: data?.statistics ?? null,
-    summary: data?.summary ?? null,
     tasks: data?.tasks ?? [],
     info: data?.info ?? null,
   };

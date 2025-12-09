@@ -250,9 +250,7 @@ export class AgentRunsRepository {
    * Get all agent run data in a single call
    */
   async getAgentRunComplete(runId: string): Promise<{
-    run: AgentRunData;
     statistics: AgentRunStats | null;
-    summary: AgentRunSummary;
     tasks: AgentRunTaskData[];
     info: {
       agentRunId: string;
@@ -265,9 +263,7 @@ export class AgentRunsRepository {
       const response = await apiClient.get<{
         success: boolean;
         data: {
-          run: AgentRunData;
           statistics: AgentRunStats | null;
-          summary: AgentRunSummary;
           tasks: AgentRunTaskData[];
           info: {
             agentRunId: string;

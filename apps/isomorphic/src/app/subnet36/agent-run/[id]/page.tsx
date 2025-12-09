@@ -203,7 +203,6 @@ export default function Page() {
     error,
     refetch,
     statistics: stats,
-    summary,
     tasks,
     info,
   } = useAgentRunComplete(runId);

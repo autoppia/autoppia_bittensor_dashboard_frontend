@@ -108,30 +108,13 @@ export interface TaskAction {
 export interface AgentRunStats {
   totalTasks: number;
   websites: number;
-  reward: number; // This is the score/reward
-  duration: number;
-  avgTaskDuration: number;
+  avg_score: number;
+  avg_reward: number;
+  avg_time: number;
   successfulTasks: number;
   failedTasks: number;
   performanceByWebsite: {
     website: string;
-    tasks: number;
-    successful: number;
-    failed: number;
-    averageScore: number;
-    averageDuration: number;
-    useCases?: {
-      useCase: string;
-      tasks: number;
-      successful: number;
-      failed: number;
-      averageScore: number;
-      averageDuration: number;
-    }[];
-  }[];
-  // Legacy field - kept for backwards compatibility with old agent runs
-  performanceByUseCase?: {
-    useCase: string;
     tasks: number;
     successful: number;
     failed: number;
