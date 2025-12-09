@@ -215,22 +215,25 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   // Update filtered agents when data / SOTA / query changes
   useEffect(() => {
-    if (minersData?.miners) {
-      let filtered = applySotaFilter(minersData.miners, includeSota);
-
-      // Apply search filter on top
-      if (query.trim() !== "") {
-        const q = query.toLowerCase();
-        filtered = filtered.filter(
-          (miner) =>
-            miner.name.toLowerCase().includes(q) ||
-            miner.uid.toString().includes(q)
-        );
-      }
-
-      setFilteredAgents(filtered);
+    if (!minersData?.miners) {
+      setFilteredAgents([]);
+      return;
     }
-  }, [minersData, includeSota, query]);
+
+    let filtered = applySotaFilter(minersData.miners, includeSota);
+
+    // Apply search filter on top
+    if (query.trim() !== "") {
+      const q = query.toLowerCase();
+      filtered = filtered.filter(
+        (miner) =>
+          miner.name.toLowerCase().includes(q) ||
+          miner.uid.toString().includes(q)
+      );
+    }
+
+    setFilteredAgents(filtered);
+  }, [minersData?.miners, includeSota, query]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextQuery = event.target.value;
