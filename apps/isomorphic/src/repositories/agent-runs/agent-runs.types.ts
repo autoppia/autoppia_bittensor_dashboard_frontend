@@ -70,8 +70,9 @@ export interface AgentRunTaskData {
   useCase: string;
   prompt: string;
   status: "pending" | "running" | "completed" | "failed";
-  score: number;
-  duration: number;
+  eval_score: number; // 0 or 1 (passed or failed)
+  eval_time: number; // Evaluation time in seconds
+  reward: number; // Combined reward (eval_score + time_score)
   startTime: string;
   endTime?: string;
   error?: string;
