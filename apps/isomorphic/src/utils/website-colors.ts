@@ -75,12 +75,53 @@ function hexToTailwindColor(hex: string): string {
  * Retorna el color hex principal y el color dotColor
  */
 export function getProjectColors(projectName: string): ProjectColors {
-  // Buscar en websitesData por nombre o slug (case-insensitive)
-  const website = websitesData.find(
-    (w) => 
-      w.name.toLowerCase() === projectName.toLowerCase() ||
-      w.slug?.toLowerCase() === projectName.toLowerCase()
+  if (!projectName) {
+    return {
+      dotColor: "#64748b",
+      mainColor: "#64748b",
+    };
+  }
+
+  // Normalizar el nombre del proyecto (trim y lowercase)
+  const normalizedName = projectName.trim().toLowerCase();
+  
+  // Primero, intentar buscar directamente por nombre o slug
+  let website = websitesData.find(
+    (w) => {
+      const nameMatch = w.name.toLowerCase() === normalizedName;
+      const slugMatch = w.slug?.toLowerCase() === normalizedName;
+      return nameMatch || slugMatch;
+    }
   );
+
+  // Si no se encuentra, intentar buscar por el nombre formateado
+  if (!website) {
+    const formattedName = formatWebsiteName(projectName);
+    if (formattedName !== projectName && formattedName.toLowerCase() !== normalizedName) {
+      website = websitesData.find(
+        (w) => {
+          const nameMatch = w.name.toLowerCase() === formattedName.toLowerCase();
+          const slugMatch = w.slug?.toLowerCase() === formattedName.toLowerCase();
+          return nameMatch || slugMatch;
+        }
+      );
+    }
+  }
+
+  // Si aún no se encuentra, buscar por coincidencia parcial (para casos como "autocinema" vs "AutoCinema")
+  if (!website) {
+    website = websitesData.find(
+      (w) => {
+        const nameLower = w.name.toLowerCase();
+        const slugLower = w.slug?.toLowerCase() || "";
+        // Buscar si el nombre normalizado contiene el slug o viceversa
+        return nameLower.includes(normalizedName) || 
+               normalizedName.includes(nameLower) ||
+               slugLower.includes(normalizedName) ||
+               normalizedName.includes(slugLower);
+      }
+    );
+  }
 
   if (website?.color) {
     return {

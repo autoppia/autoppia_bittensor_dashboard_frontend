@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRounds } from "@/services/hooks/useRounds";
 import { useMinersList } from "@/services/hooks/useAgents";
@@ -183,7 +183,18 @@ function AgentsLanding() {
   // Usar la última round disponible si no hay round seleccionado
   const effectiveRound = resolvedRound ?? selectedRound ?? roundSequence[0];
 
+  // Ref para evitar loops infinitos en la redirección
+  const hasRedirectedRef = useRef(false);
+
   useEffect(() => {
+    // Si ya estamos en una ruta de agente específico (no en /agents), no redirigir
+    // Verificar que el pathname sea exactamente /subnet36/agents (sin ID)
+    const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
+    if (!isOnAgentsLanding) {
+      hasRedirectedRef.current = false; // Reset cuando salimos de /agents
+      return;
+    }
+
     // Si no hay round disponible, esperar
     if (!isFiniteNumber(effectiveRound)) {
       return;
@@ -194,6 +205,11 @@ function AgentsLanding() {
     }
     // Si no hay miners, esperar
     if (!hasMiners) {
+      return;
+    }
+
+    // Si ya redirigimos, no volver a redirigir
+    if (hasRedirectedRef.current) {
       return;
     }
 
@@ -226,24 +242,15 @@ function AgentsLanding() {
       return;
     }
 
-    const targetPath = `${routes.agents}/${targetAgentId}`;
-    // Si ya estamos en la ruta correcta con los parámetros correctos, no redirigir
-    const currentParams = new URLSearchParams(window.location.search);
-    const currentRound = currentParams.get("round");
-    const currentAgent = currentParams.get("agent");
-    if (
-      pathname === targetPath &&
-      currentRound === String(effectiveRound) &&
-      currentAgent === targetAgentId
-    ) {
-      return;
-    }
+    // Marcar que vamos a redirigir ANTES de hacer la redirección
+    hasRedirectedRef.current = true;
 
     // Redirigir al top miner con la última round
     const params = new URLSearchParams();
     params.set("round", String(effectiveRound));
     params.set("agent", targetAgentId);
 
+    const targetPath = `${routes.agents}/${targetAgentId}`;
     router.replace(`${targetPath}?${params.toString()}`);
   }, [
     agentParam,

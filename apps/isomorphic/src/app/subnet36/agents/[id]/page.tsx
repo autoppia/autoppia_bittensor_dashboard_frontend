@@ -1616,7 +1616,10 @@ function RoundWebsitesChart({
                 <defs>
                   {/* Generate gradients dynamically based on website colors */}
                   {chartRows.map((entry, index) => {
-                    const colors = getProjectColors(entry.websiteOriginal || entry.website);
+                    // Usar websiteOriginal (nombre del backend) para buscar colores
+                    // Si no está disponible, usar website (nombre formateado)
+                    const websiteNameForColor = entry.websiteOriginal || entry.website;
+                    const colors = getProjectColors(websiteNameForColor);
                     return (
                       <linearGradient
                         key={`barGradient${index}`}
