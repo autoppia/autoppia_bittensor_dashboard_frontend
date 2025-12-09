@@ -22,8 +22,7 @@ import {
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
-import { useMinersList } from "@/services/hooks/useAgents";
-import { useRoundIds } from "@/services/hooks/useRounds";
+import { useRoundsData } from "@/services/hooks/useAgents";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type {
   MinimalAgentData,
@@ -68,11 +67,9 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const roundReady =
     typeof selectedRound === "number" && Number.isFinite(selectedRound);
 
-  // Use lightweight endpoint to get only round IDs (not full data)
-  const { data: roundIdsData } = useRoundIds({
-    limit: 500,
-    sortOrder: "desc",
-  });
+  // Use new unified endpoint to get rounds and miners
+  // Use selectedRound if available, otherwise undefined (will get rounds list)
+  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData(selectedRound);
 
   const loadingRoundOption = useMemo<SelectOption>(
     () => ({
@@ -83,16 +80,16 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   );
 
   const roundOptions: SelectOption[] = useMemo(() => {
-    const roundIds = roundIdsData?.roundIds ?? [];
-    if (roundIds.length === 0) {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) {
       return [];
     }
 
-    return roundIds.map((value) => ({
+    return rounds.map((value) => ({
       label: `Round ${value}`,
       value,
     }));
-  }, [roundIdsData]);
+  }, [roundsData?.rounds]);
 
   const defaultRound = roundOptions[0]?.value;
   const effectiveRound = selectedRound ?? defaultRound;
@@ -153,16 +150,29 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  // Fetch miners data using optimized endpoint
-  const minersParams = useMemo(() => {
-    const params: MinimalAgentsListQueryParams = { limit: 100 };
-    if (typeof effectiveRound === "number" && Number.isFinite(effectiveRound)) {
-      params.round = effectiveRound;
+  // Get miners from roundsData
+  const minersFromApi = roundsData?.round_selected?.miners ?? [];
+  
+  // Map miners from API format to MinimalAgentData format
+  const minersData = useMemo(() => {
+    if (!minersFromApi.length) {
+      return { miners: [] };
     }
-    return params;
-  }, [effectiveRound]);
+    
+    const miners: MinimalAgentData[] = minersFromApi.map((miner) => ({
+      uid: miner.uid,
+      name: miner.name,
+      ranking: miner.post_consensus_rank,
+      score: miner.post_consensus_avg_reward,
+      isSota: false, // TODO: Determine SOTA from miner data if available
+      imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
+    }));
+    
+    return { miners };
+  }, [minersFromApi]);
 
-  const { data: minersData, loading, error } = useMinersList(minersParams);
+  const loading = roundsLoading;
+  const error = roundsError;
 
   // Update filtered agents when data / SOTA / query changes
   useEffect(() => {

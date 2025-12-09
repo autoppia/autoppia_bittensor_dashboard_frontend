@@ -142,7 +142,11 @@ export function useEvaluationComplete(evaluationId: string) {
     actions: any[];
     screenshots: any[];
     task_details: TaskDetails | null;
-    results: TaskResults | null;
+    result: {
+      status: string;
+      eval_score: number;
+      eval_time: number;
+    } | null;
     info: {
       evaluationId: string;
       taskId: string;
@@ -181,7 +185,7 @@ export function useEvaluationComplete(evaluationId: string) {
     refetch: fetchComplete,
     // Convenience getters
     details: data?.task_details ?? null,
-    results: data?.results ?? null,
+    result: data?.result ?? null,
     actions: data?.actions ?? [],
     screenshots: data?.screenshots ?? [],
     info: data?.info ?? null,

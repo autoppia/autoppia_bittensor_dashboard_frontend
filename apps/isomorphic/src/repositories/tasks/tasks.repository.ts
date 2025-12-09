@@ -47,7 +47,11 @@ export class TasksRepository {
     actions: any[];
     screenshots: any[];
     task_details: TaskDetails;
-    results: TaskResults;
+    result: {
+      status: string;
+      eval_score: number;
+      eval_time: number;
+    };
     info: {
       evaluationId: string;
       taskId: string;
@@ -64,7 +68,11 @@ export class TasksRepository {
         actions: any[];
         screenshots: any[];
         task_details: TaskDetails;
-        results: TaskResults;
+        result: {
+          status: string;
+          eval_score: number;
+          eval_time: number;
+        };
         info: {
           evaluationId: string;
           taskId: string;

@@ -40,7 +40,44 @@ export class AgentsRepository {
   private readonly minerListEndpoint = '/api/v1/miner-list';
 
   /**
-   * Get minimal list of miners for sidebar (optimized endpoint)
+   * Get rounds data with optional miners for selected round (new unified endpoint)
+   */
+  async getRoundsData(roundNumber?: number): Promise<{
+    rounds: number[];
+    round_selected: {
+      round: number;
+      miners: Array<{
+        uid: number;
+        name: string;
+        image: string | null;
+        post_consensus_avg_reward: number;
+        post_consensus_rank: number;
+      }>;
+    } | null;
+  }> {
+    const params = roundNumber ? { round_number: roundNumber } : {};
+    const response = await apiClient.get<{
+      success: boolean;
+      data: {
+        rounds: number[];
+        round_selected: {
+          round: number;
+          miners: Array<{
+            uid: number;
+            name: string;
+            image: string | null;
+            post_consensus_avg_reward: number;
+            post_consensus_rank: number;
+          }>;
+        } | null;
+      };
+    }>(`${this.baseEndpoint}/rounds`, params);
+    return response.data.data;
+  }
+
+  /**
+   * Get minimal list of miners for sidebar (optimized endpoint) - DEPRECATED
+   * Use getRoundsData instead
    */
   async getMinersList(params?: MinimalAgentsListQueryParams): Promise<MinimalAgentsListResponse> {
     const response = await apiClient.get<MinimalAgentsListResponse>(

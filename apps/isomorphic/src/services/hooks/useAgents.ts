@@ -83,7 +83,17 @@ function useApiCall<T>(
   return { data, loading, error, refetch };
 }
 
-// Hook for minimal miners list (optimized for sidebar)
+// Hook for rounds data with miners (new unified endpoint)
+export function useRoundsData(roundNumber?: number) {
+  const request = useCallback(
+    () => agentsRepository.getRoundsData(roundNumber),
+    [roundNumber]
+  );
+  return useApiCall(request, `rounds-data:${roundNumber ?? 'all'}`);
+}
+
+// Hook for minimal miners list (optimized for sidebar) - DEPRECATED
+// Use useRoundsData instead
 export function useMinersList(params?: MinimalAgentsListQueryParams) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
