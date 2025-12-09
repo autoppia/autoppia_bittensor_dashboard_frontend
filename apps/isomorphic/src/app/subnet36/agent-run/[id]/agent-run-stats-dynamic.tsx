@@ -1,13 +1,20 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useAgentRunStats } from "@/services/hooks/useAgentRun";
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunStats from "./agent-run-stats";
+import type { AgentRunStats as AgentRunStatsType } from "@/repositories/agent-runs/agent-runs.types";
 
-export default function AgentRunStatsDynamic() {
-  const { id } = useParams();
-  const { stats, isLoading, error } = useAgentRunStats(id as string);
+interface AgentRunStatsDynamicProps {
+  statistics?: AgentRunStatsType | null;
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+export default function AgentRunStatsDynamic({ 
+  statistics: stats, 
+  isLoading = false, 
+  error,
+}: AgentRunStatsDynamicProps) {
 
   if (isLoading || error || !stats) {
     return (

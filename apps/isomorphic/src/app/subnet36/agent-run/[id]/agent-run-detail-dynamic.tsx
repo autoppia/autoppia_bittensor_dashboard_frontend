@@ -4,10 +4,6 @@ import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import cn from "@core/utils/class-names";
 import Placeholder from "@/app/shared/placeholder";
-import {
-  useAgentRunStats,
-  useAgentRunSummary,
-} from "@/services/hooks/useAgentRun";
 import AgentRunDetail from "./agent-run-detail";
 import {
   getFallbackDetailData,
@@ -21,6 +17,10 @@ interface AgentRunDetailDynamicProps {
   setSelectedWebsite: (value: string | null) => void;
   period: string | null;
   setPeriod: (value: string | null) => void;
+  statistics?: any | null;
+  summary?: any | null;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export default function AgentRunDetailDynamic({
@@ -29,17 +29,11 @@ export default function AgentRunDetailDynamic({
   setSelectedWebsite,
   period,
   setPeriod,
+  statistics: stats,
+  summary,
+  isLoading: isStatsLoading = false,
+  error: statsError,
 }: AgentRunDetailDynamicProps) {
-  const { id } = useParams();
-  const {
-    stats,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = useAgentRunStats(id as string);
-  const {
-    summary,
-    isLoading: isSummaryLoading,
-  } = useAgentRunSummary(id as string);
 
   const fallbackDetail = useMemo<AgentRunDetailData>(() => {
     return getFallbackDetailData(summary?.agentId);

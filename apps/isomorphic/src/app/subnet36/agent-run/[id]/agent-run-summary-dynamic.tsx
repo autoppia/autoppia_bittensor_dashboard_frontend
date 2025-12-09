@@ -4,11 +4,6 @@ import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import cn from "@core/utils/class-names";
 import Placeholder from "@/app/shared/placeholder";
-import {
-  useAgentRunStats,
-  useAgentRunSummary,
-  useAgentRunTasks,
-} from "@/services/hooks/useAgentRun";
 import AgentRunSummary from "./agent-run-summary";
 import {
   buildSummaryChartData,
@@ -24,25 +19,22 @@ import type {
 interface AgentRunSummaryDynamicProps {
   className?: string;
   selectedWebsite?: string | null;
+  summary?: any | null;
+  statistics?: any | null;
+  tasks?: any[];
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export default function AgentRunSummaryDynamic({
   className,
   selectedWebsite,
+  summary,
+  statistics: stats,
+  tasks: runTasks = [],
+  isLoading: isSummaryLoading = false,
+  error: summaryError,
 }: AgentRunSummaryDynamicProps) {
-  const { id } = useParams();
-
-  const {
-    summary,
-    isLoading: isSummaryLoading,
-    error: summaryError,
-  } = useAgentRunSummary(id as string);
-
-  const {
-    stats,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = useAgentRunStats(id as string);
 
   const fallbackDetail = useMemo<AgentRunDetailData>(() => {
     return getFallbackDetailData(summary?.agentId);
@@ -60,11 +52,9 @@ export default function AgentRunSummaryDynamic({
     return buildSummaryChartData(summary, detailData, fallbackSummary);
   }, [summary, detailData, fallbackSummary]);
 
-  // Fetch tasks (large limit) to reliably compute totals when stats/summary miss items
-  const { tasks: runTasks } = useAgentRunTasks(id as string, { limit: 1000 });
 
   const shouldShowPlaceholder =
-    (!summary && isSummaryLoading) || (!stats && isStatsLoading);
+    (!summary && isSummaryLoading) || (!stats && isSummaryLoading);
 
   if (shouldShowPlaceholder) {
     return <AgentRunSummaryPlaceholder className={className} />;
