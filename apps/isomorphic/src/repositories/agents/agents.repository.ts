@@ -30,6 +30,7 @@ import {
   AgentActivity,
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
+  MinerHistoricalResponse,
 } from './agents.types';
 import type {
   AgentRunData,
@@ -86,6 +87,18 @@ export class AgentsRepository {
     const response = await apiClient.get<MinerRoundDetailsResponse>(
       `${this.baseEndpoint}/round-details`,
       { round, miner_uid }
+    );
+    return response.data.data;
+  }
+
+  /**
+   * Get historical statistics for a miner across all rounds
+   */
+  async getMinerHistorical(
+    minerUid: number
+  ): Promise<MinerHistoricalResponse['data']> {
+    const response = await apiClient.get<MinerHistoricalResponse>(
+      `${this.baseEndpoint}/${minerUid}/historical`
     );
     return response.data.data;
   }

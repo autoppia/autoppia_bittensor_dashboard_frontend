@@ -36,7 +36,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent, useMinerRoundDetails } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails, useMinerHistorical } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
@@ -261,7 +261,7 @@ function AgentStats({
   ];
 
   // In current view: show Rank, Current Score, Avg Response Time, Validators, Avg Tasks
-  // In historical view: show Success Rate, Best Score Ever, Alpha Earned
+  // In historical view: show Success Rate, Best Reward Ever, Alpha Earned
   const displayStats = (
     mode === "current"
       ? [stats[0], stats[2], stats[4], stats[3], stats[5]]
@@ -418,6 +418,8 @@ function AgentScoreChart({
           score: normalizeScore(point.score) ?? 0,
           rank: point.rank ?? null,
           reward: point.reward ?? null,
+          eval_score: point.eval_score ?? null,
+          eval_time: point.eval_time ?? null,
           timestamp: point.timestamp,
         };
 
@@ -480,7 +482,7 @@ function AgentScoreChart({
   if (error) {
     return (
       <WidgetCard
-        title="Score Over Time"
+        title="Reward Over Time"
         action={
           <ButtonGroupAction
             options={filterOptions}
@@ -573,7 +575,7 @@ function AgentScoreChart({
     <WidgetCard
       title={
         <span className="text-md lg:text-2xl font-black text-white">
-          Score Over Time
+          Reward Over Time
         </span>
       }
       action={
@@ -646,15 +648,69 @@ function AgentScoreChart({
                 stroke="rgba(148,163,184,0.3)"
               />
               <Tooltip
-                content={<CustomTooltip />}
-                formatter={(value: any, name: string) =>
-                  value == null
-                    ? ["—", name]
-                    : [`${Number(value).toFixed(2)}%`, name]
-                }
-                labelFormatter={(value, payload) => {
-                  const data = payload?.[0]?.payload;
-                  return `${value}${data?.rank ? ` (Rank #${data.rank})` : ""}`;
+                content={({ active, payload, label }: any) => {
+                  if (!active || !payload?.length) return null;
+                  const data = payload[0]?.payload;
+                  
+                  // Get post-consensus data from the payload
+                  const reward = data?.reward ?? 0;
+                  const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
+                  const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
+                  
+                  return (
+                    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
+                      <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
+                        Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        {/* Reward */}
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                              style={{ backgroundColor: "#F59E0B" }}
+                            />
+                            <span className="text-white/90 font-semibold">Reward:</span>
+                          </div>
+                          <span className="font-black text-white text-base">
+                            {(reward * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        
+                        {/* Score (eval_score) */}
+                        {evalScore != null && !isNaN(evalScore) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#3B82F6" }}
+                              />
+                              <span className="text-white/90 font-semibold">Score:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              {(evalScore * 100).toFixed(2)}%
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Avg Time (eval_time) */}
+                        {evalTime != null && !isNaN(evalTime) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#10B981" }}
+                              />
+                              <span className="text-white/90 font-semibold">Avg Time:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              {Number(evalTime).toFixed(2)}s
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
                 }}
               />
               <Area
@@ -962,7 +1018,9 @@ function AgentValidators({
             // Use validator_image if available (from round-details), otherwise fallback
             const validatorImage = isFromRoundDetails && validator.validator_image
               ? resolveAssetUrl(validator.validator_image)
-              : resolveAssetUrl(`/validators/${validator.validator_uid}.png` || "/validators/default.png");
+              : (validator.validator_image 
+                  ? resolveAssetUrl(validator.validator_image)
+                  : resolveAssetUrl(`/validators/${validator.validator_uid}.png` || "/validators/default.png"));
             
             // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
@@ -1084,14 +1142,6 @@ function AgentValidators({
                         </Text>
                       </div>
                     </div>
-                    {latestRun && (
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
-                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-mono break-all" title={latestRun.runId}>
-                          {latestRun.runId}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="relative p-2 sm:p-5 space-y-3">
@@ -1118,8 +1168,8 @@ function AgentValidators({
                       );
                     })}
                   </div>
-                  {latestRun && (
-                    <Link href={`${routes.agent_run}/${latestRun.runId}`} className="block">
+                  {agentRunId && (
+                    <Link href={`${routes.agent_run}/${agentRunId}`} className="block">
                       <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
                         View Agent Run Details
                       </div>
@@ -1828,13 +1878,19 @@ export default function Page() {
     normalizedAgentId ??
     (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
 
+  // Declare viewMode first before using it in hooks
+  const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
+    "current"
+  );
+
+  // Only fetch agent details if not in historical mode
   const {
     data: agentDetail,
     loading,
     error,
   } = useAgent(
-    agentIdForQuery,
-    selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
+    viewMode !== "historical" ? agentIdForQuery : null,
+    viewMode !== "historical" && selectedRoundFromQuery ? { round: selectedRoundFromQuery } : undefined
   );
 
   const agent = agentDetail?.agent ?? null;
@@ -1852,26 +1908,62 @@ export default function Page() {
     numericUidFromParam
   );
   
-  const githubAvailable = Boolean(agent?.githubUrl && !agent?.isSota);
+  // Get miner historical data - only when viewMode is "historical"
+  const {
+    data: minerHistorical,
+    loading: minerHistoricalLoading,
+    error: minerHistoricalError,
+  } = useMinerHistorical(viewMode === "historical" ? numericUidFromParam : undefined);
+  
+  // Use minerHistorical data if available in historical mode
+  const effectiveAgent: AgentData | null = viewMode === "historical" && minerHistorical
+    ? {
+        uid: minerHistorical.miner.uid,
+        name: minerHistorical.miner.name,
+        hotkey: minerHistorical.miner.hotkey,
+        imageUrl: minerHistorical.miner.image,
+        isSota: false,
+        totalTasks: minerHistorical.summary.totalTasks,
+        completedTasks: minerHistorical.summary.totalTasksSuccessful,
+        currentScore: minerHistorical.summary.averageScore,
+        currentTopScore: minerHistorical.summary.bestScore,
+        currentRank: minerHistorical.summary.bestRank,
+        bestRankEver: minerHistorical.summary.bestRank,
+        bestRankRoundId: minerHistorical.summary.bestRankRound,
+        roundsParticipated: minerHistorical.summary.roundsParticipated,
+        roundsWon: minerHistorical.summary.roundsWon,
+        alphaWonInPrizes: minerHistorical.summary.totalAlphaEarned,
+        taoWonInPrizes: minerHistorical.summary.totalTaoEarned,
+        bestRoundScore: minerHistorical.summary.bestScore,
+        bestRoundId: minerHistorical.summary.bestScoreRound,
+        totalRuns: minerHistorical.summary.roundsParticipated,
+        successfulRuns: minerHistorical.summary.roundsWon,
+        averageResponseTime: minerHistorical.summary.averageDuration,
+        lastSeen: "",
+        createdAt: "",
+        updatedAt: "",
+        status: "active" as const,
+        githubUrl: undefined,
+        taostatsUrl: undefined,
+      }
+    : agent;
+  
+  const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
   const taoStatsAvailable = Boolean(
-    !agent?.isSota && (agent?.taostatsUrl || agent?.hotkey)
+    !effectiveAgent?.isSota && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
   );
 
   const defaultAvatar = useMemo(
     () =>
       resolveAssetUrl(
-        `/miners/${Math.abs((agent?.uid ?? numericUidFromParam ?? 0) % 50)}.svg`
+        `/miners/${Math.abs((effectiveAgent?.uid ?? numericUidFromParam ?? 0) % 50)}.svg`
       ),
-    [agent?.uid, numericUidFromParam]
+    [effectiveAgent?.uid, numericUidFromParam]
   );
   const [agentImgSrc, setAgentImgSrc] = useState<string>(defaultAvatar);
   useEffect(() => {
-    setAgentImgSrc(resolveAssetUrl(agent?.imageUrl, defaultAvatar));
-  }, [agent?.imageUrl, defaultAvatar]);
-
-  const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
-    "current"
-  );
+    setAgentImgSrc(resolveAssetUrl(effectiveAgent?.imageUrl, defaultAvatar));
+  }, [effectiveAgent?.imageUrl, defaultAvatar]);
   const [websitesSummary, setWebsitesSummary] = useState<{
     unique: number;
     total: number;
@@ -1895,7 +1987,26 @@ export default function Page() {
     roundMetrics?.roundId ??
     (availableRounds.length > 0 ? availableRounds[0] : undefined);
 
+  // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
+    if (viewMode === "historical" && minerHistorical?.roundsHistory) {
+      // Use historical data - sort by round descending
+      return minerHistorical.roundsHistory
+        .sort((a, b) => b.round - a.round)
+        .map((round) => ({
+          round_id: round.round,
+          score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
+          rank: round.post_consensus_rank,
+          reward: round.post_consensus_avg_reward ?? 0,
+          eval_score: round.post_consensus_avg_eval_score ?? undefined,
+          eval_time: round.post_consensus_avg_eval_time ?? undefined,
+          timestamp: "", // Historical data doesn't have timestamp
+          topScore: undefined,
+          benchmarks: undefined,
+        }));
+    }
+    
+    // Use agentDetail data for current/runs mode
     const source = agentDetail?.scoreRoundData ?? [];
     if (!source.length) return [];
     return source.map((point: any) => {
@@ -1911,6 +2022,8 @@ export default function Page() {
         score: normalizeScore(point.score) ?? 0,
         rank: point.rank ?? point.position ?? null,
         reward: point.reward ?? 0,
+        eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
+        eval_time: point.eval_time ?? point.post_consensus_avg_eval_time ?? point.avg_eval_time ?? undefined,
         timestamp:
           typeof point.timestamp === "string"
             ? point.timestamp
@@ -1928,12 +2041,14 @@ export default function Page() {
           : undefined,
       };
     });
-  }, [agentDetail?.scoreRoundData]);
+  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData]);
 
   const canFetchRuns = useMemo(() => {
+    // Don't fetch runs in historical mode
+    if (viewMode === "historical") return false;
     if (!agentIdForQuery) return false;
     return /\d+/.test(agentIdForQuery);
-  }, [agentIdForQuery]);
+  }, [agentIdForQuery, viewMode]);
 
   const [runsState, setRunsState] = useState<{
     loading: boolean;
@@ -2059,7 +2174,13 @@ export default function Page() {
     };
   }, [runsState.runs]);
 
-  if (loading) {
+  // In historical mode, we can use minerHistorical data even if agent is null
+  const hasHistoricalData = viewMode === "historical" && minerHistorical;
+  
+  // Show loading only if not in historical mode or if historical data is still loading
+  const isLoading = loading && (viewMode !== "historical" || minerHistoricalLoading);
+  
+  if (isLoading) {
     return (
       <>
         <AgentHeaderPlaceholder />
@@ -2074,8 +2195,8 @@ export default function Page() {
       </>
     );
   }
-
-  if (error || !agent) {
+  
+  if ((error || !agent) && !hasHistoricalData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -2092,37 +2213,37 @@ export default function Page() {
   const currentRankValue =
     roundMetrics?.rank && roundMetrics.rank > 0
       ? `#${roundMetrics.rank}`
-      : agent.currentRank && agent.currentRank > 0
-        ? `#${agent.currentRank}`
+      : effectiveAgent?.currentRank && (effectiveAgent.currentRank ?? 0) > 0
+        ? `#${effectiveAgent.currentRank}`
         : "N/A";
 
-  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
+  const currentScorePercentage = `${((roundMetrics?.score ?? effectiveAgent?.currentScore ?? 0) * 100).toFixed(1)}%`;
 
   // Historical metrics
   const bestRankEver =
-    agent.bestRankEver && agent.bestRankEver > 0
-      ? `#${agent.bestRankEver}`
+    effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
+      ? `#${effectiveAgent.bestRankEver}`
       : "N/A";
-  const bestEverScorePercentage = `${((agent.bestRoundScore ?? 0) * 100).toFixed(1)}%`;
+  const bestEverScorePercentage = `${((effectiveAgent?.bestRoundScore ?? 0) * 100).toFixed(1)}%`;
   const bestRoundBadge =
-    agent.bestRoundId && agent.bestRoundId > 0
-      ? `Round ${agent.bestRoundId}`
+    effectiveAgent?.bestRoundId && (effectiveAgent.bestRoundId ?? 0) > 0
+      ? `Round ${effectiveAgent.bestRoundId}`
       : null;
   const roundsParticipated = (
-    agent.roundsParticipated ||
-    agent.totalRuns ||
+    effectiveAgent?.roundsParticipated ||
+    effectiveAgent?.totalRuns ||
     0
   ).toLocaleString();
   // Multiplicando por el 7.5% solicitado por robert
   const totalAlphaEarned = Math.round(
-    Number(agent.alphaWonInPrizes ?? 0) * 0.075
+    Number(effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
   );
   const totalTaoEarned = (
-    Number((agent as any).taoWonInPrizes ?? agent.alphaWonInPrizes ?? 0) * 0.075
+    Number((effectiveAgent as any)?.taoWonInPrizes ?? effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
   ).toFixed(2);
   // Use minerRoundDetails if available, otherwise fallback to roundMetrics
-  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? agent.currentRank;
-  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundMetrics?.score ?? agent.currentScore;
+  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? effectiveAgent?.currentRank;
+  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundMetrics?.score ?? effectiveAgent?.currentScore;
   const effectiveEvalScore = minerRoundDetails?.post_consensus_avg_eval_score ?? null;
   const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
   const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
@@ -2200,69 +2321,65 @@ export default function Page() {
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Best Rank Ever, Alpha Earned
+    // Primera fila: Success Rate, Tasks Success, Best Score Ever, Alpha Earned
     {
       title: "Success Rate",
-      metric: (() => {
-        const total = agent.totalTasks ?? 0;
-        const completed = agent.completedTasks ?? 0;
-        return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
-      })(),
+      metric: minerHistorical?.summary?.overallSuccessRate
+        ? `${Math.round(minerHistorical.summary.overallSuccessRate * 100)}%`
+        : "0%",
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Success",
-      metric: (agent.completedTasks ?? 0).toLocaleString(),
+      metric: (minerHistorical?.summary?.totalTasksSuccessful ?? 0).toLocaleString(),
       icon: LuCircleCheckBig,
       ...METRIC_CARD_GRADIENTS.violet,
     },
-
     {
-      title: "Best Score Ever",
-      metric: bestEverScorePercentage,
-      badge: bestRoundBadge,
+      title: "Best Reward Ever",
+      metric: minerHistorical?.summary?.bestScore
+        ? `${(minerHistorical.summary.bestScore * 100).toFixed(1)}%`
+        : "0%",
+      badge: minerHistorical?.summary?.bestScoreRound
+        ? `Round ${minerHistorical.summary.bestScoreRound}`
+        : null,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.amber,
     },
-    // Columna 4 (VERDE): Alpha Earned
     {
       title: "Alpha Earned",
-      metric: `${totalAlphaEarned} α`,
+      metric: `${Math.round(minerHistorical?.summary?.totalAlphaEarned ?? 0)} α`,
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.green,
     },
-    // Segunda fila: Best Score Ever, Tasks Failed, Rounds Won, TAO Earned
-
+    // Segunda fila: Best Rank Ever, Tasks Failed, Rounds Won, TAO Earned
     {
       title: "Best Rank Ever",
-      metric: bestRankEver,
-      badge:
-        (agent as any).bestRankRoundId && (agent as any).bestRankRoundId > 0
-          ? `Round ${(agent as any).bestRankRoundId}`
-          : null,
+      metric: minerHistorical?.summary?.bestRank
+        ? `#${minerHistorical.summary.bestRank}`
+        : "N/A",
+      badge: minerHistorical?.summary?.bestRankRound
+        ? `Round ${minerHistorical.summary.bestRankRound}`
+        : null,
       icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
       title: "Tasks Failed",
-      metric: Math.max(
-        0,
-        (agent.totalTasks ?? 0) - (agent.completedTasks ?? 0)
-      ).toLocaleString(),
+      metric: (minerHistorical?.summary?.totalTasksFailed ?? 0).toLocaleString(),
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.violet,
     },
-
     {
       title: "Rounds Won",
-      metric: `${(agent as any).roundsWon ?? 0}/${agent.roundsParticipated ?? agent.totalRuns ?? 0}`,
+      metric: `${minerHistorical?.summary?.roundsWon ?? 0}/${minerHistorical?.summary?.roundsParticipated ?? 0}`,
       icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "TAO Earned",
-      metric: `${totalTaoEarned} τ`,
+      metric: `${(minerHistorical?.summary?.totalTaoEarned ?? 0).toFixed(2)} τ`,
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.green,
     },
@@ -2295,7 +2412,7 @@ export default function Page() {
               <div className="relative">
                 <Image
                   src={agentImgSrc}
-                  alt={agent.name}
+                  alt={effectiveAgent?.name ?? "Miner"}
                   width={56}
                   height={56}
                   className="rounded-full border-3 border-white/30 shadow-2xl ring-4 ring-white/20"
@@ -2306,25 +2423,25 @@ export default function Page() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-2xl font-black text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
-                    {agent.name}
+                    {effectiveAgent?.name ?? "Miner"}
                   </span>
-                  {agent.isSota && (
+                  {effectiveAgent?.isSota && (
                     <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/90 to-violet-500/90 text-white border-2 border-purple-400/70 shadow-lg backdrop-blur-sm">
                       SOTA
                     </span>
                   )}
-                  {!agent.isSota &&
-                    agent.status &&
-                    agent.status !== "active" && (
+                  {!effectiveAgent?.isSota &&
+                    effectiveAgent?.status &&
+                    effectiveAgent.status !== "active" && (
                       <span
                         className={cn(
                           "px-3 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm shadow-lg",
-                          agent.status === "maintenance"
+                          effectiveAgent.status === "maintenance"
                             ? "bg-yellow-500/90 text-white border-yellow-400/70"
                             : "bg-white/90 text-gray-900 border-gray-300/70"
                         )}
                       >
-                        {agent.status}
+                        {effectiveAgent.status}
                       </span>
                     )}
                   <div className="flex items-center gap-2">
@@ -2336,16 +2453,16 @@ export default function Page() {
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
                       title={
-                        agent.isSota
+                        effectiveAgent?.isSota
                           ? "GitHub repository not available for SOTA benchmarks"
-                          : agent.githubUrl
+                          : effectiveAgent?.githubUrl
                             ? "View GitHub repository"
                             : "GitHub repository not available"
                       }
                     >
                       {githubAvailable ? (
                         <a
-                          href={agent.githubUrl ?? "#"}
+                          href={effectiveAgent?.githubUrl ?? "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex h-full w-full items-center justify-center group"
@@ -2364,9 +2481,9 @@ export default function Page() {
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
                       title={
-                        agent.isSota
+                        effectiveAgent?.isSota
                           ? "On-chain explorer is not available for SOTA benchmarks"
-                          : agent.taostatsUrl || agent.hotkey
+                          : effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey
                             ? "View on TaoStats"
                             : "TaoStats link not available"
                       }
@@ -2374,9 +2491,9 @@ export default function Page() {
                       {taoStatsAvailable ? (
                         <a
                           href={
-                            agent.taostatsUrl ||
-                            (agent.hotkey
-                              ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(agent.hotkey)}`
+                            effectiveAgent?.taostatsUrl ||
+                            (effectiveAgent?.hotkey
+                              ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(effectiveAgent.hotkey)}`
                               : "#")
                           }
                           target="_blank"
@@ -2395,23 +2512,23 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <PiHashDuotone className="w-4 h-4 text-emerald-300" />
                     <span className="font-mono font-semibold">
-                      UID: {agent.isSota ? "—" : (agent.uid ?? "unknown")}
+                      UID: {effectiveAgent?.isSota ? "—" : (effectiveAgent?.uid ?? "unknown")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <PiKeyDuotone className="w-4 h-4 text-sky-300" />
                     <span className="font-mono text-xs font-semibold">
-                      {agent.isSota
+                      {effectiveAgent?.isSota
                         ? "No on-chain hotkey"
-                        : agent.hotkey
-                          ? `${agent.hotkey.slice(0, 8)}...${agent.hotkey.slice(-8)}`
+                        : effectiveAgent?.hotkey
+                          ? `${effectiveAgent.hotkey.slice(0, 8)}...${effectiveAgent.hotkey.slice(-8)}`
                           : "unknown"}
                     </span>
-                    {!agent.isSota && agent.hotkey && (
+                    {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
                       <button
                         onClick={async () => {
                           try {
-                            await navigator.clipboard.writeText(agent.hotkey!);
+                            await navigator.clipboard.writeText(effectiveAgent?.hotkey ?? "");
                             setCopiedHotkey(true);
                             setTimeout(() => setCopiedHotkey(false), 2000);
                           } catch (err) {
@@ -2497,7 +2614,7 @@ export default function Page() {
                   </span>
                 </button>
               </div>
-              {agent.isSota && (
+              {effectiveAgent?.isSota && (
                 <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500/90 to-amber-500/90 border-2 border-yellow-400/70 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
                   <PiSparkle className="h-4 w-4" />
                   Benchmark Agent
@@ -2591,6 +2708,7 @@ export default function Page() {
                 numericUidFromParam={numericUidFromParam}
                 validators={runsState.validators}
                 post_consensus_summary={runsState.post_consensus_summary}
+                minerRoundDetailsValidators={minerRoundDetails?.validators}
               />
             ) : (
               <>
@@ -2722,12 +2840,14 @@ export default function Page() {
                     <AgentScoreChart
                       className="w-full"
                       scoreRoundData={scoreRoundData}
-                      loading={loading}
-                      error={error}
+                      loading={minerHistoricalLoading || loading}
+                      error={minerHistoricalError || error}
                     />
                     <AgentHistoricalAnalytics
                       agentId={agentIdForQuery ?? trimmedId}
                       className="w-full"
+                      minerHistorical={minerHistorical}
+                      loading={minerHistoricalLoading}
                     />
                   </div>
                 )}
@@ -2735,6 +2855,45 @@ export default function Page() {
             )}
           </div>
         </div>
+        
+        {/* Historical Data Debug Section */}
+        {minerHistorical && (
+          <div className="mt-8 p-6 bg-white/5 border border-white/20 rounded-xl">
+            <h3 className="text-xl font-bold text-white mb-4">📊 Historical Data (Debug)</h3>
+            <div className="space-y-4 text-sm text-white/80">
+              <div>
+                <strong className="text-white">Summary:</strong>
+                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs">
+                  {JSON.stringify(minerHistorical.summary, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <strong className="text-white">Performance by Website:</strong>
+                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs max-h-64">
+                  {JSON.stringify(minerHistorical.performanceByWebsite, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <strong className="text-white">Rounds History (first 3):</strong>
+                <pre className="mt-2 p-3 bg-black/30 rounded overflow-auto text-xs max-h-64">
+                  {JSON.stringify(minerHistorical.roundsHistory.slice(0, 3), null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {minerHistoricalLoading && (
+          <div className="mt-8 p-6 bg-white/5 border border-white/20 rounded-xl">
+            <p className="text-white/60">Cargando datos históricos...</p>
+          </div>
+        )}
+        
+        {minerHistoricalError && (
+          <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-red-400">Error cargando datos históricos: {String(minerHistoricalError)}</p>
+          </div>
+        )}
       </div>
     </div>
   );

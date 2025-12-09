@@ -23,6 +23,8 @@ import Placeholder from "@/app/shared/placeholder";
 interface AgentHistoricalAnalyticsProps {
   agentId: string | number;
   className?: string;
+  minerHistorical?: any; // MinerHistoricalResponse['data']
+  loading?: boolean;
 }
 
 interface WebsiteStats {
@@ -56,6 +58,8 @@ function getPercentageColor(percentage: number): string {
 export default function AgentHistoricalAnalytics({
   agentId,
   className,
+  minerHistorical,
+  loading: externalLoading,
 }: AgentHistoricalAnalyticsProps) {
   const router = useRouter();
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
@@ -83,8 +87,18 @@ export default function AgentHistoricalAnalytics({
 
   const TASKS_PER_PAGE = 10;
 
-  // Fetch all agent runs and their stats for this agent
+  // Use external historical data if provided, otherwise fetch
   useEffect(() => {
+    if (minerHistorical) {
+      // Use provided historical data - no need to fetch
+      setLoading(false);
+      setError(null);
+      // Convert minerHistorical.performanceByWebsite to the format expected by the component
+      // We'll handle this in the useMemo below
+      return;
+    }
+
+    // Only fetch if no external data provided
     let isMounted = true;
 
     async function fetchData() {
@@ -141,10 +155,78 @@ export default function AgentHistoricalAnalytics({
     return () => {
       isMounted = false;
     };
-  }, [agentId]);
+  }, [agentId, minerHistorical]);
 
-  // Aggregate data by website and use case
+  // Aggregate data by website and use case - use minerHistorical if available
   const { websiteStats, useCaseStats } = useMemo(() => {
+    // If we have minerHistorical data, use it directly
+    if (minerHistorical?.performanceByWebsite) {
+      const websiteMap = new Map<string, WebsiteStats>();
+      const useCaseMap = new Map<string, UseCaseStats>();
+
+      minerHistorical.performanceByWebsite.forEach((ws) => {
+        const website = ws.website;
+        if (!website) return;
+
+        const existing = websiteMap.get(website) || {
+          website,
+          displayName: formatWebsiteName(website),
+          totalTasks: 0,
+          completedTasks: 0,
+          successRate: 0,
+          avgScore: 0,
+          avgTime: 0,
+        };
+
+        existing.totalTasks = ws.tasks || 0;
+        existing.completedTasks = ws.successful || 0;
+        existing.successRate = existing.totalTasks > 0 
+          ? (existing.completedTasks / existing.totalTasks) * 100 
+          : 0;
+        existing.avgTime = ws.averageDuration || 0;
+
+        websiteMap.set(website, existing);
+
+        // Process use cases
+        if (ws.useCases) {
+          ws.useCases.forEach((uc) => {
+            const useCase = uc.useCase;
+            if (!useCase) return;
+
+            const key = `${website}:${useCase}`;
+            const existingUC = useCaseMap.get(key) || {
+              useCase,
+              website,
+              totalTasks: 0,
+              completedTasks: 0,
+              successRate: 0,
+              avgScore: 0,
+              avgTime: 0,
+            };
+
+            existingUC.totalTasks = uc.tasks || 0;
+            existingUC.completedTasks = uc.successful || 0;
+            existingUC.successRate = existingUC.totalTasks > 0
+              ? (existingUC.completedTasks / existingUC.totalTasks) * 100
+              : 0;
+            existingUC.avgTime = uc.averageDuration || 0;
+
+            useCaseMap.set(key, existingUC);
+          });
+        }
+      });
+
+      return {
+        websiteStats: Array.from(websiteMap.values()).sort(
+          (a, b) => b.totalTasks - a.totalTasks
+        ),
+        useCaseStats: Array.from(useCaseMap.values()).sort(
+          (a, b) => b.totalTasks - a.totalTasks
+        ),
+      };
+    }
+
+    // Fallback to aggregatedData if no minerHistorical
     if (!aggregatedData?.stats || aggregatedData.stats.length === 0) {
       return { websiteStats: [], useCaseStats: [] };
     }
@@ -431,7 +513,10 @@ export default function AgentHistoricalAnalytics({
     [fetchUseCaseTasks, useCaseTasks]
   );
 
-  if (loading) {
+  // Use external loading state if provided
+  const isLoading = externalLoading !== undefined ? externalLoading : loading;
+  
+  if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>
         {/* Header Skeleton */}

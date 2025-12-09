@@ -61,6 +61,8 @@ export interface ScoreRoundDataPoint {
   reward: number;
   timestamp: string;
   topScore?: number; // Highest benchmark/miner score for the round
+  eval_score?: number; // Post-consensus average eval score
+  eval_time?: number; // Post-consensus average eval time
   benchmarks?: {
     name: string;
     score: number;
@@ -89,6 +91,65 @@ export interface AgentRoundMetrics {
 }
 
 // ===== MINER ROUND DETAILS =====
+// ===== MINER HISTORICAL DATA =====
+export interface MinerHistoricalResponse {
+  success: boolean;
+  data: {
+    miner: {
+      uid: number;
+      name: string;
+      hotkey: string;
+      image: string;
+    };
+    summary: {
+      totalRounds: number;
+      roundsWon: number;
+      roundsLost: number;
+      roundsParticipated: number;
+      totalTasks: number;
+      totalTasksSuccessful: number;
+      totalTasksFailed: number;
+      overallSuccessRate: number;
+      averageDuration: number;
+      bestScore: number;
+      bestScoreRound: number | null;
+      bestRank: number | null;
+      bestRankRound: number | null;
+      averageScore: number;
+      totalAlphaEarned: number;
+      totalTaoEarned: number;
+    };
+    performanceByWebsite: Array<{
+      website: string;
+      tasks: number;
+      successful: number;
+      failed: number;
+      averageDuration: number;
+      useCases: Array<{
+        useCase: string;
+        tasks: number;
+        successful: number;
+        failed: number;
+        averageDuration: number;
+      }>;
+    }>;
+    roundsHistory: Array<{
+      round: number;
+      post_consensus_rank: number | null;
+      post_consensus_avg_reward: number;
+      post_consensus_avg_eval_score: number;
+      post_consensus_avg_eval_time: number;
+      tasks_received: number;
+      tasks_success: number;
+      tasks_failed: number;
+      is_winner: boolean;
+      validators_count: number;
+      subnet_price: number | null;
+      weight: number;
+    }>;
+  };
+}
+
 export interface MinerRoundDetailsResponse {
   success: boolean;
   data: {
