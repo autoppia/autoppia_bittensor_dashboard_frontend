@@ -44,7 +44,7 @@ export default function AgentRunDetailDynamic({
   }, [stats, fallbackDetail]);
 
   const shouldShowPlaceholder =
-    (!stats && isStatsLoading) || (!summary && isSummaryLoading);
+    (!stats && isStatsLoading) || (!summary && isStatsLoading);
 
   if (shouldShowPlaceholder) {
     return <AgentRunDetailPlaceholder className={className} />;
