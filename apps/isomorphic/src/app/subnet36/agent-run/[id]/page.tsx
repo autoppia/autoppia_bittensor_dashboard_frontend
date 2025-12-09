@@ -202,13 +202,9 @@ export default function Page() {
     isLoading,
     error,
     refetch,
-    personas,
     statistics: stats,
     summary,
     tasks,
-    timeline,
-    logs,
-    metrics,
     info,
   } = useAgentRunComplete(runId);
 
@@ -262,7 +258,7 @@ export default function Page() {
                     typeof info?.round?.roundNumber === "number" &&
                     Number.isFinite(info.round.roundNumber)
                       ? `round_${info.round.roundNumber}`
-                      : (info?.round?.validatorRoundId ?? personas?.round?.name ?? "");
+                      : (info?.round?.validatorRoundId ?? "");
                   return roundKey
                     ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
                     : "#";
@@ -274,11 +270,11 @@ export default function Page() {
                 </span>
                 <div className="h-3.5 w-px bg-slate-600/70" />
                 <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                  {truncateMiddle(info?.round?.validatorRoundId ?? personas?.round?.name ?? "—", 8)}
+                  {truncateMiddle(info?.round?.validatorRoundId ?? "—", 8)}
                 </span>
-                {(info?.round?.validatorRoundId ?? personas?.round?.name) && (
+                {info?.round?.validatorRoundId && (
                   <span className="ml-auto">
-                    <IDCopyButton text={info?.round?.validatorRoundId ?? personas?.round?.name ?? ""} />
+                    <IDCopyButton text={info.round.validatorRoundId} />
                   </span>
                 )}
               </Link>
@@ -330,11 +326,6 @@ export default function Page() {
         </div>
       )}
 
-      {isLoading ? (
-        <AgentRunPersonasPlaceholder />
-      ) : (
-        <AgentRunPersonas personas={personas} summary={summary} />
-      )}
 
       {isLoading ? (
         <AgentRunStatsPlaceholder />

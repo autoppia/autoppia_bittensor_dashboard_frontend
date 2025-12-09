@@ -79,13 +79,9 @@ export function useAgentRunsList(params?: AgentRunsListQueryParams) {
 export function useAgentRunComplete(runId: string) {
   const [data, setData] = useState<{
     run: AgentRunData | null;
-    personas: AgentRunPersonas | null;
     statistics: AgentRunStats | null;
     summary: AgentRunSummary | null;
     tasks: AgentRunTaskData[];
-    timeline: any[];
-    logs: any[];
-    metrics: any | null;
     info: {
       agentRunId: string;
       round: any;
@@ -122,13 +118,9 @@ export function useAgentRunComplete(runId: string) {
     refetch: fetchComplete,
     // Convenience getters
     run: data?.run ?? null,
-    personas: data?.personas ?? null,
     statistics: data?.statistics ?? null,
     summary: data?.summary ?? null,
     tasks: data?.tasks ?? [],
-    timeline: data?.timeline ?? [],
-    logs: data?.logs ?? [],
-    metrics: data?.metrics ?? null,
     info: data?.info ?? null,
   };
 }

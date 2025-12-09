@@ -251,13 +251,9 @@ export class AgentRunsRepository {
    */
   async getAgentRunComplete(runId: string): Promise<{
     run: AgentRunData;
-    personas: AgentRunPersonas;
     statistics: AgentRunStats | null;
     summary: AgentRunSummary;
     tasks: AgentRunTaskData[];
-    timeline: any[];
-    logs: any[];
-    metrics: any | null;
     info: {
       agentRunId: string;
       round: any;
@@ -270,13 +266,9 @@ export class AgentRunsRepository {
         success: boolean;
         data: {
           run: AgentRunData;
-          personas: AgentRunPersonas;
           statistics: AgentRunStats | null;
           summary: AgentRunSummary;
           tasks: AgentRunTaskData[];
-          timeline: any[];
-          logs: any[];
-          metrics: any | null;
           info: {
             agentRunId: string;
             round: any;
