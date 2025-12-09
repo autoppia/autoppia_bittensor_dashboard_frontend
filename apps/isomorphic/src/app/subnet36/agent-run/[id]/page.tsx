@@ -153,25 +153,9 @@ function buildDetailDataFromStats(
 
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      // Extract use cases specific to this website from the backend
-      const websiteUseCases: AgentRunUseCase[] = (w.useCases || []).map(
-        (uc, idx) => ({
-          id: uc.useCase || idx,
-          name: uc.useCase || `Use Case ${idx + 1}`,
-        })
-      );
-
-      const websiteResults: AgentRunResult[] = (w.useCases || []).map(
-        (uc, idx) => ({
-          useCaseId: uc.useCase || idx,
-          name: uc.useCase || `Use Case ${idx + 1}`,
-          successRate:
-            typeof uc.averageScore === "number" ? uc.averageScore : 0,
-          total: uc.tasks || 0,
-          successCount: uc.successful || 0,
-          avgSolutionTime: uc.averageDuration || 0,
-        })
-      );
+      // useCases removed from backend response, so we create empty arrays
+      const websiteUseCases: AgentRunUseCase[] = [];
+      const websiteResults: AgentRunResult[] = [];
 
       return {
         name: w.website || `Website ${i + 1}`,
