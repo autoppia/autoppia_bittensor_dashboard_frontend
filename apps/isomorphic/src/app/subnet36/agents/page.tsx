@@ -180,19 +180,24 @@ function AgentsLanding() {
   const miners = useMemo(() => minersData?.miners ?? [], [minersData?.miners]);
   const hasMiners = miners.length > 0;
   const pathname = usePathname();
-  const effectiveRound = resolvedRound ?? selectedRound;
+  // Usar la última round disponible si no hay round seleccionado
+  const effectiveRound = resolvedRound ?? selectedRound ?? roundSequence[0];
 
   useEffect(() => {
+    // Si no hay round disponible, esperar
     if (!isFiniteNumber(effectiveRound)) {
       return;
     }
+    // Si está cargando o hay error, esperar
     if (minersLoading || minersError) {
       return;
     }
+    // Si no hay miners, esperar
     if (!hasMiners) {
       return;
     }
 
+    // Encontrar el top miner (el que tiene mejor ranking, excluyendo SOTA)
     const sortedMiners = [...miners].sort(
       (a, b) =>
         (a.ranking ?? Number.MAX_SAFE_INTEGER) -
@@ -222,10 +227,19 @@ function AgentsLanding() {
     }
 
     const targetPath = `${routes.agents}/${targetAgentId}`;
-    if (pathname === targetPath) {
+    // Si ya estamos en la ruta correcta con los parámetros correctos, no redirigir
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentRound = currentParams.get("round");
+    const currentAgent = currentParams.get("agent");
+    if (
+      pathname === targetPath &&
+      currentRound === String(effectiveRound) &&
+      currentAgent === targetAgentId
+    ) {
       return;
     }
 
+    // Redirigir al top miner con la última round
     const params = new URLSearchParams();
     params.set("round", String(effectiveRound));
     params.set("agent", targetAgentId);
@@ -240,6 +254,7 @@ function AgentsLanding() {
     minersLoading,
     pathname,
     router,
+    roundSequence,
   ]);
 
   if (minersError) {

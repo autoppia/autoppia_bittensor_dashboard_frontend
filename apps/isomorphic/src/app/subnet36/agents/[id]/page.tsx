@@ -1473,6 +1473,7 @@ function RoundWebsitesChart({
   const [chartRows, setChartRows] = useState<
     Array<{
       website: string;
+      websiteOriginal: string; // Nombre original del website para buscar colores
       successRate: number;
       successful: number;
       total: number;
@@ -1541,6 +1542,7 @@ function RoundWebsitesChart({
         const rows = Array.from(bySite.entries())
           .map(([website, { successful, total }]) => ({
             website: formatWebsiteName(website),
+            websiteOriginal: website, // Guardar el nombre original para buscar colores
             successful,
             total,
             successRate: total > 0 ? (successful / total) * 100 : 0,
@@ -1612,177 +1614,41 @@ function RoundWebsitesChart({
                 onMouseLeave={() => setActiveIndex(null)}
               >
                 <defs>
-                  {/* Enhanced gradients with glow effects */}
-                  <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#06D6A0" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#00B4D8" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow0"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C084FC" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#A855F7" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow1"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FBBF24" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#F59E0B" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F97316" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow2"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F87171" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#EF4444" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DC2626" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow3"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient4" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#60A5FA" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#3B82F6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow4"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient5" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F472B6" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#EC4899" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#DB2777" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow5"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient6" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2DD4BF" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#14B8A6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#0D9488" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow6"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient7" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FCD34D" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#FBBF24" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow7"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <linearGradient id="barGradient8" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#10B981" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
-                  </linearGradient>
-                  <filter
-                    id="glow8"
-                    x="-50%"
-                    y="-50%"
-                    width="200%"
-                    height="200%"
-                  >
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
+                  {/* Generate gradients dynamically based on website colors */}
+                  {chartRows.map((entry, index) => {
+                    const colors = getProjectColors(entry.websiteOriginal || entry.website);
+                    return (
+                      <linearGradient
+                        key={`barGradient${index}`}
+                        id={`barGradient${index}`}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
+                        <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
+                        <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
+                      </linearGradient>
+                    );
+                  })}
+                  {/* Generate glow filters for hover effect */}
+                  {chartRows.map((entry, index) => (
+                    <filter
+                      key={`glow${index}`}
+                      id={`glow${index}`}
+                      x="-50%"
+                      y="-50%"
+                      width="200%"
+                      height="200%"
+                    >
+                      <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  ))}
                 </defs>
                 <CartesianGrid
                   vertical={false}
@@ -1825,10 +1691,10 @@ function RoundWebsitesChart({
                   {chartRows.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={`url(#barGradient${index % 9})`}
+                      fill={`url(#barGradient${index})`}
                       filter={
                         activeIndex === index
-                          ? `url(#glow${index % 9})`
+                          ? `url(#glow${index})`
                           : undefined
                       }
                       fillOpacity={
