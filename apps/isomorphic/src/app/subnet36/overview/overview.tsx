@@ -113,7 +113,13 @@ export default function Overview() {
               </Link>
             </div>
           </div>
-          <OverviewMetrics className="w-full min-w-0 flex-1" />
+          <OverviewMetrics 
+            className="w-full min-w-0 flex-1" 
+            metrics={metrics}
+            loading={loading}
+            error={null}
+            onRefetch={refetchMetrics}
+          />
         </div>
       </div>
       <OverviewValidators currentRound={metrics?.currentRound} />

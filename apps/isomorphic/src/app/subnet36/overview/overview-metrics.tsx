@@ -59,17 +59,43 @@ const metricsData = [
   },
 ];
 
-export default function OverviewMetrics({ className }: { className?: string }) {
-  const { data: metrics, loading, error, refetch } = useOverviewMetrics();
+interface OverviewMetricsProps {
+  className?: string;
+  metrics?: any; // OverviewMetrics type
+  loading?: boolean;
+  error?: string | null;
+  onRefetch?: () => void;
+}
+
+export default function OverviewMetrics({ 
+  className,
+  metrics: metricsProp,
+  loading: loadingProp,
+  error: errorProp,
+  onRefetch
+}: OverviewMetricsProps) {
+  // Use props if provided, otherwise fallback to hook (for backward compatibility)
+  const hookResult = useOverviewMetrics();
+  const metrics = metricsProp ?? hookResult.data;
+  const loading = loadingProp ?? hookResult.loading;
+  const error = errorProp ?? hookResult.error;
+  const refetch = onRefetch ?? hookResult.refetch;
 
   // Auto-refresh metrics every 30 seconds to update cards with latest round data
+  // Only set up interval if we're using the hook (not props)
   useEffect(() => {
+    if (metricsProp !== undefined) {
+      // If metrics are provided as props, don't set up auto-refresh here
+      // The parent component handles it
+      return;
+    }
+    
     const interval = setInterval(() => {
       refetch();
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [refetch]);
+  }, [refetch, metricsProp]);
 
   const formatPercentage = (value?: number | null) => {
     if (value === null || value === undefined) {
