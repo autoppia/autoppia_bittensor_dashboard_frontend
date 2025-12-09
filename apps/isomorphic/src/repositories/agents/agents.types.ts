@@ -302,6 +302,53 @@ export interface AgentRunsResponse {
     limit: number;
     availableRounds?: number[];
     selectedRound?: number | null;
+    validators?: Array<{
+      validator_uid: number;
+      validator_name: string;
+      validator_hotkey: string | null;
+      local_avg_winner_score: number;
+      topScore: number;
+      local_avg_eval_time: number;
+      local_miners_evaluated: number;
+      local_tasks_evaluated: number;
+      miners: Array<{
+        uid: number;
+        name: string;
+        hotkey: string | null;
+        image: string | null;
+        local_rank: number | null;
+        local_avg_reward: number;
+        local_avg_eval_score: number;
+        local_avg_eval_time: number;
+      }>;
+      winner?: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+      };
+    }>;
+    post_consensus_summary?: {
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+        avg_reward: number;
+        avg_eval_score: number;
+        avg_eval_time: number;
+      } | null;
+      miners_evaluated: number;
+      tasks_evaluated: number;
+    };
+  };
+  data: {
+    runs: AgentRunOverview[];
+    total: number;
+    page: number;
+    limit: number;
+    availableRounds?: number[];
+    selectedRound?: number | null;
   };
 }
 

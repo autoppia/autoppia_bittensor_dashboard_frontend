@@ -43,6 +43,7 @@ import type {
   AgentData,
   AgentRoundMetrics,
   AgentRunOverview,
+  AgentRunsResponse,
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -97,10 +98,17 @@ const RUNS_PAGE_SIZE = 100;
 async function fetchAllAgentRuns(
   agentId: string,
   params: { roundId?: number; validatorId?: string } = {}
-): Promise<{ runs: AgentRunOverview[]; total: number }> {
+): Promise<{ 
+  runs: AgentRunOverview[]; 
+  total: number;
+  validators?: AgentRunsResponse['data']['validators'];
+  post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
+}> {
   let page = 1;
   const aggregated: AgentRunOverview[] = [];
   let total = 0;
+  let validators: AgentRunsResponse['data']['validators'] | undefined;
+  let post_consensus_summary: AgentRunsResponse['data']['post_consensus_summary'] | undefined;
 
   while (true) {
     const response = await agentsRepository.getAgentRuns(agentId, {
@@ -114,6 +122,9 @@ async function fetchAllAgentRuns(
     const batch = payload?.runs ?? [];
     if (page === 1) {
       total = payload?.total ?? batch.length;
+      // Get validators and post_consensus_summary from first page response
+      validators = payload?.validators;
+      post_consensus_summary = payload?.post_consensus_summary;
     }
     aggregated.push(...batch);
     if (aggregated.length >= total || batch.length < RUNS_PAGE_SIZE) {
@@ -122,7 +133,7 @@ async function fetchAllAgentRuns(
     page += 1;
   }
 
-  return { runs: aggregated, total };
+  return { runs: aggregated, total, validators, post_consensus_summary };
 }
 
 // Agent stats band
@@ -712,14 +723,19 @@ function AgentValidators({
   runs,
   loading,
   error,
+  numericUidFromParam,
+  validators,
+  post_consensus_summary,
 }: {
   selectedRound?: number | null;
   runs: AgentRunOverview[];
   loading: boolean;
   error?: string | null;
+  numericUidFromParam?: number;
+  validators?: AgentRunsResponse['data']['validators'];
+  post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
 }) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-  const { data: roundValidatorsData, loading: validatorsLoading } = useRoundWithValidators(selectedRound ?? undefined);
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -908,9 +924,9 @@ function AgentValidators({
       {/* Removed duplicate Avg cards from validators section */}
 
       {/* Show validators with local and post-consensus data if available */}
-      {roundValidatorsData?.data?.validators && roundValidatorsData.data.validators.length > 0 ? (
+      {validators && validators.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {roundValidatorsData.data.validators
+          {validators
             .sort((a, b) => {
               // Sort: Autoppia (UID 83 or 124) first, then others
               const aIsAutoppia = a.validator_uid === 83 || a.validator_uid === 124;
@@ -1875,6 +1891,8 @@ export default function Page() {
     loading: boolean;
     runs: AgentRunOverview[];
     error: string | null;
+    validators?: AgentRunsResponse['data']['validators'];
+    post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
   }>({
     loading: true,
     runs: [],
@@ -1898,11 +1916,17 @@ export default function Page() {
 
     (async () => {
       try {
-        const { runs } = await fetchAllAgentRuns(agentIdForQuery, {
+        const { runs, validators, post_consensus_summary } = await fetchAllAgentRuns(agentIdForQuery, {
           roundId: currentRound,
         });
         if (!cancelled) {
-          setRunsState({ loading: false, runs, error: null });
+          setRunsState({ 
+            loading: false, 
+            runs, 
+            error: null,
+            validators,
+            post_consensus_summary,
+          });
         }
       } catch (err: any) {
         if (!cancelled) {
@@ -2517,6 +2541,8 @@ export default function Page() {
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}
                 numericUidFromParam={numericUidFromParam}
+                validators={runsState.validators}
+                post_consensus_summary={runsState.post_consensus_summary}
               />
             ) : (
               <>
