@@ -122,6 +122,15 @@ export function useRoundsData(roundNumber?: number) {
   return useApiCall(request, `rounds-data:${roundNumber ?? 'all'}`);
 }
 
+// Hook for latest round and top miner (for initial redirect)
+export function useLatestRoundTopMiner() {
+  const request = useCallback(
+    () => agentsRepository.getLatestRoundTopMiner(),
+    []
+  );
+  return useApiCall(request, 'latest-round-top-miner');
+}
+
 // Hook for miner round details
 export function useMinerRoundDetails(round: number | undefined, miner_uid: number | undefined) {
   const request = useCallback(

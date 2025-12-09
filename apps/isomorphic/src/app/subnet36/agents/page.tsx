@@ -2,9 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useRounds } from "@/services/hooks/useRounds";
-import { useMinersList } from "@/services/hooks/useAgents";
-import type { MinimalAgentsListQueryParams } from "@/repositories/agents/agents.types";
+import { useRoundsData, useLatestRoundTopMiner } from "@/services/hooks/useAgents";
 import { routes } from "@/config/routes";
 import {
   AgentHeaderPlaceholder,
@@ -57,6 +55,7 @@ const extractRoundNumber = (round: any): number | undefined => {
 function AgentsLanding() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const agentParam = searchParams.get("agent");
   const roundParam = searchParams.get("round");
@@ -69,35 +68,43 @@ function AgentsLanding() {
     return Number.isFinite(parsed) ? parsed : undefined;
   }, [roundParam]);
 
-  const { data: roundsData } = useRounds({
-    limit: 50,
-    sortBy: "roundNumber",
-    sortOrder: "desc",
-  });
+  // Check if we're on the landing page (no agent ID in URL path)
+  // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam
+  // roundParam doesn't prevent redirect - we always go to latest round with top miner
+  const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
+  const needsRedirect = isOnAgentsLanding && !agentParam;
+
+  // Get latest round and top miner for initial redirect (only if we need to redirect)
+  const {
+    data: latestRoundTopMiner,
+    loading: latestRoundLoading,
+    error: latestRoundError,
+  } = useLatestRoundTopMiner();
+
+  // Get rounds list from useRoundsData (without round_number to get all rounds)
+  const {
+    data: roundsListData,
+    loading: roundsListLoading,
+    error: roundsListError,
+  } = useRoundsData(undefined);
 
   const availableRounds = useMemo(() => {
-    const rounds = roundsData?.data?.rounds ?? [];
-    if (!rounds.length) {
+    // Get rounds array from roundsListData
+    const roundsNumbers = roundsListData?.rounds ?? [];
+    if (!roundsNumbers.length) {
       return [];
     }
-    const completed = rounds
-      .filter((round) => {
-        const validatorCount =
-          (round as any).validatorRoundCount ??
-          (round as any).validator_round_count ??
-          0;
-        return round.status === "finished" && validatorCount > 0;
-      })
-      .sort(
-        (a, b) => (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
-      );
-    if (completed.length) {
-      return completed;
-    }
-    return rounds.sort(
-      (a, b) => (extractRoundNumber(b) ?? 0) - (extractRoundNumber(a) ?? 0)
-    );
-  }, [roundsData]);
+    // Convert round numbers to round objects for compatibility
+    return roundsNumbers
+      .map((roundNum) => ({
+        round: roundNum,
+        roundNumber: roundNum,
+        id: roundNum,
+        roundId: roundNum,
+        status: "finished" as const, // Assume finished if in the list
+      }))
+      .sort((a, b) => (b.roundNumber ?? 0) - (a.roundNumber ?? 0));
+  }, [roundsListData?.rounds]);
 
   const roundSequence = useMemo(() => {
     const seen = new Set<number>();
@@ -140,26 +147,20 @@ function AgentsLanding() {
 
   const roundReady = isFiniteNumber(selectedRound);
 
-  const minersParams = useMemo(() => {
-    if (roundReady && isFiniteNumber(selectedRound)) {
-      return { limit: 100, round: selectedRound };
-    }
-    return { limit: 100 } as MinimalAgentsListQueryParams;
-  }, [roundReady, selectedRound]);
-
+  // Use useRoundsData instead of useMinersList - it already includes miners for the selected round
   const {
-    data: minersData,
-    loading: minersLoading,
-    error: minersError,
-  } = useMinersList(minersParams);
+    data: roundsDataWithMiners,
+    loading: roundsDataLoading,
+    error: roundsDataError,
+  } = useRoundsData(selectedRound);
 
   const resolvedRound = useMemo(() => {
-    const backendRound = minersData?.round;
+    const backendRound = roundsDataWithMiners?.round_selected?.round;
     if (isFiniteNumber(backendRound)) {
       return backendRound;
     }
     return selectedRound;
-  }, [minersData?.round, selectedRound]);
+  }, [roundsDataWithMiners?.round_selected?.round, selectedRound]);
 
   useEffect(() => {
     if (isFiniteNumber(resolvedRound) && resolvedRound !== selectedRound) {
@@ -177,43 +178,94 @@ function AgentsLanding() {
     }
   }, [roundReady, roundSequence]);
 
-  const miners = useMemo(() => minersData?.miners ?? [], [minersData?.miners]);
+  // Get miners from roundsDataWithMiners.round_selected.miners
+  const miners = useMemo(() => {
+    const minersFromRounds = roundsDataWithMiners?.round_selected?.miners ?? [];
+    return minersFromRounds.map((miner) => ({
+      uid: miner.uid,
+      name: miner.name,
+      ranking: miner.post_consensus_rank,
+      score: miner.post_consensus_avg_reward,
+      isSota: false, // TODO: Determine SOTA from miner data if available
+      imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
+    }));
+  }, [roundsDataWithMiners?.round_selected?.miners]);
   const hasMiners = miners.length > 0;
-  const pathname = usePathname();
   // Usar la última round disponible si no hay round seleccionado
   const effectiveRound = resolvedRound ?? selectedRound ?? roundSequence[0];
 
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
 
+  // Redirect using latest round and top miner from API (fast path)
+  // This is the primary redirect mechanism - instant redirect when data is available
   useEffect(() => {
-    // Si ya estamos en una ruta de agente específico (no en /agents), no redirigir
-    // Verificar que el pathname sea exactamente /subnet36/agents (sin ID)
-    const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
-    if (!isOnAgentsLanding) {
-      hasRedirectedRef.current = false; // Reset cuando salimos de /agents
+    // Only redirect if we need to (on landing page, no params)
+    if (!needsRedirect) {
+      hasRedirectedRef.current = false;
       return;
     }
 
-    // Si no hay round disponible, esperar
-    if (!isFiniteNumber(effectiveRound)) {
-      return;
-    }
-    // Si está cargando o hay error, esperar
-    if (minersLoading || minersError) {
-      return;
-    }
-    // Si no hay miners, esperar
-    if (!hasMiners) {
-      return;
-    }
-
-    // Si ya redirigimos, no volver a redirigir
+    // If already redirected, don't do it again
     if (hasRedirectedRef.current) {
       return;
     }
 
-    // Encontrar el top miner (el que tiene mejor ranking, excluyendo SOTA)
+    // Wait for data to load
+    if (latestRoundLoading || !latestRoundTopMiner) {
+      return;
+    }
+
+    // If there's an error, fall through to fallback mechanism
+    if (latestRoundError) {
+      return;
+    }
+
+    // Mark that we're about to redirect BEFORE doing it
+    hasRedirectedRef.current = true;
+
+    // Build the target URL: /subnet36/agents/{miner_uid}?round={round}&agent={miner_uid}
+    const targetPath = `${routes.agents}/${latestRoundTopMiner.miner_uid}`;
+    const params = new URLSearchParams();
+    params.set("round", String(latestRoundTopMiner.round));
+    params.set("agent", String(latestRoundTopMiner.miner_uid));
+
+    // Redirect immediately to the normal URL format
+    router.replace(`${targetPath}?${params.toString()}`);
+  }, [
+    needsRedirect,
+    latestRoundLoading,
+    latestRoundError,
+    latestRoundTopMiner,
+    router,
+  ]);
+
+  // Fallback redirect using roundsData (slower path, only if latestRoundTopMiner fails)
+  useEffect(() => {
+    // Only use fallback if we need redirect, latestRoundTopMiner failed or is not available
+    if (!needsRedirect || latestRoundTopMiner) {
+      return;
+    }
+
+    // If already redirected, don't do it again
+    if (hasRedirectedRef.current) {
+      return;
+    }
+
+    // If no round available, wait
+    if (!isFiniteNumber(effectiveRound)) {
+      return;
+    }
+    // If loading or error, wait
+    if (roundsDataLoading || roundsDataError) {
+      return;
+    }
+    // If no miners, wait
+    if (!hasMiners) {
+      return;
+    }
+
+    // Find top miner (best ranking, excluding SOTA)
     const sortedMiners = [...miners].sort(
       (a, b) =>
         (a.ranking ?? Number.MAX_SAFE_INTEGER) -
@@ -230,41 +282,29 @@ function AgentsLanding() {
       return;
     }
 
-    const fallbackAgentId = String(topMiner.uid);
-    const agentFromQueryExists =
-      typeof agentParam === "string" &&
-      miners.some(
-        (miner) => miner.uid !== undefined && String(miner.uid) === agentParam
-      );
-    const targetAgentId = agentFromQueryExists ? agentParam : fallbackAgentId;
-
-    if (!targetAgentId) {
-      return;
-    }
-
-    // Marcar que vamos a redirigir ANTES de hacer la redirección
+    // Mark that we're about to redirect
     hasRedirectedRef.current = true;
 
-    // Redirigir al top miner con la última round
+    // Redirect to top miner with latest round
     const params = new URLSearchParams();
     params.set("round", String(effectiveRound));
-    params.set("agent", targetAgentId);
+    params.set("agent", String(topMiner.uid));
 
-    const targetPath = `${routes.agents}/${targetAgentId}`;
+    // Build the target URL: /subnet36/agents/{miner_uid}?round={round}&agent={miner_uid}
+    const targetPath = `${routes.agents}/${topMiner.uid}`;
     router.replace(`${targetPath}?${params.toString()}`);
   }, [
-    agentParam,
+    needsRedirect,
+    latestRoundTopMiner,
     effectiveRound,
     hasMiners,
     miners,
-    minersError,
-    minersLoading,
-    pathname,
+    roundsDataError,
+    roundsDataLoading,
     router,
-    roundSequence,
   ]);
 
-  if (minersError) {
+    if (roundsDataError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
         <div
@@ -277,7 +317,7 @@ function AgentsLanding() {
             Unable to load agents
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            {minersError}. Please try refreshing the page once the service is
+            {roundsDataError}. Please try refreshing the page once the service is
             available again.
           </p>
         </div>
@@ -286,8 +326,8 @@ function AgentsLanding() {
   }
 
   if (
-    !minersLoading &&
-    !minersError &&
+    !roundsDataLoading &&
+    !roundsDataError &&
     isFiniteNumber(effectiveRound) &&
     !hasMiners
   ) {

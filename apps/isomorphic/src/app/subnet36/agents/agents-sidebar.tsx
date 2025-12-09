@@ -193,6 +193,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const minersFromApi = roundsData?.round_selected?.miners ?? [];
   
   // Map miners from API format to MinimalAgentData format
+  // Use JSON.stringify to create a stable dependency key
+  const minersFromApiKey = useMemo(() => {
+    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, score: m.post_consensus_avg_reward })));
+  }, [minersFromApi]);
+  
   const minersData = useMemo(() => {
     if (!minersFromApi.length) {
       return { miners: [] };
@@ -208,14 +213,25 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     }));
     
     return { miners };
-  }, [minersFromApi]);
+  }, [minersFromApiKey]);
 
   const loading = roundsLoading;
   const error = roundsError;
 
   // Update filtered agents when data / SOTA / query changes
+  // Use a ref to track previous values and prevent unnecessary updates
+  const prevFilterKeyRef = useRef<string>("");
+  
   useEffect(() => {
-    if (!minersData?.miners) {
+    const filterKey = `${minersFromApiKey}-${includeSota}-${query}`;
+    
+    // Skip if nothing changed
+    if (filterKey === prevFilterKeyRef.current) {
+      return;
+    }
+    prevFilterKeyRef.current = filterKey;
+    
+    if (!minersData?.miners || minersData.miners.length === 0) {
       setFilteredAgents([]);
       return;
     }
@@ -233,7 +249,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     }
 
     setFilteredAgents(filtered);
-  }, [minersData?.miners, includeSota, query]);
+  }, [minersData, includeSota, query, minersFromApiKey]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextQuery = event.target.value;
