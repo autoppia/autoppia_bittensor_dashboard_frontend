@@ -162,8 +162,8 @@ function buildDetailDataFromStats(
         useCases: websiteUseCases,
         results: websiteResults,
         overall: {
-          // averageScore is already a percentage (0-100), convert to 0-1 for consistency
-          successRate: typeof w.averageScore === "number" ? w.averageScore / 100 : 0,
+          // averageScore is in 0-1 format from backend, keep as is
+          successRate: typeof w.averageScore === "number" ? w.averageScore : 0,
           total: w.tasks || 0,
           successCount: w.successful || 0,
           avgSolutionTime:
