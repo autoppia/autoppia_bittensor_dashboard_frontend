@@ -1,17 +1,22 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import {
-  useAgentRunPersonas,
-  useAgentRunSummary,
-} from "@/services/hooks/useAgentRun";
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunPersonas from "./agent-run-personas";
+import type { AgentRunPersonas as AgentRunPersonasType, AgentRunSummary } from "@/repositories/agent-runs/agent-runs.types";
 
-export default function AgentRunPersonasDynamic() {
-  const { id } = useParams();
-  const { personas, isLoading, error } = useAgentRunPersonas(id as string);
-  const { summary } = useAgentRunSummary(id as string);
+interface AgentRunPersonasDynamicProps {
+  personas?: AgentRunPersonasType | null;
+  isLoading?: boolean;
+  error?: string | null;
+  summary?: AgentRunSummary | null;
+}
+
+export default function AgentRunPersonasDynamic({ 
+  personas, 
+  isLoading = false, 
+  error,
+  summary,
+}: AgentRunPersonasDynamicProps) {
 
   if (isLoading || error || !personas) {
     return (

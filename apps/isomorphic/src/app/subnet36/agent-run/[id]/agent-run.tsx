@@ -11,7 +11,7 @@ import AgentRunDetailDynamic from "./agent-run-detail-dynamic";
 import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
 import AgentRunTasksTableDynamic from "./agent-run-tasks-table-dynamic";
 import { PiArrowLeftLight } from "react-icons/pi";
-import { useAgentRun } from "@/services/hooks/useAgentRun";
+import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import { routes } from "@/config/routes";
 
 const HIGHLIGHT_COLOR = "#FDF5E6";
@@ -21,23 +21,32 @@ export default function AgentRun() {
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [period, setPeriod] = useState<string | null>(null);
 
-  // Use the partial loading hook with progressive data fetching
-  const { data, error, refetch, isAnyLoading } = useAgentRun(runId, {
-    includePersonas: true,
-    includeStats: true,
-    includeSummary: true,
-    includeTasks: true,
-    autoRefresh: true, // Enable auto-refresh for real-time updates
-    refreshInterval: 120000, // Refresh every 2 minutes (reduced from 30s for performance)
-  });
+  // Use the complete endpoint for all data in one call
+  const { 
+    data: agentRunData, 
+    isLoading, 
+    error, 
+    refetch,
+    run,
+    personas,
+    statistics,
+    summary,
+    tasks,
+    timeline,
+    logs,
+    metrics,
+    info,
+  } = useAgentRunComplete(runId);
 
   return (
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
         description={(() => {
-          const roundId = (data?.summary?.roundId ??
-            data?.personas?.round?.id ??
+          const roundId = (info?.round?.roundNumber ??
+            info?.round?.validatorRoundId ??
+            summary?.roundId ??
+            personas?.round?.id ??
             "") as any;
           const roundLabel =
             typeof roundId === "number" ||
@@ -85,11 +94,19 @@ export default function AgentRun() {
         </div>
       )}
 
-      {/* Personas Section - Loads first */}
-      <AgentRunPersonasDynamic />
+      {/* Personas Section */}
+      <AgentRunPersonasDynamic 
+        personas={personas}
+        isLoading={isLoading}
+        error={error}
+      />
 
-      {/* Stats Section - Loads independently */}
-      <AgentRunStatsDynamic />
+      {/* Stats Section */}
+      <AgentRunStatsDynamic 
+        statistics={statistics}
+        isLoading={isLoading}
+        error={error}
+      />
 
       {/* Main Content Grid */}
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
@@ -100,47 +117,40 @@ export default function AgentRun() {
             setSelectedWebsite={setSelectedWebsite}
             period={period}
             setPeriod={setPeriod}
+            statistics={statistics}
+            summary={summary}
+            isLoading={isLoading}
+            error={error}
           />
         </div>
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic selectedWebsite={selectedWebsite} />
+          <AgentRunSummaryDynamic 
+            selectedWebsite={selectedWebsite}
+            summary={summary}
+            statistics={statistics}
+            tasks={tasks}
+            isLoading={isLoading}
+            error={error}
+          />
         </div>
       </div>
 
-      {/* Tasks Table - Loads last */}
+      {/* Tasks Table */}
       <div className="mb-6">
-        <AgentRunTasksTableDynamic />
+        <AgentRunTasksTableDynamic 
+          tasks={tasks}
+          isLoading={isLoading}
+          error={error}
+        />
       </div>
 
-      {/* Loading Indicator for Partial Updates */}
-      {isAnyLoading && (
+      {/* Loading Indicator */}
+      {isLoading && (
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm">Updating data...</span>
-        </div>
-      )}
-
-      {/* Error Indicators for Individual Sections */}
-      {data.errors.personas && (
-        <div className="fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
-          <div className="text-sm">Failed to load personas data</div>
-        </div>
-      )}
-      {data.errors.stats && (
-        <div className="fixed top-16 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
-          <div className="text-sm">Failed to load stats data</div>
-        </div>
-      )}
-      {data.errors.summary && (
-        <div className="fixed top-28 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
-          <div className="text-sm">Failed to load summary data</div>
-        </div>
-      )}
-      {data.errors.tasks && (
-        <div className="fixed top-40 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded-lg shadow-lg">
-          <div className="text-sm">Failed to load tasks data</div>
+          <span className="text-sm">Loading data...</span>
         </div>
       )}
     </div>

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
-import { useAgentRunTasks } from "@/services/hooks/useAgentRun";
 import { createColumnHelper } from "@tanstack/react-table";
 import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
@@ -122,23 +121,22 @@ const agentRunTasksColumns = [
   }),
 ];
 
-export default function AgentRunTasksTableDynamic() {
-  const { id } = useParams();
+interface AgentRunTasksTableDynamicProps {
+  tasks?: any[];
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+export default function AgentRunTasksTableDynamic({ 
+  tasks: providedTasks = [], 
+  isLoading = false, 
+  error,
+}: AgentRunTasksTableDynamicProps) {
   const router = useRouter();
-  const { 
-    tasks, 
-    total, 
-    page, 
-    limit, 
-    isLoading, 
-    error, 
-    refetch, 
-    goToPage, 
-    changeLimit 
-  } = useAgentRunTasks(id as string, {
-    page: 1,
-    limit: 10,
-  });
+  const tasks = providedTasks;
+  const total = tasks.length;
+  const page = 1;
+  const limit = 10;
 
   const { table, setData } = useTanStackTable<AgentRunTaskData>({
     tableData: tasks || [],
