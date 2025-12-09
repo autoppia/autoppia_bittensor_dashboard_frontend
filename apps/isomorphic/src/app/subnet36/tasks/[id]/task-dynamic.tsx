@@ -1124,7 +1124,11 @@ const formatKeyLabel = (k: string) =>
 
 type TaskResultsProps = {
   evaluationData: {
-    results: TaskResults | null;
+    result: {
+      status: string;
+      eval_score: number;
+      eval_time: number;
+    } | null;
     actions: any[];
     screenshots: any[];
     isLoading: boolean;
@@ -1137,7 +1141,7 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
   const [pageSize] = useState(10);
   
   // Use data from evaluationData (always from get-evaluation endpoint)
-  const results = evaluationData.results;
+  const result = evaluationData.result;
   const resultsLoading = evaluationData.isLoading;
   const resultsError = evaluationData.error;
   
@@ -1164,35 +1168,16 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
 
   const hasApiScreenshots = screenshots.length > 0;
   const fallbackScreenshots = useMemo(() => {
-    if (hasApiScreenshots || !results?.screenshots?.length)
-      return [] as Array<{
-        id?: string;
-        url: string;
-        timestamp?: string;
-        actionId?: string;
-        description?: string;
-      }>;
-    return results.screenshots.map((url, index) => {
-      const timelineTimestamp = results.timeline?.[index]?.timestamp;
-      const actionTimestamp = results.actions?.[index]?.timestamp;
-      const fallbackTimestamp =
-        timelineTimestamp ??
-        actionTimestamp ??
-        results.timeline?.[0]?.timestamp ??
-        results.actions?.[0]?.timestamp ??
-        new Date().toISOString();
-      const actionType = results.actions?.[index]?.type;
-      return {
-        id: `results-gif-${index}`,
-        url,
-        timestamp: fallbackTimestamp,
-        actionId: results.actions?.[index]?.id,
-        description: actionType
-          ? `GIF Replay • ${actionType}`
-          : `GIF Replay ${index + 1}`,
-      };
-    });
-  }, [hasApiScreenshots, results]);
+    // Screenshots come from evaluationData.screenshots, not from result
+    // No fallback screenshots since result doesn't contain screenshots anymore
+    return [] as Array<{
+      id?: string;
+      url: string;
+      timestamp?: string;
+      actionId?: string;
+      description?: string;
+    }>;
+  }, [hasApiScreenshots]);
 
   const mediaItems = hasApiScreenshots ? screenshots : fallbackScreenshots;
   const isMediaLoading =
@@ -1608,7 +1593,7 @@ export default function TaskDynamic() {
       <div className="mb-10">
         <TaskResults 
           evaluationData={{
-            results: evaluationData.results,
+            result: evaluationData.result,
             actions: evaluationData.actions,
             screenshots: evaluationData.screenshots,
             isLoading: evaluationData.isLoading,
