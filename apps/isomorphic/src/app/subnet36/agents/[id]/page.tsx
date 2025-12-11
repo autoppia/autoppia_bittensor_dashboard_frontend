@@ -868,7 +868,7 @@ function AgentValidators({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-md sm:text-2xl text-center font-bold text-white">
-            Agent Evaluation Runs ({Object.keys(runsByValidator).length})
+            Agent Evaluation Runs ({effectiveValidators?.length ?? Object.keys(runsByValidator).length ?? 0})
             {selectedRound ? ` - Round ${selectedRound}` : ""}
           </Text>
         </div>
@@ -1119,48 +1119,51 @@ function AgentValidators({
             ];
             
             return (
-              <div
-                key={`validator-${validator.validator_uid}`}
-                className={cn(
-                  "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
-                  isAutoppia 
-                    ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent" 
-                    : "border-white/20 hover:border-white/40"
-                )}
-                style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
-              >
+              <div key={`validator-${validator.validator_uid}`} className="relative">
+                {/* 🔍 FIX: Move AUTOPPIA label above the validator card */}
                 {isAutoppia && (
-                  <div className="absolute -top-3 -right-3 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border-2 border-emerald-400/50 z-50">
-                    AUTOPPIA
+                  <div className="mb-2 flex justify-start">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border-2 border-emerald-400/50">
+                      AUTOPPIA
+                    </div>
                   </div>
                 )}
-                <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                        <Image
-                          src={validatorImage}
-                          alt={validator.validator_name}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
-                          {validator.validator_name}
-                        </Text>
-                        <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                          {validator.validator_hotkey 
-                            ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
-                            : `UID: ${validator.validator_uid}`}
-                        </Text>
+                <div
+                  className={cn(
+                    "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
+                    isAutoppia 
+                      ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent" 
+                      : "border-white/20 hover:border-white/40"
+                  )}
+                  style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
+                >
+                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
+                          <Image
+                            src={validatorImage}
+                            alt={validator.validator_name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
+                            {validator.validator_name}
+                          </Text>
+                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
+                            {validator.validator_hotkey 
+                              ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
+                              : `UID: ${validator.validator_uid}`}
+                          </Text>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="relative p-2 sm:p-5 space-y-3">
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
+                  <div className="relative p-2 sm:p-5 space-y-3">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
                     {secondaryStats.map((stat) => {
                       const Icon = stat.icon as any;
                       return (
@@ -1182,14 +1185,15 @@ function AgentValidators({
                         </div>
                       );
                     })}
+                    </div>
+                    {agentRunId && (
+                      <Link href={`${routes.agent_run}/${agentRunId}`} className="block">
+                        <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
+                          View Agent Run Details
+                        </div>
+                      </Link>
+                    )}
                   </div>
-                  {agentRunId && (
-                    <Link href={`${routes.agent_run}/${agentRunId}`} className="block">
-                      <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
-                        View Agent Run Details
-                      </div>
-                    </Link>
-                  )}
                 </div>
               </div>
             );
