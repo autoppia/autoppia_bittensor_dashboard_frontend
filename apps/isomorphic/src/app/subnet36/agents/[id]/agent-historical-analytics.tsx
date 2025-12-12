@@ -302,6 +302,72 @@ export default function AgentHistoricalAnalytics({
     async (website: string, useCase: string, page: number = 1) => {
       const key = `${website}:${useCase}`;
 
+      // 1) If tenemos datos históricos, usarlos siempre (independiente de aggregatedData)
+      if (minerHistorical) {
+        const websiteData = minerHistorical.performanceByWebsite?.find(
+          (ws: any) => ws.website === website
+        );
+        const useCaseData = websiteData?.useCases?.find(
+          (uc: any) => uc.useCase === useCase
+        );
+
+        const taskDetails = useCaseData?.taskDetails ?? [];
+        const mappedTasks: TaskData[] = taskDetails.map((detail: any) => {
+          const status =
+            detail.status === "successful"
+              ? "completed"
+              : detail.status === "failed"
+                ? "failed"
+                : "completed";
+
+          const timestamp = detail.createdAt || new Date().toISOString();
+
+          return {
+            taskId:
+              detail.taskId ||
+              detail.evaluationId ||
+              detail.agentRunId ||
+              `${useCase}-${website}`,
+            agentRunId:
+              detail.agentRunId ||
+              detail.evaluationId ||
+              detail.taskId ||
+              "",
+            website,
+            useCase: detail.useCase || useCase,
+            prompt: detail.prompt || "",
+            status,
+            score: typeof detail.score === "number" ? detail.score : 0,
+            successRate:
+              typeof detail.score === "number" ? detail.score : 0,
+            duration:
+              typeof detail.evaluationTime === "number"
+                ? detail.evaluationTime
+                : 0,
+            startTime: timestamp,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            actions: [],
+          };
+        });
+
+        const startIndex = (page - 1) * TASKS_PER_PAGE;
+        const endIndex = startIndex + TASKS_PER_PAGE;
+
+        setUseCaseTasks((prev) => ({
+          ...prev,
+          [key]: {
+            allTasks: mappedTasks,
+            tasks: mappedTasks.slice(startIndex, endIndex),
+            loading: false,
+            total: mappedTasks.length,
+            page,
+          },
+        }));
+        return;
+      }
+
+      // 2) Si no hay datos históricos y tampoco runIds, no tenemos fuente
       if (!aggregatedData?.runIds || aggregatedData.runIds.length === 0) {
         setUseCaseTasks((prev) => ({
           ...prev,
@@ -365,22 +431,6 @@ export default function AgentHistoricalAnalytics({
 
         if (!shouldFetch) return;
 
-        // If we have minerHistorical data, we don't need to fetch tasks from agent-runs
-        // The historical endpoint already provides all the aggregated data we need
-        if (minerHistorical) {
-          setUseCaseTasks((prev) => ({
-            ...prev,
-            [key]: {
-              allTasks: [], // No individual task details available from historical endpoint
-              tasks: [],
-              loading: false,
-              total: 0,
-              page,
-            },
-          }));
-          return;
-        }
-
         // REMOVED: Fetch tasks from agent-runs endpoint
         // We should only use minerHistorical data - no individual task fetching needed
         // The historical endpoint already provides all aggregated data we need
@@ -409,7 +459,7 @@ export default function AgentHistoricalAnalytics({
         }));
       }
     },
-    [aggregatedData?.runIds]
+    [aggregatedData?.runIds, minerHistorical, TASKS_PER_PAGE]
   );
 
   // Toggle use case expansion
