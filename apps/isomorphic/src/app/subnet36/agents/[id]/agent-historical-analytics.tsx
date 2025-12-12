@@ -20,6 +20,28 @@ import type { TaskData } from "@/repositories/tasks/tasks.types";
 import { routes } from "@/config/routes";
 import Placeholder from "@/app/shared/placeholder";
 
+// Helper function to normalize evaluation ID for URL
+// Keeps the full evaluation ID format: "evaluation_<round>_<uuid>_<hash>"
+// Or if it's just a UUID, prepends "evaluation_" to maintain consistency
+function normalizeEvaluationId(evaluationId: string): string {
+  if (!evaluationId) return evaluationId;
+  
+  // If it already starts with "evaluation_", use it as-is (full format)
+  if (evaluationId.startsWith("evaluation_")) {
+    return evaluationId;
+  }
+  
+  // If it's just a UUID, prepend "evaluation_" to maintain the format
+  // Pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(evaluationId);
+  if (isUUID) {
+    return `evaluation_${evaluationId}`;
+  }
+  
+  // Otherwise return as-is
+  return evaluationId;
+}
+
 interface AgentHistoricalAnalyticsProps {
   agentId: string | number;
   className?: string;
@@ -322,12 +344,14 @@ export default function AgentHistoricalAnalytics({
 
           const timestamp = detail.createdAt || new Date().toISOString();
 
+          const evaluationId = detail.evaluationId || detail.taskId;
           return {
             taskId:
               detail.taskId ||
               detail.evaluationId ||
               detail.agentRunId ||
               `${useCase}-${website}`,
+            evaluationId: evaluationId, // Store original evaluationId for URL generation
             agentRunId:
               detail.agentRunId ||
               detail.evaluationId ||
@@ -1013,7 +1037,7 @@ export default function AgentHistoricalAnalytics({
                                       <thead className="bg-white/5">
                                         <tr>
                                           <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                            Task ID
+                                            Evaluation ID
                                           </th>
                                           <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
                                             Prompt
@@ -1101,7 +1125,7 @@ export default function AgentHistoricalAnalytics({
                                         <thead className="bg-white/5">
                                           <tr>
                                             <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                              Task ID
+                                              Evaluation ID
                                             </th>
                                             <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
                                               Prompt
@@ -1125,7 +1149,7 @@ export default function AgentHistoricalAnalytics({
                                             >
                                               <td className="p-2 sm:p-3">
                                                 <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
-                                                  {task.taskId}
+                                                  {(task as any).evaluationId || task.taskId}
                                                 </span>
                                               </td>
                                               <td className="p-2 sm:p-3">
@@ -1161,11 +1185,16 @@ export default function AgentHistoricalAnalytics({
                                                 <Button
                                                   size="sm"
                                                   variant="text"
-                                                  onClick={() =>
+                                                  onClick={() => {
+                                                    // Use evaluationId if available, otherwise use taskId
+                                                    // Keep the full evaluation ID format (evaluation_xxx_xxx_xxx)
+                                                    const evaluationId = (task as any).evaluationId || task.taskId;
+                                                    // Ensure it has the "evaluation_" prefix if it's just a UUID
+                                                    const normalizedId = normalizeEvaluationId(evaluationId);
                                                     router.push(
-                                                      `${routes.tasks}/${task.taskId}`
-                                                    )
-                                                  }
+                                                      `${routes.evaluations}/${normalizedId}`
+                                                    );
+                                                  }}
                                                   className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
                                                 >
                                                   <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />

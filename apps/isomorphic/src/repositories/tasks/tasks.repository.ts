@@ -87,20 +87,27 @@ export class TasksRepository {
   }
 
   /**
+   * Helper function to check if an ID is an evaluation ID
+   * UUIDs are treated as evaluation IDs (simplified format from URLs)
+   */
+  private isEvaluationId(id: string): boolean {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    return (
+      id.startsWith("evaluation_") ||
+      id.endsWith("_eval") ||
+      (id.includes("round_") && id.includes("validator_")) ||
+      isUUID // UUIDs are treated as evaluation IDs (simplified format)
+    );
+  }
+
+  /**
    * Get detailed information for a specific task
    */
   async getTaskDetails(
     taskIdOrEvaluationId: string,
     params?: TaskDetailQueryParams
   ): Promise<TaskDetails> {
-    // Check if it's an evaluation_id:
-    // - Starts with "evaluation_"
-    // - Ends with "_eval"
-    // - Contains "round_" pattern (e.g., round_2_validator_133_run_127_solution_1_1_eval)
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/task-details`
@@ -118,10 +125,7 @@ export class TasksRepository {
    * Get results for a specific task or evaluation
    */
   async getTaskResults(taskIdOrEvaluationId: string): Promise<TaskResults> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/results`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/results`;
@@ -134,10 +138,7 @@ export class TasksRepository {
    * Get personas data for a task or evaluation
    */
   async getTaskPersonas(taskIdOrEvaluationId: string): Promise<TaskPersonas> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/personas`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/personas`;
@@ -150,10 +151,7 @@ export class TasksRepository {
    * Get statistics for a specific task or evaluation
    */
   async getTaskStatistics(taskIdOrEvaluationId: string): Promise<TaskStatistics> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/statistics`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/statistics`;
@@ -378,10 +376,7 @@ export class TasksRepository {
     page: number;
     limit: number;
   }> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/actions`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/actions`;
@@ -419,10 +414,7 @@ export class TasksRepository {
       description?: string;
     }[];
   }> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/screenshots`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/screenshots`;
@@ -454,10 +446,7 @@ export class TasksRepository {
     }[];
     total: number;
   }> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/logs`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/logs`;
@@ -485,10 +474,7 @@ export class TasksRepository {
       cpuUsage: { timestamp: string; value: number }[];
     };
   }> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/metrics`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/metrics`;
@@ -513,10 +499,7 @@ export class TasksRepository {
       metadata?: Record<string, any>;
     }[];
   }> {
-    const isEvaluationId = 
-      taskIdOrEvaluationId.startsWith("evaluation_") ||
-      taskIdOrEvaluationId.endsWith("_eval") ||
-      taskIdOrEvaluationId.includes("round_") && taskIdOrEvaluationId.includes("validator_");
+    const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/timeline`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/timeline`;
