@@ -121,8 +121,14 @@ function extractUidNumber(value: unknown): number | null {
 }
 
 function resolveMinerImage(run: AgentRunListItem): string {
-  if (run.agentImage) {
-    return resolveAssetUrl(run.agentImage);
+  const explicitImage =
+    run.agentImage ||
+    (run as any)?.agent_image ||
+    (run as any)?.minerImage ||
+    (run as any)?.image;
+
+  if (explicitImage) {
+    return resolveAssetUrl(explicitImage);
   }
 
   const uidCandidate =
