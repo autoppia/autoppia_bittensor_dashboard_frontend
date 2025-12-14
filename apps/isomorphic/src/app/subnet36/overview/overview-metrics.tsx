@@ -162,7 +162,7 @@ export default function OverviewMetrics({
 
   // Create dynamic metrics data from API with safe fallbacks
   const latestFinishedRound = metrics?.metricsRound ?? 0;
-  const topScoreValue = metrics?.topScore ?? 0;
+  const topRewardValue = metrics?.topReward ?? 0;
   const topMinerInfo = metrics?.topMinerUid
     ? `${metrics.topMinerName || "Miner"} (UID ${metrics.topMinerUid})`
     : null;
@@ -171,7 +171,7 @@ export default function OverviewMetrics({
     {
       id: "score-to-win",
       title: "Top Reward",
-      value: formatPercentage(topScoreValue),
+      value: formatPercentage(topRewardValue),
       topLabel: topMinerInfo,
       bottomLabel: `Round ${latestFinishedRound}`,
       icon: LuTrophy,
