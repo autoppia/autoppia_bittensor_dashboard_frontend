@@ -367,7 +367,7 @@ function RoundHeaderInline({
     }
   }
 
-  const isActive = status === "active";
+  const isActive = status === "active" || round?.current === true;
 
   const progressPercentageRaw =
     typeof progressData?.progress === "number"
@@ -525,15 +525,16 @@ function RoundHeaderInline({
                   </span>
                 </button>
                 {/* Next round (higher number) on the right */}
-                <button
-                  type="button"
-                  onClick={() => goToRound(nextKey)}
-                  disabled={!nextKey}
-                  className={cn(roundNavButton)}
-                >
-                  <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
-                  <PiCaretRightBold className="h-4 w-4" />
-                </button>
+                {nextKey && (
+                  <button
+                    type="button"
+                    onClick={() => goToRound(nextKey)}
+                    className={cn(roundNavButton)}
+                  >
+                    <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
+                    <PiCaretRightBold className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               {currentRoundKey && currentRoundKey !== roundKey && (
                 <Link
@@ -2413,6 +2414,13 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
+  // Determine if round is active
+  const backendStatus = progressData?.status ?? round?.status;
+  const isActive = 
+    backendStatus === "active" || 
+    backendStatus === "evaluating_finished" ||
+    round?.current === true;
+
   // Determine if round data is not yet available (statistics already loaded above)
   // Only show "no data" message for current/active rounds that truly have no data
   const isCurrentRound = round?.current === true || round?.status === "active";
@@ -2481,6 +2489,28 @@ export default function Round() {
 
       {/* Round Progress removed: already shown in main header card */}
 
+      {/* Show message if round is active, otherwise show metrics */}
+      {isActive ? (
+        <div className="mt-10 mb-8">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-6 sm:p-8 shadow-lg backdrop-blur">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
+            <div className="relative flex flex-col items-center text-center gap-4">
+              <div className="h-16 w-16 rounded-xl border-2 border-amber-300/60 bg-white/10 flex items-center justify-center shadow-inner">
+                <PiInfoDuotone className="h-8 w-8 text-amber-200" />
+              </div>
+              <div className="flex-1">
+                <p className="text-lg sm:text-xl font-bold text-amber-100 uppercase tracking-wide mb-2">
+                  Round in progress
+                </p>
+                <p className="text-sm sm:text-base text-white/80 font-medium max-w-2xl">
+                  This round is in progress. Results and rankings will be available once evaluations are complete.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Aggregated Metrics */}
       <div className="mt-10 mb-6">
             {roundDataLoading ? (
@@ -2581,6 +2611,8 @@ export default function Round() {
           error={roundDataError}
         />
       </div>
+        </>
+      )}
 
       {/* Floating Glossary Button */}
       <button
