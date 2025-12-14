@@ -12,7 +12,7 @@ import type {
 } from "./overview/overview.types";
 
 export const mockOverviewMetrics: OverviewMetrics = {
-  topScore: 0.95,
+  topReward: 0.95,
   topMinerUid: 80,
   topMinerName: "Achilles",
   totalWebsites: 13,

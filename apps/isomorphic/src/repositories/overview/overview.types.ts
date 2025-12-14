@@ -5,7 +5,7 @@
 
 // ===== OVERVIEW METRICS =====
 export interface OverviewMetrics {
-  topScore: number;
+  topReward: number; // post_consensus_avg_reward of the top miner
   topMinerUid?: number | null;
   topMinerName?: string | null;
   totalWebsites: number;

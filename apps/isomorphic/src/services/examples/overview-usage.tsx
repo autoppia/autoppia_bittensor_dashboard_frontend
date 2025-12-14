@@ -20,7 +20,7 @@ export function OverviewPageExample() {
       {/* Metrics */}
       <div>
         <h2>Metrics</h2>
-        <p>Top Score: {data.metrics?.topScore}</p>
+        <p>Top Reward: {data.metrics?.topReward}</p>
         <p>Total Validators: {data.metrics?.totalValidators}</p>
         <p>Total Miners: {data.metrics?.totalMiners}</p>
       </div>
@@ -71,8 +71,8 @@ export function MetricsExample() {
       <h2>Overview Metrics</h2>
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-blue-100 p-4 rounded">
-          <h3>Top Score</h3>
-          <p className="text-2xl font-bold">{metrics?.topScore}</p>
+          <h3>Top Reward</h3>
+          <p className="text-2xl font-bold">{metrics?.topReward}</p>
         </div>
         <div className="bg-green-100 p-4 rounded">
           <h3>Total Validators</h3>
@@ -175,7 +175,7 @@ export function ErrorHandlingExample() {
   return (
     <div>
       <h2>Overview Metrics</h2>
-      <p>Top Score: {data?.topScore}</p>
+      <p>Top Reward: {data?.topReward}</p>
       <p>Total Validators: {data?.totalValidators}</p>
     </div>
   );
