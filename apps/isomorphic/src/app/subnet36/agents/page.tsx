@@ -196,6 +196,7 @@ function AgentsLanding() {
 
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirect using latest round and top miner from API (fast path)
   // This is the primary redirect mechanism - instant redirect when data is available
@@ -203,6 +204,11 @@ function AgentsLanding() {
     // Only redirect if we need to (on landing page, no agent param)
     if (!needsRedirect) {
       hasRedirectedRef.current = false;
+      // Clear timeout if redirect is not needed
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
       return;
     }
 
@@ -216,8 +222,20 @@ function AgentsLanding() {
       return;
     }
 
-    // If there's an error or no data, fall through to fallback mechanism
-    if (latestRoundError || !latestRoundTopMiner) {
+    // Clear timeout if loading finished
+    if (redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current);
+      redirectTimeoutRef.current = null;
+    }
+
+    // If no data, wait for fallback
+    if (!latestRoundTopMiner) {
+      return;
+    }
+
+    // Validate data structure
+    if (!latestRoundTopMiner.round || !latestRoundTopMiner.miner_uid) {
+      console.error('[AgentsLanding] Invalid data structure:', latestRoundTopMiner);
       return;
     }
 
@@ -231,11 +249,19 @@ function AgentsLanding() {
     params.set("agent", String(latestRoundTopMiner.miner_uid));
 
     const targetUrl = `${targetPath}?${params.toString()}`;
-    console.log(`[AgentsLanding] Redirecting from ${pathname} to: ${targetUrl}`);
+    console.log(`[AgentsLanding] ✅ Redirecting from ${pathname} to: ${targetUrl}`);
     
     // Redirect immediately to the normal URL format with full page reload
     // Using window.location.href instead of router.replace to force a full page reload
     window.location.href = targetUrl;
+
+    // Cleanup function
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
   }, [
     needsRedirect,
     pathname,
@@ -312,6 +338,15 @@ function AgentsLanding() {
     router,
   ]);
 
+  // If we need redirect (on landing page), just show skeleton
+  // Don't show "no miners" or other messages while waiting for redirect
+  if (needsRedirect) {
+    return <AgentsPageFallback />;
+  }
+
+  // Below this point, we're not on the landing page anymore
+  // (we have an agent param in the URL)
+
     if (roundsDataError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
@@ -357,8 +392,6 @@ function AgentsLanding() {
     );
   }
 
-  // Keep showing the fallback skeleton while the redirect is in flight so the page never
-  // flashes empty content before the target agent view loads.
   return <AgentsPageFallback />;
 }
 
