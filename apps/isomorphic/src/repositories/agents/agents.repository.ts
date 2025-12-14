@@ -49,15 +49,20 @@ export class AgentsRepository {
     miner_uid: number;
     miner_hotkey: string | null;
   }> {
-    const response = await apiClient.get<{
-      success: boolean;
-      data: {
-        round: number;
-        miner_uid: number;
-        miner_hotkey: string | null;
-      };
-    }>(`${this.baseEndpoint}/latest-round-top-miner`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {
+          round: number;
+          miner_uid: number;
+          miner_hotkey: string | null;
+        };
+      }>(`${this.baseEndpoint}/latest-round-top-miner`);
+      return response.data.data;
+    } catch (error) {
+      console.error('[AgentsRepository] Error fetching latest round top miner:', error);
+      throw error;
+    }
   }
 
   /**

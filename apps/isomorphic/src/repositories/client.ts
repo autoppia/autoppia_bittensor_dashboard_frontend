@@ -138,13 +138,54 @@ export class ApiClient {
         });
       }
 
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: this.defaultHeaders,
-      });
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.warn('[ApiClient] Request timeout after 10s for:', url.toString());
+        controller.abort();
+      }, 10000); // 10 second timeout
 
-      return this.handleResponse<T>(response);
+      try {
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: this.defaultHeaders,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        return this.handleResponse<T>(response);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        console.error('[ApiClient] Fetch error:', fetchError);
+        
+        // Handle abort (timeout)
+        if (fetchError?.name === 'AbortError') {
+          console.error('[ApiClient] Request was aborted (timeout)');
+          throw {
+            message: 'Request timeout: The server did not respond in time',
+            status: 408,
+            code: 'TIMEOUT',
+          } as ApiError;
+        }
+        
+        // Handle network errors (connection refused, etc.)
+        if (fetchError?.code === 'ECONNREFUSED' || 
+            fetchError?.message?.includes('Failed to fetch') || 
+            fetchError?.message?.includes('ERR_CONNECTION_REFUSED') ||
+            fetchError?.cause?.code === 'ECONNREFUSED') {
+          console.error('[ApiClient] Connection refused');
+          throw {
+            message: 'Connection refused: Unable to connect to the server. Please ensure the backend is running.',
+            status: 503,
+            code: 'CONNECTION_REFUSED',
+          } as ApiError;
+        }
+        
+        // Re-throw all other errors
+        throw fetchError;
+      }
     } catch (error: any) {
+      console.error('[ApiClient] Error in get():', error);
       // Re-throw all errors to trigger loading states in components
       throw error;
     }
