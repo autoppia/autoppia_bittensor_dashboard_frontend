@@ -49,7 +49,7 @@ function useApiCall<T>(
   enabled: boolean = true
 ) {
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled); // Start with enabled state
   const [error, setError] = useState<string | null>(null);
   const lastDependencyKeyRef = useRef<string | undefined>(undefined);
   const hasFetchedRef = useRef(false);
@@ -58,51 +58,90 @@ function useApiCall<T>(
   const fetchData = useCallback(async () => {
     // Reset cancelled flag for new fetch
     cancelledRef.current = false;
+    console.log('[useApiCall] Starting fetch for:', dependencyKey);
     try {
       setLoading(true);
       setError(null);
+      console.log('[useApiCall] Calling API...');
       const result = await apiCall();
+      console.log('[useApiCall] API call successful, result:', result);
       // Only update state if not cancelled
       if (!cancelledRef.current) {
         setData(result);
+        setLoading(false);
+        console.log('[useApiCall] State updated with data');
+      } else {
+        console.warn('[useApiCall] ⚠️ Fetch was cancelled, not updating state');
       }
     } catch (err: any) {
+      console.error('[useApiCall] API call failed:', err);
       // Only update error if not cancelled
       if (!cancelledRef.current) {
-        setError(err.message || 'An error occurred');
-      }
-    } finally {
-      if (!cancelledRef.current) {
+        // Handle different error types
+        let errorMessage = 'An error occurred';
+        if (err?.message) {
+          errorMessage = err.message;
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err?.cause?.message) {
+          errorMessage = err.cause.message;
+        } else if (err?.toString) {
+          errorMessage = err.toString();
+        }
+        console.error('[useApiCall] Error message:', errorMessage);
+        setError(errorMessage);
         setLoading(false);
+        console.log('[useApiCall] State updated with error');
+      } else {
+        console.warn('[useApiCall] ⚠️ Fetch was cancelled during error, not updating state');
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiCall]);
 
   useEffect(() => {
+    console.log('[useApiCall] Effect triggered for:', dependencyKey, 'enabled:', enabled, 'hasFetched:', hasFetchedRef.current);
     // Don't fetch if disabled
     if (!enabled) {
+      console.log('[useApiCall] Fetch disabled, resetting state');
       setLoading(false);
       setData(null);
       setError(null);
+      // Reset fetch flag when disabled so it can fetch again when enabled
+      hasFetchedRef.current = false;
       return;
     }
     
     const key = dependencyKey ?? '__default__';
-    // Cancel previous fetch if dependency key changed
-    if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
-      cancelledRef.current = true;
-    }
+    
+    // Only skip if we've already fetched with the same key
     if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
+      console.log('[useApiCall] Already fetched for key:', key, ', skipping');
       return;
     }
+    
+    // Cancel previous fetch if dependency key changed
+    if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
+      console.log('[useApiCall] Dependency key changed from', lastDependencyKeyRef.current, 'to', key);
+      cancelledRef.current = true;
+      hasFetchedRef.current = false; // Reset when key changes
+    }
+    
+    console.log('[useApiCall] Starting new fetch for key:', key);
     lastDependencyKeyRef.current = key;
     hasFetchedRef.current = true;
+    
+    // Don't cancel this new fetch
+    cancelledRef.current = false;
+    
     fetchData();
     
     return () => {
-      cancelledRef.current = true;
+      console.log('[useApiCall] Cleanup for key:', key);
+      // Don't cancel on cleanup - let the fetch complete
+      // cancelledRef.current = true;
     };
-  }, [fetchData, dependencyKey, enabled]);
+  }, [dependencyKey, enabled, fetchData]);
 
   const refetch = useCallback(() => {
     if (enabled) {
