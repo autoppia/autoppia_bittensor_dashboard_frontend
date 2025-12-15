@@ -604,55 +604,6 @@ export class RoundsRepository {
   }
 
   /**
-   * Get round comparison data (multiple rounds)
-   */
-  async getRoundComparison(roundIds: number[]): Promise<{
-    rounds: Array<{
-      roundId: number;
-      statistics: RoundStatistics;
-      topMiners: MinerPerformance[];
-    }>;
-  }> {
-    const response = await apiClient.post<{
-      data: {
-        rounds: Array<{
-          roundId: number;
-          statistics: RoundStatistics;
-          topMiners: MinerPerformance[];
-        }>;
-      };
-    }>(`${this.baseEndpoint}/compare`, { roundIds });
-    return response.data.data;
-  }
-
-  /**
-   * Get round timeline (progress over time)
-   */
-  async getRoundTimeline(identifier: string | number): Promise<{
-    timeline: Array<{
-      timestamp: string;
-      block: number;
-      completedTasks: number;
-      averageScore: number;
-      activeMiners: number;
-    }>;
-  }> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<{
-      data: {
-        timeline: Array<{
-          timestamp: string;
-          block: number;
-          completedTasks: number;
-          averageScore: number;
-          activeMiners: number;
-        }>;
-      };
-    }>(`${this.baseEndpoint}/${path}/timeline`);
-    return response.data.data;
-  }
-
-  /**
    * Get round summary (quick stats)
    */
   async getRoundSummary(identifier: string | number): Promise<{
