@@ -26,7 +26,6 @@ import { useRoundsData } from "@/services/hooks/useAgents";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type {
   MinimalAgentData,
-  MinimalAgentsListQueryParams,
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { GLASS_STYLES } from "@/config/theme-styles";
