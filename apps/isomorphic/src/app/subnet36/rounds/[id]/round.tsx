@@ -1180,6 +1180,7 @@ function RoundValidatorsInline({
       icon: v.validator_image || `/validators/Other.png`,
       topScore: v.topScore || 0,
       topMiner: v.winner,
+      hotkey: v.validator_hotkey || null,
       // Agregar otros campos necesarios
     })) as ValidatorPerformance[];
   }, [roundData]);
