@@ -1120,14 +1120,6 @@ function AgentValidators({
             
             return (
               <div key={`validator-${validator.validator_uid}`} className="relative">
-                {/* 🔍 FIX: Move AUTOPPIA label above the validator card */}
-                {isAutoppia && (
-                  <div className="mb-2 flex justify-start">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border-2 border-emerald-400/50">
-                      AUTOPPIA
-                    </div>
-                  </div>
-                )}
                 <div
                   className={cn(
                     "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
