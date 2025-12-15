@@ -1178,13 +1178,17 @@ function AgentValidators({
                       );
                     })}
                     </div>
-                    {agentRunId && (
-                      <Link href={`${routes.agent_run}/${agentRunId}`} className="block">
-                        <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
-                          View Agent Run Details
-                        </div>
-                      </Link>
-                    )}
+                    <Link 
+                      href={agentRunId 
+                        ? `${routes.agent_run}/${agentRunId}`
+                        : `${routes.agent_run}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${selectedRound ? `&round=${selectedRound}` : ''}`
+                      } 
+                      className="block"
+                    >
+                      <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
+                        View Agent Run Details
+                      </div>
+                    </Link>
                   </div>
                 </div>
               </div>
