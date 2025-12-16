@@ -261,26 +261,18 @@ export default function OverviewValidators({
           const resolvedRoundNumber =
             typeof validator.roundNumber === "number"
               ? validator.roundNumber
-              : typeof currentRound?.id === "number"
-                ? currentRound.id
+              : typeof currentRound === "number"
+                ? currentRound
                 : undefined;
-          const validatorParam =
-            validator.id ||
-            (validator.validatorUid != null
-              ? `validator-${validator.validatorUid}`
-              : "");
-          const roundKey =
-            typeof resolvedRoundNumber === "number"
-              ? `round_${resolvedRoundNumber}`
-              : currentRound?.id != null
-                ? `round_${currentRound.id}`
-                : (validator.validatorRoundId ?? undefined);
-          const roundsLink = roundKey
-            ? `${routes.rounds}/${encodeURIComponent(roundKey)}${validatorParam ? `?validator=${encodeURIComponent(validatorParam)}` : ""}`
+
+          // Build validator details link using validator UID
+          const validatorUid = validator.validatorUid;
+          const validatorLink = validatorUid != null
+            ? `/validator/${validatorUid}`
             : undefined;
 
-          return roundsLink ? (
-            <Link key={`validator-${validator.id}`} href={roundsLink}>
+          return validatorLink ? (
+            <Link key={`validator-${validator.id}`} href={validatorLink}>
               <div className="bg-gray-50 border-2 border-muted hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 group rounded-xl overflow-hidden cursor-pointer">
                 {/* Header - Validator Info & Status */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50">

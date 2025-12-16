@@ -28,3 +28,6 @@ export * from "./subnets/subnets.types";
 
 export * from "./playground/playground.repository";
 export * from "./playground/playground.types";
+
+export * from "./validators/validators.repository";
+export * from "./validators/validators.types";
