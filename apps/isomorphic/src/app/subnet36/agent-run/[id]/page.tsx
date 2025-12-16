@@ -363,7 +363,13 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection evaluations={evaluations} isLoading={isLoading} error={error} refetch={refetch} />
+        <AgentRunTasksSection 
+          evaluations={evaluations} 
+          isLoading={isLoading} 
+          error={error} 
+          refetch={refetch}
+          selectedWebsite={selectedWebsite}
+        />
       </div>
 
       {isLoading && (
@@ -2236,13 +2242,25 @@ function AgentRunTasksSection({
   isLoading = false, 
   error,
   refetch,
+  selectedWebsite,
 }: {
   evaluations?: any[];
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
+  selectedWebsite?: string | null;
 }) {
-  const evaluations = providedEvaluations;
+  // Filter evaluations by selected website
+  const filteredEvaluations = useMemo(() => {
+    if (!selectedWebsite || selectedWebsite === "__all__") {
+      return providedEvaluations;
+    }
+    return providedEvaluations.filter(
+      (evaluation) => evaluation.website === selectedWebsite
+    );
+  }, [providedEvaluations, selectedWebsite]);
+
+  const evaluations = filteredEvaluations;
   const total = evaluations.length;
   const page = 1;
   const limit = 10;
