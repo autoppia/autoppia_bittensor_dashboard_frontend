@@ -14,6 +14,28 @@ import {
 
 type SortOption = "difficulty-asc" | "difficulty-desc" | "name";
 
+// Map slug to web number for ordering (web_1_autocinema -> 1)
+const slugToWebNumber: Record<string, number> = {
+  autocinema: 1,
+  autobooks: 2,
+  autozone: 3,
+  autodining: 4,
+  autocrm: 5,
+  automail: 6,
+  autodelivery: 7,
+  autolodge: 8,
+  autoconnect: 9,
+  autowork: 10,
+  autocalendar: 11,
+  autolist: 12,
+  autodrive: 13,
+  autohealth: 14,
+};
+
+function getWebNumber(slug: string): number {
+  return slugToWebNumber[slug] || 999; // Put unknown webs at the end
+}
+
 export default function Websites() {
   const [sortBy, setSortBy] = useState<SortOption>("difficulty-asc");
 
@@ -22,11 +44,16 @@ export default function Websites() {
 
   const sortedActiveWebsites = [...activeWebsites].sort((a, b) => {
     if (sortBy === "difficulty-asc") {
-      return a.avgDifficulty - b.avgDifficulty;
+      // First sort by web number, then by difficulty
+      const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
+      return webNumDiff !== 0 ? webNumDiff : a.avgDifficulty - b.avgDifficulty;
     } else if (sortBy === "difficulty-desc") {
-      return b.avgDifficulty - a.avgDifficulty;
+      // First sort by web number, then by difficulty
+      const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
+      return webNumDiff !== 0 ? webNumDiff : b.avgDifficulty - a.avgDifficulty;
     } else {
-      return a.name.localeCompare(b.name);
+      // Sort by web number for name sort too
+      return getWebNumber(a.slug) - getWebNumber(b.slug);
     }
   });
 
