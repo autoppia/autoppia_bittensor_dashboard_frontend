@@ -2,14 +2,20 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
+import Link from "next/link";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { Select } from "rizzui";
 import Image from "next/image";
 import { validatorsRepository } from "@/repositories/validators/validators.repository";
 import type { ValidatorDetailsData, WebStats, UseCaseStats, TaskStats } from "@/repositories/validators/validators.types";
 import PageHeader from "@/app/shared/page-header";
-import Placeholder from "@/app/shared/placeholder";
 import { Text } from "rizzui";
+import {
+  ValidatorsSelectorPlaceholder,
+  ValidatorCardsPlaceholder,
+  PerformanceAnalyticsPlaceholder,
+  SummaryPlaceholder,
+} from "@/components/placeholders/validator-placeholders";
 import {
   PiShieldCheck,
   PiChartBar,
@@ -22,10 +28,17 @@ import {
   PiTrendUp,
   PiTrendDown,
   PiTrophy,
+  PiTrophyDuotone,
+  PiUsersThreeDuotone,
+  PiListChecksDuotone,
+  PiCrownDuotone,
+  PiChartLineUp,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 import { getProjectColors } from "@/utils/website-colors";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import ValidatorsSelector from "@/app/shared/validators-selector";
+import { useValidators } from "@/services/hooks/useOverview";
 
 function truncateMiddle(value?: string | null, visible: number = 6) {
   if (!value) return "—";
@@ -46,6 +59,97 @@ function formatPercentage(value: number): string {
 function capitalizeWebName(name: string): string {
   if (!name) return name;
   return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+// Web order mapping (as specified by user)
+const WEB_ORDER: Record<string, number> = {
+  autocinema: 1,
+  autobooks: 2,
+  autozone: 3,
+  autodining: 4,
+  autocrm: 5,
+  automail: 6,
+  autodelivery: 7,
+  autolodge: 8,
+  autoconnect: 9,
+  autowork: 10,
+  autocalendar: 11,
+  autolist: 12,
+  autodrive: 13,
+  autohealth: 14,
+};
+
+// Extract web name from web_id and get its order
+function getWebOrder(webId: string): number {
+  // Try to extract the web name from web_id (e.g., 'web_1_autocinema' -> 'autocinema')
+  const lowerWebId = webId.toLowerCase();
+  
+  // Check if web_id contains any of the web names
+  for (const [webName, order] of Object.entries(WEB_ORDER)) {
+    if (lowerWebId.includes(webName)) {
+      return order;
+    }
+  }
+  
+  // If not found, try to extract from web_id pattern
+  try {
+    const parts = webId.split('_');
+    if (parts.length >= 3 && parts[0] === 'web') {
+      // web_1_autocinema -> autocinema
+      const webName = parts.slice(2).join('_').toLowerCase();
+      if (WEB_ORDER[webName] !== undefined) {
+        return WEB_ORDER[webName];
+      }
+    }
+  } catch (e) {
+    // If extraction fails, return a large number to put it at the end
+  }
+  return 999;
+}
+
+// Get color and status text based on success percentage
+function getPerformanceStatus(successPct: number): {
+  color: string;
+  textColor: string;
+  statusText: string;
+  badgeClass: string;
+} {
+  if (successPct >= 80) {
+    return {
+      color: "#10B981", // emerald-500 (green)
+      textColor: "text-emerald-400",
+      statusText: "Excellent",
+      badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40",
+    };
+  } else if (successPct >= 60) {
+    return {
+      color: "#3B82F6", // blue-500
+      textColor: "text-blue-400",
+      statusText: "Good",
+      badgeClass: "bg-blue-500/20 text-blue-300 border-blue-400/40",
+    };
+  } else if (successPct >= 40) {
+    return {
+      color: "#F59E0B", // amber-500
+      textColor: "text-amber-400",
+      statusText: "Fair",
+      badgeClass: "bg-amber-500/20 text-amber-300 border-amber-400/40",
+    };
+  } else if (successPct >= 20) {
+    return {
+      color: "#F97316", // orange-500
+      textColor: "text-orange-400",
+      statusText: "Needs Improvement",
+      badgeClass: "bg-orange-500/20 text-orange-300 border-orange-400/40",
+    };
+  } else {
+    return {
+      color: "#EF4444", // red-500
+      textColor: "text-red-400",
+      statusText: "Critical",
+      badgeClass: "bg-red-500/20 text-red-300 border-red-400/40",
+    };
+  }
 }
 
 // Colors for pie chart segments
@@ -133,7 +237,7 @@ function CenterLabel({
         }}
       >
         <tspan fontSize="22" fontWeight="700">
-          {value}%
+          {value}
         </tspan>
       </text>
       <text
@@ -207,7 +311,7 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
 }
 
 // Card component for last round winner
-function LastRoundWinnerCard({ data }: { data: ValidatorDetailsData }) {
+function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsData; selectedRound: number | null }) {
   const context = data.context;
   const fallbackMinerImage = context.lastRoundWinner !== null
     ? resolveAssetUrl(`/miners/${Math.abs(context.lastRoundWinner % 50)}.svg`)
@@ -215,6 +319,29 @@ function LastRoundWinnerCard({ data }: { data: ValidatorDetailsData }) {
   const minerImageSrc = context.lastRoundWinnerImage
     ? resolveAssetUrl(context.lastRoundWinnerImage)
     : fallbackMinerImage;
+  
+  // Determine the round number to use for links
+  const roundNumber = selectedRound ?? data.validator.lastRoundEvaluated;
+  const roundKey = roundNumber ? `round_${roundNumber}` : null;
+  const roundLink = roundKey ? `/subnet36/rounds/${roundKey}` : null;
+  const minerLink = context.lastRoundWinner && roundNumber
+    ? `/subnet36/agents/${context.lastRoundWinner}?round=${roundNumber}`
+    : context.lastRoundWinner
+      ? `/subnet36/agents/${context.lastRoundWinner}`
+      : null;
+  
+  const cardTitle = selectedRound !== null ? (
+    <>
+      {roundLink ? (
+        <Link href={roundLink} className="hover:text-amber-300 transition-colors">
+          Round {selectedRound}
+        </Link>
+      ) : (
+        `Round ${selectedRound}`
+      )}{" "}
+      Winner
+    </>
+  ) : "Last Round Winner";
   
   return (
     <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
@@ -237,16 +364,24 @@ function LastRoundWinnerCard({ data }: { data: ValidatorDetailsData }) {
         </div>
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
-            Last Round Winner
+            {typeof cardTitle === 'string' ? cardTitle : (
+              <span>{cardTitle}</span>
+            )}
           </h3>
         </div>
       </div>
       <div className="space-y-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Miner</p>
-          <p className="text-2xl font-bold text-white">
-            {context.lastRoundWinnerName || (context.lastRoundWinner !== null ? `Miner ${context.lastRoundWinner}` : "—")}
-          </p>
+          {minerLink && context.lastRoundWinnerName ? (
+            <Link href={minerLink} className="text-2xl font-bold text-white hover:text-amber-300 transition-colors">
+              {context.lastRoundWinnerName}
+            </Link>
+          ) : (
+            <p className="text-2xl font-bold text-white">
+              {context.lastRoundWinnerName || (context.lastRoundWinner !== null ? `Miner ${context.lastRoundWinner}` : "—")}
+            </p>
+          )}
         </div>
         {context.lastRoundWinner !== null && (
           <div>
@@ -278,8 +413,10 @@ function LastRoundWinnerCard({ data }: { data: ValidatorDetailsData }) {
 }
 
 // Card component for global stats
-function GlobalStatsCard({ data }: { data: ValidatorDetailsData }) {
+function GlobalStatsCard({ data, selectedRound }: { data: ValidatorDetailsData; selectedRound: number | null }) {
   const stats = data.globalStats;
+  const roundLabel = selectedRound !== null ? `Round ${selectedRound}` : "All Rounds";
+  
   return (
     <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-4">
@@ -290,6 +427,7 @@ function GlobalStatsCard({ data }: { data: ValidatorDetailsData }) {
           <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
             Global Stats
           </h3>
+          <p className="text-xs text-white/60 mt-0.5">{roundLabel}</p>
         </div>
       </div>
       <div className="space-y-4">
@@ -310,7 +448,7 @@ function GlobalStatsCard({ data }: { data: ValidatorDetailsData }) {
           <div className="rounded-lg bg-white/10 p-4 flex flex-col items-center justify-center min-h-[100px]">
             <div className="flex items-center justify-center gap-2 mb-2">
               <PiXCircle className="h-4 w-4 text-red-300" />
-              <p className="text-xs uppercase tracking-wide text-white/60">Zero</p>
+              <p className="text-xs uppercase tracking-wide text-white/60">Fail</p>
             </div>
             <p className="text-lg font-semibold text-red-300 text-center">
               {formatNumber(stats.zeroCount)} ({formatPercentage(stats.zeroPct)})
@@ -368,6 +506,7 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
 
   const badge = getBadgeStatus();
   const hasTasks = useCase.tasks && useCase.tasks.length > 0;
+  const performance = getPerformanceStatus(useCase.successPct);
   const isHighPerformance = useCase.successPct >= 80;
   const isMediumPerformance = useCase.successPct >= 60 && useCase.successPct < 80;
   const projectColors = getProjectColors(useCase.useCaseName || useCase.useCaseId);
@@ -390,33 +529,17 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
           <span className="text-base sm:text-lg font-semibold text-white">
             {useCase.useCaseName || useCase.useCaseId}
           </span>
-          {isHighPerformance && (
-            <div
-              className="flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border"
-              style={{
-                backgroundColor: "rgba(253, 245, 230, 0.2)",
-                borderColor: "rgba(253, 245, 230, 0.45)",
-                color: HIGHLIGHT_COLOR,
-              }}
-            >
+          <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
+            {useCase.successPct >= 60 ? (
               <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span className="hidden sm:inline">Excellent</span>
-              <span className="sm:hidden">Top</span>
-            </div>
-          )}
-          {isMediumPerformance && (
-            <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-indigo-100 rounded-full text-[10px] sm:text-xs font-medium border border-indigo-400/30 bg-transparent">
-              <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              Good
-            </div>
-          )}
-          {!isHighPerformance && !isMediumPerformance && (
-            <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-red-200 rounded-full text-[10px] sm:text-xs font-medium border border-red-400/40 bg-transparent">
+            ) : (
               <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span className="hidden sm:inline">Needs Improvement</span>
-              <span className="sm:hidden">Low</span>
-            </div>
-          )}
+            )}
+            <span className="hidden sm:inline">{performance.statusText}</span>
+            <span className="sm:hidden">
+              {useCase.successPct >= 80 ? "Top" : useCase.successPct >= 60 ? "Good" : useCase.successPct >= 40 ? "Fair" : useCase.successPct >= 20 ? "Low" : "Crit"}
+            </span>
+          </div>
           {badge && (
             <span
               className={cn(
@@ -431,9 +554,14 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
           )}
         </div>
         <div className="text-left sm:text-right">
-          <div className="text-xl sm:text-2xl font-bold text-white">
-            {formatPercentage(useCase.successPct)}
-          </div>
+          {(() => {
+            const performance = getPerformanceStatus(useCase.successPct);
+            return (
+              <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
+                {formatPercentage(useCase.successPct)}
+              </div>
+            );
+          })()}
           <div className="text-xs sm:text-sm text-slate-400">
             {useCase.totalEvaluations} requests • {useCase.successCount} successful
           </div>
@@ -516,10 +644,13 @@ function PerformanceAnalytics({
 }) {
   const websiteOptions = [
     { value: "__all__", label: "All Websites" },
-    ...data.webs.map((web) => ({
-      value: web.webId,
-      label: capitalizeWebName(web.webName || web.webId),
-    })),
+    ...data.webs
+      .slice()
+      .sort((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
+      .map((web) => ({
+        value: web.webId,
+        label: capitalizeWebName(web.webName || web.webId),
+      })),
   ];
 
   const roundOptions = [
@@ -542,13 +673,16 @@ function PerformanceAnalytics({
           colorIndex: idx,
         }));
       })()
-    : data.webs.map((web, idx) => ({
-        name: capitalizeWebName(web.webName || web.webId),
-        successPct: web.successPct,
-        total: web.totalEvaluations,
-        successCount: web.successCount,
-        colorIndex: idx,
-      }));
+    : data.webs
+        .slice()
+        .sort((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
+        .map((web, idx) => ({
+          name: capitalizeWebName(web.webName || web.webId),
+          successPct: web.successPct,
+          total: web.totalEvaluations,
+          successCount: web.successCount,
+          colorIndex: idx,
+        }));
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-transparent p-6 text-white">
@@ -601,6 +735,7 @@ function PerformanceAnalytics({
           {chartData.map((item, index) => {
             const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
             const projectColors = getProjectColors(item.name);
+            const performance = getPerformanceStatus(item.successPct);
             const isHighPerformance = item.successPct >= 80;
             const isMediumPerformance = item.successPct >= 60 && item.successPct < 80;
 
@@ -635,38 +770,27 @@ function PerformanceAnalytics({
                     <span className="text-base sm:text-lg font-semibold text-white">
                       {capitalizeWebName(item.name)}
                     </span>
-                    {isHighPerformance && (
-                      <div
-                        className="flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border"
-                        style={{
-                          backgroundColor: "rgba(253, 245, 230, 0.2)",
-                          borderColor: "rgba(253, 245, 230, 0.45)",
-                          color: HIGHLIGHT_COLOR,
-                        }}
-                      >
+                    <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
+                      {item.successPct >= 60 ? (
                         <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">Excellent</span>
-                        <span className="sm:hidden">Top</span>
-                      </div>
-                    )}
-                    {isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-indigo-100 rounded-full text-[10px] sm:text-xs font-medium border border-indigo-400/30 bg-transparent">
-                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        Good
-                      </div>
-                    )}
-                    {!isHighPerformance && !isMediumPerformance && (
-                      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-red-200 rounded-full text-[10px] sm:text-xs font-medium border border-red-400/40 bg-transparent">
+                      ) : (
                         <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">Needs Improvement</span>
-                        <span className="sm:hidden">Low</span>
-                      </div>
-                    )}
+                      )}
+                      <span className="hidden sm:inline">{performance.statusText}</span>
+                      <span className="sm:hidden">
+                        {item.successPct >= 80 ? "Top" : item.successPct >= 60 ? "Good" : item.successPct >= 40 ? "Fair" : item.successPct >= 20 ? "Low" : "Crit"}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-left sm:text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-white">
-                      {item.successPct.toFixed(1)}%
-                    </div>
+                    {(() => {
+                      const performance = getPerformanceStatus(item.successPct);
+                      return (
+                        <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
+                          {item.successPct.toFixed(1)}%
+                        </div>
+                      );
+                    })()}
                     <div className="text-xs sm:text-sm text-slate-400">
                       {item.total} requests • {item.successCount} successful
                     </div>
@@ -756,11 +880,14 @@ function SummarySection({
             }))
           : [];
       })()
-    : data.webs.map((web, idx) => ({
-        label: capitalizeWebName(web.webName || web.webId),
-        value: web.successPct,
-        total: web.totalEvaluations,
-        successCount: web.successCount,
+    : data.webs
+        .slice()
+        .sort((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
+        .map((web, idx) => ({
+          label: capitalizeWebName(web.webName || web.webId),
+          value: web.successPct,
+          total: web.totalEvaluations,
+          successCount: web.successCount,
         webId: web.webId, // Keep reference to web for navigation
       }));
 
@@ -908,6 +1035,24 @@ export default function ValidatorDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedWeb, setSelectedWeb] = useState<string | null>(null);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  
+  // Get all validators for the selector
+  const {
+    data: validatorsData,
+    loading: validatorsLoading,
+    error: validatorsError,
+  } = useValidators({ limit: 100 });
+
+  const validators = React.useMemo(() => {
+    if (!validatorsData?.data?.validators) return [];
+    return validatorsData.data.validators.map((v: any) => ({
+      id: `validator-${v.validatorUid}`,
+      uid: v.validatorUid,
+      name: v.name || `Validator ${v.validatorUid}`,
+      icon: v.icon || "/validators/Other.png",
+      hotkey: v.hotkey || null,
+    }));
+  }, [validatorsData]);
 
   useEffect(() => {
     if (!validatorUid) {
@@ -943,13 +1088,14 @@ export default function ValidatorDetailsPage() {
     return (
       <div className="w-full max-w-[1280px] mx-auto bg-transparent">
         <PageHeader title="Validator Details" />
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2].map((i) => (
-              <Placeholder key={i} className="h-64" />
-            ))}
-          </div>
-          <Placeholder className="h-96" />
+        
+        <ValidatorsSelectorPlaceholder />
+        
+        <ValidatorCardsPlaceholder />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+          <PerformanceAnalyticsPlaceholder />
+          <SummaryPlaceholder />
         </div>
       </div>
     );
@@ -975,32 +1121,357 @@ export default function ValidatorDetailsPage() {
         description="Evaluation diagnostics by web and use case"
       />
 
+      {/* Validators Selector */}
+      <ValidatorsSelector
+        validators={validators}
+        selectedValidatorId={`validator-${data.validator.uid}`}
+        loading={validatorsLoading}
+        error={validatorsError}
+        linkToDetails={true}
+      />
+
       {/* Three cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <ValidatorDetailsCard data={data} />
-        <GlobalStatsCard data={data} />
-        <LastRoundWinnerCard data={data} />
+        <GlobalStatsCard data={data} selectedRound={selectedRound} />
+        <LastRoundWinnerCard data={data} selectedRound={selectedRound} />
       </div>
 
-      {/* Main content: Performance Analytics and Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
-        {/* Left: Performance Analytics */}
-        <PerformanceAnalytics
-          data={data}
-          selectedWeb={selectedWeb}
-          setSelectedWeb={setSelectedWeb}
-          selectedRound={selectedRound}
-          setSelectedRound={setSelectedRound}
-        />
+      {/* Tabs Navigation */}
+      <TabsSection
+        data={data}
+        selectedWeb={selectedWeb}
+        setSelectedWeb={setSelectedWeb}
+        selectedRound={selectedRound}
+        setSelectedRound={setSelectedRound}
+      />
 
-        {/* Right: Summary with Pie Chart */}
-        <SummarySection
-          data={data}
-          selectedWeb={selectedWeb}
-          onWebClick={setSelectedWeb}
-        />
+    </div>
+  );
+}
+
+// Tabs Component
+function TabsSection({
+  data,
+  selectedWeb,
+  setSelectedWeb,
+  selectedRound,
+  setSelectedRound,
+}: {
+  data: ValidatorDetailsData;
+  selectedWeb: string | null;
+  setSelectedWeb: (web: string | null) => void;
+  selectedRound: number | null;
+  setSelectedRound: (round: number | null) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<"performance" | "rounds">("performance");
+
+  return (
+    <div className="mt-8">
+      {/* Tabs Navigation */}
+      <div className="flex items-center gap-2 mb-6 border-b border-white/10">
+        <button
+          onClick={() => setActiveTab("performance")}
+          className={cn(
+            "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
+            activeTab === "performance"
+              ? "text-white"
+              : "text-white/60 hover:text-white/80"
+          )}
+        >
+          Performance
+          {activeTab === "performance" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("rounds")}
+          className={cn(
+            "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
+            activeTab === "rounds"
+              ? "text-white"
+              : "text-white/60 hover:text-white/80"
+          )}
+        >
+          Round Details
+          {activeTab === "rounds" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 rounded-full" />
+          )}
+        </button>
       </div>
 
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === "performance" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+            {/* Left: Performance Analytics */}
+            <PerformanceAnalytics
+              data={data}
+              selectedWeb={selectedWeb}
+              setSelectedWeb={setSelectedWeb}
+              selectedRound={selectedRound}
+              setSelectedRound={setSelectedRound}
+            />
+
+            {/* Right: Summary with Pie Chart */}
+            <SummarySection
+              data={data}
+              selectedWeb={selectedWeb}
+              onWebClick={setSelectedWeb}
+            />
+          </div>
+        ) : (
+          <RoundDetailsTab
+            data={data}
+            selectedRound={selectedRound}
+            setSelectedRound={setSelectedRound}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Round Details Tab Component
+function RoundDetailsTab({
+  data,
+  selectedRound,
+  setSelectedRound,
+}: {
+  data: ValidatorDetailsData;
+  selectedRound: number | null;
+  setSelectedRound: (round: number | null) => void;
+}) {
+  // Calculate metrics for the round details cards
+  const topReward = useMemo(() => {
+    // Use the highest success percentage from global stats or webs
+    if (data.globalStats.successPct > 0) {
+      return data.globalStats.successPct;
+    }
+    // Find the highest success percentage from webs
+    const maxWebSuccess = Math.max(
+      ...data.webs.map((w) => w.successPct),
+      0
+    );
+    return maxWebSuccess;
+  }, [data]);
+
+  const minersParticipated = data.roundDetails?.minersParticipated ?? 0;
+  const minersList = data.roundDetails?.miners ?? [];
+
+  const tasksExecuted = data.globalStats.totalEvaluations;
+
+  const roundDetailsCards = [
+    {
+      key: "reward",
+      title: "Top Reward",
+      value: `${topReward.toFixed(2)}%`,
+      helper: "Best run recorded by this validator",
+      icon: PiTrophyDuotone,
+      gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
+      bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
+      iconGradient: "from-emerald-400 to-teal-500",
+      borderColor: "border-emerald-400/50",
+      glowColor: "rgba(16,185,129,0.5)",
+      valueClass: "text-lg md:text-4xl",
+    },
+    {
+      key: "miners",
+      title: "Miners Participated",
+      value: formatNumber(minersParticipated),
+      helper: "Unique miners assessed this round",
+      icon: PiUsersThreeDuotone,
+      gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30",
+      bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10",
+      iconGradient: "from-violet-400 to-fuchsia-500",
+      borderColor: "border-violet-400/50",
+      glowColor: "rgba(139,92,246,0.5)",
+      valueClass: "text-lg md:text-4xl",
+    },
+    {
+      key: "tasks",
+      title: "Tasks",
+      value: formatNumber(tasksExecuted),
+      helper: "Total tasks executed by this validator",
+      icon: PiListChecksDuotone,
+      gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
+      bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10",
+      iconGradient: "from-blue-400 to-indigo-500",
+      borderColor: "border-blue-400/50",
+      glowColor: "rgba(59,130,246,0.5)",
+      valueClass: "text-lg md:text-4xl",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {roundDetailsCards.map((card) => (
+          <RoundDetailMetricCard key={card.key} card={card} />
+        ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="flex flex-col xl:flex-row gap-6">
+        {/* Miner Scores Chart */}
+        <div className="w-full xl:w-[calc(100%-400px)] rounded-2xl border border-white/15 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 p-6 shadow-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20">
+              <PiChartLineUp className="h-5 w-5 text-blue-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">
+              Miner Scores - {data.validator.uid}
+            </h3>
+          </div>
+          {minersList.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={minersList.slice(0, 20).map((miner, index) => ({
+                  name: miner.name || `Miner ${miner.uid}`,
+                  uid: miner.uid,
+                  score: miner.reward,
+                  rank: index + 1,
+                }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  tick={{ fill: "#E2E8F0", fontSize: 12 }}
+                />
+                <YAxis
+                  tick={{ fill: "#E2E8F0", fontSize: 12 }}
+                  label={{ value: "Reward (%)", angle: -90, position: "insideLeft", fill: "#E2E8F0" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "8px",
+                    color: "#E2E8F0",
+                  }}
+                  formatter={(value: any) => [`${value.toFixed(2)}%`, "Reward"]}
+                />
+                <Bar dataKey="score" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-white/50">
+              <p className="text-sm">No miner data available for this round</p>
+            </div>
+          )}
+        </div>
+
+        {/* All Miners List */}
+        <div className="w-full xl:w-[400px] rounded-2xl border border-white/15 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 p-6 shadow-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+              <PiUsersThreeDuotone className="h-5 w-5 text-purple-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">
+              All Miners - {data.validator.uid}
+            </h3>
+          </div>
+          {minersList.length > 0 ? (
+            <div className="max-h-[400px] overflow-y-auto space-y-2">
+              {minersList.map((miner, index) => {
+                const fallbackAvatar = resolveAssetUrl(`/miners/${Math.abs(miner.uid % 50)}.svg`);
+                const avatarSrc = miner.image ? resolveAssetUrl(miner.image) : fallbackAvatar;
+                const rank = index + 1;
+                const agentHref = selectedRound
+                  ? `/subnet36/agents/${miner.uid}?round=${selectedRound}`
+                  : `/subnet36/agents/${miner.uid}`;
+
+                return (
+                  <Link
+                    key={`miner-${miner.uid}`}
+                    href={agentHref}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 group"
+                  >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all">
+                      <Image
+                        src={avatarSrc}
+                        alt={miner.name || `Miner ${miner.uid}`}
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                        unoptimized
+                      />
+                      {rank === 1 && (
+                        <div className="absolute -top-1 -right-1 p-0.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-2 ring-white/50">
+                          <PiTrophy className="h-2.5 w-2.5 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {miner.name || `Miner ${miner.uid}`}
+                      </p>
+                      <p className="text-xs text-white/60">UID {miner.uid}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-white">
+                        {miner.reward.toFixed(2)}%
+                      </p>
+                      <p className="text-xs text-white/60">#{rank}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-white/50">
+              <p className="text-sm">No miners found for this round</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Round Detail Metric Card Component (simplified version of MetricCard from rounds)
+function RoundDetailMetricCard({ card }: { card: any }) {
+  const Icon = card.icon;
+
+  return (
+    <div
+      className={cn(
+        "group relative overflow-hidden rounded-2xl p-6 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border-2 bg-gradient-to-br",
+        card.borderColor,
+        card.bgGradient
+      )}
+    >
+      <div className="relative flex flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <div
+            className={cn(
+              "p-3 rounded-xl bg-gradient-to-br shadow-lg",
+              card.iconGradient
+            )}
+          >
+            <Icon className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-white/60 mb-2">
+            {card.title}
+          </p>
+          <p
+            className={cn(
+              "font-bold text-white mb-1",
+              card.valueClass || "text-2xl"
+            )}
+          >
+            {card.value}
+          </p>
+          <p className="text-xs text-white/50">{card.helper}</p>
+        </div>
+      </div>
     </div>
   );
 }

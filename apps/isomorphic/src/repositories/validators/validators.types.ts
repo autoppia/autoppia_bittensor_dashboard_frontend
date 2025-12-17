@@ -76,6 +76,22 @@ export interface WebStats {
   useCases: UseCaseStats[];
 }
 
+export interface MinerData {
+  uid: number;
+  name: string | null;
+  image: string | null;
+  hotkey: string | null;
+  score: number;
+  reward: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+}
+
+export interface RoundDetails {
+  minersParticipated: number;
+  miners: MinerData[];
+}
+
 export interface ValidatorDetailsData {
   validator: ValidatorInfo;
   globalStats: GlobalStats;
@@ -83,6 +99,7 @@ export interface ValidatorDetailsData {
   webs: WebStats[];
   validatorImage: string | null;
   availableRounds: number[];
+  roundDetails: RoundDetails;
 }
 
 export interface ValidatorDetailsResponse {

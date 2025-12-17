@@ -9,4 +9,5 @@ export const routes = {
   evaluations: "/subnet36/evaluations",
   websites: "/websites",
   leaderboard: "/leaderboard",
+  validators: "/validator",
 };
