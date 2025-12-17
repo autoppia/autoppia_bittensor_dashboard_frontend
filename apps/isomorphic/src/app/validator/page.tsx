@@ -3,9 +3,14 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
-import Placeholder from "@/app/shared/placeholder";
 import { useValidators } from "@/services/hooks/useOverview";
 import ValidatorsSelector from "@/app/shared/validators-selector";
+import {
+  ValidatorsSelectorPlaceholder,
+  ValidatorCardsPlaceholder,
+  PerformanceAnalyticsPlaceholder,
+  SummaryPlaceholder,
+} from "@/components/placeholders/validator-placeholders";
 
 interface ValidatorPerformance {
   id: string;
@@ -17,6 +22,7 @@ interface ValidatorPerformance {
 
 export default function ValidatorsPage() {
   const router = useRouter();
+  
   const {
     data: validatorsData,
     loading: validatorsLoading,
@@ -43,40 +49,13 @@ export default function ValidatorsPage() {
       );
       
       if (autoppia) {
-        router.replace(`/validator/${autoppia.uid}`);
+        router.push(`/validator/${autoppia.uid}`);
+      } else if (validators.length > 0) {
+        // Fallback to first validator if Autoppia not found
+        router.push(`/validator/${validators[0].uid}`);
       }
     }
   }, [validators, validatorsLoading, router]);
-
-  if (validatorsLoading) {
-    return (
-      <div className="w-full max-w-[1280px] mx-auto bg-transparent">
-        <PageHeader
-          title="Validators"
-          description="Select a validator to view detailed performance metrics"
-        />
-        <div className="mt-10">
-          <Placeholder className="h-64" />
-        </div>
-      </div>
-    );
-  }
-
-  if (validatorsError) {
-    return (
-      <div className="w-full max-w-[1280px] mx-auto bg-transparent">
-        <PageHeader
-          title="Validators"
-          description="Select a validator to view detailed performance metrics"
-        />
-        <div className="mt-10 bg-red-900/20 border border-red-700/50 rounded-lg p-4">
-          <p className="text-red-400 text-sm">
-            ⚠️ Failed to load validators: {validatorsError}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -85,12 +64,24 @@ export default function ValidatorsPage() {
         description="Select a validator to view detailed performance metrics"
       />
 
-      <ValidatorsSelector
-        validators={validators}
-        loading={validatorsLoading}
-        error={validatorsError}
-        linkToDetails={true}
-      />
+      {/* Validators Selector */}
+      {validatorsLoading ? (
+        <ValidatorsSelectorPlaceholder />
+      ) : (
+        <ValidatorsSelector
+          validators={validators}
+          loading={validatorsLoading}
+          error={validatorsError}
+          linkToDetails={true}
+        />
+      )}
+
+      {/* Show loading placeholders while redirecting */}
+      <div className="mt-8">
+        <ValidatorCardsPlaceholder />
+        <PerformanceAnalyticsPlaceholder />
+        <SummaryPlaceholder />
+      </div>
     </div>
   );
 }
