@@ -64,6 +64,7 @@ export interface UseCaseStats {
 export interface WebStats {
   webName: string;
   webId: string;
+  webVersion?: string | null;
   totalEvaluations: number;
   successCount: number;
   zeroCount: number;
@@ -83,6 +84,8 @@ export interface MinerData {
   hotkey: string | null;
   score: number;
   reward: number;
+  evalScore: number;
+  evalTime: number;
   tasksCompleted: number;
   tasksTotal: number;
 }
