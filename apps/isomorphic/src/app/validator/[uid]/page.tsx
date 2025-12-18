@@ -33,6 +33,7 @@ import {
   PiListChecksDuotone,
   PiCrownDuotone,
   PiChartLineUp,
+  PiCurrencyDollar,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 import { getProjectColors } from "@/utils/website-colors";
@@ -365,9 +366,14 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
         <div className="flex gap-4">
           <div className="flex-1">
             <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Stake</p>
-            <p className="text-lg font-semibold text-white">
-              {validator.stake !== null ? `${formatNumber(validator.stake)} TAO` : "—"}
-            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600">
+                <PiCurrencyDollar className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-lg font-semibold text-white">
+                {validator.stake !== null ? `${(validator.stake / 1000).toFixed(0)}K` : "—"}
+              </p>
+            </div>
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Last Round</p>
