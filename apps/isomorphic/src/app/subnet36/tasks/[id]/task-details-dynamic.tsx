@@ -76,6 +76,10 @@ const formatNumber = (value?: number | null, digits: number = 2) => {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return "—";
   }
+  // For very small values (like stake), automatically use more decimal places
+  if (value > 0 && value < 0.01 && digits === 2) {
+    return value.toFixed(8);
+  }
   return value.toFixed(digits);
 };
 

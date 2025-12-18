@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { PieChart, Pie, Cell, ResponsiveContainer, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart } from "recharts";
 import { Select } from "rizzui";
 import Image from "next/image";
 import { validatorsRepository } from "@/repositories/validators/validators.repository";
@@ -46,8 +46,79 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
+// Custom Tooltip for Miner Scores Chart (matching Rounds style)
+function CustomMinerTooltip({ active, payload }: any) {
+  if (!active || !payload || !payload.length) return null;
+  
+  const minerData = payload[0].payload;
+  const evalScore = minerData?.evalScore ?? 0;
+  const evalTime = minerData?.evalTime ?? 0;
+  const reward = minerData?.score ?? 0;
+  const name = minerData?.name || `Miner ${minerData?.uid}`;
+  const uid = minerData?.uid;
+  
+  return (
+    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
+      <div className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
+        {name} - UID {uid}
+      </div>
+      <div className="px-4 py-3 text-sm space-y-2">
+        {/* Score (eval_score) */}
+        <div className="chart-tooltip-item flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+              style={{ backgroundColor: "#3B82F6" }}
+            />
+            <span className="capitalize text-white/90 font-semibold">Score:</span>
+          </div>
+          <span className="font-black text-white text-base">
+            {evalScore.toFixed(2)}%
+          </span>
+        </div>
+        
+        {/* Time (eval_time) */}
+        <div className="chart-tooltip-item flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+              style={{ backgroundColor: "#10B981" }}
+            />
+            <span className="capitalize text-white/90 font-semibold">Time:</span>
+          </div>
+          <span className="font-black text-white text-base">
+            {evalTime.toFixed(2)}s
+          </span>
+        </div>
+        
+        {/* Reward */}
+        <div className="chart-tooltip-item flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+              style={{ backgroundColor: "#F59E0B" }}
+            />
+            <span className="capitalize text-white/90 font-semibold">Reward:</span>
+          </div>
+          <span className="font-black text-white text-base">
+            {reward.toFixed(2)}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
+  // For very small values (like stake), show more decimal places
+  if (value > 0 && value < 0.01) {
+    return value.toLocaleString("en-US", { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8 
+    });
+  }
+  // For normal values, show up to 2 decimal places
   return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
@@ -751,6 +822,8 @@ function PerformanceAnalytics({
             }
 
             // Otherwise render web card
+            // Find the web data to get webVersion
+            const webData = data.webs.find((w) => capitalizeWebName(w.webName || w.webId) === item.name);
             return (
               <div
                 key={`${item.name}-${index}`}
@@ -769,6 +842,11 @@ function PerformanceAnalytics({
                     />
                     <span className="text-base sm:text-lg font-semibold text-white">
                       {capitalizeWebName(item.name)}
+                      {webData?.webVersion && (
+                        <span className="ml-2 text-xs font-normal text-white/60">
+                          v{webData.webVersion}
+                        </span>
+                      )}
                     </span>
                     <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
                       {item.successPct >= 60 ? (
@@ -1325,39 +1403,79 @@ function RoundDetailsTab({
             </h3>
           </div>
           {minersList.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
+            <ResponsiveContainer width="100%" height={400} minWidth={640}>
+              <ComposedChart
                 data={minersList.slice(0, 20).map((miner, index) => ({
                   name: miner.name || `Miner ${miner.uid}`,
                   uid: miner.uid,
-                  score: miner.reward,
+                  xAxisLabel: miner.uid,
+                  score: miner.reward / 100, // Convert to decimal for chart (will be formatted back to %)
+                  evalScore: miner.evalScore,
+                  evalTime: miner.evalTime,
                   rank: index + 1,
                 }))}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                margin={{ left: -20, top: 20, bottom: 30 }}
+                className="[&_.recharts-cartesian-grid-vertical]:opacity-0"
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#06B6D4" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  stroke="rgba(148,163,184,0.15)"
+                  strokeDasharray="4 4"
+                />
                 <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  tick={{ fill: "#E2E8F0", fontSize: 12 }}
+                  dataKey="xAxisLabel"
+                  tick={{
+                    fill: "rgba(226,232,240,0.9)",
+                    fontSize: 13,
+                    fontFamily: "var(--font-inter)",
+                    fontWeight: 500,
+                  }}
+                  axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+                  tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
+                  height={40}
+                  label={{
+                    value: "Miner UID",
+                    position: "insideBottom",
+                    offset: -5,
+                    fill: "#94a3b8",
+                    fontSize: 12,
+                  }}
                 />
                 <YAxis
-                  tick={{ fill: "#E2E8F0", fontSize: 12 }}
-                  label={{ value: "Reward (%)", angle: -90, position: "insideLeft", fill: "#E2E8F0" }}
+                  tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                  tick={{
+                    fill: "rgba(226,232,240,0.9)",
+                    fontSize: 13,
+                    fontFamily: "var(--font-inter)",
+                    fontWeight: 500,
+                  }}
+                  axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+                  tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: "8px",
-                    color: "#E2E8F0",
-                  }}
-                  formatter={(value: any) => [`${value.toFixed(2)}%`, "Reward"]}
+                  content={<CustomMinerTooltip />}
+                  cursor={{ fill: "rgba(148,163,184,0.1)" }}
                 />
-                <Bar dataKey="score" fill="#3B82F6" radius={[8, 8, 0, 0]} />
-              </BarChart>
+                <Bar
+                  dataKey="score"
+                  fill="url(#barGradient)"
+                  strokeWidth={0}
+                  radius={[8, 8, 0, 0]}
+                  barSize={25}
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={900}
+                >
+                  {minersList.slice(0, 20).map((miner, index) => (
+                    <Cell key={`cell-${miner.uid}-${index}`} fill="url(#barGradient)" />
+                  ))}
+                </Bar>
+              </ComposedChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-64 flex items-center justify-center text-white/50">
