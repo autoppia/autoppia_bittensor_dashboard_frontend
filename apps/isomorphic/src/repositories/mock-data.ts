@@ -63,7 +63,7 @@ export const mockValidators: ValidatorData[] = [
     id: "roundtable21",
     name: "RoundTable21",
     hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    icon: "/validators/RoundTable21.png",
+    icon: "/validators/roundtable.jpg",
     status: "Waiting",
     weight: 200261.91,
     trust: 0.9676,

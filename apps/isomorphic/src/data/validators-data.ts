@@ -40,7 +40,7 @@ export const validatorsData: ValidatorDataType[] = [
     id: "roundtable21",
     name: "RoundTable21",
     hotkey: "5G1NjW9YhXLadMWajvTkfcJy6up3yH2q1YzMXDTi6ijanChe",
-    icon: "/validators/RoundTable21.png",
+    icon: "/validators/roundtable.jpg",
     currentTask: "Fill out the contact form with a name equal to 'Linda', a message that does not contain 'Just a quick question', and an email that contains 'jane@doe.com'.",
     status: "Waiting",
     total_tasks: 3465,

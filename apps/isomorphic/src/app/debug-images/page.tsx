@@ -152,7 +152,7 @@ export default function DebugImagesPage() {
               { name: "Autoppia", src: "/validators/Autoppia.png" },
               { name: "Kraken", src: "/validators/Kraken.png" },
               { name: "tao5", src: "/validators/tao5.png" },
-              { name: "RoundTable21", src: "/validators/RoundTable21.png" },
+              { name: "RoundTable21", src: "/validators/roundtable.jpg" },
               { name: "Yuma", src: "/validators/Yuma.png" },
               { name: "Other", src: "/validators/Other.png" },
             ].map((validator) => (
