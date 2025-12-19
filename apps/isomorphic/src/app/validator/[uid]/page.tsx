@@ -347,7 +347,7 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
   const validatorName = validatorInfo?.name || `Validator ${validator.uid}`;
   
   return (
-    <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
+    <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
         <div className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white/30 bg-white/10 shadow-lg ring-2 ring-emerald-400/20">
           <Image
@@ -437,7 +437,7 @@ function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsDa
   ) : "Last Round Winner";
   
   return (
-    <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
+    <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
         <div className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white/30 bg-white/10 shadow-lg ring-2 ring-amber-400/20">
           {context.lastRoundWinner !== null ? (
@@ -511,7 +511,7 @@ function GlobalStatsCard({ data, selectedRound }: { data: ValidatorDetailsData; 
   const roundLabel = selectedRound !== null ? `Round ${selectedRound}` : "All Rounds";
   
   return (
-    <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
+    <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-600/30 border border-blue-400/30 shadow-lg">
           <PiChartBar className="h-7 w-7 text-blue-300" />
@@ -523,12 +523,12 @@ function GlobalStatsCard({ data, selectedRound }: { data: ValidatorDetailsData; 
           <p className="text-xs text-white/60">{roundLabel}</p>
         </div>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 flex flex-col">
         <div className="rounded-lg bg-white/10 p-4 border border-white/10">
           <p className="text-xs uppercase tracking-wide text-white/60 mb-2">Total Evaluations</p>
           <p className="text-3xl font-bold text-white">{formatNumber(stats.totalEvaluations)}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 flex-1">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-4 border border-emerald-400/30 flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <PiCheckCircle className="h-5 w-5 text-emerald-300" />
@@ -1238,9 +1238,15 @@ export default function ValidatorDetailsPage() {
 
       {/* Three cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <ValidatorDetailsCard data={data} />
-        <GlobalStatsCard data={data} selectedRound={selectedRound} />
-        <LastRoundWinnerCard data={data} selectedRound={selectedRound} />
+        <div className="h-full">
+          <ValidatorDetailsCard data={data} />
+        </div>
+        <div className="h-full">
+          <GlobalStatsCard data={data} selectedRound={selectedRound} />
+        </div>
+        <div className="h-full">
+          <LastRoundWinnerCard data={data} selectedRound={selectedRound} />
+        </div>
       </div>
 
       {/* Tabs Navigation */}
