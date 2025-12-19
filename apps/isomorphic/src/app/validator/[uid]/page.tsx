@@ -619,51 +619,53 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
         background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`,
       }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <div
-            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
-            style={{ backgroundColor: projectColors.dotColor }}
-          />
-          <span className="text-base sm:text-lg font-semibold text-white">
-            {useCase.useCaseName || useCase.useCaseId}
-          </span>
-          <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
-            {useCase.successPct >= 60 ? (
-              <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            ) : (
-              <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            )}
-            <span className="hidden sm:inline">{performance.statusText}</span>
-            <span className="sm:hidden">
-              {useCase.successPct >= 80 ? "Top" : useCase.successPct >= 60 ? "Good" : useCase.successPct >= 40 ? "Fair" : useCase.successPct >= 20 ? "Low" : "Crit"}
+      <div className="space-y-3 mb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div
+              className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
+              style={{ backgroundColor: projectColors.dotColor }}
+            />
+            <span className="text-base sm:text-lg font-semibold text-white">
+              {useCase.useCaseName || useCase.useCaseId}
             </span>
-          </div>
-          {badge && (
-            <span
-              className={cn(
-                "px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
-                badge.type === "danger"
-                  ? "bg-red-500/30 text-red-200 border border-red-400/50"
-                  : "bg-yellow-500/30 text-yellow-200 border border-yellow-400/50"
+            <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
+              {useCase.successPct >= 60 ? (
+                <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              ) : (
+                <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               )}
-            >
-              {badge.text}
-            </span>
-          )}
-        </div>
-        <div className="text-left sm:text-right">
-          {(() => {
-            const performance = getPerformanceStatus(useCase.successPct);
-            return (
-              <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
-                {formatPercentage(useCase.successPct)}
-              </div>
-            );
-          })()}
-          <div className="text-xs sm:text-sm text-slate-400">
-            {useCase.totalEvaluations} requests • {useCase.successCount} successful
+              <span className="hidden sm:inline">{performance.statusText}</span>
+              <span className="sm:hidden">
+                {useCase.successPct >= 80 ? "Top" : useCase.successPct >= 60 ? "Good" : useCase.successPct >= 40 ? "Fair" : useCase.successPct >= 20 ? "Low" : "Crit"}
+              </span>
+            </div>
+            {badge && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+                  badge.type === "danger"
+                    ? "bg-red-500/30 text-red-200 border border-red-400/50"
+                    : "bg-yellow-500/30 text-yellow-200 border border-yellow-400/50"
+                )}
+              >
+                {badge.text}
+              </span>
+            )}
           </div>
+          <div className="text-right">
+            {(() => {
+              const performance = getPerformanceStatus(useCase.successPct);
+              return (
+                <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
+                  {formatPercentage(useCase.successPct)}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+        <div className="text-xs sm:text-sm text-slate-400">
+          {useCase.totalEvaluations} requests • {useCase.successCount} successful
         </div>
       </div>
 
@@ -741,6 +743,8 @@ function PerformanceAnalytics({
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
 }) {
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
   const websiteOptions = [
     { value: "__all__", label: "All Websites" },
     ...data.webs
@@ -752,36 +756,44 @@ function PerformanceAnalytics({
       })),
   ];
 
-  const roundOptions = [
-    { value: "__all__", label: "All Rounds" },
-    ...(data.availableRounds || []).map((round) => ({
-      value: round.toString(),
-      label: `Round ${round}`,
-    })),
+  const sortOptions = [
+    { value: "desc", label: "Highest %" },
+    { value: "asc", label: "Lowest %" },
   ];
 
-  const chartData = selectedWeb && selectedWeb !== "__all__"
-    ? (() => {
-        const selectedWebData = data.webs.find((w) => w.webId === selectedWeb);
-        if (!selectedWebData) return [];
-        return selectedWebData.useCases.map((uc, idx) => ({
-          name: uc.useCaseName || uc.useCaseId,
-          successPct: uc.successPct,
-          total: uc.totalEvaluations,
-          successCount: uc.successCount,
-          colorIndex: idx,
-        }));
-      })()
-    : data.webs
-        .slice()
-        .sort((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
-        .map((web, idx) => ({
-          name: capitalizeWebName(web.webName || web.webId),
-          successPct: web.successPct,
-          total: web.totalEvaluations,
-          successCount: web.successCount,
-          colorIndex: idx,
-        }));
+  const chartData = React.useMemo(() => {
+    const rawData = selectedWeb && selectedWeb !== "__all__"
+      ? (() => {
+          const selectedWebData = data.webs.find((w) => w.webId === selectedWeb);
+          if (!selectedWebData) return [];
+          return selectedWebData.useCases.map((uc, idx) => ({
+            name: uc.useCaseName || uc.useCaseId,
+            successPct: uc.successPct,
+            total: uc.totalEvaluations,
+            successCount: uc.successCount,
+            colorIndex: idx,
+          }));
+        })()
+      : data.webs
+          .slice()
+          .map((web, idx) => ({
+            name: capitalizeWebName(web.webName || web.webId),
+            successPct: web.successPct,
+            total: web.totalEvaluations,
+            successCount: web.successCount,
+            colorIndex: idx,
+            webId: web.webId,
+          }));
+
+    // Sort by percentage
+    return rawData.slice().sort((a, b) => {
+      if (sortOrder === "desc") {
+        return b.successPct - a.successPct;
+      } else {
+        return a.successPct - b.successPct;
+      }
+    });
+  }, [data.webs, selectedWeb, sortOrder]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-transparent p-6 text-white">
@@ -802,18 +814,6 @@ function PerformanceAnalytics({
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
             <Select
-              options={roundOptions}
-              value={roundOptions.find(
-                (opt) => opt.value === (selectedRound !== null ? selectedRound.toString() : "__all__")
-              )}
-              onChange={(option: { label: string; value: string }) =>
-                setSelectedRound(
-                  option.value === "__all__" ? null : parseInt(option.value, 10)
-                )
-              }
-              className="w-full sm:w-[140px] text-sm rounded-lg border border-purple-500/40 bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-100 focus:border-purple-400/60 focus:ring-0 hover:border-purple-400/50"
-            />
-            <Select
               options={websiteOptions}
               value={websiteOptions.find(
                 (opt) => opt.value === (selectedWeb ?? "__all__")
@@ -824,6 +824,14 @@ function PerformanceAnalytics({
                 )
               }
               className="w-full sm:w-[160px] text-sm rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 focus:border-blue-400/60 focus:ring-0 hover:border-blue-400/50"
+            />
+            <Select
+              options={sortOptions}
+              value={sortOptions.find((opt) => opt.value === sortOrder)}
+              onChange={(option: { label: string; value: string }) =>
+                setSortOrder(option.value as "desc" | "asc")
+              }
+              className="w-full sm:w-[140px] text-sm rounded-lg border border-emerald-500/40 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-emerald-100 focus:border-emerald-400/60 focus:ring-0 hover:border-emerald-400/50"
             />
           </div>
         </div>
@@ -851,7 +859,9 @@ function PerformanceAnalytics({
 
             // Otherwise render web card
             // Find the web data to get webVersion
-            const webData = data.webs.find((w) => capitalizeWebName(w.webName || w.webId) === item.name);
+            const webData = data.webs.find((w) => 
+              capitalizeWebName(w.webName || w.webId) === item.name || w.webId === (item as any).webId
+            );
             return (
               <div
                 key={`${item.name}-${index}`}
@@ -862,44 +872,46 @@ function PerformanceAnalytics({
                   background: `linear-gradient(to bottom right, ${projectColors.mainColor}26, ${projectColors.mainColor}1A)`,
                 }}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <div
-                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: projectColors.dotColor }}
-                    />
-                    <span className="text-base sm:text-lg font-semibold text-white">
-                      {capitalizeWebName(item.name)}
+                <div className="space-y-3 mb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <div
+                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm flex-shrink-0"
+                        style={{ backgroundColor: projectColors.dotColor }}
+                      />
+                      <span className="text-base sm:text-lg font-semibold text-white">
+                        {capitalizeWebName(item.name)}
+                      </span>
                       {webData?.webVersion && (
-                        <span className="ml-2 text-xs font-normal text-white/60">
+                        <span className="text-xs font-normal text-white/60">
                           v{webData.webVersion}
                         </span>
                       )}
-                    </span>
-                    <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
-                      {item.successPct >= 60 ? (
-                        <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      ) : (
-                        <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      )}
-                      <span className="hidden sm:inline">{performance.statusText}</span>
-                      <span className="sm:hidden">
-                        {item.successPct >= 80 ? "Top" : item.successPct >= 60 ? "Good" : item.successPct >= 40 ? "Fair" : item.successPct >= 20 ? "Low" : "Crit"}
-                      </span>
+                      <div className={`flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium border ${performance.badgeClass}`}>
+                        {item.successPct >= 60 ? (
+                          <PiTrendUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        ) : (
+                          <PiTrendDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        )}
+                        <span className="hidden sm:inline">{performance.statusText}</span>
+                        <span className="sm:hidden">
+                          {item.successPct >= 80 ? "Top" : item.successPct >= 60 ? "Good" : item.successPct >= 40 ? "Fair" : item.successPct >= 20 ? "Low" : "Crit"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {(() => {
+                        const performance = getPerformanceStatus(item.successPct);
+                        return (
+                          <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
+                            {item.successPct.toFixed(1)}%
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
-                  <div className="text-left sm:text-right">
-                    {(() => {
-                      const performance = getPerformanceStatus(item.successPct);
-                      return (
-                        <div className={`text-xl sm:text-2xl font-bold ${performance.textColor}`}>
-                          {item.successPct.toFixed(1)}%
-                        </div>
-                      );
-                    })()}
-                    <div className="text-xs sm:text-sm text-slate-400">
-                      {item.total} requests • {item.successCount} successful
-                    </div>
+                  <div className="text-xs sm:text-sm text-slate-400">
+                    {item.total} requests • {item.successCount} successful
                   </div>
                 </div>
 
@@ -1278,38 +1290,62 @@ function TabsSection({
 }) {
   const [activeTab, setActiveTab] = useState<"performance" | "rounds">("performance");
 
+  const roundOptions = [
+    { value: "__all__", label: "All Rounds" },
+    ...(data.availableRounds || []).map((round) => ({
+      value: round.toString(),
+      label: `Round ${round}`,
+    })),
+  ];
+
   return (
     <div className="mt-8">
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 mb-6 border-b border-white/10">
-        <button
-          onClick={() => setActiveTab("performance")}
-          className={cn(
-            "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
-            activeTab === "performance"
-              ? "text-white"
-              : "text-white/60 hover:text-white/80"
-          )}
-        >
-          Performance
-          {activeTab === "performance" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("rounds")}
-          className={cn(
-            "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
-            activeTab === "rounds"
-              ? "text-white"
-              : "text-white/60 hover:text-white/80"
-          )}
-        >
-          Round Details
-          {activeTab === "rounds" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 rounded-full" />
-          )}
-        </button>
+      <div className="flex items-center justify-between gap-4 mb-6 border-b border-white/10 pb-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveTab("performance")}
+            className={cn(
+              "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
+              activeTab === "performance"
+                ? "text-white"
+                : "text-white/60 hover:text-white/80"
+            )}
+          >
+            Performance
+            {activeTab === "performance" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("rounds")}
+            className={cn(
+              "px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 relative",
+              activeTab === "rounds"
+                ? "text-white"
+                : "text-white/60 hover:text-white/80"
+            )}
+          >
+            Round Details
+            {activeTab === "rounds" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 rounded-full" />
+            )}
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select
+            options={roundOptions}
+            value={roundOptions.find(
+              (opt) => opt.value === (selectedRound !== null ? selectedRound.toString() : "__all__")
+            )}
+            onChange={(option: { label: string; value: string }) =>
+              setSelectedRound(
+                option.value === "__all__" ? null : parseInt(option.value, 10)
+              )
+            }
+            className="w-[160px] text-sm rounded-lg border border-purple-500/40 bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-100 focus:border-purple-400/60 focus:ring-0 hover:border-purple-400/50"
+          />
+        </div>
       </div>
 
       {/* Tab Content */}
