@@ -335,51 +335,67 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
     ? resolveAssetUrl(data.validatorImage)
     : resolveAssetUrl("/validators/Other.png");
   
+  // Get validator name from validators list if available
+  const { data: validatorsData } = useValidators({ limit: 100 });
+  const validatorInfo = React.useMemo(() => {
+    if (!validatorsData?.data?.validators) return null;
+    return validatorsData.data.validators.find(
+      (v: any) => v.validatorUid === validator.uid
+    );
+  }, [validatorsData, validator.uid]);
+  
+  const validatorName = validatorInfo?.name || `Validator ${validator.uid}`;
+  
   return (
     <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/20 bg-white/10 shadow-md">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white/30 bg-white/10 shadow-lg ring-2 ring-emerald-400/20">
           <Image
             src={validatorImageSrc}
-            alt="Validator"
-            width={48}
-            height={48}
+            alt={validatorName}
+            width={56}
+            height={56}
             className="object-cover"
             unoptimized
           />
         </div>
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1">
             Validator Details
           </h3>
+          <p className="text-lg font-bold text-white truncate" title={validatorName}>
+            {validatorName}
+          </p>
         </div>
       </div>
-      <div className="space-y-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-white/60 mb-1">UID</p>
-          <p className="text-2xl font-bold text-white">{validator.uid}</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+            <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">UID</p>
+            <p className="text-xl font-bold text-white">{validator.uid}</p>
+          </div>
+          <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+            <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Last Round</p>
+            <p className="text-xl font-bold text-white">
+              {validator.lastRoundEvaluated ?? "—"}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Hotkey</p>
-          <p className="text-sm font-mono text-white/90">{truncateMiddle(validator.hotkey, 8)}</p>
+        <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+          <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Hotkey</p>
+          <p className="text-sm font-mono text-white/90 break-all">{truncateMiddle(validator.hotkey, 8)}</p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Stake</p>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600">
-                <PiCurrencyDollar className="w-5 h-5 text-white" />
-              </div>
-              <p className="text-lg font-semibold text-white">
+        <div className="rounded-lg bg-gradient-to-br from-yellow-500/20 to-amber-600/20 p-3 border border-yellow-400/30">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg">
+              <PiCurrencyDollar className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-wide text-white/60 mb-0.5">Stake</p>
+              <p className="text-xl font-bold text-white">
                 {validator.stake !== null ? `${(validator.stake / 1000).toFixed(0)}K` : "—"}
               </p>
             </div>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Last Round</p>
-            <p className="text-lg font-semibold text-white">
-              {validator.lastRoundEvaluated ?? "—"}
-            </p>
           </div>
         </div>
       </div>
@@ -422,67 +438,67 @@ function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsDa
   
   return (
     <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/20 bg-white/10 shadow-md">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white/30 bg-white/10 shadow-lg ring-2 ring-amber-400/20">
           {context.lastRoundWinner !== null ? (
             <Image
               src={minerImageSrc}
               alt={context.lastRoundWinnerName || "Winner"}
-              width={48}
-              height={48}
+              width={56}
+              height={56}
               className="object-cover"
               unoptimized
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <PiTrophy className="h-6 w-6 text-amber-300" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-500/30 to-orange-600/30">
+              <PiTrophy className="h-7 w-7 text-amber-300" />
             </div>
           )}
         </div>
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-0.5">
             {typeof cardTitle === 'string' ? cardTitle : (
-              <span>{cardTitle}</span>
+              <span className="text-white/80">{cardTitle}</span>
             )}
           </h3>
         </div>
       </div>
-      <div className="space-y-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Miner</p>
+      <div className="space-y-4">
+        <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+          <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Miner</p>
           {minerLink && context.lastRoundWinnerName ? (
-            <Link href={minerLink} className="text-2xl font-bold text-white hover:text-amber-300 transition-colors">
+            <Link href={minerLink} className="text-xl font-bold text-white hover:text-amber-300 transition-colors block truncate" title={context.lastRoundWinnerName}>
               {context.lastRoundWinnerName}
             </Link>
           ) : (
-            <p className="text-2xl font-bold text-white">
+            <p className="text-xl font-bold text-white truncate">
               {context.lastRoundWinnerName || (context.lastRoundWinner !== null ? `Miner ${context.lastRoundWinner}` : "—")}
             </p>
           )}
         </div>
         {context.lastRoundWinner !== null && (
-          <div>
-            <p className="text-xs uppercase tracking-wide text-white/60 mb-1">UID</p>
-            <p className="text-lg font-semibold text-white">{context.lastRoundWinner}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+              <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">UID</p>
+              <p className="text-lg font-bold text-white">{context.lastRoundWinner}</p>
+            </div>
+            <div className="rounded-lg bg-white/10 p-3 border border-white/10">
+              <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Weight</p>
+              <p className="text-lg font-bold text-white">
+                {context.lastRoundWinnerWeight !== null
+                  ? formatNumber(context.lastRoundWinnerWeight)
+                  : "—"}
+              </p>
+            </div>
           </div>
         )}
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Reward</p>
-            <p className="text-lg font-semibold text-white">
-              {context.lastRoundWinnerReward !== null
-                ? formatPercentage(context.lastRoundWinnerReward * 100)
-                : "—"}
-            </p>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Weight</p>
-            <p className="text-lg font-semibold text-white">
-              {context.lastRoundWinnerWeight !== null
-                ? formatNumber(context.lastRoundWinnerWeight)
-                : "—"}
-            </p>
-          </div>
+        <div className="rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-600/20 p-3 border border-amber-400/30">
+          <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Reward</p>
+          <p className="text-2xl font-bold text-amber-300">
+            {context.lastRoundWinnerReward !== null
+              ? formatPercentage(context.lastRoundWinnerReward * 100)
+              : "—"}
+          </p>
         </div>
       </div>
     </div>
@@ -496,39 +512,45 @@ function GlobalStatsCard({ data, selectedRound }: { data: ValidatorDetailsData; 
   
   return (
     <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
-          <PiChartBar className="h-6 w-6 text-blue-300" />
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-600/30 border border-blue-400/30 shadow-lg">
+          <PiChartBar className="h-7 w-7 text-blue-300" />
         </div>
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80 mb-0.5">
             Global Stats
           </h3>
-          <p className="text-xs text-white/60 mt-0.5">{roundLabel}</p>
+          <p className="text-xs text-white/60">{roundLabel}</p>
         </div>
       </div>
       <div className="space-y-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-white/60 mb-1">Total Evaluations</p>
-          <p className="text-2xl font-bold text-white">{formatNumber(stats.totalEvaluations)}</p>
+        <div className="rounded-lg bg-white/10 p-4 border border-white/10">
+          <p className="text-xs uppercase tracking-wide text-white/60 mb-2">Total Evaluations</p>
+          <p className="text-3xl font-bold text-white">{formatNumber(stats.totalEvaluations)}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-white/10 p-4 flex flex-col items-center justify-center min-h-[100px]">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-4 border border-emerald-400/30 flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <PiCheckCircle className="h-4 w-4 text-emerald-300" />
-              <p className="text-xs uppercase tracking-wide text-white/60">Success</p>
+              <PiCheckCircle className="h-5 w-5 text-emerald-300" />
+              <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Success</p>
             </div>
-            <p className="text-lg font-semibold text-emerald-300 text-center">
-              {formatNumber(stats.successCount)} ({formatPercentage(stats.successPct)})
+            <p className="text-xl font-bold text-emerald-300 text-center mb-1">
+              {formatNumber(stats.successCount)}
+            </p>
+            <p className="text-xs text-emerald-200/80 font-semibold">
+              {formatPercentage(stats.successPct)}
             </p>
           </div>
-          <div className="rounded-lg bg-white/10 p-4 flex flex-col items-center justify-center min-h-[100px]">
+          <div className="rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 p-4 border border-red-400/30 flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <PiXCircle className="h-4 w-4 text-red-300" />
-              <p className="text-xs uppercase tracking-wide text-white/60">Fail</p>
+              <PiXCircle className="h-5 w-5 text-red-300" />
+              <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Fail</p>
             </div>
-            <p className="text-lg font-semibold text-red-300 text-center">
-              {formatNumber(stats.zeroCount)} ({formatPercentage(stats.zeroPct)})
+            <p className="text-xl font-bold text-red-300 text-center mb-1">
+              {formatNumber(stats.zeroCount)}
+            </p>
+            <p className="text-xs text-red-200/80 font-semibold">
+              {formatPercentage(stats.zeroPct)}
             </p>
           </div>
         </div>
