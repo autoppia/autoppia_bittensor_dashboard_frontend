@@ -51,20 +51,14 @@ function useApiCall<T>(
   const fetchData = useCallback(async () => {
     // Reset cancelled flag for new fetch
     cancelledRef.current = false;
-    console.log('[useApiCall] Starting fetch for:', dependencyKey);
     try {
       setLoading(true);
       setError(null);
-      console.log('[useApiCall] Calling API...');
       const result = await apiCall();
-      console.log('[useApiCall] API call successful, result:', result);
       // Only update state if not cancelled
       if (!cancelledRef.current) {
         setData(result);
         setLoading(false);
-        console.log('[useApiCall] State updated with data');
-      } else {
-        console.warn('[useApiCall] ⚠️ Fetch was cancelled, not updating state');
       }
     } catch (err: any) {
       console.error('[useApiCall] API call failed:', err);
@@ -81,22 +75,16 @@ function useApiCall<T>(
         } else if (err?.toString) {
           errorMessage = err.toString();
         }
-        console.error('[useApiCall] Error message:', errorMessage);
         setError(errorMessage);
         setLoading(false);
-        console.log('[useApiCall] State updated with error');
-      } else {
-        console.warn('[useApiCall] ⚠️ Fetch was cancelled during error, not updating state');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiCall]);
 
   useEffect(() => {
-    console.log('[useApiCall] Effect triggered for:', dependencyKey, 'enabled:', enabled, 'hasFetched:', hasFetchedRef.current);
     // Don't fetch if disabled
     if (!enabled) {
-      console.log('[useApiCall] Fetch disabled, resetting state');
       setLoading(false);
       setData(null);
       setError(null);
@@ -109,18 +97,15 @@ function useApiCall<T>(
     
     // Only skip if we've already fetched with the same key
     if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
-      console.log('[useApiCall] Already fetched for key:', key, ', skipping');
       return;
     }
     
     // Cancel previous fetch if dependency key changed
     if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
-      console.log('[useApiCall] Dependency key changed from', lastDependencyKeyRef.current, 'to', key);
       cancelledRef.current = true;
       hasFetchedRef.current = false; // Reset when key changes
     }
     
-    console.log('[useApiCall] Starting new fetch for key:', key);
     lastDependencyKeyRef.current = key;
     hasFetchedRef.current = true;
     
@@ -128,12 +113,6 @@ function useApiCall<T>(
     cancelledRef.current = false;
     
     fetchData();
-    
-    return () => {
-      console.log('[useApiCall] Cleanup for key:', key);
-      // Don't cancel on cleanup - let the fetch complete
-      // cancelledRef.current = true;
-    };
   }, [dependencyKey, enabled, fetchData]);
 
   const refetch = useCallback(() => {
