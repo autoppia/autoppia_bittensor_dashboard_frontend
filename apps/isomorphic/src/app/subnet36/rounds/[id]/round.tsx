@@ -1515,18 +1515,13 @@ function RoundMinerScoresInline({
 
   const chartData = React.useMemo(() => {
     if (!chartSource?.miners) {
-      console.log("[RoundMinerScores] No miners in chartSource:", chartSource);
       return [] as any[];
     }
-    console.log("[RoundMinerScores] chartSource.miners:", chartSource.miners);
-    console.log("[RoundMinerScores] selectedValidator:", selectedValidator);
     const benchmarkColorCache = new Map<string, string>();
     let fallbackColorIndex = 0;
     const benchmarks: BenchmarkPerformance[] = chartSource.benchmarks || [];
     // ✅ Los miners ya vienen filtrados desde chartSource según selectedValidator
     const filteredMiners = chartSource.miners;
-    console.log("[RoundMinerScores] filteredMiners:", filteredMiners);
-    console.log("[RoundMinerScores] benchmarks:", benchmarks);
     const minerEntries = filteredMiners.map((miner: any) => {
       const score = normalizeScore(miner.score);
       const rawIsSota =
