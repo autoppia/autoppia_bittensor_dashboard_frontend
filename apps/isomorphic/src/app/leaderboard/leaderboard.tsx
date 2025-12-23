@@ -8,7 +8,6 @@ import {
   FaChartBar,
   FaBolt,
   FaCrown,
-  FaStar,
   FaFire,
   FaDownload,
 } from "react-icons/fa";

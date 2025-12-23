@@ -433,17 +433,14 @@ function TaskDetailsDynamic({
 
   // Extract project name from website URL using existing websitesData configuration
   const getProjectName = (url: string): string => {
-    console.log("getProjectName called with URL:", url);
     if (!url) return "—";
 
     try {
       const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
       const hostname = urlObj.hostname.toLowerCase();
-      console.log("hostname extracted:", hostname);
 
       // Remove www. prefix
       const cleanHostname = hostname.replace(/^www\./, "");
-      console.log("cleanHostname:", cleanHostname);
 
       // Map common domains to project names (excluding localhost to handle ports specifically)
       const projectMap: Record<string, string> = {
@@ -488,25 +485,16 @@ function TaskDetailsDynamic({
       if (cleanHostname === "localhost") {
         // Extract port from URL object (not hostname)
         const port = urlObj.port;
-        console.log("Port extracted from URL:", port);
 
         if (port) {
           // Find project by port in websitesData
           const project = websitesData.find(
             (site) => site.portValidator === port
           );
-          console.log("Project found:", project?.name);
 
           if (project) {
             return project.name;
           }
-
-          // Debug: if no project found, log the details
-          console.log("Port not found in websitesData:", port);
-          console.log(
-            "Available ports:",
-            websitesData.map((site) => site.portValidator)
-          );
         }
 
         // If no port or project found, return localhost
