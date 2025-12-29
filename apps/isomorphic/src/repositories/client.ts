@@ -140,10 +140,15 @@ export class ApiClient {
 
       // Create abort controller for timeout
       const controller = new AbortController();
+      // Use longer timeout for heavy endpoints (overview/metrics)
+      const isHeavyEndpoint = endpoint.includes('/overview/metrics') || 
+                               endpoint.includes('/overview/validators') ||
+                               endpoint.includes('/leaderboard');
+      const timeout = isHeavyEndpoint ? 30000 : 10000; // 30s for heavy endpoints, 10s for others
       const timeoutId = setTimeout(() => {
-        console.warn('[ApiClient] Request timeout after 10s for:', url.toString());
+        console.warn(`[ApiClient] Request timeout after ${timeout/1000}s for:`, url.toString());
         controller.abort();
-      }, 10000); // 10 second timeout
+      }, timeout);
 
       try {
         const response = await fetch(url.toString(), {
