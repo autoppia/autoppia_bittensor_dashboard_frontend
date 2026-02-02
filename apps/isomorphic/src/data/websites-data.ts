@@ -227,6 +227,58 @@ export const websitesData: WebsiteDataType[] = [
           "Login for the following username:user<web_agent_id> and password:password123. Update your profile to ensure that your first name does NOT contain 'car' and that your website contains 'https://cinephileworld.example.org'.",
         ],
       },
+      {
+        name: "ADD TO WATCHLIST",
+        examplePrompt: [
+          "Add to watchlist The Matrix movie",
+          "Add to wishlist Interstellar by Christopher Nolan",
+          "Add to watchlist sci-fi movie from 2010",
+          "Add to watchlist movie with rating above 4.5",
+          "Add to wishlist Pulp Fiction film",
+          "Add to watchlist a comedy film less than 100 minutes long",
+          "Add to wishlist a film from the 90s with Al Pacino",
+          "Add to watchlist a horror movie not directed by Wes Craven",
+          "Add to wishlist a highest-rated James Cameron film",
+        ],
+      },
+      {
+        name: "REMOVE FROM WATCHLIST",
+        examplePrompt: [
+          "Remove The Shawshank Redemption from the watchlist",
+          "Remove a drama movie directed by Frank Darabont from the watchlist",
+          "Remove any movie released before 2000 from the watchlist",
+          "Remove Inception from my watchlist",
+          "Remove the sci-fi film from watchlist",
+        ],
+      },
+      {
+        name: "SHARE FILM",
+        examplePrompt: [
+          "Share The Matrix movie",
+          "Share Interstellar by Christopher Nolan",
+          "Share sci-fi movie from 2010",
+          "Share movie with rating above 4.5",
+          "Share Pulp Fiction film details",
+          "Share comedy film less than 100 minutes long",
+          "Share film details from the 90s with Al Pacino",
+          "Share horror movie not directed by Wes Craven",
+          "Share highest-rated James Cameron film",
+        ],
+      },
+      {
+        name: "WATCH TRAILER",
+        examplePrompt: [
+          "Watch the trailer for The Matrix movie",
+          "Play the trailer of Interstellar by Christopher Nolan",
+          "Watch the trailer for a sci-fi movie from 2010",
+          "View the trailer for a movie with rating above 4.5",
+          "Watch the trailer for Pulp Fiction film",
+          "Play the trailer of a comedy film less than 100 minutes long",
+          "Watch the trailer for a film from the 90s with Al Pacino",
+          "View the trailer for a horror movie not directed by Wes Craven",
+          "Watch the trailer for the highest-rated James Cameron film",
+        ],
+      },
     ],
     comingSoonNote: "More task examples coming soon.",
   },
@@ -454,6 +506,64 @@ export const websitesData: WebsiteDataType[] = [
           "First, authenticate with username 'user<web_agent_id>' and password 'PASSWORD'. Once logged in, please purchase books where the name does NOT contain 'kku', the author does NOT contain 'mqg', and the year is LESS THAN 2021.",
         ],
       },
+      {
+        name: "SHARE BOOK",
+        examplePrompt: [
+          "Share 'The Housemaid Is Watching' book",
+          "Share book details for 'Art of Computer Programming, the, Volumes 1-4B, Boxed Set' by Donald Knuth",
+          "Share Science book from 2022",
+          "Share book with rating above 4.5",
+          "Share 'Fourth Wing' book details",
+          "Share 'Magazine' book less than 1000 pages long",
+        ],
+      },
+      {
+        name: "OPEN PREVIEW",
+        examplePrompt: [
+          "Open preview of 'The Housemaid Is Watching' book",
+          "Open preview of book for 'Art of Computer Programming, the, Volumes 1-4B, Boxed Set' by Donald Knuth",
+          "Open preview of Science book from 2022",
+          "Open preview of book with rating above 4.5",
+          "Open preview of 'Fourth Wing' book",
+          "Open preview of 'Magazine' book less than 1000 pages long",
+        ],
+      },
+      {
+        name: "ADD TO READING LIST",
+        examplePrompt: [
+          "Add to reading list 'The Housemaid Is Watching' book",
+          "Add to reading list a book 'Art of Computer Programming, the, Volumes 1-4B, Boxed Set' by Donald Knuth",
+          "Add to reading list a Science book from 2022",
+          "Add to reading list a book with rating above 4.5",
+          "Add to reading list a 'Fourth Wing' book",
+          "Add to reading list a 'Magazine' book less than 1000 pages long",
+        ],
+      },
+      {
+        name: "REMOVE FROM READING LIST",
+        examplePrompt: [
+          "Remove from reading list 'The Housemaid Is Watching'",
+          "Remove from reading list a book by Donald Knuth",
+          "Remove from reading list a Science book",
+          "Remove any book with low rating from reading list",
+        ],
+      },
+      {
+        name: "ADD TO CART BOOK",
+        examplePrompt: [
+          "Login with username: user<web_agent_id> and password: PASSWORD. After logging in, add 'Fourth Wing' to your shopping cart.",
+          "First sign in with username: user<web_agent_id> and password: PASSWORD. Then place a book with page count greater than 700, with genre 'Education' into your shopping cart.",
+          "Login and add 'The Martian' to cart",
+        ],
+      },
+      {
+        name: "REMOVE FROM CART BOOK",
+        examplePrompt: [
+          "Login with username: user<web_agent_id> and password: PASSWORD. After logging in, remove 'Fourth Wing' from your shopping cart.",
+          "First sign in with username: user<web_agent_id> and password: PASSWORD. Then remove a book with genre 'Education' from your shopping cart.",
+          "Login and remove book from shopping cart",
+        ],
+      },
     ],
     comingSoonNote: "More task examples coming soon.",
   },
@@ -604,6 +714,47 @@ export const websitesData: WebsiteDataType[] = [
           "Complete my order with a summary of items that have titles containing 'art'.",
           "Complete my order and ensure that the title does NOT contain 'TabletXYZ884'",
           "Complete my order with a product whose title is NOT equal to 'Yoga Block'",
+        ],
+      },
+      {
+        name: "DETAILS TOGGLE",
+        examplePrompt: [
+          "Expand the Explore further section for the Espresso Machine page.",
+          "Collapse the Explore further accordion on the KitchenAid Stand Mixer details.",
+          "Keep the Explore further module open for the technology bundle I'm viewing.",
+        ],
+      },
+      {
+        name: "CATEGORY FILTER",
+        examplePrompt: [
+          "On the search page, filter results for 'install kits' down to Kitchen items only.",
+          "Use the header category dropdown to switch everything to Technology products.",
+          "While viewing search results, limit the catalog to Fitness gear by applying the Fitness filter.",
+        ],
+      },
+      {
+        name: "ADD TO WISHLIST",
+        examplePrompt: [
+          "Add the Espresso Machine kit to my wishlist for later.",
+          "Add the KitchenAid Stand Mixer to my wishlist.",
+          "Save this Air Fryer to my wishlist.",
+          "Add this product to wishlist.",
+        ],
+      },
+      {
+        name: "SHARE PRODUCT",
+        examplePrompt: [
+          "Share the Espresso Machine product page with my install team.",
+          "Copy the link for the KitchenAid Stand Mixer so I can send it to procurement.",
+          "Send me the shareable link for that Technology kit I'm viewing.",
+        ],
+      },
+      {
+        name: "VIEW WISHLIST",
+        examplePrompt: [
+          "Open my wishlist page so I can review everything I've saved.",
+          "From the home wishlist preview, click through to view all saved kits.",
+          "Show me the dedicated wishlist view instead of the cart.",
         ],
       },
     ],
@@ -803,6 +954,63 @@ export const websitesData: WebsiteDataType[] = [
           "Please confirm the restaurant reservation for 1 person at a restaurant where the cuisine does NOT CONTAIN 'xjjxpl', the description does NOT CONTAIN 'fwajoh', the rating is LESS THAN 5, the occasion type is NOT EQUAL to 'business', the people count is GREATER THAN or EQUAL to 1, the country code is EQUAL to 'MY', and the selected time is NOT EQUAL to '1:30 PM'.",
         ],
       },
+      {
+        name: "CONTACT INFO",
+        examplePrompt: [
+          "Contact where name equals 'James'.",
+          "Contact where name not equals 'William' and message equals 'Can you provide more information about your pricing plans?'.",
+          "Contact where name contains 'liam' and message contains 'report a technical bug' and subject equals 'Inquiry About Your Services' and email equals 'emma.johnson@example.com'",
+        ],
+      },
+      {
+        name: "ABOUT PAGE",
+        examplePrompt: [
+          "Navigate to the About page to read about the company's mission and values.",
+          "Navigate to the About page to view team member profiles and company history.",
+          "Open the About page and explore the sections detailing company achievements and milestones.",
+          "Navigate the About page to find information about the company's vision and services.",
+        ],
+      },
+      {
+        name: "HELP PAGE",
+        examplePrompt: [
+          "Navigate to the Help page to view frequently asked questions and support guides.",
+          "Navigate to the Help page to find tutorials and troubleshooting tips.",
+          "Open the Help page and explore sections for technical support and user guidance.",
+          "Navigate the Help page to locate detailed instructions and help resources.",
+        ],
+      },
+      {
+        name: "ABOUT FEATURE CLICK",
+        examplePrompt: [
+          "Click the live availability feature on the About page.",
+        ],
+      },
+      {
+        name: "CONTACT PAGE VIEW",
+        examplePrompt: [
+          "Open the contact page.",
+          "Go to the contact page.",
+        ],
+      },
+      {
+        name: "CONTACT CARD CLICK",
+        examplePrompt: [
+          "Click the phone contact card on the contact page.",
+        ],
+      },
+      {
+        name: "HELP CATEGORY SELECTED",
+        examplePrompt: [
+          "Select the Payments category in Help.",
+        ],
+      },
+      {
+        name: "HELP FAQ TOGGLED",
+        examplePrompt: [
+          "Expand the refund FAQ.",
+        ],
+      },
     ],
     comingSoonNote: "More task examples coming soon.",
   },
@@ -983,6 +1191,110 @@ export const websitesData: WebsiteDataType[] = [
           "Change my user name to 'Ford'",
           "Change my user name to 'Muhammad Ali' that is NOT equal to 'David Miller'",
           "Change my user name to 'John Smith' that does NOT contain 'Khan'",
+        ],
+      },
+      {
+        name: "SEARCH MATTER",
+        examplePrompt: [
+          "Search for matters containing 'contract'",
+          "Find matters where title contains 'Smith'",
+          "Search for litigation matters",
+        ],
+      },
+      {
+        name: "FILTER MATTER STATUS",
+        examplePrompt: [
+          "Filter matters by active status",
+          "Show only archived matters",
+          "Display pending matters",
+        ],
+      },
+      {
+        name: "SORT MATTER BY CREATED AT",
+        examplePrompt: [
+          "Sort matters by creation date",
+          "Order matters from newest to oldest",
+          "Sort by date created ascending",
+        ],
+      },
+      {
+        name: "UPDATE MATTER",
+        examplePrompt: [
+          "Update matter title to 'Updated Contract Review'",
+          "Modify matter status to active",
+          "Change matter description",
+        ],
+      },
+      {
+        name: "DOCUMENT UPLOADED",
+        examplePrompt: [
+          "Upload document to matter",
+          "Add new file to case",
+          "Upload contract.pdf to matter",
+        ],
+      },
+      {
+        name: "DOCUMENT RENAMED",
+        examplePrompt: [
+          "Rename document to 'Final Contract'",
+          "Change document name to 'Agreement v2'",
+          "Rename file to 'Updated Terms'",
+        ],
+      },
+      {
+        name: "VIEW PENDING EVENTS",
+        examplePrompt: [
+          "Show pending calendar events",
+          "View upcoming events",
+          "Display pending appointments",
+        ],
+      },
+      {
+        name: "LOG EDITED",
+        examplePrompt: [
+          "Edit log entry",
+          "Update time log",
+          "Modify billing log",
+        ],
+      },
+      {
+        name: "BILLING SEARCH",
+        examplePrompt: [
+          "Search billing records",
+          "Find invoices for client",
+          "Search for unpaid bills",
+        ],
+      },
+      {
+        name: "ADD CLIENT",
+        examplePrompt: [
+          "Add new client John Doe",
+          "Create client profile for ABC Corp",
+          "Add client with email john@example.com",
+        ],
+      },
+      {
+        name: "DELETE CLIENT",
+        examplePrompt: [
+          "Delete client John Doe",
+          "Remove client ABC Corp",
+          "Delete inactive client",
+        ],
+      },
+      {
+        name: "FILTER CLIENTS",
+        examplePrompt: [
+          "Filter clients by active status",
+          "Show only corporate clients",
+          "Filter clients by location",
+        ],
+      },
+      {
+        name: "HELP VIEWED",
+        examplePrompt: [
+          "Open help documentation",
+          "View help center",
+          "Access user guide",
         ],
       },
     ],
@@ -1182,6 +1494,118 @@ export const websitesData: WebsiteDataType[] = [
           "Change the application theme to 'system'.",
         ],
       },
+      {
+        name: "EDIT DRAFT EMAIL",
+        examplePrompt: [
+          "Edit draft email and change subject",
+          "Modify draft email body",
+          "Update draft email recipient",
+        ],
+      },
+      {
+        name: "ARCHIVE EMAIL",
+        examplePrompt: [
+          "Archive email from John",
+          "Move email to archive",
+          "Archive selected emails",
+        ],
+      },
+      {
+        name: "REPLY EMAIL",
+        examplePrompt: [
+          "Reply to email from sender",
+          "Send reply to last email",
+          "Reply to message",
+        ],
+      },
+      {
+        name: "FORWARD EMAIL",
+        examplePrompt: [
+          "Forward email to colleague",
+          "Forward message to john@example.com",
+          "Forward selected email",
+        ],
+      },
+      {
+        name: "CLEAR SELECTION",
+        examplePrompt: [
+          "Clear selected emails",
+          "Deselect all emails",
+          "Clear email selection",
+        ],
+      },
+      {
+        name: "EMAILS NEXT PAGE",
+        examplePrompt: [
+          "Go to next page of emails",
+          "Navigate to next email page",
+          "Show next page",
+        ],
+      },
+      {
+        name: "EMAILS PREV PAGE",
+        examplePrompt: [
+          "Go to previous page of emails",
+          "Navigate to previous email page",
+          "Show previous page",
+        ],
+      },
+      {
+        name: "VIEW TEMPLATES",
+        examplePrompt: [
+          "View email templates",
+          "Open template gallery",
+          "Show available templates",
+        ],
+      },
+      {
+        name: "TEMPLATE SELECTED",
+        examplePrompt: [
+          "Select welcome template",
+          "Choose meeting template",
+          "Use template for email",
+        ],
+      },
+      {
+        name: "TEMPLATE BODY EDITED",
+        examplePrompt: [
+          "Edit template body text",
+          "Modify template content",
+          "Update template message",
+        ],
+      },
+      {
+        name: "TEMPLATE SENT",
+        examplePrompt: [
+          "Send email using template",
+          "Send templated message",
+          "Send email from template",
+        ],
+      },
+      {
+        name: "TEMPLATE SAVED DRAFT",
+        examplePrompt: [
+          "Save template as draft",
+          "Save templated email to drafts",
+          "Store template draft",
+        ],
+      },
+      {
+        name: "TEMPLATE CANCELED",
+        examplePrompt: [
+          "Cancel template editing",
+          "Discard template changes",
+          "Close template without saving",
+        ],
+      },
+      {
+        name: "EMAILS SEARCH",
+        examplePrompt: [
+          "Search emails containing 'project'",
+          "Find emails from sender",
+          "Search email by subject",
+        ],
+      },
     ],
     comingSoonNote: "More task examples coming soon.",
   },
@@ -1379,6 +1803,78 @@ export const websitesData: WebsiteDataType[] = [
           "Place an order where username not contains 'Ethan Brown' and phone equals '+1-555-234-5678' and address contains 'Avenue' and mode equals 'delivery' and preferences not in list '['nut-free', 'sugar-free']' and quantity greater than '4' and item contains 'en' and restaurant equals 'Pho 88'.",
         ],
       },
+      {
+        name: "RESTAURANT FILTER",
+        examplePrompt: [
+          "Filter restaurants by cuisine type",
+          "Apply filter for Italian restaurants",
+          "Filter by rating above 4 stars",
+        ],
+      },
+      {
+        name: "VIEW ALL RESTAURANTS",
+        examplePrompt: [
+          "View all available restaurants",
+          "Show complete restaurant list",
+          "Display all restaurants",
+        ],
+      },
+      {
+        name: "EDIT CART ITEM",
+        examplePrompt: [
+          "Edit item quantity in cart",
+          "Modify cart item preferences",
+          "Update cart item size",
+        ],
+      },
+      {
+        name: "QUICK ORDER",
+        examplePrompt: [
+          "Place quick order for previous meal",
+          "Quick order from saved items",
+          "Reorder last meal quickly",
+        ],
+      },
+      {
+        name: "QUICK REORDER",
+        examplePrompt: [
+          "Reorder previous order",
+          "Repeat last order",
+          "Quick reorder same items",
+        ],
+      },
+      {
+        name: "RESTAURANT NEXT PAGE",
+        examplePrompt: [
+          "Go to next page of restaurants",
+          "Show next restaurant page",
+          "Navigate to next page",
+        ],
+      },
+      {
+        name: "RESTAURANT PREV PAGE",
+        examplePrompt: [
+          "Go to previous page of restaurants",
+          "Show previous restaurant page",
+          "Navigate to previous page",
+        ],
+      },
+      {
+        name: "REVIEW SUBMITTED",
+        examplePrompt: [
+          "Submit review for restaurant",
+          "Post restaurant review",
+          "Leave feedback for order",
+        ],
+      },
+      {
+        name: "DELIVERY PRIORITY SELECTED",
+        examplePrompt: [
+          "Select standard delivery",
+          "Choose express delivery",
+          "Set delivery priority to fast",
+        ],
+      },
     ],
     comingSoonNote: "More task examples coming soon.",
   },
@@ -1544,6 +2040,69 @@ export const websitesData: WebsiteDataType[] = [
           "Go back to all hotels where the number of guests is less than or equal to 2, the host name is NOT 'Samantha', the rating equals '4.4', the title equals 'The Heritage Flat', the price is less than '126', the number of reviews is less than '79', and the amenities include 'Fireplace'.",
           "Go back to all hotels where the number of guests is NOT '1' or '2', the price is less than or equal to '182', the location is NOT 'Toronto, Canada', the title does NOT contain 'htc', and the reviews are less than or equal to '214'.",
           "Go back to all hotels where the number of guests is greater than 1, the amenities contain 'Downtown core', the rating is less than or equal to 4.2, and the location contains 'to'.",
+        ],
+      },
+      {
+        name: "REMOVE FROM WISHLIST",
+        examplePrompt: [
+          "Remove hotel from wishlist",
+          "Delete hotel from saved items",
+        ],
+      },
+      {
+        name: "SUBMIT HOTEL REVIEW",
+        examplePrompt: [
+          "Submit review for hotel",
+          "Post hotel review",
+        ],
+      },
+      {
+        name: "APPLY FILTERS",
+        examplePrompt: [
+          "Apply price filter",
+          "Filter hotels by amenities",
+        ],
+      },
+      {
+        name: "PAYMENT METHOD SELECTED",
+        examplePrompt: [
+          "Select credit card payment",
+          "Choose PayPal as payment method",
+        ],
+      },
+      {
+        name: "WISHLIST OPENED",
+        examplePrompt: [
+          "Open wishlist",
+          "View saved hotels",
+        ],
+      },
+      {
+        name: "BOOK FROM WISHLIST",
+        examplePrompt: [
+          "Book hotel from wishlist",
+          "Reserve saved hotel",
+        ],
+      },
+      {
+        name: "POPULAR HOTELS VIEWED",
+        examplePrompt: [
+          "View popular hotels",
+          "Show trending hotels",
+        ],
+      },
+      {
+        name: "HELP VIEWED",
+        examplePrompt: [
+          "View help section",
+          "Open help center",
+        ],
+      },
+      {
+        name: "FAQ OPENED",
+        examplePrompt: [
+          "Open FAQ",
+          "View frequently asked questions",
         ],
       },
     ],
@@ -1712,6 +2271,70 @@ export const websitesData: WebsiteDataType[] = [
           "Search for jobs where the query is NOT equal to 'Analytics Pro'.",
           "Search for jobs where the query equals 'Data Scientist'.",
         ],
+      },
+      {
+        name: "BACK TO ALL JOBS",
+        examplePrompt: ["Go back to all jobs", "Return to job listings"],
+      },
+      {
+        name: "UNFOLLOW PAGE",
+        examplePrompt: ["Unfollow company page", "Stop following page"],
+      },
+      {
+        name: "FILTER JOBS",
+        examplePrompt: ["Filter jobs by location", "Apply job filters"],
+      },
+      {
+        name: "HOME NAVBAR",
+        examplePrompt: ["Click home in navbar", "Navigate to home"],
+      },
+      {
+        name: "JOBS NAVBAR",
+        examplePrompt: ["Click jobs in navbar", "Navigate to jobs"],
+      },
+      {
+        name: "SAVE POST",
+        examplePrompt: ["Save post", "Bookmark post"],
+      },
+      {
+        name: "HIDE POST",
+        examplePrompt: ["Hide post", "Remove post from feed"],
+      },
+      {
+        name: "VIEW SAVED POSTS",
+        examplePrompt: ["View saved posts", "Show bookmarked posts"],
+      },
+      {
+        name: "VIEW APPLIED JOBS",
+        examplePrompt: ["View applied jobs", "Show job applications"],
+      },
+      {
+        name: "CANCEL APPLICATION",
+        examplePrompt: ["Cancel job application", "Withdraw application"],
+      },
+      {
+        name: "EDIT PROFILE",
+        examplePrompt: ["Edit profile", "Update profile information"],
+      },
+      {
+        name: "EDIT EXPERIENCE",
+        examplePrompt: ["Edit work experience", "Modify job experience"],
+      },
+      {
+        name: "ADD EXPERIENCE",
+        examplePrompt: ["Add work experience", "Add new job to profile"],
+      },
+      {
+        name: "REMOVE POST",
+        examplePrompt: ["Remove post", "Delete post"],
+      },
+      {
+        name: "VIEW HIDDEN POSTS",
+        examplePrompt: ["View hidden posts", "Show hidden content"],
+      },
+      {
+        name: "UNHIDE POST",
+        examplePrompt: ["Unhide post", "Restore hidden post"],
       },
     ],
     comingSoonNote: "More task examples coming soon.",
@@ -1894,6 +2517,82 @@ export const websitesData: WebsiteDataType[] = [
           "Close the posting of a job where the description contains 'droid' and the title does NOT contain 'duz' and the scope does NOT contain 'sry'",
           "Close the job posting window where the rate_from is less than or equal to '24' and the rate_to is less than '74' and the skills are not in the list [Angular, React]",
         ],
+      },
+      {
+        name: "HIRE LATER",
+        examplePrompt: ["Add expert to hire later list", "Save for later hiring"],
+      },
+      {
+        name: "HIRE LATER REMOVED",
+        examplePrompt: ["Remove from hire later list", "Delete from saved experts"],
+      },
+      {
+        name: "HIRE LATER START",
+        examplePrompt: ["Start hiring from saved list", "Begin hire process"],
+      },
+      {
+        name: "QUICK HIRE",
+        examplePrompt: ["Quick hire expert", "Hire immediately"],
+      },
+      {
+        name: "CHOOSE BUDGET TYPE",
+        examplePrompt: ["Select hourly budget", "Choose fixed budget"],
+      },
+      {
+        name: "CHOOSE PROJECT SIZE",
+        examplePrompt: ["Select small project", "Choose large project size"],
+      },
+      {
+        name: "CHOOSE TIMELINE",
+        examplePrompt: ["Select 3 months timeline", "Choose project duration"],
+      },
+      {
+        name: "SET RATE RANGE",
+        examplePrompt: ["Set hourly rate range $30-$50", "Define budget range"],
+      },
+      {
+        name: "WRITE JOB DESCRIPTION",
+        examplePrompt: ["Write job description", "Add project details"],
+      },
+      {
+        name: "CONTACT EXPERT OPENED",
+        examplePrompt: ["Open contact expert modal", "Start contacting expert"],
+      },
+      {
+        name: "CONTACT EXPERT MESSAGE SENT",
+        examplePrompt: ["Send message to expert", "Contact expert"],
+      },
+      {
+        name: "EDIT PROFILE NAME",
+        examplePrompt: ["Edit profile name", "Change name"],
+      },
+      {
+        name: "EDIT PROFILE TITLE",
+        examplePrompt: ["Edit job title", "Update profile title"],
+      },
+      {
+        name: "EDIT PROFILE LOCATION",
+        examplePrompt: ["Edit location", "Update location"],
+      },
+      {
+        name: "EDIT PROFILE ABOUT",
+        examplePrompt: ["Edit about section", "Update bio"],
+      },
+      {
+        name: "EDIT PROFILE EMAIL",
+        examplePrompt: ["Edit email", "Change email address"],
+      },
+      {
+        name: "BROWSE FAVORITE",
+        examplePrompt: ["Browse favorites", "View saved experts"],
+      },
+      {
+        name: "FAVORITE EXPERT SELECTED",
+        examplePrompt: ["Select favorite expert", "Choose from favorites"],
+      },
+      {
+        name: "FAVORITE EXPERT REMOVED",
+        examplePrompt: ["Remove from favorites", "Unfavorite expert"],
       },
     ],
     comingSoonNote: "More task examples coming soon.",
@@ -2434,48 +3133,160 @@ export const websitesData: WebsiteDataType[] = [
     name: "AutoHealth",
     slug: "autohealth",
     portValidator: "validator_126",
-    href: "#",
+    href: "http://autohealth.autoppia.com",
     origin: "Epic / Cerner / Allscripts",
-    totalTasks: [0, 0, 0],
-    image: "/images/web15.png",
-    isComingSoon: true,
+    totalTasks: [30, 20, 15],
+    image: "/images/web14.png",
+    isComingSoon: false,
     color: "#8B5CF6",
     description:
-      "Healthcare management system with patient records, appointments, and medical analytics.",
+      "Healthcare management system with patient records, appointments, prescriptions, and doctor profiles.",
+    avgDifficulty: 7.5,
+    completionRate: 75,
     useCases: [
       {
-        name: "Patient Records",
+        name: "BOOK APPOINTMENT",
         examplePrompt: [
-          "Create a new patient profile with medical history",
-          "Update patient information and treatment notes",
+          "Book an appointment where doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-20' and time equals '9:00 AM' and speciality equals 'Cardiology'",
+          "Book an appointment where doctor_name not equals 'Dr. Clara Nguyen' and date not equals '2025-09-21' and time equals '9:00 AM' and speciality equals 'Cardiology'",
+          "Book an appointment where doctor_name contains 'Daniel' and date less than '2025-09-25' and time greater than '10:00 AM' and speciality equals 'Orthopedics'",
         ],
       },
       {
-        name: "Appointment Scheduling",
+        name: "CANCEL BOOK APPOINTMENT",
         examplePrompt: [
-          "Schedule a follow-up appointment for next week",
-          "Reschedule an existing appointment to a different time",
+          "Cancel an appointment where doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-20' and time equals '9:00 AM' and speciality equals 'Cardiology'",
+          "Cancel an appointment where doctor_name not equals 'Dr. Clara Nguyen' and date not equals '2025-09-21' and time equals '10:30 AM' and speciality equals 'Dermatology'",
+          "Cancel an appointment where doctor_name contains 'Daniel' and date less than '2025-09-25' and time greater than '11:00 AM' and speciality equals 'Orthopedics'",
         ],
       },
       {
-        name: "Medical Analytics",
+        name: "FILTER BY SPECIALTY",
         examplePrompt: [
-          "Generate a health report for the past 6 months",
-          "Analyze patient trends and demographics",
+          "Filter prescriptions where status equals 'completed'",
+          "Filter prescriptions where status equals 'active'",
+          "Filter prescriptions where status equals 'discontinued'",
+          "Filter prescriptions where status equals 'all'",
+          "Filter prescriptions where status equals 'refill_needed'",
+        ],
+      },
+      {
+        name: "REFILL PRESCRIPTION",
+        examplePrompt: [
+          "Refill prescription where medicine_name equals 'Atorvastatin'",
+          "Refill prescription where medicine_name equals 'Metformin'",
+          "Refill prescription where medicine_name equals 'Ibuprofen'",
+          "Refill prescription where medicine_name not equals 'Amoxicillin'",
+          "Refill prescription where medicine_name contains 'Vitamin'",
+        ],
+      },
+      {
+        name: "VIEW PRESCRIPTION",
+        examplePrompt: [
+          "View a prescription where doctor_name equals 'Dr. Alice Thompson' and start_date equals '2025-08-01' and dosage equals '10 mg daily' and medicine_name equals 'Atorvastatin' and status equals 'active' and category equals 'cholesterol'",
+          "View a prescription where doctor_name equals 'Dr. Brian Patel' and start_date equals '2025-09-05' and dosage contains '500 mg' and medicine_name equals 'Amoxicillin' and status not equals 'active' and category equals 'antibiotic'",
+          "View a prescription where doctor_name contains 'Daniel' and start_date less than '2025-08-01' and dosage equals '200 mg as needed' and medicine_name equals 'Ibuprofen' and status equals 'active' and category equals 'pain_management'",
+        ],
+      },
+      {
+        name: "VIEW HEALTH METRICS",
+        examplePrompt: [
+          "View health metrics where record_title equals 'Complete Blood Count (CBC)' and record_type equals 'lab_result' and record_date equals '2024-01-15'",
+          "View health metrics where record_title contains 'Ray' and record_type equals 'imaging' and record_date greater than '2024-02-01'",
+          "View health metrics where record_title not equals 'Annual Flu Shot' and record_type not equals 'vaccination' and record_date equals '2024-02-05'",
+        ],
+      },
+      {
+        name: "FILTER BY CATEGORY",
+        examplePrompt: [
+          "Filter medical records where category equals 'diagnostic'",
+          "Filter medical records where category equals 'preventive'",
+          "Filter medical records where category equals 'monitoring'",
+          "Filter medical records where category equals 'treatment'",
+        ],
+      },
+      {
+        name: "VIEW DOCTOR PROFILE",
+        examplePrompt: [
+          "View a doctor profile where doctor_name equals 'Dr. Alice Thompson' and rating greater than 4.5 and speciality equals 'Cardiology'",
+          "View a doctor profile where doctor_name not equals 'Dr. Brian Patel' and rating less than 4.0 and speciality equals 'Dermatology'",
+          "View a doctor profile where doctor_name contains 'Clara' and rating equals 4.2 and speciality equals 'Pediatrics'",
+        ],
+      },
+      {
+        name: "CONTACT DOCTOR",
+        examplePrompt: [
+          "Contact a doctor where doctor_name equals 'Dr. Alice Thompson'",
+          "Contact a doctor where speciality equals 'Dermatology'",
+          "Contact a doctor where rating greater than 4.7",
+          "Contact a doctor where speciality equals 'Pediatrics' and rating greater than 4.5",
+          "Contact a doctor where doctor_name not equals 'Dr. Daniel Ruiz'",
+        ],
+      },
+      {
+        name: "DOCTOR CONTACTED SUCCESSFULLY",
+        examplePrompt: [
+          "Doctor contacted successfully where doctor_name equals 'Dr. Alice Thompson' and patient_name equals 'John Smith'",
+          "Doctor contacted successfully where speciality equals 'Dermatology' and urgency equals 'high'",
+          "Doctor contacted successfully where patient_email equals 'maria.gonzalez@example.com' and preferred_contact_method equals 'email'",
+        ],
+      },
+      {
+        name: "CANCEL CONTACT DOCTOR",
+        examplePrompt: [
+          "Cancel contact request where doctor_name equals 'Dr. Alice Thompson'",
+          "Cancel contact request where doctor_name equals 'Dr. John Smith'",
+          "Cancel contact request where speciality equals 'Cardiologist'",
+          "Cancel contact request where doctor_name not equals 'Dr. Emily Davis'",
+        ],
+      },
+      {
+        name: "VIEW REVIEWS CLICKED",
+        examplePrompt: [
+          "View reviews clicked where doctor_name equals 'Dr. Alice Thompson'",
+          "View reviews clicked where doctor_name equals 'Dr. Michael Johnson'",
+          "View reviews clicked where speciality equals 'Cardiologist'",
+          "View reviews clicked where speciality contains 'Dermatology'",
+          "View reviews clicked where rating greater than 4.5",
+        ],
+      },
+      {
+        name: "FILTER REVIEWS",
+        examplePrompt: [
+          "Filter reviews where filter_rating equals 5",
+          "Filter reviews where filter_rating equals 3 and speciality equals 'Dermatologist'",
+          "Filter reviews for doctor 'Dr. Alice Thompson' where filter_rating greater than 4",
+          "Filter reviews where speciality equals 'Neurologist' and filter_rating less than 3",
+        ],
+      },
+      {
+        name: "SORT REVIEWS",
+        examplePrompt: [
+          "Sort reviews where sort_order equals 'highest'",
+          "Sort reviews where sort_order equals 'lowest' for doctor_name equals 'Dr. Alice Thompson'",
+          "Sort reviews where sort_order equals 'newest' and speciality equals 'Cardiologist'",
+          "Sort reviews where sort_order equals 'oldest' for doctor_name equals 'Dr. John Smith'",
+        ],
+      },
+      {
+        name: "CANCEL VIEW REVIEWS",
+        examplePrompt: [
+          "Cancel view reviews where doctor_name equals 'Dr. Alice Thompson'",
+          "Cancel view reviews where speciality equals 'Cardiologist'",
+          "Cancel view reviews where doctor_name equals 'Dr. John Smith' and speciality equals 'Dermatologist'",
+          "Cancel view reviews for doctor_name equals 'Dr. Emily Davis'",
+        ],
+      },
+      {
+        name: "APPOINTMENT BOOKED SUCCESSFULLY",
+        examplePrompt: [
+          "Appointment booked successfully where patient_name equals 'John Doe' and doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-23' and time equals '10:00 AM' and speciality equals 'Cardiology' and reason_for_visit equals 'Chest pain'",
+          "Appointment booked successfully where patient_name not equals 'Sarah Lee' and insurance_provider equals 'BlueCross' and insurance_number contains 'BCX123' and doctor_name equals 'Dr. Daniel Roberts' and date greater than '2025-09-20'",
+          "Appointment booked successfully where patient_email contains '@gmail.com' and patient_phone starts with '+1' and emergency_contact equals 'Jane Doe' and emergency_phone equals '555-1234' and notes contains 'Bring previous reports'",
         ],
       },
     ],
-    taskExamples: [
-      {
-        title: "Patient Management",
-        prompt:
-          "Set up a complete patient management workflow with appointment scheduling and record keeping",
-      },
-    ],
-    comingSoonNote:
-      "AI-powered health insights and telemedicine features coming soon.",
-    avgDifficulty: 8.0,
-    completionRate: 0,
+    comingSoonNote: "More healthcare features and integrations coming soon.",
   },
   {
     name: "AutoDrive",
@@ -2609,6 +3420,22 @@ export const websitesData: WebsiteDataType[] = [
           "Reserve a ride where location equals '1030 Post Street Apartments - 1030 Post St #112, San Francisco, CA 94109, USA' and destination NOT CONTAINS 'qnf' and ride_name equals 'AutoDriverXL' and scheduled GREATER EQUAL '2025-10-31 21:20:00'",
           "Reserve a ride where the location contains 'Magnin St, San Fra' and the destination does NOT contain 'mcd' and the ride name does NOT contain 'brx' and the scheduled time is greater than or equal to '2025-10-31 21:00:00'",
         ],
+      },
+      {
+        name: "ENTER LOCATION",
+        examplePrompt: ["Enter pickup location", "Type location address"],
+      },
+      {
+        name: "ENTER DESTINATION",
+        examplePrompt: ["Enter destination address", "Type destination"],
+      },
+      {
+        name: "TRIP DETAILS",
+        examplePrompt: ["View trip details", "Show ride information"],
+      },
+      {
+        name: "CANCEL RESERVATION",
+        examplePrompt: ["Cancel ride reservation", "Cancel booked trip"],
       },
     ],
     taskExamples: [
