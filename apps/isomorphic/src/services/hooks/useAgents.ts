@@ -143,7 +143,7 @@ export function useLatestRoundTopMiner(enabled: boolean = true) {
 }
 
 // Hook for miner round details
-export function useMinerRoundDetails(round: number | undefined, miner_uid: number | undefined) {
+export function useMinerRoundDetails(round: string | number | undefined, miner_uid: number | undefined) {
   const request = useCallback(
     () => {
       if (!round || !miner_uid) {

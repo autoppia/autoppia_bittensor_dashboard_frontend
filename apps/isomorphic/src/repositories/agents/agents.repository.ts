@@ -91,9 +91,10 @@ export class AgentsRepository {
 
   /**
    * Get detailed information about a specific miner in a specific round
+   * @param round - Round identifier in format "season/round" (e.g., "1/1") or legacy number
    */
   async getMinerRoundDetails(
-    round: number,
+    round: string | number,
     miner_uid: number
   ): Promise<MinerRoundDetailsResponse['data']> {
     const response = await apiClient.get<MinerRoundDetailsResponse>(

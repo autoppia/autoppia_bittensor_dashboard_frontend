@@ -788,6 +788,8 @@ function AgentScoreChart({
 // Validators/runs list
 function AgentValidators({
   selectedRound,
+  selectedSeason,
+  selectedRoundInSeason,
   runs,
   loading,
   error,
@@ -797,6 +799,8 @@ function AgentValidators({
   minerRoundDetailsValidators,
 }: {
   selectedRound?: number | null;
+  selectedSeason?: number | null;
+  selectedRoundInSeason?: number | null;
   runs: AgentRunOverview[];
   loading: boolean;
   error?: string | null;
@@ -869,7 +873,7 @@ function AgentValidators({
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-md sm:text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({effectiveValidators?.length ?? Object.keys(runsByValidator).length ?? 0})
-            {selectedRound ? ` - Round ${selectedRound}` : ""}
+            {selectedSeason && selectedRoundInSeason ? ` - Season ${selectedSeason} - Round ${selectedRoundInSeason}` : ""}
           </Text>
         </div>
         <button
@@ -1730,14 +1734,20 @@ export default function Page() {
   const agentParam = Array.isArray(rawId) ? rawId[0] : rawId;
   const trimmedId = agentParam?.trim() ?? "";
   const searchParams = useSearchParams();
+  const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
   const [copiedHotkey, setCopiedHotkey] = useState(false);
 
   const selectedRoundFromQuery = useMemo(() => {
-    if (!roundParam) return undefined;
-    const parsed = Number.parseInt(roundParam, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }, [roundParam]);
+    const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
+    
+    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
+      return `${season}/${round}`;
+    }
+    
+    return undefined;
+  }, [seasonParam, roundParam]);
 
   const normalizedAgentId = useMemo(() => {
     if (!trimmedId) return null;
@@ -1860,7 +1870,7 @@ export default function Page() {
           createdAt: "",
           updatedAt: "",
           status: "active" as const,
-          githubUrl: undefined,
+          githubUrl: minerRoundDetails.miner.github_url ?? undefined,
           taostatsUrl: undefined,
         }
       : null;
@@ -2102,10 +2112,11 @@ export default function Page() {
   })();
 
   const currentStats = [
-    // Primera fila: Round, Rank, Avg Score, Avg Response Time
+    // Primera fila: Season, Rank, Avg Score, Avg Response Time
     {
-      title: "Round",
-      metric: currentRound ? `${currentRound}` : "N/A",
+      title: "Season",
+      metric: seasonParam ? seasonParam : "N/A",
+      badge: roundParam ? `Round ${roundParam}` : null,
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
@@ -2541,6 +2552,8 @@ export default function Page() {
             {viewMode === "runs" ? (
               <AgentValidators
                 selectedRound={currentRound ?? null}
+                selectedSeason={seasonParam ? Number.parseInt(seasonParam, 10) : null}
+                selectedRoundInSeason={roundParam ? Number.parseInt(roundParam, 10) : null}
                 runs={runsState.runs}
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}
