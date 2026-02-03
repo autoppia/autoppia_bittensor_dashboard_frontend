@@ -57,88 +57,173 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     );
   };
 
+  // Parse season and round from separate URL parameters
+  const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
-  const selectedRound = useMemo(() => {
-    if (!roundParam) return undefined;
-    const parsed = Number.parseInt(roundParam, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }, [roundParam]);
-  const roundReady =
-    typeof selectedRound === "number" && Number.isFinite(selectedRound);
+  
+  const { selectedSeason, selectedRoundInSeason } = useMemo(() => {
+    const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
+    
+    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
+      return { selectedSeason: season, selectedRoundInSeason: round };
+    }
+    
+    return { selectedSeason: undefined, selectedRoundInSeason: undefined };
+  }, [seasonParam, roundParam]);
+  
+  const roundReady = selectedSeason !== undefined && selectedRoundInSeason !== undefined;
 
   // Use new unified endpoint to get rounds and miners
-  // Use selectedRound if available, otherwise undefined (will get rounds list)
-  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData(selectedRound);
+  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData(undefined);
 
-  const loadingRoundOption = useMemo<SelectOption>(
+  const loadingOption = useMemo<SelectOption>(
     () => ({
-      label: "Loading rounds...",
+      label: "Loading...",
       value: "__loading__",
     }),
     []
   );
 
-  const roundOptions: SelectOption[] = useMemo(() => {
+  // Parse available rounds to extract seasons and rounds
+  const { seasonOptions, latestSeason, latestRoundInSeason } = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     if (rounds.length === 0) {
+      return { seasonOptions: [], latestSeason: undefined, latestRoundInSeason: undefined };
+    }
+
+    // Parse rounds in format "season/round"
+    const parsedRounds = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          return {
+            season: Number.parseInt(parts[0], 10),
+            round: Number.parseInt(parts[1], 10),
+            full: r,
+          };
+        }
+        return null;
+      })
+      .filter((r) => r !== null && Number.isFinite(r.season) && Number.isFinite(r.round)) as Array<{
+        season: number;
+        round: number;
+        full: string;
+      }>;
+
+    // Get unique seasons, sorted descending (most recent first)
+    const seasons = Array.from(new Set(parsedRounds.map((r) => r.season))).sort((a, b) => b - a);
+    
+    const seasonOpts = seasons.map((s) => ({
+      label: `Season ${s}`,
+      value: s,
+    }));
+
+    // Get latest round (highest season, highest round in that season)
+    const latest = parsedRounds.length > 0 ? parsedRounds[0] : null;
+    
+    return {
+      seasonOptions: seasonOpts,
+      latestSeason: latest?.season,
+      latestRoundInSeason: latest?.round,
+    };
+  }, [roundsData?.rounds]);
+
+  // Get round options for selected season
+  const roundInSeasonOptions = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    const currentSeason = selectedSeason ?? latestSeason;
+    
+    if (!currentSeason) {
       return [];
     }
 
-    // Asegurar que los rounds estén ordenados de mayor a menor (más reciente primero)
-    const sortedRounds = [...rounds].sort((a, b) => b - a);
+    const roundsInSeason = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          const season = Number.parseInt(parts[0], 10);
+          const round = Number.parseInt(parts[1], 10);
+          if (season === currentSeason && Number.isFinite(round)) {
+            return round;
+          }
+        }
+        return null;
+      })
+      .filter((r) => r !== null) as number[];
 
-    return sortedRounds.map((value) => ({
-      label: `Round ${value}`,
-      value,
+    // Sort descending (most recent first)
+    const sorted = [...new Set(roundsInSeason)].sort((a, b) => b - a);
+    
+    return sorted.map((r) => ({
+      label: `Round ${r}`,
+      value: r,
     }));
-  }, [roundsData?.rounds]);
+  }, [roundsData?.rounds, selectedSeason, latestSeason]);
 
-  // La última round es la primera en la lista ordenada (mayor número)
-  const latestRound = useMemo(() => {
-    const rounds = roundsData?.rounds ?? [];
-    if (rounds.length === 0) {
-      return undefined;
-    }
-    // Obtener el round más alto (más reciente)
-    return Math.max(...rounds);
-  }, [roundsData?.rounds]);
+  const effectiveSeason = selectedSeason ?? latestSeason;
+  const effectiveRoundInSeason = selectedRoundInSeason ?? latestRoundInSeason;
+  const effectiveRound = effectiveSeason && effectiveRoundInSeason 
+    ? `${effectiveSeason}/${effectiveRoundInSeason}` 
+    : undefined;
 
-  const defaultRound = latestRound;
-  const effectiveRound = selectedRound ?? defaultRound;
-  const selectOptions =
-    roundOptions.length > 0 ? roundOptions : [loadingRoundOption];
+  const [seasonSelectValue, setSeasonSelectValue] = useState<SelectOption>(
+    seasonOptions.length > 0 ? seasonOptions[0] : loadingOption
+  );
   const [roundSelectValue, setRoundSelectValue] = useState<SelectOption>(
-    selectOptions[0]
+    roundInSeasonOptions.length > 0 ? roundInSeasonOptions[0] : loadingOption
   );
 
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
 
+  // Update season select value
   useEffect(() => {
-    if (!roundOptions.length) {
-      setRoundSelectValue(loadingRoundOption);
+    if (!seasonOptions.length) {
+      setSeasonSelectValue(loadingOption);
       return;
     }
 
     const nextOption =
-      roundOptions.find((option) => option.value === effectiveRound) ??
-      roundOptions[0];
+      seasonOptions.find((option) => option.value === effectiveSeason) ??
+      seasonOptions[0];
+
+    setSeasonSelectValue((current) =>
+      current?.value === nextOption.value ? current : nextOption
+    );
+  }, [effectiveSeason, loadingOption, seasonOptions]);
+
+  // Update round select value
+  useEffect(() => {
+    if (!roundInSeasonOptions.length) {
+      setRoundSelectValue(loadingOption);
+      return;
+    }
+
+    const nextOption =
+      roundInSeasonOptions.find((option) => option.value === effectiveRoundInSeason) ??
+      roundInSeasonOptions[0];
 
     setRoundSelectValue((current) =>
       current?.value === nextOption.value ? current : nextOption
     );
-  }, [effectiveRound, loadingRoundOption, roundOptions]);
+  }, [effectiveRoundInSeason, loadingOption, roundInSeasonOptions]);
 
-  // Redirigir a la última round solo una vez cuando no hay round en la URL
+  // Redirigir a la última round si no hay round en la URL
   useEffect(() => {
-    // Si ya hay un round en la URL, resetear el flag y no hacer nada
+    // Si está cargando, esperar
+    if (roundsLoading) {
+      return;
+    }
+
+    // Si ya hay un round válido en la URL, resetear flag
     if (roundReady) {
       hasRedirectedRef.current = false;
       return;
     }
 
-    // Si no hay última round disponible o está cargando, no hacer nada
-    if (latestRound === undefined || roundsLoading) {
+    // Si no hay última round disponible, esperar
+    if (latestSeason === undefined || latestRoundInSeason === undefined) {
       return;
     }
 
@@ -147,45 +232,49 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       return;
     }
 
-    // Marcar que vamos a redirigir ANTES de hacer la redirección
+    // Marcar redirección
     hasRedirectedRef.current = true;
 
-    // Construir los parámetros de la URL
+    // Redirigir a la última round con parámetros separados
     const params = new URLSearchParams();
-    params.set("round", String(latestRound));
+    params.set("season", String(latestSeason));
+    params.set("round", String(latestRoundInSeason));
     
-    // Preservar el parámetro agent si existe, o usar el id de la ruta
-    const agentParam = searchParams.get("agent") ?? (id ? String(id) : null);
-    if (agentParam) {
-      params.set("agent", agentParam);
-    }
-    
-    // Hacer la redirección
     router.replace(`${pathname}?${params.toString()}`);
-  }, [latestRound, id, pathname, roundReady, router, roundsLoading, roundParam, searchParams]);
+  }, [latestSeason, latestRoundInSeason, id, pathname, roundReady, router, roundsLoading, searchParams]);
 
-  const handleRoundChange = (option: SelectOption | null) => {
-    if (!option || option.value === loadingRoundOption.value) {
+  const handleSeasonChange = (option: SelectOption | null) => {
+    if (!option || option.value === loadingOption.value) {
       return;
     }
-    const value =
-      typeof option.value === "number"
-        ? option.value
-        : Number.parseInt(String(option.value), 10);
+    const season = typeof option.value === "number" ? option.value : Number.parseInt(String(option.value), 10);
 
-    if (!Number.isFinite(value) || value === selectedRound) {
+    if (!Number.isFinite(season)) {
       return;
     }
 
+    // When season changes, default to round 1 of that season
     const params = new URLSearchParams(searchParamsString);
-    params.set("round", String(value));
-    const agentParam =
-      searchParams.get("agent") ?? (id ? String(id) : undefined);
-    if (agentParam) {
-      params.set("agent", agentParam);
+    params.set("season", String(season));
+    params.set("round", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleRoundInSeasonChange = (option: SelectOption | null) => {
+    if (!option || option.value === loadingOption.value) {
+      return;
     }
-    setRoundSelectValue(option);
-    router.replace(`${pathname}?${params.toString()}`);
+    const round = typeof option.value === "number" ? option.value : Number.parseInt(String(option.value), 10);
+
+    if (!Number.isFinite(round) || !effectiveSeason) {
+      return;
+    }
+
+    // Update URL with separate season and round parameters
+    const params = new URLSearchParams(searchParamsString);
+    params.set("season", String(effectiveSeason));
+    params.set("round", String(round));
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   // Get miners from roundsData
@@ -271,7 +360,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   };
 
   // Show loading placeholder
-  if (loading || (!roundReady && roundOptions.length === 0)) {
+  if (loading || (!roundReady && seasonOptions.length === 0)) {
     return <AgentSidebarPlaceholder />;
   }
 
@@ -342,10 +431,21 @@ export default function AgentsSidebar({ className }: { className?: string }) {
           <div className="flex flex-col gap-2">
             <div className="mb-1">
               <Select
-                options={selectOptions}
+                options={seasonOptions.length > 0 ? seasonOptions : [loadingOption]}
+                value={seasonSelectValue}
+                onChange={handleSeasonChange}
+                disabled={!seasonOptions.length}
+                placeholder="Select season"
+                className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
+              />
+            </div>
+            
+            <div className="mb-1">
+              <Select
+                options={roundInSeasonOptions.length > 0 ? roundInSeasonOptions : [loadingOption]}
                 value={roundSelectValue}
-                onChange={handleRoundChange}
-                disabled={!roundOptions.length}
+                onChange={handleRoundInSeasonChange}
+                disabled={!roundInSeasonOptions.length}
                 placeholder="Select round"
                 className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
               />
@@ -408,14 +508,14 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               })();
 
               return (
-                <NavLink
-                  key={`miner-menu-${miner.uid}`}
-                  href={
-                    typeof effectiveRound === "number"
-                      ? `${routes.agents}/${miner.uid}?round=${effectiveRound}&agent=${miner.uid}`
-                      : `${routes.agents}/${miner.uid}`
-                  }
-                >
+                  <NavLink
+                    key={`miner-menu-${miner.uid}`}
+                    href={
+                      effectiveSeason && effectiveRoundInSeason
+                        ? `${routes.agents}/${miner.uid}?season=${effectiveSeason}&round=${effectiveRoundInSeason}`
+                        : `${routes.agents}/${miner.uid}`
+                    }
+                  >
                   <div
                     className={cn(
                       "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",

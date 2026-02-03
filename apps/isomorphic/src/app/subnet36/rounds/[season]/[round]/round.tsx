@@ -2047,9 +2047,9 @@ function RoundTopMinersInline({
       <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner: any, index: number) => {
-            const agentHref =
-              typeof roundNumber === "number" && Number.isFinite(roundNumber)
-                ? `${routes.agents}/${miner.uid}?round=${roundNumber}&agent=${miner.uid}`
+            // Use separate season and round parameters
+            const agentHref = roundInfo?.season && roundInfo?.roundInSeason
+                ? `${routes.agents}/${miner.uid}?season=${roundInfo.season}&round=${roundInfo.roundInSeason}`
                 : `${routes.agents}/${miner.uid}`;
             const rank = index + 1;
             const rawIsSota =
