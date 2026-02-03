@@ -359,6 +359,38 @@ function TaskDetailsDynamic({
   const evaluationInfo = taskData.relationships?.evaluation;
   const solutionInfo = taskData.relationships?.solution;
 
+  // Parse season and round from roundInfo
+  const { season: parsedSeason, round: parsedRound } = (() => {
+    const roundData = roundInfo as any;
+    
+    // Priority 1: roundId as string "season/round"
+    if (typeof roundData?.roundId === "string" && roundData.roundId.includes("/")) {
+      const [s, r] = roundData.roundId.split("/").map(Number);
+      if (!isNaN(s) && !isNaN(r)) {
+        return { season: s, round: r };
+      }
+    }
+    
+    // Priority 2: season_number and round_number_in_season
+    if (typeof roundData?.season_number === "number" && typeof roundData?.round_number_in_season === "number") {
+      return { season: roundData.season_number, round: roundData.round_number_in_season };
+    }
+    
+    // Priority 3: season and round fields
+    if (typeof roundData?.season === "number" && typeof roundData?.round === "number") {
+      return { season: roundData.season, round: roundData.round };
+    }
+    
+    // Priority 4: Extract from roundNumber if it's legacy format (>= 10000)
+    if (typeof roundData?.roundNumber === "number" && roundData.roundNumber >= 10000) {
+      const season = Math.floor(roundData.roundNumber / 10000);
+      const round = roundData.roundNumber % 10000;
+      return { season, round };
+    }
+    
+    return { season: null, round: null };
+  })();
+
   // Calculate evaluationScore from evaluationInfo, taskData.score, or details.score
   const evaluationScore = (() => {
     if (typeof evaluationInfo?.finalScore === "number") {
@@ -644,18 +676,39 @@ function TaskDetailsDynamic({
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
                   <PiClock className="h-6 w-6" />
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                    Round
-                  </p>
-                  <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                    #
-                    {roundInfo?.roundNumber != null
-                      ? roundInfo.roundNumber
-                      : roundInfo?.validatorRoundId
-                        ? truncateMiddle(roundInfo.validatorRoundId, 6)
-                        : "—"}
-                  </p>
+                <div className="flex items-center gap-2">
+                  {parsedSeason !== null && parsedRound !== null ? (
+                    <>
+                      <div className="flex flex-col">
+                        <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
+                          Season
+                        </p>
+                        <p className="text-lg font-bold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                          {parsedSeason}
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-white/20"></div>
+                      <div className="flex flex-col">
+                        <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
+                          Round
+                        </p>
+                        <p className="text-lg font-bold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                          {parsedRound}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                        Round
+                      </p>
+                      <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                        {roundInfo?.validatorRoundId
+                          ? truncateMiddle(roundInfo.validatorRoundId, 6)
+                          : "—"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               <span
