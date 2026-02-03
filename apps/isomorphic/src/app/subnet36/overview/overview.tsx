@@ -21,7 +21,10 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
-  const metricsRound = metrics?.metricsRound ?? null;
+  const metricsRound = metrics?.metricsRoundInSeason ?? metrics?.metricsRound ?? null;
+  const metricsSeason = metrics?.metricsSeason ?? null;
+  const currentSeason = metrics?.currentSeason ?? null;
+  const currentRoundInSeason = metrics?.currentRoundInSeason ?? null;
 
   // Auto-refresh metrics every 30 seconds
   useEffect(() => {
@@ -67,6 +70,11 @@ export default function Overview() {
               className="flex items-center gap-3 text-[14px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
             >
               Subnet 36 - Web Agents
+              {metricsSeason !== null && metricsSeason !== undefined && (
+                <span className="inline-flex items-center rounded-md border border-emerald-400/60 bg-emerald-500/15 px-3 py-1 text-xs lg:text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100">
+                  Season {metricsSeason}
+                </span>
+              )}
               <Link
                 href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
                 target="_blank"
@@ -122,7 +130,10 @@ export default function Overview() {
           />
         </div>
       </div>
-      <OverviewValidators currentRound={metrics?.currentRound} />
+      <OverviewValidators 
+        currentRound={currentRoundInSeason ?? metrics?.currentRound} 
+        currentSeason={currentSeason}
+      />
     </>
   );
 }
