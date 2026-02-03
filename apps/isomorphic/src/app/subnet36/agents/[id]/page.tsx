@@ -36,7 +36,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent, useMinerRoundDetails, useMinerHistorical } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
@@ -426,7 +426,8 @@ function AgentScoreChart({
     const rows = scoreRoundData
       .map((point) => {
         const row: Record<string, number | string | null> = {
-          round: point.round_id,
+          round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
+          roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
           score: normalizeScore(point.score) ?? 0,
           rank: point.rank ?? null,
           reward: point.reward ?? null,
@@ -1800,12 +1801,43 @@ export default function Page() {
     numericUidFromParam
   );
   
+  // Get rounds data to extract latest season
+  const { data: roundsData } = useRoundsData(undefined);
+  
+  // Extract latest season from rounds data
+  const latestSeason = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) {
+      return undefined;
+    }
+    
+    // Parse rounds in format "season/round" and get highest season
+    const seasons = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          return Number.parseInt(parts[0], 10);
+        }
+        return null;
+      })
+      .filter((s) => s !== null && Number.isFinite(s)) as number[];
+    
+    return seasons.length > 0 ? Math.max(...seasons) : undefined;
+  }, [roundsData?.rounds]);
+  
   // Get miner historical data - only when viewMode is "historical"
+  // Always filter by season: use season from URL, or latest season as fallback
+  const seasonForHistorical = seasonParam 
+    ? Number.parseInt(seasonParam, 10) 
+    : latestSeason;
   const {
     data: minerHistorical,
     loading: minerHistoricalLoading,
     error: minerHistoricalError,
-  } = useMinerHistorical(viewMode === "historical" ? numericUidFromParam : undefined);
+  } = useMinerHistorical(
+    viewMode === "historical" ? numericUidFromParam : undefined,
+    seasonForHistorical
+  );
   
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -1917,11 +1949,19 @@ export default function Page() {
   // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
     if (viewMode === "historical" && minerHistorical?.roundsHistory) {
-      // Use historical data - sort by round descending
+      // Use historical data - sort by round descending (format: "season/round")
       return minerHistorical.roundsHistory
-        .sort((a, b) => b.round - a.round)
-        .map((round) => ({
-          round_id: round.round,
+        .sort((a, b) => {
+          // Parse "season/round" format for sorting
+          const [aSeason, aRound] = a.round.split('/').map(Number);
+          const [bSeason, bRound] = b.round.split('/').map(Number);
+          // Sort by season first, then by round (descending)
+          if (bSeason !== aSeason) return bSeason - aSeason;
+          return bRound - aRound;
+        })
+        .map((round, index) => ({
+          round_id: round.round, // Keep as string "season/round"
+          round: index + 1, // Sequential number for chart x-axis
           score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
           rank: round.post_consensus_rank,
           reward: round.post_consensus_avg_reward ?? 0,
@@ -2112,11 +2152,11 @@ export default function Page() {
   })();
 
   const currentStats = [
-    // Primera fila: Season, Rank, Avg Score, Avg Response Time
+    // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
-      title: "Season",
-      metric: seasonParam ? seasonParam : "N/A",
-      badge: roundParam ? `Round ${roundParam}` : null,
+      title: "Round",
+      metric: roundParam ? roundParam : "N/A",
+      badge: seasonParam ? `Season ${seasonParam}` : null,
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
