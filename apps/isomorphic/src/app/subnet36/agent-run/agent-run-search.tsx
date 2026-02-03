@@ -20,6 +20,7 @@ import {
 import { overviewRepository } from "@/repositories/overview/overview.repository";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
+import { useRoundsData } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -166,11 +167,14 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
 export default function AgentRunSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [roundInput, setRoundInput] = useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>(undefined);
+  const [selectedRound, setSelectedRound] = useState<number | undefined>(undefined);
   const [selectedValidator, setSelectedValidator] = useState<string>("");
   const [agentInput, setAgentInput] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
   const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
+  const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
+  const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
   const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(
     null
   );
@@ -179,15 +183,81 @@ export default function AgentRunSearch() {
   const [lastSearchedRunId, setLastSearchedRunId] = useState<string>("");
 
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
+  const seasonDropdownRef = useRef<HTMLDivElement>(null);
+  const roundDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get available rounds
+  const { data: roundsData, loading: roundsLoading } = useRoundsData(undefined);
+
+  // Parse available rounds to extract seasons and rounds
+  const { seasonOptions, latestSeason, latestRoundInSeason } = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) {
+      return { seasonOptions: [], latestSeason: undefined, latestRoundInSeason: undefined };
+    }
+
+    // Parse "season/round" format
+    const parsed = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          return { season: Number.parseInt(parts[0], 10), round: Number.parseInt(parts[1], 10) };
+        }
+        return null;
+      })
+      .filter((r) => r !== null && Number.isFinite(r.season) && Number.isFinite(r.round));
+
+    // Get unique seasons
+    const seasons = Array.from(new Set(parsed.map((r) => r!.season))).sort((a, b) => b - a);
+
+    // Find latest round
+    const latest = parsed.reduce((max, curr) => {
+      if (!max) return curr;
+      if (curr!.season > max.season) return curr;
+      if (curr!.season === max.season && curr!.round > max.round) return curr;
+      return max;
+    }, parsed[0]);
+
+    return {
+      seasonOptions: seasons,
+      latestSeason: latest?.season,
+      latestRoundInSeason: latest?.round,
+    };
+  }, [roundsData?.rounds]);
+
+  // Get round options for selected season
+  const roundOptions = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    const currentSeason = selectedSeason;
+    
+    if (!currentSeason) {
+      return [];
+    }
+
+    const parsed = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          return { season: Number.parseInt(parts[0], 10), round: Number.parseInt(parts[1], 10) };
+        }
+        return null;
+      })
+      .filter((r) => r !== null && r.season === currentSeason)
+      .map((r) => r!.round)
+      .sort((a, b) => b - a);
+
+    return parsed;
+  }, [roundsData?.rounds, selectedSeason]);
 
   const debouncedFilters = useDebouncedValue(
     useMemo(
       () => ({
-        round: roundInput.trim(),
+        season: selectedSeason,
+        round: selectedRound,
         validator: selectedValidator.trim(),
         agent: agentInput.trim(),
       }),
-      [roundInput, selectedValidator, agentInput]
+      [selectedSeason, selectedRound, selectedValidator, agentInput]
     ),
     400
   );
@@ -229,16 +299,28 @@ export default function AgentRunSearch() {
       ) {
         setIsValidatorDropdownOpen(false);
       }
+      if (
+        seasonDropdownRef.current &&
+        !seasonDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSeasonDropdownOpen(false);
+      }
+      if (
+        roundDropdownRef.current &&
+        !roundDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRoundDropdownOpen(false);
+      }
     };
 
-    if (isValidatorDropdownOpen) {
+    if (isValidatorDropdownOpen || isSeasonDropdownOpen || isRoundDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isValidatorDropdownOpen]);
+  }, [isValidatorDropdownOpen, isSeasonDropdownOpen, isRoundDropdownOpen]);
 
   useEffect(() => {
     let isActive = true;
@@ -452,12 +534,11 @@ export default function AgentRunSearch() {
 
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
-    const roundIdParam = debouncedFilters.round
-      ? Number(debouncedFilters.round)
-      : undefined;
-    const normalizedRound = Number.isFinite(roundIdParam)
-      ? Number(roundIdParam)
-      : undefined;
+    // Construct roundId from season and round (format: "season/round")
+    const normalizedRound = 
+      debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
+        ? `${debouncedFilters.season}/${debouncedFilters.round}`
+        : undefined;
     const normalizedValidator = debouncedFilters.validator || undefined;
     const normalizedAgent = debouncedFilters.agent || undefined;
 
@@ -616,10 +697,13 @@ export default function AgentRunSearch() {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setRoundInput("");
+    setSelectedSeason(undefined);
+    setSelectedRound(undefined);
     setSelectedValidator("");
     setAgentInput("");
     setIsValidatorDropdownOpen(false);
+    setIsSeasonDropdownOpen(false);
+    setIsRoundDropdownOpen(false);
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
@@ -632,7 +716,8 @@ export default function AgentRunSearch() {
 
   const hasActiveFilters =
     searchTerm !== "" ||
-    roundInput !== "" ||
+    selectedSeason !== undefined ||
+    selectedRound !== undefined ||
     selectedValidator !== "" ||
     agentInput !== "";
 
@@ -727,22 +812,150 @@ export default function AgentRunSearch() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
-                {/* Round Filter */}
+                {/* Season Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-emerald-300">
+                    SEASON
+                  </label>
+                  <div className="relative" ref={seasonDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
+                      }}
+                      className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    >
+                      <span>
+                        {roundsLoading && seasonOptions.length === 0
+                          ? "Loading seasons..."
+                          : selectedSeason === undefined
+                            ? "All Seasons"
+                            : `Season ${selectedSeason}`}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${
+                          isSeasonDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {isSeasonDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-emerald-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeason(undefined);
+                            setSelectedRound(undefined);
+                            setIsSeasonDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors duration-200 border-b border-emerald-500/20"
+                        >
+                          All Seasons
+                        </button>
+                        {seasonOptions.length > 0 &&
+                          seasonOptions.map((season) => {
+                            const isActive = selectedSeason === season;
+                            return (
+                              <button
+                                key={season}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSeason(season);
+                                  setSelectedRound(undefined); // Reset round when season changes
+                                  setIsSeasonDropdownOpen(false);
+                                }}
+                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                                  isActive
+                                    ? "bg-emerald-500/30 text-emerald-100"
+                                    : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                                }`}
+                              >
+                                Season {season}
+                              </button>
+                            );
+                          })}
+                        {!roundsLoading && seasonOptions.length === 0 && (
+                          <div className="px-3 py-2 text-emerald-300 text-sm">
+                            No seasons available
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Round Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-purple-300">
                     ROUND
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={roundInput}
-                      onChange={(e) => setRoundInput(e.target.value)}
-                      placeholder="Enter Round Number"
-                      className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <PiHashDuotone className="w-4 h-4 text-emerald-400" />
-                    </div>
+                  <div className="relative" ref={roundDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedSeason === undefined) {
+                          return; // Don't open if no season selected
+                        }
+                        setIsRoundDropdownOpen(!isRoundDropdownOpen);
+                      }}
+                      disabled={selectedSeason === undefined}
+                      className={`w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0 ${
+                        selectedSeason === undefined
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <span>
+                        {selectedSeason === undefined
+                          ? "Select season first"
+                          : roundOptions.length === 0
+                            ? "No rounds"
+                            : selectedRound === undefined
+                              ? "All Rounds"
+                              : `Round ${selectedRound}`}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${
+                          isRoundDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {isRoundDropdownOpen && selectedSeason !== undefined && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRound(undefined);
+                            setIsRoundDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                        >
+                          All Rounds
+                        </button>
+                        {roundOptions.length > 0 &&
+                          roundOptions.map((round) => {
+                            const isActive = selectedRound === round;
+                            return (
+                              <button
+                                key={round}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedRound(round);
+                                  setIsRoundDropdownOpen(false);
+                                }}
+                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${
+                                  isActive
+                                    ? "bg-purple-500/30 text-purple-100"
+                                    : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"
+                                }`}
+                              >
+                                Round {round}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1014,11 +1227,33 @@ export default function AgentRunSearch() {
 
                   {/* Content container */}
                   <div className="relative flex h-full flex-col p-5 gap-4">
-                    {/* Round & Ranking */}
+                    {/* Season & Round Badges */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
-                        Round {run.roundId ?? "?"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const roundId = run.roundId;
+                          // Parse "season/round" format
+                          if (typeof roundId === "string" && roundId.includes("/")) {
+                            const [season, round] = roundId.split("/");
+                            return (
+                              <>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
+                                  Season {season}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
+                                  Round {round}
+                                </span>
+                              </>
+                            );
+                          }
+                          // Fallback for legacy format
+                          return (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
+                              Round {roundId ?? "?"}
+                            </span>
+                          );
+                        })()}
+                      </div>
                       {typeof run.ranking === "number" && run.ranking > 0 && (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-amber-500/70 bg-gradient-to-br from-amber-500/25 to-amber-600/15 px-3 py-1.5 text-sm font-bold text-amber-200 shadow-md">
                           🏆 #{run.ranking}

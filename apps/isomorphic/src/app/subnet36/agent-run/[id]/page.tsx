@@ -469,8 +469,53 @@ function AgentRunPersonasFromInfo({
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
   
-  // Round number/ID
-  const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
+  // Parse round number/ID - support "season/round" format
+  // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
+  const parseRoundInfo = () => {
+    // First, try roundId as string in "season/round" format
+    if (roundData.roundId && typeof roundData.roundId === "string" && roundData.roundId.includes("/")) {
+      const parts = roundData.roundId.split("/");
+      const season = parts[0]?.trim();
+      const round = parts[1]?.trim();
+      if (season && round && !isNaN(Number(season)) && !isNaN(Number(round))) {
+        return { season, round };
+      }
+    }
+    
+    // Second, try to get from roundData directly (season_number, round_number_in_season)
+    if (roundData.season_number !== undefined && roundData.round_number_in_season !== undefined) {
+      return { 
+        season: String(roundData.season_number), 
+        round: String(roundData.round_number_in_season)
+      };
+    }
+    
+    // Third, try season and round fields
+    if (roundData.season !== undefined && roundData.round !== undefined) {
+      return { 
+        season: String(roundData.season), 
+        round: String(roundData.round)
+      };
+    }
+    
+    // If we have roundNumber that looks like legacy format (10001, 20003, etc), try to extract
+    if (roundData.roundNumber && typeof roundData.roundNumber === "number") {
+      const num = roundData.roundNumber;
+      // Legacy format: season * 10000 + round
+      if (num >= 10000) {
+        const season = Math.floor(num / 10000);
+        const round = num % 10000;
+        if (season > 0 && round > 0) {
+          return { season: String(season), round: String(round) };
+        }
+      }
+    }
+    
+    // No valid data found
+    return null;
+  };
+
+  const roundInfo = parseRoundInfo();
   const roundStatus = roundData.status || "Active";
 
   return (
@@ -482,13 +527,36 @@ function AgentRunPersonasFromInfo({
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
               <PiClock className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Round
-              </p>
-              <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                #{roundNumber}
-              </p>
+            <div className="flex items-center gap-4">
+              {roundInfo && roundInfo.season && roundInfo.round ? (
+                <>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                      Season
+                    </p>
+                    <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                      {roundInfo.season}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                      Round
+                    </p>
+                    <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                      {roundInfo.round}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                    Round
+                  </p>
+                  <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                    {roundData.validatorRoundId ? truncateMiddle(roundData.validatorRoundId, 8) : "—"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <span
