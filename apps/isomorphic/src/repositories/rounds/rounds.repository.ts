@@ -35,6 +35,18 @@ export class RoundsRepository {
     if (!raw) {
       throw new Error("Round identifier is required");
     }
+    
+    // Check if it's a season/round format (e.g., "1/1" or "8/3")
+    const seasonRoundMatch = raw.match(/^(\d+)\/(\d+)$/);
+    if (seasonRoundMatch) {
+      const season = Number.parseInt(seasonRoundMatch[1], 10);
+      const round = Number.parseInt(seasonRoundMatch[2], 10);
+      return {
+        path: `${season}/${round}`,
+        fallbackId: season * 10000 + round, // For backward compatibility
+      };
+    }
+    
     const match = raw.match(/\d+/);
     const parsed = match ? Number.parseInt(match[0], 10) : undefined;
     const fallbackId =
@@ -224,6 +236,8 @@ export class RoundsRepository {
       round: rawRound.round ?? id,
       roundNumber: rawRound.roundNumber ?? rawRound.round ?? id,
       roundKey: rawRound.roundKey ?? `round_${id}`,
+      season: rawRound.season ?? rawRound.Season ?? undefined,
+      roundInSeason: rawRound.roundInSeason ?? rawRound.round_in_season ?? undefined,
       startBlock,
       endBlock,
       current: Boolean(rawRound.current ?? status === "active"),
@@ -481,9 +495,9 @@ export class RoundsRepository {
   }
 
   /**
-   * Get aggregated metrics and validators data from the new simplified endpoint
+   * Get aggregated metrics and validators data from the new simplified endpoint (DEPRECATED - use getRoundSimplified)
    */
-  async getRound(roundNumber: number): Promise<{
+  async getRoundOld(roundNumber: number): Promise<{
     round_number: number;
     aggregated: {
       winner: {
@@ -513,10 +527,62 @@ export class RoundsRepository {
       local_tasks_evaluated: number;
     }>;
   }> {
+    // DEPRECATED: This method uses the old API format
+    throw new Error("getRoundOld is deprecated. Use getRoundSimplified with season and roundInSeason.");
+  }
+  
+  /**
+   * Get round details from simplified endpoint using season and round_in_season
+   */
+  async getRoundSimplified(season: number, roundInSeason: number): Promise<{
+    round_number: number;
+    season: number;
+    round_in_season: number;
+    post_consensus_summary: {
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+        avg_reward: number;
+        avg_eval_score: number;
+        avg_eval_time: number;
+      } | null;
+      miners_evaluated: number;
+      tasks_evaluated: number;
+    };
+    validators: Array<{
+      validator_uid: number;
+      validator_name: string;
+      validator_hotkey: string;
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+      } | null;
+      local_avg_winner_score: number;
+      local_avg_eval_time: number;
+      local_miners_evaluated: number;
+      local_tasks_evaluated: number;
+      miners: Array<{
+        uid: number;
+        name: string;
+        hotkey: string | null;
+        image: string | null;
+        local_rank: number | null;
+        local_avg_reward: number;
+        local_avg_eval_score: number;
+        local_avg_eval_time: number;
+      }>;
+    }>;
+  }> {
     const response = await apiClient.get<{
       success: boolean;
       data: {
         round_number: number;
+        season: number;
+        round_in_season: number;
         post_consensus_summary: {
           winner: {
             uid: number;
@@ -540,6 +606,7 @@ export class RoundsRepository {
             image: string | null;
             hotkey: string | null;
           } | null;
+          topScore: number;
           local_avg_winner_score: number;
           local_avg_eval_time: number;
           local_miners_evaluated: number;
@@ -556,7 +623,7 @@ export class RoundsRepository {
           }>;
         }>;
       };
-    }>(`${this.baseEndpoint}/get-round`, { round_number: roundNumber });
+    }>(`${this.baseEndpoint}/get-round`, { season, round_in_season: roundInSeason });
     return response.data.data;
   }
 
@@ -634,11 +701,12 @@ export class RoundsRepository {
    * Get round details with validators local and post-consensus data
    */
   async getRoundWithValidators(
-    roundNumber: number
+    season: number,
+    roundInSeason: number
   ): Promise<GetRoundResponse> {
     const response = await apiClient.get<GetRoundResponse>(
       `${this.baseEndpoint}/get-round`,
-      { round_number: roundNumber }
+      { season, round_in_season: roundInSeason }
     );
     return response.data;
   }
