@@ -108,10 +108,16 @@ export class AgentsRepository {
    * Get historical statistics for a miner across all rounds
    */
   async getMinerHistorical(
-    minerUid: number
+    minerUid: number,
+    season?: number
   ): Promise<MinerHistoricalResponse['data']> {
+    const params: Record<string, string> = {};
+    if (season !== undefined) {
+      params.season = String(season);
+    }
     const response = await apiClient.get<MinerHistoricalResponse>(
-      `${this.baseEndpoint}/${minerUid}/historical`
+      `${this.baseEndpoint}/${minerUid}/historical`,
+      params
     );
     return response.data.data;
   }

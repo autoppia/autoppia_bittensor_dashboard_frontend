@@ -156,17 +156,17 @@ export function useMinerRoundDetails(round: string | number | undefined, miner_u
   return useApiCall(request, `miner-round-details:${round ?? 'none'}:${miner_uid ?? 'none'}`);
 }
 
-export function useMinerHistorical(miner_uid: number | undefined) {
+export function useMinerHistorical(miner_uid: number | undefined, season?: number) {
   const request = useCallback(
     () => {
       if (!miner_uid) {
         return Promise.resolve(null);
       }
-      return agentsRepository.getMinerHistorical(miner_uid);
+      return agentsRepository.getMinerHistorical(miner_uid, season);
     },
-    [miner_uid]
+    [miner_uid, season]
   );
-  return useApiCall(request, `miner-historical:${miner_uid ?? 'none'}`);
+  return useApiCall(request, `miner-historical:${miner_uid ?? 'none'}:${season ?? 'all'}`);
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
