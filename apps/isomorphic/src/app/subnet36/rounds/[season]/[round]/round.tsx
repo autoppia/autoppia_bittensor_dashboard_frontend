@@ -455,8 +455,17 @@ function RoundHeaderInline({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
-                  Round {roundNumber ?? progressData?.roundId ?? "—"}
+                  Season {round?.season ?? seasonParam ?? progressData?.season ?? "—"}
                 </h1>
+                <span
+                  className={cn(
+                    chipBase,
+                    "border-blue-400/70 bg-gradient-to-r from-blue-500/90 to-cyan-500/90 text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_30px_rgba(59,130,246,0.6)] hover:scale-105"
+                  )}
+                >
+                  <span className="h-2.5 w-2.5 rounded-full bg-white shadow-lg" />
+                  Round {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
+                </span>
                 <span
                   className={cn(
                     chipBase,
@@ -2216,11 +2225,7 @@ export default function Round() {
   // ✅ Construir roundInfo desde roundData
   const roundInfo = React.useMemo(() => {
     if (!roundData) return null;
-    const roundNumber = roundData.round_number;
     return {
-      roundNumber,
-      round: roundNumber,
-      id: roundNumber,
       season: roundData.season,
       roundInSeason: roundData.round_in_season,
       status: roundData.post_consensus_summary ? "completed" : "active",
@@ -2228,8 +2233,8 @@ export default function Round() {
     };
   }, [roundData]) as any;
   
-  const roundNumberForLinks = roundData?.round_number;
-  const roundLabel = roundNumberForLinks ?? roundKey;
+  const roundNumberForLinks = roundData?.round_in_season;
+  const roundLabel = roundKey;
   const topMiners = React.useMemo(() => {
     // Obtener top miners de roundData.post_consensus_summary.winner o de validators
     if (roundData?.post_consensus_summary?.winner) {
