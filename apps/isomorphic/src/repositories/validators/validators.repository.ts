@@ -14,8 +14,8 @@ export class ValidatorsRepository {
    * @param uid Validator UID
    * @param round Optional round number to filter evaluations
    */
-  async getValidatorDetails(uid: number, round?: number | null): Promise<ValidatorDetailsData> {
-    const params = round !== null && round !== undefined ? { round: round.toString() } : undefined;
+  async getValidatorDetails(uid: number, round?: string | null): Promise<ValidatorDetailsData> {
+    const params = round !== null && round !== undefined ? { round } : undefined;
     const response = await apiClient.get<ValidatorDetailsResponse>(
       `${this.baseEndpoint}/${uid}/details`,
       params
