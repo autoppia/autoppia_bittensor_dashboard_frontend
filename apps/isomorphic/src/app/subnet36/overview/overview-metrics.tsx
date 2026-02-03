@@ -161,10 +161,15 @@ export default function OverviewMetrics({
   }
 
   // Create dynamic metrics data from API with safe fallbacks
-  const latestFinishedRound = metrics?.metricsRound ?? 0;
+  const latestFinishedRound = metrics?.metricsRoundInSeason ?? metrics?.metricsRound ?? 0;
+  const metricsSeason = metrics?.metricsSeason ?? null;
   const topRewardValue = metrics?.topReward ?? 0;
   const topMinerInfo = metrics?.topMinerUid
     ? `${metrics.topMinerName || "Miner"} (UID ${metrics.topMinerUid})`
+    : null;
+
+  const seasonLabel = metricsSeason !== null && metricsSeason !== undefined 
+    ? `Season ${metricsSeason}` 
     : null;
 
   const dynamicMetricsData = [
@@ -173,7 +178,7 @@ export default function OverviewMetrics({
       title: "Top Reward",
       value: formatPercentage(topRewardValue),
       topLabel: topMinerInfo,
-      bottomLabel: `Round ${latestFinishedRound}`,
+      bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuTrophy,
       bgColor:
         "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -188,7 +193,7 @@ export default function OverviewMetrics({
       title: "Websites",
       value: 13,
       topLabel: "Active websites",
-      bottomLabel: `Round ${latestFinishedRound}`,
+      bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -202,7 +207,7 @@ export default function OverviewMetrics({
       title: "Validators",
       value: metrics?.totalValidators ?? 0,
       topLabel: "Active validators",
-      bottomLabel: `Round ${latestFinishedRound}`,
+      bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuShield,
       bgColor:
         "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -216,7 +221,7 @@ export default function OverviewMetrics({
       title: "Miners",
       value: metrics?.totalMiners ?? 0,
       topLabel: "Active miners",
-      bottomLabel: `Round ${latestFinishedRound}`,
+      bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuPickaxe,
       bgColor:
         "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",

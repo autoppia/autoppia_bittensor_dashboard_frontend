@@ -38,7 +38,8 @@ const DEFAULT_TASK_MESSAGES = new Set([
 
 export default function OverviewValidators({
   currentRound,
-}: { currentRound?: number | null } = {}) {
+  currentSeason,
+}: { currentRound?: number | null; currentSeason?: number | null } = {}) {
   const {
     data: validatorsData,
     loading: validatorsLoading,
@@ -93,7 +94,11 @@ export default function OverviewValidators({
         <PiCheckCircleFill className="h-5 w-5 text-emerald-300" />
       )}
       <span>{isRoundActive ? "Current round:" : "Last round:"}</span>
-      <span className="font-extrabold text-white">{roundNumber}</span>
+      {currentSeason !== null && currentSeason !== undefined ? (
+        <span className="font-extrabold text-white">Season {currentSeason} - Round {roundNumber}</span>
+      ) : (
+        <span className="font-extrabold text-white">{roundNumber}</span>
+      )}
     </span>
   ) : null;
 

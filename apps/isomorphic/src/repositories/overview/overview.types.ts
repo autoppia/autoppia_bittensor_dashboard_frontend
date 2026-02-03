@@ -12,7 +12,11 @@ export interface OverviewMetrics {
   totalValidators: number;
   totalMiners: number;
   currentRound: number;
+  currentSeason?: number | null;
+  currentRoundInSeason?: number | null;
   metricsRound: number;
+  metricsSeason?: number | null;
+  metricsRoundInSeason?: number | null;
   subnetVersion: string;
   lastUpdated: string;
 }
