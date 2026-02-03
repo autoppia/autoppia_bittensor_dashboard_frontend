@@ -760,17 +760,15 @@ export default function TaskSearch() {
                 "/miners/30.svg "
               );
 
-              // Try to get round number from multiple sources
-              const roundNumber =
-                (task as any).roundNumber ?? // Direct field from backend
-                task.relationships?.round?.roundNumber ?? // From relationships if included
-                extractRoundNumber(task.taskId) ?? // Extract from task ID
-                extractRoundNumber(task.agentRunId); // Extract from agent run ID
-
+              // Get round number directly from backend (no legacy formats)
+              const roundNumber = (task as any).roundNumber;
               const roundDisplay =
                 typeof roundNumber === "number" && Number.isFinite(roundNumber)
                   ? `#${roundNumber}`
                   : "—";
+
+              // Get season directly from backend (no legacy formats)
+              const seasonValue = (task as any).season;
 
               return (
                 <div
@@ -937,10 +935,12 @@ export default function TaskSearch() {
                         </div>
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-sky-300/70 font-semibold mb-1">
-                            Duration
+                            Season
                           </div>
                           <div className="text-base font-bold text-sky-300 drop-shadow-sm">
-                            {durationLabel}
+                            {typeof seasonValue === "number" && seasonValue > 0
+                              ? seasonValue
+                              : "—"}
                           </div>
                         </div>
                       </div>
