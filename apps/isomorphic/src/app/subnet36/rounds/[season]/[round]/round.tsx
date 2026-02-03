@@ -455,7 +455,7 @@ function RoundHeaderInline({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
-                  Season {round?.season ?? seasonParam ?? progressData?.season ?? "—"}
+                  ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
                 </h1>
                 <span
                   className={cn(
@@ -464,7 +464,7 @@ function RoundHeaderInline({
                   )}
                 >
                   <span className="h-2.5 w-2.5 rounded-full bg-white shadow-lg" />
-                  Round {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
+                  Season {round?.season ?? seasonParam ?? progressData?.season ?? "—"}
                 </span>
                 <span
                   className={cn(
