@@ -41,7 +41,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autocinema.autoppia.com",
  origin: "Movie Database",
  totalTasks: [30, 20, 12],
- image: "/images/web1.png",
+ image: "/images/web_1.png",
  color: "#9333EA",
  description: "Movie catalog with search, reviews, and user management.",
  avgDifficulty: 6.5,
@@ -281,7 +281,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autobooks.autoppia.com",
  origin: "Book Store",
  totalTasks: [28, 18, 10],
- image: "/images/web2.png",
+ image: "/images/web_2.png",
  color: "#10B981",
  description:
  "Book store with shopping cart, reviews, and e-commerce features.",
@@ -575,7 +575,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autozone.autoppia.com",
  origin: "Amazon",
  totalTasks: [25, 15, 8],
- image: "/images/web3.png",
+ image: "/images/web_3.png",
  color: "#EF4444",
  description:
  "E-commerce storefront for product search, carts, and checkout.",
@@ -782,7 +782,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autodining.autoppia.com",
  origin: "OpenTable",
  totalTasks: [22, 14, 9],
- image: "/images/web4.png",
+ image: "/images/web_4.png",
  color: "#F59E0B",
  description:
  "Restaurant booking platform with search, menus, and reservations.",
@@ -1067,7 +1067,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autocrm.autoppia.com",
  origin: "Legal CRM",
  totalTasks: [26, 16, 11],
- image: "/images/web5.png",
+ image: "/images/web_5.png",
  color: "#3B82F6",
  description:
  "Legal case management with matters, clients, documents, and time tracking.",
@@ -1392,7 +1392,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://automail.autoppia.com",
  origin: "Gmail",
  totalTasks: [24, 15, 10],
- image: "/images/web6.png",
+ image: "/images/web_6.png",
  color: "#8B5CF6",
  description:
  "Email client with compose, labels, search, and organization features.",
@@ -1743,7 +1743,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autodelivery.autoppia.com",
  origin: "Uber Eats",
  totalTasks: [27, 17, 12],
- image: "/images/web7.png",
+ image: "/images/web_7.png",
  color: "#EC4899",
  description:
  "Food delivery platform with restaurant search, cart, and order placement.",
@@ -2039,7 +2039,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autolodge.autoppia.com",
  origin: "Airbnb",
  totalTasks: [25, 16, 10],
- image: "/images/web8.png",
+ image: "/images/web_8.png",
  color: "#06B6D4",
  description:
  "Hotel and lodging booking platform with search, wishlist, and reservations.",
@@ -2305,7 +2305,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autoconnect.autoppia.com",
  origin: "LinkedIn",
  totalTasks: [23, 14, 9],
- image: "/images/web9.png",
+ image: "/images/web_9.png",
  color: "#0EA5E9",
  description:
  "Professional networking platform with profiles, posts, jobs, and connections.",
@@ -2648,7 +2648,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autowork.autoppia.com",
  origin: "Upwork",
  totalTasks: [21, 13, 8],
- image: "/images/web10.png",
+ image: "/images/web_10.png",
  color: "#14B8A6",
  description:
  "Freelancer and consultant hiring platform with job postings and bookings.",
@@ -3039,7 +3039,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autocalendar.autoppia.com",
  origin: "Google Calendar",
  totalTasks: [29, 18, 11],
- image: "/images/web11.png",
+ image: "/images/web_11.png",
  color: "#A855F7",
  description:
  "Calendar application with events, reminders, attendees, and multiple views.",
@@ -3326,7 +3326,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autolist.autoppia.com",
  origin: "Trello/Asana",
  totalTasks: [24, 15, 9],
- image: "/images/web12.png",
+ image: "/images/web_12.png",
  color: "#F97316",
  description:
  "Task and team management platform with priorities, dates, and collaboration.",
@@ -3524,7 +3524,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "#",
  origin: "Mint.com / Personal Capital",
  totalTasks: [0, 0, 0],
- image: "/images/web14.png",
+ image: "/images/web_14.png",
  isComingSoon: true,
  color: "#10B981",
  description:
@@ -3571,7 +3571,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autohealth.autoppia.com",
  origin: "Epic / Cerner / Allscripts",
  totalTasks: [30, 20, 15],
- image: "/images/web14.png",
+ image: "/images/web_14.png",
  isComingSoon: false,
  color: "#8B5CF6",
  description:
@@ -3765,7 +3765,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "http://autodrive.autoppia.com",
  origin: "Fleetio / Samsara / Geotab",
  totalTasks: [0, 0, 0],
- image: "/images/web13.png",
+ image: "/images/web_13.png",
  isComingSoon: false,
  color: "#F59E0B",
  description:
@@ -3955,7 +3955,7 @@ export const websitesData: WebsiteDataType[] = [
  href: "#",
  origin: "Travel Booking",
  totalTasks: [0, 0, 0],
- image: "/images/web7.png",
+ image: "/images/web_7.png",
  color: "#06B6D4",
  description: "Travel booking platform with flights, hotels, and reservations.",
  avgDifficulty: 7.0,
