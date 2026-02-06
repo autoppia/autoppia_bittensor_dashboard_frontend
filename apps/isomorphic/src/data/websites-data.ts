@@ -3580,14 +3580,6 @@ export const websitesData: WebsiteDataType[] = [
  completionRate: 75,
  useCases: [
  {
- name: "BOOK_APPOINTMENT",
- examplePrompt: [
- "Book an appointment where doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-20' and time equals '9:00 AM' and speciality equals 'Cardiology'",
- "Book an appointment with Dr. Daniel Roberts for Orthopedics before 2025-09-25 after 10:00 AM",
- "Book an appointment with a doctor named Nguyen in Dermatology for patient Emma Wilson about skin rash",
- ],
- },
- {
  name: "OPEN_APPOINTMENT_FORM",
  examplePrompt: [
  "Open appointment form where doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-20' and time equals '9:00 AM' and speciality equals 'Cardiology'",
@@ -3600,14 +3592,6 @@ export const websitesData: WebsiteDataType[] = [
  "Appointment booked successfully where patient_name equals 'John Doe' and doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-23' and time equals '10:00 AM' and speciality equals 'Cardiology' and reason_for_visit equals 'Chest pain'",
  "Appointment booked successfully where patient_name not equals 'Sarah Lee' and insurance_provider equals 'BlueCross' and doctor_name equals 'Dr. Daniel Roberts' and date greater than '2025-09-20'",
  "Successfully booked appointment with Dr. Emily Rodriguez for Dermatology on October 22, 2025 at 11:00 AM",
- ],
- },
- {
- name: "REQUEST_APPOINTMENT",
- examplePrompt: [
- "Request an appointment where patient_name equals 'John Smith' and speciality equals 'Cardiology'",
- "Request an appointment where patient_email equals 'emily.johnson@example.com' and speciality equals 'Dermatology'",
- "Request an appointment where speciality equals 'Neurology' and patient_name contains 'Michael'",
  ],
  },
  {
@@ -3628,7 +3612,7 @@ export const websitesData: WebsiteDataType[] = [
  {
  name: "SEARCH_DOCTORS",
  examplePrompt: [
- "Search doctors where search_term contains 'Alice'",
+ "Search doctors where doctor_name contains 'Alice'",
  "Search doctors where speciality equals 'Cardiology'",
  "Search doctors where language equals 'Spanish'",
  "Search doctors where speciality equals 'Dermatology' and language equals 'English'",
@@ -3722,15 +3706,6 @@ export const websitesData: WebsiteDataType[] = [
  "Doctor contacted successfully where speciality equals 'Dermatology' and urgency equals 'high'",
  "Doctor contacted successfully where patient_email equals 'maria.gonzalez@example.com' and preferred_contact_method equals 'email'",
  "Doctor contacted successfully where subject contains 'knee pain' and message contains 'difficulty walking'",
- ],
- },
- {
- name: "VIEW_REVIEWS_CLICKED",
- examplePrompt: [
- "View reviews clicked where doctor_name equals 'Dr. Alice Thompson'",
- "View reviews clicked where doctor_name equals 'Dr. Michael Johnson'",
- "View reviews clicked where speciality equals 'Cardiologist'",
- "View reviews clicked where rating greater than 4.5",
  ],
  },
  ],
