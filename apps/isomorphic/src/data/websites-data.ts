@@ -3584,6 +3584,10 @@ export const websitesData: WebsiteDataType[] = [
  examplePrompt: [
  "Open appointment form where doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-20' and time equals '9:00 AM' and speciality equals 'Cardiology'",
  "Open booking form for appointment with Dr. Daniel Roberts at 10:00 AM",
+ "Open the appointment booking form for Dr. Emily Rodriguez in Dermatology",
+ "Open appointment form where speciality equals 'Pediatrics' and date equals '2025-10-01'",
+ "Open booking form for Dr. Brian Patel at 2:00 PM on 2025-09-28",
+ "Open appointment form where doctor_name contains 'Clara' and time equals '11:00 AM'",
  ],
  },
  {
@@ -3592,6 +3596,9 @@ export const websitesData: WebsiteDataType[] = [
  "Appointment booked successfully where patient_name equals 'John Doe' and doctor_name equals 'Dr. Alice Thompson' and date equals '2025-09-23' and time equals '10:00 AM' and speciality equals 'Cardiology' and reason_for_visit equals 'Chest pain'",
  "Appointment booked successfully where patient_name not equals 'Sarah Lee' and insurance_provider equals 'BlueCross' and doctor_name equals 'Dr. Daniel Roberts' and date greater than '2025-09-20'",
  "Successfully booked appointment with Dr. Emily Rodriguez for Dermatology on October 22, 2025 at 11:00 AM",
+ "Appointment booked successfully where doctor_name equals 'Dr. Brian Patel' and speciality equals 'Pediatrics' and reason_for_visit equals 'Annual checkup'",
+ "Booked appointment where patient_name equals 'Maria Garcia' and date equals '2025-10-05' and time equals '3:00 PM'",
+ "Appointment booked successfully where speciality equals 'Cardiology' and insurance_provider equals 'BlueCross' and date greater than '2025-09-25'",
  ],
  },
  {
@@ -3599,6 +3606,10 @@ export const websitesData: WebsiteDataType[] = [
  examplePrompt: [
  "Request quick appointment where patient_name equals 'John Smith' and speciality equals 'Cardiology'",
  "Submit quick appointment form where speciality equals 'Dermatology'",
+ "Request quick appointment where speciality equals 'Pediatrics' and preferred_date equals '2025-10-01'",
+ "Submit quick appointment for Neurology with urgency equals 'high'",
+ "Request quick appointment where patient_name contains 'Lee' and speciality equals 'General Practice'",
+ "Submit quick appointment form where speciality equals 'Orthopedics' and time_slot equals 'morning'",
  ],
  },
  {
@@ -3607,6 +3618,9 @@ export const websitesData: WebsiteDataType[] = [
  "Search appointments where doctor_name equals 'Dr. Alice Thompson'",
  "Search appointments where speciality equals 'Cardiology' and date equals '2025-09-20'",
  "Search appointments where date equals '2025-09-25'",
+ "Search my appointments where date greater than '2025-09-20' and speciality equals 'Dermatology'",
+ "Search appointments where doctor_name contains 'Roberts' and status equals 'confirmed'",
+ "Search appointments where date equals '2025-10-01' and time equals '9:00 AM'",
  ],
  },
  {
@@ -3616,6 +3630,8 @@ export const websitesData: WebsiteDataType[] = [
  "Search doctors where speciality equals 'Cardiology'",
  "Search doctors where language equals 'Spanish'",
  "Search doctors where speciality equals 'Dermatology' and language equals 'English'",
+ "Search doctors where rating greater than 4.5 and consultation_fee less than 150",
+ "Search doctors where speciality equals 'Pediatrics' and language contains 'Spanish'",
  ],
  },
  {
@@ -3624,6 +3640,9 @@ export const websitesData: WebsiteDataType[] = [
  "Search prescriptions where medicine_name equals 'Atorvastatin'",
  "Search prescriptions where doctor_name equals 'Dr. Alice Thompson'",
  "Search prescriptions where medicine_name contains 'Vitamin' and doctor_name contains 'Smith'",
+ "Search prescriptions where status equals 'active' and start_date greater than '2025-01-01'",
+ "Search prescriptions where medicine_name equals 'Metformin' or medicine_name equals 'Lisinopril'",
+ "Search my prescriptions where category equals 'blood_pressure' and doctor_name contains 'Patel'",
  ],
  },
  {
@@ -3632,6 +3651,9 @@ export const websitesData: WebsiteDataType[] = [
  "Search medical analysis where record_title equals 'Complete Blood Count (CBC)'",
  "Search medical analysis where doctor_name equals 'Dr. Alice Thompson'",
  "Search medical analysis where record_title contains 'X-Ray' and doctor_name contains 'Smith'",
+ "Search medical records where record_type equals 'lab_result' and record_date greater than '2024-06-01'",
+ "Search medical analysis where record_title contains 'MRI' or record_title contains 'CT scan'",
+ "Search medical analysis where doctor_name equals 'Dr. Emily Rodriguez' and record_type equals 'vaccination'",
  ],
  },
  {
@@ -3640,6 +3662,9 @@ export const websitesData: WebsiteDataType[] = [
  "View medical analysis where record_title equals 'Complete Blood Count (CBC)' and record_type equals 'lab_result' and record_date equals '2024-01-15'",
  "View medical analysis where record_title contains 'X-Ray' and doctor_name equals 'Dr. Alice Thompson'",
  "View medical analysis where record_type equals 'vaccination' and record_date greater than '2024-02-01'",
+ "View medical analysis where record_title equals 'Lipid Panel' and doctor_name contains 'Roberts'",
+ "View lab result where record_type equals 'lab_result' and record_date equals '2024-08-20'",
+ "View medical analysis where record_title contains 'Ultrasound' and record_date less than '2024-12-01'",
  ],
  },
  {
@@ -3648,6 +3673,9 @@ export const websitesData: WebsiteDataType[] = [
  "View a prescription where doctor_name equals 'Dr. Alice Thompson' and start_date equals '2025-08-01' and medicine_name equals 'Atorvastatin' and status equals 'active' and category equals 'cholesterol'",
  "View a prescription where doctor_name contains 'Daniel' and medicine_name equals 'Ibuprofen' and status equals 'active'",
  "View the prescription for Metformin from my active prescriptions",
+ "View prescription where medicine_name equals 'Lisinopril' and status equals 'active' and category equals 'blood_pressure'",
+ "View a prescription where doctor_name equals 'Dr. Brian Patel' and end_date greater than '2025-09-01'",
+ "View prescription details where medicine_name contains 'Vitamin D' and start_date equals '2025-07-15'",
  ],
  },
  {
@@ -3656,6 +3684,9 @@ export const websitesData: WebsiteDataType[] = [
  "View a doctor profile where doctor_name equals 'Dr. Alice Thompson' and rating greater than 4.5 and speciality equals 'Cardiology'",
  "View a doctor profile where doctor_name contains 'Clara' and consultation_fee less than 200 and language equals 'Spanish'",
  "View a doctor profile where speciality equals 'Dermatology' and language equals 'English'",
+ "View doctor profile where doctor_name equals 'Dr. Brian Patel' and speciality equals 'Pediatrics'",
+ "View profile for Dr. Daniel Roberts where rating greater than 4.7 and consultation_fee less than 180",
+ "View a doctor profile where speciality equals 'Neurology' and language contains 'English'",
  ],
  },
  {
@@ -3664,6 +3695,9 @@ export const websitesData: WebsiteDataType[] = [
  "View doctor education where doctor_name equals 'Dr. Alice Thompson' and speciality equals 'Cardiology'",
  "View doctor education where doctor_name contains 'Patel' and rating greater than 4.5 and language equals 'English'",
  "View doctor education where speciality equals 'Dermatology' and consultation_fee less than 200",
+ "View education and credentials for Dr. Emily Rodriguez",
+ "View doctor education where doctor_name equals 'Dr. Daniel Roberts' and speciality equals 'Internal Medicine'",
+ "View education where speciality equals 'Pediatrics' and language equals 'Spanish'",
  ],
  },
  {
@@ -3673,6 +3707,8 @@ export const websitesData: WebsiteDataType[] = [
  "Filter doctor reviews where filter_rating equals 1 and doctor_name contains 'Pepe'",
  "Filter doctor reviews where speciality equals 'Dermatology' and sort_order equals 'newest'",
  "Sort doctor reviews by highest rating for Dr. Brian Patel",
+ "Filter reviews where doctor_name equals 'Dr. Emily Rodriguez' and filter_rating greater than 4",
+ "Sort doctor reviews by date for Dr. Daniel Roberts where sort_order equals 'oldest'",
  ],
  },
  {
@@ -3680,6 +3716,10 @@ export const websitesData: WebsiteDataType[] = [
  examplePrompt: [
  "Open contact doctor form where doctor_name equals 'Dr. Alice Thompson' and speciality equals 'Cardiology'",
  "Open contact form for Dr. Brian Patel",
+ "Open contact form where doctor_name equals 'Dr. Emily Rodriguez' and speciality equals 'Dermatology'",
+ "Open contact doctor form where doctor_name contains 'Roberts'",
+ "Open contact form for Dr. Daniel Roberts in Cardiology",
+ "Open contact doctor form where speciality equals 'Pediatrics' and doctor_name contains 'Clara'",
  ],
  },
  {
@@ -3689,6 +3729,8 @@ export const websitesData: WebsiteDataType[] = [
  "Contact a doctor where speciality equals 'Dermatology'",
  "Contact a doctor where rating greater than 4.7",
  "Contact a doctor where speciality equals 'Pediatrics' and rating greater than 4.5",
+ "Contact Dr. Brian Patel about a follow-up consultation",
+ "Contact a doctor where speciality equals 'Neurology' and preferred_contact_method equals 'email'",
  ],
  },
  {
@@ -3697,6 +3739,9 @@ export const websitesData: WebsiteDataType[] = [
  "Refill prescription where medicine_name equals 'Atorvastatin'",
  "Refill prescription where medicine_name equals 'Metformin'",
  "Refill prescription where medicine_name contains 'Vitamin'",
+ "Request refill for prescription where medicine_name equals 'Lisinopril'",
+ "Refill prescription where medicine_name equals 'Ibuprofen' and status equals 'active'",
+ "Refill prescription where medicine_name contains 'Omeprazole'",
  ],
  },
  {
@@ -3706,6 +3751,8 @@ export const websitesData: WebsiteDataType[] = [
  "Doctor contacted successfully where speciality equals 'Dermatology' and urgency equals 'high'",
  "Doctor contacted successfully where patient_email equals 'maria.gonzalez@example.com' and preferred_contact_method equals 'email'",
  "Doctor contacted successfully where subject contains 'knee pain' and message contains 'difficulty walking'",
+ "Doctor contacted successfully where doctor_name equals 'Dr. Brian Patel' and subject equals 'Prescription refill request'",
+ "Doctor contacted successfully where patient_name equals 'Sarah Lee' and preferred_contact_method equals 'phone'",
  ],
  },
  ],
