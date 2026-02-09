@@ -100,6 +100,29 @@ const formatNumber = (value?: number | null, digits: number = 2) => {
   return value.toFixed(digits);
 };
 
+const formatCost = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "—";
+  }
+  if (value < 0.01) {
+    return `$${value.toFixed(6)}`;
+  }
+  return `$${value.toFixed(4)}`;
+};
+
+const formatTokens = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "—";
+  }
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(2)}M`;
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(2)}K`;
+  }
+  return value.toLocaleString();
+};
+
 function InfoRow({
   label,
   value,
@@ -864,6 +887,31 @@ export default function TaskDetails() {
                     value={solutionSummary}
                     valueClassName="text-white/80"
                   />
+                  {/* LLM Usage Tracking */}
+                  {evaluationInfo?.llmProvider && (
+                    <>
+                      <div className="pt-2 border-t border-white/10" />
+                      <InfoRow
+                        label="LLM Provider"
+                        value={evaluationInfo.llmProvider.toUpperCase()}
+                        valueClassName="font-semibold text-sky-200"
+                      />
+                      {evaluationInfo.llmCost != null && (
+                        <InfoRow
+                          label="LLM Cost"
+                          value={formatCost(evaluationInfo.llmCost)}
+                          valueClassName="font-semibold text-emerald-200"
+                        />
+                      )}
+                      {evaluationInfo.llmTokens != null && (
+                        <InfoRow
+                          label="LLM Tokens"
+                          value={formatTokens(evaluationInfo.llmTokens)}
+                          valueClassName="font-semibold text-amber-200"
+                        />
+                      )}
+                    </>
+                  )}
                 </div>
               </ContextCard>
             </div>
