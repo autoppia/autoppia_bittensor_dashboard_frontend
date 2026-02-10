@@ -221,7 +221,7 @@ function AgentStats({
         const completed =
           mode === "historical"
             ? (agent.completedTasks ?? 0)
-            : (agent.completedTasks ?? 0);
+            : (roundMetrics?.completedTasks ?? 0);
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuTrophy,
@@ -1036,11 +1036,9 @@ function AgentValidators({
             const isFromRoundDetails = 'validator_image' in validator;
             
             // Use validator_image if available (from round-details), otherwise fallback
-            const validatorImage = isFromRoundDetails && validator.validator_image
+            const validatorImage = validator.validator_image
               ? resolveAssetUrl(validator.validator_image)
-              : (validator.validator_image 
-                  ? resolveAssetUrl(validator.validator_image)
-                  : resolveAssetUrl(`/validators/${validator.validator_uid}.png` || "/validators/default.png"));
+              : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
             
             // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
