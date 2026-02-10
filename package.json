@@ -14,7 +14,10 @@
     "start": "turbo start",
     "clean": "turbo clean && rm -rf node_modules .turbo",
     "cache:clean": "turbo cache:clean && rm -rf .turbo",
-    "gen-icons": "turbo gen-icons --filter=core"
+    "gen-icons": "turbo gen-icons --filter=core",
+    "sonar": "./scripts/run-sonar-local.sh",
+    "sonar:issues": "./scripts/get-sonar-issues.sh",
+    "sonar:fix": "npm run sonar && npm run sonar:issues"
   },
   "devDependencies": {
     "eslint": "9.23.0",

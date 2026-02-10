@@ -43,3 +43,10 @@ dist/
 
 # agent files
 agent-files/
+
+# SonarCloud / SonarQube
+.scannerwork/
+sonar-report.json
+sonar-report.html
+*.scannerwork
+.sonar/

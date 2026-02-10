@@ -25,7 +25,7 @@ cd autoppia_bittensor_dashboard_frontend
 - Sube los resultados a SonarCloud
 - Actualiza el proyecto en la web
 
-### Modo Local (solo analiza, NO sube)
+### Modo Local (analiza y genera reportes locales)
 
 ```bash
 cd autoppia_bittensor_dashboard_frontend
@@ -33,10 +33,12 @@ cd autoppia_bittensor_dashboard_frontend
 ```
 
 **Qué hace:**
-- Analiza el código localmente
-- Genera reportes locales (HTML y JSON)
-- NO sube nada a SonarCloud
-- Útil para pruebas rápidas sin modificar SonarCloud
+- Analiza el código
+- **También sube resultados a SonarCloud** (SonarScanner requiere conexión para descargar reglas)
+- Genera reportes locales adicionales (HTML y JSON)
+- Útil para tener reportes locales además de los de SonarCloud
+
+**Nota importante:** SonarScanner siempre necesita conectarse a SonarCloud para descargar las reglas de análisis. Por lo tanto, los resultados también se subirán a SonarCloud, pero obtendrás reportes locales adicionales.
 
 ### Ver ayuda
 
