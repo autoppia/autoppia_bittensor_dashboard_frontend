@@ -58,6 +58,28 @@ export class RoundsRepository {
   }
 
   /**
+   * Extract round payload from API response, handling various response formats
+   */
+  private extractRoundPayload(raw: any): any {
+    const payloadCandidates = [
+      raw?.data?.round,
+      raw?.round,
+      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
+      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
+      raw,
+    ];
+
+    return (
+      payloadCandidates.find(
+        (candidate) =>
+          candidate &&
+          typeof candidate === "object" &&
+          !Array.isArray(candidate)
+      ) ?? {}
+    );
+  }
+
+  /**
    * Normalize round payloads coming from the API into the RoundData shape expected by the UI.
    * Handles both camelCase and snake_case responses as well as string-based round identifiers.
    */
@@ -346,23 +368,7 @@ export class RoundsRepository {
     const response = await apiClient.get<any>(
       `${this.baseEndpoint}/${path}/basic`
     );
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload, fallbackId);
   }
 
@@ -373,23 +379,7 @@ export class RoundsRepository {
   async getRound(identifier: string | number): Promise<RoundData> {
     const { path, fallbackId } = this.buildRoundPath(identifier);
     const response = await apiClient.get<any>(`${this.baseEndpoint}/${path}`);
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload, fallbackId);
   }
 
@@ -398,23 +388,7 @@ export class RoundsRepository {
    */
   async getCurrentRound(): Promise<RoundData> {
     const response = await apiClient.get<any>(`${this.baseEndpoint}/current`);
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload);
   }
 
