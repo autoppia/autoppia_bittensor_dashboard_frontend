@@ -6,12 +6,8 @@
 import { apiClient } from "../client";
 import {
   RoundsListResponse,
-  RoundDetailsResponse,
-  RoundStatisticsResponse,
   RoundMinersResponse,
   RoundValidatorsResponse,
-  RoundActivityResponse,
-  RoundProgressResponse,
   RoundsListQueryParams,
   RoundMinersQueryParams,
   RoundActivityQueryParams,
@@ -77,6 +73,24 @@ export class RoundsRepository {
           !Array.isArray(candidate)
       ) ?? {}
     );
+  }
+
+  /**
+   * Generic helper to fetch data from round endpoints with nested data.data structure
+   * Reduces duplication in methods that follow the pattern: buildPath -> get -> return data.data.XXX
+   */
+  private async fetchRoundEndpointData<T>(
+    identifier: string | number,
+    endpoint: string,
+    dataKey: string,
+    params?: any
+  ): Promise<T> {
+    const { path } = this.buildRoundPath(identifier);
+    const response = await apiClient.get<{ data: { [key: string]: T } }>(
+      `${this.baseEndpoint}/${path}/${endpoint}`,
+      params
+    );
+    return response.data.data[dataKey] as T;
   }
 
   /**
@@ -242,13 +256,15 @@ export class RoundsRepository {
       typeof startBlock === "number" &&
       typeof endBlock === "number"
     ) {
-      const effectiveCurrentBlock =
-        currentBlock !== undefined
-          ? currentBlock
-          : status === "finished"
-            ? endBlock
-            : startBlock;
-      const range = endBlock - startBlock;
+    let effectiveCurrentBlock: number;
+    if (currentBlock !== undefined) {
+      effectiveCurrentBlock = currentBlock;
+    } else if (status === "finished") {
+      effectiveCurrentBlock = endBlock;
+    } else {
+      effectiveCurrentBlock = startBlock;
+    }
+    const range = endBlock - startBlock;
       progress =
         range > 0 ? (effectiveCurrentBlock - startBlock) / range : undefined;
     }
@@ -322,11 +338,14 @@ export class RoundsRepository {
     const response = await apiClient.get<any>(this.baseEndpoint, params);
     const responseData = response.data?.data ?? response.data ?? {};
 
-    const roundsArraySource = Array.isArray(responseData.rounds)
-      ? responseData.rounds
-      : Array.isArray(response.data?.rounds)
-        ? response.data.rounds
-        : [];
+    let roundsArraySource: any[];
+    if (Array.isArray(responseData.rounds)) {
+      roundsArraySource = responseData.rounds;
+    } else if (Array.isArray(response.data?.rounds)) {
+      roundsArraySource = response.data.rounds;
+    } else {
+      roundsArraySource = [];
+    }
 
     const normalizedRounds = roundsArraySource.map((round: any) =>
       this.normalizeRoundData(round)
@@ -398,11 +417,11 @@ export class RoundsRepository {
   async getRoundStatistics(
     identifier: string | number
   ): Promise<RoundStatistics> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundStatisticsResponse>(
-      `${this.baseEndpoint}/${path}/statistics`
+    return this.fetchRoundEndpointData<RoundStatistics>(
+      identifier,
+      "statistics",
+      "statistics"
     );
-    return response.data.data.statistics;
   }
 
   /**
@@ -449,23 +468,23 @@ export class RoundsRepository {
     identifier: string | number,
     params?: RoundActivityQueryParams
   ): Promise<RoundActivity[]> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundActivityResponse>(
-      `${this.baseEndpoint}/${path}/activity`,
+    return this.fetchRoundEndpointData<RoundActivity[]>(
+      identifier,
+      "activity",
+      "activities",
       params
     );
-    return response.data.data.activities;
   }
 
   /**
    * Get round progress information
    */
   async getRoundProgress(identifier: string | number): Promise<RoundProgress> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundProgressResponse>(
-      `${this.baseEndpoint}/${path}/progress`
+    return this.fetchRoundEndpointData<RoundProgress>(
+      identifier,
+      "progress",
+      "progress"
     );
-    return response.data.data.progress;
   }
 
   /**

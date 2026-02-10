@@ -1219,6 +1219,14 @@ export default function AgentRunSearch() {
                   onClick={() =>
                     router.push(`${routes.agent_run}/${run.runId}`)
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`${routes.agent_run}/${run.runId}`);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"
                   style={{ cursor: "pointer" }}
                 >

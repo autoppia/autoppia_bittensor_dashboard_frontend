@@ -1949,35 +1949,6 @@ function AgentRunSummary({
             </PieChart>
           </ResponsiveContainer>
         </div>
-        {false && (
-          <div className="h-[240px] flex items-center justify-center">
-            <div className="text-center">
-              <div className="relative">
-                {/* Donut placeholder */}
-                <div className="w-[200px] h-[200px] rounded-full border-8 border-slate-600/30 mx-auto mb-4 relative">
-                  <div className="absolute inset-4 rounded-full border-4 border-dashed border-slate-500/40"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-slate-400 mb-1">
-                        0%
-                      </div>
-                      <div className="text-xs text-slate-500 uppercase tracking-wider">
-                        No Data
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">
-                No Performance Data Available
-              </h3>
-              <p className="text-slate-400 text-sm max-w-[200px] mx-auto">
-                Performance metrics will appear here once the agent run
-                processes some tasks.
-              </p>
-            </div>
-          </div>
-        )}
         {displayData.length > 0 ? (
           <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-transparent">
             {displayData.map((item, idx) => {

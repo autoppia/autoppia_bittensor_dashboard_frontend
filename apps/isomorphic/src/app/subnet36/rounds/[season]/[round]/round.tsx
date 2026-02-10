@@ -1334,6 +1334,17 @@ function RoundValidatorsInline({
                     lastNotifiedValidator.current = validator.id;
                     onValidatorSelect?.(validator);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (validator.id === selectedValidatorId) return;
+                      setSelectedValidatorId(validator.id);
+                      lastNotifiedValidator.current = validator.id;
+                      onValidatorSelect?.(validator);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="cursor-pointer"
                 >
                   <div

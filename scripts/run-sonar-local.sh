@@ -142,7 +142,7 @@ export SONAR_TOKEN
 
 $SONAR_SCANNER_CMD \
     -Dsonar.host.url=https://sonarcloud.io \
-    -Dsonar.login="$SONAR_TOKEN" \
+    -Dsonar.token="$SONAR_TOKEN" \
     -Dsonar.issuesReport.html.enable=true \
     -Dsonar.issuesReport.console.enable=true
 
