@@ -3701,6 +3701,17 @@ export const websitesData: WebsiteDataType[] = [
  ],
  },
  {
+ name: "VIEW_DOCTOR_AVAILABILITY",
+ examplePrompt: [
+ "View doctor availability where doctor_name equals 'Dr. Alice Thompson' and speciality equals 'Cardiology'",
+ "View doctor availability where doctor_name contains 'Patel' and rating greater than 4.5 and language equals 'English'",
+ "View doctor availability where speciality equals 'Dermatology' and consultation_fee less than 200",
+ "View doctor availability where doctor_name equals 'Dr. Emily Rodriguez' and speciality equals 'Dermatology'",
+ "View availability for Dr. Daniel Roberts where rating greater than 4.7 and consultation_fee less than 180",
+ "View doctor availability where speciality equals 'Pediatrics' and language equals 'Spanish'",
+ ],
+ },
+ {
  name: "FILTER_DOCTOR_REVIEWS",
  examplePrompt: [
  "Filter doctor reviews where doctor_name equals 'Dr. Alice Thompson' and filter_rating equals 5",
