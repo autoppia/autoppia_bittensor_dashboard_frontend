@@ -145,6 +145,25 @@ const formatNumber = (value?: number | null, digits: number = 2) => {
   return value.toFixed(digits);
 };
 
+const formatCost = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 6,
+  });
+};
+
+const formatTokens = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US");
+};
+
+const formatReward = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return `${formatNumber(value, 6)} α`;
+};
+
 function InfoRow({
   label,
   value,
@@ -548,6 +567,14 @@ function TaskDetailsDynamic({
   );
   const agentRunLinkId =
     agentRunInfo?.agentRunId ?? (taskData as any).agentRunId ?? "";
+  const hasLlmData =
+    Boolean(evaluationInfo?.llmProvider) ||
+    Boolean(evaluationInfo?.llmModel) ||
+    evaluationInfo?.llmCost != null ||
+    evaluationInfo?.llmTokens != null;
+  const priceValue =
+    evaluationInfo?.llmCost != null ? evaluationInfo.llmCost : evaluationInfo?.reward;
+  const hasPrice = priceValue != null;
 
   const primaryCards: StatCardConfig[] = [
     {
@@ -946,6 +973,61 @@ function TaskDetailsDynamic({
             </div>
           </div>
         ) : null}
+
+        {(hasLlmData || hasPrice) && (
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-slate-900/80 via-slate-950/70 to-emerald-950/30 p-5 text-white shadow-[0_20px_56px_rgba(0,0,0,0.6)] backdrop-blur-md">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(16,185,129,0.12),transparent_45%),radial-gradient(circle_at_100%_20%,rgba(56,189,248,0.12),transparent_40%)]" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-300/30 bg-emerald-500/15 text-emerald-200 shadow-inner">
+                  <PiChartBar className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-emerald-200/70">
+                    Evaluation Usage
+                  </p>
+                  <p className="text-lg font-semibold text-white/95">
+                    LLM Provider, Model &amp; Pricing
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <InfoRow
+                  label="LLM Provider"
+                  value={evaluationInfo?.llmProvider ? evaluationInfo.llmProvider.toUpperCase() : "—"}
+                  valueClassName="font-semibold text-sky-200"
+                />
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <InfoRow
+                  label="LLM Model"
+                  value={evaluationInfo?.llmModel ?? "—"}
+                  valueClassName="font-semibold text-indigo-200"
+                />
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <InfoRow
+                  label="Tokens Used"
+                  value={
+                    evaluationInfo?.llmTokens != null
+                      ? formatTokens(evaluationInfo.llmTokens)
+                      : "—"
+                  }
+                  valueClassName="font-semibold text-amber-200"
+                />
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <InfoRow
+                  label="Evaluation Price"
+                  value={hasPrice ? formatCost(priceValue as number) : "—"}
+                  valueClassName="font-semibold text-emerald-200"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70 font-bold">
