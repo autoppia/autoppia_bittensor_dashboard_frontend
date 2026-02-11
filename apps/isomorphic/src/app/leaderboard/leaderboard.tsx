@@ -31,6 +31,7 @@ const leaderboardData = [
     rank: 1,
     name: "Autoppia Operator",
     score: 72,
+    avgCostPerTask: 0.18,
     type: "Autoppia",
     medal: "🥇",
     logoUrl: "/images/icons/validators/Autoppia.png",
@@ -39,6 +40,7 @@ const leaderboardData = [
     rank: 2,
     name: "Browser Use GPT-5",
     score: 65,
+    avgCostPerTask: 0.22,
     type: "GPT Agent",
     medal: "🥈",
     logoUrl: "/images/icons/validators/gpt5.png",
@@ -47,6 +49,7 @@ const leaderboardData = [
     rank: 3,
     name: "Browser Use Claude 4.5 Sonnet",
     score: 56,
+    avgCostPerTask: 0.19,
     type: "Claude Agent",
     medal: "🥉",
     logoUrl: "/images/icons/validators/claude.png",
@@ -55,6 +58,7 @@ const leaderboardData = [
     rank: 4,
     name: "Anthropic CUA",
     score: 55,
+    avgCostPerTask: 0.17,
     type: "Anthropic",
     logoUrl: "/images/icons/validators/ac.png",
   },
@@ -62,6 +66,7 @@ const leaderboardData = [
     rank: 5,
     name: "OpenAI CUA",
     score: 50,
+    avgCostPerTask: 0.21,
     type: "OpenAI",
     logoUrl: "/images/icons/validators/openai.png",
   },
@@ -69,6 +74,7 @@ const leaderboardData = [
     rank: 6,
     name: "Agent-Q",
     score: 48,
+    avgCostPerTask: 0.14,
     type: "AI Agent",
     logoUrl:
       "https://images.unsplash.com/photo-1684369586188-bad829e7c51f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdXRvbm9tb3VzJTIwYWdlbnQlMjBpY29ufGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -77,6 +83,7 @@ const leaderboardData = [
     rank: 7,
     name: "Gemini Web Agent",
     score: 45,
+    avgCostPerTask: 0.16,
     type: "Google",
     logoUrl:
       "https://images.unsplash.com/photo-1706426629246-2a3c3e3e3ff2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnb29nbGUlMjBnZW1pbmklMjBsb2dvfGVufDF8fHx8MTc2MDYxNTE5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -85,6 +92,7 @@ const leaderboardData = [
     rank: 8,
     name: "GPT Researcher",
     score: 42,
+    avgCostPerTask: 0.12,
     type: "Research Agent",
     logoUrl:
       "https://images.unsplash.com/photo-1760493828288-d2dbb70d18c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNlYXJjaCUyMG1pY3Jvc2NvcGUlMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -300,6 +308,7 @@ const baseData = leaderboardData.map((d) => ({
   type: d.type,
   medal: d.medal,
   logoUrl: d.logoUrl,
+  avgCostPerTask: d.avgCostPerTask,
 }));
 
 const useIsMobile = (bp = 768) => {
@@ -410,6 +419,10 @@ function ScorePillLabel(props: any) {
     return null;
   const d = baseData[index];
   const right = x + width;
+  const costText =
+    typeof d?.avgCostPerTask === "number"
+      ? `$${d.avgCostPerTask.toFixed(2)}/task`
+      : "—";
   const rankTheme =
     d.rank === 1
       ? {
@@ -439,7 +452,7 @@ function ScorePillLabel(props: any) {
     <foreignObject
       x={right + 8}
       y={y + height / 2 - 22}
-      width={150}
+      width={240}
       height={48}
     >
       <div className="flex items-center gap-2.5">
@@ -454,6 +467,9 @@ function ScorePillLabel(props: any) {
         >
           <span>{Number(value).toFixed(1)}%</span>
         </div>
+        <div className="inline-flex min-w-[92px] items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+          {costText}
+        </div>
       </div>
     </foreignObject>
   );
@@ -463,6 +479,14 @@ function ScorePillLabel(props: any) {
 function FlatTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const p = payload[0]?.payload;
+  const avgCost =
+    typeof p?.avgCostPerTask === "number"
+      ? p.avgCostPerTask.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 4,
+        })
+      : "—";
   return (
     <div className="rounded-2xl border border-cyan-500/30 bg-[#05070C]/95 px-4 py-3 shadow-[0_18px_40px_rgba(6,182,212,0.35)] backdrop-blur">
       <div className="flex items-center gap-3">
@@ -476,8 +500,17 @@ function FlatTooltip({ active, payload }: any) {
           {p.label}
         </div>
       </div>
-      <div className="mt-3 text-xl font-black tracking-widest text-sky-300">
-        {p.score}%
+      <div className="mt-3 text-sm font-semibold text-slate-200/90">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+          <span className="text-slate-300/80">Success rate</span>
+          <span className="ml-auto text-sky-300 font-black">{p.score}%</span>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          <span className="text-slate-300/80">Avg cost per task</span>
+          <span className="ml-auto text-emerald-300 font-black">{avgCost}</span>
+        </div>
       </div>
     </div>
   );
