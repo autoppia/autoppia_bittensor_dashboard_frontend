@@ -1056,7 +1056,7 @@ function TaskDetailsDynamic({
                     </div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                       <InfoRow
-                        label="Evaluation Price"
+                        label="Evaluation Cost"
                         value={row.cost != null ? formatCost(row.cost) : "—"}
                         valueClassName="font-semibold text-emerald-200"
                       />
@@ -1093,7 +1093,7 @@ function TaskDetailsDynamic({
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <InfoRow
-                    label="Evaluation Price"
+                    label="Evaluation Cost"
                     value={hasPrice ? formatCost(priceValue as number) : "—"}
                     valueClassName="font-semibold text-emerald-200"
                   />
