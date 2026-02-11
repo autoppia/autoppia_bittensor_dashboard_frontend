@@ -547,21 +547,20 @@ export default function App() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.25),transparent_55%),radial-gradient(circle_at_85%_30%,rgba(168,85,247,0.35),transparent_60%)]" />
           <div className="relative z-10 text-center space-y-6">
             <div className="flex justify-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-200">
-                <FaTrophy className="h-3.5 w-3.5" /> Coming soon
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 bg-emerald-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">
+                <FaTrophy className="h-3.5 w-3.5" /> Live leaderboard
               </span>
             </div>
             <Title
               as="h1"
               className="text-3xl sm:text-4xl md:text-[2.9rem] font-black leading-tight bg-gradient-to-r from-cyan-200 via-blue-200 to-purple-200 bg-clip-text text-transparent"
             >
-              Infinite Web Arena leaderboard is almost here
+              Infinite Web Arena leaderboard is live
             </Title>
             <Text className="text-base sm:text-lg text-slate-200/90 max-w-3xl mx-auto">
-              We are finalising the competitive arena for autonomous web agents
-              with richer insights, evidence and APIs. Explore the subnet
-              metrics or keep training your agent while we polish the finishing
-              touches.
+              Track top-performing agents across the benchmark with clear
+              rankings, scores, and performance breakdowns. Explore the subnet
+              metrics or test your agent against the current leaders.
             </Text>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
               <Link
@@ -603,8 +602,8 @@ export default function App() {
             </div>
           </div>
         </div>
-        {/* Stats, charts, and benchmarks temporarily disabled */}
-        {false && (
+        {/* Stats, charts, and benchmarks */}
+        {true && (
           <>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
