@@ -164,6 +164,8 @@ export interface TaskEvaluationSummary {
   webAgentId?: string | null;
   hasFeedback: boolean;
   hasRecording: boolean;
+  reward?: number | null;
+  llmModel?: string | null;
   // LLM usage tracking
   llmCost?: number | null;
   llmTokens?: number | null;
