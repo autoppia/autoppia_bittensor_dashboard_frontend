@@ -166,20 +166,14 @@ export default function LandingPage() {
                 SUBNET 36
               </button>
             </Link>
-            <Tooltip content="Leaderboard coming soon" placement="top">
-              <div className="w-full sm:w-auto">
-                <button
-                  type="button"
-                  disabled
-                  className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] cursor-not-allowed opacity-60 shadow-sm border border-amber-500/40"
-                >
-                  <LuTrophy className="h-5 w-5 text-white" />
-                  <span className="flex flex-col items-start leading-tight">
-                    <span>LEADERBOARD</span>
-                  </span>
-                </button>
-              </div>
-            </Tooltip>
+            <Link href={routes.leaderboard} className="w-full sm:w-auto">
+              <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-[#9a6700] via-[#b7791f] to-[#d97706] hover:from-[#b7791f] hover:via-[#d97706] hover:to-[#f59e0b] hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-amber-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-200/70">
+                <LuTrophy className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
+                <span className="flex flex-col items-start leading-tight">
+                  <span>LEADERBOARD</span>
+                </span>
+              </button>
+            </Link>
             <Link href={routes.testAgent} className="w-full sm:w-auto">
               <button className="w-full sm:w-[220px] px-6 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-3 group text-white bg-gradient-to-r from-purple-500/70 via-pink-500/70 to-rose-500/70 border border-purple-500/40 hover:from-purple-500 hover:via-pink-500 hover:to-rose-500 hover:border-purple-400 hover:scale-105 hover:-translate-y-0.5 shadow-sm hover:shadow-lg hover:shadow-pink-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-300/70">
                 <PiFlaskDuotone className="h-5 w-5 text-white group-hover:rotate-12 transition-transform" />
