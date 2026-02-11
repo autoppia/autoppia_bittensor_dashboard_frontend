@@ -170,6 +170,12 @@ export interface TaskEvaluationSummary {
   llmCost?: number | null;
   llmTokens?: number | null;
   llmProvider?: string | null;
+  llmUsage?: {
+    provider?: string | null;
+    model?: string | null;
+    tokens?: number | null;
+    cost?: number | null;
+  }[] | null;
 }
 
 export interface TaskSolutionSummary {

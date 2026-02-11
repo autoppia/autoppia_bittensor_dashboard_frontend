@@ -571,10 +571,28 @@ function TaskDetailsDynamic({
     Boolean(evaluationInfo?.llmProvider) ||
     Boolean(evaluationInfo?.llmModel) ||
     evaluationInfo?.llmCost != null ||
-    evaluationInfo?.llmTokens != null;
+    evaluationInfo?.llmTokens != null ||
+    Boolean(evaluationInfo?.llmUsage?.length);
   const priceValue =
     evaluationInfo?.llmCost != null ? evaluationInfo.llmCost : evaluationInfo?.reward;
   const hasPrice = priceValue != null;
+  const usageRows = (evaluationInfo?.llmUsage ?? []).filter((row) => {
+    return (
+      row &&
+      (row.provider || row.model || row.tokens != null || row.cost != null)
+    );
+  });
+  const usageTotals = usageRows.reduce(
+    (acc, row) => {
+      const tokens = row.tokens != null ? Number(row.tokens) : 0;
+      const cost = row.cost != null ? Number(row.cost) : 0;
+      return {
+        tokens: acc.tokens + (Number.isFinite(tokens) ? tokens : 0),
+        cost: acc.cost + (Number.isFinite(cost) ? cost : 0),
+      };
+    },
+    { tokens: 0, cost: 0 }
+  );
 
   const primaryCards: StatCardConfig[] = [
     {
@@ -992,40 +1010,96 @@ function TaskDetailsDynamic({
                 </div>
               </div>
             </div>
-            <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <InfoRow
-                  label="LLM Provider"
-                  value={evaluationInfo?.llmProvider ? evaluationInfo.llmProvider.toUpperCase() : "—"}
-                  valueClassName="font-semibold text-sky-200"
-                />
+            {usageRows.length > 0 ? (
+              <div className="relative mt-5 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Tokens"
+                      value={formatTokens(usageTotals.tokens)}
+                      valueClassName="font-semibold text-amber-200"
+                    />
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Cost"
+                      value={formatCost(usageTotals.cost)}
+                      valueClassName="font-semibold text-emerald-200"
+                    />
+                  </div>
+                </div>
+                {usageRows.map((row, idx) => (
+                  <div
+                    key={`${row.provider ?? "provider"}-${row.model ?? "model"}-${idx}`}
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                  >
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="LLM Provider"
+                        value={row.provider ? row.provider.toUpperCase() : "—"}
+                        valueClassName="font-semibold text-sky-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="LLM Model"
+                        value={row.model ?? "—"}
+                        valueClassName="font-semibold text-indigo-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="Tokens Used"
+                        value={row.tokens != null ? formatTokens(row.tokens) : "—"}
+                        valueClassName="font-semibold text-amber-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="Evaluation Price"
+                        value={row.cost != null ? formatCost(row.cost) : "—"}
+                        valueClassName="font-semibold text-emerald-200"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <InfoRow
-                  label="LLM Model"
-                  value={evaluationInfo?.llmModel ?? "—"}
-                  valueClassName="font-semibold text-indigo-200"
-                />
+            ) : (
+              <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="LLM Provider"
+                    value={evaluationInfo?.llmProvider ? evaluationInfo.llmProvider.toUpperCase() : "—"}
+                    valueClassName="font-semibold text-sky-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="LLM Model"
+                    value={evaluationInfo?.llmModel ?? "—"}
+                    valueClassName="font-semibold text-indigo-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="Tokens Used"
+                    value={
+                      evaluationInfo?.llmTokens != null
+                        ? formatTokens(evaluationInfo.llmTokens)
+                        : "—"
+                    }
+                    valueClassName="font-semibold text-amber-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="Evaluation Price"
+                    value={hasPrice ? formatCost(priceValue as number) : "—"}
+                    valueClassName="font-semibold text-emerald-200"
+                  />
+                </div>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <InfoRow
-                  label="Tokens Used"
-                  value={
-                    evaluationInfo?.llmTokens != null
-                      ? formatTokens(evaluationInfo.llmTokens)
-                      : "—"
-                  }
-                  valueClassName="font-semibold text-amber-200"
-                />
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <InfoRow
-                  label="Evaluation Price"
-                  value={hasPrice ? formatCost(priceValue as number) : "—"}
-                  valueClassName="font-semibold text-emerald-200"
-                />
-              </div>
-            </div>
+            )}
           </div>
         )}
 
