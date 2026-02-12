@@ -27,6 +27,8 @@ import {
   LabelList,
 } from "recharts";
 import { Text, Title } from "rizzui/typography";
+import { apiClient } from "@/repositories/client";
+import { OverviewRepository } from "@/repositories/overview/overview.repository";
 
 /* -------------------- DATA -------------------- */
 const leaderboardData = [
@@ -660,6 +662,8 @@ function LeftAxisLabel({ viewBox, value }: any) {
 export default function App() {
   const isMobile = useIsMobile();
   const [showAllTasks, setShowAllTasks] = useState(false);
+  const [seasonToDownload, setSeasonToDownload] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const chartData = useMemo(
     () =>
@@ -689,20 +693,48 @@ export default function App() {
     ? benchmarkTasks
     : benchmarkTasks.slice(0, 6);
 
-  const downloadTasks = () => {
-    const tasksText = benchmarkTasks
-      .map((task) => `Project: ${task.project}\nPrompt: ${task.prompt}\n---`)
-      .join("\n\n");
+  useEffect(() => {
+    const repo = new OverviewRepository();
+    repo
+      .getMetrics()
+      .then((metrics) => {
+        setSeasonToDownload(
+          metrics.currentSeason ?? metrics.metricsSeason ?? null
+        );
+      })
+      .catch(() => {
+        setSeasonToDownload(null);
+      });
+  }, []);
 
-    const blob = new Blob([tasksText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "benchmark-tasks.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const downloadEvaluations = async () => {
+    if (!seasonToDownload || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const response = await apiClient.get<{
+        data?: { season: number; evaluations: unknown[] };
+        season?: number;
+        evaluations?: unknown[];
+      }>("/api/v1/evaluations/export", { season: seasonToDownload });
+
+      const payload: any = response.data?.data ?? response.data;
+      const season = payload?.season ?? seasonToDownload;
+      const evaluations = payload?.evaluations ?? [];
+      const blob = new Blob(
+        [JSON.stringify({ season, evaluations }, null, 2)],
+        { type: "application/json" }
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `iwap_evaluations_season_${season}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -1357,11 +1389,14 @@ export default function App() {
                     </div>
                   </div>
                   <button
-                    onClick={downloadTasks}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
+                    onClick={downloadEvaluations}
+                    disabled={isDownloading || !seasonToDownload}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <FaDownload className="w-4 h-4" />
-                    <span>Download evaluations</span>
+                    <span>
+                      {isDownloading ? "Downloading..." : "Download evaluations"}
+                    </span>
                   </button>
                 </div>
 
