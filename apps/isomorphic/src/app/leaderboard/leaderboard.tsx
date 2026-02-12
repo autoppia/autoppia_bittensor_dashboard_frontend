@@ -16,6 +16,9 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  ScatterChart,
+  Scatter,
+  ZAxis,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,6 +35,7 @@ const leaderboardData = [
     name: "Autoppia Operator",
     score: 72,
     avgCostPerTask: 0.18,
+    avgDuration: 78,
     type: "Autoppia",
     medal: "🥇",
     logoUrl: "/images/icons/validators/Autoppia.png",
@@ -41,6 +45,7 @@ const leaderboardData = [
     name: "Browser Use GPT-5",
     score: 65,
     avgCostPerTask: 0.22,
+    avgDuration: 92,
     type: "GPT Agent",
     medal: "🥈",
     logoUrl: "/images/icons/validators/gpt5.png",
@@ -50,6 +55,7 @@ const leaderboardData = [
     name: "Browser Use Claude 4.5 Sonnet",
     score: 56,
     avgCostPerTask: 0.19,
+    avgDuration: 105,
     type: "Claude Agent",
     medal: "🥉",
     logoUrl: "/images/icons/validators/claude.png",
@@ -59,6 +65,7 @@ const leaderboardData = [
     name: "Anthropic CUA",
     score: 55,
     avgCostPerTask: 0.17,
+    avgDuration: 118,
     type: "Anthropic",
     logoUrl: "/images/icons/validators/ac.png",
   },
@@ -67,6 +74,7 @@ const leaderboardData = [
     name: "OpenAI CUA",
     score: 50,
     avgCostPerTask: 0.21,
+    avgDuration: 132,
     type: "OpenAI",
     logoUrl: "/images/icons/validators/openai.png",
   },
@@ -75,6 +83,7 @@ const leaderboardData = [
     name: "Agent-Q",
     score: 48,
     avgCostPerTask: 0.14,
+    avgDuration: 90,
     type: "AI Agent",
     logoUrl:
       "https://images.unsplash.com/photo-1684369586188-bad829e7c51f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdXRvbm9tb3VzJTIwYWdlbnQlMjBpY29ufGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -84,6 +93,7 @@ const leaderboardData = [
     name: "Gemini Web Agent",
     score: 45,
     avgCostPerTask: 0.16,
+    avgDuration: 148,
     type: "Google",
     logoUrl:
       "https://images.unsplash.com/photo-1706426629246-2a3c3e3e3ff2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnb29nbGUlMjBnZW1pbmklMjBsb2dvfGVufDF8fHx8MTc2MDYxNTE5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -93,6 +103,7 @@ const leaderboardData = [
     name: "GPT Researcher",
     score: 42,
     avgCostPerTask: 0.12,
+    avgDuration: 160,
     type: "Research Agent",
     logoUrl:
       "https://images.unsplash.com/photo-1760493828288-d2dbb70d18c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNlYXJjaCUyMG1pY3Jvc2NvcGUlMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -257,6 +268,25 @@ const benchmarkTasks = [
     gif: "Available",
   },
 ];
+
+const efficiencySeries = leaderboardData.map((entry) => ({
+  label: entry.name,
+  provider: entry.type,
+  accuracy: entry.score,
+  duration: entry.avgDuration,
+  cost: entry.avgCostPerTask,
+}));
+
+const efficiencyColors: Record<string, string> = {
+  Autoppia: "#22d3ee",
+  "GPT Agent": "#60a5fa",
+  "Claude Agent": "#fb923c",
+  Anthropic: "#f472b6",
+  OpenAI: "#22c55e",
+  "AI Agent": "#a78bfa",
+  Google: "#38bdf8",
+  "Research Agent": "#facc15",
+};
 
 const lastBenchmarkUpdate = "November 1, 2025";
 const evaluatedBenchmarks = benchmarkTasks.length;
@@ -516,6 +546,116 @@ function FlatTooltip({ active, payload }: any) {
   );
 }
 
+function EfficiencyTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0]?.payload;
+  if (!p) return null;
+
+  return (
+    <div className="rounded-2xl border border-cyan-400/30 bg-[#05070C]/95 px-4 py-3 shadow-[0_18px_40px_rgba(6,182,212,0.35)] backdrop-blur">
+      <div className="text-[10px] uppercase tracking-[0.32em] font-semibold text-cyan-300/70">
+        {p.provider}
+      </div>
+      <div className="text-base font-semibold text-white mt-1">{p.label}</div>
+      <div className="mt-2 grid gap-1 text-xs text-slate-200/80">
+        <div className="flex items-center justify-between gap-4">
+          <span>Accuracy</span>
+          <span className="font-semibold text-cyan-200">{p.accuracy}%</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span>Avg duration</span>
+          <span className="font-semibold text-emerald-200">
+            {p.duration}s
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EfficiencyPoint(props: any) {
+  const { cx, cy, payload } = props;
+  if (typeof cx !== "number" || typeof cy !== "number") return null;
+  const color = efficiencyColors[payload.provider] || "#22d3ee";
+  const logo =
+    leaderboardData.find((item) => item.name === payload.label)?.logoUrl || "";
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={22} fill={color} opacity={0.18} />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={18}
+        fill="#0b1220"
+        stroke={color}
+        strokeWidth={2}
+      />
+      {logo ? (
+        <foreignObject x={cx - 14} y={cy - 14} width={28} height={28}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logo}
+            alt={payload.label}
+            className="h-[28px] w-[28px] rounded-full object-cover"
+          />
+        </foreignObject>
+      ) : null}
+    </g>
+  );
+}
+
+function EfficiencyCostTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0]?.payload;
+  if (!p) return null;
+  const costText =
+    typeof p.cost === "number"
+      ? p.cost.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 4,
+        })
+      : "—";
+
+  return (
+    <div className="rounded-2xl border border-cyan-400/30 bg-[#05070C]/95 px-4 py-3 shadow-[0_18px_40px_rgba(6,182,212,0.35)] backdrop-blur">
+      <div className="text-[10px] uppercase tracking-[0.32em] font-semibold text-cyan-300/70">
+        {p.provider}
+      </div>
+      <div className="text-base font-semibold text-white mt-1">{p.label}</div>
+      <div className="mt-2 grid gap-1 text-xs text-slate-200/80">
+        <div className="flex items-center justify-between gap-4">
+          <span>Accuracy</span>
+          <span className="font-semibold text-cyan-200">{p.accuracy}%</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span>Avg cost</span>
+          <span className="font-semibold text-emerald-200">{costText}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeftAxisLabel({ viewBox, value }: any) {
+  if (!viewBox) return null;
+  const x = 10;
+  const y = viewBox.y + viewBox.height / 2;
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#9fb7d8"
+      fontSize={12}
+      fontWeight={700}
+      textAnchor="middle"
+      transform={`rotate(-90 ${x} ${y})`}
+    >
+      {value}
+    </text>
+  );
+}
+
 /* -------------------- COMPONENT -------------------- */
 export default function App() {
   const isMobile = useIsMobile();
@@ -534,6 +674,7 @@ export default function App() {
   const rowHeight = isMobile ? 96 : 112;
   const barSize = isMobile ? 40 : 48;
   const chartHeight = rowHeight * chartData.length;
+  const scatterHeight = isMobile ? 280 : 380;
 
   // logos-only gutter
   const yAxisWidth = isMobile ? 64 : 84;
@@ -1024,7 +1165,175 @@ export default function App() {
                   </div>
                 </div>
               </motion.div>
-            )}
+            )} 
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8 sm:mb-12 items-stretch">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="relative"
+              >
+                <div className="relative h-full overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950/95 border border-cyan-500/20 p-4 sm:p-6 lg:p-7 backdrop-blur-xl shadow-[0_35px_120px_rgba(14,165,233,0.18)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.18),transparent_55%),radial-gradient(circle_at_88%_22%,rgba(168,85,247,0.2),transparent_60%)]" />
+                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center shadow-[0_12px_30px_rgba(34,211,238,0.35)]">
+                        <FaChartBar className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight whitespace-nowrap">
+                          Task Duration vs Accuracy
+                        </h3>
+                        <p className="text-xs sm:text-sm uppercase tracking-[0.28em] text-cyan-200/80 font-semibold">
+                          Efficiency snapshot
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative z-10 mb-4" />
+
+                  <div className="relative z-10">
+                    <ResponsiveContainer width="100%" height={scatterHeight}>
+                    <ScatterChart
+                        margin={{ top: 12, right: 10, bottom: 10, left: 0 }}
+                      >
+                        <CartesianGrid stroke="#0f172a" strokeOpacity={0.7} />
+                        <XAxis
+                          type="number"
+                          dataKey="accuracy"
+                          domain={[40, 75]}
+                          tick={{
+                            fill: "#8fb0d6",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                          axisLine={{ stroke: "#122135" }}
+                          tickLine={{ stroke: "#122135" }}
+                          label={{
+                            value: "Accuracy [%]",
+                            position: "insideBottom",
+                            offset: -6,
+                            fill: "#9fb7d8",
+                            fontSize: 12,
+                            fontWeight: 700,
+                          }}
+                        />
+                        <YAxis
+                          type="number"
+                          dataKey="duration"
+                          domain={[70, 170]}
+                          width={72}
+                          tick={{
+                            fill: "#8fb0d6",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                          axisLine={{ stroke: "#122135" }}
+                          tickLine={{ stroke: "#122135" }}
+                          label={<LeftAxisLabel value="Avg Task Duration [s]" />}
+                        />
+                        <ZAxis range={[120]} />
+                        <Tooltip content={<EfficiencyTooltip />} />
+                        <Scatter
+                          data={efficiencySeries}
+                          shape={<EfficiencyPoint />}
+                          isAnimationActive
+                          animationDuration={1200}
+                        />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="relative z-10 mt-4" />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative"
+              >
+                <div className="relative h-full overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950/95 border border-emerald-500/20 p-4 sm:p-6 lg:p-7 backdrop-blur-xl shadow-[0_35px_120px_rgba(16,185,129,0.18)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(34,197,94,0.18),transparent_55%),radial-gradient(circle_at_86%_28%,rgba(56,189,248,0.2),transparent_60%)]" />
+                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl border border-emerald-400/40 bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center shadow-[0_12px_30px_rgba(16,185,129,0.35)]">
+                        <FaChartBar className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight whitespace-nowrap">
+                          Cost vs Accuracy
+                        </h3>
+                        <p className="text-xs sm:text-sm uppercase tracking-[0.28em] text-emerald-200/80 font-semibold">
+                          Cost efficiency
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative z-10 mb-4" />
+
+                  <div className="relative z-10">
+                    <ResponsiveContainer width="100%" height={scatterHeight}>
+                    <ScatterChart
+                        margin={{ top: 12, right: 10, bottom: 10, left: 0 }}
+                      >
+                        <CartesianGrid stroke="#0f172a" strokeOpacity={0.7} />
+                        <XAxis
+                          type="number"
+                          dataKey="accuracy"
+                          domain={[40, 75]}
+                          tick={{
+                            fill: "#8fb0d6",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                          axisLine={{ stroke: "#122135" }}
+                          tickLine={{ stroke: "#122135" }}
+                          label={{
+                            value: "Accuracy [%]",
+                            position: "insideBottom",
+                            offset: -6,
+                            fill: "#9fb7d8",
+                            fontSize: 12,
+                            fontWeight: 700,
+                          }}
+                        />
+                        <YAxis
+                          type="number"
+                          dataKey="cost"
+                          domain={[0.1, 0.25]}
+                          width={72}
+                          tick={{
+                            fill: "#8fb0d6",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                          axisLine={{ stroke: "#122135" }}
+                          tickLine={{ stroke: "#122135" }}
+                          tickFormatter={(value) =>
+                            `$${Number(value).toFixed(2)}`
+                          }
+                          label={
+                            <LeftAxisLabel value="Avg Cost per Task [USD]" />
+                          }
+                        />
+                        <ZAxis range={[120]} />
+                        <Tooltip content={<EfficiencyCostTooltip />} />
+                        <Scatter
+                          data={efficiencySeries}
+                          shape={<EfficiencyPoint />}
+                          isAnimationActive
+                          animationDuration={1200}
+                        />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="relative z-10 mt-4" />
+                </div>
+              </motion.div>
+            </div>
             {/* Benchmark Tasks — ONLY Project + Prompt (Card Grid) */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1052,7 +1361,7 @@ export default function App() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
                   >
                     <FaDownload className="w-4 h-4" />
-                    <span>Download</span>
+                    <span>Download evaluations</span>
                   </button>
                 </div>
 
