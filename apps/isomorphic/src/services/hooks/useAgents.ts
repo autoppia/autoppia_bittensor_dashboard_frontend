@@ -92,26 +92,26 @@ function useApiCall<T>(
       hasFetchedRef.current = false;
       return;
     }
-    
+
     const key = dependencyKey ?? '__default__';
-    
+
     // Only skip if we've already fetched with the same key
     if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
       return;
     }
-    
+
     // Cancel previous fetch if dependency key changed
     if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
       cancelledRef.current = true;
       hasFetchedRef.current = false; // Reset when key changes
     }
-    
+
     lastDependencyKeyRef.current = key;
     hasFetchedRef.current = true;
-    
+
     // Don't cancel this new fetch
     cancelledRef.current = false;
-    
+
     fetchData();
   }, [dependencyKey, enabled, fetchData]);
 
@@ -125,12 +125,13 @@ function useApiCall<T>(
 }
 
 // Hook for rounds data with miners (new unified endpoint)
-export function useRoundsData(roundNumber?: number) {
+// roundIdentifier: "season/round" (e.g. "83/20") or legacy number
+export function useRoundsData(roundIdentifier?: string | number) {
   const request = useCallback(
-    () => agentsRepository.getRoundsData(roundNumber),
-    [roundNumber]
+    () => agentsRepository.getRoundsData(roundIdentifier),
+    [roundIdentifier]
   );
-  return useApiCall(request, `rounds-data:${roundNumber ?? 'all'}`);
+  return useApiCall(request, `rounds-data:${roundIdentifier ?? 'all'}`);
 }
 
 // Hook for latest round and top miner (for initial redirect)
@@ -201,18 +202,18 @@ export function useAgent(id?: string | null, params?: { round?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
   // If id is null/undefined, don't make any API calls
   const shouldFetch = !!id;
-  
+
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);
-  
+
   // Use a different dependency key when id is null to ensure the hook re-runs
   // but the key should be stable when id is null to avoid unnecessary re-fetches
   const dependencyKey = shouldFetch ? `${id}:${paramsKey}` : `agent:disabled:${paramsKey}`;
-  
+
   // Pass enabled=false when id is null to prevent any API calls
   return useApiCall(request, dependencyKey, shouldFetch);
 }
@@ -251,4 +252,3 @@ export function useAgentRun(agentId: string, runId: string) {
   );
   return useApiCall(request, `${agentId}:${runId}`);
 }
-
