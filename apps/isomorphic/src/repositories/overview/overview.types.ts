@@ -49,6 +49,8 @@ export interface ValidatorData {
   emission: number | null;
   validatorRoundId?: string | null;
   roundNumber?: number | null;
+  lastSeenSeason?: number | null;
+  lastSeenRoundInSeason?: number | null;
 }
 
 export interface ValidatorFilterItem {

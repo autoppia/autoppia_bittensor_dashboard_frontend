@@ -270,6 +270,15 @@ export default function OverviewValidators({
                 ? currentRound
                 : undefined;
 
+          const lastSeenSeason = validator.lastSeenSeason != null ? validator.lastSeenSeason : undefined;
+          const lastSeenRoundInSeason = validator.lastSeenRoundInSeason != null ? validator.lastSeenRoundInSeason : undefined;
+          const lastSeenLabel =
+            lastSeenSeason != null && (lastSeenRoundInSeason != null || resolvedRoundNumber != null)
+              ? `Last seen season ${lastSeenSeason}, round #${lastSeenRoundInSeason ?? resolvedRoundNumber}`
+              : resolvedRoundNumber != null
+                ? `Last seen round #${resolvedRoundNumber}`
+                : "—";
+
           // Build validator details link using validator UID
           const validatorUid = validator.validatorUid;
           const validatorLink = validatorUid != null
@@ -440,10 +449,7 @@ export default function OverviewValidators({
                     })}
                   </div>
                   <div className="text-right text-[11px] text-gray-400">
-                    Last seen round{" "}
-                    {resolvedRoundNumber != null
-                      ? `#${resolvedRoundNumber}`
-                      : "—"}
+                    {lastSeenLabel}
                   </div>
                 </div>
               </div>
@@ -570,10 +576,7 @@ export default function OverviewValidators({
                   })}
                 </div>
                 <div className="text-right text-[11px] text-gray-400">
-                  Last seen round{" "}
-                  {resolvedRoundNumber != null
-                    ? `#${resolvedRoundNumber}`
-                    : "—"}
+                  {lastSeenLabel}
                 </div>
               </div>
             </div>
