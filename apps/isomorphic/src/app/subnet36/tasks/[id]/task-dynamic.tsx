@@ -381,7 +381,7 @@ function TaskDetailsDynamic({
   // Parse season and round from roundInfo
   const { season: parsedSeason, round: parsedRound } = (() => {
     const roundData = roundInfo as any;
-    
+
     // Priority 1: roundId as string "season/round"
     if (typeof roundData?.roundId === "string" && roundData.roundId.includes("/")) {
       const [s, r] = roundData.roundId.split("/").map(Number);
@@ -389,24 +389,24 @@ function TaskDetailsDynamic({
         return { season: s, round: r };
       }
     }
-    
+
     // Priority 2: season_number and round_number_in_season
     if (typeof roundData?.season_number === "number" && typeof roundData?.round_number_in_season === "number") {
       return { season: roundData.season_number, round: roundData.round_number_in_season };
     }
-    
+
     // Priority 3: season and round fields
     if (typeof roundData?.season === "number" && typeof roundData?.round === "number") {
       return { season: roundData.season, round: roundData.round };
     }
-    
+
     // Priority 4: Extract from roundNumber if it's legacy format (>= 10000)
     if (typeof roundData?.roundNumber === "number" && roundData.roundNumber >= 10000) {
       const season = Math.floor(roundData.roundNumber / 10000);
       const round = roundData.roundNumber % 10000;
       return { season, round };
     }
-    
+
     return { season: null, round: null };
   })();
 
@@ -423,7 +423,7 @@ function TaskDetailsDynamic({
     }
     return "0%";
   })();
-  
+
   // Calculate evaluationDuration from evaluationInfo, taskData.duration, or details.duration
   const evaluationDuration = (() => {
     if (evaluationInfo?.evaluationTime != null) {
@@ -1233,29 +1233,41 @@ const getStatusIcon = (success: boolean, error?: string) => {
 const formatActionDetails = (action: TaskAction) => {
   const parts: string[] = [];
   const meta = (action as any).metadata || {};
+  const raw = meta?.raw_action || {};
+  const attr = meta?.attributes || {};
 
-  // Prefer common fields
-  if (action.selector) parts.push(`Selector: ${truncate(action.selector, 80)}`);
+  // Prefer common fields (attr, raw top-level for IWA format)
+  if (action.selector) parts.push(`Selector: ${truncate(String(action.selector), 80)}`);
   if (action.value) parts.push(`Value: ${truncate(action.value, 80)}`);
-  if (meta.url) parts.push(`URL: ${truncate(String(meta.url), 120)}`);
-  if (meta.query) parts.push(`Query: ${truncate(String(meta.query), 80)}`);
-  if (meta.keys) parts.push(`Keys: ${truncate(String(meta.keys), 40)}`);
-  if (meta.text) parts.push(`Text: ${truncate(String(meta.text), 80)}`);
-  if (meta.to) parts.push(`To: ${truncate(String(meta.to), 80)}`);
-  if (meta.from) parts.push(`From: ${truncate(String(meta.from), 80)}`);
-  if (typeof meta.deltaY === "number") parts.push(`deltaY: ${meta.deltaY}`);
-  if (typeof meta.deltaX === "number") parts.push(`deltaX: ${meta.deltaX}`);
-  if (meta.title) parts.push(`Title: ${truncate(String(meta.title), 60)}`);
+  const url = attr.url ?? raw.url;
+  if (url) parts.push(`URL: ${truncate(String(url), 120)}`);
+  const query = attr.query ?? raw.query;
+  if (query) parts.push(`Query: ${truncate(String(query), 80)}`);
+  const keys = attr.keys ?? raw.keys;
+  if (keys) parts.push(`Keys: ${truncate(String(keys), 40)}`);
+  const text = attr.text ?? raw.text;
+  if (text) parts.push(`Text: ${truncate(String(text), 80)}`);
+  const toVal = attr.to ?? raw.to;
+  if (toVal) parts.push(`To: ${truncate(String(toVal), 80)}`);
+  const fromVal = attr.from ?? raw.from;
+  if (fromVal) parts.push(`From: ${truncate(String(fromVal), 80)}`);
+  if (typeof (attr.deltaY ?? raw.deltaY) === "number") parts.push(`deltaY: ${attr.deltaY ?? raw.deltaY}`);
+  if (typeof (attr.deltaX ?? raw.deltaX) === "number") parts.push(`deltaX: ${attr.deltaX ?? raw.deltaX}`);
+  const title = attr.title ?? raw.title;
+  if (title) parts.push(`Title: ${truncate(String(title), 60)}`);
+  if (raw.go_back === true) parts.push("go_back");
+  if (raw.go_forward === true) parts.push("go_forward");
   if (action.error) parts.push(`Error: ${truncate(action.error, 80)}`);
 
-  // If still nothing, surface first 2 metadata entries if present
-  if (parts.length === 0 && meta && typeof meta === "object") {
-    const entries = Object.entries(meta).slice(0, 2);
-    entries.forEach(([k, v]) => {
-      if (v == null) return;
+  // Si raw_action tiene campos a nivel superior
+  if (parts.length === 0 && raw && typeof raw === "object") {
+    const skip = new Set(["type", "attributes", "value"]);
+    for (const [k, v] of Object.entries(raw)) {
+      if (skip.has(k) || v == null || v === "") continue;
       const val = typeof v === "string" ? v : JSON.stringify(v);
       parts.push(`${k}: ${truncate(val, 80)}`);
-    });
+      if (parts.length >= 3) break;
+    }
   }
 
   return parts.length === 0 ? "No additional details" : parts.join(" • ");
@@ -1282,35 +1294,39 @@ const extractActionDetailPairs = (
   const attr = meta?.attributes?.attributes || meta?.attributes || {};
   const raw = meta?.raw_action || {};
   const rawAttr = raw?.attributes?.attributes || raw?.attributes || {};
+  // IWA format: url, text, selector, etc. están a nivel superior en raw_action
+  const top = (k: string) => (typeof raw[k] === "string" || typeof raw[k] === "number" || typeof raw[k] === "boolean" ? raw[k] : undefined);
 
-  // Prefer attributes
-  add("url", attr.url ?? rawAttr.url);
-  add("status", attr.status ?? rawAttr.status);
-  add("query", attr.query ?? rawAttr.query);
-  add("keys", attr.keys ?? rawAttr.keys);
-  add("text", attr.text ?? rawAttr.text);
-  add("to", attr.to ?? rawAttr.to);
-  add("from", attr.from ?? rawAttr.from);
-  if (typeof (attr.deltaY ?? rawAttr.deltaY) === "number")
-    add("deltaY", attr.deltaY ?? rawAttr.deltaY);
-  if (typeof (attr.deltaX ?? rawAttr.deltaX) === "number")
-    add("deltaX", attr.deltaX ?? rawAttr.deltaX);
-  add("title", attr.title ?? rawAttr.title);
+  // Prefer attributes, then raw.attributes, then raw top-level (IWA format)
+  add("url", attr.url ?? rawAttr.url ?? top("url"));
+  add("status", attr.status ?? rawAttr.status ?? top("status"));
+  add("query", attr.query ?? rawAttr.query ?? top("query"));
+  add("keys", attr.keys ?? rawAttr.keys ?? top("keys"));
+  add("text", attr.text ?? rawAttr.text ?? top("text"));
+  add("to", attr.to ?? rawAttr.to ?? top("to"));
+  add("from", attr.from ?? rawAttr.from ?? top("from"));
+  if (typeof (attr.deltaY ?? rawAttr.deltaY ?? raw.deltaY) === "number")
+    add("deltaY", attr.deltaY ?? rawAttr.deltaY ?? raw.deltaY);
+  if (typeof (attr.deltaX ?? rawAttr.deltaX ?? raw.deltaX) === "number")
+    add("deltaX", attr.deltaX ?? rawAttr.deltaX ?? raw.deltaX);
+  add("title", attr.title ?? rawAttr.title ?? top("title"));
+  if (raw.go_back === true) add("go_back", "true");
+  if (raw.go_forward === true) add("go_forward", "true");
   // Hide redundant type field; action type is already shown in the badge/icon
   // if (raw?.type && String(raw.type).toLowerCase() !== "navigate") {
   //   add("type", raw.type);
   // }
   if (action.error) add("error", action.error);
 
-  // If nothing, surface first entries of metadata (excluding type and value)
-  if (pairs.length === 0 && meta && typeof meta === "object") {
-    const entries = Object.entries(meta)
-      .filter(
-        ([k]) => k.toLowerCase() !== "type" && k.toLowerCase() !== "value"
-      ) // Exclude type and value fields
-      .slice(0, 3) as Array<[string, any]>;
-    entries.forEach(([k, v]) => add(k, v));
+  // Si raw_action tiene campos útiles a nivel superior que no hemos mostrado
+  if (pairs.length === 0 && raw && typeof raw === "object") {
+    const skipKeys = new Set(["type", "attributes", "value"]);
+    const rawEntries = Object.entries(raw)
+      .filter(([k]) => !skipKeys.has(k) && raw[k] != null && raw[k] !== "")
+      .slice(0, 4) as Array<[string, any]>;
+    rawEntries.forEach(([k, v]) => add(k, v));
   }
+  // Fallback final: no mostrar raw_action como JSON, solo "No additional details"
   return pairs;
 };
 
@@ -1340,12 +1356,12 @@ type TaskResultsProps = {
 function TaskResults({ evaluationData }: TaskResultsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  
+
   // Use data from evaluationData (always from get-evaluation endpoint)
   const result = evaluationData.result;
   const resultsLoading = evaluationData.isLoading;
   const resultsError = evaluationData.error;
-  
+
   // Paginate actions
   const allActions = evaluationData.actions || [];
   const actionsTotal = allActions.length;
@@ -1353,16 +1369,16 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
   const failCount = allActions.filter((a: any) => !a.success || a.error).length;
   const actionsLoading = evaluationData.isLoading;
   const actionsError = evaluationData.error;
-  
+
   // Paginate actions
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
   const actions = allActions.slice(start, end);
-  
+
   const goToPage = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   const screenshots = evaluationData.screenshots || [];
   const screenshotsLoading = evaluationData.isLoading;
   const screenshotsError = evaluationData.error;
@@ -1660,16 +1676,16 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const idParam = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  
+
   // Always use the complete evaluation endpoint
   const evaluationData = useEvaluationComplete(idParam);
-  
+
   const details = evaluationData.details;
   const info = evaluationData.info;
   const isLoading = evaluationData.isLoading;
   const error = evaluationData.error;
   const refetch = evaluationData.refetch;
-  
+
   // Extract actual IDs from the info object (preferred) or details response
   const taskId = info?.taskId ?? details?.taskId ?? (isLoading ? "Loading…" : "—");
   const runIdDisplay =
@@ -1792,7 +1808,7 @@ export default function TaskDynamic() {
       />
 
       <div className="mb-10">
-        <TaskResults 
+        <TaskResults
           evaluationData={{
             result: evaluationData.result,
             actions: evaluationData.actions,
