@@ -60,21 +60,21 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   // Parse season and round from separate URL parameters
   const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
-  
+
   const { selectedSeason, selectedRoundInSeason } = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
     const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
-    
+
     if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
       return { selectedSeason: season, selectedRoundInSeason: round };
     }
-    
+
     return { selectedSeason: undefined, selectedRoundInSeason: undefined };
   }, [seasonParam, roundParam]);
-  
+
   const roundReady = selectedSeason !== undefined && selectedRoundInSeason !== undefined;
 
-  // Use new unified endpoint to get rounds and miners
+  // Use new unified endpoint to get rounds list (no round = list of rounds only)
   const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData(undefined);
 
   const loadingOption = useMemo<SelectOption>(
@@ -113,7 +113,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
     // Get unique seasons, sorted descending (most recent first)
     const seasons = Array.from(new Set(parsedRounds.map((r) => r.season))).sort((a, b) => b - a);
-    
+
     const seasonOpts = seasons.map((s) => ({
       label: `Season ${s}`,
       value: s,
@@ -121,7 +121,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
     // Get latest round (highest season, highest round in that season)
     const latest = parsedRounds.length > 0 ? parsedRounds[0] : null;
-    
+
     return {
       seasonOptions: seasonOpts,
       latestSeason: latest?.season,
@@ -133,7 +133,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const roundInSeasonOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason ?? latestSeason;
-    
+
     if (!currentSeason) {
       return [];
     }
@@ -154,7 +154,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
     // Sort descending (most recent first)
     const sorted = [...new Set(roundsInSeason)].sort((a, b) => b - a);
-    
+
     return sorted.map((r) => ({
       label: `Round ${r}`,
       value: r,
@@ -163,9 +163,12 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   const effectiveSeason = selectedSeason ?? latestSeason;
   const effectiveRoundInSeason = selectedRoundInSeason ?? latestRoundInSeason;
-  const effectiveRound = effectiveSeason && effectiveRoundInSeason 
-    ? `${effectiveSeason}/${effectiveRoundInSeason}` 
+  const effectiveRound = effectiveSeason && effectiveRoundInSeason
+    ? `${effectiveSeason}/${effectiveRoundInSeason}`
     : undefined;
+
+  // Fetch miners for the selected round (season/round from URL or latest)
+  const { data: roundsDataWithMiners } = useRoundsData(effectiveRound);
 
   const [seasonSelectValue, setSeasonSelectValue] = useState<SelectOption>(
     seasonOptions.length > 0 ? seasonOptions[0] : loadingOption
@@ -239,7 +242,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     const params = new URLSearchParams();
     params.set("season", String(latestSeason));
     params.set("round", String(latestRoundInSeason));
-    
+
     router.replace(`${pathname}?${params.toString()}`);
   }, [latestSeason, latestRoundInSeason, id, pathname, roundReady, router, roundsLoading, searchParams]);
 
@@ -277,20 +280,22 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Get miners from roundsData
-  const minersFromApi = roundsData?.round_selected?.miners ?? [];
-  
+  // Get miners for the selected round (from round-specific fetch when we have season/round)
+  const minersFromApi = effectiveRound
+    ? (roundsDataWithMiners?.round_selected?.miners ?? [])
+    : (roundsData?.round_selected?.miners ?? []);
+
   // Map miners from API format to MinimalAgentData format
   // Use JSON.stringify to create a stable dependency key
   const minersFromApiKey = useMemo(() => {
     return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, score: m.post_consensus_avg_reward })));
   }, [minersFromApi]);
-  
+
   const minersData = useMemo(() => {
     if (!minersFromApi.length) {
       return { miners: [] };
     }
-    
+
     const miners: MinimalAgentData[] = minersFromApi.map((miner) => ({
       uid: miner.uid,
       name: miner.name,
@@ -299,7 +304,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));
-    
+
     return { miners };
   }, [minersFromApiKey]);
 
@@ -309,16 +314,16 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   // Update filtered agents when data / SOTA / query changes
   // Use a ref to track previous values and prevent unnecessary updates
   const prevFilterKeyRef = useRef<string>("");
-  
+
   useEffect(() => {
     const filterKey = `${minersFromApiKey}-${includeSota}-${query}`;
-    
+
     // Skip if nothing changed
     if (filterKey === prevFilterKeyRef.current) {
       return;
     }
     prevFilterKeyRef.current = filterKey;
-    
+
     if (!minersData?.miners || minersData.miners.length === 0) {
       setFilteredAgents([]);
       return;
@@ -439,7 +444,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
               />
             </div>
-            
+
             <div className="mb-1">
               <Select
                 options={roundInSeasonOptions.length > 0 ? roundInSeasonOptions : [loadingOption]}
