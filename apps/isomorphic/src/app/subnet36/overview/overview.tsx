@@ -25,6 +25,10 @@ export default function Overview() {
   const metricsSeason = metrics?.metricsSeason ?? null;
   const currentSeason = metrics?.currentSeason ?? null;
   const currentRoundInSeason = metrics?.currentRoundInSeason ?? null;
+  const metricsRoundLabel =
+    metricsSeason !== null && metricsSeason !== undefined && metricsRound !== null && metricsRound !== undefined
+      ? `Season ${metricsSeason} - Round ${metricsRound}`
+      : metricsRound ?? "—";
 
   // Auto-refresh metrics every 30 seconds
   useEffect(() => {
@@ -88,6 +92,7 @@ export default function Overview() {
           <OverviewMinerChart
             className="w-full min-w-0 flex-1"
             targetHeight={metricsHeight}
+            season={metricsSeason}
           />
         </div>
         <div
@@ -99,7 +104,7 @@ export default function Overview() {
               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               Latest finished round:
               <span className="font-bold text-white">
-                {metricsRound ?? "—"}
+                {metricsRoundLabel}
               </span>
             </span>
             <div className="flex items-center justify-end gap-2 min-w-0">
@@ -121,8 +126,8 @@ export default function Overview() {
               </Link>
             </div>
           </div>
-          <OverviewMetrics 
-            className="w-full min-w-0 flex-1" 
+          <OverviewMetrics
+            className="w-full min-w-0 flex-1"
             metrics={metrics}
             loading={loading}
             error={null}
@@ -130,8 +135,8 @@ export default function Overview() {
           />
         </div>
       </div>
-      <OverviewValidators 
-        currentRound={currentRoundInSeason ?? metrics?.currentRound} 
+      <OverviewValidators
+        currentRound={currentRoundInSeason ?? metrics?.currentRound}
         currentSeason={currentSeason}
       />
     </>
