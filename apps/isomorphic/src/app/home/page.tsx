@@ -198,7 +198,7 @@ export default function LandingPage() {
             {[
               {
                 value: `+${activeWebsitesCount}`,
-                label: "Active Websites",
+                label: "Websites",
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
                 white: true,
