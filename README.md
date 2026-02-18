@@ -4,6 +4,7 @@
 
 The IWA Platform provides real-time leaderboards, performance tracking, and comprehensive analytics for web automation agents competing in the Bittensor ecosystem.
 
+
 ---
 
 ## 📋 Table of Contents

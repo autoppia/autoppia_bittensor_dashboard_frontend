@@ -55,11 +55,12 @@ export class AgentsRepository {
 
   /**
    * Get rounds data with optional miners for selected round (new unified endpoint)
+   * @param roundIdentifier - "season/round" (e.g. "83/20") or legacy round_number
    */
-  async getRoundsData(roundNumber?: number): Promise<{
-    rounds: number[];
+  async getRoundsData(roundIdentifier?: string | number): Promise<{
+    rounds: string[];
     round_selected: {
-      round: number;
+      round: string;
       miners: Array<{
         uid: number;
         name: string;
@@ -69,13 +70,20 @@ export class AgentsRepository {
       }>;
     } | null;
   }> {
-    const params = roundNumber ? { round_number: roundNumber } : {};
+    const params: Record<string, string | number> = {};
+    if (roundIdentifier !== undefined && roundIdentifier !== null) {
+      if (typeof roundIdentifier === 'string' && roundIdentifier.includes('/')) {
+        params.round_identifier = roundIdentifier;
+      } else {
+        params.round_number = Number(roundIdentifier);
+      }
+    }
     const response = await apiClient.get<{
       success: boolean;
       data: {
-        rounds: number[];
+        rounds: string[];
         round_selected: {
-          round: number;
+          round: string;
           miners: Array<{
             uid: number;
             name: string;
@@ -85,15 +93,16 @@ export class AgentsRepository {
           }>;
         } | null;
       };
-    }>(`${this.baseEndpoint}/rounds`, params);
+    }>(`${this.baseEndpoint}/rounds`, Object.keys(params).length ? params : undefined);
     return response.data.data;
   }
 
   /**
    * Get detailed information about a specific miner in a specific round
+   * @param round - Round identifier in format "season/round" (e.g., "1/1") or legacy number
    */
   async getMinerRoundDetails(
-    round: number,
+    round: string | number,
     miner_uid: number
   ): Promise<MinerRoundDetailsResponse['data']> {
     const response = await apiClient.get<MinerRoundDetailsResponse>(
@@ -107,10 +116,16 @@ export class AgentsRepository {
    * Get historical statistics for a miner across all rounds
    */
   async getMinerHistorical(
-    minerUid: number
+    minerUid: number,
+    season?: number
   ): Promise<MinerHistoricalResponse['data']> {
+    const params: Record<string, string> = {};
+    if (season !== undefined) {
+      params.season = String(season);
+    }
     const response = await apiClient.get<MinerHistoricalResponse>(
-      `${this.baseEndpoint}/${minerUid}/historical`
+      `${this.baseEndpoint}/${minerUid}/historical`,
+      params
     );
     return response.data.data;
   }

@@ -164,6 +164,18 @@ export interface TaskEvaluationSummary {
   webAgentId?: string | null;
   hasFeedback: boolean;
   hasRecording: boolean;
+  reward?: number | null;
+  llmModel?: string | null;
+  // LLM usage tracking
+  llmCost?: number | null;
+  llmTokens?: number | null;
+  llmProvider?: string | null;
+  llmUsage?: {
+    provider?: string | null;
+    model?: string | null;
+    tokens?: number | null;
+    cost?: number | null;
+  }[] | null;
 }
 
 export interface TaskSolutionSummary {

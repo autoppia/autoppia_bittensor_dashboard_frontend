@@ -87,11 +87,13 @@ const deriveRoundLabel = (rawLabel: unknown, roundValue: number): string => {
 interface MinerChartProps {
   className?: string;
   targetHeight?: number;
+  season?: number | null;
 }
 
 export default function MinerChart({
   className,
   targetHeight,
+  season,
 }: MinerChartProps) {
   const [timeRange, setTimeRange] = useState<FilterOption>("7R"); // Default to 7R
   // Get leaderboard data from API
@@ -181,6 +183,13 @@ export default function MinerChart({
     );
   }, [leaderboardData?.data?.leaderboard]);
 
+  const filteredBySeason = useMemo<NormalizedLeaderboardDatum[]>(() => {
+    if (season === null || season === undefined) {
+      return rawChartData;
+    }
+    return rawChartData.filter((entry) => entry.season === season);
+  }, [rawChartData, season]);
+
   const scaleScoreValue = (value?: number | null) => {
     if (value === null || value === undefined) return undefined;
     const numeric = Number(value);
@@ -190,7 +199,7 @@ export default function MinerChart({
   };
 
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
-    return rawChartData.map((entry) => ({
+    return filteredBySeason.map((entry) => ({
       ...entry,
       Score: scaleScoreValue(entry.subnet36) ?? 0,
       subnet36: scaleScoreValue(entry.subnet36) ?? 0,
@@ -198,7 +207,7 @@ export default function MinerChart({
       anthropic_cua: scaleScoreValue((entry as any).anthropic_cua),
       browser_use: scaleScoreValue((entry as any).browser_use),
     }));
-  }, [rawChartData]);
+  }, [filteredBySeason]);
 
   // Generate X-axis ticks every 4 rounds
   const xAxisTicks = useMemo<number[]>(() => {
@@ -535,7 +544,11 @@ export default function MinerChart({
 
   const chartCard = (
     <WidgetCard
-      title="Top Miner Score"
+      title={
+        season !== null && season !== undefined
+          ? `Top Miner Score - Season ${season}`
+          : "Top Miner Score"
+      }
       action={
         <ButtonGroupAction
           options={filterOptions}

@@ -92,26 +92,26 @@ function useApiCall<T>(
       hasFetchedRef.current = false;
       return;
     }
-    
+
     const key = dependencyKey ?? '__default__';
-    
+
     // Only skip if we've already fetched with the same key
     if (lastDependencyKeyRef.current === key && hasFetchedRef.current) {
       return;
     }
-    
+
     // Cancel previous fetch if dependency key changed
     if (lastDependencyKeyRef.current !== key && lastDependencyKeyRef.current !== undefined) {
       cancelledRef.current = true;
       hasFetchedRef.current = false; // Reset when key changes
     }
-    
+
     lastDependencyKeyRef.current = key;
     hasFetchedRef.current = true;
-    
+
     // Don't cancel this new fetch
     cancelledRef.current = false;
-    
+
     fetchData();
   }, [dependencyKey, enabled, fetchData]);
 
@@ -125,12 +125,13 @@ function useApiCall<T>(
 }
 
 // Hook for rounds data with miners (new unified endpoint)
-export function useRoundsData(roundNumber?: number) {
+// roundIdentifier: "season/round" (e.g. "83/20") or legacy number
+export function useRoundsData(roundIdentifier?: string | number) {
   const request = useCallback(
-    () => agentsRepository.getRoundsData(roundNumber),
-    [roundNumber]
+    () => agentsRepository.getRoundsData(roundIdentifier),
+    [roundIdentifier]
   );
-  return useApiCall(request, `rounds-data:${roundNumber ?? 'all'}`);
+  return useApiCall(request, `rounds-data:${roundIdentifier ?? 'all'}`);
 }
 
 // Hook for latest round and top miner (for initial redirect)
@@ -143,7 +144,7 @@ export function useLatestRoundTopMiner(enabled: boolean = true) {
 }
 
 // Hook for miner round details
-export function useMinerRoundDetails(round: number | undefined, miner_uid: number | undefined) {
+export function useMinerRoundDetails(round: string | number | undefined, miner_uid: number | undefined) {
   const request = useCallback(
     () => {
       if (!round || !miner_uid) {
@@ -156,17 +157,17 @@ export function useMinerRoundDetails(round: number | undefined, miner_uid: numbe
   return useApiCall(request, `miner-round-details:${round ?? 'none'}:${miner_uid ?? 'none'}`);
 }
 
-export function useMinerHistorical(miner_uid: number | undefined) {
+export function useMinerHistorical(miner_uid: number | undefined, season?: number) {
   const request = useCallback(
     () => {
       if (!miner_uid) {
         return Promise.resolve(null);
       }
-      return agentsRepository.getMinerHistorical(miner_uid);
+      return agentsRepository.getMinerHistorical(miner_uid, season);
     },
-    [miner_uid]
+    [miner_uid, season]
   );
-  return useApiCall(request, `miner-historical:${miner_uid ?? 'none'}`);
+  return useApiCall(request, `miner-historical:${miner_uid ?? 'none'}:${season ?? 'all'}`);
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
@@ -201,18 +202,18 @@ export function useAgent(id?: string | null, params?: { round?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
   // If id is null/undefined, don't make any API calls
   const shouldFetch = !!id;
-  
+
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
       return Promise.resolve({ agent: null, scoreRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);
-  
+
   // Use a different dependency key when id is null to ensure the hook re-runs
   // but the key should be stable when id is null to avoid unnecessary re-fetches
   const dependencyKey = shouldFetch ? `${id}:${paramsKey}` : `agent:disabled:${paramsKey}`;
-  
+
   // Pass enabled=false when id is null to prevent any API calls
   return useApiCall(request, dependencyKey, shouldFetch);
 }
@@ -251,4 +252,3 @@ export function useAgentRun(agentId: string, runId: string) {
   );
   return useApiCall(request, `${agentId}:${runId}`);
 }
-

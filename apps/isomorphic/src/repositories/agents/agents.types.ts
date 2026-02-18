@@ -158,6 +158,7 @@ export interface MinerRoundDetailsResponse {
       name: string;
       hotkey: string | null;
       image: string | null;
+      github_url?: string | null;
     };
     round: number;
     post_consensus_rank: number;

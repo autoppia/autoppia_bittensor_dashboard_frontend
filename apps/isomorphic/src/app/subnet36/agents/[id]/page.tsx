@@ -36,7 +36,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent, useMinerRoundDetails, useMinerHistorical } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
@@ -221,7 +221,7 @@ function AgentStats({
         const completed =
           mode === "historical"
             ? (agent.completedTasks ?? 0)
-            : (agent.completedTasks ?? 0);
+            : (roundMetrics?.completedTasks ?? 0);
         return total > 0 ? `${Math.round((completed / total) * 100)}%` : "0%";
       })(),
       icon: LuTrophy,
@@ -426,7 +426,8 @@ function AgentScoreChart({
     const rows = scoreRoundData
       .map((point) => {
         const row: Record<string, number | string | null> = {
-          round: point.round_id,
+          round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
+          roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
           score: normalizeScore(point.score) ?? 0,
           rank: point.rank ?? null,
           reward: point.reward ?? null,
@@ -788,6 +789,8 @@ function AgentScoreChart({
 // Validators/runs list
 function AgentValidators({
   selectedRound,
+  selectedSeason,
+  selectedRoundInSeason,
   runs,
   loading,
   error,
@@ -797,6 +800,8 @@ function AgentValidators({
   minerRoundDetailsValidators,
 }: {
   selectedRound?: number | null;
+  selectedSeason?: number | null;
+  selectedRoundInSeason?: number | null;
   runs: AgentRunOverview[];
   loading: boolean;
   error?: string | null;
@@ -869,7 +874,7 @@ function AgentValidators({
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-md sm:text-2xl text-center font-bold text-white">
             Agent Evaluation Runs ({effectiveValidators?.length ?? Object.keys(runsByValidator).length ?? 0})
-            {selectedRound ? ` - Round ${selectedRound}` : ""}
+            {selectedSeason && selectedRoundInSeason ? ` - Season ${selectedSeason} - Round ${selectedRoundInSeason}` : ""}
           </Text>
         </div>
         <button
@@ -1031,11 +1036,9 @@ function AgentValidators({
             const isFromRoundDetails = 'validator_image' in validator;
             
             // Use validator_image if available (from round-details), otherwise fallback
-            const validatorImage = isFromRoundDetails && validator.validator_image
+            const validatorImage = validator.validator_image
               ? resolveAssetUrl(validator.validator_image)
-              : (validator.validator_image 
-                  ? resolveAssetUrl(validator.validator_image)
-                  : resolveAssetUrl(`/validators/${validator.validator_uid}.png` || "/validators/default.png"));
+              : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
             
             // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
@@ -1730,14 +1733,20 @@ export default function Page() {
   const agentParam = Array.isArray(rawId) ? rawId[0] : rawId;
   const trimmedId = agentParam?.trim() ?? "";
   const searchParams = useSearchParams();
+  const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
   const [copiedHotkey, setCopiedHotkey] = useState(false);
 
   const selectedRoundFromQuery = useMemo(() => {
-    if (!roundParam) return undefined;
-    const parsed = Number.parseInt(roundParam, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }, [roundParam]);
+    const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
+    
+    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
+      return `${season}/${round}`;
+    }
+    
+    return undefined;
+  }, [seasonParam, roundParam]);
 
   const normalizedAgentId = useMemo(() => {
     if (!trimmedId) return null;
@@ -1790,12 +1799,43 @@ export default function Page() {
     numericUidFromParam
   );
   
+  // Get rounds data to extract latest season
+  const { data: roundsData } = useRoundsData(undefined);
+  
+  // Extract latest season from rounds data
+  const latestSeason = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) {
+      return undefined;
+    }
+    
+    // Parse rounds in format "season/round" and get highest season
+    const seasons = rounds
+      .map((r) => {
+        if (typeof r === "string" && r.includes("/")) {
+          const parts = r.split("/");
+          return Number.parseInt(parts[0], 10);
+        }
+        return null;
+      })
+      .filter((s) => s !== null && Number.isFinite(s)) as number[];
+    
+    return seasons.length > 0 ? Math.max(...seasons) : undefined;
+  }, [roundsData?.rounds]);
+  
   // Get miner historical data - only when viewMode is "historical"
+  // Always filter by season: use season from URL, or latest season as fallback
+  const seasonForHistorical = seasonParam 
+    ? Number.parseInt(seasonParam, 10) 
+    : latestSeason;
   const {
     data: minerHistorical,
     loading: minerHistoricalLoading,
     error: minerHistoricalError,
-  } = useMinerHistorical(viewMode === "historical" ? numericUidFromParam : undefined);
+  } = useMinerHistorical(
+    viewMode === "historical" ? numericUidFromParam : undefined,
+    seasonForHistorical
+  );
   
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -1860,7 +1900,7 @@ export default function Page() {
           createdAt: "",
           updatedAt: "",
           status: "active" as const,
-          githubUrl: undefined,
+          githubUrl: minerRoundDetails.miner.github_url ?? undefined,
           taostatsUrl: undefined,
         }
       : null;
@@ -1907,11 +1947,19 @@ export default function Page() {
   // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
     if (viewMode === "historical" && minerHistorical?.roundsHistory) {
-      // Use historical data - sort by round descending
+      // Use historical data - sort by round descending (format: "season/round")
       return minerHistorical.roundsHistory
-        .sort((a, b) => b.round - a.round)
-        .map((round) => ({
-          round_id: round.round,
+        .sort((a, b) => {
+          // Parse "season/round" format for sorting
+          const [aSeason, aRound] = a.round.split('/').map(Number);
+          const [bSeason, bRound] = b.round.split('/').map(Number);
+          // Sort by season first, then by round (descending)
+          if (bSeason !== aSeason) return bSeason - aSeason;
+          return bRound - aRound;
+        })
+        .map((round, index) => ({
+          round_id: round.round, // Keep as string "season/round"
+          round: index + 1, // Sequential number for chart x-axis
           score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
           rank: round.post_consensus_rank,
           reward: round.post_consensus_avg_reward ?? 0,
@@ -2105,7 +2153,8 @@ export default function Page() {
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
       title: "Round",
-      metric: currentRound ? `${currentRound}` : "N/A",
+      metric: roundParam ? roundParam : "N/A",
+      badge: seasonParam ? `Season ${seasonParam}` : null,
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
@@ -2541,6 +2590,8 @@ export default function Page() {
             {viewMode === "runs" ? (
               <AgentValidators
                 selectedRound={currentRound ?? null}
+                selectedSeason={seasonParam ? Number.parseInt(seasonParam, 10) : null}
+                selectedRoundInSeason={roundParam ? Number.parseInt(roundParam, 10) : null}
                 runs={runsState.runs}
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}

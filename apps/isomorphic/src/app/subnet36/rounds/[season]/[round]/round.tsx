@@ -170,7 +170,7 @@ const DEFAULT_BENCHMARK_COLORS = [
 function CustomTooltip({ label, active, payload, className }: any) {
   if (!active || !payload?.length) return null;
   const minerData = payload[0]?.payload;
-  
+
   // ✅ Obtener datos del miner (eval_score, eval_time, reward)
   // Score: usar eval_score específico, NO score (que puede ser reward)
   const evalScore = minerData?.eval_score ?? minerData?.local_avg_eval_score ?? 0;
@@ -178,7 +178,7 @@ function CustomTooltip({ label, active, payload, className }: any) {
   const evalTime = minerData?.eval_time ?? minerData?.local_avg_eval_time ?? minerData?.avgTime ?? null;
   // Reward: usar reward específico, NUNCA score como fallback
   const reward = minerData?.reward ?? minerData?.local_avg_reward ?? 0;
-  
+
   return (
     <div
       className={cn(
@@ -213,7 +213,7 @@ function CustomTooltip({ label, active, payload, className }: any) {
             })()}
           </Text>
         </div>
-        
+
         {/* Time (eval_time) - SIEMPRE mostrar si está disponible */}
         {evalTime != null && Number(evalTime) > 0 && (
           <div className="chart-tooltip-item flex items-center justify-between gap-4">
@@ -236,7 +236,7 @@ function CustomTooltip({ label, active, payload, className }: any) {
             </Text>
           </div>
         )}
-        
+
         {/* Reward */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4 pt-1 border-t border-white/10">
           <div className="flex items-center gap-2.5">
@@ -276,27 +276,51 @@ function RoundHeaderInline({
   progressData?: any;
   progressLoading?: boolean;
 }) {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
-  const roundKey = extractRoundIdentifier(id);
-  const roundNumber = extractRoundNumber(roundKey);
+  const seasonParam = params.season as string | undefined;
+  const roundParam = params.round as string | undefined;
+  const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
+  const roundNumber = roundParam ? Number.parseInt(String(roundParam), 10) : undefined;
 
   const isLoading = roundLoading || progressLoading;
 
-  // ✅ Obtener neighborRounds desde progressData
+  // ✅ Obtener neighborRounds desde progressData (roundKey = season/round para coincidir con ruta [season]/[round])
+  // El backend puede devolver previousRound/nextRound como "83/19" (string) o como 19 (número)
   const neighborRounds = React.useMemo(() => {
     const previousRound = progressData?.previousRound;
     const nextRound = progressData?.nextRound;
-    return {
-      previous: previousRound ? { roundNumber: previousRound, roundKey: `round_${previousRound}` } : null,
-      next: nextRound ? { roundNumber: nextRound, roundKey: `round_${nextRound}` } : null,
+    const season = seasonParam ?? round?.season_number;
+    const buildKey = (r: number) => (season != null ? `${season}/${r}` : null);
+    const toRoundKey = (val: string | number | null | undefined): string | null => {
+      if (val == null) return null;
+      if (typeof val === "string" && val.includes("/")) return val; // Ya viene "season/round"
+      const r = typeof val === "number" ? val : Number(val);
+      return Number.isFinite(r) ? buildKey(r) : null;
     };
-  }, [progressData]);
+    const extractRoundNum = (val: string | number | null | undefined): number | undefined => {
+      if (val == null) return undefined;
+      if (typeof val === "number" && Number.isFinite(val)) return val;
+      if (typeof val === "string" && val.includes("/")) {
+        const n = Number.parseInt(val.split("/")[1], 10);
+        return Number.isFinite(n) ? n : undefined;
+      }
+      const n = Number(val);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    const prevKey = toRoundKey(previousRound);
+    const nextKeyVal = toRoundKey(nextRound);
+    return {
+      previous: prevKey != null ? { roundNumber: extractRoundNum(previousRound), roundKey: prevKey } : null,
+      next: nextKeyVal != null ? { roundNumber: extractRoundNum(nextRound), roundKey: nextKeyVal } : null,
+    };
+  }, [progressData, seasonParam, round?.season_number]);
 
   const goToRound = React.useCallback(
     (targetKey?: string) => {
       if (!targetKey || targetKey === roundKey) return;
-      router.push(`${routes.rounds}/${encodeURIComponent(targetKey)}`);
+      // targetKey es "season/round" (ej. 83/19) - sin encodeURIComponent para mantener / como separador de ruta
+      router.push(`${routes.rounds}/${targetKey}`);
     },
     [router, roundKey]
   );
@@ -453,8 +477,17 @@ function RoundHeaderInline({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
-                  Round {roundNumber ?? progressData?.roundId ?? "—"}
+                  ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
                 </h1>
+                <span
+                  className={cn(
+                    chipBase,
+                    "border-blue-400/70 bg-gradient-to-r from-blue-500/90 to-cyan-500/90 text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_30px_rgba(59,130,246,0.6)] hover:scale-105"
+                  )}
+                >
+                  <span className="h-2.5 w-2.5 rounded-full bg-white shadow-lg" />
+                  Season {round?.season ?? seasonParam ?? progressData?.season ?? "—"}
+                </span>
                 <span
                   className={cn(
                     chipBase,
@@ -538,7 +571,7 @@ function RoundHeaderInline({
               </div>
               {currentRoundKey && currentRoundKey !== roundKey && (
                 <Link
-                  href={`${routes.rounds}/${encodeURIComponent(currentRoundKey)}`}
+                  href={`${routes.rounds}/${currentRoundKey}`}
                   className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
@@ -867,7 +900,7 @@ function RoundStatsInline({
       maximumFractionDigits: digits,
     });
   };
-  
+
   const topMinerLabel = topMiner
     ? (topMiner.name?.trim() || `Miner ${topMiner.uid ?? "pending"}`)
     : "Top miner pending";
@@ -1167,8 +1200,10 @@ function RoundValidatorsInline({
   loading?: boolean;
   error?: string | null;
 }) {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
+  const params = useParams();
+  const seasonParam = params.season as string | undefined;
+  const roundParam = params.round as string | undefined;
+  const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   // ✅ Validators ahora vienen de roundData (useGetRound)
   const validatorsData = React.useMemo(() => {
     if (!roundData?.validators) return [];
@@ -1321,6 +1356,17 @@ function RoundValidatorsInline({
                     lastNotifiedValidator.current = validator.id;
                     onValidatorSelect?.(validator);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (validator.id === selectedValidatorId) return;
+                      setSelectedValidatorId(validator.id);
+                      lastNotifiedValidator.current = validator.id;
+                      onValidatorSelect?.(validator);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="cursor-pointer"
                 >
                   <div
@@ -1462,12 +1508,12 @@ function RoundMinerScoresInline({
   );
   const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
   const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
-  
+
   // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo)
   const chartSource = React.useMemo(() => {
     if (roundData?.validators) {
       let miners: any[] = [];
-      
+
       if (selectedValidator?.id) {
         // Si hay selectedValidator, usar solo sus miners
         const validatorUid = selectedValidator.id.replace("validator-", "");
@@ -1494,14 +1540,14 @@ function RoundMinerScoresInline({
         }
         miners = Array.from(uniqueMiners.values());
       }
-      
+
       // ✅ Mapear los miners al formato esperado (agregar score desde local_avg_reward)
       const mappedMiners = miners.map((miner: any) => ({
         ...miner,
         score: miner.local_avg_reward ?? miner.reward ?? 0, // ✅ score para el gráfico
         validatorId: selectedValidator?.id || `validator-${roundData.validators[0]?.validator_uid}`, // ✅ Agregar validatorId
       }));
-      
+
       if (mappedMiners.length > 0) {
         return {
           miners: mappedMiners,
@@ -2034,9 +2080,9 @@ function RoundTopMinersInline({
       <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
         <div className="flex flex-col">
           {topMinersList.map((miner: any, index: number) => {
-            const agentHref =
-              typeof roundNumber === "number" && Number.isFinite(roundNumber)
-                ? `${routes.agents}/${miner.uid}?round=${roundNumber}&agent=${miner.uid}`
+            // Use separate season and round parameters
+            const agentHref = roundInfo?.season && roundInfo?.roundInSeason
+                ? `${routes.agents}/${miner.uid}?season=${roundInfo.season}&round=${roundInfo.roundInSeason}`
                 : `${routes.agents}/${miner.uid}`;
             const rank = index + 1;
             const rawIsSota =
@@ -2179,8 +2225,10 @@ function RoundTopMinersInline({
 }
 
 export default function Round() {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
+  const params = useParams();
+  const seasonParam = params.season as string | undefined;
+  const roundParam = params.round as string | undefined;
+  const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   const { openModal } = useModal();
 
   const handleOpenGlossary = () =>
@@ -2194,31 +2242,32 @@ export default function Round() {
   const searchParams = useSearchParams();
   const requestedValidatorId = searchParams?.get("validator") ?? null;
 
-  // Top/context labels - primero extraer roundNumber del key
-  const roundNumberFromKey = React.useMemo(
-    () => extractRoundNumber(roundKey),
-    [roundKey]
-  );
+  // Extraer season y round del roundKey
+  const [seasonFromKey, roundFromKey] = React.useMemo(() => {
+    if (typeof roundKey === 'string' && roundKey.includes('/')) {
+      const [s, r] = roundKey.split('/').map(Number);
+      return [s, r];
+    }
+    return [undefined, undefined];
+  }, [roundKey]);
 
   // ✅ Solo estas dos llamadas: get-round y progress
-  const { data: roundData, loading: roundDataLoading, error: roundDataError } = useGetRound(roundNumberFromKey);
+  const { data: roundData, loading: roundDataLoading, error: roundDataError } = useGetRound(seasonFromKey, roundFromKey);
   const { data: progressData, loading: progressLoading } = useRoundProgress(roundKey);
-  
-  // ✅ Construir round desde roundData
-  const round = React.useMemo(() => {
+
+  // ✅ Construir roundInfo desde roundData
+  const roundInfo = React.useMemo(() => {
     if (!roundData) return null;
-    const roundNumber = roundNumberFromKey;
     return {
-      roundNumber,
-      round: roundNumber,
-      id: roundNumber,
+      season: roundData.season,
+      roundInSeason: roundData.round_in_season,
       status: roundData.post_consensus_summary ? "completed" : "active",
       validatorRounds: [], // Ya no necesario, todo viene de roundData.validators
     };
-  }, [roundData, roundNumberFromKey]) as any;
-  
-  const roundNumberForLinks = roundNumberFromKey;
-  const roundLabel = roundNumberForLinks ?? roundKey;
+  }, [roundData]) as any;
+
+  const roundNumberForLinks = roundData?.round_in_season;
+  const roundLabel = roundKey;
   const topMiners = React.useMemo(() => {
     // Obtener top miners de roundData.post_consensus_summary.winner o de validators
     if (roundData?.post_consensus_summary?.winner) {
@@ -2226,7 +2275,7 @@ export default function Round() {
     }
     return [];
   }, [roundData]);
-  
+
   const statistics = React.useMemo(() => {
     // Construir statistics desde roundData
     if (!roundData) return null;
@@ -2241,9 +2290,9 @@ export default function Round() {
   }, [roundData]);
 
   // Determine if round is waiting for consensus
-  const validatorRounds = round?.validatorRounds ?? [];
+  const validatorRounds = roundInfo?.validatorRounds ?? [];
   const isWaitingForConsensus =
-    round?.status === "evaluating_finished" ||
+    roundInfo?.status === "evaluating_finished" ||
     (validatorRounds.some((vr) => {
       if (vr.status === "evaluating_finished") return true;
       const agentRuns = vr.agentEvaluationRuns ?? [];
@@ -2256,7 +2305,7 @@ export default function Round() {
         );
       });
     }) &&
-      round?.status === "active");
+      roundInfo?.status === "active");
 
   const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
@@ -2411,18 +2460,18 @@ export default function Round() {
   );
 
   // Determine if round is active
-  const backendStatus = progressData?.status ?? round?.status;
-  const isActive = 
-    backendStatus === "active" || 
+  const backendStatus = progressData?.status ?? roundInfo?.status;
+  const isActive =
+    backendStatus === "active" ||
     backendStatus === "evaluating_finished" ||
-    round?.current === true;
+    roundInfo?.current === true;
 
   // Determine if round data is not yet available (statistics already loaded above)
   // Only show "no data" message for current/active rounds that truly have no data
-  const isCurrentRound = round?.current === true || round?.status === "active";
+  const isCurrentRound = roundInfo?.current === true || roundInfo?.status === "active";
   const hasNoData =
     isCurrentRound && !statistics?.totalMiners && !statistics?.totalTasks;
-  const isRoundStarting = round?.status === "pending";
+  const isRoundStarting = roundInfo?.status === "pending";
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
@@ -2474,8 +2523,8 @@ export default function Round() {
       ) : !roundDataError ? (
         <>
       {/* Header */}
-          <RoundHeaderInline 
-            round={round} 
+          <RoundHeaderInline
+            round={roundInfo}
             roundLoading={roundDataLoading}
             progressData={progressData}
             progressLoading={progressLoading}
@@ -2590,7 +2639,7 @@ export default function Round() {
         <RoundMinerScoresInline
           className="w-full xl:w-[calc(100%-400px)]"
           selectedValidator={selectedValidator}
-          roundInfo={round}
+          roundInfo={roundInfo}
           minersData={undefined}
           roundData={roundData}
           loading={roundDataLoading}
@@ -2600,7 +2649,7 @@ export default function Round() {
           className="w-full xl:w-[400px]"
           selectedValidator={selectedValidator}
           roundNumber={roundNumberForLinks}
-          roundInfo={round}
+          roundInfo={roundInfo}
           minersData={undefined}
           roundData={roundData} // ✅ Pasar roundData
           loading={roundDataLoading}
@@ -2637,7 +2686,6 @@ export default function Round() {
   const { data: progressData, loading: progressLoading, error: progressError } = useRoundProgress(roundKey);
   const { data: roundData, loading: roundLoading, error: roundError } = useRound(roundKey);
 
-  const round = roundData as any;
   const progress = progressData as any;
   const loading = progressLoading || roundLoading;
   const isTinyScreen = useMedia("(max-width: 639px)", false);
