@@ -219,13 +219,15 @@ export function useRoundProgress(roundId?: RoundIdentifier) {
 }
 
 // Hook for new simplified get-round endpoint
-export function useGetRound(roundNumber?: number) {
-  const enabled = typeof roundNumber === "number" && Number.isFinite(roundNumber) && roundNumber > 0;
+export function useGetRound(season?: number, roundInSeason?: number) {
+  const enabled = 
+    typeof season === "number" && Number.isFinite(season) && season > 0 &&
+    typeof roundInSeason === "number" && Number.isFinite(roundInSeason) && roundInSeason > 0;
   const request = useCallback(
-    () => roundsRepository.getRound(roundNumber as number),
-    [roundNumber]
+    () => roundsRepository.getRoundSimplified(season as number, roundInSeason as number),
+    [season, roundInSeason]
   );
-  return useApiCall(request, `round-${roundNumber}`, enabled);
+  return useApiCall(request, `round-${season}-${roundInSeason}`, enabled);
 }
 
 // Hook for top miners

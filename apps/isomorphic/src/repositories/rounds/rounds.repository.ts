@@ -6,12 +6,8 @@
 import { apiClient } from "../client";
 import {
   RoundsListResponse,
-  RoundDetailsResponse,
-  RoundStatisticsResponse,
   RoundMinersResponse,
   RoundValidatorsResponse,
-  RoundActivityResponse,
-  RoundProgressResponse,
   RoundsListQueryParams,
   RoundMinersQueryParams,
   RoundActivityQueryParams,
@@ -35,6 +31,18 @@ export class RoundsRepository {
     if (!raw) {
       throw new Error("Round identifier is required");
     }
+    
+    // Check if it's a season/round format (e.g., "1/1" or "8/3")
+    const seasonRoundMatch = raw.match(/^(\d+)\/(\d+)$/);
+    if (seasonRoundMatch) {
+      const season = Number.parseInt(seasonRoundMatch[1], 10);
+      const round = Number.parseInt(seasonRoundMatch[2], 10);
+      return {
+        path: `${season}/${round}`,
+        fallbackId: season * 10000 + round, // For backward compatibility
+      };
+    }
+    
     const match = raw.match(/\d+/);
     const parsed = match ? Number.parseInt(match[0], 10) : undefined;
     const fallbackId =
@@ -43,6 +51,46 @@ export class RoundsRepository {
       path: encodeURIComponent(raw),
       fallbackId,
     };
+  }
+
+  /**
+   * Extract round payload from API response, handling various response formats
+   */
+  private extractRoundPayload(raw: any): any {
+    const payloadCandidates = [
+      raw?.data?.round,
+      raw?.round,
+      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
+      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
+      raw,
+    ];
+
+    return (
+      payloadCandidates.find(
+        (candidate) =>
+          candidate &&
+          typeof candidate === "object" &&
+          !Array.isArray(candidate)
+      ) ?? {}
+    );
+  }
+
+  /**
+   * Generic helper to fetch data from round endpoints with nested data.data structure
+   * Reduces duplication in methods that follow the pattern: buildPath -> get -> return data.data.XXX
+   */
+  private async fetchRoundEndpointData<T>(
+    identifier: string | number,
+    endpoint: string,
+    dataKey: string,
+    params?: any
+  ): Promise<T> {
+    const { path } = this.buildRoundPath(identifier);
+    const response = await apiClient.get<{ data: { [key: string]: T } }>(
+      `${this.baseEndpoint}/${path}/${endpoint}`,
+      params
+    );
+    return response.data.data[dataKey] as T;
   }
 
   /**
@@ -208,13 +256,15 @@ export class RoundsRepository {
       typeof startBlock === "number" &&
       typeof endBlock === "number"
     ) {
-      const effectiveCurrentBlock =
-        currentBlock !== undefined
-          ? currentBlock
-          : status === "finished"
-            ? endBlock
-            : startBlock;
-      const range = endBlock - startBlock;
+    let effectiveCurrentBlock: number;
+    if (currentBlock !== undefined) {
+      effectiveCurrentBlock = currentBlock;
+    } else if (status === "finished") {
+      effectiveCurrentBlock = endBlock;
+    } else {
+      effectiveCurrentBlock = startBlock;
+    }
+    const range = endBlock - startBlock;
       progress =
         range > 0 ? (effectiveCurrentBlock - startBlock) / range : undefined;
     }
@@ -224,6 +274,8 @@ export class RoundsRepository {
       round: rawRound.round ?? id,
       roundNumber: rawRound.roundNumber ?? rawRound.round ?? id,
       roundKey: rawRound.roundKey ?? `round_${id}`,
+      season: rawRound.season ?? rawRound.Season ?? undefined,
+      roundInSeason: rawRound.roundInSeason ?? rawRound.round_in_season ?? undefined,
       startBlock,
       endBlock,
       current: Boolean(rawRound.current ?? status === "active"),
@@ -286,11 +338,14 @@ export class RoundsRepository {
     const response = await apiClient.get<any>(this.baseEndpoint, params);
     const responseData = response.data?.data ?? response.data ?? {};
 
-    const roundsArraySource = Array.isArray(responseData.rounds)
-      ? responseData.rounds
-      : Array.isArray(response.data?.rounds)
-        ? response.data.rounds
-        : [];
+    let roundsArraySource: any[];
+    if (Array.isArray(responseData.rounds)) {
+      roundsArraySource = responseData.rounds;
+    } else if (Array.isArray(response.data?.rounds)) {
+      roundsArraySource = response.data.rounds;
+    } else {
+      roundsArraySource = [];
+    }
 
     const normalizedRounds = roundsArraySource.map((round: any) =>
       this.normalizeRoundData(round)
@@ -332,23 +387,7 @@ export class RoundsRepository {
     const response = await apiClient.get<any>(
       `${this.baseEndpoint}/${path}/basic`
     );
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload, fallbackId);
   }
 
@@ -359,23 +398,7 @@ export class RoundsRepository {
   async getRound(identifier: string | number): Promise<RoundData> {
     const { path, fallbackId } = this.buildRoundPath(identifier);
     const response = await apiClient.get<any>(`${this.baseEndpoint}/${path}`);
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload, fallbackId);
   }
 
@@ -384,23 +407,7 @@ export class RoundsRepository {
    */
   async getCurrentRound(): Promise<RoundData> {
     const response = await apiClient.get<any>(`${this.baseEndpoint}/current`);
-    const raw = response.data;
-    const payloadCandidates = [
-      raw?.data?.round,
-      raw?.round,
-      Array.isArray(raw?.data?.rounds) ? raw.data.rounds[0] : undefined,
-      Array.isArray(raw?.rounds) ? raw.rounds[0] : undefined,
-      raw,
-    ];
-
-    const payload =
-      payloadCandidates.find(
-        (candidate) =>
-          candidate &&
-          typeof candidate === "object" &&
-          !Array.isArray(candidate)
-      ) ?? {};
-
+    const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload);
   }
 
@@ -410,11 +417,11 @@ export class RoundsRepository {
   async getRoundStatistics(
     identifier: string | number
   ): Promise<RoundStatistics> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundStatisticsResponse>(
-      `${this.baseEndpoint}/${path}/statistics`
+    return this.fetchRoundEndpointData<RoundStatistics>(
+      identifier,
+      "statistics",
+      "statistics"
     );
-    return response.data.data.statistics;
   }
 
   /**
@@ -461,29 +468,29 @@ export class RoundsRepository {
     identifier: string | number,
     params?: RoundActivityQueryParams
   ): Promise<RoundActivity[]> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundActivityResponse>(
-      `${this.baseEndpoint}/${path}/activity`,
+    return this.fetchRoundEndpointData<RoundActivity[]>(
+      identifier,
+      "activity",
+      "activities",
       params
     );
-    return response.data.data.activities;
   }
 
   /**
    * Get round progress information
    */
   async getRoundProgress(identifier: string | number): Promise<RoundProgress> {
-    const { path } = this.buildRoundPath(identifier);
-    const response = await apiClient.get<RoundProgressResponse>(
-      `${this.baseEndpoint}/${path}/progress`
+    return this.fetchRoundEndpointData<RoundProgress>(
+      identifier,
+      "progress",
+      "progress"
     );
-    return response.data.data.progress;
   }
 
   /**
-   * Get aggregated metrics and validators data from the new simplified endpoint
+   * Get aggregated metrics and validators data from the new simplified endpoint (DEPRECATED - use getRoundSimplified)
    */
-  async getRound(roundNumber: number): Promise<{
+  async getRoundOld(roundNumber: number): Promise<{
     round_number: number;
     aggregated: {
       winner: {
@@ -513,10 +520,62 @@ export class RoundsRepository {
       local_tasks_evaluated: number;
     }>;
   }> {
+    // DEPRECATED: This method uses the old API format
+    throw new Error("getRoundOld is deprecated. Use getRoundSimplified with season and roundInSeason.");
+  }
+  
+  /**
+   * Get round details from simplified endpoint using season and round_in_season
+   */
+  async getRoundSimplified(season: number, roundInSeason: number): Promise<{
+    round_number: number;
+    season: number;
+    round_in_season: number;
+    post_consensus_summary: {
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+        avg_reward: number;
+        avg_eval_score: number;
+        avg_eval_time: number;
+      } | null;
+      miners_evaluated: number;
+      tasks_evaluated: number;
+    };
+    validators: Array<{
+      validator_uid: number;
+      validator_name: string;
+      validator_hotkey: string;
+      winner: {
+        uid: number;
+        name: string;
+        image: string | null;
+        hotkey: string | null;
+      } | null;
+      local_avg_winner_score: number;
+      local_avg_eval_time: number;
+      local_miners_evaluated: number;
+      local_tasks_evaluated: number;
+      miners: Array<{
+        uid: number;
+        name: string;
+        hotkey: string | null;
+        image: string | null;
+        local_rank: number | null;
+        local_avg_reward: number;
+        local_avg_eval_score: number;
+        local_avg_eval_time: number;
+      }>;
+    }>;
+  }> {
     const response = await apiClient.get<{
       success: boolean;
       data: {
         round_number: number;
+        season: number;
+        round_in_season: number;
         post_consensus_summary: {
           winner: {
             uid: number;
@@ -540,6 +599,7 @@ export class RoundsRepository {
             image: string | null;
             hotkey: string | null;
           } | null;
+          topScore: number;
           local_avg_winner_score: number;
           local_avg_eval_time: number;
           local_miners_evaluated: number;
@@ -556,7 +616,7 @@ export class RoundsRepository {
           }>;
         }>;
       };
-    }>(`${this.baseEndpoint}/get-round`, { round_number: roundNumber });
+    }>(`${this.baseEndpoint}/get-round`, { season, round_in_season: roundInSeason });
     return response.data.data;
   }
 
@@ -634,11 +694,12 @@ export class RoundsRepository {
    * Get round details with validators local and post-consensus data
    */
   async getRoundWithValidators(
-    roundNumber: number
+    season: number,
+    roundInSeason: number
   ): Promise<GetRoundResponse> {
     const response = await apiClient.get<GetRoundResponse>(
       `${this.baseEndpoint}/get-round`,
-      { round_number: roundNumber }
+      { season, round_in_season: roundInSeason }
     );
     return response.data;
   }

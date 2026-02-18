@@ -145,6 +145,25 @@ const formatNumber = (value?: number | null, digits: number = 2) => {
   return value.toFixed(digits);
 };
 
+const formatCost = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 6,
+  });
+};
+
+const formatTokens = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US");
+};
+
+const formatReward = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return `${formatNumber(value, 6)} α`;
+};
+
 function InfoRow({
   label,
   value,
@@ -359,6 +378,38 @@ function TaskDetailsDynamic({
   const evaluationInfo = taskData.relationships?.evaluation;
   const solutionInfo = taskData.relationships?.solution;
 
+  // Parse season and round from roundInfo
+  const { season: parsedSeason, round: parsedRound } = (() => {
+    const roundData = roundInfo as any;
+
+    // Priority 1: roundId as string "season/round"
+    if (typeof roundData?.roundId === "string" && roundData.roundId.includes("/")) {
+      const [s, r] = roundData.roundId.split("/").map(Number);
+      if (!isNaN(s) && !isNaN(r)) {
+        return { season: s, round: r };
+      }
+    }
+
+    // Priority 2: season_number and round_number_in_season
+    if (typeof roundData?.season_number === "number" && typeof roundData?.round_number_in_season === "number") {
+      return { season: roundData.season_number, round: roundData.round_number_in_season };
+    }
+
+    // Priority 3: season and round fields
+    if (typeof roundData?.season === "number" && typeof roundData?.round === "number") {
+      return { season: roundData.season, round: roundData.round };
+    }
+
+    // Priority 4: Extract from roundNumber if it's legacy format (>= 10000)
+    if (typeof roundData?.roundNumber === "number" && roundData.roundNumber >= 10000) {
+      const season = Math.floor(roundData.roundNumber / 10000);
+      const round = roundData.roundNumber % 10000;
+      return { season, round };
+    }
+
+    return { season: null, round: null };
+  })();
+
   // Calculate evaluationScore from evaluationInfo, taskData.score, or details.score
   const evaluationScore = (() => {
     if (typeof evaluationInfo?.finalScore === "number") {
@@ -372,7 +423,7 @@ function TaskDetailsDynamic({
     }
     return "0%";
   })();
-  
+
   // Calculate evaluationDuration from evaluationInfo, taskData.duration, or details.duration
   const evaluationDuration = (() => {
     if (evaluationInfo?.evaluationTime != null) {
@@ -516,6 +567,32 @@ function TaskDetailsDynamic({
   );
   const agentRunLinkId =
     agentRunInfo?.agentRunId ?? (taskData as any).agentRunId ?? "";
+  const hasLlmData =
+    Boolean(evaluationInfo?.llmProvider) ||
+    Boolean(evaluationInfo?.llmModel) ||
+    evaluationInfo?.llmCost != null ||
+    evaluationInfo?.llmTokens != null ||
+    Boolean(evaluationInfo?.llmUsage?.length);
+  const priceValue =
+    evaluationInfo?.llmCost != null ? evaluationInfo.llmCost : evaluationInfo?.reward;
+  const hasPrice = priceValue != null;
+  const usageRows = (evaluationInfo?.llmUsage ?? []).filter((row) => {
+    return (
+      row &&
+      (row.provider || row.model || row.tokens != null || row.cost != null)
+    );
+  });
+  const usageTotals = usageRows.reduce(
+    (acc, row) => {
+      const tokens = row.tokens != null ? Number(row.tokens) : 0;
+      const cost = row.cost != null ? Number(row.cost) : 0;
+      return {
+        tokens: acc.tokens + (Number.isFinite(tokens) ? tokens : 0),
+        cost: acc.cost + (Number.isFinite(cost) ? cost : 0),
+      };
+    },
+    { tokens: 0, cost: 0 }
+  );
 
   const primaryCards: StatCardConfig[] = [
     {
@@ -644,18 +721,39 @@ function TaskDetailsDynamic({
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
                   <PiClock className="h-6 w-6" />
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                    Round
-                  </p>
-                  <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                    #
-                    {roundInfo?.roundNumber != null
-                      ? roundInfo.roundNumber
-                      : roundInfo?.validatorRoundId
-                        ? truncateMiddle(roundInfo.validatorRoundId, 6)
-                        : "—"}
-                  </p>
+                <div className="flex items-center gap-2">
+                  {parsedSeason !== null && parsedRound !== null ? (
+                    <>
+                      <div className="flex flex-col">
+                        <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
+                          Season
+                        </p>
+                        <p className="text-lg font-bold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                          {parsedSeason}
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-white/20"></div>
+                      <div className="flex flex-col">
+                        <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
+                          Round
+                        </p>
+                        <p className="text-lg font-bold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                          {parsedRound}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                        Round
+                      </p>
+                      <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
+                        {roundInfo?.validatorRoundId
+                          ? truncateMiddle(roundInfo.validatorRoundId, 6)
+                          : "—"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               <span
@@ -894,6 +992,117 @@ function TaskDetailsDynamic({
           </div>
         ) : null}
 
+        {(hasLlmData || hasPrice) && (
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-slate-900/80 via-slate-950/70 to-emerald-950/30 p-5 text-white shadow-[0_20px_56px_rgba(0,0,0,0.6)] backdrop-blur-md">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(16,185,129,0.12),transparent_45%),radial-gradient(circle_at_100%_20%,rgba(56,189,248,0.12),transparent_40%)]" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-300/30 bg-emerald-500/15 text-emerald-200 shadow-inner">
+                  <PiChartBar className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-emerald-200/70">
+                    Evaluation Usage
+                  </p>
+                  <p className="text-lg font-semibold text-white/95">
+                    LLM Provider, Model &amp; Pricing
+                  </p>
+                </div>
+              </div>
+            </div>
+            {usageRows.length > 0 ? (
+              <div className="relative mt-5 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Tokens"
+                      value={formatTokens(usageTotals.tokens)}
+                      valueClassName="font-semibold text-amber-200"
+                    />
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Cost"
+                      value={formatCost(usageTotals.cost)}
+                      valueClassName="font-semibold text-emerald-200"
+                    />
+                  </div>
+                </div>
+                {usageRows.map((row, idx) => (
+                  <div
+                    key={`${row.provider ?? "provider"}-${row.model ?? "model"}-${idx}`}
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                  >
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="LLM Provider"
+                        value={row.provider ? row.provider.toUpperCase() : "—"}
+                        valueClassName="font-semibold text-sky-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="LLM Model"
+                        value={row.model ?? "—"}
+                        valueClassName="font-semibold text-indigo-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="Tokens Used"
+                        value={row.tokens != null ? formatTokens(row.tokens) : "—"}
+                        valueClassName="font-semibold text-amber-200"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <InfoRow
+                        label="Evaluation Cost"
+                        value={row.cost != null ? formatCost(row.cost) : "—"}
+                        valueClassName="font-semibold text-emerald-200"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="LLM Provider"
+                    value={evaluationInfo?.llmProvider ? evaluationInfo.llmProvider.toUpperCase() : "—"}
+                    valueClassName="font-semibold text-sky-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="LLM Model"
+                    value={evaluationInfo?.llmModel ?? "—"}
+                    valueClassName="font-semibold text-indigo-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="Tokens Used"
+                    value={
+                      evaluationInfo?.llmTokens != null
+                        ? formatTokens(evaluationInfo.llmTokens)
+                        : "—"
+                    }
+                    valueClassName="font-semibold text-amber-200"
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <InfoRow
+                    label="Evaluation Cost"
+                    value={hasPrice ? formatCost(priceValue as number) : "—"}
+                    valueClassName="font-semibold text-emerald-200"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-4">
           <span className="text-[11px] uppercase tracking-[0.24em] text-[#9aaeff]/70 font-bold">
             Task Context
@@ -1024,29 +1233,41 @@ const getStatusIcon = (success: boolean, error?: string) => {
 const formatActionDetails = (action: TaskAction) => {
   const parts: string[] = [];
   const meta = (action as any).metadata || {};
+  const raw = meta?.raw_action || {};
+  const attr = meta?.attributes || {};
 
-  // Prefer common fields
-  if (action.selector) parts.push(`Selector: ${truncate(action.selector, 80)}`);
+  // Prefer common fields (attr, raw top-level for IWA format)
+  if (action.selector) parts.push(`Selector: ${truncate(String(action.selector), 80)}`);
   if (action.value) parts.push(`Value: ${truncate(action.value, 80)}`);
-  if (meta.url) parts.push(`URL: ${truncate(String(meta.url), 120)}`);
-  if (meta.query) parts.push(`Query: ${truncate(String(meta.query), 80)}`);
-  if (meta.keys) parts.push(`Keys: ${truncate(String(meta.keys), 40)}`);
-  if (meta.text) parts.push(`Text: ${truncate(String(meta.text), 80)}`);
-  if (meta.to) parts.push(`To: ${truncate(String(meta.to), 80)}`);
-  if (meta.from) parts.push(`From: ${truncate(String(meta.from), 80)}`);
-  if (typeof meta.deltaY === "number") parts.push(`deltaY: ${meta.deltaY}`);
-  if (typeof meta.deltaX === "number") parts.push(`deltaX: ${meta.deltaX}`);
-  if (meta.title) parts.push(`Title: ${truncate(String(meta.title), 60)}`);
+  const url = attr.url ?? raw.url;
+  if (url) parts.push(`URL: ${truncate(String(url), 120)}`);
+  const query = attr.query ?? raw.query;
+  if (query) parts.push(`Query: ${truncate(String(query), 80)}`);
+  const keys = attr.keys ?? raw.keys;
+  if (keys) parts.push(`Keys: ${truncate(String(keys), 40)}`);
+  const text = attr.text ?? raw.text;
+  if (text) parts.push(`Text: ${truncate(String(text), 80)}`);
+  const toVal = attr.to ?? raw.to;
+  if (toVal) parts.push(`To: ${truncate(String(toVal), 80)}`);
+  const fromVal = attr.from ?? raw.from;
+  if (fromVal) parts.push(`From: ${truncate(String(fromVal), 80)}`);
+  if (typeof (attr.deltaY ?? raw.deltaY) === "number") parts.push(`deltaY: ${attr.deltaY ?? raw.deltaY}`);
+  if (typeof (attr.deltaX ?? raw.deltaX) === "number") parts.push(`deltaX: ${attr.deltaX ?? raw.deltaX}`);
+  const title = attr.title ?? raw.title;
+  if (title) parts.push(`Title: ${truncate(String(title), 60)}`);
+  if (raw.go_back === true) parts.push("go_back");
+  if (raw.go_forward === true) parts.push("go_forward");
   if (action.error) parts.push(`Error: ${truncate(action.error, 80)}`);
 
-  // If still nothing, surface first 2 metadata entries if present
-  if (parts.length === 0 && meta && typeof meta === "object") {
-    const entries = Object.entries(meta).slice(0, 2);
-    entries.forEach(([k, v]) => {
-      if (v == null) return;
+  // Si raw_action tiene campos a nivel superior
+  if (parts.length === 0 && raw && typeof raw === "object") {
+    const skip = new Set(["type", "attributes", "value"]);
+    for (const [k, v] of Object.entries(raw)) {
+      if (skip.has(k) || v == null || v === "") continue;
       const val = typeof v === "string" ? v : JSON.stringify(v);
       parts.push(`${k}: ${truncate(val, 80)}`);
-    });
+      if (parts.length >= 3) break;
+    }
   }
 
   return parts.length === 0 ? "No additional details" : parts.join(" • ");
@@ -1073,35 +1294,39 @@ const extractActionDetailPairs = (
   const attr = meta?.attributes?.attributes || meta?.attributes || {};
   const raw = meta?.raw_action || {};
   const rawAttr = raw?.attributes?.attributes || raw?.attributes || {};
+  // IWA format: url, text, selector, etc. están a nivel superior en raw_action
+  const top = (k: string) => (typeof raw[k] === "string" || typeof raw[k] === "number" || typeof raw[k] === "boolean" ? raw[k] : undefined);
 
-  // Prefer attributes
-  add("url", attr.url ?? rawAttr.url);
-  add("status", attr.status ?? rawAttr.status);
-  add("query", attr.query ?? rawAttr.query);
-  add("keys", attr.keys ?? rawAttr.keys);
-  add("text", attr.text ?? rawAttr.text);
-  add("to", attr.to ?? rawAttr.to);
-  add("from", attr.from ?? rawAttr.from);
-  if (typeof (attr.deltaY ?? rawAttr.deltaY) === "number")
-    add("deltaY", attr.deltaY ?? rawAttr.deltaY);
-  if (typeof (attr.deltaX ?? rawAttr.deltaX) === "number")
-    add("deltaX", attr.deltaX ?? rawAttr.deltaX);
-  add("title", attr.title ?? rawAttr.title);
+  // Prefer attributes, then raw.attributes, then raw top-level (IWA format)
+  add("url", attr.url ?? rawAttr.url ?? top("url"));
+  add("status", attr.status ?? rawAttr.status ?? top("status"));
+  add("query", attr.query ?? rawAttr.query ?? top("query"));
+  add("keys", attr.keys ?? rawAttr.keys ?? top("keys"));
+  add("text", attr.text ?? rawAttr.text ?? top("text"));
+  add("to", attr.to ?? rawAttr.to ?? top("to"));
+  add("from", attr.from ?? rawAttr.from ?? top("from"));
+  if (typeof (attr.deltaY ?? rawAttr.deltaY ?? raw.deltaY) === "number")
+    add("deltaY", attr.deltaY ?? rawAttr.deltaY ?? raw.deltaY);
+  if (typeof (attr.deltaX ?? rawAttr.deltaX ?? raw.deltaX) === "number")
+    add("deltaX", attr.deltaX ?? rawAttr.deltaX ?? raw.deltaX);
+  add("title", attr.title ?? rawAttr.title ?? top("title"));
+  if (raw.go_back === true) add("go_back", "true");
+  if (raw.go_forward === true) add("go_forward", "true");
   // Hide redundant type field; action type is already shown in the badge/icon
   // if (raw?.type && String(raw.type).toLowerCase() !== "navigate") {
   //   add("type", raw.type);
   // }
   if (action.error) add("error", action.error);
 
-  // If nothing, surface first entries of metadata (excluding type and value)
-  if (pairs.length === 0 && meta && typeof meta === "object") {
-    const entries = Object.entries(meta)
-      .filter(
-        ([k]) => k.toLowerCase() !== "type" && k.toLowerCase() !== "value"
-      ) // Exclude type and value fields
-      .slice(0, 3) as Array<[string, any]>;
-    entries.forEach(([k, v]) => add(k, v));
+  // Si raw_action tiene campos útiles a nivel superior que no hemos mostrado
+  if (pairs.length === 0 && raw && typeof raw === "object") {
+    const skipKeys = new Set(["type", "attributes", "value"]);
+    const rawEntries = Object.entries(raw)
+      .filter(([k]) => !skipKeys.has(k) && raw[k] != null && raw[k] !== "")
+      .slice(0, 4) as Array<[string, any]>;
+    rawEntries.forEach(([k, v]) => add(k, v));
   }
+  // Fallback final: no mostrar raw_action como JSON, solo "No additional details"
   return pairs;
 };
 
@@ -1131,12 +1356,12 @@ type TaskResultsProps = {
 function TaskResults({ evaluationData }: TaskResultsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  
+
   // Use data from evaluationData (always from get-evaluation endpoint)
   const result = evaluationData.result;
   const resultsLoading = evaluationData.isLoading;
   const resultsError = evaluationData.error;
-  
+
   // Paginate actions
   const allActions = evaluationData.actions || [];
   const actionsTotal = allActions.length;
@@ -1144,16 +1369,16 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
   const failCount = allActions.filter((a: any) => !a.success || a.error).length;
   const actionsLoading = evaluationData.isLoading;
   const actionsError = evaluationData.error;
-  
+
   // Paginate actions
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
   const actions = allActions.slice(start, end);
-  
+
   const goToPage = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   const screenshots = evaluationData.screenshots || [];
   const screenshotsLoading = evaluationData.isLoading;
   const screenshotsError = evaluationData.error;
@@ -1451,16 +1676,16 @@ export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const idParam = Array.isArray(id) ? id[0] : ((id as string) ?? "");
-  
+
   // Always use the complete evaluation endpoint
   const evaluationData = useEvaluationComplete(idParam);
-  
+
   const details = evaluationData.details;
   const info = evaluationData.info;
   const isLoading = evaluationData.isLoading;
   const error = evaluationData.error;
   const refetch = evaluationData.refetch;
-  
+
   // Extract actual IDs from the info object (preferred) or details response
   const taskId = info?.taskId ?? details?.taskId ?? (isLoading ? "Loading…" : "—");
   const runIdDisplay =
@@ -1583,7 +1808,7 @@ export default function TaskDynamic() {
       />
 
       <div className="mb-10">
-        <TaskResults 
+        <TaskResults
           evaluationData={{
             result: evaluationData.result,
             actions: evaluationData.actions,

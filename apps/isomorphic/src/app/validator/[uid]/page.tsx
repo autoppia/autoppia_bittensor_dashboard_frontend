@@ -376,9 +376,32 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
           </div>
           <div className="rounded-lg bg-white/10 p-3 border border-white/10">
             <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Last Round</p>
-            <p className="text-xl font-bold text-white">
-              {validator.lastRoundEvaluated ?? "—"}
-            </p>
+            <div className="flex items-center gap-2">
+              {(() => {
+                const lastRound = validator.lastRoundEvaluated;
+                if (!lastRound || lastRound === "—") {
+                  return <p className="text-xl font-bold text-white">—</p>;
+                }
+                // Parse "season/round" format
+                const parts = String(lastRound).split("/");
+                if (parts.length === 2) {
+                  return (
+                    <>
+                      <div className="flex flex-col items-center">
+                        <p className="text-[9px] uppercase tracking-wider text-white/50">Season</p>
+                        <p className="text-base font-bold text-white">{parts[0]}</p>
+                      </div>
+                      <div className="h-8 w-px bg-white/20"></div>
+                      <div className="flex flex-col items-center">
+                        <p className="text-[9px] uppercase tracking-wider text-white/50">Round</p>
+                        <p className="text-base font-bold text-white">{parts[1]}</p>
+                      </div>
+                    </>
+                  );
+                }
+                return <p className="text-xl font-bold text-white">{lastRound}</p>;
+              })()}
+            </div>
           </div>
         </div>
         <div className="rounded-lg bg-white/10 p-3 border border-white/10">
@@ -404,7 +427,15 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
 }
 
 // Card component for last round winner
-function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsData; selectedRound: number | null }) {
+function LastRoundWinnerCard({ 
+  data, 
+  selectedSeason, 
+  selectedRound 
+}: { 
+  data: ValidatorDetailsData; 
+  selectedSeason: number | null;
+  selectedRound: number | null;
+}) {
   const context = data.context;
   const fallbackMinerImage = context.lastRoundWinner !== null
     ? resolveAssetUrl(`/miners/${Math.abs(context.lastRoundWinner % 50)}.svg`)
@@ -413,8 +444,11 @@ function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsDa
     ? resolveAssetUrl(context.lastRoundWinnerImage)
     : fallbackMinerImage;
   
-  // Determine the round number to use for links
-  const roundNumber = selectedRound ?? data.validator.lastRoundEvaluated;
+  // Determine the round to use for links (using "season/round" format or lastRoundEvaluated)
+  const roundNumber =
+    selectedSeason !== null && selectedRound !== null
+      ? `${selectedSeason}/${selectedRound}`
+      : data.validator.lastRoundEvaluated;
   const roundKey = roundNumber ? `round_${roundNumber}` : null;
   const roundLink = roundKey ? `/subnet36/rounds/${roundKey}` : null;
   const minerLink = context.lastRoundWinner && roundNumber
@@ -506,9 +540,22 @@ function LastRoundWinnerCard({ data, selectedRound }: { data: ValidatorDetailsDa
 }
 
 // Card component for global stats
-function GlobalStatsCard({ data, selectedRound }: { data: ValidatorDetailsData; selectedRound: number | null }) {
+function GlobalStatsCard({ 
+  data, 
+  selectedSeason, 
+  selectedRound 
+}: { 
+  data: ValidatorDetailsData; 
+  selectedSeason: number | null;
+  selectedRound: number | null;
+}) {
   const stats = data.globalStats;
-  const roundLabel = selectedRound !== null ? `Round ${selectedRound}` : "All Rounds";
+  const roundLabel =
+    selectedSeason !== null && selectedRound !== null
+      ? `Season ${selectedSeason} - Round ${selectedRound}`
+      : selectedSeason !== null
+        ? `Season ${selectedSeason}`
+        : "All Rounds";
   
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
@@ -734,12 +781,16 @@ function PerformanceAnalytics({
   data,
   selectedWeb,
   setSelectedWeb,
+  selectedSeason,
+  setSelectedSeason,
   selectedRound,
   setSelectedRound,
 }: {
   data: ValidatorDetailsData;
   selectedWeb: string | null;
   setSelectedWeb: (web: string | null) => void;
+  selectedSeason: number | null;
+  setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
 }) {
@@ -1152,6 +1203,7 @@ export default function ValidatorDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeb, setSelectedWeb] = useState<string | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   
   // Get all validators for the selector
@@ -1190,7 +1242,12 @@ export default function ValidatorDetailsPage() {
       try {
         setLoading(true);
         setError(null);
-        const result = await validatorsRepository.getValidatorDetails(uidNum, selectedRound);
+        // Construct round parameter as "season/round" if both are selected
+        const roundParam =
+          selectedSeason !== null && selectedRound !== null
+            ? `${selectedSeason}/${selectedRound}`
+            : null;
+        const result = await validatorsRepository.getValidatorDetails(uidNum, roundParam);
         setData(result);
       } catch (err: any) {
         setError(err.message || "Failed to load validator details");
@@ -1200,7 +1257,7 @@ export default function ValidatorDetailsPage() {
     }
 
     fetchData();
-  }, [validatorUid, selectedRound]);
+  }, [validatorUid, selectedSeason, selectedRound]);
 
   if (loading) {
     return (
@@ -1254,10 +1311,18 @@ export default function ValidatorDetailsPage() {
           <ValidatorDetailsCard data={data} />
         </div>
         <div className="h-full">
-          <GlobalStatsCard data={data} selectedRound={selectedRound} />
+          <GlobalStatsCard 
+            data={data} 
+            selectedSeason={selectedSeason} 
+            selectedRound={selectedRound} 
+          />
         </div>
         <div className="h-full">
-          <LastRoundWinnerCard data={data} selectedRound={selectedRound} />
+          <LastRoundWinnerCard 
+            data={data} 
+            selectedSeason={selectedSeason} 
+            selectedRound={selectedRound} 
+          />
         </div>
       </div>
 
@@ -1266,6 +1331,8 @@ export default function ValidatorDetailsPage() {
         data={data}
         selectedWeb={selectedWeb}
         setSelectedWeb={setSelectedWeb}
+        selectedSeason={selectedSeason}
+        setSelectedSeason={setSelectedSeason}
         selectedRound={selectedRound}
         setSelectedRound={setSelectedRound}
       />
@@ -1279,24 +1346,70 @@ function TabsSection({
   data,
   selectedWeb,
   setSelectedWeb,
+  selectedSeason,
+  setSelectedSeason,
   selectedRound,
   setSelectedRound,
 }: {
   data: ValidatorDetailsData;
   selectedWeb: string | null;
   setSelectedWeb: (web: string | null) => void;
+  selectedSeason: number | null;
+  setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"performance" | "rounds">("performance");
 
-  const roundOptions = [
-    { value: "__all__", label: "All Rounds" },
-    ...(data.availableRounds || []).map((round) => ({
-      value: round.toString(),
-      label: `Round ${round}`,
-    })),
-  ];
+  // Parse available rounds from "season/round" format
+  const { seasonOptions, roundOptions } = useMemo(() => {
+    const seasons = new Set<number>();
+    const roundsBySeason = new Map<number, Set<number>>();
+
+    (data.availableRounds || []).forEach((roundStr) => {
+      const parts = String(roundStr).split("/");
+      if (parts.length === 2) {
+        const season = parseInt(parts[0], 10);
+        const round = parseInt(parts[1], 10);
+        if (!isNaN(season) && !isNaN(round)) {
+          seasons.add(season);
+          if (!roundsBySeason.has(season)) {
+            roundsBySeason.set(season, new Set());
+          }
+          roundsBySeason.get(season)!.add(round);
+        }
+      }
+    });
+
+    const seasonOpts = [
+      { value: "__all__", label: "All Seasons" },
+      ...Array.from(seasons)
+        .sort((a, b) => b - a)
+        .map((s) => ({
+          value: s.toString(),
+          label: `Season ${s}`,
+        })),
+    ];
+
+    // Get rounds for selected season, or all rounds if no season selected
+    const availableRounds =
+      selectedSeason !== null && roundsBySeason.has(selectedSeason)
+        ? Array.from(roundsBySeason.get(selectedSeason)!)
+        : Array.from(new Set(Array.from(roundsBySeason.values()).flatMap((s) => Array.from(s))));
+
+    const roundOpts = [
+      { value: "__all__", label: "All Rounds" },
+      ...availableRounds.sort((a, b) => b - a).map((r) => ({
+        value: r.toString(),
+        label: `Round ${r}`,
+      })),
+    ];
+
+    return { seasonOptions: seasonOpts, roundOptions: roundOpts };
+  }, [data.availableRounds, selectedSeason]);
+
+  // Check if a specific season and round are selected
+  const hasSpecificRoundSelected = selectedSeason !== null && selectedRound !== null;
 
   return (
     <div className="mt-8">
@@ -1334,15 +1447,29 @@ function TabsSection({
         </div>
         <div className="flex items-center gap-3">
           <Select
+            options={seasonOptions}
+            value={seasonOptions.find(
+              (opt) => opt.value === (selectedSeason !== null ? selectedSeason.toString() : "__all__")
+            )}
+            onChange={(option: { label: string; value: string }) => {
+              const newSeason = option.value === "__all__" ? null : parseInt(option.value, 10);
+              setSelectedSeason(newSeason);
+              // Reset round when season changes
+              if (newSeason === null) {
+                setSelectedRound(null);
+              }
+            }}
+            className="w-[160px] text-sm rounded-lg border border-emerald-500/40 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-emerald-100 focus:border-emerald-400/60 focus:ring-0 hover:border-emerald-400/50"
+          />
+          <Select
             options={roundOptions}
             value={roundOptions.find(
               (opt) => opt.value === (selectedRound !== null ? selectedRound.toString() : "__all__")
             )}
-            onChange={(option: { label: string; value: string }) =>
-              setSelectedRound(
-                option.value === "__all__" ? null : parseInt(option.value, 10)
-              )
-            }
+            onChange={(option: { label: string; value: string }) => {
+              const newRound = option.value === "__all__" ? null : parseInt(option.value, 10);
+              setSelectedRound(newRound);
+            }}
             className="w-[160px] text-sm rounded-lg border border-purple-500/40 bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-100 focus:border-purple-400/60 focus:ring-0 hover:border-purple-400/50"
           />
         </div>
@@ -1357,6 +1484,8 @@ function TabsSection({
               data={data}
               selectedWeb={selectedWeb}
               setSelectedWeb={setSelectedWeb}
+              selectedSeason={selectedSeason}
+              setSelectedSeason={setSelectedSeason}
               selectedRound={selectedRound}
               setSelectedRound={setSelectedRound}
             />
@@ -1368,12 +1497,83 @@ function TabsSection({
               onWebClick={setSelectedWeb}
             />
           </div>
-        ) : (
+        ) : hasSpecificRoundSelected ? (
           <RoundDetailsTab
             data={data}
+            selectedSeason={selectedSeason}
+            setSelectedSeason={setSelectedSeason}
             selectedRound={selectedRound}
             setSelectedRound={setSelectedRound}
           />
+        ) : (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center max-w-md">
+              <div className="mb-6 relative">
+                <div className="relative inline-block">
+                  {/* Triangle warning icon */}
+                  <div className="w-24 h-24 mx-auto relative">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="w-full h-full"
+                    >
+                      {/* Triangle background */}
+                      <path
+                        d="M12 2L2 20h20L12 2z"
+                        fill="currentColor"
+                        className="text-amber-500/20"
+                      />
+                      {/* Triangle border */}
+                      <path
+                        d="M12 2L2 20h20L12 2z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        fill="none"
+                        className="text-amber-400"
+                      />
+                      {/* Exclamation mark */}
+                      <line
+                        x1="12"
+                        y1="8"
+                        x2="12"
+                        y2="14"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        className="text-amber-400"
+                      />
+                      <circle
+                        cx="12"
+                        cy="17"
+                        r="1"
+                        fill="currentColor"
+                        className="text-amber-400"
+                      />
+                    </svg>
+                  </div>
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 blur-xl opacity-50">
+                    <div className="w-24 h-24 mx-auto bg-amber-500/30 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">
+                Select Season and Round
+              </h3>
+              <p className="text-white/60 mb-6">
+                To view round details, you must first select a specific season and round using the filters above.
+              </p>
+              <div className="flex items-center justify-center gap-3 text-sm">
+                <div className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">
+                  Specific Season
+                </div>
+                <span className="text-white/40">+</span>
+                <div className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300">
+                  Specific Round
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1383,10 +1583,14 @@ function TabsSection({
 // Round Details Tab Component
 function RoundDetailsTab({
   data,
+  selectedSeason,
+  setSelectedSeason,
   selectedRound,
   setSelectedRound,
 }: {
   data: ValidatorDetailsData;
+  selectedSeason: number | null;
+  setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
 }) {

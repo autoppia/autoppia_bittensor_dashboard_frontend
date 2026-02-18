@@ -38,7 +38,8 @@ const DEFAULT_TASK_MESSAGES = new Set([
 
 export default function OverviewValidators({
   currentRound,
-}: { currentRound?: number | null } = {}) {
+  currentSeason,
+}: { currentRound?: number | null; currentSeason?: number | null } = {}) {
   const {
     data: validatorsData,
     loading: validatorsLoading,
@@ -93,7 +94,11 @@ export default function OverviewValidators({
         <PiCheckCircleFill className="h-5 w-5 text-emerald-300" />
       )}
       <span>{isRoundActive ? "Current round:" : "Last round:"}</span>
-      <span className="font-extrabold text-white">{roundNumber}</span>
+      {currentSeason !== null && currentSeason !== undefined ? (
+        <span className="font-extrabold text-white">Season {currentSeason} - Round {roundNumber}</span>
+      ) : (
+        <span className="font-extrabold text-white">{roundNumber}</span>
+      )}
     </span>
   ) : null;
 
@@ -265,6 +270,15 @@ export default function OverviewValidators({
                 ? currentRound
                 : undefined;
 
+          const lastSeenSeason = validator.lastSeenSeason != null ? validator.lastSeenSeason : undefined;
+          const lastSeenRoundInSeason = validator.lastSeenRoundInSeason != null ? validator.lastSeenRoundInSeason : undefined;
+          const lastSeenLabel =
+            lastSeenSeason != null && (lastSeenRoundInSeason != null || resolvedRoundNumber != null)
+              ? `Last seen season ${lastSeenSeason}, round #${lastSeenRoundInSeason ?? resolvedRoundNumber}`
+              : resolvedRoundNumber != null
+                ? `Last seen round #${resolvedRoundNumber}`
+                : "—";
+
           // Build validator details link using validator UID
           const validatorUid = validator.validatorUid;
           const validatorLink = validatorUid != null
@@ -435,10 +449,7 @@ export default function OverviewValidators({
                     })}
                   </div>
                   <div className="text-right text-[11px] text-gray-400">
-                    Last seen round{" "}
-                    {resolvedRoundNumber != null
-                      ? `#${resolvedRoundNumber}`
-                      : "—"}
+                    {lastSeenLabel}
                   </div>
                 </div>
               </div>
@@ -565,10 +576,7 @@ export default function OverviewValidators({
                   })}
                 </div>
                 <div className="text-right text-[11px] text-gray-400">
-                  Last seen round{" "}
-                  {resolvedRoundNumber != null
-                    ? `#${resolvedRoundNumber}`
-                    : "—"}
+                  {lastSeenLabel}
                 </div>
               </div>
             </div>

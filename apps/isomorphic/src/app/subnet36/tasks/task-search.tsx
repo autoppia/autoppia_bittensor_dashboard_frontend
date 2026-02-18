@@ -760,17 +760,15 @@ export default function TaskSearch() {
                 "/miners/30.svg "
               );
 
-              // Try to get round number from multiple sources
-              const roundNumber =
-                (task as any).roundNumber ?? // Direct field from backend
-                task.relationships?.round?.roundNumber ?? // From relationships if included
-                extractRoundNumber(task.taskId) ?? // Extract from task ID
-                extractRoundNumber(task.agentRunId); // Extract from agent run ID
-
+              // Get round number directly from backend (no legacy formats)
+              const roundNumber = (task as any).roundNumber;
               const roundDisplay =
                 typeof roundNumber === "number" && Number.isFinite(roundNumber)
                   ? `#${roundNumber}`
                   : "—";
+
+              // Get season directly from backend (no legacy formats)
+              const seasonValue = (task as any).season;
 
               return (
                 <div
@@ -781,6 +779,17 @@ export default function TaskSearch() {
                       : `${routes.evaluations}/${task.taskId}`;
                     router.push(url);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      const url = task.evaluationId
+                        ? `${routes.evaluations}/${task.evaluationId}`
+                        : `${routes.evaluations}/${task.taskId}`;
+                      router.push(url);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"
                   style={{ cursor: "pointer" }}
                 >
@@ -937,10 +946,12 @@ export default function TaskSearch() {
                         </div>
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-sky-300/70 font-semibold mb-1">
-                            Duration
+                            Season
                           </div>
                           <div className="text-base font-bold text-sky-300 drop-shadow-sm">
-                            {durationLabel}
+                            {typeof seasonValue === "number" && seasonValue > 0
+                              ? seasonValue
+                              : "—"}
                           </div>
                         </div>
                       </div>

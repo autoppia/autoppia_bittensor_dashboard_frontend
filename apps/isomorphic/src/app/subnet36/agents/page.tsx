@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRoundsData, useLatestRoundTopMiner } from "@/services/hooks/useAgents";
 import { routes } from "@/config/routes";
@@ -26,47 +26,24 @@ function AgentsPageFallback() {
   );
 }
 
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
-
-const extractRoundNumber = (round: any): number | undefined => {
-  if (!round || typeof round !== "object") {
-    return undefined;
-  }
-  const candidate =
-    round.roundNumber ??
-    round.round ??
-    round.id ??
-    round.roundId ??
-    round.round_id ??
-    round.validatorRoundId ??
-    round.validator_round_id;
-
-  if (typeof candidate === "number" && Number.isFinite(candidate)) {
-    return candidate;
-  }
-  if (typeof candidate === "string") {
-    const parsed = Number.parseInt(candidate, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }
-  return undefined;
-};
-
 function AgentsLanding() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
   const agentParam = searchParams.get("agent");
+  const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
 
-  const roundFromQuery = useMemo(() => {
-    if (!roundParam) {
-      return undefined;
+  // Build round key "season/round" from URL (e.g. "83/20")
+  const roundKeyFromQuery = useMemo(() => {
+    const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
+    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
+      return `${season}/${round}`;
     }
-    const parsed = Number.parseInt(roundParam, 10);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }, [roundParam]);
+    return undefined;
+  }, [seasonParam, roundParam]);
 
   // Check if we're on the landing page (no agent ID in URL path)
   // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam
@@ -81,102 +58,29 @@ function AgentsLanding() {
     error: latestRoundError,
   } = useLatestRoundTopMiner(needsRedirect);
 
-  // Get rounds list from useRoundsData (without round_number to get all rounds)
+  // Get rounds list from useRoundsData (without round to get all rounds)
   const {
     data: roundsListData,
     loading: roundsListLoading,
     error: roundsListError,
   } = useRoundsData(undefined);
 
-  const availableRounds = useMemo(() => {
-    // Get rounds array from roundsListData
-    const roundsNumbers = roundsListData?.rounds ?? [];
-    if (!roundsNumbers.length) {
-      return [];
-    }
-    // Convert round numbers to round objects for compatibility
-    return roundsNumbers
-      .map((roundNum) => ({
-        round: roundNum,
-        roundNumber: roundNum,
-        id: roundNum,
-        roundId: roundNum,
-        status: "finished" as const, // Assume finished if in the list
-      }))
-      .sort((a, b) => (b.roundNumber ?? 0) - (a.roundNumber ?? 0));
+  // Rounds are strings "season/round" (e.g. "83/20")
+  const availableRoundKeys = useMemo(() => {
+    const rounds = roundsListData?.rounds ?? [];
+    if (!Array.isArray(rounds) || rounds.length === 0) return [];
+    return rounds.filter((r): r is string => typeof r === "string" && r.includes("/"));
   }, [roundsListData?.rounds]);
 
-  const roundSequence = useMemo(() => {
-    const seen = new Set<number>();
-    const sequence: number[] = [];
-    availableRounds.forEach((round) => {
-      const value = extractRoundNumber(round);
-      if (isFiniteNumber(value) && !seen.has(value)) {
-        seen.add(value);
-        sequence.push(value);
-      }
-    });
-    return sequence.sort((a, b) => b - a);
-  }, [availableRounds]);
+  // selectedRoundKey: "season/round" - URL is source of truth
+  const selectedRoundKey = roundKeyFromQuery ?? availableRoundKeys[0];
 
-  const initialRound = useMemo(() => {
-    if (isFiniteNumber(roundFromQuery)) {
-      return roundFromQuery;
-    }
-    return roundSequence[0];
-  }, [roundFromQuery, roundSequence]);
-
-  const [selectedRound, setSelectedRound] = useState<number | undefined>(
-    initialRound
-  );
-
-  useEffect(() => {
-    if (!isFiniteNumber(roundFromQuery)) {
-      return;
-    }
-    if (roundFromQuery !== selectedRound) {
-      setSelectedRound(roundFromQuery);
-    }
-  }, [roundFromQuery, selectedRound]);
-
-  useEffect(() => {
-    if (selectedRound === undefined && isFiniteNumber(initialRound)) {
-      setSelectedRound(initialRound);
-    }
-  }, [initialRound, selectedRound]);
-
-  const roundReady = isFiniteNumber(selectedRound);
-
-  // Use useRoundsData instead of useMinersList - it already includes miners for the selected round
+  // Use useRoundsData with selected round (only when we have a valid key to avoid redundant calls)
   const {
     data: roundsDataWithMiners,
     loading: roundsDataLoading,
     error: roundsDataError,
-  } = useRoundsData(selectedRound);
-
-  const resolvedRound = useMemo(() => {
-    const backendRound = roundsDataWithMiners?.round_selected?.round;
-    if (isFiniteNumber(backendRound)) {
-      return backendRound;
-    }
-    return selectedRound;
-  }, [roundsDataWithMiners?.round_selected?.round, selectedRound]);
-
-  useEffect(() => {
-    if (isFiniteNumber(resolvedRound) && resolvedRound !== selectedRound) {
-      setSelectedRound(resolvedRound);
-    }
-  }, [resolvedRound, selectedRound]);
-
-  useEffect(() => {
-    if (roundReady || !roundSequence.length) {
-      return;
-    }
-    const nextAvailableRound = roundSequence[0];
-    if (isFiniteNumber(nextAvailableRound)) {
-      setSelectedRound(nextAvailableRound);
-    }
-  }, [roundReady, roundSequence]);
+  } = useRoundsData(selectedRoundKey);
 
   // Get miners from roundsDataWithMiners.round_selected.miners
   const miners = useMemo(() => {
@@ -191,8 +95,7 @@ function AgentsLanding() {
     }));
   }, [roundsDataWithMiners?.round_selected?.miners]);
   const hasMiners = miners.length > 0;
-  // Usar la última round disponible si no hay round seleccionado
-  const effectiveRound = resolvedRound ?? selectedRound ?? roundSequence[0];
+  const effectiveRoundKey = selectedRoundKey;
 
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
@@ -242,15 +145,22 @@ function AgentsLanding() {
     // Mark that we're about to redirect BEFORE doing it
     hasRedirectedRef.current = true;
 
-    // Build the target URL: /subnet36/agents/{miner_uid}?round={round}&agent={miner_uid}
+    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y&agent={miner_uid}
     const targetPath = `${routes.agents}/${latestRoundTopMiner.miner_uid}`;
     const params = new URLSearchParams();
-    params.set("round", String(latestRoundTopMiner.round));
+    const roundVal = String(latestRoundTopMiner.round);
+    if (roundVal.includes("/")) {
+      const [s, r] = roundVal.split("/");
+      if (s) params.set("season", s);
+      if (r) params.set("round", r);
+    } else {
+      params.set("round", roundVal);
+    }
     params.set("agent", String(latestRoundTopMiner.miner_uid));
 
     const targetUrl = `${targetPath}?${params.toString()}`;
     console.log(`[AgentsLanding] ✅ Redirecting from ${pathname} to: ${targetUrl}`);
-    
+
     // Redirect immediately to the normal URL format with full page reload
     // Using window.location.href instead of router.replace to force a full page reload
     window.location.href = targetUrl;
@@ -284,7 +194,7 @@ function AgentsLanding() {
     }
 
     // If no round available, wait
-    if (!isFiniteNumber(effectiveRound)) {
+    if (!effectiveRoundKey) {
       return;
     }
     // If loading or error, wait
@@ -316,21 +226,23 @@ function AgentsLanding() {
     // Mark that we're about to redirect
     hasRedirectedRef.current = true;
 
-    // Redirect to top miner with latest round
+    // Redirect to top miner with latest round (use season/round in URL)
+    const [s, r] = effectiveRoundKey.includes("/") ? effectiveRoundKey.split("/") : [undefined, effectiveRoundKey];
     const params = new URLSearchParams();
-    params.set("round", String(effectiveRound));
+    if (s) params.set("season", s);
+    if (r) params.set("round", r);
     params.set("agent", String(topMiner.uid));
 
-    // Build the target URL: /subnet36/agents/{miner_uid}?round={round}&agent={miner_uid}
+    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y&agent={miner_uid}
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
-    
+
     // Redirect with full page reload
     window.location.href = targetUrl;
   }, [
     needsRedirect,
     latestRoundTopMiner,
-    effectiveRound,
+    effectiveRoundKey,
     hasMiners,
     miners,
     roundsDataError,
@@ -371,7 +283,7 @@ function AgentsLanding() {
   if (
     !roundsDataLoading &&
     !roundsDataError &&
-    isFiniteNumber(effectiveRound) &&
+    effectiveRoundKey &&
     !hasMiners
   ) {
     return (
