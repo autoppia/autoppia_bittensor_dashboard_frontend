@@ -3518,6 +3518,52 @@ export const websitesData: WebsiteDataType[] = [
   },
   // Coming Soon Websites
   {
+    name: "AutoStats",
+    slug: "autostats",
+    portValidator: "8015",
+    href: "#",
+    origin: "Analytics Dashboard",
+    totalTasks: [0, 0, 0],
+    image: "/images/web_15.png",
+    color: "#6366F1",
+    description:
+      "Analytics and statistics platform for data visualization, KPIs, and insights.",
+    useCases: [
+      {
+        name: "Dashboard Creation",
+        examplePrompt: [
+          "Create a dashboard with revenue and user growth metrics",
+          "Build a KPI dashboard for monthly sales and conversions",
+        ],
+      },
+      {
+        name: "Chart Filtering",
+        examplePrompt: [
+          "Filter the bar chart by date range and region",
+          "Apply filters to show only North America data",
+        ],
+      },
+      {
+        name: "Report Export",
+        examplePrompt: [
+          "Export the current report as CSV",
+          "Download the analytics summary for Q4",
+        ],
+      },
+      {
+        name: "Metric Comparison",
+        examplePrompt: [
+          "Compare conversion rates between this month and last month",
+          "Show year-over-year comparison for key metrics",
+        ],
+      },
+    ],
+    comingSoonNote: "Analytics dashboard with charts, filters, and exports coming soon.",
+    avgDifficulty: 6.5,
+    completionRate: 0,
+    isComingSoon: true,
+  },
+  {
     name: "AutoFinance",
     slug: "autofinance",
     portValidator: "validator_125",
@@ -3549,6 +3595,20 @@ export const websitesData: WebsiteDataType[] = [
         examplePrompt: [
           "Categorize and analyze monthly expenses",
           "Set up automatic bill payments",
+        ],
+      },
+      {
+        name: "Savings Goals",
+        examplePrompt: [
+          "Create a savings goal for a $5000 vacation fund",
+          "Track progress toward emergency fund target",
+        ],
+      },
+      {
+        name: "Net Worth Tracking",
+        examplePrompt: [
+          "View total net worth across all linked accounts",
+          "Update asset values and recalculate portfolio",
         ],
       },
     ],
@@ -3960,25 +4020,45 @@ export const websitesData: WebsiteDataType[] = [
     description: "Travel booking platform with flights, hotels, and reservations.",
     avgDifficulty: 7.0,
     completionRate: 0,
-    useCases: [],
+    useCases: [
+      {
+        name: "Flight Search",
+        examplePrompt: [
+          "Search flights from NYC to Paris for next month",
+          "Find round-trip flights under $500 for two passengers",
+        ],
+      },
+      {
+        name: "Hotel Booking",
+        examplePrompt: [
+          "Book a hotel in Barcelona for 3 nights with pool and breakfast",
+          "Find accommodation near the convention center under $150/night",
+        ],
+      },
+      {
+        name: "Trip Itinerary",
+        examplePrompt: [
+          "Create a 5-day itinerary for Rome with top attractions",
+          "Add restaurant reservations to my trip schedule",
+        ],
+      },
+      {
+        name: "Car Rental",
+        examplePrompt: [
+          "Rent a car for pickup at Madrid airport next week",
+          "Compare SUV rental prices for a 7-day road trip",
+        ],
+      },
+      {
+        name: "Manage Booking",
+        examplePrompt: [
+          "View and modify my upcoming flight reservation",
+          "Add extra baggage to my hotel package",
+        ],
+      },
+    ],
     isComingSoon: true,
     comingSoonNote: "Travel booking platform with flights, hotels, and reservations coming soon.",
-  },
-  {
-    name: "AutoStats",
-    slug: "autostats",
-    portValidator: "8015",
-    href: "#",
-    origin: "Analytics Dashboard",
-    totalTasks: [0, 0, 0],
-    image: "/images/web_15.png",
-    color: "#8B5CF6",
-    description: "Analytics and statistics platform for data visualization and insights.",
-    avgDifficulty: 7.5,
-    completionRate: 0,
-    useCases: [],
-    isComingSoon: true,
-    comingSoonNote: "Analytics and statistics platform coming soon.",
   },
 ];
 
