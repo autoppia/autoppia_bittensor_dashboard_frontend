@@ -31,7 +31,7 @@ export class RoundsRepository {
     if (!raw) {
       throw new Error("Round identifier is required");
     }
-    
+
     // Check if it's a season/round format (e.g., "1/1" or "8/3")
     const seasonRoundMatch = raw.match(/^(\d+)\/(\d+)$/);
     if (seasonRoundMatch) {
@@ -42,7 +42,7 @@ export class RoundsRepository {
         fallbackId: season * 10000 + round, // For backward compatibility
       };
     }
-    
+
     const match = raw.match(/\d+/);
     const parsed = match ? Number.parseInt(match[0], 10) : undefined;
     const fallbackId =
@@ -116,11 +116,11 @@ export class RoundsRepository {
     };
 
     const id =
-      resolveNumber(rawRound.round) ??
-      resolveNumber(rawRound.roundNumber) ??
       resolveNumber(rawRound.id) ??
       resolveNumber(rawRound.roundId) ??
       resolveNumber(rawRound.round_id) ??
+      resolveNumber(rawRound.round) ??
+      resolveNumber(rawRound.roundNumber) ??
       (typeof fallbackId === "number" ? fallbackId : undefined);
 
     if (id === undefined) {
@@ -523,7 +523,7 @@ export class RoundsRepository {
     // DEPRECATED: This method uses the old API format
     throw new Error("getRoundOld is deprecated. Use getRoundSimplified with season and roundInSeason.");
   }
-  
+
   /**
    * Get round details from simplified endpoint using season and round_in_season
    */
