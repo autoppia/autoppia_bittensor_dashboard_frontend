@@ -6,6 +6,7 @@ import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
+import { websitesData } from "@/data/websites-data";
 
 const metricsData = [
   {
@@ -167,6 +168,8 @@ export default function OverviewMetrics({
   const topMinerInfo = metrics?.topMinerUid
     ? `${metrics.topMinerName || "Miner"} (UID ${metrics.topMinerUid})`
     : null;
+  // Use websitesData as source of truth (backend's totalWebsites counts websites used in rounds, not total demo websites)
+  const totalWebsitesCount = websitesData.filter((w) => !w.isComingSoon).length;
 
   const seasonLabel = metricsSeason !== null && metricsSeason !== undefined 
     ? `Season ${metricsSeason}` 
@@ -191,7 +194,7 @@ export default function OverviewMetrics({
     {
       id: "total-websites",
       title: "Websites",
-      value: 13,
+      value: totalWebsitesCount,
       topLabel: "Active websites",
       bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuGlobe,
