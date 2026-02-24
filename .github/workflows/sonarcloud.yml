@@ -46,6 +46,7 @@ jobs:
           # Uncomment if you have tests
           # pnpm test --coverage || true
           echo "Tests skipped - add your test command here"
+          # Workflow triggered for fix/* branches
 
       - name: Build project
         run: pnpm build
