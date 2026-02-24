@@ -47,14 +47,14 @@ export default function Websites() {
       // First sort by web number, then by difficulty
       const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
       return webNumDiff !== 0 ? webNumDiff : a.avgDifficulty - b.avgDifficulty;
-    } else if (sortBy === "difficulty-desc") {
+    }
+    if (sortBy === "difficulty-desc") {
       // First sort by web number, then by difficulty
       const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
       return webNumDiff !== 0 ? webNumDiff : b.avgDifficulty - a.avgDifficulty;
-    } else {
-      // Sort by web number for name sort too
-      return getWebNumber(a.slug) - getWebNumber(b.slug);
     }
+    // Sort by web number for name sort too
+    return getWebNumber(a.slug) - getWebNumber(b.slug);
   });
 
   return (

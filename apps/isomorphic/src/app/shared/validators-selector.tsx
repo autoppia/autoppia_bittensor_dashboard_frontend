@@ -3,11 +3,10 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "rizzui";
+import { Button, Text } from "rizzui";
 import { PiCaretLeftBold, PiCaretRightBold, PiUsersThreeDuotone } from "react-icons/pi";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import cn from "@core/utils/class-names";
-import { Text } from "rizzui";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 interface ValidatorPerformance {
@@ -19,13 +18,13 @@ interface ValidatorPerformance {
 }
 
 interface ValidatorsSelectorProps {
-  validators: ValidatorPerformance[];
-  selectedValidatorId?: string | null;
-  onValidatorSelect?: (validator: ValidatorPerformance) => void;
-  loading?: boolean;
-  error?: string | null;
-  showHeader?: boolean;
-  linkToDetails?: boolean; // If true, clicking navigates to /validator/:uid, otherwise calls onValidatorSelect
+  readonly validators: ValidatorPerformance[];
+  readonly selectedValidatorId?: string | null;
+  readonly onValidatorSelect?: (validator: ValidatorPerformance) => void;
+  readonly loading?: boolean;
+  readonly error?: string | null;
+  readonly showHeader?: boolean;
+  readonly linkToDetails?: boolean; // If true, clicking navigates to /validator/:uid, otherwise calls onValidatorSelect
 }
 
 export default function ValidatorsSelector({
@@ -70,7 +69,7 @@ export default function ValidatorsSelector({
             <div className="grid grid-flow-col gap-4 overflow-x-auto scroll-smooth">
               {Array.from({ length: 4 }, (_, index) => (
                 <div
-                  key={index}
+                  key={`validator-loading-placeholder-${index}`}
                   className="w-full min-w-[200px] px-5 py-5 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-sky-500/20 via-cyan-500/15 to-blue-500/20"
                 >
                   <div className="flex flex-col items-center">
@@ -212,16 +211,17 @@ export default function ValidatorsSelector({
               }
 
               return (
-                <div
+                <button
                   key={`validator-${validator.id}`}
+                  type="button"
                   onClick={() => {
                     if (validator.id === selectedValidatorId) return;
                     onValidatorSelect?.(validator);
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer border-none bg-transparent p-0 text-left"
                 >
                   {cardContent}
-                </div>
+                </button>
               );
             })}
           </div>

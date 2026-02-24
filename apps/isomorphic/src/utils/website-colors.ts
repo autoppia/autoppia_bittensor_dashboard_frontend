@@ -113,7 +113,7 @@ export function getProjectColors(projectName: string): ProjectColors {
     website = websitesData.find(
       (w) => {
         const nameLower = w.name.toLowerCase();
-        const slugLower = w.slug?.toLowerCase() || "";
+        const slugLower = w.slug?.toLowerCase() ?? "";
         // Buscar si el nombre normalizado contiene el slug o viceversa
         return nameLower.includes(normalizedName) || 
                normalizedName.includes(nameLower) ||

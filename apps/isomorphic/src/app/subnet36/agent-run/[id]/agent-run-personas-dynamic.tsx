@@ -5,10 +5,10 @@ import AgentRunPersonas from "./agent-run-personas";
 import type { AgentRunPersonas as AgentRunPersonasType, AgentRunSummary } from "@/repositories/agent-runs/agent-runs.types";
 
 interface AgentRunPersonasDynamicProps {
-  personas?: AgentRunPersonasType | null;
-  isLoading?: boolean;
-  error?: string | null;
-  summary?: AgentRunSummary | null;
+  readonly personas?: AgentRunPersonasType | null;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
+  readonly summary?: AgentRunSummary | null;
 }
 
 export default function AgentRunPersonasDynamic({ 

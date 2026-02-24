@@ -205,7 +205,7 @@
 
   /* Ensure no horizontal overflow on main containers */
   html, body, main {
-    max-width: 100%;
+    max-width: 100vw;
     overflow-x: hidden;
   }
 
@@ -217,11 +217,6 @@
   /* Ensure grid items don't overflow */
   .grid {
     min-width: 0;
-  }
-
-  /* Force main containers to respect viewport width */
-  html, body, main {
-    max-width: 100vw;
   }
 
   /* Prevent main layout elements from causing horizontal overflow */
@@ -327,6 +322,7 @@
   .password-dot {
     -webkit-text-security: disc;
     -moz-text-security: circle;
+    /* stylelint-disable-next-line property-no-unknown */
     text-security: circle;
   }
 
@@ -690,10 +686,6 @@ select:-webkit-autofill:focus {
   @apply w-auto px-5 py-1.5 text-gray-600 dark:hover:text-gray-100;
 }
 
-.react-datepicker .react-datepicker__year-text--range-end {
-  @apply text-gray-0;
-}
-
 /* keyboard selected year in year picker */
 .react-datepicker .react-datepicker__year-text--keyboard-selected {
   @apply bg-gray-200 text-gray-900;
@@ -859,7 +851,7 @@ select:-webkit-autofill:focus {
 }
 
 .date-picker-event-calendar .react-datepicker__time-container {
-  @apply max-sm:p-1 max-sm:ps-0;
+  @apply max-sm:p-1 max-sm:ps-0 max-sm:!pb-1;
 }
 
 .date-picker-event-calendar .react-datepicker__time-container .react-datepicker__time {
@@ -897,20 +889,12 @@ select:-webkit-autofill:focus {
   @apply overflow-x-hidden;
 }
 
-.date-picker-event-calendar .react-datepicker__time-container {
-  @apply max-sm:!pb-1;
-}
-
 .date-picker-event-calendar .react-datepicker__time-container .react-datepicker-time__header {
   @apply font-medium;
 }
 
 .date-picker-event-calendar .react-datepicker__week .react-datepicker__day {
-  @apply dark:hover:bg-gray-400;
-}
-
-.date-picker-event-calendar .react-datepicker__week .react-datepicker__day {
-  @apply !rounded-full;
+  @apply dark:hover:bg-gray-400 !rounded-full;
 }
 
 .date-picker-event-calendar
@@ -1150,12 +1134,6 @@ td.rc-table-cell-fix-right {
 }
 
 /* react-quill responsive styles */
-/* .react-quill .ql-toolbar {
-  @apply flex 3xl:block 3xl:max-w-none;
-}
-.react-quill .ql-snow .ql-formats {
-  @apply flex lg:inline-flex lg:items-center;
-} */
 
 /* social btn shadow  */
 .social-btn-shadow {
@@ -1203,11 +1181,7 @@ td.rc-table-cell-fix-right {
 }
 
 .recharts-wrapper .recharts-tooltip-cursor {
-  @apply opacity-20;
-}
-
-.recharts-wrapper .recharts-tooltip-cursor {
-  @apply dark:opacity-10;
+  @apply opacity-20 dark:opacity-10;
 }
 
 .recharts-wrapper .recharts-brush rect:first-child {
@@ -1220,9 +1194,6 @@ td.rc-table-cell-fix-right {
 /* Google Map Styles */
 /* ................................................... */
 
-/* .gmnoprint {
-  @apply hidden;
-} */
 div[style="z-index: 1000001;"],
 .gm-style-cc {
   @apply hidden;
@@ -1239,20 +1210,6 @@ div[style="z-index: 1000001;"],
 .pac-item {
   @apply px-3 py-1.5 font-inter;
 }
-
-/* google location search auto complete  */
-/* .pac-container {
-  @apply w-full rounded-lg border border-gray-100 shadow after:hidden;
-}
-.pac-item {
-  @apply cursor-pointer py-3 pl-3 text-sm font-normal text-gray-300;
-}
-.pac-matched {
-  @apply text-sm text-gray-900;
-}
-.pac-icon {
-  @apply mt-0;
-} */
 
 /* checkout page payment card gradient  */
 .card-gradient {
@@ -1335,7 +1292,7 @@ div[style="z-index: 1000001;"],
   @apply border-l border-muted;
 }
 .rbc-timeslot-group {
-  @apply border-b border-muted;
+  @apply border-b border-muted font-medium text-gray-900 min-h-[80px];
 }
 
 .rbc-time-header.rbc-overflowing {
@@ -1356,11 +1313,7 @@ div[style="z-index: 1000001;"],
 }
 
 .rbc-time-gutter .rbc-timeslot-group {
-  @apply px-3.5 py-2 font-medium text-gray-900;
-}
-
-.rbc-timeslot-group {
-  @apply font-medium text-gray-900;
+  @apply px-3.5 py-2;
 }
 
 .rbc-label {
@@ -1369,10 +1322,6 @@ div[style="z-index: 1000001;"],
 
 .rbc-day-slot .rbc-time-slot + .rbc-time-slot {
   @apply border-t border-muted;
-}
-
-.rbc-timeslot-group {
-  @apply min-h-[80px] border-muted;
 }
 .rbc-toolbar {
   @apply mb-0 rounded-t-md border border-b-0 border-muted px-4 py-6;

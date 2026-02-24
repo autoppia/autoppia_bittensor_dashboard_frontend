@@ -5,9 +5,9 @@ import AgentRunStats from "./agent-run-stats";
 import type { AgentRunStats as AgentRunStatsType } from "@/repositories/agent-runs/agent-runs.types";
 
 interface AgentRunStatsDynamicProps {
-  statistics?: AgentRunStatsType | null;
-  isLoading?: boolean;
-  error?: string | null;
+  readonly statistics?: AgentRunStatsType | null;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
 }
 
 export default function AgentRunStatsDynamic({ 
