@@ -28,7 +28,7 @@ export function ValidatorsSelectorPlaceholder() {
           <div className="grid grid-flow-col gap-8 overflow-x-auto scroll-smooth px-4 py-6">
             {Array.from({ length: 4 }).map((_, index) => (
               <div
-                key={index}
+                key={`validator-placeholder-${index}`}
                 className={cn(
                   "relative w-full min-w-[200px] px-5 py-5 rounded-2xl",
                   PLACEHOLDER_PANEL
@@ -54,7 +54,7 @@ export function ValidatorCardsPlaceholder() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
-          key={index}
+          key={`validator-card-placeholder-${index}`}
           className={cn(
             "rounded-2xl border border-white/15 p-6 shadow-xl backdrop-blur-sm",
             PLACEHOLDER_PANEL
@@ -110,7 +110,7 @@ export function PerformanceAnalyticsPlaceholder() {
       <div className="space-y-6">
         {Array.from({ length: 5 }).map((_, index) => (
           <div
-            key={index}
+            key={`validator-list-item-placeholder-${index}`}
             className={cn(
               "rounded-xl border p-5",
               PLACEHOLDER_SURFACE
@@ -159,7 +159,7 @@ export function SummaryPlaceholder() {
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
-            key={index}
+            key={`validator-compact-item-placeholder-${index}`}
             className={cn(
               "rounded-lg p-3 border",
               PLACEHOLDER_SURFACE

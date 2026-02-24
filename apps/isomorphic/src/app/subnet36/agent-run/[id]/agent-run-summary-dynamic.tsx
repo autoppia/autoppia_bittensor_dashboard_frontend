@@ -17,13 +17,13 @@ import type {
 } from "./agent-run-types";
 
 interface AgentRunSummaryDynamicProps {
-  className?: string;
-  selectedWebsite?: string | null;
-  summary?: any | null;
-  statistics?: any | null;
-  tasks?: any[];
-  isLoading?: boolean;
-  error?: string | null;
+  readonly className?: string;
+  readonly selectedWebsite?: string | null;
+  readonly summary?: Record<string, unknown> | null;
+  readonly statistics?: Record<string, unknown> | null;
+  readonly tasks?: unknown[];
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
 }
 
 export default function AgentRunSummaryDynamic({

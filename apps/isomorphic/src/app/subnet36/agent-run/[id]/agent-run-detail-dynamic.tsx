@@ -12,15 +12,15 @@ import {
 import type { AgentRunDetailData } from "./agent-run-types";
 
 interface AgentRunDetailDynamicProps {
-  className?: string;
-  selectedWebsite: string | null;
-  setSelectedWebsite: (value: string | null) => void;
-  period: string | null;
-  setPeriod: (value: string | null) => void;
-  statistics?: any | null;
-  summary?: any | null;
-  isLoading?: boolean;
-  error?: string | null;
+  readonly className?: string;
+  readonly selectedWebsite: string | null;
+  readonly setSelectedWebsite: (value: string | null) => void;
+  readonly period: string | null;
+  readonly setPeriod: (value: string | null) => void;
+  readonly statistics?: Record<string, unknown> | null;
+  readonly summary?: Record<string, unknown> | null;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
 }
 
 export default function AgentRunDetailDynamic({

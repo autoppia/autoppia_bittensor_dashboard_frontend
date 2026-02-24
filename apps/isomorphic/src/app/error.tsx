@@ -3,13 +3,15 @@
 import { useEffect } from 'react';
 import { PiWarningCircleDuotone, PiArrowClockwiseDuotone, PiHouseDuotone } from 'react-icons/pi';
 
-export default function Error({
+interface ErrorPageProps {
+  readonly error: Error & { digest?: string };
+  readonly reset: () => void;
+}
+
+export default function ErrorPage({
   error,
   reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+}: ErrorPageProps) {
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Application error:', error);
@@ -45,7 +47,7 @@ export default function Error({
               Try Again
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => globalThis.window.location.href = '/'}
               className="px-6 py-3 bg-black hover:bg-gray-900 border border-gray-700 hover:border-gray-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
             >
               <PiHouseDuotone className="w-4 h-4" />
