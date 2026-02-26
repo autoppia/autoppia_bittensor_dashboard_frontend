@@ -154,6 +154,10 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
       : totalTasks > 0
         ? Math.round((completed / totalTasks) * 100 * 10) / 10
         : 0;
+  const raw = run as AgentRunListItem & { is_reused?: boolean; reused_from_agent_run_id?: string | null; reused_from_round_display?: string | null };
+  const isReused = run.isReused ?? raw.is_reused ?? false;
+  const reusedFromAgentRunId = run.reusedFromAgentRunId ?? raw.reused_from_agent_run_id ?? null;
+  const reusedFromRoundDisplay = run.reusedFromRoundDisplay ?? raw.reused_from_round_display ?? null;
 
   return {
     ...run,
@@ -161,6 +165,9 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
     successRate,
     successfulTasks: run.successfulTasks ?? completed,
     completedTasks: run.completedTasks ?? completed,
+    isReused,
+    reusedFromAgentRunId,
+    reusedFromRoundDisplay,
   };
 };
 
@@ -229,7 +236,7 @@ export default function AgentRunSearch() {
   const roundOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason;
-    
+
     if (!currentSeason) {
       return [];
     }
@@ -535,7 +542,7 @@ export default function AgentRunSearch() {
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     // Construct roundId from season and round (format: "season/round")
-    const normalizedRound = 
+    const normalizedRound =
       debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
         ? `${debouncedFilters.season}/${debouncedFilters.round}`
         : undefined;
@@ -628,6 +635,9 @@ export default function AgentRunSearch() {
       successRate,
       overallScore: baseScore,
       ranking: run.ranking ?? 0,
+      isReused: run.isReused ?? (run as any).is_reused ?? false,
+      reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as any).reusedFromAgentRunId ?? (run as any).reused_from_agent_run_id ?? null,
+      reusedFromRoundDisplay: run.reusedFromRoundDisplay ?? (run as any).reusedFromRoundDisplay ?? (run as any).reused_from_round_display ?? null,
     };
   };
 
@@ -1314,14 +1324,44 @@ export default function AgentRunSearch() {
                       </div>
                     </div>
 
-                    {/* Run ID */}
-                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
-                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
-                        Run ID
+                    {/* Run ID (left) + Reused from round (right) when reused; single Run ID otherwise */}
+                    <div className={run.isReused || run.reusedFromAgentRunId ? "grid grid-cols-2 gap-3" : ""}>
+                      <div className="rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-3 shadow-sm">
+                        <div className="text-[10px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
+                          Run ID
+                        </div>
+                        <div className="text-xs font-mono font-bold text-orange-50 truncate">
+                          {run.runId}
+                        </div>
                       </div>
-                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
-                        {run.runId}
-                      </div>
+                      {(run.isReused || run.reusedFromAgentRunId) && (
+                        <div className="rounded-xl border border-amber-400/50 bg-gradient-to-br from-amber-500/20 to-amber-600/10 p-3 shadow-md">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-amber-400/30 text-amber-200 text-[10px] font-bold">↻</span>
+                            <span className="text-[10px] uppercase tracking-wider text-amber-300/90 font-semibold">
+                              Reused from round {(() => {
+                              const d = run.reusedFromRoundDisplay ?? "";
+                              const m = d.match(/Round\s+(\d+)/i) ?? d.match(/\/?(\d+)$/);
+                              return m ? m[1] : "—";
+                            })()}
+                            </span>
+                          </div>
+                          {run.reusedFromAgentRunId ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`${routes.agent_run}/${run.reusedFromAgentRunId!}`);
+                              }}
+                              className="text-xs font-mono text-amber-200 underline underline-offset-1 hover:text-amber-100 truncate max-w-full block text-left"
+                            >
+                              {run.reusedFromAgentRunId}
+                            </button>
+                          ) : (
+                            <span className="text-xs font-mono text-amber-200/70 truncate block">—</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Footer Stats */}

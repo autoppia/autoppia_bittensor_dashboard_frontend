@@ -282,7 +282,10 @@ type TaskDetailsDynamicProps = {
     round?: any;
     validator?: any;
     miner?: any;
+    zeroReason?: string | null;
   } | null;
+  /** Reason for evaluation score 0 (e.g. task_timeout, tests_failed); from result.zero_reason when not in info */
+  evaluationZeroReason?: string | null;
 };
 function TaskDetailsDynamic({
   details,
@@ -293,7 +296,9 @@ function TaskDetailsDynamic({
   successCount,
   failCount,
   info,
+  evaluationZeroReason,
 }: TaskDetailsDynamicProps) {
+  const zeroReason = info?.zeroReason ?? evaluationZeroReason;
   if (isLoading && !details) {
     return (
       <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-transparent p-8 shadow-2xl backdrop-blur-sm">
@@ -916,6 +921,11 @@ function TaskDetailsDynamic({
                 <div className="mt-2 text-sm font-medium text-white/70">
                   Task Score
                 </div>
+                {evaluationScore === "0%" && zeroReason && (
+                  <div className="mt-1.5 text-xs text-amber-400/90">
+                    Reason: {zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <RunStatCard
@@ -973,6 +983,11 @@ function TaskDetailsDynamic({
                 <div className="mt-1 text-xs font-medium text-white/70">
                   Task Score
                 </div>
+                {evaluationScore === "0%" && zeroReason && (
+                  <div className="mt-1 text-[10px] text-amber-400/90">
+                    Reason: {zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4 justify-end">
                 <RunStatCard
@@ -1805,6 +1820,7 @@ export default function TaskDynamic() {
         successCount={evaluationData.actions.filter((a: any) => a.success).length}
         failCount={evaluationData.actions.filter((a: any) => !a.success || a.error).length}
         info={info}
+        evaluationZeroReason={evaluationData?.result?.zero_reason ?? undefined}
       />
 
       <div className="mb-10">

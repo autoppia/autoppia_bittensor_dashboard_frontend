@@ -30,21 +30,25 @@ export class AgentsRepository {
   private readonly baseEndpoint = '/api/v1/agents';
 
   /**
-   * Get the latest round number and top miner for initial redirect
+   * Get the latest round and top miner for initial redirect.
+   * Backend returns season and round as separate numbers.
+   * Returns null when no rounds are available (frontend should use rounds list fallback).
    */
   async getLatestRoundTopMiner(): Promise<{
+    season: number;
     round: number;
     miner_uid: number;
     miner_hotkey: string | null;
-  }> {
+  } | null> {
     try {
       const response = await apiClient.get<{
         success: boolean;
         data: {
+          season: number;
           round: number;
           miner_uid: number;
           miner_hotkey: string | null;
-        };
+        } | null;
       }>(`${this.baseEndpoint}/latest-round-top-miner`);
       return response.data.data;
     } catch (error) {
@@ -66,6 +70,9 @@ export class AgentsRepository {
         name: string;
         image: string | null;
         post_consensus_avg_reward: number;
+        round_score?: number;
+        best_score_in_season?: number;
+        effective_round_score?: number;
         post_consensus_rank: number;
       }>;
     } | null;
@@ -89,6 +96,9 @@ export class AgentsRepository {
             name: string;
             image: string | null;
             post_consensus_avg_reward: number;
+            round_score?: number;
+            best_score_in_season?: number;
+            effective_round_score?: number;
             post_consensus_rank: number;
           }>;
         } | null;

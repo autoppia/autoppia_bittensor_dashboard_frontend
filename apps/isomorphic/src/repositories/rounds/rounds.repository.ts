@@ -589,32 +589,57 @@ export class RoundsRepository {
           miners_evaluated: number;
           tasks_evaluated: number;
         };
-        validators: Array<{
-          validator_uid: number;
-          validator_name: string;
-          validator_hotkey: string;
-          winner: {
-            uid: number;
-            name: string;
-            image: string | null;
-            hotkey: string | null;
-          } | null;
-          topScore: number;
-          local_avg_winner_score: number;
+      validators: Array<{
+        validator_uid: number;
+        validator_name: string;
+        validator_hotkey: string;
+        winner: {
+          uid: number;
+          name: string;
+          image: string | null;
+          hotkey: string | null;
+        } | null;
+        topScore: number;
+        local_avg_winner_score: number;
+        local_avg_eval_time: number;
+        local_miners_evaluated: number;
+        local_tasks_evaluated: number;
+        miners: Array<{
+          uid: number;
+          name: string;
+          hotkey: string | null;
+          image: string | null;
+          local_rank: number | null;
+          local_avg_reward: number;
+          local_avg_eval_score: number;
           local_avg_eval_time: number;
-          local_miners_evaluated: number;
-          local_tasks_evaluated: number;
-          miners: Array<{
-            uid: number;
-            name: string;
-            hotkey: string | null;
-            image: string | null;
-            local_rank: number | null;
-            local_avg_reward: number;
-            local_avg_eval_score: number;
-            local_avg_eval_time: number;
-          }>;
         }>;
+        ipfs_uploaded?: {
+          cid?: string;
+          published_at?: number;
+          commit_version?: number;
+          note?: string;
+        } | null;
+        ipfs_downloaded?: {
+          validators_participated?: number;
+          total_stake?: number;
+          timestamp?: number;
+        } | null;
+        consensus_summary?: {
+          validators_participated?: number;
+          total_stake?: number;
+          miners_count?: number;
+        } | null;
+        post_consensus_evaluation?: {
+          miners?: Array<{
+            miner_uid?: number;
+            rank?: number;
+            weight?: number;
+            consensus_reward?: number;
+          }>;
+          timestamp?: number;
+        } | null;
+      }>;
       };
     }>(`${this.baseEndpoint}/get-round`, { season, round_in_season: roundInSeason });
     return response.data.data;

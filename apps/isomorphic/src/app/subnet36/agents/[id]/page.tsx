@@ -68,6 +68,7 @@ import {
   PiTimerDuotone,
   PiCaretDownDuotone,
   PiCaretUpDuotone,
+  PiWarning,
 } from "react-icons/pi";
 import {
   LuCircleCheckBig,
@@ -99,8 +100,8 @@ async function fetchAllAgentRuns(
   agentId: string,
   params: { roundId?: number; validatorId?: string } = {},
   signal?: AbortSignal
-): Promise<{ 
-  runs: AgentRunOverview[]; 
+): Promise<{
+  runs: AgentRunOverview[];
   total: number;
   validators?: AgentRunsResponse['data']['validators'];
   post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
@@ -116,7 +117,7 @@ async function fetchAllAgentRuns(
     if (signal?.aborted) {
       throw new Error('Request cancelled');
     }
-    
+
     const response = await agentsRepository.getAgentRuns(agentId, {
       ...params,
       page,
@@ -124,12 +125,12 @@ async function fetchAllAgentRuns(
       sortBy: "startTime",
       sortOrder: "desc",
     });
-    
+
     // Check again after the request (in case it was cancelled during the request)
     if (signal?.aborted) {
       throw new Error('Request cancelled');
     }
-    
+
     const payload = response?.data;
     const batch = payload?.runs ?? [];
     if (page === 1) {
@@ -410,11 +411,13 @@ function AgentScoreChart({
   scoreRoundData = [] as ScoreRoundDataPoint[],
   loading = false,
   error,
+  title = "Reward Over Time",
 }: {
   className?: string;
   scoreRoundData?: ScoreRoundDataPoint[];
   loading?: boolean;
   error?: string | null;
+  title?: string;
 }) {
   const [timeRange, setTimeRange] = useState<"7r" | "15r" | "30r" | "all">(
     "all"
@@ -492,10 +495,10 @@ function AgentScoreChart({
     return <AgentScoreChartPlaceholder className={className} />;
   }
 
-  if (error) {
+  if (error && processedRows.length === 0) {
     return (
       <WidgetCard
-        title="Reward Over Time"
+        title={title}
         action={
           <ButtonGroupAction
             options={filterOptions}
@@ -588,7 +591,7 @@ function AgentScoreChart({
     <WidgetCard
       title={
         <span className="text-md lg:text-2xl font-black text-white">
-          Reward Over Time
+          {title}
         </span>
       }
       action={
@@ -664,12 +667,12 @@ function AgentScoreChart({
                 content={({ active, payload, label }: any) => {
                   if (!active || !payload?.length) return null;
                   const data = payload[0]?.payload;
-                  
+
                   // Get post-consensus data from the payload
                   const reward = data?.reward ?? 0;
                   const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
                   const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
-                  
+
                   return (
                     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
                       <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
@@ -689,7 +692,7 @@ function AgentScoreChart({
                             {(reward * 100).toFixed(2)}%
                           </span>
                         </div>
-                        
+
                         {/* Score (eval_score) */}
                         {evalScore != null && !isNaN(evalScore) && (
                           <div className="flex items-center justify-between gap-4">
@@ -705,7 +708,7 @@ function AgentScoreChart({
                             </span>
                           </div>
                         )}
-                        
+
                         {/* Avg Time (eval_time) */}
                         {evalTime != null && !isNaN(evalTime) && (
                           <div className="flex items-center justify-between gap-4">
@@ -798,6 +801,7 @@ function AgentValidators({
   validators,
   post_consensus_summary,
   minerRoundDetailsValidators,
+  roundAvgCostPerTask,
 }: {
   selectedRound?: number | null;
   selectedSeason?: number | null;
@@ -822,9 +826,10 @@ function AgentValidators({
     local_miners_evaluated: number;
     agent_run_id?: string;
   }>;
+  roundAvgCostPerTask?: number | null;
 }) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-  
+
   // Prefer validators from minerRoundDetails (round-details endpoint) over validators from runs
   const effectiveValidators = minerRoundDetailsValidators || validators;
 
@@ -931,7 +936,7 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
                     <PiTrophyDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
@@ -939,9 +944,8 @@ function AgentValidators({
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Each validator runs independent evaluations of your agent
-                  across different tasks and scenarios to ensure fair and
-                  comprehensive testing.
+                  Each validator evaluates your agent independently on the same task set.
+                  Local results are computed first, then merged in post-consensus.
                 </p>
               </div>
               <div
@@ -953,17 +957,19 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
-                    <PiChartLineUpDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiCurrencyDollarDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Scoring
+                    Reward Formula
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Agents are scored based on task completion accuracy, response
-                  quality, and execution efficiency across multiple evaluation
-                  criteria.
+                  Per solved task, reward combines quality, speed, and efficiency:
+                  <span className="mt-1 block rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[11px] md:text-xs text-white/90">
+                    Reward = (EVAL_SCORE_WEIGHT × 1.0) + (TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)) + (COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR))
+                  </span>
+                  <span className="mt-1 block">If the task is not solved, reward = 0.</span>
                 </p>
               </div>
               <div
@@ -975,17 +981,17 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
-                    <PiListChecksDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <LuAward className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Ranking
+                    Effective Ranking
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Your final rank is determined by your average performance
-                  across all validators in each round, providing a comprehensive
-                  ranking system.
+                  In each new round, your effective competition score is
+                  <span className="font-mono text-white/90"> max(round_reward, best_reward_in_season)</span>.
+                  Rank is computed with that effective score against other miners.
                 </p>
               </div>
               <div
@@ -997,17 +1003,16 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
                     <PiTimerDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Response Time
+                    Time & Cost Limits
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Faster response times with maintained quality result in higher
-                  scores, balancing speed and accuracy in the evaluation
-                  process.
+                  Faster execution and lower cost improve reward shaping.
+                  Exceeding timeout/cost thresholds can force failures or zero-score outcomes.
                 </p>
               </div>
             </div>
@@ -1031,30 +1036,29 @@ function AgentValidators({
             })
             .map((validator: any) => {
             const isAutoppia = validator.validator_uid === 83 || validator.validator_uid === 124;
-            
+
             // Check if this is from minerRoundDetails (has validator_image) or from runs (has miners array)
             const isFromRoundDetails = 'validator_image' in validator;
-            
+
             // Use validator_image if available (from round-details), otherwise fallback
             const validatorImage = validator.validator_image
               ? resolveAssetUrl(validator.validator_image)
               : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
-            
+
             // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
               (run) => String(run.validatorId) === String(validator.validator_uid)
             );
             const latestRun = validatorRuns[0];
             const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
-            
+
             // Use direct validator data (from round-details) or fallback to miners list
             let localRank: number | null = null;
             let localAvgReward: number = 0;
             let localAvgEvalTime: number = 0;
             let localTasksReceived: number = 0;
             let localTasksSuccess: number = 0;
-            let localMinersEvaluated: number = 0;
-            
+
             if (isFromRoundDetails) {
               // Data from round-details endpoint (direct fields)
               localRank = validator.local_rank;
@@ -1062,7 +1066,6 @@ function AgentValidators({
               localAvgEvalTime = validator.local_avg_eval_time ?? 0;
               localTasksReceived = validator.local_tasks_received ?? 0;
               localTasksSuccess = validator.local_tasks_success ?? 0;
-              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
             } else {
               // Data from runs endpoint (need to find miner in miners array)
               const currentMinerData = validator.miners?.find(
@@ -1073,36 +1076,76 @@ function AgentValidators({
               localAvgEvalTime = currentMinerData?.local_avg_eval_time ?? 0;
               localTasksReceived = validator.local_tasks_evaluated ?? 0;
               localTasksSuccess = validator.local_tasks_evaluated ?? 0; // Fallback, should be calculated
-              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
             }
-            
+
+            const safeRoundMetric = (() => {
+              if (typeof selectedRound === "number" && Number.isFinite(selectedRound)) {
+                return selectedRound;
+              }
+              if (typeof selectedRound === "string") {
+                const raw = selectedRound.trim();
+                if (!raw) return "N/A";
+                if (raw.includes("/")) {
+                  const roundPart = raw.split("/")[1];
+                  const n = Number(roundPart);
+                  return Number.isFinite(n) ? n : roundPart ?? raw;
+                }
+                const parsed = Number(raw);
+                return Number.isFinite(parsed) ? parsed : raw;
+              }
+              if (selectedRoundInSeason != null && Number.isFinite(selectedRoundInSeason)) {
+                return selectedRoundInSeason;
+              }
+              return "N/A";
+            })();
+            const safeLocalAvgReward =
+              typeof localAvgReward === "number" && Number.isFinite(localAvgReward)
+                ? localAvgReward
+                : 0;
+            const safeLocalAvgEvalTime =
+              typeof localAvgEvalTime === "number" && Number.isFinite(localAvgEvalTime)
+                ? localAvgEvalTime
+                : 0;
+            const hasLocalAvgReward =
+              typeof localAvgReward === "number" && Number.isFinite(localAvgReward);
+            const hasLocalAvgEvalTime =
+              typeof localAvgEvalTime === "number" && Number.isFinite(localAvgEvalTime);
+            const resolvedAvgCostPerTask = (() => {
+              const direct = (validator as any)?.avg_cost_per_task;
+              if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+              const local = (validator as any)?.local_avg_cost_per_task;
+              if (typeof local === "number" && Number.isFinite(local)) return local;
+              if (typeof roundAvgCostPerTask === "number" && Number.isFinite(roundAvgCostPerTask)) return roundAvgCostPerTask;
+              return null;
+            })();
+
             const secondaryStats = [
               {
                 title: "Round",
-                metric: selectedRound ?? "N/A",
+                metric: safeRoundMetric,
                 icon: PiClockDuotone,
                 iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600",
               },
               {
                 title: "Rank",
-                metric: localRank 
-                  ? `#${localRank}` 
+                metric: localRank
+                  ? `#${localRank}`
                   : "N/A",
                 icon: PiHashDuotone,
                 iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
               },
               {
                 title: "Reward",
-                metric: localAvgReward 
-                  ? `${(localAvgReward * 100).toFixed(2)}%` 
+                metric: hasLocalAvgReward
+                  ? `${(safeLocalAvgReward * 100).toFixed(2)}%`
                   : "N/A",
                 icon: PiChartLineUpDuotone,
                 iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600",
               },
               {
                 title: "Time",
-                metric: localAvgEvalTime 
-                  ? `${localAvgEvalTime.toFixed(2)}s` 
+                metric: hasLocalAvgEvalTime
+                  ? `${safeLocalAvgEvalTime.toFixed(2)}s`
                   : "N/A",
                 icon: PiTimerDuotone,
                 iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
@@ -1114,20 +1157,23 @@ function AgentValidators({
                 iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
               },
               {
-                title: "Miners",
-                metric: localMinersEvaluated,
-                icon: PiChartBarDuotone,
-                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
+                title: "Avg Cost",
+                metric:
+                  resolvedAvgCostPerTask !== null
+                    ? `$${Number(resolvedAvgCostPerTask).toFixed(3)}`
+                    : "N/A",
+                icon: PiCurrencyDollarDuotone,
+                iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600",
               },
             ];
-            
+
             return (
               <div key={`validator-${validator.validator_uid}`} className="relative">
                 <div
                   className={cn(
                     "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
-                    isAutoppia 
-                      ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent" 
+                    isAutoppia
+                      ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
                       : "border-white/20 hover:border-white/40"
                   )}
                   style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
@@ -1149,7 +1195,7 @@ function AgentValidators({
                             {validator.validator_name}
                           </Text>
                           <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                            {validator.validator_hotkey 
+                            {validator.validator_hotkey
                               ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
                               : `UID: ${validator.validator_uid}`}
                           </Text>
@@ -1181,11 +1227,11 @@ function AgentValidators({
                       );
                     })}
                     </div>
-                    <Link 
-                      href={agentRunId 
+                    <Link
+                      href={agentRunId
                         ? `${routes.agent_run}/${agentRunId}`
                         : `${routes.agent_run}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${selectedRound ? `&round=${selectedRound}` : ''}`
-                      } 
+                      }
                       className="block"
                     >
                       <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
@@ -1229,10 +1275,24 @@ function AgentValidators({
               latestRun.validatorImage || "/validators/default.png"
             );
 
+            const roundDisplayOnly = (() => {
+              const rid = latestRun.roundId;
+              if (rid == null) return "N/A";
+              if (typeof rid === "number" && Number.isFinite(rid)) return rid;
+              const s = String(rid).trim();
+              if (s.includes("/")) {
+                const roundPart = s.split("/")[1];
+                const n = Number(roundPart);
+                return Number.isFinite(n) ? n : roundPart ?? s;
+              }
+              const n = Number(s);
+              return Number.isFinite(n) ? n : s;
+            })();
+
             const secondaryStats = [
               {
                 title: "Round",
-                metric: latestRun.roundId,
+                metric: roundDisplayOnly,
                 icon: PiClockDuotone,
                 iconClassName:
                   "bg-gradient-to-br from-purple-500 to-violet-600",
@@ -1740,11 +1800,11 @@ export default function Page() {
   const selectedRoundFromQuery = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
     const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
-    
+
     if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
       return `${season}/${round}`;
     }
-    
+
     return undefined;
   }, [seasonParam, roundParam]);
 
@@ -1775,6 +1835,7 @@ export default function Page() {
   const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
     "current"
   );
+  const [roundMetricsMode, setRoundMetricsMode] = useState<"round" | "effective">("round");
 
   // Removed useAgent call - we use useMinerRoundDetails and useMinerHistorical instead
   // This eliminates the unnecessary /api/v1/agents/{id}?round=X call
@@ -1786,7 +1847,7 @@ export default function Page() {
   const roundMetrics = null;
   const availableRounds: number[] = [];
   const apiScoreRoundData: ScoreRoundDataPoint[] = [];
-  
+
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
@@ -1798,17 +1859,17 @@ export default function Page() {
     selectedRoundFromQuery, // Always fetch if round is selected (needed for round-details)
     numericUidFromParam
   );
-  
-  // Get rounds data to extract latest season
-  const { data: roundsData } = useRoundsData(undefined);
-  
+
+  // Get rounds data (list + selected round miners when round is provided)
+  const { data: roundsData } = useRoundsData(selectedRoundFromQuery);
+
   // Extract latest season from rounds data
   const latestSeason = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     if (rounds.length === 0) {
       return undefined;
     }
-    
+
     // Parse rounds in format "season/round" and get highest season
     const seasons = rounds
       .map((r) => {
@@ -1819,24 +1880,70 @@ export default function Page() {
         return null;
       })
       .filter((s) => s !== null && Number.isFinite(s)) as number[];
-    
+
     return seasons.length > 0 ? Math.max(...seasons) : undefined;
   }, [roundsData?.rounds]);
-  
-  // Get miner historical data - only when viewMode is "historical"
+
+  // Get miner historical data only when needed:
+  // - Historical tab
+  // - Current tab in Effective mode (to resolve source best round)
+  const shouldFetchHistorical =
+    viewMode === "historical" || (viewMode === "current" && roundMetricsMode === "effective");
   // Always filter by season: use season from URL, or latest season as fallback
-  const seasonForHistorical = seasonParam 
-    ? Number.parseInt(seasonParam, 10) 
+  const seasonForHistorical = seasonParam
+    ? Number.parseInt(seasonParam, 10)
     : latestSeason;
   const {
     data: minerHistorical,
     loading: minerHistoricalLoading,
     error: minerHistoricalError,
   } = useMinerHistorical(
-    viewMode === "historical" ? numericUidFromParam : undefined,
+    shouldFetchHistorical ? numericUidFromParam : undefined,
     seasonForHistorical
   );
-  
+  const effectiveSourceFromHistory = useMemo(() => {
+    const roundsHistory = minerHistorical?.roundsHistory ?? [];
+    if (!roundsHistory.length) return null;
+    const target = roundsHistory.reduce((best: any, row: any) => {
+      if (!best) return row;
+      const bestReward = Number(best?.post_consensus_avg_reward ?? 0);
+      const rowReward = Number(row?.post_consensus_avg_reward ?? 0);
+      if (rowReward > bestReward) return row;
+      if (rowReward < bestReward) return best;
+      const [bestSeason, bestRound] = String(best?.round ?? "0/0").split("/").map((v) => Number.parseInt(v, 10) || 0);
+      const [rowSeason, rowRound] = String(row?.round ?? "0/0").split("/").map((v) => Number.parseInt(v, 10) || 0);
+      if (rowSeason > bestSeason) return row;
+      if (rowSeason < bestSeason) return best;
+      return rowRound >= bestRound ? row : best;
+    }, null as any);
+    return target ? String(target.round) : null;
+  }, [minerHistorical?.roundsHistory]);
+  const effectiveSourceRoundIdentifier =
+    effectiveSourceFromHistory &&
+    selectedRoundFromQuery &&
+    effectiveSourceFromHistory !== selectedRoundFromQuery
+      ? effectiveSourceFromHistory
+      : undefined;
+  const {
+    data: effectiveSourceRoundDetails,
+  } = useMinerRoundDetails(
+    effectiveSourceRoundIdentifier,
+    numericUidFromParam
+  );
+  const historicalBestRoundIdentifier = useMemo(() => {
+    const bestScoreRound = minerHistorical?.summary?.bestScoreRound;
+    if (bestScoreRound) return String(bestScoreRound);
+    const bestRankRound = minerHistorical?.summary?.bestRankRound;
+    if (bestRankRound) return String(bestRankRound);
+    return undefined;
+  }, [minerHistorical?.summary?.bestScoreRound, minerHistorical?.summary?.bestRankRound]);
+  const {
+    data: historicalBestRoundDetails,
+  } = useMinerRoundDetails(
+    viewMode === "historical" ? historicalBestRoundIdentifier : undefined,
+    numericUidFromParam
+  );
+
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
   const effectiveAgent: AgentData | null = viewMode === "historical" && minerHistorical
@@ -1868,7 +1975,7 @@ export default function Page() {
         createdAt: "",
         updatedAt: "",
         status: "active" as const,
-        githubUrl: undefined,
+        githubUrl: historicalBestRoundDetails?.miner?.github_url ?? undefined,
         taostatsUrl: undefined,
       }
     : minerRoundDetails && minerRoundDetails.miner
@@ -1904,7 +2011,7 @@ export default function Page() {
           taostatsUrl: undefined,
         }
       : null;
-  
+
   const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
   const taoStatsAvailable = Boolean(
     !effectiveAgent?.isSota && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
@@ -1970,7 +2077,7 @@ export default function Page() {
           benchmarks: undefined,
         }));
     }
-    
+
     // Use agentDetail data for current/runs mode
     const source = agentDetail?.scoreRoundData ?? [];
     if (!source.length) return [];
@@ -2018,9 +2125,9 @@ export default function Page() {
       validatorImage: v.validator_image ?? null,
       runs: [] // Empty runs array since we don't need individual runs
     })) ?? [];
-    
+
     const post_consensus_summary = minerRoundDetails?.post_consensus_summary ?? undefined;
-    
+
     return {
       loading: false,
       runs: [], // Empty runs array - we use minerRoundDetails.validators instead
@@ -2038,7 +2145,7 @@ export default function Page() {
       const avgScore = minerRoundDetails.post_consensus_avg_reward ?? 0;
       const avgResp = minerRoundDetails.post_consensus_avg_eval_time ?? 0;
       const avgTasks = minerRoundDetails.avg_tasks_per_validator ?? 0;
-      
+
       return {
         avgRank: avgRank !== null ? avgRank.toFixed(1) : "N/A",
         avgScore: `${Math.round(avgScore * 100)}%`,
@@ -2046,7 +2153,7 @@ export default function Page() {
         avgTasks: `${Math.round(avgTasks)}`,
       };
     }
-    
+
     // Fallback to empty values if no data
     return {
       avgRank: "N/A",
@@ -2055,17 +2162,49 @@ export default function Page() {
       avgTasks: "0",
     };
   }, [minerRoundDetails]);
+  const derivedBestRankFromHistory = useMemo(() => {
+    const rows = minerHistorical?.roundsHistory ?? [];
+    const ranks = rows
+      .map((row: any) => Number(row?.post_consensus_rank))
+      .filter((rank: number) => Number.isFinite(rank) && rank > 0);
+    if (!ranks.length) return { rank: null as number | null, round: null as string | null };
+    const bestRank = Math.min(...ranks);
+    const candidateRounds = rows
+      .filter((row: any) => Number(row?.post_consensus_rank) === bestRank && row?.round)
+      .map((row: any) => String(row.round));
+    if (!candidateRounds.length) return { rank: bestRank, round: null as string | null };
+    // "When achieved": pick earliest round in season/round order (e.g. 25/1 before 25/12)
+    candidateRounds.sort((a, b) => {
+      const [as, ar] = a.split("/").map((v) => Number.parseInt(v, 10) || 0);
+      const [bs, br] = b.split("/").map((v) => Number.parseInt(v, 10) || 0);
+      if (as !== bs) return as - bs;
+      return ar - br;
+    });
+    return { rank: bestRank, round: candidateRounds[0] };
+  }, [minerHistorical?.roundsHistory]);
+  const distinctGithubUrlsInSeason = useMemo(() => {
+    const value = Number(minerHistorical?.summary?.distinctGithubUrls ?? 0);
+    if (!Number.isFinite(value) || value < 0) return 0;
+    return Math.floor(value);
+  }, [minerHistorical?.summary?.distinctGithubUrls]);
+  const historicalChartError = useMemo(() => {
+    if (!minerHistoricalError) return null;
+    const msg = String(minerHistoricalError);
+    // For historical chart UX, treat 404 as "no history yet" instead of hard error card.
+    if (msg.includes("404")) return null;
+    return msg;
+  }, [minerHistoricalError]);
 
   // In historical mode, we can use minerHistorical data even if agent is null
   const hasHistoricalData = viewMode === "historical" && minerHistorical;
   // In current/runs mode, we can use minerRoundDetails data
   const hasRoundDetailsData = viewMode !== "historical" && minerRoundDetails;
-  
+
   // Show loading only if we don't have data yet
-  const isLoading = 
+  const isLoading =
     (viewMode === "historical" && minerHistoricalLoading) ||
     (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
-  
+
   if (isLoading) {
     return (
       <>
@@ -2081,7 +2220,7 @@ export default function Page() {
       </>
     );
   }
-  
+
   // Show error only if we don't have any data source available
   if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
     return (
@@ -2128,19 +2267,158 @@ export default function Page() {
   const totalTaoEarned = (
     Number((effectiveAgent as any)?.taoWonInPrizes ?? effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
   ).toFixed(2);
-  // Use minerRoundDetails if available, otherwise fallback to roundMetrics
+  const roundSelectedMiner = (() => {
+    const miners = roundsData?.round_selected?.miners ?? [];
+    const uid = minerRoundDetails?.miner?.uid ?? numericUidFromParam;
+    if (!uid) return null;
+    return miners.find((m: any) => Number(m?.uid) === Number(uid)) ?? null;
+  })();
+  // Round vs Effective reward model:
+  // - roundReward: reward submitted in this round
+  // - bestRewardInSeason: best reward achieved by this miner in the season
+  // - effectiveRewardForRanking: max(roundReward, bestRewardInSeason)
+  const roundReward = Number(
+    roundSelectedMiner?.round_score ??
+      minerRoundDetails?.post_consensus_avg_reward ??
+      roundMetrics?.score ??
+      effectiveAgent?.currentScore ??
+      0
+  );
+  const bestRewardInSeason = Number(
+    roundSelectedMiner?.best_score_in_season ?? roundReward
+  );
+  const effectiveRewardForRanking = Number(
+    roundSelectedMiner?.effective_round_score ??
+      Math.max(roundReward, bestRewardInSeason)
+  );
+  const isUsingSeasonBestForRanking = effectiveRewardForRanking > roundReward + 1e-12;
+  // Rank shown:
+  // - Effective mode: official rank in leaderboard (post-consensus/effective model)
+  // - Round mode: still the same rank field (no separate raw-rank in API yet), but clearly labeled
   const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? effectiveAgent?.currentRank;
-  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundMetrics?.score ?? effectiveAgent?.currentScore;
-  const effectiveEvalScore = minerRoundDetails?.post_consensus_avg_eval_score ?? null;
-  const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
-  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
-  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
-  const effectiveAvgTasksPerValidator = minerRoundDetails?.avg_tasks_per_validator ?? null;
-  const effectivePerformanceByWebsite = minerRoundDetails?.performanceByWebsite ?? [];
-  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0 
-    ? effectivePerformanceByWebsite.length 
+  const displayedReward = roundMetricsMode === "effective" ? effectiveRewardForRanking : roundReward;
+  const sourceMetricsDetails =
+    roundMetricsMode === "effective" && isUsingSeasonBestForRanking
+      ? (effectiveSourceRoundDetails ?? minerRoundDetails)
+      : minerRoundDetails;
+  const effectiveEvalScore = sourceMetricsDetails?.post_consensus_avg_eval_score ?? null;
+  const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
+  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
+  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
+  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
+  const effectiveAvgTasksPerValidator = sourceMetricsDetails?.avg_tasks_per_validator ?? null;
+  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? [];
+  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
+    ? effectivePerformanceByWebsite.length
     : websitesSummary.unique;
+  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? null;
+  const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
+  const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
+  const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
+  const sourceRoundForEffective =
+    roundMetricsMode === "effective" && isUsingSeasonBestForRanking
+      ? (effectiveSourceRoundIdentifier ?? selectedRoundFromQuery ?? null)
+      : (selectedRoundFromQuery ?? null);
+  const sourceRoundParts = String(sourceRoundForEffective ?? "").split("/");
+  const sourceSeason = Number.parseInt(sourceRoundParts[0] ?? "", 10);
+  const sourceRound = Number.parseInt(sourceRoundParts[1] ?? "", 10);
+  const sourceRoundHref =
+    Number.isFinite(sourceSeason) && Number.isFinite(sourceRound) && (effectiveAgent?.uid ?? numericUidFromParam)
+      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${sourceSeason}&round=${sourceRound}&agent=${effectiveAgent?.uid ?? numericUidFromParam}`
+      : null;
+  const isAvgResponseTimeout =
+    effectiveEvalTime !== null &&
+    Number.isFinite(effectiveEvalTime) &&
+    Number.isFinite(timeoutThresholdSeconds) &&
+    effectiveEvalTime >= timeoutThresholdSeconds;
+  const isAvgCostOverLimit =
+    effectiveAvgCostPerTask !== null &&
+    Number.isFinite(effectiveAvgCostPerTask) &&
+    Number.isFinite(maxTaskCostUsd) &&
+    effectiveAvgCostPerTask >= maxTaskCostUsd;
+  const reusedRunInfo =
+    (minerRoundDetails?.validators ?? []).find(
+      (validator: any) => validator?.is_reused && validator?.reused_from_agent_run_id
+    ) ?? null;
+  const reusedRoundParts = String(reusedRunInfo?.reused_from_round ?? "").split("/");
+  const reusedSeason = Number.parseInt(reusedRoundParts[0] ?? "", 10);
+  const reusedRound = Number.parseInt(reusedRoundParts[1] ?? "", 10);
+  const reusedRoundDetailsHref =
+    Number.isFinite(reusedSeason) && Number.isFinite(reusedRound) && (effectiveAgent?.uid ?? numericUidFromParam)
+      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${reusedSeason}&round=${reusedRound}&agent=${effectiveAgent?.uid ?? numericUidFromParam}`
+      : null;
+  const seasonCompetitionState = (() => {
+    const leadership = (minerRoundDetails as any)?.season_leadership;
+    const validators = minerRoundDetails?.validators;
+    const validator = Array.isArray(validators) && validators.length > 0 ? (validators[0] as any) : null;
+    const post = validator?.evaluation_post_consensus;
+    const hasNewLeadership = leadership && typeof leadership === "object";
+    const hasLegacyPost = post && typeof post === "object";
+    if (!hasNewLeadership && !hasLegacyPost) return null;
+
+    const roundSummary = hasLegacyPost && post.round_summary && typeof post.round_summary === "object" ? post.round_summary : {};
+    const decision = hasLegacyPost && roundSummary.decision && typeof roundSummary.decision === "object" ? roundSummary.decision : {};
+    const seasonSummary = hasLegacyPost && post.season_summary && typeof post.season_summary === "object" ? post.season_summary : {};
+    const winner = hasLegacyPost && roundSummary.winner && typeof roundSummary.winner === "object" ? roundSummary.winner : {};
+
+    const toNullableNumber = (value: unknown): number | null => {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      return null;
+    };
+
+    const roundWinnerUid =
+      toNullableNumber((leadership as any)?.round_winner_uid) ??
+      toNullableNumber((winner as any).miner_uid) ??
+      toNullableNumber((winner as any).uid);
+    const topCandidateUid =
+      toNullableNumber((leadership as any)?.top_candidate_uid) ??
+      toNullableNumber((decision as any).top_candidate_uid);
+    const seasonLeaderUid =
+      toNullableNumber((leadership as any)?.season_leader_uid) ??
+      toNullableNumber((seasonSummary as any).current_winner_uid);
+    const dethroned = Boolean(
+      (leadership as any)?.dethroned ??
+      (seasonSummary as any).dethroned ??
+      (decision as any).dethroned
+    );
+    const requiredImprovementPct =
+      toNullableNumber((leadership as any)?.required_improvement_pct) ??
+      toNullableNumber((seasonSummary as any).required_improvement_pct) ??
+      toNullableNumber((decision as any).required_improvement_pct) ??
+      0;
+    const topCandidateScore =
+      toNullableNumber((leadership as any)?.top_candidate_score) ??
+      toNullableNumber((decision as any).top_candidate_score);
+    const reigningScore =
+      toNullableNumber((leadership as any)?.reigning_score_before_round) ??
+      toNullableNumber((decision as any).reigning_score_before_round);
+    const reigningUidBeforeRound =
+      toNullableNumber((leadership as any)?.reigning_uid_before_round) ??
+      toNullableNumber((decision as any).reigning_uid_before_round);
+
+    if (
+      roundWinnerUid === null &&
+      topCandidateUid === null &&
+      seasonLeaderUid === null
+    ) {
+      return null;
+    }
+
+    return {
+      roundWinnerUid,
+      topCandidateUid,
+      seasonLeaderUid,
+      dethroned,
+      requiredImprovementPct,
+      topCandidateScore,
+      reigningScore,
+      reigningUidBeforeRound,
+    };
+  })();
 
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
@@ -2152,21 +2430,37 @@ export default function Page() {
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
-      title: "Round",
-      metric: roundParam ? roundParam : "N/A",
-      badge: seasonParam ? `Season ${seasonParam}` : null,
+      title: roundMetricsMode === "effective" ? "Source Round" : "Round",
+      metric:
+        roundMetricsMode === "effective" && Number.isFinite(sourceRound)
+          ? `${sourceRound}`
+          : (roundParam ? roundParam : "N/A"),
+      badge:
+        roundMetricsMode === "effective"
+          ? "From best round"
+          : (seasonParam ? `Season ${seasonParam}` : null),
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Rank",
+      title: roundMetricsMode === "effective" ? "Effective Rank" : "Round Rank",
       metric: effectiveRank && effectiveRank > 0 ? `#${effectiveRank}` : "N/A",
+      badge:
+        roundMetricsMode === "round" && isUsingSeasonBestForRanking
+          ? "Official rank uses Effective Reward"
+          : null,
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
-      title: "Reward",
-      metric: `${((effectiveScore ?? 0) * 100).toFixed(1)}%`,
+      title: roundMetricsMode === "effective" ? "Effective Reward" : "Round Reward",
+      metric: `${((displayedReward ?? 0) * 100).toFixed(1)}%`,
+      badge:
+        roundMetricsMode === "effective" && isUsingSeasonBestForRanking
+          ? `Best in season ${(bestRewardInSeason * 100).toFixed(1)}%`
+          : roundMetricsMode === "round" && isUsingSeasonBestForRanking
+            ? `Season best ${(bestRewardInSeason * 100).toFixed(1)}%`
+            : null,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
@@ -2177,7 +2471,7 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.green,
     },
 
-    // Segunda fila: Validators, Avg Tasks Per Validator, Websites, Success Rate (debajo de Avg Response Time)
+    // Segunda fila: Validators, Websites, Avg Cost Per Task, Avg Response Time
     {
       title: "Validators",
       metric: effectiveValidatorsCount.toString(),
@@ -2185,44 +2479,59 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Task Per Validator",
-      metric: effectiveAvgTasksPerValidator !== null 
-        ? effectiveAvgTasksPerValidator.toFixed(1) 
-        : (preAvg?.avgTasks ?? "0"),
-      icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
       title: "Websites",
       metric: effectiveWebsitesCount.toString(),
       icon: PiChartBarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
+    },
+    {
+      title: "Avg Cost Per Task",
+      metric: effectiveAvgCostPerTask != null && Number.isFinite(effectiveAvgCostPerTask)
+        ? `$${Number(effectiveAvgCostPerTask).toFixed(3)}`
+        : "—",
+      badge: isAvgCostOverLimit ? `Over $${maxTaskCostUsd.toFixed(3)} limit` : null,
+      badgeClassName: isAvgCostOverLimit ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
+      icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Response Time",
-      metric: effectiveEvalTime !== null 
-        ? `${effectiveEvalTime.toFixed(1)}s` 
+      metric: effectiveEvalTime !== null
+        ? `${effectiveEvalTime.toFixed(1)}s`
         : (preAvg?.avgResp ?? "0s"),
+      badge: isAvgResponseTimeout ? `Timeout >= ${Math.round(timeoutThresholdSeconds)}s` : null,
+      badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Best Score Ever, Alpha Earned
+    // 2 filas × 3 columnas. Col1 mismo estilo que Avg Cost (amber), Col2 violet, Col3 green/emerald
     {
-      title: "Success Rate",
-      metric: minerHistorical?.summary?.overallSuccessRate
-        ? `${Math.round(minerHistorical.summary.overallSuccessRate * 100)}%`
-        : "0%",
-      icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.indigo,
+      title: "Best Rank (Season)",
+      metric: minerHistorical?.summary?.bestRank
+        ? `#${minerHistorical.summary.bestRank}`
+        : derivedBestRankFromHistory.rank != null && Number.isFinite(derivedBestRankFromHistory.rank)
+          ? `#${derivedBestRankFromHistory.rank}`
+          : "—",
+      badge: minerHistorical?.summary?.bestRankRound
+        ? `Round ${minerHistorical.summary.bestRankRound}`
+        : derivedBestRankFromHistory.round ?? null,
+      icon: LuCrown,
+      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Tasks Success",
-      metric: (minerHistorical?.summary?.totalTasksSuccessful ?? 0).toLocaleString(),
-      icon: LuCircleCheckBig,
+      title: "Rounds Won",
+      metric: `${minerHistorical?.summary?.roundsWon ?? 0}/${minerHistorical?.summary?.roundsParticipated ?? 0}`,
+      icon: LuTrophy,
       ...METRIC_CARD_GRADIENTS.violet,
+    },
+    {
+      title: "Alpha Earned",
+      metric: `${Math.round(minerHistorical?.summary?.totalAlphaEarned ?? 0)} α`,
+      icon: PiCurrencyDollarDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "Best Reward Ever",
@@ -2236,40 +2545,16 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
-      title: "Alpha Earned",
-      metric: `${Math.round(minerHistorical?.summary?.totalAlphaEarned ?? 0)} α`,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-    // Segunda fila: Best Rank Ever, Tasks Failed, Rounds Won, TAO Earned
-    {
-      title: "Best Rank Ever",
-      metric: minerHistorical?.summary?.bestRank
-        ? `#${minerHistorical.summary.bestRank}`
-        : "N/A",
-      badge: minerHistorical?.summary?.bestRankRound
-        ? `Round ${minerHistorical.summary.bestRankRound}`
-        : null,
-      icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Tasks Failed",
-      metric: (minerHistorical?.summary?.totalTasksFailed ?? 0).toLocaleString(),
-      icon: LuTarget,
+      title: "GitHub URLs (Season)",
+      metric: distinctGithubUrlsInSeason.toLocaleString(),
+      icon: PiGithubLogoDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "Rounds Won",
-      metric: `${minerHistorical?.summary?.roundsWon ?? 0}/${minerHistorical?.summary?.roundsParticipated ?? 0}`,
-      icon: LuTrophy,
-      ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "TAO Earned",
       metric: `${(minerHistorical?.summary?.totalTaoEarned ?? 0).toFixed(2)} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
@@ -2511,9 +2796,157 @@ export default function Page() {
             </div>
           </div>
 
+          {viewMode === "current" && (
+            <>
+            {roundMetricsMode === "round" && (
+              <div
+                className={cn(
+                  "mb-4 rounded-xl border px-4 py-3",
+                  seasonCompetitionState?.dethroned
+                    ? "border-emerald-400/50 bg-emerald-500/12"
+                    : "border-amber-400/50 bg-amber-500/12"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-shrink-0 items-center justify-center">
+                    <PiWarning
+                      className={cn(
+                        "h-12 w-12 flex-shrink-0",
+                        seasonCompetitionState?.dethroned ? "text-emerald-300" : "text-amber-300"
+                      )}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-white">
+                      Season leadership rule (+{(((seasonCompetitionState?.requiredImprovementPct ?? 0.05) as number) * 100).toFixed(1)}% to dethrone):
+                    </p>
+                    <p className="mt-1 text-xs text-white/85">
+                      Reigning miner before round:{" "}
+                      <span className="text-cyan-300 font-semibold">
+                        UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
+                      </span>
+                      , score:{" "}
+                      <span className="text-cyan-300 font-semibold">
+                        {seasonCompetitionState?.reigningScore ?? "—"}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-white/85">
+                      Candidate miner to dethrone:{" "}
+                      <span className="text-amber-300 font-semibold">
+                        UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
+                      </span>
+                      , score:{" "}
+                      <span className="text-amber-300 font-semibold">
+                        {seasonCompetitionState?.topCandidateScore ?? "—"}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-sm text-white">
+                      Verdict:{" "}
+                      {seasonCompetitionState == null ? (
+                        <>
+                          <span className="text-white/80">No season leadership data available for this round yet.</span>
+                        </>
+                      ) : seasonCompetitionState.dethroned ? (
+                        <>
+                          Next winner:{" "}
+                          <span className="text-emerald-300 font-bold">
+                            UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
+                          </span>{" "}
+                          (candidate surpassed +{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%).
+                        </>
+                      ) : (
+                        <>
+                          Next winner continues being{" "}
+                          <span className="text-cyan-300 font-bold">
+                            UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
+                          </span>{" "}
+                          because candidate could not dethrone.
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="mb-4 w-full">
+              <div className="flex w-full rounded-xl border border-white/15 bg-slate-800/50 p-1 gap-1 backdrop-blur-sm">
+                <button
+                  type="button"
+                  onClick={() => setRoundMetricsMode("round")}
+                  className={cn(
+                    "flex-1 min-w-0 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-150 text-center",
+                    roundMetricsMode === "round"
+                      ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40"
+                      : "text-white/55 hover:text-white/85 hover:bg-white/5 border border-transparent"
+                  )}
+                  aria-pressed={roundMetricsMode === "round"}
+                >
+                  Round metrics view
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRoundMetricsMode("effective")}
+                  className={cn(
+                    "flex-1 min-w-0 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-150 text-center",
+                    roundMetricsMode === "effective"
+                      ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40"
+                      : "text-white/55 hover:text-white/85 hover:bg-white/5 border border-transparent"
+                  )}
+                  aria-pressed={roundMetricsMode === "effective"}
+                >
+                  Effective metrics view
+                </button>
+              </div>
+            </div>
+            </>
+          )}
+
+          {/* Reused run banner: only in Round metrics view */}
+          {viewMode === "current" && roundMetricsMode === "round" && reusedRunInfo ? (
+            <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              <span className="font-semibold">Reused run:</span>{" "}
+              This round reuses results from{" "}
+              {reusedRunInfo.reused_from_round
+                ? `Season ${String(reusedRunInfo.reused_from_round).split("/")[0]}, Round ${String(reusedRunInfo.reused_from_round).split("/")[1]}`
+                : "a previous round"}.
+              {" "}
+              <a
+                className="underline underline-offset-2 hover:text-white"
+                href={reusedRoundDetailsHref ?? "#"}
+              >
+                Open original round details
+              </a>
+              .
+            </div>
+          ) : null}
+          {viewMode === "current" && roundMetricsMode === "effective" && isUsingSeasonBestForRanking && sourceRoundHref ? (
+            <div className="mb-4 rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+              <span className="font-semibold">Effective metrics:</span>{" "}
+              These metrics were obtained in{" "}
+              {Number.isFinite(sourceSeason) && Number.isFinite(sourceRound)
+                ? `Season ${sourceSeason}, Round ${sourceRound}`
+                : "a previous round"}.
+              {" "}
+              <a
+                className="underline underline-offset-2 hover:text-white"
+                href={sourceRoundHref}
+              >
+                Open source round details
+              </a>
+              .
+            </div>
+          ) : null}
+
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
+            <div
+              className={cn(
+                "relative grid gap-4 z-10",
+                viewMode === "historical"
+                  ? "grid-cols-2 sm:grid-cols-3"
+                  : "grid-cols-2 md:grid-cols-4"
+              )}
+            >
               {headerStats.map((stat) => {
                 const Icon = stat.icon as any;
                 return (
@@ -2573,7 +3006,12 @@ export default function Page() {
                             {stat.metric}
                           </Text>
                           {(stat as any).badge ? (
-                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
+                            <span
+                              className={cn(
+                                "hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase shadow-sm flex-shrink-0",
+                                (stat as any).badgeClassName ?? "bg-white/15 text-white/90 border border-white/25"
+                              )}
+                            >
                               {(stat as any).badge}
                             </span>
                           ) : null}
@@ -2599,6 +3037,7 @@ export default function Page() {
                 validators={runsState.validators}
                 post_consensus_summary={runsState.post_consensus_summary}
                 minerRoundDetailsValidators={minerRoundDetails?.validators}
+                roundAvgCostPerTask={(minerRoundDetails as any)?.avg_cost_per_task ?? (minerRoundDetails as any)?.avgCostPerTask ?? null}
               />
             ) : (
               <>
@@ -2731,13 +3170,15 @@ export default function Page() {
                       className="w-full"
                       scoreRoundData={scoreRoundData}
                       loading={minerHistoricalLoading || loading}
-                      error={minerHistoricalError || error}
+                      error={historicalChartError || error}
+                      title={`Reward Over Time · Season ${seasonForHistorical ?? "N/A"}`}
                     />
                     <AgentHistoricalAnalytics
                       agentId={agentIdForQuery ?? trimmedId}
                       className="w-full"
                       minerHistorical={minerHistorical}
                       loading={minerHistoricalLoading}
+                      selectedSeason={seasonForHistorical}
                     />
                   </div>
                 )}
@@ -2745,7 +3186,7 @@ export default function Page() {
             )}
           </div>
         </div>
-        
+
       </div>
     </div>
   );

@@ -86,6 +86,15 @@ export function useAgentRunComplete(runId: string) {
       round: any;
       validator: any;
       miner: any;
+      zeroReason?: string | null;
+      isReused?: boolean;
+      reusedFromAgentRunId?: string | null;
+      reusedFrom?: {
+        agentRunId?: string | null;
+        validatorRoundId?: string | null;
+        roundNumber?: number | null;
+        seasonNumber?: number | null;
+      } | null;
     } | null;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);

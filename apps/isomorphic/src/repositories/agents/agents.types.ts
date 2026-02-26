@@ -118,6 +118,7 @@ export interface MinerHistoricalResponse {
       averageScore: number;
       totalAlphaEarned: number;
       totalTaoEarned: number;
+      distinctGithubUrls?: number;
     };
     performanceByWebsite: Array<{
       website: string;
@@ -169,6 +170,9 @@ export interface MinerRoundDetailsResponse {
     tasks_success: number;
     validators_count: number;
     avg_tasks_per_validator: number;
+    avg_cost_per_task?: number | null;
+    task_timeout_seconds?: number;
+    max_task_cost_usd?: number;
     performanceByWebsite: Array<{
       website: string;
       tasks_received: number;
@@ -188,6 +192,9 @@ export interface MinerRoundDetailsResponse {
       local_tasks_success: number;
       local_miners_evaluated: number;
       agent_run_id?: string;
+      is_reused?: boolean;
+      reused_from_agent_run_id?: string | null;
+      reused_from_round?: string | null;
     }>;
     post_consensus_summary?: {
       winner: {
@@ -201,6 +208,18 @@ export interface MinerRoundDetailsResponse {
       } | null;
       miners_evaluated: number;
       tasks_evaluated: number;
+    };
+    season_leadership?: {
+      round_winner_uid?: number | null;
+      round_winner_score?: number | null;
+      top_candidate_uid?: number | null;
+      top_candidate_score?: number | null;
+      reigning_uid_before_round?: number | null;
+      reigning_score_before_round?: number | null;
+      season_leader_uid?: number | null;
+      season_leader_score?: number | null;
+      required_improvement_pct?: number | null;
+      dethroned?: boolean | null;
     };
   };
 }

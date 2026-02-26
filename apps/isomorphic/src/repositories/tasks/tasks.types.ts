@@ -33,6 +33,8 @@ export interface TaskData {
     userAgent: string;
   } | null;
   relationships?: TaskRelationships | null;
+  /** Reason for score 0 at evaluation level (e.g. task_timeout, tests_failed) */
+  zeroReason?: string | null;
 }
 
 // ===== TASK ACTION =====

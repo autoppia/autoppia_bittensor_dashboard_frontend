@@ -81,6 +81,8 @@ export interface MinerPerformance {
   isSota?: boolean;
   provider?: string;
   imageUrl?: string;
+  /** Reason for score 0 when applicable (from agent run) */
+  zeroReason?: string | null;
 }
 
 export interface BenchmarkPerformance {
@@ -279,6 +281,7 @@ export interface PostConsensusSummary {
     name: string;
     image: string | null;
     hotkey: string | null;
+    github_url?: string | null;
     avg_reward: number;
     avg_eval_score: number;
     avg_eval_time: number;

@@ -285,6 +285,23 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     ? (roundsDataWithMiners?.round_selected?.miners ?? [])
     : (roundsData?.round_selected?.miners ?? []);
 
+  const minerScoreMetaByUid = useMemo(() => {
+    const byUid = new Map<number, { round: number; effective: number; best: number }>();
+    minersFromApi.forEach((miner: any) => {
+      const uid = Number(miner?.uid);
+      if (!Number.isFinite(uid)) return;
+      const round = Number(miner?.round_score ?? miner?.post_consensus_avg_reward ?? 0);
+      const best = Number(miner?.best_score_in_season ?? round);
+      const effective = Number(miner?.effective_round_score ?? Math.max(round, best));
+      byUid.set(uid, {
+        round: Number.isFinite(round) ? round : 0,
+        best: Number.isFinite(best) ? best : 0,
+        effective: Number.isFinite(effective) ? effective : 0,
+      });
+    });
+    return byUid;
+  }, [minersFromApi]);
+
   // Map miners from API format to MinimalAgentData format
   // Use JSON.stringify to create a stable dependency key
   const minersFromApiKey = useMemo(() => {
@@ -494,6 +511,10 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                 ? miner.ranking
                 : undefined;
               const showRankBadge = typeof displayRank === "number";
+              const scoreMeta = minerScoreMetaByUid.get(Number(miner.uid));
+              const roundScore = scoreMeta?.round ?? Number(miner.score ?? 0);
+              const bestScore = scoreMeta?.best ?? roundScore;
+              const isBoostedBySeason = bestScore > roundScore;
 
               const rankBadgePalette = (() => {
                 switch (displayRank) {
@@ -536,7 +557,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
                     )}
 
-                    {/* Crown badge for top agent */}
+                    {/* Crown for winner only */}
                     {showCrown && (
                       <div className="absolute -top-1 -right-1 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 border-amber-300 animate-pulse">
                         <FaCrown className="w-3 h-3 text-white drop-shadow-lg" />
@@ -597,47 +618,58 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {showRankBadge && (
+                      <div className="flex items-center gap-2 mt-1 flex-nowrap min-w-0 overflow-x-auto overflow-y-hidden scrollbar-none">
+                        {showRankBadge && displayRank !== 1 ? (
                           <span
                             className={cn(
-                              "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300",
+                              "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300 shrink-0",
                               rankBadgePalette,
-                              isActive && displayRank
+                              isActive
                                 ? "ring-2 ring-white/40 shadow-md"
-                                : highlightTop && displayRank
+                                : highlightTop
                                 ? "ring-1 ring-amber-400/50 shadow-sm"
                                 : ""
                             )}
                           >
                             #{displayRank}
                           </span>
-                        )}
+                        ) : null}
 
                         <span
                           className={cn(
-                            "text-[11px] font-mono font-medium transition-all duration-300",
-                            isActive
-                              ? "text-emerald-200"
-                              : highlightTop
-                              ? "text-amber-300"
-                              : "text-white/70 group-hover:text-white/90"
+                            "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300 shrink-0",
+                            "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-black shadow-sm",
+                            isActive ? "ring-2 ring-white/40 shadow-md" : ""
                           )}
                         >
-                          UID: {miner.uid}
+                          UID {miner.uid}
                         </span>
 
                         <span
                           className={cn(
-                            "text-[11px] font-semibold transition-all duration-300",
+                            "text-[10px] font-semibold transition-all duration-300 shrink-0 whitespace-nowrap",
                             isActive
+                              ? "text-white/75"
+                              : "text-white/60 group-hover:text-white/80"
+                          )}
+                          title="Reward achieved in this round"
+                        >
+                          Reward {(roundScore * 100).toFixed(1)}%
+                        </span>
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold transition-all duration-300 shrink-0 whitespace-nowrap",
+                            isBoostedBySeason
+                              ? "text-amber-300"
+                              : isActive
                               ? "text-emerald-200"
                               : highlightTop
                               ? "text-amber-300"
                               : "text-white/70 group-hover:text-white/90"
                           )}
+                          title="Best reward achieved in this season"
                         >
-                          {(miner.score * 100).toFixed(1)}%
+                          Best {(bestScore * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>

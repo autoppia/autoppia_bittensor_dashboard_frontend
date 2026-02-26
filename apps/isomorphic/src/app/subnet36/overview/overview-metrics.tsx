@@ -68,7 +68,7 @@ interface OverviewMetricsProps {
   onRefetch?: () => void;
 }
 
-export default function OverviewMetrics({ 
+export default function OverviewMetrics({
   className,
   metrics: metricsProp,
   loading: loadingProp,
@@ -90,7 +90,7 @@ export default function OverviewMetrics({
       // The parent component handles it
       return;
     }
-    
+
     const interval = setInterval(() => {
       refetch();
     }, 30000); // 30 seconds
@@ -171,8 +171,8 @@ export default function OverviewMetrics({
   // Use websitesData as source of truth (backend's totalWebsites counts websites used in rounds, not total demo websites)
   const totalWebsitesCount = websitesData.filter((w) => !w.isComingSoon).length;
 
-  const seasonLabel = metricsSeason !== null && metricsSeason !== undefined 
-    ? `Season ${metricsSeason}` 
+  const seasonLabel = metricsSeason !== null && metricsSeason !== undefined
+    ? `Season ${metricsSeason}`
     : null;
 
   const dynamicMetricsData = [
@@ -209,7 +209,10 @@ export default function OverviewMetrics({
       id: "total-validators",
       title: "Validators",
       value: metrics?.totalValidators ?? 0,
-      topLabel: "Active validators",
+      topLabel:
+        metrics?.tasksPerValidator != null
+          ? `${metrics.tasksPerValidator} tasks per validator`
+          : "Active validators",
       bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuShield,
       bgColor:

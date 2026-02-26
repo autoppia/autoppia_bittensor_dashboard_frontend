@@ -4,7 +4,7 @@
   "description": "A nextjs template to build dashboard",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true turbo dev",
     "lint": "turbo lint",
     "type:check": "turbo type:check",
     "build": "turbo build",

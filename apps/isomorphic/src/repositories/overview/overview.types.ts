@@ -4,6 +4,11 @@
  */
 
 // ===== OVERVIEW METRICS =====
+export interface MinerSummary {
+  uid: number;
+  name?: string | null;
+}
+
 export interface OverviewMetrics {
   topReward: number; // post_consensus_avg_reward of the top miner
   topMinerUid?: number | null;
@@ -11,6 +16,8 @@ export interface OverviewMetrics {
   totalWebsites: number;
   totalValidators: number;
   totalMiners: number;
+  tasksPerValidator?: number | null;
+  minerList?: MinerSummary[] | null;
   currentRound: number;
   currentSeason?: number | null;
   currentRoundInSeason?: number | null;
@@ -79,6 +86,7 @@ export interface OverviewRoundData {
 // ===== LEADERBOARD DATA =====
 export interface LeaderboardData {
   round: number;
+  season?: number | null; // season_number from backend
   subnet36: number; // post_consensus_avg_reward (mantener por compatibilidad)
   post_consensus_reward: number; // post_consensus_avg_reward
   winnerUid?: number | null;
