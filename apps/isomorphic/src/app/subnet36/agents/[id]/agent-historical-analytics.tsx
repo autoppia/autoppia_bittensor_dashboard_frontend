@@ -25,19 +25,19 @@ import Placeholder from "@/app/shared/placeholder";
 // Or if it's just a UUID, prepends "evaluation_" to maintain consistency
 function normalizeEvaluationId(evaluationId: string): string {
   if (!evaluationId) return evaluationId;
-  
+
   // If it already starts with "evaluation_", use it as-is (full format)
   if (evaluationId.startsWith("evaluation_")) {
     return evaluationId;
   }
-  
+
   // If it's just a UUID, prepend "evaluation_" to maintain the format
   // Pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(evaluationId);
   if (isUUID) {
     return `evaluation_${evaluationId}`;
   }
-  
+
   // Otherwise return as-is
   return evaluationId;
 }
@@ -47,6 +47,7 @@ interface AgentHistoricalAnalyticsProps {
   className?: string;
   minerHistorical?: any; // MinerHistoricalResponse['data']
   loading?: boolean;
+  selectedSeason?: number;
 }
 
 interface WebsiteStats {
@@ -82,6 +83,7 @@ export default function AgentHistoricalAnalytics({
   className,
   minerHistorical,
   loading: externalLoading,
+  selectedSeason,
 }: AgentHistoricalAnalyticsProps) {
   const router = useRouter();
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
@@ -109,6 +111,71 @@ export default function AgentHistoricalAnalytics({
 
   const TASKS_PER_PAGE = 10;
   const hasInitializedRef = useRef(false);
+  const roundsWithTaskDetails = useMemo(() => {
+    const set = new Set<string>();
+    const websites = minerHistorical?.performanceByWebsite ?? [];
+    websites.forEach((ws: any) => {
+      (ws?.useCases ?? []).forEach((uc: any) => {
+        (uc?.taskDetails ?? []).forEach((detail: any) => {
+          const round = detail?.round;
+          if (!round) return;
+          const roundStr = String(round);
+          if (selectedSeason != null) {
+            const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
+            if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return;
+          }
+          set.add(roundStr);
+        });
+      });
+    });
+    return set;
+  }, [minerHistorical?.performanceByWebsite, selectedSeason]);
+  const sourceRound = useMemo(() => {
+    const bestScoreRound = minerHistorical?.summary?.bestScoreRound;
+    if (bestScoreRound) {
+      const bestScoreRoundStr = String(bestScoreRound);
+      const seasonPart = Number.parseInt(bestScoreRoundStr.split("/")[0] ?? "", 10);
+      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestScoreRoundStr)) {
+        return bestScoreRoundStr;
+      }
+    }
+    const bestRankRound = minerHistorical?.summary?.bestRankRound;
+    if (bestRankRound) {
+      const bestRankRoundStr = String(bestRankRound);
+      const seasonPart = Number.parseInt(bestRankRoundStr.split("/")[0] ?? "", 10);
+      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestRankRoundStr)) {
+        return bestRankRoundStr;
+      }
+    }
+
+    // Fallback 1: latest round in this season that actually has task details.
+    if (roundsWithTaskDetails.size > 0) {
+      const entries = Array.from(roundsWithTaskDetails);
+      entries.sort((a, b) => {
+        const [as, ar] = a.split("/").map((v) => Number.parseInt(v, 10) || 0);
+        const [bs, br] = b.split("/").map((v) => Number.parseInt(v, 10) || 0);
+        if (as !== bs) return bs - as;
+        return br - ar;
+      });
+      return entries[0];
+    }
+
+    // Fallback 2: latest round from roundsHistory (if no task details available at all).
+    const latest = minerHistorical?.roundsHistory?.[0]?.round;
+    if (!latest) return null;
+    const latestStr = String(latest);
+    if (selectedSeason != null) {
+      const seasonPart = Number.parseInt(latestStr.split("/")[0] ?? "", 10);
+      if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return null;
+    }
+    return latestStr;
+  }, [
+    minerHistorical?.summary?.bestScoreRound,
+    minerHistorical?.summary?.bestRankRound,
+    minerHistorical?.roundsHistory,
+    roundsWithTaskDetails,
+    selectedSeason,
+  ]);
 
   // Use external historical data - never fetch from agent-runs
   // This component should only be used when minerHistorical is provided
@@ -116,7 +183,7 @@ export default function AgentHistoricalAnalytics({
     // Prevent double execution in React Strict Mode
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
-    
+
     // Always use minerHistorical if available - never fetch from agent-runs
     setLoading(false);
     setError(null);
@@ -126,7 +193,7 @@ export default function AgentHistoricalAnalytics({
 
   // Aggregate data by website and use case - use minerHistorical if available
   const { websiteStats, useCaseStats } = useMemo(() => {
-    // If we have minerHistorical data, use it directly
+    // If we have minerHistorical data, use only source round details (best round fallbacks)
     if (minerHistorical?.performanceByWebsite) {
       const websiteMap = new Map<string, WebsiteStats>();
       const useCaseMap = new Map<string, UseCaseStats>();
@@ -134,25 +201,10 @@ export default function AgentHistoricalAnalytics({
       minerHistorical.performanceByWebsite.forEach((ws: any) => {
         const website = ws.website;
         if (!website) return;
-
-        const existing = websiteMap.get(website) || {
-          website,
-          displayName: formatWebsiteName(website),
-          totalTasks: 0,
-          completedTasks: 0,
-          successRate: 0,
-          avgScore: 0,
-          avgTime: 0,
-        };
-
-        existing.totalTasks = ws.tasks || 0;
-        existing.completedTasks = ws.successful || 0;
-        existing.successRate = existing.totalTasks > 0 
-          ? (existing.completedTasks / existing.totalTasks) * 100 
-          : 0;
-        existing.avgTime = ws.averageDuration || 0;
-
-        websiteMap.set(website, existing);
+        let websiteTasks = 0;
+        let websiteSuccess = 0;
+        let websiteTotalTime = 0;
+        let websiteTimeCount = 0;
 
         // Process use cases
         if (ws.useCases) {
@@ -171,16 +223,71 @@ export default function AgentHistoricalAnalytics({
               avgTime: 0,
             };
 
-            existingUC.totalTasks = uc.tasks || 0;
-            existingUC.completedTasks = uc.successful || 0;
+            const details = Array.isArray(uc.taskDetails) ? uc.taskDetails : [];
+            const filteredDetails = sourceRound
+              ? details.filter((detail: any) => String(detail?.round) === sourceRound)
+              : details;
+
+            if (filteredDetails.length > 0) {
+              existingUC.totalTasks = filteredDetails.length;
+              existingUC.completedTasks = filteredDetails.filter(
+                (detail: any) =>
+                  detail?.status === "successful" ||
+                  (typeof detail?.score === "number" && Number(detail.score) >= 0.5)
+              ).length;
+              const totalTime = filteredDetails.reduce(
+                (sum: number, detail: any) =>
+                  sum + (typeof detail?.evaluationTime === "number" ? detail.evaluationTime : 0),
+                0
+              );
+              existingUC.avgTime = existingUC.totalTasks > 0 ? totalTime / existingUC.totalTasks : 0;
+            } else {
+              // Fallback when taskDetails are absent: use provided aggregate (less precise).
+              existingUC.totalTasks = uc.tasks || 0;
+              existingUC.completedTasks = uc.successful || 0;
+              existingUC.avgTime = uc.averageDuration || 0;
+            }
             existingUC.successRate = existingUC.totalTasks > 0
               ? (existingUC.completedTasks / existingUC.totalTasks) * 100
               : 0;
-            existingUC.avgTime = uc.averageDuration || 0;
+
+            websiteTasks += existingUC.totalTasks;
+            websiteSuccess += existingUC.completedTasks;
+            if (existingUC.totalTasks > 0) {
+              websiteTotalTime += existingUC.avgTime * existingUC.totalTasks;
+              websiteTimeCount += existingUC.totalTasks;
+            }
 
             useCaseMap.set(key, existingUC);
           });
         }
+
+        if (websiteTasks === 0 && (!ws.useCases || ws.useCases.length === 0)) {
+          // Last resort fallback if backend does not provide use case details.
+          websiteTasks = ws.tasks || 0;
+          websiteSuccess = ws.successful || 0;
+          websiteTotalTime = (ws.averageDuration || 0) * websiteTasks;
+          websiteTimeCount = websiteTasks;
+        }
+
+        const existing = websiteMap.get(website) || {
+          website,
+          displayName: formatWebsiteName(website),
+          totalTasks: 0,
+          completedTasks: 0,
+          successRate: 0,
+          avgScore: 0,
+          avgTime: 0,
+        };
+
+        existing.totalTasks = websiteTasks;
+        existing.completedTasks = websiteSuccess;
+        existing.successRate = existing.totalTasks > 0
+          ? (existing.completedTasks / existing.totalTasks) * 100
+          : 0;
+        existing.avgTime = websiteTimeCount > 0 ? websiteTotalTime / websiteTimeCount : 0;
+
+        websiteMap.set(website, existing);
       });
 
       return {
@@ -293,7 +400,7 @@ export default function AgentHistoricalAnalytics({
         (a, b) => b.totalTasks - a.totalTasks
       ),
     };
-  }, [aggregatedData]);
+  }, [aggregatedData, minerHistorical, sourceRound]);
 
   // Filter use cases by selected website
   const filteredUseCases = useMemo(() => {
@@ -523,7 +630,7 @@ export default function AgentHistoricalAnalytics({
 
   // Use external loading state if provided
   const isLoading = externalLoading !== undefined ? externalLoading : loading;
-  
+
   if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>
@@ -659,10 +766,12 @@ export default function AgentHistoricalAnalytics({
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                Historical Performance Analytics
+                Best-Round Performance Analytics
               </h2>
               <p className="text-xs sm:text-sm text-emerald-200/70">
-                Accumulated results across all rounds
+                {sourceRound
+                  ? `Metrics from your strongest round in this season (${sourceRound})`
+                  : "Metrics from your strongest round in this season"}
               </p>
             </div>
           </div>

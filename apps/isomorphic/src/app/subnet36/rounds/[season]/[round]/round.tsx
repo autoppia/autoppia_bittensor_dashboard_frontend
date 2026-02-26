@@ -38,6 +38,14 @@ import {
   PiCrownFill,
   PiCopyDuotone,
   PiCheckDuotone,
+  PiCloudArrowUpDuotone,
+  PiCloudArrowDownDuotone,
+  PiCirclesThreeDuotone,
+  PiChartLineUpDuotone,
+  PiChartLineDownDuotone,
+  PiGithubLogoDuotone,
+  PiWarning,
+  PiXBold,
 } from "react-icons/pi";
 
 // Services & helpers
@@ -833,6 +841,7 @@ function RoundStatsInline({
       name: string;
       image: string | null;
       hotkey: string | null;
+      github_url?: string | null;
       avg_reward: number;
       avg_eval_score: number;
       avg_eval_time: number;
@@ -861,6 +870,7 @@ function RoundStatsInline({
         name: winner.name,
         hotkey: winner.hotkey,
         imageUrl: winner.image,
+        githubUrl: winner.github_url ?? null,
       };
     }
     if (!Array.isArray(topMiners) || topMiners.length === 0) return undefined;
@@ -913,6 +923,7 @@ function RoundStatsInline({
       uid: topMiner?.uid,
       hotkey: topMiner?.hotkey,
       imageUrl: topMiner?.imageUrl,
+      githubUrl: topMiner?.githubUrl ?? topMiner?.github_url,
       helper: !topMiner ? "Awaiting validator results" : undefined,
       icon: PiCrownDuotone,
       gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
@@ -1055,6 +1066,17 @@ function MetricCard({ card }: { card: any }) {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/40 text-white font-black text-sm shadow-lg">
                   {card.uid}
                 </span>
+                {typeof card.githubUrl === "string" && card.githubUrl.trim().length > 0 && (
+                  <Link
+                    href={card.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center p-1.5 rounded-full border-2 border-amber-400/40 bg-amber-500/15 text-white hover:bg-amber-500/25 transition-all duration-200"
+                    title="Open winner GitHub URL"
+                  >
+                    <PiGithubLogoDuotone className="h-4 w-4" />
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -1132,6 +1154,17 @@ function MetricCard({ card }: { card: any }) {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/40 text-white font-black text-sm shadow-lg">
                   {card.uid}
                 </span>
+                {typeof card.githubUrl === "string" && card.githubUrl.trim().length > 0 && (
+                  <Link
+                    href={card.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center p-1.5 rounded-full border-2 border-amber-400/40 bg-amber-500/15 text-white hover:bg-amber-500/25 transition-all duration-200"
+                    title="Open winner GitHub URL"
+                  >
+                    <PiGithubLogoDuotone className="h-4 w-4" />
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -2178,6 +2211,11 @@ function RoundTopMinersInline({
                           UID {miner.uid}
                         </span>
                       </div>
+                      {(miner.zero_reason ?? miner.zeroReason) && (Number(miner.score ?? miner.local_avg_reward ?? 0) <= 0) && (
+                        <div className="mt-1.5 text-[11px] text-amber-200/90 font-medium">
+                          Reason: {(miner.zero_reason ?? miner.zeroReason).split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-end gap-1">
@@ -2237,6 +2275,12 @@ export default function Round() {
   // Selection state for validator-driven panels
   const [selectedValidator, setSelectedValidator] =
     React.useState<ValidatorPerformance | null>(null);
+  // IPFS / Consensus detail modal: click on Upload, Download or Consensus to see full data
+  const [ipfsConsensusDetail, setIpfsConsensusDetail] = React.useState<{
+    type: "upload" | "download" | "pre_consensus" | "post_consensus" | "how_consensus";
+    title: string;
+    data: unknown;
+  } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2327,6 +2371,80 @@ export default function Round() {
     return selectedValidator?.topMiner ?? null;
   }, [roundData, selectedValidator]);
 
+  const seasonCompetitionState = React.useMemo(() => {
+    if (!roundData?.validators || !Array.isArray(roundData.validators) || roundData.validators.length === 0) return null;
+    const selectedId = selectedValidator?.id ?? null;
+    const validator = selectedId
+      ? (roundData.validators.find(
+          (v: any) =>
+            v.validator_uid?.toString() === selectedId.replace("validator-", "") ||
+            v.validator_uid?.toString() === selectedId
+        ) as any)
+      : (roundData.validators[0] as any);
+    if (!validator) return null;
+
+    const post = validator.evaluation_post_consensus;
+    if (!post || typeof post !== "object") return null;
+
+    const roundSummary =
+      post.round_summary && typeof post.round_summary === "object"
+        ? post.round_summary
+        : {};
+    const decision =
+      roundSummary.decision && typeof roundSummary.decision === "object"
+        ? roundSummary.decision
+        : {};
+    const seasonSummary =
+      post.season_summary && typeof post.season_summary === "object"
+        ? post.season_summary
+        : {};
+    const winner =
+      roundSummary.winner && typeof roundSummary.winner === "object"
+        ? roundSummary.winner
+        : {};
+
+    const toNullableNumber = (value: unknown): number | null => {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      return null;
+    };
+
+    const roundWinnerUid =
+      toNullableNumber((winner as any).miner_uid) ??
+      toNullableNumber((winner as any).uid);
+    const topCandidateUid = toNullableNumber((decision as any).top_candidate_uid);
+    const seasonLeaderUid = toNullableNumber((seasonSummary as any).current_winner_uid);
+    const dethronedRaw = (seasonSummary as any).dethroned ?? (decision as any).dethroned;
+    const dethroned = Boolean(dethronedRaw);
+    const requiredImprovementPct =
+      toNullableNumber((decision as any).required_improvement_pct) ??
+      toNullableNumber((seasonSummary as any).required_improvement_pct) ??
+      0;
+    const topCandidateScore = toNullableNumber((decision as any).top_candidate_score);
+    const reigningScore = toNullableNumber((decision as any).reigning_score_before_round);
+
+    if (
+      roundWinnerUid === null &&
+      topCandidateUid === null &&
+      seasonLeaderUid === null
+    ) {
+      return null;
+    }
+
+    return {
+      roundWinnerUid,
+      topCandidateUid,
+      seasonLeaderUid,
+      dethroned,
+      requiredImprovementPct,
+      topCandidateScore,
+      reigningScore,
+    };
+  }, [roundData, selectedValidator]);
+
   const winnerLabel = selectedValidatorWinner
     ? selectedValidatorWinner.name?.trim() ||
       `Miner ${selectedValidatorWinner.uid ?? "unknown"}`
@@ -2353,6 +2471,13 @@ export default function Round() {
           value: winnerLabel,
           uid: winnerUidVal,
           hotkey: selectedValidatorWinner?.hotkey ?? selectedValidator?.topMiner?.hotkey,
+          githubUrl:
+            selectedValidatorWinner?.github_url ??
+            selectedValidator?.topMiner?.githubUrl ??
+            selectedValidator?.topMiner?.github_url ??
+            aggregatedTopMiner?.githubUrl ??
+            aggregatedTopMiner?.github_url ??
+            null,
           imageUrl:
             selectedValidatorWinner?.image ??
             selectedValidator?.topMiner?.imageUrl ??
@@ -2459,12 +2584,21 @@ export default function Round() {
     [pathname, router, searchParams, requestedValidatorId]
   );
 
-  // Determine if round is active
+  // Determine if round is active (and not already past end block on chain)
   const backendStatus = progressData?.status ?? roundInfo?.status;
+  const progressRatio = progressData?.progress; // 0–1 from API
+  const currentBlock = progressData?.currentBlock ?? (progressData as any)?.current_block;
+  const endBlock = progressData?.endBlock ?? (progressData as any)?.end_block;
+  const roundBlockWindowEnded =
+    (typeof progressRatio === "number" && progressRatio >= 1) ||
+    (typeof currentBlock === "number" &&
+      typeof endBlock === "number" &&
+      currentBlock >= endBlock);
   const isActive =
-    backendStatus === "active" ||
-    backendStatus === "evaluating_finished" ||
-    roundInfo?.current === true;
+    !roundBlockWindowEnded &&
+    (backendStatus === "active" ||
+      backendStatus === "evaluating_finished" ||
+      roundInfo?.current === true);
 
   // Determine if round data is not yet available (statistics already loaded above)
   // Only show "no data" message for current/active rounds that truly have no data
@@ -2591,6 +2725,72 @@ export default function Round() {
               loading={roundDataLoading}
               error={roundDataError}
             />
+            {seasonCompetitionState && (
+              <div
+                className={cn(
+                  "mt-4 mb-2 rounded-xl border px-4 py-3",
+                  seasonCompetitionState.dethroned
+                    ? "border-emerald-400/50 bg-emerald-500/12"
+                    : "border-amber-400/50 bg-amber-500/12"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-shrink-0 items-center justify-center">
+                    <PiWarning
+                      className={cn(
+                        "h-12 w-12 flex-shrink-0",
+                        seasonCompetitionState.dethroned ? "text-emerald-300" : "text-amber-300"
+                      )}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-white">
+                  Season leadership rule (+{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}% to dethrone):
+                </p>
+                <p className="mt-1 text-xs text-white/85">
+                  Reigning miner before round:{" "}
+                  <span className="text-cyan-300 font-semibold">
+                    UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? "—"}
+                  </span>
+                  , score:{" "}
+                  <span className="text-cyan-300 font-semibold">
+                    {seasonCompetitionState.reigningScore ?? "—"}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs text-white/85">
+                  Candidate miner to dethrone:{" "}
+                  <span className="text-amber-300 font-semibold">
+                    UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
+                  </span>
+                  , score:{" "}
+                  <span className="text-amber-300 font-semibold">
+                    {seasonCompetitionState.topCandidateScore ?? "—"}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm text-white">
+                  Verdict:{" "}
+                  {seasonCompetitionState.dethroned ? (
+                    <>
+                      Next winner:{" "}
+                      <span className="text-emerald-300 font-bold">
+                        UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
+                      </span>{" "}
+                      (candidate surpassed +{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%).
+                    </>
+                  ) : (
+                    <>
+                      Next winner continues being{" "}
+                      <span className="text-cyan-300 font-bold">
+                        UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
+                      </span>{" "}
+                      (candidate did not dethrone).
+                    </>
+                  )}
+                </p>
+                  </div>
+                </div>
+              </div>
+            )}
       </div>
 
       {/* Validators selector */}
@@ -2627,10 +2827,241 @@ export default function Round() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {selectedValidatorCards.map((card) => (
-            <MetricCard key={(card as any).key} card={card} />
-          ))}
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
+            {selectedValidatorCards.map((card) => (
+              <MetricCard key={(card as any).key} card={card} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* IPFS & Consensus (validator detail) — always show section; cards clickable when data exists */}
+      {selectedValidator && roundData?.validators && (() => {
+        const validatorUid = selectedValidator.id.replace("validator-", "");
+        const v = roundData.validators.find(
+          (x: any) => String(x.validator_uid) === validatorUid || String(x.validator_uid) === selectedValidator.id
+        );
+        const vAny = v as any;
+        const hasIpfs =
+          vAny?.ipfs_uploaded ||
+          vAny?.ipfs_downloaded ||
+          vAny?.evaluation_pre_consensus ||
+          vAny?.evaluation_post_consensus;
+        const ipfsUp = vAny?.ipfs_uploaded as Record<string, unknown> | undefined;
+        const ipfsDown = vAny?.ipfs_downloaded as Record<string, unknown> | undefined;
+        const evaluationPre = vAny?.evaluation_pre_consensus as Record<string, unknown> | undefined;
+        const evaluationPost = vAny?.evaluation_post_consensus as Record<string, unknown> | undefined;
+        const ipfsGateway = (cid: string) => `https://ipfs.io/ipfs/${cid}`;
+        const cardClass = "rounded-xl border border-white/20 bg-white/5 p-4 text-left transition-all " + (hasIpfs ? "cursor-pointer hover:border-white/40 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]" : "opacity-80");
+        // UID 5 (Burned) does not count as a miner
+        const countMinersExcludingBurned = (miners: unknown): number => {
+          if (!Array.isArray(miners)) return 0;
+          return miners.filter((m: any) => {
+            const uid = m?.uid ?? m?.miner_uid;
+            return uid != null && Number(uid) !== 5;
+          }).length;
+        };
+        const cardTitleRowClass = "flex items-center gap-2 min-h-6 mb-2";
+        return (
+          <div className={cn("mt-6 mb-6", roundGlassBackgroundClass, "rounded-2xl p-6 border-white/20")}>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <PiCirclesThreeDuotone className="h-5 w-5 text-cyan-400" />
+                Consensus & IPFS
+              </h3>
+              <button
+                type="button"
+                onClick={() =>
+                  setIpfsConsensusDetail({
+                    type: "how_consensus",
+                    title: "How consensus works",
+                    data: {},
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-300/60 transition-colors"
+              >
+                <LuInfo className="h-4 w-4" />
+                How consensus works?
+              </button>
+            </div>
+            {hasIpfs ? (
+              <p className="text-white/60 text-sm mb-4">Click a card to see full details.</p>
+            ) : (
+              <p className="text-white/50 text-sm mb-4">No IPFS/consensus data for this validator in this round yet. Data appears after the round ends and the validator sends results.</p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* IPFS Upload — always visible */}
+              {ipfsUp ? (
+                <button
+                  type="button"
+                  className={cardClass}
+                  onClick={() => setIpfsConsensusDetail({ type: "upload", title: "IPFS Uploaded — What this validator published", data: ipfsUp })}
+                >
+                  <div className={cn(cardTitleRowClass, "text-teal-400")}>
+                    <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">IPFS Uploaded</span>
+                  </div>
+                  <p className="text-white/80 text-sm">What this validator published for consensus.</p>
+                  {(ipfsUp as any).cid && (
+                    <a
+                      href={ipfsGateway((ipfsUp as any).cid)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-2 inline-block text-cyan-400 hover:underline text-sm font-mono break-all"
+                    >
+                      {(ipfsUp as any).cid.slice(0, 20)}…
+                    </a>
+                  )}
+                  <p className="text-teal-400/80 text-xs mt-2">Click to view full payload →</p>
+                </button>
+              ) : (
+                <div className={cardClass}>
+                  <div className={cn(cardTitleRowClass, "text-teal-400/70")}>
+                    <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">IPFS Uploaded</span>
+                  </div>
+                  <p className="text-white/60 text-sm">What this validator published for consensus.</p>
+                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
+                </div>
+              )}
+              {/* IPFS Download — always visible */}
+              {ipfsDown ? (
+                <button
+                  type="button"
+                  className={cardClass}
+                  onClick={() => setIpfsConsensusDetail({ type: "download", title: "IPFS Downloaded — Payloads from other validators", data: ipfsDown })}
+                >
+                  <div className={cn(cardTitleRowClass, "text-violet-400")}>
+                    <PiCloudArrowDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">IPFS Downloaded</span>
+                  </div>
+                  <p className="text-white/80 text-sm">Payloads downloaded from other validators.</p>
+                  {(ipfsDown as any).validators_participated != null && (
+                    <p className="text-white font-medium mt-2">{(ipfsDown as any).validators_participated} validators</p>
+                  )}
+                  {(ipfsDown as any).total_stake != null && (ipfsDown as any).total_stake > 0 && (
+                    <p className="text-white/60 text-xs">Total stake: {Number((ipfsDown as any).total_stake).toFixed(2)} τ</p>
+                  )}
+                  <p className="text-violet-400/80 text-xs mt-2">Click to view all payloads →</p>
+                </button>
+              ) : (
+                <div className={cardClass}>
+                  <div className={cn(cardTitleRowClass, "text-violet-400/70")}>
+                    <PiCloudArrowDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">IPFS Downloaded</span>
+                  </div>
+                  <p className="text-white/60 text-sm">Payloads downloaded from other validators.</p>
+                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
+                </div>
+              )}
+              {/* Evaluation pre-consensus — local evaluation before consensus */}
+              {evaluationPre ? (
+                <button
+                  type="button"
+                  className={cardClass}
+                  onClick={() => setIpfsConsensusDetail({ type: "pre_consensus", title: "Evaluation pre-consensus — Local evaluation", data: evaluationPre })}
+                >
+                  <div className={cn(cardTitleRowClass, "text-emerald-400")}>
+                    <PiChartLineUpDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Pre-consensus</span>
+                  </div>
+                  <p className="text-white/80 text-sm">Local evaluation before consensus.</p>
+                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned((evaluationPre as any).miners)} miners</p>
+                  <p className="text-emerald-400/80 text-xs mt-2">Click to view full payload →</p>
+                </button>
+              ) : (
+                <div className={cardClass}>
+                  <div className={cn(cardTitleRowClass, "text-emerald-400/70")}>
+                    <PiChartLineUpDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Pre-consensus</span>
+                  </div>
+                  <p className="text-white/60 text-sm">Local evaluation before consensus.</p>
+                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
+                </div>
+              )}
+              {/* Evaluation post-consensus — after consensus */}
+              {evaluationPost ? (
+                <button
+                  type="button"
+                  className={cardClass}
+                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Evaluation post-consensus — After consensus", data: evaluationPost })}
+                >
+                  <div className={cn(cardTitleRowClass, "text-orange-400")}>
+                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Post-consensus</span>
+                  </div>
+                  <p className="text-white/80 text-sm">Evaluation after consensus.</p>
+                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned((evaluationPost as any).miners)} miners</p>
+                  <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
+                </button>
+              ) : (
+                <div className={cardClass}>
+                  <div className={cn(cardTitleRowClass, "text-orange-400/70")}>
+                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Post-consensus</span>
+                  </div>
+                  <p className="text-white/60 text-sm">Evaluation after consensus.</p>
+                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Modal: full IPFS / Consensus detail when user clicks a card */}
+      {ipfsConsensusDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setIpfsConsensusDetail(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="IPFS & Consensus detail"
+        >
+          <div
+            className={cn("relative max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/20 px-6 py-4">
+              <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
+              <button
+                type="button"
+                onClick={() => setIpfsConsensusDetail(null)}
+                className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <PiXBold className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="overflow-auto max-h-[calc(90vh-80px)] p-6">
+              {ipfsConsensusDetail.type === "how_consensus" ? (
+                <div className="space-y-4 text-white/85 text-sm leading-relaxed">
+                  <p>
+                    1. Each validator evaluates miners locally and computes pre-consensus metrics
+                    (`reward`, `score`, `time`, tasks stats).
+                  </p>
+                  <p>
+                    2. Each validator uploads its local payload to IPFS (`IPFS Uploaded`), then downloads
+                    peers' payloads (`IPFS Downloaded`).
+                  </p>
+                  <p>
+                    3. Final consensus combines validators using stake-weighted aggregation to produce
+                    post-consensus metrics and ranks.
+                  </p>
+                  <p>
+                    4. `Pre-consensus` card shows this validator local values. `Post-consensus` card shows
+                    final values after combining all validators.
+                  </p>
+                </div>
+              ) : (
+                <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
+                  {JSON.stringify(ipfsConsensusDetail.data, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

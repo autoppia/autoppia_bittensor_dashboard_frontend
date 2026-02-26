@@ -136,8 +136,9 @@ function AgentsLanding() {
       return;
     }
 
-    // Validate data structure
-    if (!latestRoundTopMiner.round || !latestRoundTopMiner.miner_uid) {
+    // Validate data structure (backend returns season and round as numbers)
+    const { season, round: roundInSeason, miner_uid: minerUid } = latestRoundTopMiner;
+    if (season == null || roundInSeason == null || minerUid == null) {
       console.error('[AgentsLanding] Invalid data structure:', latestRoundTopMiner);
       return;
     }
@@ -146,17 +147,11 @@ function AgentsLanding() {
     hasRedirectedRef.current = true;
 
     // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y&agent={miner_uid}
-    const targetPath = `${routes.agents}/${latestRoundTopMiner.miner_uid}`;
+    const targetPath = `${routes.agents}/${minerUid}`;
     const params = new URLSearchParams();
-    const roundVal = String(latestRoundTopMiner.round);
-    if (roundVal.includes("/")) {
-      const [s, r] = roundVal.split("/");
-      if (s) params.set("season", s);
-      if (r) params.set("round", r);
-    } else {
-      params.set("round", roundVal);
-    }
-    params.set("agent", String(latestRoundTopMiner.miner_uid));
+    params.set("season", String(season));
+    params.set("round", String(roundInSeason));
+    params.set("agent", String(minerUid));
 
     const targetUrl = `${targetPath}?${params.toString()}`;
     console.log(`[AgentsLanding] ✅ Redirecting from ${pathname} to: ${targetUrl}`);

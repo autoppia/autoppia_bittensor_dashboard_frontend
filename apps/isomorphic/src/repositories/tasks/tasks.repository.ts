@@ -51,6 +51,7 @@ export class TasksRepository {
       status: string;
       eval_score: number;
       eval_time: number;
+      zero_reason?: string | null;
     };
     info: {
       evaluationId: string;
@@ -59,6 +60,7 @@ export class TasksRepository {
       round: any;
       validator: any;
       miner: any;
+      zeroReason?: string | null;
     };
   }> {
     const endpoint = `/api/v1/evaluations/${evaluationId}/get-evaluation`;
@@ -72,6 +74,7 @@ export class TasksRepository {
           status: string;
           eval_score: number;
           eval_time: number;
+          zero_reason?: string | null;
         };
         info: {
           evaluationId: string;
@@ -80,6 +83,7 @@ export class TasksRepository {
           round: any;
           validator: any;
           miner: any;
+          zeroReason?: string | null;
         };
       };
     }>(endpoint);
@@ -108,11 +112,11 @@ export class TasksRepository {
     params?: TaskDetailQueryParams
   ): Promise<TaskDetails> {
     const isEvaluationId = this.isEvaluationId(taskIdOrEvaluationId);
-    
+
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/task-details`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/details`;
-    
+
     const response = await apiClient.get<{
       data: {
         details: TaskDetails;
@@ -129,7 +133,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/results`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/results`;
-    
+
     const response = await apiClient.get<TaskResultsResponse>(endpoint);
     return response.data.data.results;
   }
@@ -142,7 +146,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/personas`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/personas`;
-    
+
     const response = await apiClient.get<TaskPersonasResponse>(endpoint);
     return response.data.data.personas;
   }
@@ -155,7 +159,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/statistics`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/statistics`;
-    
+
     const response = await apiClient.get<TaskStatisticsResponse>(endpoint);
     return response.data.data.statistics;
   }
@@ -380,7 +384,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/actions`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/actions`;
-    
+
     const response = await apiClient.get<{
       data: {
         actions: any[];
@@ -418,7 +422,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/screenshots`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/screenshots`;
-    
+
     const response = await apiClient.get<{
       data: {
         screenshots: any[];
@@ -450,7 +454,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/logs`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/logs`;
-    
+
     const response = await apiClient.get<{
       data: {
         logs: any[];
@@ -478,7 +482,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/metrics`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/metrics`;
-    
+
     const response = await apiClient.get<{
       data: {
         metrics: any;
@@ -503,7 +507,7 @@ export class TasksRepository {
     const endpoint = isEvaluationId
       ? `/api/v1/evaluations/${taskIdOrEvaluationId}/timeline`
       : `${this.baseEndpoint}/${taskIdOrEvaluationId}/timeline`;
-    
+
     const response = await apiClient.get<{
       data: {
         timeline: any[];

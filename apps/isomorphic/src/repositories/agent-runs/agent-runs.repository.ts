@@ -258,6 +258,16 @@ export class AgentRunsRepository {
       round: any;
       validator: any;
       miner: any;
+      /** Reason for score 0 when applicable */
+      zeroReason?: string | null;
+      isReused?: boolean;
+      reusedFromAgentRunId?: string | null;
+      reusedFrom?: {
+        agentRunId?: string | null;
+        validatorRoundId?: string | null;
+        roundNumber?: number | null;
+        seasonNumber?: number | null;
+      } | null;
     };
   }> {
     try {
@@ -271,6 +281,15 @@ export class AgentRunsRepository {
             round: any;
             validator: any;
             miner: any;
+            zeroReason?: string | null;
+            isReused?: boolean;
+            reusedFromAgentRunId?: string | null;
+            reusedFrom?: {
+              agentRunId?: string | null;
+              validatorRoundId?: string | null;
+              roundNumber?: number | null;
+              seasonNumber?: number | null;
+            } | null;
           };
         };
       }>(`${this.baseEndpoint}/${runId}/get-agent-run`);

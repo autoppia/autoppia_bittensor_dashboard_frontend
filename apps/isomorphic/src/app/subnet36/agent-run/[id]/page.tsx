@@ -146,22 +146,92 @@ function formatUseCaseName(name?: string | null): string {
     .join(" ");
 }
 
+/** Humanize zero_reason from backend (e.g. over_cost_limit → Over cost limit) */
+function humanizeZeroReason(reason: string): string {
+  if (!reason || typeof reason !== "string") return reason || "—";
+  return reason
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function normalizeRoundInSeason(
+  roundValue: unknown,
+  seasonValue?: unknown
+): number | null {
+  const parseNumber = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+  };
+
+  const roundNum = parseNumber(roundValue);
+  const seasonNum = parseNumber(seasonValue);
+  if (roundNum === null) return null;
+
+  if (roundNum >= 10000) {
+    if (seasonNum && roundNum >= seasonNum * 10000) {
+      const decoded = roundNum - seasonNum * 10000;
+      if (decoded > 0) return decoded;
+    }
+    const mod = roundNum % 10000;
+    if (mod > 0) return mod;
+  }
+
+  return roundNum > 0 ? roundNum : null;
+}
+
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
-  stats?: AgentRunStatsData | null
+  stats?: AgentRunStatsData | null,
+  evaluations?: AgentRunEvaluationData[] | null
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
+  const rawStats = stats as Record<string, any>;
+  const evals = evaluations || [];
 
-  const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
+  const readNumber = (keys: string[], fallback = 0): number => {
+    for (const key of keys) {
+      const value = rawStats[key];
+      if (typeof value === "number" && !Number.isNaN(value)) return value;
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (!Number.isNaN(parsed)) return parsed;
+      }
+    }
+    return fallback;
+  };
+
+  const totalTasks = readNumber(["totalTasks", "total_tasks", "total"], evals.length);
+  const successfulTasks = readNumber(
+    ["successfulTasks", "successful_tasks", "successes"],
+    0
+  );
+  const avgTime = readNumber(
+    ["avg_time", "averageTaskDuration", "average_task_duration", "avg_duration"],
+    0
+  );
+  const avgScoreRaw = readNumber(
+    ["avg_score", "overallScore", "average_score", "successRate", "success_rate"],
+    0
+  );
+  const avgScore = avgScoreRaw > 1 ? avgScoreRaw / 100 : avgScoreRaw;
+  const fallbackSuccessRate =
+    avgScore > 0 ? avgScore : totalTasks > 0 ? successfulTasks / totalTasks : 0;
+
+  let websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
       // Build useCases and results from statsByUsecase if available
       const statsByUsecase = (w as any).statsByUsecase || [];
-      
+
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
       }));
-      
+
       const websiteResults: AgentRunResult[] = statsByUsecase.map((uc: any, idx: number) => ({
         useCaseId: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
@@ -188,6 +258,39 @@ function buildDetailDataFromStats(
     }
   );
 
+  // Reused runs may return aggregate totals but no per-website breakdown.
+  // Build a fallback block so charts/summary still render meaningful values.
+  if (websites.length === 0 && (totalTasks > 0 || evals.length > 0)) {
+    const avgFromEvals =
+      evals.length > 0
+        ? evals.reduce((acc, ev) => acc + (Number(ev.eval_time) || 0), 0) /
+          evals.length
+        : avgTime;
+
+    websites = [
+      {
+        name: "All Websites",
+        useCases: [{ id: "all", name: "All Use Cases" }],
+        results: [
+          {
+            useCaseId: "all",
+            name: "All Use Cases",
+            successRate: fallbackSuccessRate,
+            total: totalTasks,
+            successCount: successfulTasks,
+            avgSolutionTime: avgFromEvals,
+          },
+        ],
+        overall: {
+          successRate: fallbackSuccessRate,
+          total: totalTasks,
+          successCount: successfulTasks,
+          avgSolutionTime: avgFromEvals,
+        },
+      },
+    ];
+  }
+
   return { websites };
 }
 
@@ -197,7 +300,7 @@ export default function Page() {
 
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
 
-  const { 
+  const {
     data: agentRunData,
     isLoading,
     error,
@@ -209,8 +312,8 @@ export default function Page() {
 
   // Derived detail data from stats for charts/summary
   const detailData = useMemo(() => {
-    return buildDetailDataFromStats(stats);
-  }, [stats]);
+    return buildDetailDataFromStats(stats, evaluations);
+  }, [stats, evaluations]);
 
   // Check if agent run has no data yet
   const hasNoData =
@@ -218,6 +321,11 @@ export default function Page() {
     error &&
     (!stats ||
       (stats.totalTasks === 0 && stats.overallScore === 0));
+
+  const reusedRoundInSeason = normalizeRoundInSeason(
+    info?.reusedFrom?.roundNumber,
+    info?.reusedFrom?.seasonNumber
+  );
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -325,7 +433,6 @@ export default function Page() {
         </div>
       )}
 
-
       {/* Personas cards (Round, Validator, Miner) */}
       {isLoading ? (
         <AgentRunPersonasPlaceholder />
@@ -333,10 +440,48 @@ export default function Page() {
         <AgentRunPersonasFromInfo info={info} />
       )}
 
+      {!isLoading && info?.isReused && (
+        <div className="mb-4 rounded-xl border border-sky-300/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+          <div className="flex items-start gap-2">
+            <PiInfoDuotone className="mt-0.5 h-4 w-4 shrink-0 text-sky-200" />
+            <div>
+              <span className="font-semibold">Reused run:</span>{" "}
+              This run is a reused copy from
+              {" "}
+              {typeof info?.reusedFrom?.seasonNumber === "number" &&
+              reusedRoundInSeason !== null
+                ? `Season ${info.reusedFrom.seasonNumber}, Round ${
+                    reusedRoundInSeason
+                  }`
+                : "a previous round in this season"}
+              .
+              {" "}
+              {info?.reusedFromAgentRunId ? (
+                <Link
+                  href={`${routes.agent_run}/${encodeURIComponent(info.reusedFromAgentRunId)}`}
+                  className="font-semibold underline underline-offset-4 hover:text-white"
+                >
+                  Open original run
+                </Link>
+              ) : null}
+              .
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <AgentRunStatsPlaceholder />
       ) : (
         <AgentRunStats stats={stats || null} />
+      )}
+
+      {/* Zero score reason: show when overall score is 0 and we have a reason (below stats card) */}
+      {!isLoading && stats && (stats.overallScore === 0 || (stats.avg_score !== undefined && stats.avg_score <= 0)) && (info?.zeroReason ?? (stats as any)?.zeroReason) && (
+        <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+          <span className="font-semibold">Reason for zero score:</span>{" "}
+          {humanizeZeroReason((info?.zeroReason ?? (stats as any)?.zeroReason) as string)}
+        </div>
       )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
@@ -363,10 +508,10 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection 
-          evaluations={evaluations} 
-          isLoading={isLoading} 
-          error={error} 
+        <AgentRunTasksSection
+          evaluations={evaluations}
+          isLoading={isLoading}
+          error={error}
           refetch={refetch}
           selectedWebsite={selectedWebsite}
         />
@@ -391,6 +536,15 @@ function AgentRunPersonasFromInfo({
     round: any;
     validator: any;
     miner: any;
+    zeroReason?: string | null;
+    isReused?: boolean;
+    reusedFromAgentRunId?: string | null;
+    reusedFrom?: {
+      agentRunId?: string | null;
+      validatorRoundId?: string | null;
+      roundNumber?: number | null;
+      seasonNumber?: number | null;
+    } | null;
   } | null;
 }) {
   function extractUidNumber(value: unknown): number | null {
@@ -468,7 +622,7 @@ function AgentRunPersonasFromInfo({
   const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-  
+
   // Parse round number/ID - support "season/round" format
   // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
   const parseRoundInfo = () => {
@@ -481,23 +635,23 @@ function AgentRunPersonasFromInfo({
         return { season, round };
       }
     }
-    
+
     // Second, try to get from roundData directly (season_number, round_number_in_season)
     if (roundData.season_number !== undefined && roundData.round_number_in_season !== undefined) {
-      return { 
-        season: String(roundData.season_number), 
+      return {
+        season: String(roundData.season_number),
         round: String(roundData.round_number_in_season)
       };
     }
-    
+
     // Third, try season and round fields
     if (roundData.season !== undefined && roundData.round !== undefined) {
-      return { 
-        season: String(roundData.season), 
+      return {
+        season: String(roundData.season),
         round: String(roundData.round)
       };
     }
-    
+
     // If we have roundNumber that looks like legacy format (10001, 20003, etc), try to extract
     if (roundData.roundNumber && typeof roundData.roundNumber === "number") {
       const num = roundData.roundNumber;
@@ -510,7 +664,7 @@ function AgentRunPersonasFromInfo({
         }
       }
     }
-    
+
     // No valid data found
     return null;
   };
@@ -801,7 +955,7 @@ function AgentRunPersonas({
   const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-  
+
   // Round number/ID
   const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
   const roundStatus = roundData.status || "Active";
@@ -2213,9 +2367,11 @@ const agentRunTasksColumns = [
         title="View evaluation details"
       >
         {row.original.useCase
-          .split("_")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ")}
+          ? row.original.useCase
+              .split("_")
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ")
+          : "Unknown"}
       </Link>
     ),
   }),
@@ -2228,13 +2384,23 @@ const agentRunTasksColumns = [
       const isPassed = eval_score >= 1;
       const scoreColor = isPassed ? "text-green-400" : "text-red-400";
       const scoreValue = isPassed ? "100%" : "0%";
+      const zeroReason = row.original.zeroReason;
+      const title =
+        zeroReason && !isPassed
+          ? `Reason: ${zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}`
+          : "View evaluation details";
       return (
         <Link
           href={`${routes.evaluations}/${row.original.evaluationId}`}
-          className={`text-xs sm:text-sm font-medium ${scoreColor}`}
-          title="View evaluation details"
+          className={`text-xs sm:text-sm font-medium ${scoreColor} block`}
+          title={title}
         >
           {scoreValue}
+          {!isPassed && zeroReason && (
+            <span className="block text-[10px] text-amber-400/90 font-normal mt-0.5" title={title}>
+              {zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
+            </span>
+          )}
         </Link>
       );
     },
@@ -2276,9 +2442,9 @@ const agentRunTasksColumns = [
   }),
 ];
 
-function AgentRunTasksSection({ 
-  evaluations: providedEvaluations = [], 
-  isLoading = false, 
+function AgentRunTasksSection({
+  evaluations: providedEvaluations = [],
+  isLoading = false,
   error,
   refetch,
   selectedWebsite,
@@ -2359,7 +2525,7 @@ function AgentRunTasksSection({
     );
   }
 
-  if (error && !tasks) {
+  if (error && !evaluations?.length) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
         <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
