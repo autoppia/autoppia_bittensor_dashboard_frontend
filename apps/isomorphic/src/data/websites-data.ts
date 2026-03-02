@@ -4060,6 +4060,82 @@ export const websitesData: WebsiteDataType[] = [
     isComingSoon: true,
     comingSoonNote: "Travel booking platform with flights, hotels, and reservations coming soon.",
   },
+  {
+    name: "AutoDiscord",
+    slug: "autodiscord",
+    portValidator: "8016",
+    href: "#",
+    origin: "Discord",
+    totalTasks: [0, 0, 0],
+    image: "/images/web_16.png",
+    color: "#5865F2",
+    description: "Community and messaging platform with servers, channels, and voice.",
+    avgDifficulty: 6.5,
+    completionRate: 0,
+    useCases: [
+      {
+        name: "Channel Management",
+        examplePrompt: [
+          "Create a new text channel in the general category",
+          "Set up a voice channel for the team meeting",
+        ],
+      },
+      {
+        name: "Message & DM",
+        examplePrompt: [
+          "Send a message to the announcements channel",
+          "DM the user list from the members panel",
+        ],
+      },
+      {
+        name: "Server Settings",
+        examplePrompt: [
+          "Change server name and icon",
+          "Update role permissions for moderators",
+        ],
+      },
+    ],
+    isComingSoon: true,
+    comingSoonNote: "Discord-like community and messaging platform coming soon.",
+  },
+  {
+    name: "AutoChess",
+    slug: "autochess",
+    portValidator: "8017",
+    href: "#",
+    origin: "Chess Platform",
+    totalTasks: [0, 0, 0],
+    image: "/images/web_17.png",
+    color: "#1E293B",
+    description: "Chess platform for playing games, puzzles, and analyzing positions.",
+    avgDifficulty: 6,
+    completionRate: 0,
+    useCases: [
+      {
+        name: "Game Play",
+        examplePrompt: [
+          "Start a new game against the computer",
+          "Make the best move in the current position",
+        ],
+      },
+      {
+        name: "Puzzles",
+        examplePrompt: [
+          "Load a puzzle and show the solution",
+          "Filter puzzles by rating and theme",
+        ],
+      },
+      {
+        name: "Analysis",
+        examplePrompt: [
+          "Analyze the current game and show engine evaluation",
+          "Export the game as PGN",
+        ],
+      },
+    ],
+    isComingSoon: true,
+    comingSoonNote: "Chess platform with games, puzzles, and analysis coming soon.",
+  },
 ];
 
 export const websitesDataMap = websitesData.reduce(
