@@ -4108,7 +4108,7 @@ export const websitesData: WebsiteDataType[] = [
     image: "/images/web_17.png",
     color: "#1E293B",
     description: "Chess platform for playing games, puzzles, and analyzing positions.",
-    avgDifficulty: 6,
+    avgDifficulty: 9.75,
     completionRate: 0,
     useCases: [
       {
