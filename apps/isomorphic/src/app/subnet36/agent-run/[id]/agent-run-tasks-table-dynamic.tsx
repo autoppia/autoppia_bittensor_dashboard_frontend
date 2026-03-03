@@ -1,21 +1,18 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
-import { createColumnHelper } from "@tanstack/react-table";
+import { useParams, useRouter } from "next/navigation";
+import { createColumnHelper, flexRender } from "@tanstack/react-table";
 import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
-import { Button, Text, Input } from "rizzui";
+import { Button, Text, Input, Table as RTable } from "rizzui";
 import Link from "next/link";
 import Table from "@core/components/table";
-import { Table as RTable } from "rizzui";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
 import { AgentRunTaskData } from "@/repositories/agent-runs/agent-runs.types";
 import { routes } from "@/config/routes";
-import { useRouter } from "next/navigation";
-import { flexRender } from "@tanstack/react-table";
 
 const columnHelper = createColumnHelper<AgentRunTaskData>();
 
@@ -71,7 +68,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
       const scoreColor = eval_score >= 1 ? "text-green-500" : "text-red-500";
-      
+
       return (
         <Text className={`font-medium ${scoreColor}`}>
           {eval_score === 1 ? "✓" : "✗"}
@@ -98,8 +95,8 @@ const agentRunTasksColumns = [
         href={`${routes.tasks}/${row.original.taskId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >
@@ -117,9 +114,9 @@ interface AgentRunTasksTableDynamicProps {
   error?: string | null;
 }
 
-export default function AgentRunTasksTableDynamic({ 
-  tasks: providedTasks = [], 
-  isLoading = false, 
+export default function AgentRunTasksTableDynamic({
+  tasks: providedTasks = [],
+  isLoading = false,
   error,
 }: AgentRunTasksTableDynamicProps) {
   const router = useRouter();
@@ -303,8 +300,8 @@ export default function AgentRunTasksTableDynamic({
       </div>
 
       {tasks && tasks.length > 0 && (
-        <TablePagination 
-          table={table} 
+        <TablePagination
+          table={table}
           className="relative py-4 text-slate-300"
         />
       )}

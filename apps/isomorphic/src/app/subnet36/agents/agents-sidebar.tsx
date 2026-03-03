@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import NavLink from "@core/components/nav-link";
 import Image from "next/image";
@@ -43,19 +43,19 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   const SOTA_ALLOWED_NAMES = ["openai cua", "anthropic cua", "browser use"];
 
-  const applySotaFilter = (
-    miners: MinimalAgentData[],
-    includeSota: boolean
-  ) => {
-    if (includeSota) {
-      return miners.filter((m) =>
-        SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
+  const applySotaFilter = useCallback(
+    (miners: MinimalAgentData[], includeSota: boolean) => {
+      if (includeSota) {
+        return miners.filter((m) =>
+          SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
+        );
+      }
+      return miners.filter(
+        (m) => !SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
       );
-    }
-    return miners.filter(
-      (m) => !SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
-    );
-  };
+    },
+    []
+  );
 
   // Parse season and round from separate URL parameters
   const seasonParam = searchParams.get("season");
@@ -281,9 +281,17 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   };
 
   // Get miners for the selected round (from round-specific fetch when we have season/round)
-  const minersFromApi = effectiveRound
-    ? (roundsDataWithMiners?.round_selected?.miners ?? [])
-    : (roundsData?.round_selected?.miners ?? []);
+  const minersFromApi = useMemo(
+    () =>
+      effectiveRound
+        ? (roundsDataWithMiners?.round_selected?.miners ?? [])
+        : (roundsData?.round_selected?.miners ?? []),
+    [
+      effectiveRound,
+      roundsDataWithMiners?.round_selected?.miners,
+      roundsData?.round_selected?.miners,
+    ]
+  );
 
   const minerScoreMetaByUid = useMemo(() => {
     const byUid = new Map<number, { round: number; effective: number; best: number }>();
@@ -323,7 +331,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     }));
 
     return { miners };
-  }, [minersFromApiKey]);
+  }, [minersFromApiKey, minersFromApi]);
 
   // Normalize displayed rank to the participating set (handshake miners shown in this round),
   // instead of keeping the global metagraph rank (e.g. 26, 234, ...).
@@ -373,7 +381,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     }
 
     setFilteredAgents(filtered);
-  }, [minersData, includeSota, query, minersFromApiKey]);
+  }, [minersData, includeSota, query, minersFromApiKey, applySotaFilter]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextQuery = event.target.value;

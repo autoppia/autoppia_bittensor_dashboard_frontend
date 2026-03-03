@@ -1683,7 +1683,7 @@ function RoundMinerScoresInline({
     return [...minerEntries, ...benchmarkEntries].sort(
       (a, b) => b.score - a.score
     );
-  }, [minersData, selectedValidator]);
+  }, [minersData, selectedValidator, chartSource.benchmarks, chartSource.miners]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
@@ -3195,7 +3195,7 @@ export default function Round() {
                   </p>
                   <p>
                     2. Each validator uploads its local payload to IPFS (`IPFS Uploaded`), then downloads
-                    peers' payloads (`IPFS Downloaded`).
+                    peers&apos; payloads (`IPFS Downloaded`).
                   </p>
                   <p>
                     3. Final consensus combines validators using stake-weighted aggregation to produce

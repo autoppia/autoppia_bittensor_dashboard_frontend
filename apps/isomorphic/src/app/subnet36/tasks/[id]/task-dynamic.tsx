@@ -1409,7 +1409,7 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
       actionId?: string;
       description?: string;
     }>;
-  }, [hasApiScreenshots]);
+  }, []);
 
   const mediaItems = hasApiScreenshots ? screenshots : fallbackScreenshots;
   const isMediaLoading =
