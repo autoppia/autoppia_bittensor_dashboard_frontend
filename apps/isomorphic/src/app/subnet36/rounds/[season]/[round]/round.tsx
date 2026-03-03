@@ -2281,6 +2281,7 @@ export default function Round() {
     title: string;
     data: unknown;
   } | null>(null);
+  const [includeOwnDownloadedPayload, setIncludeOwnDownloadedPayload] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2839,6 +2840,7 @@ export default function Round() {
       {/* IPFS & Consensus (validator detail) — always show section; cards clickable when data exists */}
       {selectedValidator && roundData?.validators && (() => {
         const validatorUid = selectedValidator.id.replace("validator-", "");
+        const selfValidatorUid = Number.parseInt(validatorUid, 10);
         const v = roundData.validators.find(
           (x: any) => String(x.validator_uid) === validatorUid || String(x.validator_uid) === selectedValidator.id
         );
@@ -2847,20 +2849,150 @@ export default function Round() {
           vAny?.ipfs_uploaded ||
           vAny?.ipfs_downloaded ||
           vAny?.evaluation_pre_consensus ||
-          vAny?.evaluation_post_consensus;
+          vAny?.evaluation_post_consensus ||
+          vAny?.consensus_summary ||
+          vAny?.post_consensus_evaluation;
         const ipfsUp = vAny?.ipfs_uploaded as Record<string, unknown> | undefined;
         const ipfsDown = vAny?.ipfs_downloaded as Record<string, unknown> | undefined;
-        const evaluationPre = vAny?.evaluation_pre_consensus as Record<string, unknown> | undefined;
-        const evaluationPost = vAny?.evaluation_post_consensus as Record<string, unknown> | undefined;
+        const evaluationPre = (vAny?.evaluation_pre_consensus ?? vAny?.consensus_summary) as Record<string, unknown> | undefined;
+        const evaluationPost = (vAny?.evaluation_post_consensus ?? vAny?.post_consensus_evaluation) as Record<string, unknown> | undefined;
         const ipfsGateway = (cid: string) => `https://ipfs.io/ipfs/${cid}`;
+        const pickCanonicalIpfsPayload = (raw: unknown, depth = 0): Record<string, unknown> | null => {
+          if (!raw || typeof raw !== "object" || depth > 5) return null;
+          const obj = raw as any;
+
+          const hasScores = obj?.scores && typeof obj.scores === "object" && !Array.isArray(obj.scores);
+          if (hasScores) {
+            return {
+              r: obj?.r ?? null,
+              s: obj?.s ?? null,
+              v: obj?.v ?? null,
+              es: obj?.es ?? null,
+              et: obj?.et ?? null,
+              hk: obj?.hk ?? null,
+              uid: obj?.uid ?? null,
+              scores: obj?.scores ?? {},
+              validator_uid: obj?.validator_uid ?? null,
+              validator_hotkey: obj?.validator_hotkey ?? null,
+              validator_version: obj?.validator_version ?? null,
+              validator_round_id: obj?.validator_round_id ?? null,
+            };
+          }
+
+          return (
+            pickCanonicalIpfsPayload(obj?.payload, depth + 1) ||
+            pickCanonicalIpfsPayload(obj?.data, depth + 1) ||
+            pickCanonicalIpfsPayload(obj?.content, depth + 1) ||
+            null
+          );
+        };
+
+        const buildIpfsUploadModalData = (
+          payload: Record<string, unknown> | undefined,
+          downloaded: Record<string, unknown> | undefined
+        ) => {
+          if (!payload) return payload;
+          const p = payload as any;
+          let canonicalPayload = pickCanonicalIpfsPayload(p?.payload ?? p);
+
+          // Some validators persist only CID on ipfs_uploaded.
+          // If payload is missing, recover it from ipfs_downloaded payloads by CID.
+          if (!canonicalPayload && p?.cid && downloaded && typeof downloaded === "object") {
+            const d = downloaded as any;
+            const entries = Array.isArray(d?.payloads) ? d.payloads : [];
+            const sameCid = entries.find((entry: any) => entry?.cid === p.cid);
+            canonicalPayload = pickCanonicalIpfsPayload(sameCid?.payload ?? sameCid);
+          }
+
+          const payloadPreview = canonicalPayload ?? { note: p?.payload?.note ?? "Payload not available" };
+          return {
+            cid: p?.cid ?? null,
+            uid: p?.uid ?? null,
+            stake: p?.stake ?? null,
+            validator_hotkey: p?.validator_hotkey ?? null,
+            payload: payloadPreview,
+          };
+        };
+        const buildIpfsDownloadModalData = (payload: Record<string, unknown> | undefined) => {
+          if (!payload) return payload;
+          const p = payload as any;
+          const cleanPayloads = Array.isArray(p?.payloads)
+            ? p.payloads.map((entry: any) => ({
+                cid: entry?.cid ?? null,
+                validator_uid: entry?.validator_uid ?? null,
+                validator_hotkey: entry?.validator_hotkey ?? null,
+                payload:
+                  pickCanonicalIpfsPayload(entry?.payload ?? entry) ??
+                  { note: entry?.payload?.note ?? "Payload not available" },
+              }))
+            : [];
+          return {
+            validators_participated: p?.validators_participated ?? cleanPayloads.length ?? 0,
+            total_stake: p?.total_stake ?? null,
+            self_validator_uid: Number.isFinite(selfValidatorUid) ? selfValidatorUid : null,
+            payloads: cleanPayloads,
+          };
+        };
         const cardClass = "rounded-xl border border-white/20 bg-white/5 p-4 text-left transition-all " + (hasIpfs ? "cursor-pointer hover:border-white/40 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]" : "opacity-80");
-        // UID 5 (Burned) does not count as a miner
-        const countMinersExcludingBurned = (miners: unknown): number => {
-          if (!Array.isArray(miners)) return 0;
-          return miners.filter((m: any) => {
-            const uid = m?.uid ?? m?.miner_uid;
-            return uid != null && Number(uid) !== 5;
-          }).length;
+        // UID 5 (Burned) does not count as a miner.
+        // Prefer counting actual participants (non-zero activity/score), then fallback.
+        const countMinersExcludingBurned = (evaluationPayload: unknown): number => {
+          if (!evaluationPayload || typeof evaluationPayload !== "object") return 0;
+          const raw = evaluationPayload as any;
+          const payload =
+            raw?.evaluation_post_consensus ??
+            raw?.post_consensus_evaluation ??
+            raw?.evaluation_pre_consensus ??
+            raw?.consensus_summary ??
+            raw;
+
+          if (Array.isArray(payload.miners)) {
+            const miners = payload.miners.filter((m: any) => {
+              const uid = m?.uid ?? m?.miner_uid;
+              return uid != null && Number(uid) !== 5;
+            });
+
+            const participants = miners.filter((m: any) => {
+              const tasksSent = Number(
+                m?.tasks_sent ??
+                m?.tasks_received ??
+                m?.post_consensus_tasks_received ??
+                m?.local_tasks_received ??
+                0
+              );
+              const reward = Number(
+                m?.consensus_reward ??
+                m?.reward ??
+                m?.post_consensus_avg_reward ??
+                m?.local_avg_reward ??
+                0
+              );
+              const evalScore = Number(
+                m?.avg_eval_score ??
+                m?.post_consensus_avg_eval_score ??
+                m?.local_avg_eval_score ??
+                0
+              );
+              const evalTime = Number(
+                m?.avg_eval_time ??
+                m?.post_consensus_avg_eval_time ??
+                m?.local_avg_eval_time ??
+                0
+              );
+              return tasksSent > 0 || reward > 0 || evalScore > 0 || evalTime > 0;
+            });
+
+            return participants.length > 0 ? participants.length : miners.length;
+          }
+
+          const minerScores = payload?.round_summary?.miner_scores;
+          if (minerScores && typeof minerScores === "object") {
+            const entries = Object.entries(minerScores).filter(([uid]) => Number(uid) !== 5);
+            const nonZero = entries.filter(([, score]) => Number(score ?? 0) > 0);
+            return nonZero.length > 0 ? nonZero.length : entries.length;
+          }
+
+          return 0;
         };
         const cardTitleRowClass = "flex items-center gap-2 min-h-6 mb-2";
         return (
@@ -2896,7 +3028,13 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "upload", title: "IPFS Uploaded — What this validator published", data: ipfsUp })}
+                  onClick={() =>
+                    setIpfsConsensusDetail({
+                      type: "upload",
+                      title: "IPFS Uploaded — What this validator published",
+                      data: buildIpfsUploadModalData(ipfsUp, ipfsDown),
+                    })
+                  }
                 >
                   <div className={cn(cardTitleRowClass, "text-teal-400")}>
                     <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
@@ -2931,7 +3069,14 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "download", title: "IPFS Downloaded — Payloads from other validators", data: ipfsDown })}
+                  onClick={() =>
+                    (setIncludeOwnDownloadedPayload(false),
+                    setIpfsConsensusDetail({
+                      type: "download",
+                      title: "IPFS Downloaded — Payloads from other validators",
+                      data: buildIpfsDownloadModalData(ipfsDown),
+                    }))
+                  }
                 >
                   <div className={cn(cardTitleRowClass, "text-violet-400")}>
                     <PiCloudArrowDownDuotone className="h-5 w-5 flex-shrink-0" />
@@ -2968,7 +3113,7 @@ export default function Round() {
                     <span className="font-semibold text-sm uppercase tracking-wider">Pre-consensus</span>
                   </div>
                   <p className="text-white/80 text-sm">Local evaluation before consensus.</p>
-                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned((evaluationPre as any).miners)} miners</p>
+                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPre)} miners</p>
                   <p className="text-emerald-400/80 text-xs mt-2">Click to view full payload →</p>
                 </button>
               ) : (
@@ -2993,7 +3138,7 @@ export default function Round() {
                     <span className="font-semibold text-sm uppercase tracking-wider">Post-consensus</span>
                   </div>
                   <p className="text-white/80 text-sm">Evaluation after consensus.</p>
-                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned((evaluationPost as any).miners)} miners</p>
+                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
                   <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
                 </button>
               ) : (
@@ -3015,7 +3160,10 @@ export default function Round() {
       {ipfsConsensusDetail && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setIpfsConsensusDetail(null)}
+          onClick={() => {
+            setIpfsConsensusDetail(null);
+            setIncludeOwnDownloadedPayload(false);
+          }}
           role="dialog"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
@@ -3028,7 +3176,10 @@ export default function Round() {
               <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
               <button
                 type="button"
-                onClick={() => setIpfsConsensusDetail(null)}
+                onClick={() => {
+                  setIpfsConsensusDetail(null);
+                  setIncludeOwnDownloadedPayload(false);
+                }}
                 className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Close"
               >
@@ -3055,6 +3206,40 @@ export default function Round() {
                     final values after combining all validators.
                   </p>
                 </div>
+              ) : ipfsConsensusDetail.type === "download" ? (
+                (() => {
+                  const data = (ipfsConsensusDetail.data ?? {}) as any;
+                  const payloads = Array.isArray(data?.payloads) ? data.payloads : [];
+                  const selfUid = Number(data?.self_validator_uid);
+                  const filteredPayloads =
+                    includeOwnDownloadedPayload || !Number.isFinite(selfUid)
+                      ? payloads
+                      : payloads.filter((entry: any) => Number(entry?.validator_uid) !== selfUid);
+                  const shownData = {
+                    validators_participated: data?.validators_participated ?? payloads.length,
+                    total_stake: data?.total_stake ?? null,
+                    payloads: filteredPayloads,
+                  };
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-white/70 text-xs">
+                          Showing {filteredPayloads.length} payload(s)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setIncludeOwnDownloadedPayload((prev) => !prev)}
+                          className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/85 hover:bg-white/10 transition-colors"
+                        >
+                          {includeOwnDownloadedPayload ? "Hide own payload" : "Include own payload"}
+                        </button>
+                      </div>
+                      <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
+                        {JSON.stringify(shownData, null, 2)}
+                      </pre>
+                    </div>
+                  );
+                })()
               ) : (
                 <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
                   {JSON.stringify(ipfsConsensusDetail.data, null, 2)}

@@ -2079,8 +2079,30 @@ export default function Page() {
     }
 
     // Use agentDetail data for current/runs mode
-    const source = agentDetail?.scoreRoundData ?? [];
-    if (!source.length) return [];
+    const source =
+      agentDetail?.scoreRoundData ??
+      ((minerRoundDetails as any)?.scoreRoundData ?? []);
+    if (!source.length) {
+      const fallbackReward = Number((minerRoundDetails as any)?.post_consensus_avg_reward ?? 0);
+      const fallbackRank = Number((minerRoundDetails as any)?.post_consensus_rank ?? 0);
+      const fallbackRoundId = selectedRoundFromQuery ?? Number((minerRoundDetails as any)?.round ?? 0);
+      if (fallbackRoundId) {
+        return [
+          {
+            round_id: fallbackRoundId as any,
+            score: normalizeScore(fallbackReward) ?? 0,
+            rank: Number.isFinite(fallbackRank) && fallbackRank > 0 ? fallbackRank : null,
+            reward: fallbackReward,
+            eval_score: (minerRoundDetails as any)?.post_consensus_avg_eval_score ?? undefined,
+            eval_time: (minerRoundDetails as any)?.post_consensus_avg_eval_time ?? undefined,
+            timestamp: "",
+            topScore: undefined,
+            benchmarks: undefined,
+          },
+        ];
+      }
+      return [];
+    }
     return source.map((point: any) => {
       const roundId =
         point.round_id ??
@@ -2113,7 +2135,7 @@ export default function Page() {
           : undefined,
       };
     });
-  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData]);
+  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData, minerRoundDetails, selectedRoundFromQuery]);
 
   // Removed fetchAllAgentRuns call - we use minerRoundDetails instead
   // This eliminates the unnecessary /api/v1/agent-runs call
@@ -2324,7 +2346,7 @@ export default function Page() {
   const sourceRound = Number.parseInt(sourceRoundParts[1] ?? "", 10);
   const sourceRoundHref =
     Number.isFinite(sourceSeason) && Number.isFinite(sourceRound) && (effectiveAgent?.uid ?? numericUidFromParam)
-      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${sourceSeason}&round=${sourceRound}&agent=${effectiveAgent?.uid ?? numericUidFromParam}`
+      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${sourceSeason}&round=${sourceRound}`
       : null;
   const isAvgResponseTimeout =
     effectiveEvalTime !== null &&
@@ -2345,7 +2367,7 @@ export default function Page() {
   const reusedRound = Number.parseInt(reusedRoundParts[1] ?? "", 10);
   const reusedRoundDetailsHref =
     Number.isFinite(reusedSeason) && Number.isFinite(reusedRound) && (effectiveAgent?.uid ?? numericUidFromParam)
-      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${reusedSeason}&round=${reusedRound}&agent=${effectiveAgent?.uid ?? numericUidFromParam}`
+      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${reusedSeason}&round=${reusedRound}`
       : null;
   const seasonCompetitionState = (() => {
     const leadership = (minerRoundDetails as any)?.season_leadership;

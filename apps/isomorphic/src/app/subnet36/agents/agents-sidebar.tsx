@@ -325,6 +325,20 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     return { miners };
   }, [minersFromApiKey]);
 
+  // Normalize displayed rank to the participating set (handshake miners shown in this round),
+  // instead of keeping the global metagraph rank (e.g. 26, 234, ...).
+  const normalizedRankByUid = useMemo(() => {
+    const sorted = [...(minersData.miners ?? [])].sort((a, b) => {
+      const ar = Number.isFinite(a.ranking) ? a.ranking : Number.MAX_SAFE_INTEGER;
+      const br = Number.isFinite(b.ranking) ? b.ranking : Number.MAX_SAFE_INTEGER;
+      if (ar !== br) return ar - br;
+      return (b.score ?? 0) - (a.score ?? 0);
+    });
+    const map = new Map<number, number>();
+    sorted.forEach((m, idx) => map.set(Number(m.uid), idx + 1));
+    return map;
+  }, [minersData.miners]);
+
   const loading = roundsLoading;
   const error = roundsError;
 
@@ -500,16 +514,15 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               const firstNonSotaUid = filteredAgents.find(
                 (agent) => !agent.isSota
               )?.uid;
-              const isTopRanked = miner.ranking === 1;
+              const normalizedRank = normalizedRankByUid.get(Number(miner.uid));
+              const isTopRanked = normalizedRank === 1;
               const showCrown = includeSota
                 ? isTopRanked
                 : firstNonSotaUid === miner.uid;
               const highlightTop =
                 (!includeSota && firstNonSotaUid === miner.uid) ||
                 (includeSota && isTopRanked);
-              const displayRank = Number.isFinite(miner.ranking)
-                ? miner.ranking
-                : undefined;
+              const displayRank = normalizedRank !== undefined ? normalizedRank : undefined;
               const showRankBadge = typeof displayRank === "number";
               const scoreMeta = minerScoreMetaByUid.get(Number(miner.uid));
               const roundScore = scoreMeta?.round ?? Number(miner.score ?? 0);
@@ -528,8 +541,8 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                     // Bronce (sin amarillo)
                     return "bg-gradient-to-r from-amber-800 via-amber-700 to-orange-800 text-white shadow-sm";
                   default:
-                    // Resto grises
-                    return "bg-gray-700 text-gray-100 border border-gray-500";
+                    // #4+ (evitar look plata/gris): azul/cian
+                    return "bg-gradient-to-r from-sky-700 via-cyan-700 to-blue-800 text-cyan-50 border border-cyan-300/40 shadow-sm";
                 }
               })();
 
