@@ -161,6 +161,14 @@ export class AgentsRepository {
           payload.avg_cost_per_task ??
           roundMetrics.avgCostPerTask ??
           null,
+        task_timeout_seconds:
+          payload.task_timeout_seconds ??
+          roundMetrics.taskTimeoutSeconds ??
+          undefined,
+        max_task_cost_usd:
+          payload.max_task_cost_usd ??
+          roundMetrics.maxTaskCostUsd ??
+          undefined,
         validators: Array.isArray(roundMetrics.validators)
           ? roundMetrics.validators.map((v: any) => ({
               validator_uid: Number(v.uid ?? 0),
@@ -185,6 +193,14 @@ export class AgentsRepository {
                 null,
             }))
           : [],
+        post_consensus_summary:
+          payload.post_consensus_summary ??
+          roundMetrics.postConsensusSummary ??
+          undefined,
+        season_leadership:
+          payload.season_leadership ??
+          roundMetrics.seasonLeadership ??
+          undefined,
         scoreRoundData: Array.isArray(payload.scoreRoundData) ? payload.scoreRoundData : [],
       } as MinerRoundDetailsResponse['data'];
     }

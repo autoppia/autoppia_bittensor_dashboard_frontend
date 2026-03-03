@@ -107,6 +107,18 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
+/** Truncate long evaluation ID to short start + … + middle + … + end (compact table display). */
+function truncateEvaluationId(
+  id: string,
+  startLen = 8,
+  midLen = 3,
+  endLen = 6
+): string {
+  if (!id || id.length <= startLen + midLen + endLen + 4) return id;
+  const midStart = Math.floor(id.length / 2) - Math.floor(midLen / 2);
+  return id.slice(0, startLen) + "…" + id.slice(midStart, midStart + midLen) + "…" + id.slice(-endLen);
+}
+
 function IDCopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false);
 
@@ -182,6 +194,17 @@ function normalizeRoundInSeason(
   }
 
   return roundNum > 0 ? roundNum : null;
+}
+
+function normalizePositiveInt(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return null;
 }
 
 // Transform stats to local detail model (no external utils)
@@ -326,6 +349,27 @@ export default function Page() {
     info?.reusedFrom?.roundNumber,
     info?.reusedFrom?.seasonNumber
   );
+  const currentSeasonNumber =
+    normalizePositiveInt((info?.round as any)?.season_number) ??
+    normalizePositiveInt((info?.round as any)?.season) ??
+    null;
+  const currentRoundInSeason =
+    normalizeRoundInSeason(
+      (info?.round as any)?.round_number_in_season ??
+        (info?.round as any)?.roundNumber ??
+        (info?.round as any)?.round,
+      currentSeasonNumber
+    ) ?? null;
+  const roundDisplayLabel =
+    currentSeasonNumber !== null && currentRoundInSeason !== null
+      ? `Season ${currentSeasonNumber}, Round ${currentRoundInSeason}`
+      : ((info?.round as any)?.roundId as string | undefined) ??
+        ((info?.round as any)?.validatorRoundId as string | undefined) ??
+        "—";
+  const roundLinkHref =
+    currentSeasonNumber !== null && currentRoundInSeason !== null
+      ? `${routes.rounds}/${currentSeasonNumber}/${currentRoundInSeason}`
+      : "#";
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -360,16 +404,7 @@ export default function Page() {
           ) : (
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
               <Link
-                href={((): string => {
-                  const roundKey =
-                    typeof info?.round?.roundNumber === "number" &&
-                    Number.isFinite(info.round.roundNumber)
-                      ? `round_${info.round.roundNumber}`
-                      : (info?.round?.validatorRoundId ?? "");
-                  return roundKey
-                    ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
-                    : "#";
-                })()}
+                href={roundLinkHref}
                 className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -377,11 +412,11 @@ export default function Page() {
                 </span>
                 <div className="h-3.5 w-px bg-slate-600/70" />
                 <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                  {truncateMiddle(info?.round?.validatorRoundId ?? "—", 8)}
+                  {roundDisplayLabel}
                 </span>
-                {info?.round?.validatorRoundId && (
+                {(info?.round as any)?.roundId && (
                   <span className="ml-auto">
-                    <IDCopyButton text={info.round.validatorRoundId} />
+                    <IDCopyButton text={(info?.round as any).roundId} />
                   </span>
                 )}
               </Link>
@@ -2313,22 +2348,29 @@ const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 const agentRunTasksColumns = [
   columnHelper.display({
     id: "evaluationId",
-    size: 80,
+    size: 55,
     header: "Evaluation Id",
-    cell: ({ row }) => (
-      <Link
-        href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="ms-2 font-mono text-xs sm:text-sm text-white"
-        title="View evaluation details"
-      >
-        #{row.original.evaluationId}
-      </Link>
-    ),
+    cell: ({ row }) => {
+      const id = row.original.evaluationId;
+      const displayId = truncateEvaluationId(id);
+      return (
+        <div className="flex items-center gap-1.5 min-w-0 ms-2">
+          <Link
+            href={`${routes.evaluations}/${id}`}
+            className="font-mono text-xs sm:text-sm text-white truncate min-w-0"
+            title={id}
+          >
+            #{displayId}
+          </Link>
+          <IDCopyButton text={id} />
+        </div>
+      );
+    },
   }),
   columnHelper.accessor("prompt", {
     id: "prompt",
     header: "Prompt",
-    size: 400,
+    size: 420,
     enableSorting: false,
     cell: ({ row }) => (
       <Link

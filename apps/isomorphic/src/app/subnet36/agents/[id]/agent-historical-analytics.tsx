@@ -194,11 +194,14 @@ export default function AgentHistoricalAnalytics({
   // Aggregate data by website and use case - use minerHistorical if available
   const { websiteStats, useCaseStats } = useMemo(() => {
     // If we have minerHistorical data, use only source round details (best round fallbacks)
-    if (minerHistorical?.performanceByWebsite) {
+    const websiteSource =
+      (minerHistorical as any)?.performanceByWebsiteBestRound ??
+      minerHistorical?.performanceByWebsite;
+    if (websiteSource) {
       const websiteMap = new Map<string, WebsiteStats>();
       const useCaseMap = new Map<string, UseCaseStats>();
 
-      minerHistorical.performanceByWebsite.forEach((ws: any) => {
+      websiteSource.forEach((ws: any) => {
         const website = ws.website;
         if (!website) return;
         let websiteTasks = 0;
