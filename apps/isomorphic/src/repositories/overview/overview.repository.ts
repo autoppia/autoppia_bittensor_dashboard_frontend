@@ -34,12 +34,12 @@ export class OverviewRepository {
       const response = await apiClient.get<OverviewMetricsResponse>(
         `${this.baseEndpoint}/metrics`
       );
-      
+
       // Ensure response.data is an object before accessing properties
       if (!response.data || typeof response.data !== 'object') {
         throw new Error('Invalid response data format');
       }
-      
+
       // Handle both nested and flat response structures
       if (response.data?.data?.metrics) {
         return response.data.data.metrics;
@@ -64,12 +64,12 @@ export class OverviewRepository {
         `${this.baseEndpoint}/validators`,
         params
       );
-      
+
       // Ensure response.data is an object before accessing properties
       if (!response.data || typeof response.data !== 'object') {
         throw new Error('Invalid response data format');
       }
-      
+
       // Handle both nested and flat response structures
       if (response.data?.data) {
         return response.data;
@@ -181,12 +181,12 @@ export class OverviewRepository {
         `${this.baseEndpoint}/leaderboard`,
         params
       );
-      
+
       // Ensure response.data is an object before accessing properties
       if (!response.data || typeof response.data !== 'object') {
         throw new Error('Invalid response data format');
       }
-      
+
       // Handle both nested and flat response structures
       if (response.data?.data) {
         return response.data;

@@ -54,7 +54,7 @@ const formatNetwork = (kb: number) => {
 // Get trend icon based on value
 const getTrendIcon = (value: number, previousValue?: number) => {
   if (previousValue === undefined) return <PiMinus className="w-4 h-4 text-gray-500" />;
-  
+
   if (value > previousValue) {
     return <PiTrendUp className="w-4 h-4 text-green-500" />;
   } else if (value < previousValue) {
@@ -114,7 +114,7 @@ export default function TaskMetricsDynamic() {
   // Calculate current vs previous values for trends
   const currentMemory = memoryUsage.length > 0 ? memoryUsage[memoryUsage.length - 1]?.value : 0;
   const previousMemory = memoryUsage.length > 1 ? memoryUsage[memoryUsage.length - 2]?.value : undefined;
-  
+
   const currentCpu = cpuUsage.length > 0 ? cpuUsage[cpuUsage.length - 1]?.value : 0;
   const previousCpu = cpuUsage.length > 1 ? cpuUsage[cpuUsage.length - 2]?.value : undefined;
 
@@ -198,7 +198,7 @@ export default function TaskMetricsDynamic() {
             </div>
             {getTrendIcon(currentMemory, previousMemory)}
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Text className="text-gray-600 text-sm">Current Usage</Text>
@@ -206,7 +206,7 @@ export default function TaskMetricsDynamic() {
                 {formatMemory(currentMemory)}
               </Text>
             </div>
-            
+
             {memoryUsage.length > 1 && (
               <div className="space-y-2">
                 <Text className="text-gray-600 text-sm">Usage Over Time</Text>
@@ -240,7 +240,7 @@ export default function TaskMetricsDynamic() {
             </div>
             {getTrendIcon(currentCpu, previousCpu)}
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Text className="text-gray-600 text-sm">Current Usage</Text>
@@ -248,7 +248,7 @@ export default function TaskMetricsDynamic() {
                 {currentCpu.toFixed(1)}%
               </Text>
             </div>
-            
+
             {cpuUsage.length > 1 && (
               <div className="space-y-2">
                 <Text className="text-gray-600 text-sm">Usage Over Time</Text>

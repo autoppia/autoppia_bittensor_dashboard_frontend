@@ -22,7 +22,7 @@ export const metaObject = () => {
       description: siteConfig.description,
       url: "https://leaderboard.autoppia.com",
       image: "https://leaderboard.autoppia.com/og.webp",
-      siteName: "Bittensor Subnet 36 Leaderboard", 
+      siteName: "Bittensor Subnet 36 Leaderboard",
       locale: "en_US",
       type: "website",
     },

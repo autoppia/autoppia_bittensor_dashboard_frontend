@@ -84,7 +84,7 @@ export function getProjectColors(projectName: string): ProjectColors {
 
   // Normalizar el nombre del proyecto (trim y lowercase)
   const normalizedName = projectName.trim().toLowerCase();
-  
+
   // Primero, intentar buscar directamente por nombre o slug
   let website = websitesData.find(
     (w) => {
@@ -115,7 +115,7 @@ export function getProjectColors(projectName: string): ProjectColors {
         const nameLower = w.name.toLowerCase();
         const slugLower = w.slug?.toLowerCase() || "";
         // Buscar si el nombre normalizado contiene el slug o viceversa
-        return nameLower.includes(normalizedName) || 
+        return nameLower.includes(normalizedName) ||
                normalizedName.includes(nameLower) ||
                slugLower.includes(normalizedName) ||
                normalizedName.includes(slugLower);

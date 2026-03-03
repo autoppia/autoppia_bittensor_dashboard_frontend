@@ -106,7 +106,7 @@ export function PerformanceAnalyticsPlaceholder() {
           <div className={cn("h-10 w-40 rounded", SKELETON_BASE)}></div>
         </div>
       </div>
-      
+
       <div className="space-y-6">
         {Array.from({ length: 5 }).map((_, index) => (
           <div
@@ -149,13 +149,13 @@ export function SummaryPlaceholder() {
   return (
     <div className={cn("rounded-3xl border border-white/15 p-6 shadow-2xl backdrop-blur-xl", PLACEHOLDER_PANEL)}>
       <div className={cn("h-7 w-32 rounded mb-6", SKELETON_BASE)}></div>
-      
+
       <div className="flex flex-col items-center mb-6">
         <div className={cn("w-48 h-48 rounded-full mb-4", SKELETON_BASE)}></div>
         <div className={cn("h-5 w-24 rounded mb-2", SKELETON_BASE)}></div>
         <div className={cn("h-4 w-32 rounded", SKELETON_SUBTLE)}></div>
       </div>
-      
+
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
@@ -181,4 +181,3 @@ export function SummaryPlaceholder() {
     </div>
   );
 }
-

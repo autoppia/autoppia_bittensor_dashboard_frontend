@@ -8,12 +8,12 @@ export default async function Page() {
   async function resolveCurrentRoundIdentifier() {
     try {
       const current = await roundsRepository.getCurrentRound();
-      
+
       // Prefer season/round format if available
       if (current?.season && current?.roundInSeason) {
         return `${current.season}/${current.roundInSeason}`;
       }
-      
+
       // Fallback to old format
       if (current?.roundKey) {
         return current.roundKey;
@@ -30,12 +30,12 @@ export default async function Page() {
       const rounds = roundsList?.data?.rounds || roundsList?.rounds;
       if (Array.isArray(rounds) && rounds.length > 0) {
         const round = rounds[0];
-        
+
         // Prefer season/round format if available
         if (round?.season && round?.roundInSeason) {
           return `${round.season}/${round.roundInSeason}`;
         }
-        
+
         // Fallback to old format
         return round.roundKey ?? String(round.id);
       }
@@ -50,7 +50,7 @@ export default async function Page() {
 
   if (currentRoundId) {
     // Don't encode if it's season/round format (contains /)
-    const redirectPath = currentRoundId.includes('/') 
+    const redirectPath = currentRoundId.includes('/')
       ? `${routes.rounds}/${currentRoundId}`
       : `${routes.rounds}/${encodeURIComponent(currentRoundId)}`;
     redirect(redirectPath);

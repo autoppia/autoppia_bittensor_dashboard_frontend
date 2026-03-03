@@ -15,10 +15,10 @@ export default function PerformanceMonitor({ label, startTime }: PerformanceMoni
       const endTime = performance.now();
       const duration = endTime - startTime;
       setLoadTime(duration);
-      
+
       // Log performance metrics
       console.log(`🚀 ${label} loaded in ${duration.toFixed(2)}ms`);
-      
+
       // Store in localStorage for debugging
       const metrics = JSON.parse(localStorage.getItem('performance-metrics') || '[]');
       metrics.push({
@@ -44,7 +44,7 @@ export default function PerformanceMonitor({ label, startTime }: PerformanceMoni
 
 export function usePerformanceTimer(label: string) {
   const [startTime] = useState(() => performance.now());
-  
+
   useEffect(() => {
     return () => {
       const endTime = performance.now();

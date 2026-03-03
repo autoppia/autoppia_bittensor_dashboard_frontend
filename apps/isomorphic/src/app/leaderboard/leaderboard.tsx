@@ -1197,7 +1197,7 @@ export default function App() {
                   </div>
                 </div>
               </motion.div>
-            )} 
+            )}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8 sm:mb-12 items-stretch">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}

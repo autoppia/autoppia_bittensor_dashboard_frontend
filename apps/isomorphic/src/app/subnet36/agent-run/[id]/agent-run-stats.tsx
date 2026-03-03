@@ -134,7 +134,7 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
         className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full blur-3xl"
         style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
-      
+
       {/* Mobile Layout - Stacked */}
       <div className="flex flex-col space-y-6 md:hidden relative">
         {/* Overall Score - Prominent on mobile */}

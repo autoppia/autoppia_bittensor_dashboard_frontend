@@ -10,7 +10,7 @@ export type AgentDataType = {
     /** porcentaje de éxito global mostrado en el gráfico */
     successRate: number;
   };
-  
+
   /* ─────────────────────────  top‑5 agentes ───────────────────────── */
   export const agentsData: AgentDataType[] = [
     {

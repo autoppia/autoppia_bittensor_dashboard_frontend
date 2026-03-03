@@ -25,4 +25,3 @@ export class ValidatorsRepository {
 }
 
 export const validatorsRepository = new ValidatorsRepository();
-

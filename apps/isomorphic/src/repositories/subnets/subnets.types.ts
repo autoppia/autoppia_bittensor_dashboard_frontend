@@ -50,4 +50,3 @@ export type SubnetTimelineResponse = {
   timeline: ApiTimelinePoint[];
   meta: SubnetTimelineMeta;
 };
-

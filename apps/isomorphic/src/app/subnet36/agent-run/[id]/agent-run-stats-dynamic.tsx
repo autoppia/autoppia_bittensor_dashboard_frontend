@@ -10,9 +10,9 @@ interface AgentRunStatsDynamicProps {
   error?: string | null;
 }
 
-export default function AgentRunStatsDynamic({ 
-  statistics: stats, 
-  isLoading = false, 
+export default function AgentRunStatsDynamic({
+  statistics: stats,
+  isLoading = false,
   error,
 }: AgentRunStatsDynamicProps) {
 

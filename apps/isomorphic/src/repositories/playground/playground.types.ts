@@ -10,4 +10,3 @@ export type RunAgentBenchmarkPayload = {
 };
 
 export type RunAgentBenchmarkResponse = Record<string, unknown>;
-

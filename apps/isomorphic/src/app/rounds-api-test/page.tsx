@@ -9,7 +9,7 @@ export default function RoundsApiTestPage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">Rounds API Test Page</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Rounds List */}
         <div className="bg-white p-6 rounded-lg shadow">
@@ -138,10 +138,10 @@ function RoundStatisticsTest({ roundId }: { roundId: number }) {
 }
 
 function RoundMinersTest({ roundId }: { roundId: number }) {
-  const { data, loading, error } = useRoundMiners(roundId, { 
-    limit: 5, 
-    sortBy: 'score', 
-    sortOrder: 'desc' 
+  const { data, loading, error } = useRoundMiners(roundId, {
+    limit: 5,
+    sortBy: 'score',
+    sortOrder: 'desc'
   });
 
   if (loading) return <div className="text-blue-600">Loading miners...</div>;

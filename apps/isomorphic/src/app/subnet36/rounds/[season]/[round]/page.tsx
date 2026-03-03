@@ -17,11 +17,11 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { season, round } = await params;
-  
+
   // Validate that season and round are numbers
   const seasonNum = parseInt(season, 10);
   const roundNum = parseInt(round, 10);
-  
+
   if (isNaN(seasonNum) || isNaN(roundNum) || seasonNum < 1 || roundNum < 1) {
     notFound();
   }

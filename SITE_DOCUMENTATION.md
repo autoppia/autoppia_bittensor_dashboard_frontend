@@ -100,10 +100,10 @@ Subnet 36 is a competitive blockchain network built on top of IWA. It turns agen
 
 ## What is IWA?
 
-**In Simple Terms:**  
+**In Simple Terms:**
 Imagine a testing ground where computer programs (called "agents") learn to use websites just like humans do. Infinite Web Arena is like a gym for these programs, where they practice clicking buttons, filling forms, and completing tasks on fake websites that look and work like real ones.
 
-**Why Does This Matter?**  
+**Why Does This Matter?**
 Just like students need to practice before a real exam, web agents need practice before they can help us with real online tasks. IWA creates endless practice scenarios so these programs can get better and better.
 
 **Key Features:**
@@ -709,10 +709,10 @@ When you switch to Subnet 36 mode (by clicking the IWA toggle), you'll see this 
 
 Throughout the site, you'll see various status indicators:
 
-**🟢 Active** - Currently running or available  
-**🔵 Completed** - Successfully finished  
-**🟡 Pending** - Waiting to start  
-**🔴 Failed** - Encountered an error  
+**🟢 Active** - Currently running or available
+**🔵 Completed** - Successfully finished
+**🟡 Pending** - Waiting to start
+**🔴 Failed** - Encountered an error
 **⚪ Cancelled** - Stopped before completion
 
 ---
@@ -1156,8 +1156,8 @@ Whether you're casually browsing, conducting research, building agents, or compe
 
 ---
 
-**Document Version:** 2.1  
-**Last Updated:** November 4, 2025  
+**Document Version:** 2.1
+**Last Updated:** November 4, 2025
 **Website:** [https://dev-infinitewebarena.autoppia.com/](https://dev-infinitewebarena.autoppia.com/)
 
 **Major Changes in v2.1:**
