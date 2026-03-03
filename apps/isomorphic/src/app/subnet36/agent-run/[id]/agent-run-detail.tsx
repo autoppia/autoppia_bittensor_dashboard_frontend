@@ -118,7 +118,7 @@ export default function AgentRunDetail({
         className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl"
         style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
-      
+
       {/* Header Section */}
       <div className="relative mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -133,7 +133,7 @@ export default function AgentRunDetail({
               </p>
             </div>
           </div>
-          
+
           {/* Filter Controls */}
           <div className="flex items-center gap-3">
             <Select
@@ -168,10 +168,10 @@ export default function AgentRunDetail({
             const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
             const isHighPerformance = item.average >= 80;
             const isMediumPerformance = item.average >= 60 && item.average < 80;
-            
+
             return (
-              <div 
-                key={`${item.website}-${index}`} 
+              <div
+                key={`${item.website}-${index}`}
                 className="group relative rounded-xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm transition-all duration-300 hover:border-[#FDF5E6]/60 hover:shadow-2xl"
                 style={{
                   boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
@@ -180,7 +180,7 @@ export default function AgentRunDetail({
                 {/* Performance Indicator */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div 
+                    <div
                       className="w-3 h-3 rounded-full shadow-sm"
                       style={{ backgroundColor: colorClass }}
                     />
@@ -213,7 +213,7 @@ export default function AgentRunDetail({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="text-right">
                     <div className="text-2xl font-bold text-white">
                       {item.average.toFixed(1)}%
@@ -223,7 +223,7 @@ export default function AgentRunDetail({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Enhanced Progress Bar */}
                 <div className="relative">
                   <div className="h-4 w-full rounded-full bg-white/10 overflow-hidden">
@@ -237,7 +237,7 @@ export default function AgentRunDetail({
                     >
                       {/* Shimmer effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-                      
+
                       {/* Progress indicator dot */}
                       <div
                         className="absolute right-1 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full shadow-sm"
@@ -248,7 +248,7 @@ export default function AgentRunDetail({
                       />
                     </div>
                   </div>
-                  
+
                   {/* Performance markers */}
                   <div className="flex justify-between mt-2 text-xs text-white/60">
                     <span>0%</span>
@@ -258,7 +258,7 @@ export default function AgentRunDetail({
                     <span>100%</span>
                   </div>
                 </div>
-                
+
                 {/* Additional metrics */}
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                   <div className="rounded-lg border border-white/15 bg-white/10 p-3">

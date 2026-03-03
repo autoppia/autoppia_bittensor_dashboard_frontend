@@ -10,8 +10,8 @@ interface LoadingScreenProps {
   className?: string;
 }
 
-export default function LoadingScreen({ 
-  title = "Loading...", 
+export default function LoadingScreen({
+  title = "Loading...",
   subtitle = "Please wait while we fetch your data",
   size = 'md',
   variant = 'default',
@@ -53,7 +53,7 @@ export default function LoadingScreen({
             <div className={`absolute inset-0 ${sizeClasses[size]} mx-auto border-2 border-blue-300 rounded-full animate-ping`}></div>
             <div className={`absolute inset-0 ${sizeClasses[size]} mx-auto border border-purple-300 rounded-full animate-ping`} style={{animationDelay: '0.5s'}}></div>
           </div>
-          
+
           {/* Loading Text */}
           <div className="space-y-2">
             <h2 className={`${textSizeClasses[size]} font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent`}>
@@ -61,14 +61,14 @@ export default function LoadingScreen({
             </h2>
             <p className="text-gray-600">{subtitle}</p>
           </div>
-          
+
           {/* Progress Bar */}
           <div className={`${size === 'sm' ? 'w-48' : size === 'md' ? 'w-64' : 'w-80'} mx-auto`}>
             <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full animate-pulse"></div>
             </div>
           </div>
-          
+
           {/* Loading Dots */}
           <div className="flex justify-center space-x-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
@@ -92,7 +92,7 @@ export default function LoadingScreen({
             </div>
           </div>
         </div>
-        
+
         {/* Loading Text */}
         <div className="space-y-1">
           <h3 className={`${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-xl' : 'text-2xl'} font-semibold text-gray-800`}>
@@ -100,7 +100,7 @@ export default function LoadingScreen({
           </h3>
           <p className="text-gray-600 text-sm">{subtitle}</p>
         </div>
-        
+
         {/* Loading Dots */}
         <div className="flex justify-center space-x-1">
           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
@@ -135,10 +135,10 @@ export function CardLoadingSkeleton({ count = 4, className = "" }: { count?: num
           'from-violet-400 to-fuchsia-500',
           'from-green-400 to-emerald-500'
         ];
-        
+
         return (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`relative bg-gradient-to-br ${colors[index % colors.length]} border-2 ${borderColors[index % borderColors.length]} rounded-xl p-3 backdrop-blur-md overflow-hidden animate-pulse`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
@@ -147,7 +147,7 @@ export function CardLoadingSkeleton({ count = 4, className = "" }: { count?: num
             <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-gray-400/50 rounded-tr-lg"></div>
             <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-gray-400/50 rounded-bl-lg"></div>
             <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-gray-400/50 rounded-br-lg"></div>
-            
+
             <div className="relative z-10">
               {/* Icon */}
               <div className="flex items-center space-x-2 mb-2">
@@ -190,7 +190,7 @@ export function ProgressBarLoading({ className = "" }: { className?: string }) {
           <span className="text-sm text-emerald-600 font-medium">Loading...</span>
         </div>
       </div>
-      
+
       {/* Enhanced Progress Bar Loading */}
       <div className="w-full flex items-center justify-between mb-4">
         {Array.from({ length: 50 }, (_, index) => (
@@ -204,14 +204,14 @@ export function ProgressBarLoading({ className = "" }: { className?: string }) {
           />
         ))}
       </div>
-      
+
       {/* Loading Content */}
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center space-x-2">
           <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-emerald-600 font-medium">Loading progress data...</span>
         </div>
-        
+
         {/* Animated Progress Text */}
         <div className="text-sm text-gray-500 animate-pulse">
           Fetching current block and time remaining...

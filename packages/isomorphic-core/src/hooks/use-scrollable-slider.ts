@@ -25,12 +25,12 @@ export function useScrollableSlider() {
     const filterBarEl = sliderEl.current;
     const prevBtn = sliderPrevBtn.current;
     const nextBtn = sliderNextBtn.current;
-    
+
     // Early return if filterBarEl is null
     if (!filterBarEl) {
       return;
     }
-    
+
     const formPageHeaderEl = filterBarEl.classList.contains(
       'formPageHeaderSliderElJS'
     );

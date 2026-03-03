@@ -141,7 +141,7 @@ export class ApiClient {
       // Create abort controller for timeout
       const controller = new AbortController();
       // Use longer timeout for heavy endpoints (overview/metrics)
-      const isHeavyEndpoint = endpoint.includes('/overview/metrics') || 
+      const isHeavyEndpoint = endpoint.includes('/overview/metrics') ||
                                endpoint.includes('/overview/validators') ||
                                endpoint.includes('/leaderboard');
       const timeout = isHeavyEndpoint ? 30000 : 10000; // 30s for heavy endpoints, 10s for others
@@ -162,7 +162,7 @@ export class ApiClient {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         console.error('[ApiClient] Fetch error:', fetchError);
-        
+
         // Handle abort (timeout)
         if (fetchError?.name === 'AbortError') {
           console.error('[ApiClient] Request was aborted (timeout)');
@@ -172,10 +172,10 @@ export class ApiClient {
             code: 'TIMEOUT',
           } as ApiError;
         }
-        
+
         // Handle network errors (connection refused, etc.)
-        if (fetchError?.code === 'ECONNREFUSED' || 
-            fetchError?.message?.includes('Failed to fetch') || 
+        if (fetchError?.code === 'ECONNREFUSED' ||
+            fetchError?.message?.includes('Failed to fetch') ||
             fetchError?.message?.includes('ERR_CONNECTION_REFUSED') ||
             fetchError?.cause?.code === 'ECONNREFUSED') {
           console.error('[ApiClient] Connection refused');
@@ -185,7 +185,7 @@ export class ApiClient {
             code: 'CONNECTION_REFUSED',
           } as ApiError;
         }
-        
+
         // Re-throw all other errors
         throw fetchError;
       }

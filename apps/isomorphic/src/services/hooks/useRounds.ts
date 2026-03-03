@@ -220,7 +220,7 @@ export function useRoundProgress(roundId?: RoundIdentifier) {
 
 // Hook for new simplified get-round endpoint
 export function useGetRound(season?: number, roundInSeason?: number) {
-  const enabled = 
+  const enabled =
     typeof season === "number" && Number.isFinite(season) && season > 0 &&
     typeof roundInSeason === "number" && Number.isFinite(roundInSeason) && roundInSeason > 0;
   const request = useCallback(

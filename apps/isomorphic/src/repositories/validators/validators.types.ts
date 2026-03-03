@@ -109,4 +109,3 @@ export interface ValidatorDetailsResponse {
   success: boolean;
   data: ValidatorDetailsData;
 }
-

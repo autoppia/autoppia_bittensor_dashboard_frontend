@@ -30,4 +30,3 @@ class PlaygroundRepository {
 
 export const playgroundRepository = new PlaygroundRepository();
 export const PLAYGROUND_BENCHMARK_ENDPOINT = TEST_AGENT_BENCHMARK_ENDPOINT;
-

@@ -11,9 +11,9 @@ interface AgentRunPersonasDynamicProps {
   summary?: AgentRunSummary | null;
 }
 
-export default function AgentRunPersonasDynamic({ 
-  personas, 
-  isLoading = false, 
+export default function AgentRunPersonasDynamic({
+  personas,
+  isLoading = false,
   error,
   summary,
 }: AgentRunPersonasDynamicProps) {

@@ -61,33 +61,33 @@ SONAR_SCANNER_DIR="$SONAR_SCANNER_HOME/sonar-scanner-$SONAR_SCANNER_VERSION-linu
 
 if [ ! -d "$SONAR_SCANNER_DIR" ]; then
     echo -e "${YELLOW}📦 SonarScanner no encontrado. Instalando...${NC}"
-    
+
     mkdir -p "$SONAR_SCANNER_HOME"
     cd "$SONAR_SCANNER_HOME"
-    
+
     SCANNER_FILE="sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip"
     SCANNER_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${SCANNER_FILE}"
-    
+
     echo "   Descargando SonarScanner $SONAR_SCANNER_VERSION..."
     wget -q "$SCANNER_URL" || {
         echo -e "${RED}❌ Error al descargar SonarScanner${NC}"
         exit 1
     }
-    
+
     echo "   Extrayendo..."
     unzip -q -o "$SCANNER_FILE" || {
         echo -e "${RED}❌ Error al extraer SonarScanner${NC}"
         exit 1
     }
-    
+
     # El zip extrae a "sonar-scanner-X.X.X-linux-x64", renombrar si es necesario
     EXTRACTED_DIR="sonar-scanner-${SONAR_SCANNER_VERSION}-linux-x64"
     if [ -d "$EXTRACTED_DIR" ] && [ "$EXTRACTED_DIR" != "$SONAR_SCANNER_DIR" ]; then
         mv "$EXTRACTED_DIR" "$SONAR_SCANNER_DIR" 2>/dev/null || true
     fi
-    
+
     rm -f "$SCANNER_FILE"
-    
+
     echo -e "${GREEN}✅ SonarScanner instalado en: $SONAR_SCANNER_DIR${NC}"
     echo ""
 fi
@@ -152,7 +152,7 @@ echo ""
 if [ $EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✅ Análisis completado y subido exitosamente${NC}"
     echo ""
-    
+
     # Mostrar reportes locales
     echo -e "${BLUE}📊 Reportes locales generados:${NC}"
     if [ -f "$PROJECT_ROOT/.scannerwork/report-task.txt" ]; then
@@ -162,11 +162,11 @@ if [ $EXIT_CODE -eq 0 ]; then
         cat "$PROJECT_ROOT/.scannerwork/report-task.txt" 2>/dev/null || echo "   (No se pudo leer el resumen)"
         echo ""
     fi
-    
+
     echo -e "${BLUE}🔗 Ver resultados en SonarCloud:${NC}"
     echo "   https://sonarcloud.io/dashboard?id=autoppia_autoppia_bittensor_dashboard_frontend"
     echo ""
-    
+
     # Mostrar incidencias usando el script get-sonar-issues
     if [ -f "$SCRIPT_DIR/get-sonar-issues.sh" ]; then
         echo -e "${BLUE}📋 Obteniendo incidencias actualizadas...${NC}"

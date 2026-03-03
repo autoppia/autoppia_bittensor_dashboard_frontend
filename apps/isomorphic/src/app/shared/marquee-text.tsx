@@ -28,12 +28,12 @@ export default function MarqueeText({
       if (containerRef.current && textRef.current) {
         const containerW = containerRef.current.offsetWidth;
         const textWidth = textRef.current.scrollWidth;
-        
+
         setContainerWidth(containerW);
-        
+
         // Total distance: container width + text width (from outside right to -100% left)
         const totalDistance = containerW + textWidth;
-        
+
         // Duration based on speed
         const duration = totalDistance / speed;
         setAnimationDuration(duration);
@@ -42,7 +42,7 @@ export default function MarqueeText({
 
     // Calculate after component mounts
     calculateAnimation();
-    
+
     // Recalculate on window resize
     const handleResize = () => calculateAnimation();
     window.addEventListener('resize', handleResize);
@@ -61,7 +61,7 @@ export default function MarqueeText({
   const totalCycleTime = animationDuration + pauseDuration;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`overflow-hidden whitespace-nowrap relative ${containerClassName}`}
     >

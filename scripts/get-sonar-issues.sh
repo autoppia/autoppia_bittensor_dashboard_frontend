@@ -105,7 +105,7 @@ if [[ "${USE_JQ}" == "true" ]]; then
     RELIABILITY_RATING_RAW=$(echo "${METRICS_RESPONSE}" | jq -r '.component.measures[]? | select(.metric=="reliability_rating") | .value // "1.0"' 2>/dev/null || echo "1.0")
     MAINTAINABILITY_RATING_RAW=$(echo "${METRICS_RESPONSE}" | jq -r '.component.measures[]? | select(.metric=="sqale_rating") | .value // "1.0"' 2>/dev/null || echo "1.0")
     SECURITY_REVIEW_RATING_RAW=$(echo "${METRICS_RESPONSE}" | jq -r '.component.measures[]? | select(.metric=="security_review_rating") | .value // "1.0"' 2>/dev/null || echo "1.0")
-    
+
     SECURITY_RATING=$(rating_to_letter "${SECURITY_RATING_RAW}")
     RELIABILITY_RATING=$(rating_to_letter "${RELIABILITY_RATING_RAW}")
     MAINTAINABILITY_RATING=$(rating_to_letter "${MAINTAINABILITY_RATING_RAW}")
@@ -126,10 +126,10 @@ if [[ "${USE_JQ}" == "true" ]]; then
     SECURITY_HOTSPOTS="0"
     ACCEPTED_ISSUES="0"
   fi
-  
+
   # Quality Gate
   QG_STATUS=$(echo "${QG_RESPONSE}" | jq -r '.projectStatus.status // "UNKNOWN"' 2>/dev/null || echo "UNKNOWN")
-  
+
   # Issues por severidad
   BLOCKER_COUNT=$(echo "${ISSUES_RESPONSE}" | jq -r '[.issues[] | select(.severity=="BLOCKER")] | length' 2>/dev/null || echo "0")
   CRITICAL_COUNT=$(echo "${ISSUES_RESPONSE}" | jq -r '[.issues[] | select(.severity=="CRITICAL")] | length' 2>/dev/null || echo "0")
@@ -196,13 +196,13 @@ else
   else
     echo -e "  ${CYAN}Coverage:${NC} No disponible"
   fi
-  
+
   if [[ "${DUPLICATED}" != "0" ]] && [[ -n "${DUPLICATED}" ]]; then
     echo -e "  ${CYAN}Duplications:${NC} ${DUPLICATED}%"
   else
     echo -e "  ${CYAN}Duplications:${NC} No disponible"
   fi
-  
+
   echo -e "  ${CYAN}Security Hotspots:${NC} ${SECURITY_HOTSPOTS}, Rating: $(get_rating_color ${SECURITY_REVIEW_RATING})"
   echo ""
 fi
@@ -222,27 +222,27 @@ echo ""
 # Mostrar archivos con problemas (si tenemos jq y hay incidencias)
 if [[ "${USE_JQ}" == "true" ]] && [[ -n "${ISSUES_RESPONSE}" ]]; then
   TOTAL_ISSUES=$(echo "${ISSUES_RESPONSE}" | jq -r '.total // 0' 2>/dev/null || echo "0")
-  
+
   if [[ ${TOTAL_ISSUES} -gt 0 ]]; then
     echo -e "${CYAN}═══════════════════════════════════════════════════════${NC}"
     echo -e "${CYAN}  ARCHIVOS CON PROBLEMAS (Top 20)${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════${NC}"
     echo ""
-    
-    echo "${ISSUES_RESPONSE}" | jq -r '.issues[0:20] | group_by(.component) | .[] | 
-      "📁 " + .[0].component + "\n" + 
-      (.[] | 
-        if .severity == "BLOCKER" then "  🔴 Línea \(.line // "?")" 
-        elif .severity == "CRITICAL" then "  🔴 Línea \(.line // "?")" 
-        elif .severity == "MAJOR" then "  🟠 Línea \(.line // "?")" 
-        elif .severity == "MINOR" then "  🟡 Línea \(.line // "?")" 
-        else "  🔵 Línea \(.line // "?")" 
-        end + 
-        ": \(.message)\n" + 
+
+    echo "${ISSUES_RESPONSE}" | jq -r '.issues[0:20] | group_by(.component) | .[] |
+      "📁 " + .[0].component + "\n" +
+      (.[] |
+        if .severity == "BLOCKER" then "  🔴 Línea \(.line // "?")"
+        elif .severity == "CRITICAL" then "  🔴 Línea \(.line // "?")"
+        elif .severity == "MAJOR" then "  🟠 Línea \(.line // "?")"
+        elif .severity == "MINOR" then "  🟡 Línea \(.line // "?")"
+        else "  🔵 Línea \(.line // "?")"
+        end +
+        ": \(.message)\n" +
         "     Tipo: \(.type) | Regla: \(.rule)\n"
       ) + "\n"
     ' 2>/dev/null | head -100 || true
-    
+
     if [[ ${TOTAL_ISSUES} -gt 20 ]]; then
       echo -e "${YELLOW}... y $((TOTAL_ISSUES - 20)) más. Ver todas en SonarCloud web.${NC}"
       echo ""

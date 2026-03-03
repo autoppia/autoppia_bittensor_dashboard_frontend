@@ -27,4 +27,3 @@ export default function TeslaIcon({ ...props }: React.SVGProps<SVGSVGElement>) {
       </svg>
     );
   }
-  
