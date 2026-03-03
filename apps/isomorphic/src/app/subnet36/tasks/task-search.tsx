@@ -349,7 +349,7 @@ export default function TaskSearch() {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit]);
+  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit, selectedWebsite]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

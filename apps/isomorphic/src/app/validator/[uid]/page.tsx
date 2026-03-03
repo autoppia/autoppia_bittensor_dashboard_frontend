@@ -4,12 +4,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart } from "recharts";
-import { Select } from "rizzui";
+import { Select, Text } from "rizzui";
 import Image from "next/image";
 import { validatorsRepository } from "@/repositories/validators/validators.repository";
 import type { ValidatorDetailsData, WebStats, UseCaseStats, TaskStats } from "@/repositories/validators/validators.types";
 import PageHeader from "@/app/shared/page-header";
-import { Text } from "rizzui";
 import {
   ValidatorsSelectorPlaceholder,
   ValidatorCardsPlaceholder,
