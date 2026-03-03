@@ -3,11 +3,10 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "rizzui";
+import { Button, Text } from "rizzui";
 import { PiCaretLeftBold, PiCaretRightBold, PiUsersThreeDuotone } from "react-icons/pi";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import cn from "@core/utils/class-names";
-import { Text } from "rizzui";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 interface ValidatorPerformance {
@@ -143,7 +142,7 @@ export default function ValidatorsSelector({
                 resolveAssetUrl("/validators/Other.png")
               );
               const isActive = selectedValidatorId === validator.id;
-              
+
               const cardContent = (
                 <div
                   className={cn(
@@ -257,4 +256,3 @@ export default function ValidatorsSelector({
     </div>
   );
 }
-
