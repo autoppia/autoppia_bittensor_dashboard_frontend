@@ -50,14 +50,14 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
 // Custom Tooltip for Miner Scores Chart (matching Rounds style)
 function CustomMinerTooltip({ active, payload }: any) {
   if (!active || !payload || !payload.length) return null;
-  
+
   const minerData = payload[0].payload;
   const evalScore = minerData?.evalScore ?? 0;
   const evalTime = minerData?.evalTime ?? 0;
   const reward = minerData?.score ?? 0;
   const name = minerData?.name || `Miner ${minerData?.uid}`;
   const uid = minerData?.uid;
-  
+
   return (
     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
       <div className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
@@ -77,7 +77,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalScore.toFixed(2)}%
           </span>
         </div>
-        
+
         {/* Time (eval_time) */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -91,7 +91,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalTime.toFixed(2)}s
           </span>
         </div>
-        
+
         {/* Reward */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -114,9 +114,9 @@ function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
   // For very small values (like stake), show more decimal places
   if (value > 0 && value < 0.01) {
-    return value.toLocaleString("en-US", { 
+    return value.toLocaleString("en-US", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 8 
+      maximumFractionDigits: 8
     });
   }
   // For normal values, show up to 2 decimal places
@@ -155,14 +155,14 @@ const WEB_ORDER: Record<string, number> = {
 function getWebOrder(webId: string): number {
   // Try to extract the web name from web_id (e.g., 'web_1_autocinema' -> 'autocinema')
   const lowerWebId = webId.toLowerCase();
-  
+
   // Check if web_id contains any of the web names
   for (const [webName, order] of Object.entries(WEB_ORDER)) {
     if (lowerWebId.includes(webName)) {
       return order;
     }
   }
-  
+
   // If not found, try to extract from web_id pattern
   try {
     const parts = webId.split('_');
@@ -334,7 +334,7 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
   const validatorImageSrc = data.validatorImage
     ? resolveAssetUrl(data.validatorImage)
     : resolveAssetUrl("/validators/Other.png");
-  
+
   // Get validator name from validators list if available
   const { data: validatorsData } = useValidators({ limit: 100 });
   const validatorInfo = React.useMemo(() => {
@@ -343,9 +343,9 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
       (v: any) => v.validatorUid === validator.uid
     );
   }, [validatorsData, validator.uid]);
-  
+
   const validatorName = validatorInfo?.name || `Validator ${validator.uid}`;
-  
+
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
@@ -427,12 +427,12 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
 }
 
 // Card component for last round winner
-function LastRoundWinnerCard({ 
-  data, 
-  selectedSeason, 
-  selectedRound 
-}: { 
-  data: ValidatorDetailsData; 
+function LastRoundWinnerCard({
+  data,
+  selectedSeason,
+  selectedRound
+}: {
+  data: ValidatorDetailsData;
   selectedSeason: number | null;
   selectedRound: number | null;
 }) {
@@ -443,7 +443,7 @@ function LastRoundWinnerCard({
   const minerImageSrc = context.lastRoundWinnerImage
     ? resolveAssetUrl(context.lastRoundWinnerImage)
     : fallbackMinerImage;
-  
+
   // Determine the round to use for links (using "season/round" format or lastRoundEvaluated)
   const roundNumber =
     selectedSeason !== null && selectedRound !== null
@@ -456,7 +456,7 @@ function LastRoundWinnerCard({
     : context.lastRoundWinner
       ? `/subnet36/agents/${context.lastRoundWinner}`
       : null;
-  
+
   const cardTitle = selectedRound !== null ? (
     <>
       {roundLink ? (
@@ -469,7 +469,7 @@ function LastRoundWinnerCard({
       Winner
     </>
   ) : "Last Round Winner";
-  
+
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
@@ -540,12 +540,12 @@ function LastRoundWinnerCard({
 }
 
 // Card component for global stats
-function GlobalStatsCard({ 
-  data, 
-  selectedSeason, 
-  selectedRound 
-}: { 
-  data: ValidatorDetailsData; 
+function GlobalStatsCard({
+  data,
+  selectedSeason,
+  selectedRound
+}: {
+  data: ValidatorDetailsData;
   selectedSeason: number | null;
   selectedRound: number | null;
 }) {
@@ -556,7 +556,7 @@ function GlobalStatsCard({
       : selectedSeason !== null
         ? `Season ${selectedSeason}`
         : "All Rounds";
-  
+
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
@@ -639,7 +639,7 @@ function TaskRow({ task }: { task: TaskStats }) {
 // Use case row
 function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
   const [isTasksExpanded, setIsTasksExpanded] = useState(false);
-  
+
   const getBadgeStatus = () => {
     if (useCase.successPct < 10 || useCase.zeroPct > 80) {
       return { type: "danger", text: "Critical" };
@@ -910,7 +910,7 @@ function PerformanceAnalytics({
 
             // Otherwise render web card
             // Find the web data to get webVersion
-            const webData = data.webs.find((w) => 
+            const webData = data.webs.find((w) =>
               capitalizeWebName(w.webName || w.webId) === item.name || w.webId === (item as any).webId
             );
             return (
@@ -1004,7 +1004,21 @@ function PerformanceAnalytics({
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-white/60">No data available</p>
+          {selectedSeason !== null &&
+          selectedRound !== null &&
+          data.globalStats.totalEvaluations === 0 &&
+          (data.roundDetails?.minersParticipated || 0) > 0 ? (
+            <div className="space-y-1">
+              <p className="text-white/70">
+                No persisted evaluations for Season {selectedSeason} / Round {selectedRound}
+              </p>
+              <p className="text-xs text-white/50">
+                Miners participated, but this round only has run-level records (no evaluation rows).
+              </p>
+            </div>
+          ) : (
+            <p className="text-white/60">No data available</p>
+          )}
         </div>
       )}
     </div>
@@ -1068,7 +1082,7 @@ function SummarySection({
         className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
         style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
-      
+
       {/* Header */}
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -1205,7 +1219,7 @@ export default function ValidatorDetailsPage() {
   const [selectedWeb, setSelectedWeb] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
-  
+
   // Get all validators for the selector
   const {
     data: validatorsData,
@@ -1263,11 +1277,11 @@ export default function ValidatorDetailsPage() {
     return (
       <div className="w-full max-w-[1280px] mx-auto bg-transparent">
         <PageHeader title="Validator Details" />
-        
+
         <ValidatorsSelectorPlaceholder />
-        
+
         <ValidatorCardsPlaceholder />
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
           <PerformanceAnalyticsPlaceholder />
           <SummaryPlaceholder />
@@ -1311,17 +1325,17 @@ export default function ValidatorDetailsPage() {
           <ValidatorDetailsCard data={data} />
         </div>
         <div className="h-full">
-          <GlobalStatsCard 
-            data={data} 
-            selectedSeason={selectedSeason} 
-            selectedRound={selectedRound} 
+          <GlobalStatsCard
+            data={data}
+            selectedSeason={selectedSeason}
+            selectedRound={selectedRound}
           />
         </div>
         <div className="h-full">
-          <LastRoundWinnerCard 
-            data={data} 
-            selectedSeason={selectedSeason} 
-            selectedRound={selectedRound} 
+          <LastRoundWinnerCard
+            data={data}
+            selectedSeason={selectedSeason}
+            selectedRound={selectedRound}
           />
         </div>
       </div>

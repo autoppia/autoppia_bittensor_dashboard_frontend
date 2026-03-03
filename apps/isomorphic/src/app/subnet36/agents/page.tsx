@@ -31,7 +31,6 @@ function AgentsLanding() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const agentParam = searchParams.get("agent");
   const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
 
@@ -49,7 +48,7 @@ function AgentsLanding() {
   // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam
   // roundParam doesn't prevent redirect - we always go to latest round with top miner
   const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
-  const needsRedirect = isOnAgentsLanding && !agentParam;
+  const needsRedirect = isOnAgentsLanding;
 
   // Get latest round and top miner for initial redirect (only if we need to redirect)
   const {
@@ -146,12 +145,11 @@ function AgentsLanding() {
     // Mark that we're about to redirect BEFORE doing it
     hasRedirectedRef.current = true;
 
-    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y&agent={miner_uid}
+    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y
     const targetPath = `${routes.agents}/${minerUid}`;
     const params = new URLSearchParams();
     params.set("season", String(season));
     params.set("round", String(roundInSeason));
-    params.set("agent", String(minerUid));
 
     const targetUrl = `${targetPath}?${params.toString()}`;
     console.log(`[AgentsLanding] ✅ Redirecting from ${pathname} to: ${targetUrl}`);
@@ -226,9 +224,7 @@ function AgentsLanding() {
     const params = new URLSearchParams();
     if (s) params.set("season", s);
     if (r) params.set("round", r);
-    params.set("agent", String(topMiner.uid));
-
-    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y&agent={miner_uid}
+    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
 

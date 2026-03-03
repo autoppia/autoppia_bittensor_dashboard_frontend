@@ -119,7 +119,77 @@ export class AgentsRepository {
       `${this.baseEndpoint}/round-details`,
       { round, miner_uid }
     );
-    return response.data.data;
+    const payload: any = response.data?.data;
+
+    // Backward/compat shape: some backends return agent detail payload in this endpoint.
+    // Normalize to MinerRoundDetailsResponse['data'] expected by the UI.
+    if (payload && !payload.miner && payload.agent) {
+      const agent = payload.agent ?? {};
+      const roundMetrics = payload.roundMetrics ?? {};
+      const parsedRound = (() => {
+        const value = Number(round);
+        if (Number.isFinite(value)) return value;
+        const fromMetrics = Number(roundMetrics.roundId ?? 0);
+        return Number.isFinite(fromMetrics) ? fromMetrics : 0;
+      })();
+      return {
+        miner: {
+          uid: Number(agent.uid ?? miner_uid),
+          name: String(agent.name ?? `miner ${miner_uid}`),
+          hotkey: agent.hotkey ?? null,
+          image: agent.imageUrl ?? null,
+          github_url: agent.githubUrl ?? null,
+        },
+        round: parsedRound,
+        post_consensus_rank: Number(roundMetrics.rank ?? agent.currentRank ?? 0),
+        post_consensus_avg_reward: Number(roundMetrics.score ?? agent.currentScore ?? 0),
+        post_consensus_avg_eval_score: 0,
+        post_consensus_avg_eval_time: Number(roundMetrics.averageResponseTime ?? agent.averageResponseTime ?? 0),
+        tasks_received: Number(roundMetrics.totalTasks ?? agent.totalTasks ?? 0),
+        tasks_success: Number(roundMetrics.completedTasks ?? agent.completedTasks ?? 0),
+        validators_count: Number(roundMetrics.totalValidators ?? 0),
+        avg_tasks_per_validator: Number(
+          roundMetrics.totalValidators
+            ? (Number(roundMetrics.totalTasks ?? 0) / Number(roundMetrics.totalValidators))
+            : 0
+        ),
+        performanceByWebsite:
+          (Array.isArray(payload.performanceByWebsite) && payload.performanceByWebsite) ||
+          (Array.isArray(roundMetrics.performanceByWebsite) && roundMetrics.performanceByWebsite) ||
+          [],
+        avg_cost_per_task:
+          payload.avg_cost_per_task ??
+          roundMetrics.avgCostPerTask ??
+          null,
+        validators: Array.isArray(roundMetrics.validators)
+          ? roundMetrics.validators.map((v: any) => ({
+              validator_uid: Number(v.uid ?? 0),
+              validator_name: v.name ?? (v.uid != null ? `Validator ${v.uid}` : "Validator"),
+              validator_hotkey: v.hotkey ?? null,
+              validator_image: null,
+              local_rank: null,
+              local_avg_reward: 0,
+              local_avg_eval_score: 0,
+              local_avg_eval_time: 0,
+              local_tasks_received: 0,
+              local_tasks_success: 0,
+              local_miners_evaluated: 0,
+              is_reused: payload.is_reused ?? roundMetrics.isReused ?? false,
+              reused_from_agent_run_id:
+                payload.reused_from_agent_run_id ??
+                roundMetrics.reusedFromAgentRunId ??
+                null,
+              reused_from_round:
+                payload.reused_from_round ??
+                roundMetrics.reusedFromRound ??
+                null,
+            }))
+          : [],
+        scoreRoundData: Array.isArray(payload.scoreRoundData) ? payload.scoreRoundData : [],
+      } as MinerRoundDetailsResponse['data'];
+    }
+
+    return payload;
   }
 
   /**
