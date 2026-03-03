@@ -803,7 +803,7 @@ function AgentValidators({
   minerRoundDetailsValidators,
   roundAvgCostPerTask,
 }: {
-  selectedRound?: number | null;
+  selectedRound?: number | string | null;
   selectedSeason?: number | null;
   selectedRoundInSeason?: number | null;
   runs: AgentRunOverview[];
@@ -858,9 +858,27 @@ function AgentValidators({
     }
   }
 
+  const parseRoundInSeason = (value: number | string | null | undefined): number | null => {
+    if (value == null) return null;
+    if (typeof value === "number" && Number.isFinite(value)) {
+      // Encoded form season*10000 + round
+      return value >= 10000 ? value % 10000 : value;
+    }
+    const raw = String(value).trim();
+    if (!raw) return null;
+    if (raw.includes("/")) {
+      const roundPart = Number(raw.split("/")[1]);
+      return Number.isFinite(roundPart) ? roundPart : null;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return null;
+    return parsed >= 10000 ? parsed % 10000 : parsed;
+  };
+
+  const selectedRoundInSeasonValue = parseRoundInSeason(selectedRound);
   const filteredRuns =
-    selectedRound != null
-      ? runs.filter((run) => run.roundId === selectedRound)
+    selectedRoundInSeasonValue != null
+      ? runs.filter((run) => parseRoundInSeason(run.roundId) === selectedRoundInSeasonValue)
       : runs;
 
   const runsByValidator = filteredRuns.reduce(
@@ -1043,14 +1061,38 @@ function AgentValidators({
             // Use validator_image if available (from round-details), otherwise fallback
             const validatorImage = validator.validator_image
               ? resolveAssetUrl(validator.validator_image)
-              : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
+              : resolveAssetUrl("/validators/Other.png");
 
             // Find corresponding run for this validator (for agent_run_id or fallback)
             const validatorRuns = filteredRuns.filter(
-              (run) => String(run.validatorId) === String(validator.validator_uid)
+              (run) =>
+                Number.parseInt(String(run.validatorId).replace(/^validator-/i, ""), 10) ===
+                Number(validator.validator_uid)
             );
             const latestRun = validatorRuns[0];
             const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
+            const isReusedRun = Boolean(
+              (isFromRoundDetails && (validator as any)?.is_reused) ||
+              (latestRun as any)?.isReused
+            );
+            const reusedFromAgentRunId =
+              (isFromRoundDetails && (validator as any)?.reused_from_agent_run_id) ||
+              (latestRun as any)?.reusedFromAgentRunId ||
+              null;
+            const reusedFromRoundRaw =
+              (isFromRoundDetails && (validator as any)?.reused_from_round) ||
+              (latestRun as any)?.reusedFromRoundDisplay ||
+              (latestRun as any)?.reusedFromRound ||
+              null;
+            const reusedFromRoundLabel = (() => {
+              const raw = String(reusedFromRoundRaw ?? "").trim();
+              if (!raw) return "—";
+              if (raw.includes("/")) {
+                const [season, round] = raw.split("/");
+                if (season && round) return `Season ${season}, Round ${round}`;
+              }
+              return raw;
+            })();
 
             // Use direct validator data (from round-details) or fallback to miners list
             let localRank: number | null = null;
@@ -1058,8 +1100,14 @@ function AgentValidators({
             let localAvgEvalTime: number = 0;
             let localTasksReceived: number = 0;
             let localTasksSuccess: number = 0;
+            const hasRichRoundDetailsStats =
+              validator.local_rank != null ||
+              Number(validator.local_avg_reward ?? 0) > 0 ||
+              Number(validator.local_avg_eval_time ?? 0) > 0 ||
+              Number(validator.local_tasks_received ?? 0) > 0 ||
+              Number(validator.local_tasks_success ?? 0) > 0;
 
-            if (isFromRoundDetails) {
+            if (isFromRoundDetails && hasRichRoundDetailsStats) {
               // Data from round-details endpoint (direct fields)
               localRank = validator.local_rank;
               localAvgReward = validator.local_avg_reward ?? 0;
@@ -1067,15 +1115,34 @@ function AgentValidators({
               localTasksReceived = validator.local_tasks_received ?? 0;
               localTasksSuccess = validator.local_tasks_success ?? 0;
             } else {
-              // Data from runs endpoint (need to find miner in miners array)
-              const currentMinerData = validator.miners?.find(
-                (m: any) => m.uid === numericUidFromParam
-              );
-              localRank = currentMinerData?.local_rank ?? null;
-              localAvgReward = currentMinerData?.local_avg_reward ?? 0;
-              localAvgEvalTime = currentMinerData?.local_avg_eval_time ?? 0;
-              localTasksReceived = validator.local_tasks_evaluated ?? 0;
-              localTasksSuccess = validator.local_tasks_evaluated ?? 0; // Fallback, should be calculated
+              // Fallback to run-level data when round-details validators are skeletal.
+              localRank =
+                typeof latestRun?.ranking === "number" && Number.isFinite(latestRun.ranking)
+                  ? latestRun.ranking
+                  : null;
+              localAvgReward =
+                typeof latestRun?.overallScore === "number" && Number.isFinite(latestRun.overallScore)
+                  ? latestRun.overallScore
+                  : typeof (latestRun as any)?.score === "number" && Number.isFinite((latestRun as any)?.score)
+                    ? (latestRun as any).score
+                    : 0;
+              localAvgEvalTime =
+                typeof latestRun?.averageEvaluationTime === "number" &&
+                Number.isFinite(latestRun.averageEvaluationTime)
+                  ? latestRun.averageEvaluationTime
+                  : typeof latestRun?.duration === "number" && Number.isFinite(latestRun.duration)
+                    ? latestRun.duration
+                    : Number.NaN;
+              localTasksReceived =
+                typeof latestRun?.totalTasks === "number" && Number.isFinite(latestRun.totalTasks)
+                  ? latestRun.totalTasks
+                  : 0;
+              localTasksSuccess =
+                typeof latestRun?.completedTasks === "number" && Number.isFinite(latestRun.completedTasks)
+                  ? latestRun.completedTasks
+                  : typeof latestRun?.successfulTasks === "number" && Number.isFinite(latestRun.successfulTasks)
+                    ? latestRun.successfulTasks
+                    : 0;
             }
 
             const safeRoundMetric = (() => {
@@ -1111,6 +1178,8 @@ function AgentValidators({
             const hasLocalAvgEvalTime =
               typeof localAvgEvalTime === "number" && Number.isFinite(localAvgEvalTime);
             const resolvedAvgCostPerTask = (() => {
+              const fromRun = (latestRun as any)?.avgCostPerTask;
+              if (typeof fromRun === "number" && Number.isFinite(fromRun)) return fromRun;
               const direct = (validator as any)?.avg_cost_per_task;
               if (typeof direct === "number" && Number.isFinite(direct)) return direct;
               const local = (validator as any)?.local_avg_cost_per_task;
@@ -1227,6 +1296,21 @@ function AgentValidators({
                       );
                     })}
                     </div>
+                    {isReusedRun && (
+                      <div className="rounded-lg border border-amber-400/50 bg-amber-500/12 px-3 py-2 text-xs text-amber-100">
+                        <span className="font-semibold">Reused run from round {reusedFromRoundLabel}.</span>{" "}
+                        {reusedFromAgentRunId ? (
+                          <Link
+                            href={`${routes.agent_run}/${reusedFromAgentRunId}`}
+                            className="underline underline-offset-2 hover:text-white"
+                          >
+                            Open original run
+                          </Link>
+                        ) : (
+                          <span>Open original run in Agent Run list.</span>
+                        )}
+                      </div>
+                    )}
                     <Link
                       href={agentRunId
                         ? `${routes.agent_run}/${agentRunId}`
@@ -2137,27 +2221,75 @@ export default function Page() {
     });
   }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData, minerRoundDetails, selectedRoundFromQuery]);
 
-  // Removed fetchAllAgentRuns call - we use minerRoundDetails instead
-  // This eliminates the unnecessary /api/v1/agent-runs call
-  const runsState = useMemo(() => {
-    // Use validators and post_consensus_summary from minerRoundDetails if available
-    const validators = minerRoundDetails?.validators?.map((v: any) => ({
-      validatorId: v.validator_uid?.toString() ?? "",
-      validatorName: v.validator_name ?? "",
-      validatorImage: v.validator_image ?? null,
-      runs: [] // Empty runs array since we don't need individual runs
-    })) ?? [];
+  const selectedRoundEncoded = useMemo(() => {
+    if (typeof selectedRoundFromQuery === "string" && selectedRoundFromQuery.includes("/")) {
+      const [seasonRaw, roundRaw] = selectedRoundFromQuery.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (Number.isFinite(season) && Number.isFinite(round)) {
+        return season * 10000 + round;
+      }
+      return undefined;
+    }
+    if (typeof selectedRoundFromQuery === "number" && Number.isFinite(selectedRoundFromQuery)) {
+      return selectedRoundFromQuery;
+    }
+    return undefined;
+  }, [selectedRoundFromQuery]);
 
-    const post_consensus_summary = minerRoundDetails?.post_consensus_summary ?? undefined;
+  const [runsState, setRunsState] = useState<{
+    loading: boolean;
+    runs: AgentRunOverview[];
+    error: string | null;
+    validators?: AgentRunsResponse["data"]["validators"];
+    post_consensus_summary?: AgentRunsResponse["data"]["post_consensus_summary"];
+  }>({
+    loading: false,
+    runs: [],
+    error: null,
+    validators: undefined,
+    post_consensus_summary: undefined,
+  });
 
-    return {
-      loading: false,
-      runs: [], // Empty runs array - we use minerRoundDetails.validators instead
-      error: null,
-      validators: validators.length > 0 ? validators : undefined,
-      post_consensus_summary,
+  useEffect(() => {
+    if (viewMode !== "runs" || !agentIdForQuery) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let isActive = true;
+
+    setRunsState((prev) => ({ ...prev, loading: true, error: null }));
+
+    fetchAllAgentRuns(
+      agentIdForQuery,
+      selectedRoundEncoded != null ? { roundId: selectedRoundEncoded } : {},
+      controller.signal
+    )
+      .then((result) => {
+        if (!isActive) return;
+        setRunsState({
+          loading: false,
+          runs: result.runs ?? [],
+          error: null,
+          validators: result.validators,
+          post_consensus_summary: result.post_consensus_summary,
+        });
+      })
+      .catch((err) => {
+        if (!isActive || controller.signal.aborted) return;
+        setRunsState((prev) => ({
+          ...prev,
+          loading: false,
+          error: err instanceof Error ? err.message : String(err),
+        }));
+      });
+
+    return () => {
+      isActive = false;
+      controller.abort();
     };
-  }, [minerRoundDetails]);
+  }, [viewMode, agentIdForQuery, selectedRoundEncoded]);
 
   // Calculate preAvg from minerRoundDetails instead of runs
   const preAvg = useMemo(() => {
@@ -2441,6 +2573,8 @@ export default function Page() {
       reigningUidBeforeRound,
     };
   })();
+  const formatLeadershipReward = (value: number | null | undefined) =>
+    typeof value === "number" && Number.isFinite(value) ? value.toFixed(3) : "—";
 
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
@@ -2847,9 +2981,9 @@ export default function Page() {
                       <span className="text-cyan-300 font-semibold">
                         UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
                       </span>
-                      , score:{" "}
+                      , reward:{" "}
                       <span className="text-cyan-300 font-semibold">
-                        {seasonCompetitionState?.reigningScore ?? "—"}
+                        {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
                       </span>
                     </p>
                     <p className="mt-0.5 text-xs text-white/85">
@@ -2857,9 +2991,9 @@ export default function Page() {
                       <span className="text-amber-300 font-semibold">
                         UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
                       </span>
-                      , score:{" "}
+                      , reward:{" "}
                       <span className="text-amber-300 font-semibold">
-                        {seasonCompetitionState?.topCandidateScore ?? "—"}
+                        {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
                       </span>
                     </p>
                     <p className="mt-1 text-sm text-white">

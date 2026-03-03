@@ -121,6 +121,52 @@ function extractUidNumber(value: unknown): number | null {
   return null;
 }
 
+function parseSeasonRound(
+  value: string | number | null | undefined
+): { season: number; round: number } | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === "string" && value.includes("/")) {
+    const [seasonRaw, roundRaw] = value.split("/");
+    const season = Number.parseInt(seasonRaw, 10);
+    const round = Number.parseInt(roundRaw, 10);
+    if (Number.isFinite(season) && Number.isFinite(round)) {
+      return { season, round };
+    }
+    return null;
+  }
+
+  const compact =
+    typeof value === "number"
+      ? value
+      : Number.parseInt(String(value).trim(), 10);
+
+  if (!Number.isFinite(compact) || compact <= 0) {
+    return null;
+  }
+
+  const season = Math.floor(compact / 10000);
+  const round = compact % 10000;
+  if (season > 0 && round > 0) {
+    return { season, round };
+  }
+  return null;
+}
+
+function sanitizeRanking(value: number | null | undefined): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  const ranking = Math.trunc(value);
+  // 9999 is used as sentinel/non-ranked in some payloads.
+  if (ranking <= 0 || ranking === 9999) {
+    return undefined;
+  }
+  return ranking;
+}
+
 function resolveMinerImage(run: AgentRunListItem): string {
   const explicitImage =
     run.agentImage ||
@@ -168,6 +214,7 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
     isReused,
     reusedFromAgentRunId,
     reusedFromRoundDisplay,
+    ranking: sanitizeRanking(run.ranking),
   };
 };
 
@@ -205,14 +252,8 @@ export default function AgentRunSearch() {
 
     // Parse "season/round" format
     const parsed = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          return { season: Number.parseInt(parts[0], 10), round: Number.parseInt(parts[1], 10) };
-        }
-        return null;
-      })
-      .filter((r) => r !== null && Number.isFinite(r.season) && Number.isFinite(r.round));
+      .map((r) => parseSeasonRound(r))
+      .filter((r): r is { season: number; round: number } => r !== null);
 
     // Get unique seasons
     const seasons = Array.from(new Set(parsed.map((r) => r!.season))).sort((a, b) => b - a);
@@ -242,15 +283,9 @@ export default function AgentRunSearch() {
     }
 
     const parsed = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          return { season: Number.parseInt(parts[0], 10), round: Number.parseInt(parts[1], 10) };
-        }
-        return null;
-      })
+      .map((r) => parseSeasonRound(r))
       .filter((r) => r !== null && r.season === currentSeason)
-      .map((r) => r!.round)
+      .map((r) => r.round)
       .sort((a, b) => b - a);
 
     return parsed;
@@ -634,7 +669,7 @@ export default function AgentRunSearch() {
       successfulTasks,
       successRate,
       overallScore: baseScore,
-      ranking: run.ranking ?? 0,
+      ranking: sanitizeRanking(run.ranking),
       isReused: run.isReused ?? (run as any).is_reused ?? false,
       reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as any).reusedFromAgentRunId ?? (run as any).reused_from_agent_run_id ?? null,
       reusedFromRoundDisplay: run.reusedFromRoundDisplay ?? (run as any).reusedFromRoundDisplay ?? (run as any).reused_from_round_display ?? null,
@@ -1250,16 +1285,19 @@ export default function AgentRunSearch() {
                       <div className="flex items-center gap-2">
                         {(() => {
                           const roundId = run.roundId;
-                          // Parse "season/round" format
-                          if (typeof roundId === "string" && roundId.includes("/")) {
-                            const [season, round] = roundId.split("/");
+                          const parsedRound = parseSeasonRound(
+                            typeof roundId === "string" || typeof roundId === "number"
+                              ? roundId
+                              : null
+                          );
+                          if (parsedRound) {
                             return (
                               <>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
-                                  Season {season}
+                                  Season {parsedRound.season}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
-                                  Round {round}
+                                  Round {parsedRound.round}
                                 </span>
                               </>
                             );

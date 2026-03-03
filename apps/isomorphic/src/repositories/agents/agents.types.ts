@@ -134,6 +134,20 @@ export interface MinerHistoricalResponse {
         averageDuration: number;
       }>;
     }>;
+    performanceByWebsiteBestRound?: Array<{
+      website: string;
+      tasks: number;
+      successful: number;
+      failed: number;
+      averageDuration: number;
+      useCases: Array<{
+        useCase: string;
+        tasks: number;
+        successful: number;
+        failed: number;
+        averageDuration: number;
+      }>;
+    }>;
     roundsHistory: Array<{
       round: number;
       post_consensus_rank: number | null;
@@ -278,6 +292,7 @@ export interface AgentRunOverview {
   ranking: number;
   duration: number;
   averageEvaluationTime?: number | null;
+  avgCostPerTask?: number | null;
   // Optional: number of unique websites involved in this run
   websitesCount?: number;
   // Optional legacy field present in some backends
