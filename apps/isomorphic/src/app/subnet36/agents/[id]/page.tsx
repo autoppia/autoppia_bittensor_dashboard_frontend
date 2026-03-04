@@ -2989,6 +2989,10 @@ export default function Page() {
                       <span className="text-cyan-300 font-semibold">
                         {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
                       </span>
+                      {" "}
+                      <span className="text-white/60 italic">
+                        (leader from a previous round or initial state; they may not appear in the round participants list if they did not participate in this round)
+                      </span>
                     </p>
                     {seasonCompetitionState?.reigningUidBeforeRound != null &&
                      seasonCompetitionState?.topCandidateUid != null &&
