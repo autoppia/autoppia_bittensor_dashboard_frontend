@@ -54,3 +54,4 @@ jobs:
         with:
           args: >
             -Dsonar.branch.name=${{ github.ref_name }}
+            ${{ github.ref_name != 'main' && github.ref_name != 'master' && '-Dsonar.branch.target=main' || '' }}
