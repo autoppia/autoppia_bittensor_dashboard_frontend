@@ -2980,41 +2980,57 @@ export default function Page() {
                     <p className="text-sm font-bold text-white">
                       Season leadership rule (+{(((seasonCompetitionState?.requiredImprovementPct ?? 0.05) as number) * 100).toFixed(1)}% to dethrone):
                     </p>
-                    <p className="mt-1 text-xs text-white/85">
-                      Reigning season leader before round:{" "}
-                      <span className="text-cyan-300 font-semibold">
-                        UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
-                      </span>
-                      , reward:{" "}
-                      <span className="text-cyan-300 font-semibold">
-                        {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
-                      </span>
-                      {" "}
-                      <span className="text-white/60 italic">
-                        (leader from a previous round or initial state; they may not appear in the round participants list if they did not participate in this round)
-                      </span>
-                    </p>
                     {seasonCompetitionState?.reigningUidBeforeRound != null &&
                      seasonCompetitionState?.topCandidateUid != null &&
                      seasonCompetitionState.reigningUidBeforeRound === seasonCompetitionState.topCandidateUid ? (
-                      <p className="mt-0.5 text-xs text-white/85">
-                        Same leader still has the best season score (reward:{" "}
-                        <span className="text-amber-300 font-semibold">
-                          {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
-                        </span>
-                        ). No other miner beat the +{((seasonCompetitionState?.requiredImprovementPct ?? 0.05) * 100).toFixed(1)}% threshold to dethrone.
-                      </p>
+                      <>
+                        <p className="mt-1 text-xs text-white/85">
+                          Reigning season leader before round:{" "}
+                          <span className="text-cyan-300 font-semibold">
+                            UID {seasonCompetitionState.reigningUidBeforeRound}
+                          </span>
+                          , reward:{" "}
+                          <span className="text-cyan-300 font-semibold">
+                            {formatLeadershipReward(
+                              seasonCompetitionState?.topCandidateScore ??
+                              seasonCompetitionState?.reigningScore
+                            )}
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-xs text-white/85">
+                          Same leader still has the best season score (reward:{" "}
+                          <span className="text-amber-300 font-semibold">
+                            {formatLeadershipReward(
+                              seasonCompetitionState?.topCandidateScore ??
+                              seasonCompetitionState?.reigningScore
+                            )}
+                          </span>
+                          ). No other miner beat the +{((seasonCompetitionState?.requiredImprovementPct ?? 0.05) * 100).toFixed(1)}% threshold to dethrone.
+                        </p>
+                      </>
                     ) : (
-                      <p className="mt-0.5 text-xs text-white/85">
-                        Candidate miner to dethrone:{" "}
-                        <span className="text-amber-300 font-semibold">
-                          UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
-                        </span>
-                        , reward:{" "}
-                        <span className="text-amber-300 font-semibold">
-                          {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
-                        </span>
-                      </p>
+                      <>
+                        <p className="mt-1 text-xs text-white/85">
+                          Reigning season leader before round:{" "}
+                          <span className="text-cyan-300 font-semibold">
+                            UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
+                          </span>
+                          , reward:{" "}
+                          <span className="text-cyan-300 font-semibold">
+                            {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-xs text-white/85">
+                          Candidate miner to dethrone:{" "}
+                          <span className="text-amber-300 font-semibold">
+                            UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
+                          </span>
+                          , reward:{" "}
+                          <span className="text-amber-300 font-semibold">
+                            {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
+                          </span>
+                        </p>
+                      </>
                     )}
                     {seasonCompetitionState?.roundWinnerUid != null &&
                      seasonCompetitionState.roundWinnerUid !== (seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid) && (
