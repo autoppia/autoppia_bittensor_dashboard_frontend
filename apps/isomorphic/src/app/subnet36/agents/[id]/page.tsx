@@ -2553,6 +2553,9 @@ export default function Page() {
     const reigningUidBeforeRound =
       toNullableNumber((leadership as any)?.reigning_uid_before_round) ??
       toNullableNumber((decision as any).reigning_uid_before_round);
+    const roundWinnerScore =
+      toNullableNumber((leadership as any)?.round_winner_score) ??
+      toNullableNumber((winner as any)?.score);
 
     if (
       roundWinnerUid === null &&
@@ -2564,6 +2567,7 @@ export default function Page() {
 
     return {
       roundWinnerUid,
+      roundWinnerScore,
       topCandidateUid,
       seasonLeaderUid,
       dethroned,
@@ -2977,7 +2981,7 @@ export default function Page() {
                       Season leadership rule (+{(((seasonCompetitionState?.requiredImprovementPct ?? 0.05) as number) * 100).toFixed(1)}% to dethrone):
                     </p>
                     <p className="mt-1 text-xs text-white/85">
-                      Reigning miner before round:{" "}
+                      Reigning season leader before round:{" "}
                       <span className="text-cyan-300 font-semibold">
                         UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
                       </span>
@@ -2986,16 +2990,39 @@ export default function Page() {
                         {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
                       </span>
                     </p>
-                    <p className="mt-0.5 text-xs text-white/85">
-                      Candidate miner to dethrone:{" "}
-                      <span className="text-amber-300 font-semibold">
-                        UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
-                      </span>
-                      , reward:{" "}
-                      <span className="text-amber-300 font-semibold">
-                        {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
-                      </span>
-                    </p>
+                    {seasonCompetitionState?.reigningUidBeforeRound != null &&
+                     seasonCompetitionState?.topCandidateUid != null &&
+                     seasonCompetitionState.reigningUidBeforeRound === seasonCompetitionState.topCandidateUid ? (
+                      <p className="mt-0.5 text-xs text-white/85">
+                        Same leader still has the best season score (reward:{" "}
+                        <span className="text-amber-300 font-semibold">
+                          {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
+                        </span>
+                        ). No other miner beat the +{((seasonCompetitionState?.requiredImprovementPct ?? 0.05) * 100).toFixed(1)}% threshold to dethrone.
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 text-xs text-white/85">
+                        Candidate miner to dethrone:{" "}
+                        <span className="text-amber-300 font-semibold">
+                          UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
+                        </span>
+                        , reward:{" "}
+                        <span className="text-amber-300 font-semibold">
+                          {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
+                        </span>
+                      </p>
+                    )}
+                    {seasonCompetitionState?.roundWinnerUid != null &&
+                     seasonCompetitionState.roundWinnerUid !== (seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid) && (
+                      <p className="mt-0.5 text-xs text-white/85">
+                        Best in this round:{" "}
+                        <span className="text-white font-semibold">
+                          UID {seasonCompetitionState.roundWinnerUid}
+                        </span>
+                        {" "}(reward: {formatLeadershipReward(seasonCompetitionState?.roundWinnerScore)})
+                        {" "}— below dethrone threshold.
+                      </p>
+                    )}
                     <p className="mt-1 text-sm text-white">
                       Verdict:{" "}
                       {seasonCompetitionState == null ? (
@@ -3012,11 +3039,15 @@ export default function Page() {
                         </>
                       ) : (
                         <>
-                          Next winner continues being{" "}
+                          Season leader remains{" "}
                           <span className="text-cyan-300 font-bold">
                             UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                          </span>{" "}
-                          because candidate could not dethrone.
+                          </span>
+                          {seasonCompetitionState?.reigningUidBeforeRound != null &&
+                           seasonCompetitionState?.topCandidateUid != null &&
+                           seasonCompetitionState.reigningUidBeforeRound === seasonCompetitionState.topCandidateUid
+                            ? " (no other miner met the dethrone threshold this round)."
+                            : " (candidate could not dethrone)."}
                         </>
                       )}
                     </p>
