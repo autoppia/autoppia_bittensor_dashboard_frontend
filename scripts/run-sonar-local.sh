@@ -42,10 +42,8 @@ if [[ ! $REPLY =~ ^[Ss]$ ]]; then
   exit 0
 fi
 
-# Verificar que el token esté configurado
-SONAR_TOKEN="${SONAR_TOKEN:-77ebb52b5f3cfb99368c13f49e03791b53287bbb}"
-
-if [ -z "$SONAR_TOKEN" ]; then
+# Require SONAR_TOKEN (no default for security)
+if [ -z "${SONAR_TOKEN:-}" ]; then
     echo -e "${RED}❌ Error: SONAR_TOKEN no está configurado${NC}"
     echo "   Configúralo con: export SONAR_TOKEN=tu-token"
     exit 1
@@ -140,11 +138,19 @@ echo ""
 
 export SONAR_TOKEN
 
+# Use current branch so SonarCloud (and SonarLint in IDE) show issues for this branch (e.g. fix/sonar)
+SONAR_BRANCH="${SONAR_BRANCH:-$(git branch --show-current 2>/dev/null || echo '')}"
+BRANCH_ARGS=""
+if [ -n "$SONAR_BRANCH" ]; then
+  BRANCH_ARGS="-Dsonar.branch.name=$SONAR_BRANCH"
+fi
+
 $SONAR_SCANNER_CMD \
     -Dsonar.host.url=https://sonarcloud.io \
     -Dsonar.token="$SONAR_TOKEN" \
     -Dsonar.issuesReport.html.enable=true \
-    -Dsonar.issuesReport.console.enable=true
+    -Dsonar.issuesReport.console.enable=true \
+    $BRANCH_ARGS
 
 EXIT_CODE=$?
 
