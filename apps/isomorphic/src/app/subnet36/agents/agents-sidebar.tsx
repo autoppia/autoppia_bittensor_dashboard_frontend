@@ -675,7 +675,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           )}
                           title="Reward achieved in this round"
                         >
-                          Reward {(roundScore * 100).toFixed(1)}%
+                          Reward {(roundScore * 100).toFixed(2)}%
                         </span>
                         <span
                           className={cn(
@@ -690,7 +690,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           )}
                           title="Best reward achieved in this season"
                         >
-                          Best {(bestScore * 100).toFixed(1)}%
+                          Best {(bestScore * 100).toFixed(2)}%
                         </span>
                       </div>
                     </div>
