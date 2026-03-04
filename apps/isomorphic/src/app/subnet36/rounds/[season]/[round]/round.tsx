@@ -1542,8 +1542,9 @@ function RoundMinerScoresInline({
   const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
   const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
 
-  // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo)
+  // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo). Nunca devolver undefined para evitar "reading 'benchmarks' of undefined".
   const chartSource = React.useMemo(() => {
+    const empty = { miners: [] as any[], benchmarks: [] as any[] };
     if (roundData?.validators) {
       let miners: any[] = [];
 
@@ -1581,15 +1582,16 @@ function RoundMinerScoresInline({
         validatorId: selectedValidator?.id || `validator-${roundData.validators[0]?.validator_uid}`, // ✅ Agregar validatorId
       }));
 
-      if (mappedMiners.length > 0) {
-        return {
-          miners: mappedMiners,
-          benchmarks: [], // Los benchmarks vienen del endpoint antiguo si es necesario
-        };
-      }
+      return {
+        miners: mappedMiners,
+        benchmarks: [], // Los benchmarks vienen del endpoint antiguo si es necesario
+      };
     }
-    // Fallback al endpoint antiguo
-    return minersData?.data;
+    // Fallback al endpoint antiguo; si falla la API (ej. 500), minersData?.data es undefined → usar empty
+    const fallback = minersData?.data;
+    return fallback && typeof fallback === "object" && (Array.isArray(fallback.miners) || "miners" in fallback)
+      ? { miners: fallback.miners ?? [], benchmarks: fallback.benchmarks ?? [] }
+      : empty;
   }, [roundData, selectedValidator, minersData]);
 
   const chartData = React.useMemo(() => {
@@ -1683,7 +1685,7 @@ function RoundMinerScoresInline({
     return [...minerEntries, ...benchmarkEntries].sort(
       (a, b) => b.score - a.score
     );
-  }, [minersData, selectedValidator, chartSource.benchmarks, chartSource.miners]);
+  }, [minersData, selectedValidator, chartSource?.benchmarks, chartSource?.miners]);
 
   const legendItems = React.useMemo(() => {
     const sotaEntries = new Map<string, string>();
