@@ -1252,7 +1252,7 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
-              const scoreOutOf100 = Math.max(
+              const rewardOutOf100 = Math.max(
                 0,
                 Math.min(100, Math.round(run.overallScore ?? 0))
               );
@@ -1407,10 +1407,10 @@ export default function AgentRunSearch() {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
-                            Score
+                            Reward
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {scoreOutOf100}%
+                            {rewardOutOf100}%
                           </div>
                         </div>
                         <div className="text-center">
