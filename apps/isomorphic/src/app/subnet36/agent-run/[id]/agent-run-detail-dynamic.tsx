@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useParams } from "next/navigation";
 import cn from "@core/utils/class-names";
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunDetail from "./agent-run-detail";
@@ -10,6 +9,7 @@ import {
   transformStatsToDetailData,
 } from "./agent-run-data.utils";
 import type { AgentRunDetailData } from "./agent-run-types";
+import type { AgentRunStats } from "@/repositories/agent-runs/agent-runs.types";
 
 interface AgentRunDetailDynamicProps {
   readonly className?: string;
@@ -36,11 +36,16 @@ export default function AgentRunDetailDynamic({
 }: AgentRunDetailDynamicProps) {
 
   const fallbackDetail = useMemo<AgentRunDetailData>(() => {
-    return getFallbackDetailData(summary?.agentId);
+    const agentId =
+      summary?.agentId == null ? undefined : String(summary.agentId);
+    return getFallbackDetailData(agentId);
   }, [summary?.agentId]);
 
   const { data } = useMemo(() => {
-    return transformStatsToDetailData(stats, fallbackDetail);
+    return transformStatsToDetailData(
+      stats as AgentRunStats | null | undefined,
+      fallbackDetail
+    );
   }, [stats, fallbackDetail]);
 
   const shouldShowPlaceholder =
@@ -68,7 +73,9 @@ export default function AgentRunDetailDynamic({
   );
 }
 
-function AgentRunDetailPlaceholder({ className }: { className?: string }) {
+function AgentRunDetailPlaceholder({
+  className,
+}: Readonly<{ className?: string }>) {
   const progressWidths = ["68%", "52%", "78%"];
 
   return (
@@ -133,9 +140,9 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
       </div>
 
       <div className="relative space-y-6">
-        {progressWidths.map((progressWidth, index) => (
+        {progressWidths.map((progressWidth) => (
           <div
-            key={`placeholder-card-${index}`}
+            key={`placeholder-card-${progressWidth}`}
             className="relative rounded-xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm"
           >
             <div className="mb-4 flex items-center justify-between">
