@@ -6,9 +6,9 @@ import { type Table as ReactTableType } from "@tanstack/react-table";
 
 export default function ToggleColumns<TData extends Record<string, any>>({
   table,
-}: {
+}: Readonly<{
   table: ReactTableType<TData>;
-}) {
+}>) {
   return (
     <Popover shadow="sm" placement="bottom-end">
       <Popover.Trigger>
