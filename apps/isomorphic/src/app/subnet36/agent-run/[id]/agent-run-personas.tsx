@@ -12,6 +12,12 @@ import { CHIP_STYLES } from "@/config/theme-styles";
 
 const HIGHLIGHT_COLOR = "#FDF5E6";
 
+function getStatusChipClass(status: string): string {
+  if (status === "completed") return CHIP_STYLES.completed;
+  if (status === "pending") return CHIP_STYLES.pending;
+  return CHIP_STYLES.active;
+}
+
 interface AgentRunPersonasProps {
   personas?: any;
   summary?: any;
@@ -28,7 +34,7 @@ function extractUidNumber(value: unknown): number | null {
     return value;
   }
   if (typeof value === "string") {
-    const match = value.match(/-?\d+/);
+    const match = /-?\d+/.exec(value);
     if (match) {
       const parsed = Number.parseInt(match[0], 10);
       if (!Number.isNaN(parsed)) {
@@ -39,7 +45,10 @@ function extractUidNumber(value: unknown): number | null {
   return null;
 }
 
-export default function AgentRunPersonas({ personas, summary }: AgentRunPersonasProps) {
+export default function AgentRunPersonas({
+  personas,
+  summary,
+}: Readonly<AgentRunPersonasProps>) {
   const roundData =
     personas?.round || {
       id: "—",
@@ -138,12 +147,7 @@ export default function AgentRunPersonas({ personas, summary }: AgentRunPersonas
           </div>
           {(() => {
             const status = String(roundData.status || "Active").toLowerCase();
-            const colorClass =
-              status === "completed"
-                ? CHIP_STYLES.completed
-                : status === "pending"
-                ? CHIP_STYLES.pending
-                : CHIP_STYLES.active;
+            const colorClass = getStatusChipClass(status);
             return (
               <span className={`${CHIP_STYLES.base} ${colorClass} !px-3 !py-1`}>
                 {(roundData.status || "Active").replace(/^\w/, (c: string) => c.toUpperCase())}
