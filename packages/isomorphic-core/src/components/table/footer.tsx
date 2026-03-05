@@ -13,7 +13,7 @@ export default function TableFooter<TData extends Record<string, any>>({
   table,
   showDownloadButton = true,
   onExport,
-}: TableToolbarProps<TData>) {
+}: Readonly<TableToolbarProps<TData>>) {
   const checkedItems = table
     .getSelectedRowModel()
     .rows.map((row) => row.original);
