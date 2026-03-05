@@ -10,7 +10,7 @@ type WebsiteInfoProps = {
   title?: string;
 };
 
-export default function WebsiteInfo(props: WebsiteInfoProps) {
+export default function WebsiteInfo(props: Readonly<WebsiteInfoProps>) {
   const { title } = props;
   const { closeModal } = useModal();
 
