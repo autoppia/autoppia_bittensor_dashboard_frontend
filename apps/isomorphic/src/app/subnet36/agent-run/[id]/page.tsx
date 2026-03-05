@@ -7,7 +7,6 @@ import { routes } from "@/config/routes";
 import {
   formatWebsiteName,
   getProjectColors,
-  getProjectMainColor,
 } from "@/utils/website-colors";
 
 import PageHeader from "@/app/shared/page-header";
@@ -18,7 +17,7 @@ import Table from "@core/components/table";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 
-import { Select, Button, Text, Input } from "rizzui";
+import { Select, Button, Input } from "rizzui";
 import Image from "next/image";
 
 import {
@@ -36,13 +35,11 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
-  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import type {
   AgentRunStats as AgentRunStatsData,
-  AgentRunTaskData,
   AgentRunEvaluationData,
 } from "@/repositories/agent-runs/agent-runs.types";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -107,7 +104,20 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
-function IDCopyButton({ text }: { text: string }) {
+function extractUidNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value))
+    return Math.max(0, Math.abs(value));
+  if (typeof value === "string") {
+    const match = /\d+/.exec(value);
+    if (match) {
+      const parsed = Number.parseInt(match[0], 10);
+      if (!Number.isNaN(parsed)) return Math.max(0, parsed);
+    }
+  }
+  return null;
+}
+
+function IDCopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -154,8 +164,7 @@ function buildDetailDataFromStats(
 
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      // Build useCases and results from statsByUsecase if available
-      const statsByUsecase = (w as any).statsByUsecase || [];
+      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number }> }).statsByUsecase ?? [];
       
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
@@ -193,12 +202,11 @@ function buildDetailDataFromStats(
 
 export default function Page() {
   const { id } = useParams();
-  const runId = Array.isArray(id) ? id[0] : (id as string) || "";
+  const runId = Array.isArray(id) ? id[0] : (id ?? "") || "";
 
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
 
-  const { 
-    data: agentRunData,
+  const {
     isLoading,
     error,
     refetch,
@@ -211,13 +219,6 @@ export default function Page() {
   const detailData = useMemo(() => {
     return buildDetailDataFromStats(stats);
   }, [stats]);
-
-  // Check if agent run has no data yet
-  const hasNoData =
-    !isLoading &&
-    error &&
-    (!stats ||
-      (stats.totalTasks === 0 && stats.overallScore === 0));
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -383,29 +384,15 @@ export default function Page() {
 }
 
 // Personas card group - adapted to use info object
-function AgentRunPersonasFromInfo({
-  info,
-}: {
+type AgentRunPersonasFromInfoProps = Readonly<{
   info: {
     agentRunId: string;
     round: any;
     validator: any;
     miner: any;
   } | null;
-}) {
-  function extractUidNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value))
-      return Math.max(0, Math.abs(value));
-    if (typeof value === "string") {
-      const match = value.match(/\d+/);
-      if (match) {
-        const parsed = Number.parseInt(match[0], 10);
-        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
-      }
-    }
-    return null;
-  }
-
+}>;
+function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
   if (!info) {
     return <AgentRunPersonasPlaceholder />;
   }
@@ -473,11 +460,11 @@ function AgentRunPersonasFromInfo({
   // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
   const parseRoundInfo = () => {
     // First, try roundId as string in "season/round" format
-    if (roundData.roundId && typeof roundData.roundId === "string" && roundData.roundId.includes("/")) {
+    if (typeof roundData.roundId === "string" && roundData.roundId.includes("/")) {
       const parts = roundData.roundId.split("/");
       const season = parts[0]?.trim();
       const round = parts[1]?.trim();
-      if (season && round && !isNaN(Number(season)) && !isNaN(Number(round))) {
+      if (season && round && !Number.isNaN(Number(season)) && !Number.isNaN(Number(round))) {
         return { season, round };
       }
     }
@@ -528,7 +515,7 @@ function AgentRunPersonasFromInfo({
               <PiClock className="h-6 w-6" />
             </div>
             <div className="flex items-center gap-4">
-              {roundInfo && roundInfo.season && roundInfo.round ? (
+              {roundInfo?.season && roundInfo?.round ? (
                 <>
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/60">
@@ -722,23 +709,10 @@ function AgentRunPersonasFromInfo({
 function AgentRunPersonas({
   personas,
   summary,
-}: {
+}: Readonly<{
   personas?: any;
   summary?: any;
-}) {
-  function extractUidNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value))
-      return Math.max(0, Math.abs(value));
-    if (typeof value === "string") {
-      // Extract first sequence of digits; treat hyphens as delimiters, not signs
-      const match = value.match(/\d+/);
-      if (match) {
-        const parsed = Number.parseInt(match[0], 10);
-        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
-      }
-    }
-    return null;
-  }
+}>) {
   const roundData = personas?.round || {
     id: "—",
     status: "Active",
@@ -783,14 +757,13 @@ function AgentRunPersonas({
     summary?.agentId;
 
   const fallbackMinerImage = (() => {
-    const uidCandidate = minerUid;
-    if (uidCandidate === null) return "/images/autoppia-logo.png";
-    const normalized = Math.abs(uidCandidate % 50);
+    if (agentUid === null) return "/images/autoppia-logo.png";
+    const normalized = Math.abs(agentUid % 50);
     return `/miners/${normalized}.svg`;
   })();
 
-  const minerImageSrc = minerData.image
-    ? resolveAssetUrl(minerData.image)
+  const minerImageSrc = agentData.image
+    ? resolveAssetUrl(agentData.image)
     : resolveAssetUrl(fallbackMinerImage);
   const validatorImageSrc = validatorData.image
     ? resolveAssetUrl(validatorData.image)
@@ -932,12 +905,12 @@ function AgentRunPersonas({
                 Miner
               </p>
               <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {minerData.name || "Unknown Miner"}
+                {agentData.name || "Unknown Miner"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {minerUid !== null && (
+            {agentUid !== null && (
               <span
                 className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
                 style={{
@@ -946,12 +919,12 @@ function AgentRunPersonas({
                   color: "#34D399",
                 }}
               >
-                UID {minerUid}
+                UID {agentUid}
               </span>
             )}
-            {minerData.github ? (
+            {agentData.github ? (
               <a
-                href={minerData.github}
+                href={agentData.github}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300"
@@ -971,10 +944,10 @@ function AgentRunPersonas({
                   Hotkey:
                 </span>
                 <span className="font-mono text-sm text-white">
-                  {truncateMiddle(minerHotkey)}
+                  {truncateMiddle(agentHotkey)}
                 </span>
               </div>
-              {minerHotkey && minerHotkey !== "—" && <IDCopyButton text={minerHotkey} />}
+              {agentHotkey && agentHotkey !== "—" && <IDCopyButton text={agentHotkey} />}
             </div>
           </div>
         </div>
@@ -984,12 +957,13 @@ function AgentRunPersonas({
 }
 
 // Personas placeholder
+const PERSONA_PLACEHOLDER_KEYS = ["round", "validator", "miner"] as const;
 function AgentRunPersonasPlaceholder() {
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, idx) => (
+      {PERSONA_PLACEHOLDER_KEYS.map((key) => (
         <section
-          key={`persona-placeholder-${idx}`}
+          key={`persona-placeholder-${key}`}
           className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-transparent p-5 shadow-lg"
         >
           <header className="flex items-center justify-between gap-3">
@@ -1045,7 +1019,7 @@ function AgentRunPersonasPlaceholder() {
 }
 
 // Stats cards
-function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
+function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>) {
   const numberFormatter = new Intl.NumberFormat("en-US");
   const percentageFormatter = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 1,
@@ -1072,20 +1046,16 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
-    stats?.failedTasks != null
-      ? clampNonNegative(stats.failedTasks)
-      : Math.max(totalTasks - successfulTasks, 0);
+    stats?.failedTasks == null
+      ? Math.max(totalTasks - successfulTasks, 0)
+      : clampNonNegative(stats.failedTasks);
   const websitesCount = clampNonNegative(
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
-  );
-  const successRate = clampPercentage(
-    totalTasks ? (successfulTasks / totalTasks) * 100 : 0
   );
   const averageDuration = stats?.avg_time ?? 0;
 
   const displayOverallScore = formatPercentage(overallScore);
   const displayOverallReward = formatPercentage(overallReward);
-  const displaySuccessRate = formatPercentage(successRate);
   const displayAverageDuration = formatDuration(averageDuration);
 
   const cards = [
@@ -1230,9 +1200,9 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          {Array.from({ length: 4 }).map((_, idx) => (
+          {(["tasks", "websites", "success", "failed"] as const).map((k) => (
             <div
-              key={`stats-mobile-placeholder-${idx}`}
+              key={`stats-mobile-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1259,9 +1229,9 @@ function AgentRunStatsPlaceholder() {
       {/* Desktop layout */}
       <div className="hidden md:flex items-center justify-between relative">
         <div className="grid grid-cols-2 gap-6">
-          {Array.from({ length: 2 }).map((_, idx) => (
+          {(["left1", "left2"] as const).map((k) => (
             <div
-              key={`stats-left-placeholder-${idx}`}
+              key={`stats-left-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1301,9 +1271,9 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {Array.from({ length: 2 }).map((_, idx) => (
+          {(["right1", "right2"] as const).map((k) => (
             <div
-              key={`stats-right-placeholder-${idx}`}
+              key={`stats-right-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1336,12 +1306,12 @@ function AgentRunDetail({
   selectedWebsite,
   setSelectedWebsite,
   data,
-}: {
+}: Readonly<{
   className?: string;
   selectedWebsite?: string | null;
   setSelectedWebsite: (value: string | null) => void;
   data?: AgentRunDetailData | null;
-}) {
+}>) {
   const agentDetailsData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentDetailsData.websites.length > 0;
 
@@ -1584,7 +1554,7 @@ function AgentRunDetail({
   );
 }
 
-function AgentRunDetailPlaceholder({ className }: { className?: string }) {
+function AgentRunDetailPlaceholder({ className }: Readonly<{ className?: string }>) {
   const progressWidths = ["68%", "52%", "78%"];
   return (
     <div
@@ -1640,9 +1610,9 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
       </div>
 
       <div className="relative space-y-6">
-        {progressWidths.map((w, i) => (
+        {progressWidths.map((w) => (
           <div
-            key={`placeholder-card-${i}`}
+            key={`placeholder-card-${w}`}
             className="relative rounded-xl border border-white/15 bg-transparent p-5"
           >
             <div className="mb-4 flex items-center justify-between">
@@ -1729,44 +1699,29 @@ function AgentRunSummary({
   className,
   selectedWebsite,
   data,
-}: {
+}: Readonly<{
   className?: string;
   selectedWebsite?: string | null;
   data?: AgentRunDetailData | null;
-}) {
+}>) {
   const agentData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentData.websites.length > 0;
 
   // Compute display metrics
-  let successRate = 0;
-  let totalRequests = 0;
-  let totalSuccesses = 0;
-  let avgSolutionTime = 0;
-
-  if (selectedWebsite) {
-    const selectedWeb = agentData.websites.find(
-      (w) => w.name === selectedWebsite
-    );
-    if (selectedWeb) {
-      successRate = selectedWeb.overall.successRate;
-      totalRequests = selectedWeb.overall.total;
-      totalSuccesses = selectedWeb.overall.successCount;
-      avgSolutionTime = selectedWeb.overall.avgSolutionTime;
-    }
-  } else {
-    const websites = agentData.websites;
-    successRate = websites.length
-      ? websites.reduce((s, w) => s + w.overall.successRate, 0) /
-        websites.length
-      : 0;
-    totalRequests = websites.reduce((s, w) => s + w.overall.total, 0);
-    totalSuccesses = websites.reduce((s, w) => s + w.overall.successCount, 0);
-    avgSolutionTime = websites.length
-      ? websites.reduce((s, w) => s + w.overall.avgSolutionTime, 0) /
-        websites.length
-      : 0;
-  }
-
+  const selectedWeb = selectedWebsite
+    ? agentData.websites.find((w) => w.name === selectedWebsite)
+    : null;
+  const websites = agentData.websites;
+  const n = websites.length;
+  const avgSuccessRate =
+    n > 0 ? websites.reduce((s, w) => s + w.overall.successRate, 0) / n : 0;
+  const successRate = selectedWeb ? selectedWeb.overall.successRate : avgSuccessRate;
+  const totalRequests = selectedWeb
+    ? selectedWeb.overall.total
+    : websites.reduce((s, w) => s + w.overall.total, 0);
+  const totalSuccesses = selectedWeb
+    ? selectedWeb.overall.successCount
+    : websites.reduce((s, w) => s + w.overall.successCount, 0);
   const displayData = (() => {
     if (selectedWebsite) {
       console.log("🎯 Summary: Filtering by website:", selectedWebsite);
@@ -1815,7 +1770,7 @@ function AgentRunSummary({
         const selectedWeb = agentData.websites.find(
           (w) => w.name === selectedWebsite
         );
-        if (!selectedWeb) return [] as any[];
+        if (!selectedWeb) return [] as { label: string; value: number; average: number; total: number; successCount: number; avgSolutionTime: number; fill: string; stroke: string }[];
         const sortedResults = [...selectedWeb.results]
           .map((result) => {
             const useCase = selectedWeb.useCases.find(
@@ -1867,24 +1822,23 @@ function AgentRunSummary({
       });
 
   // Ensure donutData has valid values for rendering
-  const finalDonutData =
-    donutData.length > 0 && donutData.some((d) => d.value > 0)
-      ? donutData
-      : hasWebsites
-        ? displayData.map((item, idx) => {
-            const projectColors = getProjectColors(item.label);
-            return {
-              label: item.label,
-              value: 100, // Show equal segments when no data
-              average: 0,
-              total: item.total,
-              successCount: 0,
-              avgSolutionTime: 0,
-              fill: projectColors.dotColor,
-              stroke: projectColors.dotColor,
-            };
-          })
-        : [];
+  const hasValidDonut = donutData.some((d) => d.value > 0);
+  const fallbackDonut = hasWebsites
+    ? displayData.map((item) => {
+        const projectColors = getProjectColors(item.label);
+        return {
+          label: item.label,
+          value: 100, // Show equal segments when no data
+          average: 0,
+          total: item.total,
+          successCount: 0,
+          avgSolutionTime: 0,
+          fill: projectColors.dotColor,
+          stroke: projectColors.dotColor,
+        };
+      })
+    : [];
+  const finalDonutData = hasValidDonut ? donutData : fallbackDonut;
 
   return (
     <div
@@ -1928,18 +1882,23 @@ function AgentRunSummary({
               >
                 <Label
                   position="center"
-                  content={(props) => (
-                    <CenterLabel
-                      value={(successRate * 100).toFixed(0)}
-                      totalRequests={Math.round(totalRequests).toString()}
-                      totalSuccesses={Math.round(totalSuccesses).toString()}
-                      viewBox={(props as any).viewBox}
-                    />
-                  )}
+                  content={(props) => {
+                    const viewBox = props?.viewBox as { cx?: number; cy?: number } | undefined;
+                    const cx = viewBox && "cx" in viewBox ? viewBox.cx ?? 0 : 0;
+                    const cy = viewBox && "cy" in viewBox ? viewBox.cy ?? 0 : 0;
+                    return (
+                      <CenterLabel
+                        value={(successRate * 100).toFixed(0)}
+                        totalRequests={Math.round(totalRequests).toString()}
+                        totalSuccesses={Math.round(totalSuccesses).toString()}
+                        viewBox={{ cx, cy }}
+                      />
+                    );
+                  }}
                 />
-                {finalDonutData.map((entry: any, idx: number) => (
+                {finalDonutData.map((entry: { label: string; fill?: string; stroke?: string }, idx: number) => (
                   <Cell
-                    key={`cell-${idx}`}
+                    key={`cell-${entry.label}-${idx}`}
                     fill={entry.fill}
                     stroke={entry.stroke || entry.fill}
                     strokeWidth={2}
@@ -2000,12 +1959,12 @@ function CenterLabel({
   totalRequests,
   totalSuccesses,
   viewBox,
-}: {
+}: Readonly<{
   value: string;
   totalRequests: string;
   totalSuccesses: string;
-  viewBox: any;
-}) {
+  viewBox: { cx: number; cy: number };
+}>) {
   const { cx, cy } = viewBox;
   return (
     <>
@@ -2052,7 +2011,7 @@ function CenterLabel({
   );
 }
 
-function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
+function AgentRunSummaryPlaceholder({ className }: Readonly<{ className?: string }>) {
   const donutInner = (
     <div className="relative flex items-center justify-center py-4">
       <div className="relative flex items-center justify-center">
@@ -2276,19 +2235,19 @@ const agentRunTasksColumns = [
   }),
 ];
 
-function AgentRunTasksSection({ 
-  evaluations: providedEvaluations = [], 
-  isLoading = false, 
+function AgentRunTasksSection({
+  evaluations: providedEvaluations = [],
+  isLoading = false,
   error,
   refetch,
   selectedWebsite,
-}: {
-  evaluations?: any[];
+}: Readonly<{
+  evaluations?: AgentRunEvaluationData[];
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
   selectedWebsite?: string | null;
-}) {
+}>) {
   // Filter evaluations by selected website
   const filteredEvaluations = useMemo(() => {
     if (!selectedWebsite || selectedWebsite === "__all__") {
@@ -2332,16 +2291,16 @@ function AgentRunTasksSection({
             <table className="w-full text-xs sm:text-sm">
               <thead className="bg-transparent">
                 <tr>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <th key={i} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
+                  {(["c0", "c1", "c2", "c3", "c4", "c5"] as const).map((col) => (
+                    <th key={`tasks-thead-${col}`} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                       <Placeholder height="0.875rem" width="3rem" />
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <TableRowPlaceholder key={i} columns={6} />
+                {(["r0", "r1", "r2", "r3", "r4"] as const).map((row) => (
+                  <TableRowPlaceholder key={`tasks-row-${row}`} columns={6} />
                 ))}
               </tbody>
             </table>
@@ -2359,7 +2318,7 @@ function AgentRunTasksSection({
     );
   }
 
-  if (error && !tasks) {
+  if (error && !evaluations?.length) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-transparent p-3 sm:p-6">
         <div className="relative mb-4 sm:mb-6 flex items-center justify-between">
