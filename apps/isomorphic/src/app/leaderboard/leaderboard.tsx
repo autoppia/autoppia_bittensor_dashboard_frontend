@@ -357,6 +357,13 @@ const useIsMobile = (bp = 768) => {
 const shorten = (s: string, max = 26) =>
   s.length > max ? s.slice(0, max - 1) + "…" : s;
 
+function getMedalDisplay(index: number): string | number {
+  if (index === 0) return "🥇";
+  if (index === 1) return "🥈";
+  if (index === 2) return "🥉";
+  return index + 1;
+}
+
 /* -------------------- CHART RENDERERS (from the provided chart code) -------------------- */
 /** Left Y-axis tick: show ONLY the logo (names go inside bars) */
 function LogoYAxisTick(props: any) {
@@ -364,7 +371,9 @@ function LogoYAxisTick(props: any) {
   const item = baseData.find((d) => d.label === payload.value);
   if (!item) return null;
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isMobile =
+    globalThis.window !== undefined &&
+    globalThis.window.innerWidth < 768;
   const logo = isMobile ? 40 : 56;
   return (
     <g transform={`translate(${x},${y})`}>
@@ -395,8 +404,6 @@ function NameInsideBarLabel(props: any) {
   const d = baseData[index];
   const minForInside = 136;
   const labelHeight = 48;
-  const rankClass = "text-white";
-  const rankMutedClass = "text-white";
 
   if (width < minForInside) {
     return (
@@ -438,6 +445,37 @@ function NameInsideBarLabel(props: any) {
   );
 }
 
+const RANK_THEMES: Record<
+  number,
+  { orb: string; glow: string; pill: string }
+> = {
+  1: {
+    orb: "border-amber-300/80 bg-gradient-to-br from-amber-200 via-yellow-300 to-amber-400 text-amber-900 shadow-[0_0_20px_rgba(251,191,36,0.45)]",
+    glow: "bg-amber-300/40 blur-md opacity-80",
+    pill: "bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400 text-amber-950 shadow-[0_14px_28px_rgba(251,191,36,0.4)]",
+  },
+  2: {
+    orb: "border-slate-200/80 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 text-slate-800 shadow-[0_0_20px_rgba(148,163,184,0.4)]",
+    glow: "bg-slate-200/50 blur-md opacity-80",
+    pill: "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-slate-900 shadow-[0_14px_28px_rgba(148,163,184,0.35)]",
+  },
+  3: {
+    orb: "border-[#eabf86]/80 bg-gradient-to-br from-[#fcd7a3] via-[#d6974d] to-[#8d4f1f] text-[#2f1b0d] shadow-[0_0_20px_rgba(214,151,77,0.45)]",
+    glow: "bg-[#f4a261]/45 blur-md opacity-80",
+    pill: "bg-gradient-to-r from-[#fcd29f] via-[#d97706] to-[#8f4b16] text-[#2f1b0d] shadow-[0_14px_28px_rgba(217,119,6,0.35)]",
+  },
+};
+
+const DEFAULT_RANK_THEME = {
+  orb: "border-white/40 bg-white text-slate-900 shadow-[0_0_14px_rgba(148,163,184,0.35)]",
+  glow: "bg-white/60 blur-md opacity-70",
+  pill: "bg-white text-slate-900 shadow-[0_10px_24px_rgba(148,163,184,0.4)]",
+};
+
+function getRankTheme(rank: number) {
+  return RANK_THEMES[rank] ?? DEFAULT_RANK_THEME;
+}
+
 /** Right-end rank glyph + score pill */
 function ScorePillLabel(props: any) {
   const { x, y, width, height, value, index } = props;
@@ -455,30 +493,7 @@ function ScorePillLabel(props: any) {
     typeof d?.avgCostPerTask === "number"
       ? `$${d.avgCostPerTask.toFixed(2)}/task`
       : "—";
-  const rankTheme =
-    d.rank === 1
-      ? {
-          orb: "border-amber-300/80 bg-gradient-to-br from-amber-200 via-yellow-300 to-amber-400 text-amber-900 shadow-[0_0_20px_rgba(251,191,36,0.45)]",
-          glow: "bg-amber-300/40 blur-md opacity-80",
-          pill: "bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400 text-amber-950 shadow-[0_14px_28px_rgba(251,191,36,0.4)]",
-        }
-      : d.rank === 2
-        ? {
-            orb: "border-slate-200/80 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 text-slate-800 shadow-[0_0_20px_rgba(148,163,184,0.4)]",
-            glow: "bg-slate-200/50 blur-md opacity-80",
-            pill: "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-slate-900 shadow-[0_14px_28px_rgba(148,163,184,0.35)]",
-          }
-        : d.rank === 3
-          ? {
-              orb: "border-[#eabf86]/80 bg-gradient-to-br from-[#fcd7a3] via-[#d6974d] to-[#8d4f1f] text-[#2f1b0d] shadow-[0_0_20px_rgba(214,151,77,0.45)]",
-              glow: "bg-[#f4a261]/45 blur-md opacity-80",
-              pill: "bg-gradient-to-r from-[#fcd29f] via-[#d97706] to-[#8f4b16] text-[#2f1b0d] shadow-[0_14px_28px_rgba(217,119,6,0.35)]",
-            }
-          : {
-              orb: "border-white/40 bg-white text-slate-900 shadow-[0_0_14px_rgba(148,163,184,0.35)]",
-              glow: "bg-white/60 blur-md opacity-70",
-              pill: "bg-white text-slate-900 shadow-[0_10px_24px_rgba(148,163,184,0.4)]",
-            };
+  const rankTheme = getRankTheme(d.rank);
 
   return (
     <foreignObject
@@ -658,6 +673,38 @@ function LeftAxisLabel({ viewBox, value }: any) {
   );
 }
 
+async function fetchExportPayload(season: number): Promise<{
+  season: number;
+  evaluations: unknown[];
+}> {
+  const response = await apiClient.get<{
+    data?: { season: number; evaluations: unknown[] };
+    season?: number;
+    evaluations?: unknown[];
+  }>("/api/v1/evaluations/export", { season });
+  const payload: { season?: number; evaluations?: unknown[] } =
+    response.data?.data ?? response.data ?? {};
+  return {
+    season: payload.season ?? season,
+    evaluations: payload.evaluations ?? [],
+  };
+}
+
+function triggerJsonDownload(season: number, evaluations: unknown[]) {
+  const blob = new Blob(
+    [JSON.stringify({ season, evaluations }, null, 2)],
+    { type: "application/json" }
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `iwap_evaluations_season_${season}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /* -------------------- COMPONENT -------------------- */
 export default function App() {
   const isMobile = useIsMobile();
@@ -679,9 +726,6 @@ export default function App() {
   const barSize = isMobile ? 40 : 48;
   const chartHeight = rowHeight * chartData.length;
   const scatterHeight = isMobile ? 280 : 380;
-
-  // logos-only gutter
-  const yAxisWidth = isMobile ? 64 : 84;
 
   const avg = Number(
     (
@@ -711,27 +755,10 @@ export default function App() {
     if (!seasonToDownload || isDownloading) return;
     setIsDownloading(true);
     try {
-      const response = await apiClient.get<{
-        data?: { season: number; evaluations: unknown[] };
-        season?: number;
-        evaluations?: unknown[];
-      }>("/api/v1/evaluations/export", { season: seasonToDownload });
-
-      const payload: any = response.data?.data ?? response.data;
-      const season = payload?.season ?? seasonToDownload;
-      const evaluations = payload?.evaluations ?? [];
-      const blob = new Blob(
-        [JSON.stringify({ season, evaluations }, null, 2)],
-        { type: "application/json" }
+      const { season, evaluations } = await fetchExportPayload(
+        seasonToDownload
       );
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `iwap_evaluations_season_${season}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      triggerJsonDownload(season, evaluations);
     } finally {
       setIsDownloading(false);
     }
@@ -809,9 +836,7 @@ export default function App() {
           </div>
         </div>
         {/* Stats, charts, and benchmarks */}
-        {true && (
-          <>
-            <motion.div
+        <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -940,16 +965,7 @@ export default function App() {
                   {isMobile ? (
                     <div className="relative z-10 grid grid-cols-1 gap-3">
                       {chartData.map((item, index) => {
-                        // Medal for top 3
-                        const medal =
-                          index === 0
-                            ? "🥇"
-                            : index === 1
-                              ? "🥈"
-                              : index === 2
-                                ? "🥉"
-                                : index + 1;
-
+                        const medal = getMedalDisplay(index);
                         return (
                           <div
                             key={item.label}
@@ -1473,8 +1489,6 @@ export default function App() {
                   )}
               </div>
             </motion.div>
-          </>
-        )}
 
         {/* Footer */}
       </div>
