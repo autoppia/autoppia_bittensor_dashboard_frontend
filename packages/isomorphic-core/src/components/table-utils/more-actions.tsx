@@ -8,7 +8,9 @@ import {
 } from "react-icons/pi";
 import { ActionIcon, Box, Button, Popover } from "rizzui";
 
-export function MoreActions({ onDelete }: { onDelete?: () => void }) {
+export function MoreActions({
+  onDelete,
+}: Readonly<{ onDelete?: () => void }>) {
   return (
     <Popover placement="bottom-end">
       <Popover.Trigger>
