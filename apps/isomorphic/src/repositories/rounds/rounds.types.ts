@@ -26,6 +26,8 @@ export interface RoundData {
   round?: number;
   roundNumber?: number;
   roundKey?: string;
+  season?: number;
+  roundInSeason?: number;
   startBlock: number;
   endBlock: number;
   current: boolean;
@@ -164,6 +166,7 @@ export interface RoundsListResponse {
     total: number;
     page: number;
     limit: number;
+    currentRound?: RoundData;
   };
 }
 
