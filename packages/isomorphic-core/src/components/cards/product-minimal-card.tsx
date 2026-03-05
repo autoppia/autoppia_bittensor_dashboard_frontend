@@ -18,7 +18,7 @@ export default function ProductMinimalCard({
   product,
   className,
   routes,
-}: ProductProps) {
+}: Readonly<ProductProps>) {
   const {
     slug,
     title,
