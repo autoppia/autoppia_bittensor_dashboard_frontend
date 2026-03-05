@@ -4,7 +4,9 @@ import { Provider } from "jotai";
 import { siteConfig } from "@/config/site.config";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
 
-export function ThemeProvider({ children }: React.PropsWithChildren<{}>) {
+export function ThemeProvider({
+  children,
+}: Readonly<React.PropsWithChildren<{}>>) {
   return (
     <NextThemeProvider
       enableSystem={false}
@@ -16,6 +18,8 @@ export function ThemeProvider({ children }: React.PropsWithChildren<{}>) {
   );
 }
 
-export function JotaiProvider({ children }: React.PropsWithChildren<{}>) {
+export function JotaiProvider({
+  children,
+}: Readonly<React.PropsWithChildren<{}>>) {
   return <Provider>{children}</Provider>;
 }
