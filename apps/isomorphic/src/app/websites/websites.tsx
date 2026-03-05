@@ -6,7 +6,6 @@ import { websitesData } from "@/data/websites-data";
 import WebsiteItem from "./website-item";
 import {
   PiGlobeDuotone,
-  PiRocketLaunchDuotone,
   PiClockDuotone,
   PiSortAscendingBold,
   PiSortDescendingBold,
@@ -46,12 +45,12 @@ export default function Websites() {
     if (sortBy === "difficulty-asc") {
       // First sort by web number, then by difficulty
       const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
-      return webNumDiff !== 0 ? webNumDiff : a.avgDifficulty - b.avgDifficulty;
+      return webNumDiff === 0 ? a.avgDifficulty - b.avgDifficulty : webNumDiff;
     }
     if (sortBy === "difficulty-desc") {
       // First sort by web number, then by difficulty
       const webNumDiff = getWebNumber(a.slug) - getWebNumber(b.slug);
-      return webNumDiff !== 0 ? webNumDiff : b.avgDifficulty - a.avgDifficulty;
+      return webNumDiff === 0 ? b.avgDifficulty - a.avgDifficulty : webNumDiff;
     }
     // Sort by web number for name sort too
     return getWebNumber(a.slug) - getWebNumber(b.slug);
@@ -131,8 +130,8 @@ export default function Websites() {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedActiveWebsites.map((website, index) => (
-              <WebsiteItem key={index} website={website} />
+            {sortedActiveWebsites.map((website) => (
+              <WebsiteItem key={website.slug} website={website} />
             ))}
           </div>
         </div>
@@ -151,8 +150,8 @@ export default function Websites() {
               </Title>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {comingSoonWebsites.map((website, index) => (
-                <WebsiteItem key={index} website={website} />
+              {comingSoonWebsites.map((website) => (
+                <WebsiteItem key={website.slug} website={website} />
               ))}
             </div>
           </div>

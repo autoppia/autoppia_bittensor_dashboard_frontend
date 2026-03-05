@@ -7,16 +7,18 @@ import { WebsiteDataType } from "@/data/websites-data";
 import { PiClockDuotone, PiCheckCircleDuotone } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 
-export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
+type WebsiteItemProps = { website: WebsiteDataType };
+
+export default function WebsiteItem({ website }: Readonly<WebsiteItemProps>) {
   const isComingSoon = website.isComingSoon;
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
+          r: Number.parseInt(result[1], 16),
+          g: Number.parseInt(result[2], 16),
+          b: Number.parseInt(result[3], 16),
         }
       : { r: 0, g: 255, b: 255 };
   };
@@ -33,6 +35,18 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         "group relative block h-full",
         isComingSoon && "pointer-events-none"
       )}
+      onMouseEnter={(e) => {
+        if (!isComingSoon) {
+          const card = e.currentTarget.firstElementChild as HTMLElement | null;
+          if (card) card.style.borderColor = colorBorderHover;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isComingSoon) {
+          const card = e.currentTarget.firstElementChild as HTMLElement | null;
+          if (card) card.style.borderColor = colorBorder;
+        }
+      }}
     >
       <div
         className={cn(
@@ -46,16 +60,6 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
         style={{
           backgroundColor: isComingSoon ? undefined : colorWithOpacity,
           borderColor: isComingSoon ? undefined : colorBorder,
-        }}
-        onMouseEnter={(e) => {
-          if (!isComingSoon) {
-            e.currentTarget.style.borderColor = colorBorderHover;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isComingSoon) {
-            e.currentTarget.style.borderColor = colorBorder;
-          }
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
@@ -82,15 +86,15 @@ export default function WebsiteItem({ website }: { website: WebsiteDataType }) {
             >
               {website.origin}
             </div>
-            {!isComingSoon ? (
-              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400">
-                <PiCheckCircleDuotone className="w-4 h-4" />
-                <span>Active</span>
-              </div>
-            ) : (
+            {isComingSoon ? (
               <div className="flex items-center gap-1 text-xs font-medium text-gray-600">
                 <PiClockDuotone className="w-4 h-4" />
                 <span>Soon</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400">
+                <PiCheckCircleDuotone className="w-4 h-4" />
+                <span>Active</span>
               </div>
             )}
           </div>
