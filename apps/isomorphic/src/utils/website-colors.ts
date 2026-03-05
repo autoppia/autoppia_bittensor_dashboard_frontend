@@ -31,7 +31,7 @@ export function formatWebsiteName(name?: string | null): string {
   if (!name) return "Website";
   if (name.length === 0) return name;
 
-  const portMatch = name.match(/localhost:(\d+)/);
+  const portMatch = /localhost:(\d+)/.exec(name);
   if (portMatch) {
     const port = portMatch[1];
     return LOCALHOST_PORT_MAPPING[port] || `Web Project (${port})`;
@@ -109,19 +109,17 @@ export function getProjectColors(projectName: string): ProjectColors {
   }
 
   // Si aún no se encuentra, buscar por coincidencia parcial (para casos como "autocinema" vs "AutoCinema")
-  if (!website) {
-    website = websitesData.find(
-      (w) => {
-        const nameLower = w.name.toLowerCase();
-        const slugLower = w.slug?.toLowerCase() ?? "";
-        // Buscar si el nombre normalizado contiene el slug o viceversa
-        return nameLower.includes(normalizedName) || 
-               normalizedName.includes(nameLower) ||
-               slugLower.includes(normalizedName) ||
-               normalizedName.includes(slugLower);
-      }
-    );
-  }
+  website ??= websitesData.find(
+    (w) => {
+      const nameLower = w.name.toLowerCase();
+      const slugLower = w.slug?.toLowerCase() ?? "";
+      // Buscar si el nombre normalizado contiene el slug o viceversa
+      return nameLower.includes(normalizedName) ||
+             normalizedName.includes(nameLower) ||
+             slugLower.includes(normalizedName) ||
+             normalizedName.includes(slugLower);
+    }
+  );
 
   if (website?.color) {
     return {
