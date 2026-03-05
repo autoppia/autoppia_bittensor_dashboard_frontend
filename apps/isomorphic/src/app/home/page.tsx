@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react";
 import type { IconType } from "react-icons";
 import { Title, Text } from "rizzui/typography";
-import { Button, Tooltip } from "rizzui";
+import { Tooltip } from "rizzui";
 import Link from "next/link";
-import Image from "next/image";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
 import { WebsiteItem } from "./cardItem";
-import { LuTrophy, LuFileText, LuNetwork, LuCompass } from "react-icons/lu";
+import { LuTrophy, LuNetwork } from "react-icons/lu";
 import {
   PiFlaskDuotone,
   PiRocketLaunchDuotone,
@@ -17,11 +16,10 @@ import {
   PiGearDuotone,
   PiTargetDuotone,
   PiLightningDuotone,
-  PiXCircleDuotone,
   PiBrainDuotone,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
-import { FaArrowRight, FaGithub } from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa";
 
 type Highlight = {
   title: string;
@@ -74,7 +72,6 @@ export default function LandingPage() {
   const fullText = "Infinite Web Arena Platform";
   const highlightWord = "Platform";
   const highlightStart = fullText.indexOf(highlightWord);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState(0);
 
   // Use websitesData as source of truth for demo websites count (backend's totalWebsites
@@ -94,14 +91,6 @@ export default function LandingPage() {
     }, 100);
 
     return () => clearInterval(typingInterval);
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
@@ -225,46 +214,48 @@ export default function LandingPage() {
                 valueClass: undefined,
                 labelClass: undefined,
               },
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "group p-6 sm:p-8 rounded-2xl backdrop-blur-sm bg-background/50 border border-border/50 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-foreground/20",
-                  stat.glow
-                )}
-                style={{
-                  animationDelay: `${idx * 200}ms`,
-                }}
-              >
+            ].map((stat, idx) => {
+              const valueClassName =
+                stat.valueClass ??
+                (stat.white
+                  ? "text-white"
+                  : cn(
+                      "bg-gradient-to-r bg-clip-text text-transparent",
+                      stat.gradient
+                    ));
+              const labelClassName =
+                stat.labelClass ??
+                (stat.white ? "text-white" : "text-muted-foreground");
+              return (
                 <div
+                  key={stat.label}
                   className={cn(
-                    "text-3xl sm:text-4xl md:text-5xl font-bold mb-2",
-                    stat.valueClass
-                      ? stat.valueClass
-                      : stat.white
-                        ? "text-white"
-                        : cn(
-                            "bg-gradient-to-r bg-clip-text text-transparent",
-                            stat.gradient
-                          )
+                    "group p-6 sm:p-8 rounded-2xl backdrop-blur-sm bg-background/50 border border-border/50 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-foreground/20",
+                    stat.glow
                   )}
+                  style={{
+                    animationDelay: `${idx * 200}ms`,
+                  }}
                 >
-                  {stat.value}
+                  <div
+                    className={cn(
+                      "text-3xl sm:text-4xl md:text-5xl font-bold mb-2",
+                      valueClassName
+                    )}
+                  >
+                    {stat.value}
+                  </div>
+                  <div
+                    className={cn(
+                      "text-sm sm:text-base font-medium",
+                      labelClassName
+                    )}
+                  >
+                    {stat.label}
+                  </div>
                 </div>
-                <div
-                  className={cn(
-                    "text-sm sm:text-base font-medium",
-                    stat.labelClass
-                      ? stat.labelClass
-                      : stat.white
-                        ? "text-white"
-                        : "text-muted-foreground"
-                  )}
-                >
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -451,7 +442,7 @@ export default function LandingPage() {
               },
             ].map((step, idx) => (
               <div
-                key={idx}
+                key={step.num}
                 className={cn(
                   "group relative flex gap-4 sm:gap-6 p-6 sm:p-8 rounded-2xl backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-2",
                   step.borderColor,
@@ -519,7 +510,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {websitesData.slice(0, 6).map((website, index) => (
             <div
-              key={index}
+              key={website.slug}
               className="transition-transform duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
