@@ -13,7 +13,9 @@ export function useFavorite() {
   };
 }
 
-export default function WishlistButton({ className }: { className?: string }) {
+export default function WishlistButton({
+  className,
+}: Readonly<{ className?: string }>) {
   const { favorite, setFavorite } = useFavorite();
   return (
     <Button
