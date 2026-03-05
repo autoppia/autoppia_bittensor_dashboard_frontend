@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Disclosure } from "@headlessui/react";
+import { Disclosure, DisclosurePanel, DisclosureButton } from "@headlessui/react";
 import {
-  Title,
   Input,
   Checkbox,
   ActionIcon,
@@ -40,7 +39,7 @@ export default function FilterWithSearch({
   state,
   clearFilter,
   applyFilter,
-}: FilterWithSearchProps) {
+}: Readonly<FilterWithSearchProps>) {
   const [isSearchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [values, setValues] = useState<string[]>(
@@ -49,14 +48,14 @@ export default function FilterWithSearch({
   const [event, setEvent] = useState(false);
 
   function handleOnChange(e: React.ChangeEvent<any>) {
-    setEvent(() => e.target.checked);
+    setEvent(e.target.checked);
   }
 
   // apply & clear filter
   useEffect(() => {
     if (values.length) applyFilter(name, values);
-    if (values.length == 0 && event !== true) {
-      clearFilter && clearFilter([name]);
+    if (values.length === 0 && event !== true) {
+      clearFilter?.([name]);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,12 +70,11 @@ export default function FilterWithSearch({
   });
 
   return (
-    <>
-      <div className="block">
-        <div className="relative flex items-center justify-between">
-          <Text className="font-inter font-semibold">{title}</Text>
+    <div className="block">
+      <div className="relative flex items-center justify-between">
+        <Text className="font-inter font-semibold">{title}</Text>
 
-          {data!.length > 5 ? (
+        {data.length > 5 ? (
             <FilterOptionSearch
               title={title}
               isSearchOpen={isSearchOpen}
@@ -114,7 +112,7 @@ export default function FilterWithSearch({
             ))}
           </CheckboxGroup>
 
-          {filteredData!.length > 5 ? (
+          {filteredData.length > 5 ? (
             <CollapsibleFilterOptions data={filteredData}>
               <CheckboxGroup
                 values={state[name]?.length ? state[name].split(",") : []}
@@ -145,12 +143,11 @@ export default function FilterWithSearch({
             </CollapsibleFilterOptions>
           ) : null}
 
-          {!filteredData.length ? (
+          {filteredData.length === 0 ? (
             <div className="text-gray-500">No result found</div>
           ) : null}
         </div>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -168,7 +165,7 @@ function FilterOptionSearch({
   title,
   setSearchTerm,
   setSearchOpen,
-}: FilterOptionSearchProps) {
+}: Readonly<FilterOptionSearchProps>) {
   return (
     <div
       className={cn(
@@ -225,7 +222,7 @@ function FilterOptionSearch({
   );
 }
 
-function FilterOption({ name, count, color, tooltipText }: FilterOptions) {
+function FilterOption({ name, count, color, tooltipText }: Readonly<FilterOptions>) {
   return (
     <div className="flex items-center justify-between">
       <div className="relative flex shrink-0 items-center">
@@ -262,23 +259,23 @@ function FilterOption({ name, count, color, tooltipText }: FilterOptions) {
 function CollapsibleFilterOptions({
   data,
   children,
-}: React.PropsWithChildren<{ data: FilterOptions[] }>) {
+}: Readonly<React.PropsWithChildren<{ data: FilterOptions[] }>>) {
   return (
     <div className="w-full">
       <Disclosure>
         {({ open }) => (
           <>
-            <Disclosure.Panel className="space-y-3.5">
+            <DisclosurePanel className="space-y-3.5">
               {children}
-            </Disclosure.Panel>
+            </DisclosurePanel>
 
             {!open && (
-              <Disclosure.Button className="mt-3.5 w-full px-6 text-start font-semibold focus:outline-none">
+              <DisclosureButton className="mt-3.5 w-full px-6 text-start font-semibold focus:outline-none">
                 <span className="flex items-center">
                   <PiPlusBold size={12} />
                   {data.length - 5} more
                 </span>
-              </Disclosure.Button>
+              </DisclosureButton>
             )}
           </>
         )}
