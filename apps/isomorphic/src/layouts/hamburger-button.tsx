@@ -11,7 +11,7 @@ interface Props {
   className?: string;
 }
 
-export default function HamburgerButton({ view, placement = "left", className }: Props) {
+export default function HamburgerButton({ view, placement = "left", className }: Readonly<Props>) {
   const { openDrawer } = useDrawer();
   return (
     <ActionIcon
