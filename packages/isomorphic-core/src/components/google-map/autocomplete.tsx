@@ -41,7 +41,7 @@ export default function Autocomplete({
   inputProps,
   onPlaceSelect,
   spinnerClassName,
-}: GoogleMapsAutocompleteProps) {
+}: Readonly<GoogleMapsAutocompleteProps>) {
   // check for dark mode
   const { theme } = useTheme();
   // global location state
@@ -53,6 +53,7 @@ export default function Autocomplete({
   // to reset location
   const resetLocation = useResetAtom(locationAtom);
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [autocomplete, setAutocomplete] =
     useState<google.maps.places.Autocomplete | null>(null);
@@ -64,21 +65,20 @@ export default function Autocomplete({
       libraries: ["places"],
     });
 
-    loader.importLibrary("maps").then(({ Map }) => {
+    loader.importLibrary("maps").then(({ Map: GoogleMap }) => {
       const autocompleteInstance = new google.maps.places.Autocomplete(
         inputRef.current as HTMLInputElement
       );
       setAutocomplete(autocompleteInstance);
 
       autocompleteInstance.addListener("place_changed", () => {
-        const selectedPlace =
-          autocompleteInstance.getPlace() as google.maps.places.PlaceResult;
+        const selectedPlace = autocompleteInstance.getPlace();
         handlePlaceSelect(selectedPlace);
       });
       setIsLoading(false);
 
       if (!hideMap && mapRef.current) {
-        new Map(mapRef.current, {
+        mapInstanceRef.current = new GoogleMap(mapRef.current, {
           center: {
             lat: location.lat,
             lng: location.lng,
@@ -106,7 +106,7 @@ export default function Autocomplete({
   };
 
   const handlePlaceSelect = (selectedPlace: google.maps.places.PlaceResult) => {
-    if (selectedPlace && selectedPlace.formatted_address) {
+    if (selectedPlace?.formatted_address) {
       const { formatted_address, geometry } = selectedPlace;
       const place: Location = {
         address: formatted_address,
@@ -129,7 +129,7 @@ export default function Autocomplete({
             setInputValue("");
           }}
           onChange={handleInputChange}
-          clearable={inputValue ? true : false}
+          clearable={Boolean(inputValue)}
           {...inputProps}
         />
       )}
