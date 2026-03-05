@@ -33,8 +33,14 @@ export function CustomTooltip({
   formattedNumber,
   decimals,
   valueFormatter,
-}: CustomTooltipProps) {
+}: Readonly<CustomTooltipProps>) {
   if (!active) return null;
+
+  const getItemColor = (fill: string | undefined, stroke: string | undefined) => {
+    if (!fill || !isValidHexColor(fill)) return stroke;
+    if (fill === "#fff") return stroke;
+    return fill;
+  };
 
   const renderValue = (value: ValueType) => {
     if (typeof value === "number") {
@@ -72,11 +78,7 @@ export function CustomTooltip({
             <span
               className="me-1.5 h-2 w-2 rounded-full"
               style={{
-                backgroundColor: isValidHexColor(item.fill)
-                  ? item.fill === "#fff"
-                    ? item.stroke
-                    : item.fill
-                  : item.stroke,
+                backgroundColor: getItemColor(item.fill, item.stroke) ?? undefined,
               }}
             />
             <Text>
@@ -87,9 +89,9 @@ export function CustomTooltip({
                 as="span"
                 className="font-medium text-gray-900 dark:text-gray-700"
               >
-                {prefix && prefix}
+                {prefix}
                 {renderValue(item.value)}
-                {postfix && postfix}
+                {postfix}
               </Text>
             </Text>
           </div>
