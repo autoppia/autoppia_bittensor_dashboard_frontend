@@ -12,7 +12,7 @@ interface FloatingAutoUpdateProps {
       reference: React.MutableRefObject<any>;
     };
   };
-  positionDependencies: any[];
+  positionDependencies: unknown[];
   position: FloatingPosition;
 }
 

@@ -33,7 +33,7 @@ interface PopoverProps {
   position?: FloatingPosition;
   offset?: number;
   onPositionChange?: (position: FloatingPosition) => void;
-  positionDependencies?: any[];
+  positionDependencies?: unknown[];
   onClose?: () => void;
   onOpen?: () => void;
   middlewares?: PopoverMiddlewares;
@@ -130,8 +130,7 @@ export default function Popover({
     middlewares,
     width,
     position: getFloatingPosition(
-      // @ts-ignore
-      direction,
+      direction as 'rtl' | 'ltr',
       position!
     ),
     offset: offset!,

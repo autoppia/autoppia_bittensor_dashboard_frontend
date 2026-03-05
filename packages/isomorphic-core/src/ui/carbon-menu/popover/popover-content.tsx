@@ -8,20 +8,20 @@ import { useMergedRef } from './use-merged-ref';
 interface Options {
   active: boolean | undefined;
   onTrigger?: () => void;
-  onKeyDown?: (event: React.KeyboardEvent<any>) => void;
+  onKeyDown?: (event: React.KeyboardEvent) => void;
 }
 
 const noop = () => { };
 
 export function closeOnEscape(
-  callback?: (event: any) => void,
+  callback?: (event: React.KeyboardEvent) => void,
   options: Options = { active: true }
 ) {
   if (typeof callback !== 'function' || !options.active) {
     return options.onKeyDown || noop;
   }
 
-  return (event: React.KeyboardEvent<any>) => {
+  return (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       callback(event);
       options.onTrigger?.();
@@ -131,9 +131,8 @@ export const PopoverContent = React.forwardRef<
               className,
               popoverStyle.base,
               popoverStyle.shadow[shadow],
-              // @ts-ignore
-              popoverStyle.size[size],
-              popoverStyle.rounded[rounded]
+              popoverStyle.size[size as keyof typeof popoverStyle.size],
+              popoverStyle.rounded[rounded as keyof typeof popoverStyle.rounded]
             )}
           >
             {children}
