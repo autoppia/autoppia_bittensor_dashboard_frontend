@@ -17,7 +17,7 @@ export default function Placeholder({
   width = '100%',
   height = '1rem',
   animation = 'pulse'
-}: PlaceholderProps) {
+}: Readonly<PlaceholderProps>) {
   const baseClasses = "bg-gray-200 rounded";
   const animationClasses = {
     pulse: "animate-pulse",
@@ -51,7 +51,7 @@ export default function Placeholder({
 }
 
 // Specialized placeholder components
-export function TextPlaceholder({ lines = 1, className = "" }: { lines?: number; className?: string }) {
+export function TextPlaceholder({ lines = 1, className = "" }: Readonly<{ lines?: number; className?: string }>) {
   return (
     <div className={className}>
       {Array.from({ length: lines }, (_, index) => (
@@ -67,7 +67,7 @@ export function TextPlaceholder({ lines = 1, className = "" }: { lines?: number;
   );
 }
 
-export function CardPlaceholder({ className = "" }: { className?: string }) {
+export function CardPlaceholder({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <div className={cn("p-4 border border-gray-200 rounded-lg", className)}>
       <div className="flex items-center space-x-3 mb-3">
@@ -86,7 +86,7 @@ export function CardPlaceholder({ className = "" }: { className?: string }) {
   );
 }
 
-export function StatsCardPlaceholder({ className = "" }: { className?: string }) {
+export function StatsCardPlaceholder({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <div className={cn("relative bg-gradient-to-br from-gray-100/50 to-gray-200/50 border-2 border-gray-200/50 rounded-xl p-3 backdrop-blur-md overflow-hidden", className)}>
       {/* Corner Accents */}
@@ -122,7 +122,7 @@ export function StatsCardPlaceholder({ className = "" }: { className?: string })
   );
 }
 
-export function ProgressBarPlaceholder({ className = "" }: { className?: string }) {
+export function ProgressBarPlaceholder({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <div className={cn("w-full", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -168,7 +168,7 @@ export function ProgressBarPlaceholder({ className = "" }: { className?: string 
   );
 }
 
-export function TableRowPlaceholder({ columns = 4, className = "" }: { columns?: number; className?: string }) {
+export function TableRowPlaceholder({ columns = 4, className = "" }: Readonly<{ columns?: number; className?: string }>) {
   return (
     <tr className={className}>
       {Array.from({ length: columns }, (_, index) => (
@@ -180,7 +180,7 @@ export function TableRowPlaceholder({ columns = 4, className = "" }: { columns?:
   );
 }
 
-export function ListItemPlaceholder({ className = "" }: { className?: string }) {
+export function ListItemPlaceholder({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <div className={cn("flex items-center space-x-3 p-3 border border-gray-200 rounded-lg", className)}>
       <Placeholder variant="circular" width={40} height={40} />
