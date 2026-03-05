@@ -6,6 +6,7 @@
 // ===== TASK DATA =====
 export interface TaskData {
   taskId: string;
+  evaluationId?: string;
   agentRunId: string;
   website: string;
   seed?: string | null;
