@@ -12,7 +12,6 @@ import AgentRunTasksTable from "./agent-run-tasks-table";
 import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRun } from "@/services/hooks/useAgentRun";
 import LoadingScreen from "@/app/shared/loading-screen";
-import Placeholder from "@/app/shared/placeholder";
 import { routes } from "@/config/routes";
 
 export default function AgentRunDynamic() {
