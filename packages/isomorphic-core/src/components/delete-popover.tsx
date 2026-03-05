@@ -14,7 +14,7 @@ export default function DeletePopover({
   title,
   description,
   onDelete,
-}: DeletePopoverProps) {
+}: Readonly<DeletePopoverProps>) {
   return (
     <Popover placement="left">
       <Popover.Trigger>
@@ -44,7 +44,7 @@ export default function DeletePopover({
                 size="sm"
                 className="me-1.5 h-7"
                 onClick={() => {
-                  onDelete && onDelete();
+                  onDelete?.();
                   setOpen(false);
                 }}
               >
