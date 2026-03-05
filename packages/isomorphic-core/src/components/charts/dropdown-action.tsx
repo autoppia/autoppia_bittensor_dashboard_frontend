@@ -35,22 +35,32 @@ export default function DropdownAction({
   selectClassName,
   dropdownClassName,
   inPortal = true,
-}: DropdownActionProps) {
-  const [viewType, setViewType] = useState(options[0]);
+  defaultActive,
+  name,
+  activeClassName,
+}: Readonly<DropdownActionProps>) {
+  const [viewType, setViewType] = useState(
+    () => options.find((o) => o.value === defaultActive) ?? options[0]
+  );
   function handleOnChange(data: Options) {
     setViewType(data);
-    onChange && onChange(data.value);
+    onChange?.(data.value);
   }
 
   return (
     <Select
+      name={name}
       inPortal={inPortal}
       variant={variant}
       value={viewType.value}
       options={options}
       onChange={handleOnChange}
       displayValue={(selected) => options.find((option) => option.value === selected)?.label}
-      selectClassName={cn("py-1 px-2 leading-[32px] h-8 me-2", selectClassName)}
+      selectClassName={cn(
+        "py-1 px-2 leading-[32px] h-8 me-2",
+        selectClassName,
+        activeClassName
+      )}
       optionClassName="py-1 px-2 leading-[32px] h-8"
       dropdownClassName={cn(
         "p-2 gap-1 grid !z-0",
