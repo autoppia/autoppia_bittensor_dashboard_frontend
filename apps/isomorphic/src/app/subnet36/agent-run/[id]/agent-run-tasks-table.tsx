@@ -11,7 +11,7 @@ import { PiMagnifyingGlassBold } from "react-icons/pi";
 export type TasksDataType = (typeof tasksData)[number];
 
 export default function AgentRunTasksTable() {
-  const { table, setData } = useTanStackTable<TasksDataType>({
+  const { table } = useTanStackTable<TasksDataType>({
     tableData: tasksData,
     columnConfig: agentRunTasksColumns,
     options: {
