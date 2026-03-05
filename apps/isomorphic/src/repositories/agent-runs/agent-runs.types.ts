@@ -35,7 +35,12 @@ export interface AgentRunData {
   duration: number;
   overallScore: number;
   averageEvaluationTime?: number | null;
-  // websites removed - already in statistics
+  /** Optional per-website stats (from run details API) */
+  websites?: Array<{
+    website?: string;
+    successful?: number;
+    tasks?: number;
+  }>;
   // metadata removed - validator info already in info
 }
 
@@ -47,7 +52,7 @@ export interface AgentRunListItem {
   agentHotkey?: string | null;
   agentName?: string | null;
   agentImage?: string | null;
-  roundId: number;
+  roundId: number | string;
   validatorId: string;
   validatorName?: string;
   validatorImage?: string;
@@ -270,7 +275,7 @@ export interface AgentRunsListQueryParams {
   query?: string;
   page?: number;
   limit?: number;
-  roundId?: number;
+  roundId?: number | string;
   validatorId?: string;
   agentId?: string;
   status?: "pending" | "running" | "completed" | "failed" | "timeout";
