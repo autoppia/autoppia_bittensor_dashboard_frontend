@@ -17,7 +17,7 @@ import type {
 } from '@/layouts/nav-menu/nav-menu-types';
 import { navMenuReducer } from '@/layouts/nav-menu/nav-menu-utils';
 
-export default function NavMenu(props: NavMenuProps) {
+export default function NavMenu(props: Readonly<NavMenuProps>) {
   const {
     className,
     menuClassName,
