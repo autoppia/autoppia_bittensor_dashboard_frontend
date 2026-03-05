@@ -11,10 +11,7 @@ import {
   PiCamera,
   PiCheckCircle,
   PiXCircle,
-  PiWarning,
   PiPlay,
-  PiPause,
-  PiStop,
   PiArrowClockwise,
 } from "react-icons/pi";
 import { useTaskTimeline } from "@/services/hooks/useTask";
@@ -104,7 +101,7 @@ export default function TaskTimelineDynamic() {
             <Text className="text-red-700 font-medium">Failed to load timeline</Text>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             className="p-2 text-red-500 hover:text-red-700 transition-colors"
             title="Retry loading timeline"
           >
@@ -144,7 +141,7 @@ export default function TaskTimelineDynamic() {
             {timeline.length} events
           </Text>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
             title="Refresh timeline"
           >
@@ -159,12 +156,12 @@ export default function TaskTimelineDynamic() {
         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
         
         <div className="space-y-4">
-          {timeline.map((event, index) => {
-            const isLast = index === timeline.length - 1;
+          {timeline.map((event) => {
             const relativeTime = getRelativeTime(event.timestamp, startTime);
-            
+            const eventKey = `timeline-event-${event.timestamp}-${event.action}-${event.duration}`;
+
             return (
-              <div key={`timeline-event-${index}`} className="relative flex items-start gap-4">
+              <div key={eventKey} className="relative flex items-start gap-4">
                 {/* Timeline dot */}
                 <div className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                   event.success 
