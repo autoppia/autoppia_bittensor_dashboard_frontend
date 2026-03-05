@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import cn from "@core/utils/class-names";
 import { CSS } from "@dnd-kit/utilities";
 import { CSSProperties, Fragment } from "react";
-import { ActionIcon, Flex, Table, Text, Title } from "rizzui";
+import { ActionIcon, Table } from "rizzui";
 import { getColumnOptions } from "../util";
 import { Cell, Header, Row, flexRender } from "@tanstack/react-table";
 import {
@@ -13,51 +12,46 @@ import {
   verticalListSortingStrategy,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { PiCaretUpFill, PiCaretDownFill, PiXBold, PiDotsSixVerticalBold } from "react-icons/pi";
+import { PiCaretUpFill, PiCaretDownFill, PiDotsSixVerticalBold } from "react-icons/pi";
 import { CustomBodyCellProps, CustomBodyRowProps, CustomHeaderCellProps } from "../table-types";
-import { TanTableProductsDataType } from "@core/types";
 import { CustomExpandedComponent } from "./expanded-row";
 
 // DnD Head wrapper component
-export function DragAbleHeadWrapper<TData extends Record<string, any>>({
+export function DragAbleHeadWrapper<TData extends Record<string, unknown>>({
   headerGroup,
   columnOrder,
   isLeftScrollable,
   isRightScrollable,
-}: CustomHeaderCellProps<TData>) {
+}: Readonly<CustomHeaderCellProps<TData>>) {
   return (
-    <>
-      <SortableContext
-        items={columnOrder!}
-        strategy={horizontalListSortingStrategy}
-      >
-        {headerGroup?.headers.map((header) => {
-          return (
-            <DragAbleHead
-              key={header.id}
-              header={header}
-              isLeftScrollable={isLeftScrollable}
-              isRightScrollable={isRightScrollable}
-            />
-          );
-        })}
-      </SortableContext>
-    </>
+    <SortableContext
+      items={columnOrder ?? []}
+      strategy={horizontalListSortingStrategy}
+    >
+      {headerGroup?.headers.map((header) => (
+        <DragAbleHead
+          key={header.id}
+          header={header}
+          isLeftScrollable={isLeftScrollable}
+          isRightScrollable={isRightScrollable}
+        />
+      ))}
+    </SortableContext>
   );
 }
 
-type DragAbleHeadProps<TData extends Record<string, any>> = {
+type DragAbleHeadProps<TData extends Record<string, unknown>> = {
   header: Header<TData, unknown>;
   isLeftScrollable?: boolean;
   isRightScrollable?: boolean;
 };
 
 // DnD head child
-function DragAbleHead<TData extends Record<string, any>>({
+function DragAbleHead<TData extends Record<string, unknown>>({
   header,
   isLeftScrollable,
   isRightScrollable,
-}: DragAbleHeadProps<TData>) {
+}: Readonly<DragAbleHeadProps<TData>>) {
   const { canPin, isPinned, canResize, isLeftPinned, isRightPinned, isColumnDraggable } =
     getColumnOptions(header.column);
   const { attributes, isDragging, listeners, setNodeRef, transform } = useSortable({
@@ -147,19 +141,20 @@ function DragAbleHead<TData extends Record<string, any>>({
 }
 
 // DnD Cell wrapper component
-export function DragAbleCellWrapper<TData extends Record<string, any>>({
+export function DragAbleCellWrapper<TData extends Record<string, unknown>>({
   cell,
   columnOrder,
   isLeftScrollable,
   isRightScrollable,
-}: CustomBodyCellProps<TData>) {
+}: Readonly<CustomBodyCellProps<TData>>) {
+  if (!cell) return null;
   return (
     <SortableContext
-      items={columnOrder!}
+      items={columnOrder ?? []}
       strategy={horizontalListSortingStrategy}
     >
       <DragAbleCell
-        cell={cell!}
+        cell={cell}
         isLeftScrollable={isLeftScrollable}
         isRightScrollable={isRightScrollable}
       />
@@ -167,18 +162,18 @@ export function DragAbleCellWrapper<TData extends Record<string, any>>({
   );
 }
 
-type DragAbleCellProps<TData extends Record<string, any>> = {
+type DragAbleCellProps<TData extends Record<string, unknown>> = {
   cell: Cell<TData, unknown>;
   isLeftScrollable?: boolean;
   isRightScrollable?: boolean;
 };
 
 // DnD cell child
-function DragAbleCell<TData extends Record<string, any>>({
+function DragAbleCell<TData extends Record<string, unknown>>({
   cell,
   isLeftScrollable,
   isRightScrollable,
-}: DragAbleCellProps<TData>) {
+}: Readonly<DragAbleCellProps<TData>>) {
   const { canPin, canResize, isPinned, isLeftPinned, isRightPinned } = getColumnOptions(
     cell.column
   );
@@ -211,17 +206,17 @@ function DragAbleCell<TData extends Record<string, any>>({
 }
 
 // Dnd Row wrapper component
-export function DragAbleRowWrapper<TData extends Record<string, any>>({
+export function DragAbleRowWrapper<TData extends Record<string, unknown>>({
   table,
   dataIds,
   columnOrder,
   isLeftScrollable,
   isRightScrollable,
-}: CustomBodyRowProps<TData>) {
+}: Readonly<CustomBodyRowProps<TData>>) {
   if (!table) return null;
   return (
     <SortableContext
-      items={dataIds!}
+      items={dataIds ?? []}
       strategy={verticalListSortingStrategy}
     >
       {table.getRowModel().rows.map((row) => {
@@ -250,7 +245,7 @@ export function DragAbleRowWrapper<TData extends Record<string, any>>({
   );
 }
 
-type DragAbleRowProps<TData extends Record<string, any>> = {
+type DragAbleRowProps<TData extends Record<string, unknown>> = {
   row: Row<TData>;
   columnOrder?: string[];
   isLeftScrollable?: boolean;
@@ -258,14 +253,14 @@ type DragAbleRowProps<TData extends Record<string, any>> = {
 };
 
 // Dnd Row child
-function DragAbleRow<TData extends Record<string, any>>({
+function DragAbleRow<TData extends Record<string, unknown>>({
   row,
   columnOrder,
   isLeftScrollable,
   isRightScrollable,
-}: DragAbleRowProps<TData>) {
+}: Readonly<DragAbleRowProps<TData>>) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
+    id: row.id,
   });
 
   const style: CSSProperties = {
@@ -295,7 +290,7 @@ function DragAbleRow<TData extends Record<string, any>>({
 }
 
 // Row drag handle Component
-export function RowDragHandleCell({ rowId }: { rowId: string }) {
+export function RowDragHandleCell({ rowId }: Readonly<{ rowId: string }>) {
   const { attributes, listeners } = useSortable({
     id: rowId,
   });
