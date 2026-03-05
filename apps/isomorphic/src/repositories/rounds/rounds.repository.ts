@@ -18,6 +18,7 @@ import {
   RoundActivity,
   RoundProgress,
   GetRoundResponse,
+  ValidatorRoundData,
 } from "./rounds.types";
 
 export class RoundsRepository {
@@ -33,7 +34,7 @@ export class RoundsRepository {
     }
 
     // Check if it's a season/round format (e.g., "1/1" or "8/3")
-    const seasonRoundMatch = raw.match(/^(\d+)\/(\d+)$/);
+    const seasonRoundMatch = /^(\d+)\/(\d+)$/.exec(raw);
     if (seasonRoundMatch) {
       const season = Number.parseInt(seasonRoundMatch[1], 10);
       const round = Number.parseInt(seasonRoundMatch[2], 10);
@@ -43,7 +44,7 @@ export class RoundsRepository {
       };
     }
 
-    const match = raw.match(/\d+/);
+    const match = /\d+/.exec(raw);
     const parsed = match ? Number.parseInt(match[0], 10) : undefined;
     const fallbackId =
       typeof parsed === "number" && !Number.isNaN(parsed) ? parsed : undefined;
@@ -90,7 +91,7 @@ export class RoundsRepository {
       `${this.baseEndpoint}/${path}/${endpoint}`,
       params
     );
-    return response.data.data[dataKey] as T;
+    return response.data.data[dataKey];
   }
 
   /**
@@ -107,7 +108,7 @@ export class RoundsRepository {
         return value;
       }
       if (typeof value === "string") {
-        const match = value.match(/\d+/);
+        const match = /\d+/.exec(value);
         if (match) {
           return Number.parseInt(match[0], 10);
         }
@@ -178,7 +179,7 @@ export class RoundsRepository {
             validator.validatorHotkey ??
             validator.validator_hotkey ??
             validator.hotkey,
-          status: (() => {
+          status: ((): ValidatorRoundData["status"] => {
             const vStatus = (
               validator.status ?? validator.Status
             )?.toLowerCase();
@@ -186,15 +187,18 @@ export class RoundsRepository {
               vStatus === "evaluating_finished" ||
               vStatus === "evaluating-finished"
             ) {
-              return "evaluating_finished" as const;
-            } else if (vStatus === "finished" || vStatus === "completed") {
-              return "finished" as const;
-            } else if (vStatus === "pending") {
-              return "pending" as const;
-            } else if (vStatus === "active") {
-              return "active" as const;
+              return "evaluating_finished";
             }
-            return (validator.current ? "active" : "finished") as const;
+            if (vStatus === "finished" || vStatus === "completed") {
+              return "finished";
+            }
+            if (vStatus === "pending") {
+              return "pending";
+            }
+            if (vStatus === "active") {
+              return "active";
+            }
+            return validator.current ? "active" : "finished";
           })(),
           startTime:
             ensureIso(
@@ -368,6 +372,7 @@ export class RoundsRepository {
       : undefined;
 
     return {
+      success: true,
       data: {
         rounds: normalizedRounds,
         total,
