@@ -3,7 +3,7 @@
  * Central export point for all HTTP repositories and shared utilities
  */
 
-export { apiClient, ApiClient } from "./client";
+export { apiClient, ApiClient, ApiError } from "./client";
 export type { ApiResponse, ApiError } from "./client";
 
 export * from "./agents/agents.repository";
