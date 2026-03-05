@@ -94,7 +94,7 @@ export default function TaskLogsDynamic() {
             </Text>
           )}
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             disabled={isLoading}
             className="p-2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
             title="Refresh logs"
@@ -140,57 +140,64 @@ export default function TaskLogsDynamic() {
 
       {/* Logs Container */}
       <div className="border border-muted rounded-lg h-[400px] overflow-y-auto custom-scrollbar">
-        {isLoading ? (
-          // Loading state
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 8 }, (_, index) => (
-              <div key={`log-loading-${index}`} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Placeholder variant="circular" width={16} height={16} />
-                  <Placeholder height="0.75rem" width="20%" />
-                  <Placeholder height="0.75rem" width="15%" />
-                </div>
-                <TextPlaceholder lines={1} />
+        {(() => {
+          if (isLoading) {
+            return (
+              <div className="p-4 space-y-3">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <div key={`log-loading-${index}`} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Placeholder variant="circular" width={16} height={16} />
+                      <Placeholder height="0.75rem" width="20%" />
+                      <Placeholder height="0.75rem" width="15%" />
+                    </div>
+                    <TextPlaceholder lines={1} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : error ? (
-          // Error state
-          <div className="flex items-center justify-center h-full text-red-500">
-            <div className="text-center">
-              <PiXCircle className="w-8 h-8 mx-auto mb-2" />
-              <Text className="text-sm">Failed to load logs</Text>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-2 px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        ) : filteredLogs.length === 0 ? (
-          // Empty state
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
-              <PiInfo className="w-8 h-8 mx-auto mb-2" />
-              <Text className="text-sm">No logs found</Text>
-              {selectedLevel !== 'all' && (
-                <Text className="text-xs mt-1">
-                  Try changing the filter or check back later
-                </Text>
-              )}
-            </div>
-          </div>
-        ) : (
-          // Logs list
-          <div className="p-4 space-y-3">
-            {filteredLogs.map((log, index) => {
-              const isExpanded = expandedLogs.has(index);
-              const hasMetadata = log.metadata && Object.keys(log.metadata).length > 0;
-              
-              return (
-                <div
-                  key={`log-${index}`}
+            );
+          }
+          if (error) {
+            return (
+              <div className="flex items-center justify-center h-full text-red-500">
+                <div className="text-center">
+                  <PiXCircle className="w-8 h-8 mx-auto mb-2" />
+                  <Text className="text-sm">Failed to load logs</Text>
+                  <button
+                    onClick={() => globalThis.window.location.reload()}
+                    className="mt-2 px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          if (filteredLogs.length === 0) {
+            return (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <PiInfo className="w-8 h-8 mx-auto mb-2" />
+                  <Text className="text-sm">No logs found</Text>
+                  {selectedLevel !== 'all' && (
+                    <Text className="text-xs mt-1">
+                      Try changing the filter or check back later
+                    </Text>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div className="p-4 space-y-3">
+              {filteredLogs.map((log, index) => {
+                const isExpanded = expandedLogs.has(index);
+                const hasMetadata = log.metadata && Object.keys(log.metadata).length > 0;
+                const logKey = `log-${log.timestamp}-${log.level}-${String(log.message).slice(0, 80)}`;
+
+                return (
+                  <div
+                    key={logKey}
                   className={`border rounded-lg p-3 transition-all duration-200 ${
                     getLogLevelColor(log.level)
                   }`}
@@ -243,9 +250,10 @@ export default function TaskLogsDynamic() {
                   )}
                 </div>
               );
-            })}
-          </div>
-        )}
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Footer Info */}
