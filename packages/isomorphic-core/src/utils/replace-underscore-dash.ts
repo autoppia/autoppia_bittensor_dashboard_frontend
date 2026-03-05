@@ -1,3 +1,3 @@
 export function replaceUnderscoreDash(str: string) {
-  return str.replace(/[_-]/g, " ");
+  return str.split(/[_-]/).join(" ");
 }

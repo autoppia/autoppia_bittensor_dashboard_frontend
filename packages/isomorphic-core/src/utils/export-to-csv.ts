@@ -1,4 +1,8 @@
-export function exportToCSV(data: any[], header: string, fileName: string) {
+export function exportToCSV(
+  data: Record<string, unknown>[],
+  header: string,
+  fileName: string
+) {
   const csvContent =
     'data:text/csv;charset=utf-8,' +
     `${header}\n` +
@@ -18,17 +22,18 @@ export function exportToCSV(data: any[], header: string, fileName: string) {
   link.click();
 }
 
-function flattenObject(obj: any): string[] {
+function flattenObject(obj: Record<string, unknown>): string[] {
   const values: string[] = [];
 
   for (const key in obj) {
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
-      const childValues = flattenObject(obj[key]);
+    const val = obj[key];
+    if (typeof val === 'object' && val !== null) {
+      const childValues = flattenObject(val as Record<string, unknown>);
       if (childValues.length > 0) {
         values.push(childValues.join(' '));
       }
     } else {
-      values.push(obj[key]);
+      values.push(String(val));
     }
   }
 
