@@ -90,15 +90,15 @@ function useApiCall<T>(
       return;
     }
 
-    if (typeof window === "undefined") {
+    if (globalThis.window === undefined) {
       return;
     }
 
-    const intervalId = window.setInterval(() => {
+    const intervalId = globalThis.setInterval(() => {
       fetchData();
     }, pollIntervalMs);
 
-    return () => window.clearInterval(intervalId);
+    return () => globalThis.clearInterval(intervalId);
   }, [fetchData, pollIntervalMs]);
 
   return { data, loading, error, refetch: fetchData };
