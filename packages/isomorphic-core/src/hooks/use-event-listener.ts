@@ -1,7 +1,7 @@
 import { useRef, RefObject, useEffect, useLayoutEffect } from 'react';
 
 export const useIsomorphicEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+  globalThis.window === undefined ? useEffect : useLayoutEffect;
 
 // MediaQueryList Event based useEventListener interface
 function useEventListener<K extends keyof MediaQueryListEventMap>(
@@ -64,12 +64,13 @@ function useEventListener<
 
   useEffect(() => {
     // Define the listening target
-    const targetElement: T | Window = element?.current ?? window;
+    const targetElement: T | Window | null | undefined =
+      element?.current ?? globalThis.window;
 
-    if (!(targetElement && targetElement.addEventListener)) return;
+    if (!targetElement?.addEventListener) return;
 
     // Create event listener that calls handler function stored in ref
-    const listener: typeof handler = (event) => savedHandler.current(event);
+    const listener = (event: Event) => savedHandler.current(event);
 
     targetElement.addEventListener(eventName, listener, options);
 
