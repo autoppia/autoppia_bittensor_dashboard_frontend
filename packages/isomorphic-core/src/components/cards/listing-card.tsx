@@ -10,10 +10,10 @@ import WishlistButton from "../wishlist-button";
 export function RatingsCount({
   rating,
   totalRatings,
-}: {
+}: Readonly<{
   rating: number;
   totalRatings?: number;
-}) {
+}>) {
   return (
     <Text
       as="span"
@@ -51,7 +51,7 @@ export default function ListingCard({
   product,
   className,
   title = `${product.city}, ${product.country}`,
-}: ListingCardProps) {
+}: Readonly<ListingCardProps>) {
   const { thumbnail, tag, rating, ratingCount, hostname, features, price } =
     product;
 
