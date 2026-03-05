@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -9,12 +10,10 @@ import { Button, Text } from "rizzui";
 import {
   formatWebsiteName,
   getProjectColors,
-  getProjectMainColor,
 } from "@/utils/website-colors";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import {
   ComposedChart,
@@ -36,7 +35,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent, useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
+import { useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   ScoreRoundDataPoint,
@@ -77,7 +76,7 @@ import {
   LuStar,
   LuCrown,
 } from "react-icons/lu";
-import { GLASS_STYLES, METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
+import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
 // ============================================================================
 // Shared helpers within this page
@@ -90,8 +89,8 @@ const normalizeScore = (value?: number | null): number | null => {
 const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "");
 
 const RUNS_PAGE_SIZE = 100;
 
@@ -148,18 +147,19 @@ async function fetchAllAgentRuns(
   return { runs: aggregated, total, validators, post_consensus_summary };
 }
 
-// Agent stats band
+type AgentStatsProps = Readonly<{
+  agent?: AgentData | null;
+  roundMetrics?: AgentRoundMetrics | null;
+  mode?: "current" | "historical";
+  preAvg?: any;
+}>;
+
 function AgentStats({
   agent,
   roundMetrics,
   mode = "current",
   preAvg,
-}: {
-  agent?: AgentData | null;
-  roundMetrics?: AgentRoundMetrics | null;
-  mode?: "current" | "historical";
-  preAvg?: any;
-}) {
+}: AgentStatsProps) {
   const {
     sliderEl,
     sliderPrevBtn,
@@ -172,17 +172,14 @@ function AgentStats({
     return <AgentStatsPlaceholder />;
   }
 
-  const currentRankValue =
-    roundMetrics?.rank && roundMetrics.rank > 0
-      ? `#${roundMetrics.rank}`
-      : agent.currentRank && agent.currentRank > 0
-        ? `#${agent.currentRank}`
-        : "N/A";
+  const rankNum =
+    (roundMetrics?.rank && roundMetrics.rank > 0)
+      ? roundMetrics.rank
+      : (agent.currentRank && agent.currentRank > 0)
+        ? agent.currentRank
+        : null;
+  const currentRankValue = rankNum != null ? `#${rankNum}` : "N/A";
 
-  const bestRankEver =
-    agent.bestRankEver && agent.bestRankEver > 0
-      ? `#${agent.bestRankEver}`
-      : "N/A";
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
   const bestRoundScoreValue =
     agent.bestRoundScore ?? agent.currentTopScore ?? 0;
@@ -191,9 +188,6 @@ function AgentStats({
     agent.bestRoundId && agent.bestRoundId > 0
       ? `Round ${agent.bestRoundId}`
       : null;
-  const roundsParticipated = (
-    agent.roundsParticipated || agent.totalRuns
-  ).toLocaleString();
 
   // Multiplicando por el 7.5% solicitado por robert
   const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0) * 0.075;
@@ -297,7 +291,7 @@ function AgentStats({
           className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0"
         >
           {displayStats.map((stat) => {
-            const Icon = stat.icon as any;
+            const Icon = stat.icon as ComponentType<{ className?: string }>;
             return (
               <div
                 key={stat.title}
@@ -405,17 +399,19 @@ const BENCHMARK_COLOR_PALETTE = [
   "#EC4899",
 ];
 
+type AgentScoreChartProps = Readonly<{
+  className?: string;
+  scoreRoundData?: ScoreRoundDataPoint[];
+  loading?: boolean;
+  error?: string | null;
+}>;
+
 function AgentScoreChart({
   className,
   scoreRoundData = [] as ScoreRoundDataPoint[],
   loading = false,
   error,
-}: {
-  className?: string;
-  scoreRoundData?: ScoreRoundDataPoint[];
-  loading?: boolean;
-  error?: string | null;
-}) {
+}: AgentScoreChartProps) {
   const [timeRange, setTimeRange] = useState<"7r" | "15r" | "30r" | "all">(
     "all"
   );
@@ -426,8 +422,8 @@ function AgentScoreChart({
     const rows = scoreRoundData
       .map((point) => {
         const row: Record<string, number | string | null> = {
-          round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
-          roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
+          round: point.round_id,
+          roundLabel: point.round_id,
           score: normalizeScore(point.score) ?? 0,
           rank: point.rank ?? null,
           reward: point.reward ?? null,
@@ -467,7 +463,7 @@ function AgentScoreChart({
         (entry) =>
           typeof entry.round === "number" &&
           Number.isFinite(entry.round) &&
-          (entry.round as number) > 0
+          entry.round > 0
       )
       .sort((a, b) => Number(a.round) - Number(b.round));
 
@@ -523,7 +519,8 @@ function AgentScoreChart({
   const getFilteredData = (data: any[]) => {
     if (data.length === 0 || timeRange === "all") return data;
     const maxRound = Math.max(...data.map((d) => d.round));
-    const roundsToShow = timeRange === "7r" ? 7 : timeRange === "15r" ? 15 : 30;
+    const roundsToShow =
+      timeRange === "7r" ? 7 : timeRange === "15r" ? 15 : 30;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
@@ -533,13 +530,13 @@ function AgentScoreChart({
       ...entry,
       score: entry.score != null ? Number(entry.score) * 100 : entry.score,
       topBenchmarkScore:
-        entry.topBenchmarkScore != null
-          ? Number(entry.topBenchmarkScore) * 100
-          : entry.topBenchmarkScore,
+        entry.topBenchmarkScore == null
+          ? entry.topBenchmarkScore
+          : Number(entry.topBenchmarkScore) * 100,
     };
     benchmarkSeries.forEach((series) => {
-      if (scaled[series.key] != null)
-        scaled[series.key] = Number(scaled[series.key]) * 100;
+      const val = scaled[series.key];
+      if (val != null) scaled[series.key] = Number(val) * 100;
     });
     return scaled;
   });
@@ -691,7 +688,7 @@ function AgentScoreChart({
                         </div>
                         
                         {/* Score (eval_score) */}
-                        {evalScore != null && !isNaN(evalScore) && (
+                        {evalScore != null && !Number.isNaN(evalScore) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
                               <span
@@ -707,7 +704,7 @@ function AgentScoreChart({
                         )}
                         
                         {/* Avg Time (eval_time) */}
-                        {evalTime != null && !isNaN(evalTime) && (
+                        {evalTime != null && !Number.isNaN(evalTime) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
                               <span
@@ -786,19 +783,7 @@ function AgentScoreChart({
   );
 }
 
-// Validators/runs list
-function AgentValidators({
-  selectedRound,
-  selectedSeason,
-  selectedRoundInSeason,
-  runs,
-  loading,
-  error,
-  numericUidFromParam,
-  validators,
-  post_consensus_summary,
-  minerRoundDetailsValidators,
-}: {
+type AgentValidatorsProps = Readonly<{
   selectedRound?: number | null;
   selectedSeason?: number | null;
   selectedRoundInSeason?: number | null;
@@ -822,7 +807,20 @@ function AgentValidators({
     local_miners_evaluated: number;
     agent_run_id?: string;
   }>;
-}) {
+}>;
+
+function AgentValidators({
+  selectedRound,
+  selectedSeason,
+  selectedRoundInSeason,
+  runs,
+  loading,
+  error,
+  numericUidFromParam,
+  validators,
+  post_consensus_summary,
+  minerRoundDetailsValidators,
+}: AgentValidatorsProps) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
   
   // Prefer validators from minerRoundDetails (round-details endpoint) over validators from runs
@@ -860,9 +858,11 @@ function AgentValidators({
 
   const runsByValidator = filteredRuns.reduce(
     (acc, run) => {
-      if (!acc[run.validatorId])
-        acc[run.validatorId] = [] as typeof filteredRuns;
-      acc[run.validatorId].push(run);
+      if (run.validatorId in acc) {
+        acc[run.validatorId].push(run);
+      } else {
+        acc[run.validatorId] = [run];
+      }
       return acc;
     },
     {} as Record<string, typeof filteredRuns>
@@ -1041,10 +1041,9 @@ function AgentValidators({
               : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
             
             // Find corresponding run for this validator (for agent_run_id or fallback)
-            const validatorRuns = filteredRuns.filter(
+            const latestRun = filteredRuns.find(
               (run) => String(run.validatorId) === String(validator.validator_uid)
             );
-            const latestRun = validatorRuns[0];
             const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
             
             // Use direct validator data (from round-details) or fallback to miners list
@@ -1380,7 +1379,7 @@ function AgentValidators({
 
 // Enhanced custom tooltip for bar chart
 const WebsitePerformanceTooltip = ({ active, payload }: any) => {
-  if (!active || !payload || !payload.length) return null;
+  if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;
   const successRate = Math.round(data.successRate);
@@ -1456,13 +1455,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
   );
 };
 
-// Websites performance for current round
-function RoundWebsitesChart({
-  agentId,
-  selectedRound,
-  runs,
-  onSummaryChange,
-}: {
+type RoundWebsitesChartProps = Readonly<{
   agentId: string;
   selectedRound?: number | null;
   runs: AgentRunOverview[];
@@ -1470,7 +1463,14 @@ function RoundWebsitesChart({
     uniqueWebsites: number;
     totalTasks: number;
   }) => void;
-}) {
+}>;
+
+function RoundWebsitesChart({
+  agentId,
+  selectedRound,
+  runs,
+  onSummaryChange,
+}: RoundWebsitesChartProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chartRows, setChartRows] = useState<
@@ -1482,7 +1482,7 @@ function RoundWebsitesChart({
       total: number;
     }>
   >([]);
-  const [totals, setTotals] = useState<{ successful: number; total: number }>({
+  const [, setTotals] = useState<{ successful: number; total: number }>({
     successful: 0,
     total: 0,
   });
@@ -1524,16 +1524,12 @@ function RoundWebsitesChart({
         let totalSuccessful = 0;
         let totalTasks = 0;
         details.forEach((run) => {
-          if (!run || !Array.isArray(run.websites)) return;
-          run.websites.forEach((w) => {
-            const key = (w.website || "unknown").toString();
-            const entry = bySite.get(key) || { successful: 0, total: 0 };
-            const succ = Number.isFinite(w.successful as any)
-              ? Math.max(0, Number(w.successful))
-              : 0;
-            const tasks = Number.isFinite(w.tasks as any)
-              ? Math.max(0, Number(w.tasks))
-              : 0;
+          if (!run?.websites?.length) return;
+          run.websites.forEach((w: { website?: string; successful?: number; tasks?: number }) => {
+            const key = (w.website ?? "unknown").toString();
+            const entry = bySite.get(key) ?? { successful: 0, total: 0 };
+            const succ = Number.isFinite(Number(w.successful)) ? Math.max(0, Number(w.successful)) : 0;
+            const tasks = Number.isFinite(Number(w.tasks)) ? Math.max(0, Number(w.tasks)) : 0;
             entry.successful += succ;
             entry.total += tasks;
             bySite.set(key, entry);
@@ -1560,9 +1556,10 @@ function RoundWebsitesChart({
             totalTasks: totalTasks,
           });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!cancelled) {
-          setError(e?.message || "Failed to load website stats");
+          const message = e instanceof Error ? e.message : "Failed to load website stats";
+          setError(message);
           onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         }
       } finally {
@@ -1574,9 +1571,6 @@ function RoundWebsitesChart({
       cancelled = true;
     };
   }, [agentId, onSummaryChange, runsForRound, selectedRound]);
-
-  const totalRate =
-    totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
 
   return (
     <div className="relative">
@@ -1625,7 +1619,7 @@ function RoundWebsitesChart({
                     const colors = getProjectColors(websiteNameForColor);
                     return (
                       <linearGradient
-                        key={`barGradient${index}`}
+                        key={`barGradient-${websiteNameForColor}`}
                         id={`barGradient${index}`}
                         x1="0"
                         y1="0"
@@ -1641,7 +1635,7 @@ function RoundWebsitesChart({
                   {/* Generate glow filters for hover effect */}
                   {chartRows.map((entry, index) => (
                     <filter
-                      key={`glow${index}`}
+                      key={`glow-${entry.websiteOriginal}`}
                       id={`glow${index}`}
                       x="-50%"
                       y="-50%"
@@ -1696,7 +1690,7 @@ function RoundWebsitesChart({
                 >
                   {chartRows.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${entry.websiteOriginal}`}
                       fill={`url(#barGradient${index})`}
                       filter={
                         activeIndex === index
@@ -1778,12 +1772,12 @@ export default function Page() {
 
   // Removed useAgent call - we use useMinerRoundDetails and useMinerHistorical instead
   // This eliminates the unnecessary /api/v1/agents/{id}?round=X call
-  const agentDetail = null;
+  const agentDetail = null as { scoreRoundData?: ScoreRoundDataPoint[] } | null;
   const loading = false;
   const error = null;
 
   const agent = null;
-  const roundMetrics = null;
+  const roundMetrics: AgentRoundMetrics | null = null;
   const availableRounds: number[] = [];
   const apiScoreRoundData: ScoreRoundDataPoint[] = [];
   
@@ -1793,7 +1787,7 @@ export default function Page() {
   const {
     data: minerRoundDetails,
     loading: minerRoundDetailsLoading,
-    error: minerRoundDetailsError,
+    error: _minerRoundDetailsError,
   } = useMinerRoundDetails(
     selectedRoundFromQuery, // Always fetch if round is selected (needed for round-details)
     numericUidFromParam
@@ -1852,15 +1846,15 @@ export default function Page() {
         completedTasks: minerHistorical.summary.totalTasksSuccessful,
         currentScore: minerHistorical.summary.averageScore,
         currentTopScore: minerHistorical.summary.bestScore,
-        currentRank: minerHistorical.summary.bestRank,
-        bestRankEver: minerHistorical.summary.bestRank,
-        bestRankRoundId: minerHistorical.summary.bestRankRound,
+        currentRank: minerHistorical.summary.bestRank ?? 0,
+        bestRankEver: minerHistorical.summary.bestRank ?? 0,
+        bestRankRoundId: minerHistorical.summary.bestRankRound ?? undefined,
         roundsParticipated: minerHistorical.summary.roundsParticipated,
         roundsWon: minerHistorical.summary.roundsWon,
         alphaWonInPrizes: minerHistorical.summary.totalAlphaEarned,
         taoWonInPrizes: minerHistorical.summary.totalTaoEarned,
         bestRoundScore: minerHistorical.summary.bestScore,
-        bestRoundId: minerHistorical.summary.bestScoreRound,
+        bestRoundId: minerHistorical.summary.bestScoreRound ?? undefined,
         totalRuns: minerHistorical.summary.roundsParticipated,
         successfulRuns: minerHistorical.summary.roundsWon,
         averageResponseTime: minerHistorical.summary.averageDuration,
@@ -1885,14 +1879,14 @@ export default function Page() {
           currentScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
           currentTopScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
           currentRank: minerRoundDetails.post_consensus_rank ?? null,
-          bestRankEver: minerRoundDetails.post_consensus_rank ?? null,
-          bestRankRoundId: selectedRoundFromQuery ?? null,
+          bestRankEver: minerRoundDetails.post_consensus_rank ?? 0,
+          bestRankRoundId: undefined,
           roundsParticipated: 0,
           roundsWon: 0,
           alphaWonInPrizes: 0,
           taoWonInPrizes: 0,
           bestRoundScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          bestRoundId: selectedRoundFromQuery ?? null,
+          bestRoundId: undefined,
           totalRuns: 0,
           successfulRuns: 0,
           averageResponseTime: minerRoundDetails.post_consensus_avg_eval_time ?? 0,
@@ -1939,10 +1933,16 @@ export default function Page() {
     [setWebsitesSummary]
   );
 
-  const currentRound =
+  const currentRoundRaw =
     selectedRoundFromQuery ??
-    roundMetrics?.roundId ??
+    (roundMetrics !== null && "roundId" in roundMetrics ? (roundMetrics as AgentRoundMetrics).roundId : undefined) ??
     (availableRounds.length > 0 ? availableRounds[0] : undefined);
+  const currentRound: number | undefined =
+    typeof currentRoundRaw === "number"
+      ? currentRoundRaw
+      : (typeof currentRoundRaw === "string" && /^\d+$/.test(currentRoundRaw)
+          ? Number(currentRoundRaw)
+          : undefined);
 
   // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
@@ -1951,15 +1951,16 @@ export default function Page() {
       return minerHistorical.roundsHistory
         .sort((a, b) => {
           // Parse "season/round" format for sorting
-          const [aSeason, aRound] = a.round.split('/').map(Number);
-          const [bSeason, bRound] = b.round.split('/').map(Number);
+          const aStr = String(a.round);
+          const bStr = String(b.round);
+          const [aSeason, aRound] = aStr.includes("/") ? aStr.split("/").map(Number) : [Number(aStr), 0];
+          const [bSeason, bRound] = bStr.includes("/") ? bStr.split("/").map(Number) : [Number(bStr), 0];
           // Sort by season first, then by round (descending)
           if (bSeason !== aSeason) return bSeason - aSeason;
           return bRound - aRound;
         })
         .map((round, index) => ({
-          round_id: round.round, // Keep as string "season/round"
-          round: index + 1, // Sequential number for chart x-axis
+          round_id: typeof round.round === "number" ? round.round : index + 1,
           score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
           rank: round.post_consensus_rank,
           reward: round.post_consensus_avg_reward ?? 0,
@@ -1972,36 +1973,41 @@ export default function Page() {
     }
     
     // Use agentDetail data for current/runs mode
-    const source = agentDetail?.scoreRoundData ?? [];
+    const source: ScoreRoundDataPoint[] = agentDetail?.scoreRoundData ?? [];
     if (!source.length) return [];
-    return source.map((point: any) => {
+    return source.map((point: ScoreRoundDataPoint) => {
+      const raw = point as ScoreRoundDataPoint & Record<string, unknown>;
       const roundId =
         point.round_id ??
-        point.validator_round_id ??
-        point.roundId ??
-        point.validatorRoundId ??
-        point.round ??
+        raw.validator_round_id ??
+        raw.roundId ??
+        raw.validatorRoundId ??
+        raw.round ??
         0;
+      const rankVal = point.rank ?? raw.position;
+      const rank = rankVal != null && typeof rankVal === "number" ? rankVal : null;
       return {
         round_id: Number(roundId),
         score: normalizeScore(point.score) ?? 0,
-        rank: point.rank ?? point.position ?? null,
+        rank,
         reward: point.reward ?? 0,
-        eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
-        eval_time: point.eval_time ?? point.post_consensus_avg_eval_time ?? point.avg_eval_time ?? undefined,
+        eval_score: (point.eval_score ?? raw.post_consensus_avg_eval_score ?? raw.avg_eval_score) as number | undefined,
+        eval_time: (point.eval_time ?? raw.post_consensus_avg_eval_time ?? raw.avg_eval_time) as number | undefined,
         timestamp:
           typeof point.timestamp === "string"
             ? point.timestamp
-            : (point.timestamp?.toString() ?? ""),
+            : (point.timestamp != null && typeof (point.timestamp as { toString?: () => string }).toString === "function")
+              ? (point.timestamp as { toString: () => string }).toString()
+              : "",
         topScore:
           normalizeScore(
-            point.topScore ?? point.top_score ?? point.bestScore
+            point.topScore ?? (raw.top_score as number | undefined) ?? (raw.bestScore as number | undefined)
           ) ?? undefined,
         benchmarks: Array.isArray(point.benchmarks)
-          ? point.benchmarks.map((benchmark: any) => ({
+          ? point.benchmarks.map((benchmark: { name?: string; provider?: string; score?: number }) => ({
               name: benchmark.name ?? benchmark.provider ?? "Benchmark",
               provider: benchmark.provider,
-              score: normalizeScore(benchmark.score) ?? 0,
+              score: normalizeScore(Number(benchmark.score)) ?? 0,
             }))
           : undefined,
       };
@@ -2011,21 +2017,12 @@ export default function Page() {
   // Removed fetchAllAgentRuns call - we use minerRoundDetails instead
   // This eliminates the unnecessary /api/v1/agent-runs call
   const runsState = useMemo(() => {
-    // Use validators and post_consensus_summary from minerRoundDetails if available
-    const validators = minerRoundDetails?.validators?.map((v: any) => ({
-      validatorId: v.validator_uid?.toString() ?? "",
-      validatorName: v.validator_name ?? "",
-      validatorImage: v.validator_image ?? null,
-      runs: [] // Empty runs array since we don't need individual runs
-    })) ?? [];
-    
     const post_consensus_summary = minerRoundDetails?.post_consensus_summary ?? undefined;
-    
     return {
       loading: false,
-      runs: [], // Empty runs array - we use minerRoundDetails.validators instead
+      runs: [] as AgentRunOverview[],
       error: null,
-      validators: validators.length > 0 ? validators : undefined,
+      validators: minerRoundDetails?.validators,
       post_consensus_summary,
     };
   }, [minerRoundDetails]);
@@ -2096,51 +2093,16 @@ export default function Page() {
     );
   }
 
-  // Current mode stats for header - showing only the 5 key metrics
-  const currentRankValue =
-    roundMetrics?.rank && roundMetrics.rank > 0
-      ? `#${roundMetrics.rank}`
-      : effectiveAgent?.currentRank && (effectiveAgent.currentRank ?? 0) > 0
-        ? `#${effectiveAgent.currentRank}`
-        : "N/A";
-
-  const currentScorePercentage = `${((roundMetrics?.score ?? effectiveAgent?.currentScore ?? 0) * 100).toFixed(1)}%`;
-
-  // Historical metrics
-  const bestRankEver =
-    effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
-      ? `#${effectiveAgent.bestRankEver}`
-      : "N/A";
-  const bestEverScorePercentage = `${((effectiveAgent?.bestRoundScore ?? 0) * 100).toFixed(1)}%`;
-  const bestRoundBadge =
-    effectiveAgent?.bestRoundId && (effectiveAgent.bestRoundId ?? 0) > 0
-      ? `Round ${effectiveAgent.bestRoundId}`
-      : null;
-  const roundsParticipated = (
-    effectiveAgent?.roundsParticipated ||
-    effectiveAgent?.totalRuns ||
-    0
-  ).toLocaleString();
-  // Multiplicando por el 7.5% solicitado por robert
-  const totalAlphaEarned = Math.round(
-    Number(effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
-  );
-  const totalTaoEarned = (
-    Number((effectiveAgent as any)?.taoWonInPrizes ?? effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
-  ).toFixed(2);
   // Use minerRoundDetails if available, otherwise fallback to roundMetrics
-  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? effectiveAgent?.currentRank;
-  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundMetrics?.score ?? effectiveAgent?.currentScore;
-  const effectiveEvalScore = minerRoundDetails?.post_consensus_avg_eval_score ?? null;
+  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).rank : undefined) ?? effectiveAgent?.currentRank;
+  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).score : undefined) ?? effectiveAgent?.currentScore;
   const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
-  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
-  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
+  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).totalTasks : 0);
+  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).completedTasks : 0);
+  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).totalValidators : 0);
   const effectiveAvgTasksPerValidator = minerRoundDetails?.avg_tasks_per_validator ?? null;
   const effectivePerformanceByWebsite = minerRoundDetails?.performanceByWebsite ?? [];
-  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0 
-    ? effectivePerformanceByWebsite.length 
-    : websitesSummary.unique;
+  const effectiveWebsitesCount = effectivePerformanceByWebsite.length || websitesSummary.unique;
 
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
@@ -2596,7 +2558,7 @@ export default function Page() {
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}
                 numericUidFromParam={numericUidFromParam}
-                validators={runsState.validators}
+                validators={undefined}
                 post_consensus_summary={runsState.post_consensus_summary}
                 minerRoundDetailsValidators={minerRoundDetails?.validators}
               />
@@ -2694,11 +2656,9 @@ export default function Page() {
                                     animationDuration={800}
                                     animationEasing="ease-out"
                                   >
-                                    {effectivePerformanceByWebsite.map((entry, index) => {
-                                      const colors = getProjectColors(entry.website);
-                                      return (
+                                    {effectivePerformanceByWebsite.map((entry, index) => (
                                         <Cell
-                                          key={`cell-${index}`}
+                                          key={`cell-${entry.website}-${index}`}
                                           fill={`url(#barGradient${index})`}
                                           fillOpacity={0.9}
                                           style={{
@@ -2707,8 +2667,7 @@ export default function Page() {
                                             transformOrigin: "center bottom",
                                           }}
                                         />
-                                      );
-                                    })}
+                                    ))}
                                   </Bar>
                                 </BarChart>
                               </ResponsiveContainer>
