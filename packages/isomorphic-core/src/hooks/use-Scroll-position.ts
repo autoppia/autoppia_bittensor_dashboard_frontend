@@ -5,7 +5,6 @@ import { useScroll, useSize } from 'ahooks';
 
 export function getPercentage(partialValue?: number, totalValue?: number) {
   if (partialValue && totalValue) return (100 * partialValue) / totalValue;
-  return;
 }
 
 export function useScrollPosition() {
