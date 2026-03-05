@@ -21,13 +21,8 @@ import {
   PiArrowLeftLight,
   PiCopy,
   PiChartBar,
-  PiClockCountdown,
   PiFileText,
-  PiGauge,
-  PiIdentificationCard,
-  PiShieldCheck,
   PiTimer,
-  PiUserCircle,
   PiArrowRight,
   PiClock,
   PiKeyboard,
@@ -54,7 +49,7 @@ function truncateMiddle(value?: string | null, visible: number = 8) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
-function IDCopyButton({ text }: { text: string }) {
+function IDCopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = useState(false);
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -62,8 +57,8 @@ function IDCopyButton({ text }: { text: string }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      // no-op
+    } catch {
+      // Intentional no-op when clipboard write fails (e.g. permissions)
     }
   };
   return (
@@ -113,8 +108,8 @@ type QuickInfoItem = {
 const formatLabel = (value?: string) => {
   if (!value) return "Unknown";
   return value
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase()
     .split(" ")
@@ -168,11 +163,11 @@ function InfoRow({
   label,
   value,
   valueClassName,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   valueClassName?: string;
-}) {
+}>) {
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
       <span className="text-white/55">{label}</span>
@@ -233,7 +228,7 @@ function StatCard({
   iconBgClass,
   description,
   valueClassName,
-}: StatCardConfig) {
+}: Readonly<StatCardConfig>) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-white/20 bg-slate-900/80 text-slate-100 shadow-[0_20px_48px_rgba(0,0,0,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.8)] hover:border-white/30">
       <div
@@ -267,6 +262,9 @@ function StatCard({
   );
 }
 
+const TASK_LOADING_PRIMARY_KEYS = ["task-loading-primary-a", "task-loading-primary-b", "task-loading-primary-c"] as const;
+const TASK_LOADING_SECONDARY_KEYS = ["task-loading-secondary-a", "task-loading-secondary-b", "task-loading-secondary-c", "task-loading-secondary-d", "task-loading-secondary-e", "task-loading-secondary-f"] as const;
+
 type TaskDetailsDynamicProps = {
   details?: TaskDetails | null;
   isLoading?: boolean;
@@ -293,15 +291,15 @@ function TaskDetailsDynamic({
   successCount,
   failCount,
   info,
-}: TaskDetailsDynamicProps) {
+}: Readonly<TaskDetailsDynamicProps>) {
   if (isLoading && !details) {
     return (
       <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-transparent p-8 shadow-2xl backdrop-blur-sm">
         <div className="relative space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {TASK_LOADING_PRIMARY_KEYS.map((key) => (
               <div
-                key={`task-loading-primary-${idx}`}
+                key={key}
                 className="animate-pulse rounded-xl border border-slate-700/50 bg-transparent p-5"
               >
                 <div className="space-y-3">
@@ -312,9 +310,9 @@ function TaskDetailsDynamic({
             ))}
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, idx) => (
+            {TASK_LOADING_SECONDARY_KEYS.map((key) => (
               <div
-                key={`task-loading-secondary-${idx}`}
+                key={key}
                 className="animate-pulse rounded-xl border border-slate-700/50 bg-transparent p-6"
               >
                 <div className="space-y-3">
@@ -376,7 +374,6 @@ function TaskDetailsDynamic({
   const minerInfo = info?.miner ?? taskData.relationships?.miner;
   const agentRunInfo = taskData.relationships?.agentRun;
   const evaluationInfo = taskData.relationships?.evaluation;
-  const solutionInfo = taskData.relationships?.solution;
 
   // Parse season and round from roundInfo
   const { season: parsedSeason, round: parsedRound } = (() => {
@@ -385,7 +382,7 @@ function TaskDetailsDynamic({
     // Priority 1: roundId as string "season/round"
     if (typeof roundData?.roundId === "string" && roundData.roundId.includes("/")) {
       const [s, r] = roundData.roundId.split("/").map(Number);
-      if (!isNaN(s) && !isNaN(r)) {
+      if (Number.isFinite(s) && Number.isFinite(r)) {
         return { season: s, round: r };
       }
     }
@@ -437,20 +434,12 @@ function TaskDetailsDynamic({
     }
     return "—";
   })();
-  const agentRunDuration = agentRunInfo?.duration
-    ? formatDuration(agentRunInfo.duration)
-    : formatDuration((taskData as any).duration);
-  const agentRunAverageScore =
-    typeof agentRunInfo?.averageScore === "number"
-      ? formatPercent(agentRunInfo.averageScore)
-      : "—";
-
   // Visual constants and image helpers
   const HIGHLIGHT_COLOR = "#FDF5E6";
 
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
   const validatorImage =
-    validatorInfo?.image && validatorInfo.image.trim()
+    validatorInfo?.image?.trim()
       ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
       : validatorDefaultImage;
 
@@ -458,7 +447,7 @@ function TaskDetailsDynamic({
     minerInfo?.isSota ? "/miners/30.svg" : "/miners/0.svg"
   );
   const minerImage =
-    minerInfo?.image && minerInfo.image.trim()
+    minerInfo?.image?.trim()
       ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
       : minerDefaultImage;
 
@@ -561,20 +550,13 @@ function TaskDetailsDynamic({
     }
   };
 
-  // (Artifacts/solution summary removed from UI to reduce duplication)
-  const evaluationStyles = getStatusStyles(
-    evaluationInfo?.status ?? (taskData as any).status
-  );
-  const agentRunLinkId =
-    agentRunInfo?.agentRunId ?? (taskData as any).agentRunId ?? "";
   const hasLlmData =
     Boolean(evaluationInfo?.llmProvider) ||
     Boolean(evaluationInfo?.llmModel) ||
     evaluationInfo?.llmCost != null ||
     evaluationInfo?.llmTokens != null ||
     Boolean(evaluationInfo?.llmUsage?.length);
-  const priceValue =
-    evaluationInfo?.llmCost != null ? evaluationInfo.llmCost : evaluationInfo?.reward;
+  const priceValue = evaluationInfo?.llmCost ?? evaluationInfo?.reward;
   const hasPrice = priceValue != null;
   const usageRows = (evaluationInfo?.llmUsage ?? []).filter((row) => {
     return (
@@ -582,10 +564,10 @@ function TaskDetailsDynamic({
       (row.provider || row.model || row.tokens != null || row.cost != null)
     );
   });
-  const usageTotals = usageRows.reduce(
+  const usageTotals = usageRows.reduce<{ tokens: number; cost: number }>(
     (acc, row) => {
-      const tokens = row.tokens != null ? Number(row.tokens) : 0;
-      const cost = row.cost != null ? Number(row.cost) : 0;
+      const tokens = row.tokens == null ? 0 : Number(row.tokens);
+      const cost = row.cost == null ? 0 : Number(row.cost);
       return {
         tokens: acc.tokens + (Number.isFinite(tokens) ? tokens : 0),
         cost: acc.cost + (Number.isFinite(cost) ? cost : 0),
@@ -594,58 +576,19 @@ function TaskDetailsDynamic({
     { tokens: 0, cost: 0 }
   );
 
-  const primaryCards: StatCardConfig[] = [
-    {
-      label: "Score",
-      value: evaluationScore,
-      Icon: PiChartBar,
-      gradient: "from-emerald-500/18 via-emerald-400/8 to-transparent",
-      iconWrapper: "border-emerald-400/40",
-      iconBgClass: "bg-emerald-500/20",
-      iconColorClass: "text-white",
-      description: evaluationInfo
-        ? "Final evaluation issued by the validator for this task."
-        : "Awaiting validator scoring for this task.",
-      valueClassName: "text-emerald-100",
-    },
-    {
-      label: "Duration",
-      value: evaluationDuration,
-      Icon: PiTimer,
-      gradient: "from-indigo-500/18 via-indigo-400/8 to-transparent",
-      iconWrapper: "border-indigo-400/40",
-      iconBgClass: "bg-indigo-500/20",
-      iconColorClass: "text-white",
-      description: evaluationInfo
-        ? "Measured evaluation time recorded by the validator."
-        : "Elapsed time based on action execution.",
-      valueClassName: "text-indigo-100",
-    },
-    {
-      label: "Tasks",
-      value: agentRunInfo?.taskCount ?? "—",
-      Icon: PiGauge,
-      gradient: "from-cyan-500/18 via-blue-400/8 to-transparent",
-      iconWrapper: "border-cyan-400/40",
-      iconBgClass: "bg-cyan-500/20",
-      iconColorClass: "text-white",
-      description: `${agentRunInfo?.completedTasks ?? "—"} completed • ${agentRunInfo?.failedTasks ?? "—"} failed`,
-      valueClassName: "text-cyan-100",
-    },
-  ];
-
   // Derive seed from website URL if not provided by backend
   const websiteUrl: string = (taskData as any).website || "";
   let derivedSeed: string | null = (taskData as any).seed ?? null;
-  if (!derivedSeed && typeof window !== "undefined" && websiteUrl) {
+  if (!derivedSeed && globalThis.window !== undefined && websiteUrl) {
     try {
       const u = new URL(
         websiteUrl,
         websiteUrl.startsWith("http") ? undefined : "https://dummy.local"
       );
       derivedSeed = u.searchParams.get("seed");
-    } catch (e) {
-      const m = websiteUrl.match(/[?&]seed=([^&]+)/i);
+    } catch {
+      const seedRegex = /[?&]seed=([^&]+)/i;
+      const m = seedRegex.exec(websiteUrl);
       derivedSeed = m ? decodeURIComponent(m[1]) : null;
     }
   }
@@ -681,31 +624,6 @@ function TaskDetailsDynamic({
       iconColorClass: "text-purple-100",
       valueClassName:
         "text-lg font-bold font-mono text-purple-100 drop-shadow-sm",
-    },
-  ];
-
-  const timelineCards: StatCardConfig[] = [
-    {
-      label: "Started",
-      value: (taskData as any).startTime
-        ? new Date((taskData as any).startTime!).toLocaleString()
-        : "—",
-      Icon: PiClock,
-      gradient: "from-sky-500/18 via-slate-400/8 to-transparent",
-      iconWrapper: "border-sky-400/40 bg-transparent",
-      iconColorClass: "text-sky-200",
-    },
-    {
-      label: "Finished",
-      value: (taskData as any).endTime
-        ? new Date((taskData as any).endTime!).toLocaleString()
-        : (taskData as any).updatedAt
-          ? new Date((taskData as any).updatedAt!).toLocaleString()
-          : "—",
-      Icon: PiClock,
-      gradient: "from-indigo-500/18 via-slate-400/8 to-transparent",
-      iconWrapper: "border-indigo-400/40 bg-transparent",
-      iconColorClass: "text-indigo-200",
     },
   ];
 
@@ -775,11 +693,11 @@ function TaskDetailsDynamic({
                 </span>
                 <span className="font-mono text-sm text-white whitespace-nowrap">
                   {roundInfo?.startEpoch ?? "—"} -{" "}
-                  {roundInfo?.endEpoch ??
-                    (roundInfo?.status &&
-                    String(roundInfo.status).toLowerCase() === "active"
-                      ? "Active"
-                      : "—")}
+                  {(() => {
+                    if (roundInfo?.endEpoch != null) return roundInfo.endEpoch;
+                    const isActive = roundInfo?.status != null && String(roundInfo.status).toLowerCase() === "active";
+                    return isActive ? "Active" : "—";
+                  })()}
                 </span>
               </div>
             </div>
@@ -1050,14 +968,14 @@ function TaskDetailsDynamic({
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                       <InfoRow
                         label="Tokens Used"
-                        value={row.tokens != null ? formatTokens(row.tokens) : "—"}
+                        value={row.tokens == null ? "—" : formatTokens(row.tokens)}
                         valueClassName="font-semibold text-amber-200"
                       />
                     </div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                       <InfoRow
                         label="Evaluation Cost"
-                        value={row.cost != null ? formatCost(row.cost) : "—"}
+                        value={row.cost == null ? "—" : formatCost(row.cost)}
                         valueClassName="font-semibold text-emerald-200"
                       />
                     </div>
@@ -1084,9 +1002,9 @@ function TaskDetailsDynamic({
                   <InfoRow
                     label="Tokens Used"
                     value={
-                      evaluationInfo?.llmTokens != null
-                        ? formatTokens(evaluationInfo.llmTokens)
-                        : "—"
+                      evaluationInfo?.llmTokens == null
+                        ? "—"
+                        : formatTokens(evaluationInfo.llmTokens)
                     }
                     valueClassName="font-semibold text-amber-200"
                   />
@@ -1332,8 +1250,8 @@ const extractActionDetailPairs = (
 
 const formatKeyLabel = (k: string) =>
   k
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .split(" ")
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
@@ -1351,14 +1269,14 @@ type TaskResultsProps = {
     isLoading: boolean;
     error: string | null;
   };
+  taskId?: string;
 };
 
-function TaskResults({ evaluationData }: TaskResultsProps) {
+function TaskResults({ evaluationData, taskId }: Readonly<TaskResultsProps>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
   // Use data from evaluationData (always from get-evaluation endpoint)
-  const result = evaluationData.result;
   const resultsLoading = evaluationData.isLoading;
   const resultsError = evaluationData.error;
 
@@ -1414,12 +1332,12 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
 
   const handleDownloadAll = () => {
     if (!mediaItems || mediaItems.length === 0) return;
-    const baseId = Array.isArray(id) ? id[0] : (id as string);
+    const baseId = taskId ?? "task";
     mediaItems.forEach((item: any, index: number) => {
       if (!item?.url) return;
       const a = document.createElement("a");
       a.href = item.url;
-      a.download = `${baseId || "task"}-replay-${index + 1}.gif`;
+      a.download = `${baseId}-replay-${index + 1}.gif`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1493,32 +1411,41 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
         </div>
 
         <div className="space-y-3 h-[350px] overflow-y-auto custom-scrollbar pr-1">
-          {actionsLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: pageSize }, (_, index) => (
-                <ListItemPlaceholder key={`action-loading-${index}`} />
-              ))}
-            </div>
-          ) : actionsError ? (
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  {actionsError || "Failed to load actions"}
-                </Text>
-              </div>
-            </div>
-          ) : actions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiPlay className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">
-                  No actions available
-                </Text>
-              </div>
-            </div>
-          ) : (
-            actions.map((action, index) => {
+          {(() => {
+            if (actionsLoading) {
+              return (
+                <div className="space-y-3">
+                  {Array.from({ length: pageSize }, (_, index) => (
+                    <ListItemPlaceholder key={`action-loading-${index}`} />
+                  ))}
+                </div>
+              );
+            }
+            if (actionsError) {
+              return (
+                <div className="flex items-center justify-center h-full text-red-300">
+                  <div className="text-center space-y-1">
+                    <PiXCircle className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-red-200">
+                      {actionsError || "Failed to load actions"}
+                    </Text>
+                  </div>
+                </div>
+              );
+            }
+            if (actions.length === 0) {
+              return (
+                <div className="flex items-center justify-center h-full text-slate-400">
+                  <div className="text-center space-y-1">
+                    <PiPlay className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-slate-300">
+                      No actions available
+                    </Text>
+                  </div>
+                </div>
+              );
+            }
+            return actions.map((action, index) => {
               const meta =
                 ACTION_TYPE_META[
                   action.type as keyof typeof ACTION_TYPE_META
@@ -1565,8 +1492,8 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </section>
 
@@ -1606,65 +1533,76 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
           ref={recordingsRef}
           className={`${isFullscreen ? "h-screen" : "h-[180px] md:h-[350px]"} border border-slate-700/50 rounded-xl overflow-y-auto custom-scrollbar bg-transparent p-4`}
         >
-          {isMediaLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Array.from({ length: 4 }, (_, index) => (
-                <div key={`screenshot-loading-${index}`} className="space-y-2">
-                  <Placeholder height="160px" className="rounded-lg" />
-                  <TextPlaceholder lines={2} />
-                </div>
-              ))}
-            </div>
-          ) : showMediaError ? (
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  {screenshotsError ||
-                    resultsError ||
-                    "Failed to load GIF replays"}
-                </Text>
-              </div>
-            </div>
-          ) : showMediaEmpty ? (
-            <div className="relative w-full h-full rounded-xl overflow-hidden">
-              <Image
-                src="/images/no_gift_available.png"
-                alt="No GIF replays available"
-                fill
-                className="object-contain rounded-xl"
-              />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {mediaItems.map((screenshot: any, index: number) => (
-                <div
-                  key={`gif-${screenshot.id || index}`}
-                  className="w-full group bg-transparent rounded-xl overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-all"
-                >
-                  <div className="relative w-full aspect-video bg-black/60">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={screenshot.url}
-                      alt={`GIF Replay ${index + 1}`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        const sibling =
-                          target.nextElementSibling as HTMLElement;
-                        if (sibling) sibling.classList.remove("hidden");
-                      }}
-                    />
-                    <div className="hidden absolute inset-0 items-center justify-center text-slate-500">
-                      <PiCamera className="w-12 h-12 mb-2" />
-                      <p className="text-sm">Recording unavailable</p>
+          {(() => {
+            if (isMediaLoading) {
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <div key={`screenshot-loading-${index}`} className="space-y-2">
+                      <Placeholder height="160px" className="rounded-lg" />
+                      <TextPlaceholder lines={2} />
                     </div>
+                  ))}
+                </div>
+              );
+            }
+            if (showMediaError) {
+              return (
+                <div className="flex items-center justify-center h-full text-red-300">
+                  <div className="text-center space-y-1">
+                    <PiXCircle className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-red-200">
+                      {screenshotsError ||
+                        resultsError ||
+                        "Failed to load GIF replays"}
+                    </Text>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            }
+            if (showMediaEmpty) {
+              return (
+                <div className="relative w-full h-full rounded-xl overflow-hidden">
+                  <Image
+                    src="/images/no_gift_available.png"
+                    alt="No GIF replays available"
+                    fill
+                    className="object-contain rounded-xl"
+                  />
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-4">
+                {mediaItems.map((screenshot: any, index: number) => (
+                  <div
+                    key={`gif-${screenshot.id || index}`}
+                    className="w-full group bg-transparent rounded-xl overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-all"
+                  >
+                    <div className="relative w-full aspect-video bg-black/60">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={screenshot.url}
+                        alt={`GIF Replay ${index + 1}`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          const sibling =
+                            target.nextElementSibling as HTMLElement;
+                          if (sibling) sibling.classList.remove("hidden");
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 items-center justify-center text-slate-500">
+                        <PiCamera className="w-12 h-12 mb-2" />
+                        <p className="text-sm">Recording unavailable</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </section>
     </div>
@@ -1675,7 +1613,7 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
 export default function TaskDynamic() {
   const params = useParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const idParam = Array.isArray(id) ? id[0] : ((id as string) ?? "");
+  const idParam = Array.isArray(id) ? id[0] : (id ?? "");
 
   // Always use the complete evaluation endpoint
   const evaluationData = useEvaluationComplete(idParam);
@@ -1687,21 +1625,18 @@ export default function TaskDynamic() {
   const refetch = evaluationData.refetch;
 
   // Extract actual IDs from the info object (preferred) or details response
+  const loadingOrUnavailable = (() => {
+    if (isLoading) return "Loading…";
+    if (error) return "Unavailable";
+    return "—";
+  })();
   const taskId = info?.taskId ?? details?.taskId ?? (isLoading ? "Loading…" : "—");
   const runIdDisplay =
-    info?.miner_run_id ??
-    details?.agentRunId ??
-    (isLoading ? "Loading…" : error ? "Unavailable" : "—");
+    info?.miner_run_id ?? details?.agentRunId ?? loadingOrUnavailable;
   const evaluationIdDisplay =
     info?.evaluationId ??
     details?.relationships?.evaluation?.evaluationId ??
-    (isLoading ? "Loading…" : error ? "Unavailable" : "—");
-  const roundKeyForHeader = (() => {
-    const r = info?.round ?? details?.relationships?.round;
-    if (!r) return "";
-    if (typeof r?.roundNumber === "number") return `round_${r.roundNumber}`;
-    return r?.validatorRoundId ?? "";
-  })();
+    loadingOrUnavailable;
   const backHref = (info?.miner_run_id ?? details?.agentRunId)
     ? `${routes.agent_run}/${encodeURIComponent(info?.miner_run_id ?? details?.agentRunId ?? "")}`
     : routes.agent_run;
@@ -1809,6 +1744,7 @@ export default function TaskDynamic() {
 
       <div className="mb-10">
         <TaskResults
+          taskId={idParam}
           evaluationData={{
             result: evaluationData.result,
             actions: evaluationData.actions,
@@ -1827,12 +1763,12 @@ function RunStatCard({
   value,
   color = "blue",
   Icon,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   color?: "blue" | "amber" | "emerald" | "rose";
   Icon: IconType;
-}) {
+}>) {
   const colorMap: Record<
     string,
     { bg: string; border: string; iconBg: string }
