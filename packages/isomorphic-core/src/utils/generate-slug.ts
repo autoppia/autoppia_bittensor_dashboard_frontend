@@ -1,4 +1,4 @@
 export function generateSlug(title: string) {
-  const slug = title.toLowerCase().replace(/\s+/g, '-');
-  return slug.replace(/[^a-z0-9-]/g, '');
+  const slug = title.toLowerCase().replaceAll(/\s+/g, '-');
+  return slug.replaceAll(/[^a-z0-9-]/g, '');
 }

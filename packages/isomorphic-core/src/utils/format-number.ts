@@ -30,5 +30,5 @@ export function formatNumber(value: number): string {
 }
 
 export function formatNumberWithCommas(value: number): string {
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return value.toString().replaceAll(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
