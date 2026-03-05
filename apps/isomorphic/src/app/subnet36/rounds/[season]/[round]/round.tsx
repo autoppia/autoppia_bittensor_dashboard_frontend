@@ -47,12 +47,15 @@ import {
   useRoundProgress,
   useGetRound,
 } from "@/services/hooks/useRounds";
-import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
+  ValidatorRoundData,
   ValidatorPerformance,
   MinerPerformance,
   BenchmarkPerformance,
 } from "@/repositories/rounds/rounds.types";
+
+type AgentRunLike = { evaluation_results?: unknown[]; evaluationResults?: unknown[]; total_tasks?: number; totalTasks?: number };
+type RoundWinnerLike = { uid: number; name?: string; image?: string | null; imageUrl?: string; hotkey?: string | null };
 
 // ============================================================================
 // UTILITY FUNCTIONS - Inline from round-identifier.ts
@@ -78,16 +81,18 @@ function extractRoundNumber(
   const identifier = extractRoundIdentifier(value);
   if (!identifier) return undefined;
   const normalized = identifier.toLowerCase();
-  const roundPatternMatch = normalized.match(/round[-_]?(\d+)/);
+  const roundPatternMatch = /round[-_]?(\d+)/.exec(normalized);
   if (roundPatternMatch?.[1]) {
     const parsed = Number.parseInt(roundPatternMatch[1], 10);
     if (Number.isFinite(parsed)) return parsed;
   }
-  const digitMatches = normalized.match(/\d+/g);
-  if (digitMatches && digitMatches.length > 0) {
-    const lastSegment = digitMatches[digitMatches.length - 1];
-    const parsed = Number.parseInt(lastSegment, 10);
-    if (Number.isFinite(parsed)) return parsed;
+  const digitList = normalized.match(/\d+/g);
+  if (digitList && digitList.length > 0) {
+    const lastSegment = digitList.at(-1);
+    if (lastSegment !== undefined) {
+      const parsed = Number.parseInt(lastSegment, 10);
+      if (Number.isFinite(parsed)) return parsed;
+    }
   }
   return undefined;
 }
@@ -149,8 +154,8 @@ const normalizeScore = (value?: number | null): number => {
 const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "");
 
 const BENCHMARK_COLORS: Record<string, string> = {
   openai: "#2563EB",
@@ -265,17 +270,19 @@ function CustomTooltip({ label, active, payload, className }: any) {
   );
 }
 
+type RoundHeaderInlineProps = Readonly<{
+  round?: any;
+  roundLoading?: boolean;
+  progressData?: any;
+  progressLoading?: boolean;
+}>;
+
 function RoundHeaderInline({
   round,
   roundLoading,
   progressData,
   progressLoading,
-}: {
-  round?: any;
-  roundLoading?: boolean;
-  progressData?: any;
-  progressLoading?: boolean;
-}) {
+}: RoundHeaderInlineProps) {
   const params = useParams();
   const router = useRouter();
   const seasonParam = params.season as string | undefined;
@@ -335,20 +342,16 @@ function RoundHeaderInline({
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
-  // ✅ Usar status desde progressData
-  const progressValue = progressData?.progress ?? round?.progress ?? 0;
   const backendStatus = progressData?.status ?? round?.status;
 
   // Check if validator rounds have evaluation results (tasks evaluated)
   const validatorRounds = round?.validatorRounds ?? [];
-  const hasEvaluationsComplete = validatorRounds.some((vr) => {
-    // Check if this validator has finished evaluating
+  const hasEvaluationsComplete = validatorRounds.some((vr: ValidatorRoundData) => {
     if (vr.status === "evaluating_finished" || vr.status === "finished") {
       return true;
     }
-    // Check if there are agent runs with evaluation results
     const agentRuns = vr.agentEvaluationRuns ?? [];
-    return agentRuns.some((run) => {
+    return agentRuns.some((run: AgentRunLike) => {
       const evalResults = run.evaluation_results ?? run.evaluationResults ?? [];
       return (
         evalResults.length > 0 &&
@@ -411,7 +414,6 @@ function RoundHeaderInline({
   const nextKey = neighborRounds.next?.roundKey;
   const previousNumber = neighborRounds.previous?.roundNumber;
   const nextNumber = neighborRounds.next?.roundNumber;
-  const currentRoundKey = roundKey;
 
   if (isLoading) {
     return (
@@ -569,9 +571,9 @@ function RoundHeaderInline({
                   </button>
                 )}
               </div>
-              {currentRoundKey && currentRoundKey !== roundKey && (
+              {roundKey && (
                 <Link
-                  href={`${routes.rounds}/${currentRoundKey}`}
+                  href={`${routes.rounds}/${roundKey}`}
                   className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
@@ -846,7 +848,6 @@ function RoundStatsInline({
   // ✅ Usar datos de post_consensus_summary si están disponibles
   const winner = postConsensusSummary?.winner;
   const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
-  const winnerEvalScore = winner?.avg_eval_score ?? 0;
   const averageEvalTime = winner?.avg_eval_time ?? 0;
   const minersEvaluated = postConsensusSummary?.miners_evaluated ?? statistics?.totalMiners ?? 0;
   const winnerUid = winner?.uid ?? statistics?.winnerMinerUid ?? null;
@@ -1200,10 +1201,6 @@ function RoundValidatorsInline({
   loading?: boolean;
   error?: string | null;
 }) {
-  const params = useParams();
-  const seasonParam = params.season as string | undefined;
-  const roundParam = params.round as string | undefined;
-  const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   // ✅ Validators ahora vienen de roundData (useGetRound)
   const validatorsData = React.useMemo(() => {
     if (!roundData?.validators) return [];
@@ -1348,7 +1345,8 @@ function RoundValidatorsInline({
               );
               const isActive = selectedValidatorId === validator.id;
               return (
-                <div
+                <button
+                  type="button"
                   key={`validator-${validator.id}`}
                   onClick={() => {
                     if (validator.id === selectedValidatorId) return;
@@ -1365,8 +1363,6 @@ function RoundValidatorsInline({
                       onValidatorSelect?.(validator);
                     }
                   }}
-                  role="button"
-                  tabIndex={0}
                   className="cursor-pointer"
                 >
                   <div
@@ -1421,7 +1417,7 @@ function RoundValidatorsInline({
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1478,8 +1474,6 @@ function RoundMinerScoresInline({
   loading?: boolean;
   error?: string;
 }) {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1939,8 +1933,6 @@ function RoundTopMinersInline({
   loading?: boolean;
   error?: string;
 }) {
-  const { id } = useParams();
-  const roundKey = extractRoundIdentifier(id);
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
@@ -1979,7 +1971,7 @@ function RoundTopMinersInline({
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
-      (miner) => miner.validatorId === selectedValidator.id
+      (miner: MinerPerformance) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
   }, [roundData, minersData, selectedValidator]);
@@ -2158,7 +2150,7 @@ function RoundTopMinersInline({
                               : "text-white group-hover:scale-105"
                           )}
                         >
-                          {miner.name && miner.name.trim()
+                          {miner.name?.trim()
                             ? miner.name
                             : `Miner ${miner.uid}`}
                         </RizzText>
@@ -2267,7 +2259,6 @@ export default function Round() {
   }, [roundData]) as any;
 
   const roundNumberForLinks = roundData?.round_in_season;
-  const roundLabel = roundKey;
   const topMiners = React.useMemo(() => {
     // Obtener top miners de roundData.post_consensus_summary.winner o de validators
     if (roundData?.post_consensus_summary?.winner) {
@@ -2277,15 +2268,17 @@ export default function Round() {
   }, [roundData]);
 
   const statistics = React.useMemo(() => {
-    // Construir statistics desde roundData
     if (!roundData) return null;
+    const pcs = roundData.post_consensus_summary;
     return {
-      winnerUid: roundData.post_consensus_summary?.winner?.uid,
-      winnerAverage: roundData.post_consensus_summary?.winner?.avg_reward,
-      topScore: roundData.post_consensus_summary?.winner?.avg_reward,
-      avgEvalTime: roundData.post_consensus_summary?.winner?.avg_eval_time,
-      minersEvaluated: roundData.post_consensus_summary?.miners_evaluated,
-      tasksEvaluated: roundData.post_consensus_summary?.tasks_evaluated,
+      winnerUid: pcs?.winner?.uid,
+      winnerAverage: pcs?.winner?.avg_reward,
+      topScore: pcs?.winner?.avg_reward,
+      avgEvalTime: pcs?.winner?.avg_eval_time,
+      minersEvaluated: pcs?.miners_evaluated,
+      tasksEvaluated: pcs?.tasks_evaluated,
+      totalMiners: pcs?.miners_evaluated,
+      totalTasks: pcs?.tasks_evaluated,
     };
   }, [roundData]);
 
@@ -2293,10 +2286,10 @@ export default function Round() {
   const validatorRounds = roundInfo?.validatorRounds ?? [];
   const isWaitingForConsensus =
     roundInfo?.status === "evaluating_finished" ||
-    (validatorRounds.some((vr) => {
+    (validatorRounds.some((vr: ValidatorRoundData) => {
       if (vr.status === "evaluating_finished") return true;
       const agentRuns = vr.agentEvaluationRuns ?? [];
-      return agentRuns.some((run) => {
+      return agentRuns.some((run: AgentRunLike) => {
         const evalResults =
           run.evaluation_results ?? run.evaluationResults ?? [];
         return (
@@ -2307,9 +2300,9 @@ export default function Round() {
     }) &&
       roundInfo?.status === "active");
 
-  const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
+  const aggregatedTopMiner: RoundWinnerLike | null = React.useMemo(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
-    return topMiners[0] ?? null;
+    return (topMiners[0] as RoundWinnerLike) ?? null;
   }, [topMiners]);
 
   // ✅ Usar winner de roundData.validators[selectedValidator] si está disponible
@@ -2354,7 +2347,8 @@ export default function Round() {
           uid: winnerUidVal,
           hotkey: selectedValidatorWinner?.hotkey ?? selectedValidator?.topMiner?.hotkey,
           imageUrl:
-            selectedValidatorWinner?.image ??
+            (selectedValidatorWinner as RoundWinnerLike | null)?.image ??
+            (selectedValidatorWinner as RoundWinnerLike | null)?.imageUrl ??
             selectedValidator?.topMiner?.imageUrl ??
             aggregatedTopMiner?.imageUrl,
           helper:
@@ -2505,7 +2499,7 @@ export default function Round() {
               </p>
               <div className="mt-8 flex justify-center gap-4">
                 <Button
-                  onClick={() => window.location.reload()}
+                  onClick={() => globalThis.location.reload()}
                   className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
                 >
                   Retry
@@ -2589,7 +2583,7 @@ export default function Round() {
               topMiners={topMiners}
               postConsensusSummary={roundData?.post_consensus_summary ?? null}
               loading={roundDataLoading}
-              error={roundDataError}
+              error={roundDataError ?? undefined}
             />
       </div>
 
@@ -2612,8 +2606,8 @@ export default function Round() {
 
       <RoundValidatorsInline
         onValidatorSelect={handleValidatorSelect}
-        selectedValidatorId={selectedValidator?.id ?? null}
-        requestedValidatorId={requestedValidatorId}
+        selectedValidatorId={selectedValidator?.id ?? undefined}
+        requestedValidatorId={requestedValidatorId ?? undefined}
         roundData={roundData}
         loading={roundDataLoading}
         error={roundDataError}
@@ -2643,7 +2637,7 @@ export default function Round() {
           minersData={undefined}
           roundData={roundData}
           loading={roundDataLoading}
-          error={roundDataError}
+          error={roundDataError ?? undefined}
         />
         <RoundTopMinersInline
           className="w-full xl:w-[400px]"
@@ -2651,9 +2645,9 @@ export default function Round() {
           roundNumber={roundNumberForLinks}
           roundInfo={roundInfo}
           minersData={undefined}
-          roundData={roundData} // ✅ Pasar roundData
+          roundData={roundData}
           loading={roundDataLoading}
-          error={roundDataError}
+          error={roundDataError ?? undefined}
         />
       </div>
         </>
