@@ -1,6 +1,6 @@
 export default function AnalyticsCircularIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 20 20"

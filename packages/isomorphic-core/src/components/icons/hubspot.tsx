@@ -1,4 +1,4 @@
-export default function HubSpotIcon({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function HubSpotIcon({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

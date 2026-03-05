@@ -1,6 +1,6 @@
 export default function Containers({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" {...props}>
       <path fill="#969faa" d="M62 6H6a4 4 0 0 1 4-4h48a4 4 0 0 1 4 4z" />
