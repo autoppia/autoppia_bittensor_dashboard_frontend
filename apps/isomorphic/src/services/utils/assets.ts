@@ -19,12 +19,16 @@ let defaultAssetHost = "";
 try {
   defaultAssetHost = new URL(DEFAULT_ASSET_BASE).hostname.toLowerCase();
 } catch (error) {
+  if (process.env.NODE_ENV === "development") {
+    console.warn("[assets] Invalid DEFAULT_ASSET_BASE URL:", error);
+  }
   defaultAssetHost = "";
 }
 
 const allowedHosts = new Set<string>(
   [
     ...DEFAULT_ALLOWED_IMAGE_HOSTS,
+    
     ...parseHosts(process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS),
     defaultAssetHost,
   ].filter(Boolean)
@@ -38,7 +42,7 @@ const isAllowedHost = (hostname: string | null): boolean => {
   if (allowedHosts.has(lower)) {
     return true;
   }
-  for (const host of allowedHosts) {
+  for (const host of Array.from(allowedHosts)) {
     if (host.startsWith("*.")) {
       const suffix = host.slice(1);
       if (lower.endsWith(suffix)) {
@@ -92,6 +96,9 @@ const sanitizeUrl = (value?: string | null): string => {
         return parsed.toString();
       }
     } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[assets] Invalid URL in sanitizeUrl:", error);
+      }
       return "";
     }
     return "";
@@ -133,7 +140,9 @@ const rewriteToLocalAsset = (value: string): string => {
       return path + candidateUrl.search;
     }
   } catch (error) {
-    // noop
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[assets] URL rewrite failed:", error);
+    }
   }
 
   // Any other absolute URL should be considered invalid for frontend assets.
