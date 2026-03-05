@@ -101,8 +101,8 @@ export default function Overview() {
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
-              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              Latest finished round:
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
+              <span>Latest finished round:</span>
               <span className="font-bold text-white">
                 {metricsRoundLabel}
               </span>
