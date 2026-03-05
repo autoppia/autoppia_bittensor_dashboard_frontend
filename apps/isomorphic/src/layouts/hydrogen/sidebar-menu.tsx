@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import NavLink from "@core/components/nav-link";
 import React from "react";
 import { usePathname } from "next/navigation";
@@ -13,6 +12,37 @@ import {
   NAV_COLLECTION_STORAGE_KEY,
 } from "@/layouts/hydrogen/menu-items";
 import { Tooltip } from "rizzui";
+
+function getNavItemWrapperClass(disabled: boolean, isActive: boolean): string {
+  if (disabled) {
+    return "cursor-not-allowed select-none text-slate-400 rounded-md border border-white/10 bg-white/5";
+  }
+  return isActive ? "text-emerald-300" : "text-slate-300 hover:text-emerald-200";
+}
+
+function getNavItemIconClass(disabled: boolean, isActive: boolean): string {
+  if (disabled) return "text-slate-500";
+  return isActive ? "text-emerald-300" : "text-slate-400 group-hover:text-emerald-200";
+}
+
+function getNavItemLabelClass(disabled: boolean, isActive: boolean): string {
+  if (disabled) return "font-medium text-slate-300";
+  return isActive
+    ? "font-semibold text-white"
+    : "font-medium text-slate-200 group-hover:text-white group-hover:font-semibold";
+}
+
+function getNavItemIndicatorClass(disabled: boolean, isActive: boolean): string {
+  if (disabled) return "hidden";
+  return isActive
+    ? "opacity-100 scale-y-100"
+    : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100";
+}
+
+function getNavItemHoverGlowClass(disabled: boolean, isActive: boolean): string {
+  if (disabled) return "hidden";
+  return isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100";
+}
 
 export function SidebarMenu() {
   const pathname = usePathname();
@@ -35,14 +65,14 @@ export function SidebarMenu() {
         setActiveNav(next);
         activeNavRef.current = next;
       }
-      if (typeof window === "undefined") {
+      if (globalThis.window === undefined) {
         return;
       }
       if (options?.persist !== false) {
-        window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
+        globalThis.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
       }
       if (options?.broadcast && prev !== next) {
-        window.dispatchEvent(
+        globalThis.dispatchEvent(
           new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
             detail: next,
           })
@@ -53,8 +83,8 @@ export function SidebarMenu() {
   );
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
+    if (globalThis.window === undefined) return;
+    const stored = globalThis.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
     if (stored === "subnet36" || stored === "iwa") {
       updateNavSelection(stored as MenuNamespace, { persist: false });
     }
@@ -66,12 +96,12 @@ export function SidebarMenu() {
       }
     };
 
-    window.addEventListener(
+    globalThis.addEventListener(
       NAV_COLLECTION_EVENT,
       handleExternalNav as EventListener
     );
     return () =>
-      window.removeEventListener(
+      globalThis.removeEventListener(
         NAV_COLLECTION_EVENT,
         handleExternalNav as EventListener
       );
@@ -109,56 +139,34 @@ export function SidebarMenu() {
 
       {navItems.map((item) => {
         const href = item.href;
+        const disabled = Boolean(item.disabled);
         const isActive =
-          !item.disabled &&
+          !disabled &&
           (pathname === href || (href !== "/" && pathname.startsWith(href)));
 
         const wrapperClass = cn(
           "relative mx-3 my-1 flex items-center px-4 py-4 transition-all duration-300 ease-out lg:my-1.5 2xl:mx-5 2xl:my-2 font-medium text-base",
-          item.disabled
-            ? "cursor-not-allowed select-none text-slate-400 rounded-md border border-white/10 bg-white/5"
-            : [
-                "group",
-                isActive
-                  ? "text-emerald-300"
-                  : "text-slate-300 hover:text-emerald-200",
-              ]
+          disabled ? getNavItemWrapperClass(true, false) : ["group", getNavItemWrapperClass(false, isActive)]
         );
 
         const iconClass = cn(
           "relative z-10 mr-3 flex-shrink-0 transition-all duration-300 text-lg",
-          item.disabled
-            ? "text-slate-500"
-            : isActive
-              ? "text-emerald-300"
-              : "text-slate-400 group-hover:text-emerald-200"
+          getNavItemIconClass(disabled, isActive)
         );
 
         const labelClass = cn(
           "relative z-10 transition-all duration-300 flex items-center gap-2",
-          item.disabled
-            ? "font-medium text-slate-300"
-            : isActive
-              ? "font-semibold text-white"
-              : "font-medium text-slate-200 group-hover:text-white group-hover:font-semibold"
+          getNavItemLabelClass(disabled, isActive)
         );
 
         const activeIndicatorClass = cn(
           "absolute left-0 top-1/2 z-0 h-10 w-1 -translate-y-1/2 transform rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 transition-all duration-300 shadow-[4px_0_16px_rgba(16,185,129,0.4)]",
-          item.disabled
-            ? "hidden"
-            : isActive
-              ? "opacity-100 scale-y-100"
-              : "opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100"
+          getNavItemIndicatorClass(disabled, isActive)
         );
 
         const hoverGlowClass = cn(
           "absolute inset-0 z-0 rounded-md bg-emerald-400/10 backdrop-blur-[1px] transition-all duration-300",
-          item.disabled
-            ? "hidden"
-            : isActive
-              ? "opacity-100"
-              : "opacity-0 group-hover:opacity-100"
+          getNavItemHoverGlowClass(disabled, isActive)
         );
 
         const itemBody = (
@@ -177,14 +185,14 @@ export function SidebarMenu() {
           </div>
         );
 
-        if (item.disabled) {
+        if (disabled) {
           return (
             <Tooltip
               key={item.name}
               content={item.disabledLabel ?? "Not available yet"}
               placement="right"
             >
-              <div role="link" aria-disabled="true" tabIndex={-1}>
+              <div aria-disabled="true" tabIndex={-1}>
                 {itemBody}
               </div>
             </Tooltip>

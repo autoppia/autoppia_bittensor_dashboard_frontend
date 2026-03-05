@@ -18,9 +18,39 @@ import {
   NAV_COLLECTION_STORAGE_KEY,
 } from "@/layouts/hydrogen/menu-items";
 import { FaGithub, FaXTwitter, FaDiscord } from "react-icons/fa6";
-import { PiGlobeDuotone, PiBookOpenDuotone } from "react-icons/pi";
+import { PiGlobeDuotone } from "react-icons/pi";
 import { Tooltip } from "rizzui";
 import { useNetworkStatus } from "@/services/hooks/useOverview";
+
+type NormalizedStatus = "loading" | "healthy" | "degraded" | "down";
+
+function getStatusGlowClass(s: NormalizedStatus): string {
+  if (s === "healthy") return "bg-green-500";
+  if (s === "degraded") return "bg-yellow-500";
+  if (s === "loading") return "bg-blue-500";
+  return "bg-red-500";
+}
+
+function getStatusBorderClass(s: NormalizedStatus): string {
+  if (s === "healthy") return "border border-green-500 hover:border-green-400";
+  if (s === "degraded") return "border border-yellow-500 hover:border-yellow-400";
+  if (s === "loading") return "border border-blue-500 hover:border-blue-400";
+  return "border border-red-500 hover:border-red-400";
+}
+
+function getStatusIconClass(s: NormalizedStatus): string {
+  if (s === "healthy") return "text-green-500";
+  if (s === "degraded") return "text-yellow-500";
+  if (s === "loading") return "text-blue-400";
+  return "text-red-500";
+}
+
+function getStatusTextClass(s: NormalizedStatus): string {
+  if (s === "healthy") return "text-green-400";
+  if (s === "degraded") return "text-yellow-400";
+  if (s === "loading") return "text-blue-300";
+  return "text-red-400";
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -57,16 +87,21 @@ export default function Header() {
     return "healthy";
   })();
 
-  const displayStatusText =
-    normalizedStatus === "loading"
-      ? "Load"
-      : normalizedStatus === "healthy"
-        ? "Live"
-        : normalizedStatus === "degraded"
-          ? "Warn"
-          : "Down";
+  const displayStatusText = (() => {
+    if (normalizedStatus === "loading") return "Load";
+    if (normalizedStatus === "healthy") return "Live";
+    if (normalizedStatus === "degraded") return "Warn";
+    return "Down";
+  })();
 
   const statusLabel = `● ${displayStatusText.toUpperCase()}`;
+
+  const statusTooltipContent = (() => {
+    if (normalizedStatus === "healthy") return `Network Status: ${displayStatusText}`;
+    if (normalizedStatus === "loading") return "Network Status: Loading…";
+    if (networkStatus?.message) return networkStatus.message;
+    return `Network Status: ${displayStatusText}`;
+  })();
 
   const [activeNav, setActiveNav] = React.useState<MenuNamespace>(
     DEFAULT_NAV_COLLECTION
@@ -88,14 +123,14 @@ export default function Header() {
         setActiveNav(next);
         activeNavRef.current = next;
       }
-      if (typeof window === "undefined") {
+      if (globalThis.window === undefined) {
         return;
       }
       if (options?.persist !== false) {
-        window.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
+        globalThis.localStorage.setItem(NAV_COLLECTION_STORAGE_KEY, next);
       }
       if (options?.broadcast && prev !== next) {
-        window.dispatchEvent(
+        globalThis.dispatchEvent(
           new CustomEvent<MenuNamespace>(NAV_COLLECTION_EVENT, {
             detail: next,
           })
@@ -106,8 +141,8 @@ export default function Header() {
   );
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
+    if (globalThis.window === undefined) return;
+    const stored = globalThis.localStorage.getItem(NAV_COLLECTION_STORAGE_KEY);
     if (stored === "subnet36" || stored === "iwa") {
       updateNavSelection(stored as MenuNamespace, { persist: false });
     }
@@ -119,12 +154,12 @@ export default function Header() {
       }
     };
 
-    window.addEventListener(
+    globalThis.addEventListener(
       NAV_COLLECTION_EVENT,
       handleExternalNav as EventListener
     );
     return () =>
-      window.removeEventListener(
+      globalThis.removeEventListener(
         NAV_COLLECTION_EVENT,
         handleExternalNav as EventListener
       );
@@ -189,15 +224,21 @@ export default function Header() {
                 (pathname === href ||
                   (href !== "/" && pathname.startsWith(href)));
 
+              let navItemContentClass: string;
+              if (item.disabled) {
+                navItemContentClass =
+                  "cursor-not-allowed select-none text-gray-400 bg-gray-100/60 border border-dashed border-gray-300/70 shadow-none";
+              } else if (isActive) {
+                navItemContentClass = "bg-white text-black";
+              } else {
+                navItemContentClass = "text-gray-700 hover:text-gray-600 hover:bg-gray-100";
+              }
+
               const itemContent = (
                 <div
                   className={cn(
                     "px-2 xl:px-2.5 py-2.5 rounded-lg transition-all duration-300 ease-out font-medium flex items-center gap-1 xl:gap-1.5 text-xs xl:text-sm whitespace-nowrap",
-                    item.disabled
-                      ? "cursor-not-allowed select-none text-gray-400 bg-gray-100/60 border border-dashed border-gray-300/70 shadow-none"
-                      : isActive
-                        ? "bg-white text-black"
-                        : "text-gray-700 hover:text-gray-600 hover:bg-gray-100"
+                    navItemContentClass
                   )}
                 >
                   {item.icon && (
@@ -230,7 +271,6 @@ export default function Header() {
                   >
                     <div
                       className="flex-shrink-0 cursor-not-allowed select-none"
-                      role="link"
                       aria-disabled="true"
                       tabIndex={-1}
                     >
@@ -298,15 +338,7 @@ export default function Header() {
               </a>
             </Tooltip>
             <Tooltip
-              content={
-                normalizedStatus === "healthy"
-                  ? `Network Status: ${displayStatusText}`
-                  : normalizedStatus === "loading"
-                    ? "Network Status: Loading…"
-                    : networkStatus?.message
-                      ? networkStatus.message
-                      : `Network Status: ${displayStatusText}`
-              }
+              content={statusTooltipContent}
               placement="bottom"
             >
               <div className="relative ms-2 sm:ms-3 flex items-center group overflow-hidden max-w-[96px] sm:max-w-[120px] flex-shrink-0">
@@ -314,13 +346,7 @@ export default function Header() {
                 <div
                   className={cn(
                     "absolute inset-0 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300",
-                    normalizedStatus === "healthy"
-                      ? "bg-green-500"
-                      : normalizedStatus === "degraded"
-                        ? "bg-yellow-500"
-                        : normalizedStatus === "loading"
-                          ? "bg-blue-500"
-                          : "bg-red-500"
+                    getStatusGlowClass(normalizedStatus)
                   )}
                 ></div>
 
@@ -328,13 +354,7 @@ export default function Header() {
                 <div
                   className={cn(
                     "relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-black/90 rounded-lg transition-all duration-300 whitespace-nowrap overflow-hidden max-w-full",
-                    normalizedStatus === "healthy"
-                      ? "border border-green-500 hover:border-green-400"
-                      : normalizedStatus === "degraded"
-                        ? "border border-yellow-500 hover:border-yellow-400"
-                        : normalizedStatus === "loading"
-                          ? "border border-blue-500 hover:border-blue-400"
-                          : "border border-red-500 hover:border-red-400"
+                    getStatusBorderClass(normalizedStatus)
                   )}
                 >
                   {/* Dynamic icon and animation based on status */}
@@ -347,13 +367,7 @@ export default function Header() {
                       <LuActivity
                         className={cn(
                           "w-4 h-4 sm:w-5 sm:h-5 animate-pulse",
-                          normalizedStatus === "healthy"
-                            ? "text-green-500"
-                            : normalizedStatus === "degraded"
-                              ? "text-yellow-500"
-                              : normalizedStatus === "loading"
-                                ? "text-blue-400"
-                                : "text-red-500"
+                          getStatusIconClass(normalizedStatus)
                         )}
                       />
                     )}
@@ -366,13 +380,7 @@ export default function Header() {
                   <span
                     className={cn(
                       "text-[11px] sm:text-sm font-mono font-bold tracking-widest",
-                      normalizedStatus === "healthy"
-                        ? "text-green-400"
-                        : normalizedStatus === "degraded"
-                          ? "text-yellow-400"
-                          : normalizedStatus === "loading"
-                            ? "text-blue-300"
-                            : "text-red-400"
+                      getStatusTextClass(normalizedStatus)
                     )}
                   >
                     {statusLabel}
