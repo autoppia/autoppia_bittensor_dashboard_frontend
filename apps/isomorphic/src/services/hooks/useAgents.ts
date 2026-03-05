@@ -7,8 +7,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { agentsRepository } from '@/repositories/agents/agents.repository';
 import type {
   AgentData,
-  AgentPerformanceMetrics,
-  AgentRunOverview,
   AgentRoundMetrics,
   ScoreRoundDataPoint,
   AgentsListQueryParams,
