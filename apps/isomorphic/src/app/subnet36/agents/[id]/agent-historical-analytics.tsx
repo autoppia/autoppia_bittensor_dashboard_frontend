@@ -15,7 +15,20 @@ import cn from "@core/utils/class-names";
 import { formatWebsiteName, getProjectColors } from "@/utils/website-colors";
 import type { AgentRunStats } from "@/repositories/agent-runs/agent-runs.types";
 import type { TaskData } from "@/repositories/tasks/tasks.types";
+import type { MinerHistoricalResponse } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
+
+/** Extended use-case shape when API returns taskDetails (not in MinerHistoricalResponse type). */
+type UseCaseWithTaskDetails = MinerHistoricalResponse["data"]["performanceByWebsite"][number]["useCases"][number] & {
+  taskDetails?: Array<Record<string, unknown>>;
+};
+type PerformanceByWebsiteWithTaskDetails = Omit<
+  MinerHistoricalResponse["data"]["performanceByWebsite"][number],
+  "useCases"
+> & { useCases?: UseCaseWithTaskDetails[] };
+
+/** TaskData with optional evaluationId (set when mapping from historical taskDetails). */
+type TaskDataWithEval = TaskData & { evaluationId?: string };
 
 // Helper function to normalize evaluation ID for URL
 // Keeps the full evaluation ID format: "evaluation_<round>_<uuid>_<hash>"
@@ -42,7 +55,7 @@ function normalizeEvaluationId(evaluationId: string): string {
 interface AgentHistoricalAnalyticsProps {
   agentId: string | number;
   className?: string;
-  minerHistorical?: any; // MinerHistoricalResponse['data']
+  minerHistorical?: MinerHistoricalResponse["data"] | null;
   loading?: boolean;
 }
 
@@ -66,12 +79,27 @@ interface UseCaseStats {
   avgTime: number;
 }
 
+interface DonutItem {
+  name: string;
+  value: number;
+  fill: string;
+  stroke: string;
+  percentage: number;
+}
+
 // Helper function to get color based on percentage
 function getPercentageColor(percentage: number): string {
   if (percentage >= 75) return "#22C55E"; // green-500
   if (percentage >= 50) return "#EAB308"; // yellow-500
   if (percentage >= 25) return "#F97316"; // orange-500
   return "#EF4444"; // red-500
+}
+
+function getScoreBadgeClass(score: number): string {
+  const base = "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold";
+  if (score >= 0.8) return `${base} bg-emerald-500/20 text-emerald-300`;
+  if (score >= 0.5) return `${base} bg-yellow-500/20 text-yellow-300`;
+  return `${base} bg-red-500/20 text-red-300`;
 }
 
 export default function AgentHistoricalAnalytics({
@@ -92,11 +120,11 @@ export default function AgentHistoricalAnalytics({
   // Expandable state
   const [expandedWebsite, setExpandedWebsite] = useState<string | null>(null);
 
-  // Task data state
+  // Task data state (tasks may include evaluationId when from historical taskDetails)
   const [useCaseTasks, setUseCaseTasks] = useState<{
     [key: string]: {
-      allTasks: TaskData[]; // All fetched tasks
-      tasks: TaskData[]; // Current page tasks
+      allTasks: TaskDataWithEval[];
+      tasks: TaskDataWithEval[];
       loading: boolean;
       total: number;
       page: number;
@@ -121,17 +149,21 @@ export default function AgentHistoricalAnalytics({
   }, [minerHistorical]);
 
   // Aggregate data by website and use case - use minerHistorical if available
-  const { websiteStats, useCaseStats } = useMemo(() => {
+  const { websiteStats, useCaseStats } = useMemo((): {
+    websiteStats: WebsiteStats[];
+    useCaseStats: UseCaseStats[];
+  } => {
     // If we have minerHistorical data, use it directly
     if (minerHistorical?.performanceByWebsite) {
       const websiteMap = new Map<string, WebsiteStats>();
       const useCaseMap = new Map<string, UseCaseStats>();
+      const perfList = minerHistorical.performanceByWebsite as PerformanceByWebsiteWithTaskDetails[];
 
-      minerHistorical.performanceByWebsite.forEach((ws: any) => {
+      for (const ws of perfList) {
         const website = ws.website;
-        if (!website) return;
+        if (!website) continue;
 
-        const existing = websiteMap.get(website) || {
+        const existing = websiteMap.get(website) ?? {
           website,
           displayName: formatWebsiteName(website),
           totalTasks: 0,
@@ -141,20 +173,20 @@ export default function AgentHistoricalAnalytics({
           avgTime: 0,
         };
 
-        existing.totalTasks = ws.tasks || 0;
-        existing.completedTasks = ws.successful || 0;
-        existing.successRate = existing.totalTasks > 0 
-          ? (existing.completedTasks / existing.totalTasks) * 100 
+        existing.totalTasks = ws.tasks ?? 0;
+        existing.completedTasks = ws.successful ?? 0;
+        existing.successRate = existing.totalTasks > 0
+          ? (existing.completedTasks / existing.totalTasks) * 100
           : 0;
-        existing.avgTime = ws.averageDuration || 0;
+        existing.avgTime = ws.averageDuration ?? 0;
 
         websiteMap.set(website, existing);
 
         // Process use cases
         if (ws.useCases) {
-          ws.useCases.forEach((uc: any) => {
+          for (const uc of ws.useCases) {
             const useCase = uc.useCase;
-            if (!useCase) return;
+            if (!useCase) continue;
 
             const key = `${website}:${useCase}`;
             const existingUC = useCaseMap.get(key) || {
@@ -172,12 +204,12 @@ export default function AgentHistoricalAnalytics({
             existingUC.successRate = existingUC.totalTasks > 0
               ? (existingUC.completedTasks / existingUC.totalTasks) * 100
               : 0;
-            existingUC.avgTime = uc.averageDuration || 0;
+            existingUC.avgTime = uc.averageDuration ?? 0;
 
             useCaseMap.set(key, existingUC);
-          });
+          }
         }
-      });
+      }
 
       return {
         websiteStats: Array.from(websiteMap.values()).sort(
@@ -288,7 +320,7 @@ export default function AgentHistoricalAnalytics({
         (a, b) => b.totalTasks - a.totalTasks
       ),
     };
-  }, [aggregatedData]);
+  }, [aggregatedData, minerHistorical]);
 
   // Filter use cases by selected website
   const filteredUseCases = useMemo(() => {
@@ -303,30 +335,27 @@ export default function AgentHistoricalAnalytics({
   }, [websiteStats, selectedWebsite]);
 
   // Website options for dropdown
-  const websiteOptions = useMemo(() => {
-    const options = [{ label: "All Websites", value: "__all__" }];
-    websiteStats.forEach((ws) => {
-      options.push({
+  const websiteOptions = useMemo(
+    () => [
+      { label: "All Websites", value: "__all__" },
+      ...websiteStats.map((ws) => ({
         label: formatWebsiteName(ws.website),
         value: ws.website,
-      });
-    });
-    return options;
-  }, [websiteStats]);
+      })),
+    ],
+    [websiteStats]
+  );
 
   // Fetch tasks for a specific use case
   const fetchUseCaseTasks = useCallback(
     async (website: string, useCase: string, page: number = 1) => {
       const key = `${website}:${useCase}`;
 
-      // 1) If tenemos datos históricos, usarlos siempre (independiente de aggregatedData)
+      // 1) If we have historical data, use it (independent of aggregatedData)
       if (minerHistorical) {
-        const websiteData = minerHistorical.performanceByWebsite?.find(
-          (ws: any) => ws.website === website
-        );
-        const useCaseData = websiteData?.useCases?.find(
-          (uc: any) => uc.useCase === useCase
-        );
+        const perfList = minerHistorical.performanceByWebsite as PerformanceByWebsiteWithTaskDetails[] | undefined;
+        const websiteData = perfList?.find((ws: PerformanceByWebsiteWithTaskDetails) => ws.website === website);
+        const useCaseData = websiteData?.useCases?.find((uc: UseCaseWithTaskDetails) => uc.useCase === useCase);
 
         const taskDetails = useCaseData?.taskDetails ?? [];
         const mapDetailStatus = (s: string) => {
@@ -334,13 +363,13 @@ export default function AgentHistoricalAnalytics({
           if (s === "failed") return "failed";
           return "completed";
         };
-        const mappedTasks: TaskData[] = taskDetails.map((detail: Record<string, unknown>) => {
+        const mappedTasks: TaskDataWithEval[] = taskDetails.map((detail: Record<string, unknown>) => {
           const status = mapDetailStatus(String(detail.status ?? ""));
           const timestamp = String(detail.createdAt ?? new Date().toISOString());
           const evaluationId = detail.evaluationId ?? detail.taskId;
           return {
             taskId: String(detail.taskId ?? detail.evaluationId ?? detail.agentRunId ?? `${useCase}-${website}`),
-            evaluationId: String(evaluationId),
+            evaluationId: String(evaluationId ?? ""),
             agentRunId: String(detail.agentRunId ?? detail.evaluationId ?? detail.taskId ?? ""),
             website,
             useCase: String(detail.useCase ?? useCase),
@@ -450,7 +479,7 @@ export default function AgentHistoricalAnalytics({
           },
         }));
         return;
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch tasks:", err);
         setUseCaseTasks((prev) => ({
           ...prev,
@@ -464,7 +493,7 @@ export default function AgentHistoricalAnalytics({
         }));
       }
     },
-    [aggregatedData?.runIds, minerHistorical, TASKS_PER_PAGE]
+    [aggregatedData?.runIds, minerHistorical]
   );
 
   // Handle page change
@@ -523,7 +552,7 @@ export default function AgentHistoricalAnalytics({
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
               <div
-                key={i}
+                key={`skeleton-legend-${i}`}
                 className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
               >
                 <div className="w-3 h-3 rounded-full bg-white/10 flex-shrink-0" />
@@ -540,7 +569,7 @@ export default function AgentHistoricalAnalytics({
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div
-              key={i}
+              key={`skeleton-card-${i}`}
               className="relative rounded-xl border p-3 sm:p-5 animate-pulse"
               style={{
                 borderColor: "rgba(100, 116, 139, 0.6)",
@@ -582,7 +611,7 @@ export default function AgentHistoricalAnalytics({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                   {[1, 2, 3, 4].map((j) => (
                     <div
-                      key={j}
+                      key={`skeleton-usecase-${j}`}
                       className="rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10"
                     >
                       <div className="flex items-center justify-between">
@@ -692,11 +721,11 @@ export default function AgentHistoricalAnalytics({
         {(() => {
           // Calculate overall stats for pie chart
           const totalTasks = displayedWebsites.reduce(
-            (sum, ws) => sum + ws.totalTasks,
+            (sum: number, ws: WebsiteStats) => sum + ws.totalTasks,
             0
           );
           const totalCompleted = displayedWebsites.reduce(
-            (sum, ws) => sum + ws.completedTasks,
+            (sum: number, ws: WebsiteStats) => sum + ws.completedTasks,
             0
           );
           const overallSuccessRate =
@@ -741,7 +770,7 @@ export default function AgentHistoricalAnalytics({
                   filteredUseCases.length
                 );
 
-                return filteredUseCases.map((uc, idx) => ({
+                return filteredUseCases.map((uc: UseCaseStats, idx: number) => ({
                   name: uc.useCase,
                   value: uc.completedTasks,
                   fill: colorVariations[idx] || projectColors.mainColor,
@@ -751,7 +780,7 @@ export default function AgentHistoricalAnalytics({
                 }));
               })()
             : // Show websites with their specific colors
-              displayedWebsites.map((ws) => {
+              displayedWebsites.map((ws: WebsiteStats) => {
                 const projectColors = getProjectColors(ws.website);
                 return {
                   name: ws.displayName,
@@ -764,7 +793,7 @@ export default function AgentHistoricalAnalytics({
               });
 
           // If no data or all values are 0, show a neutral empty state
-          const hasData = donutData.some((d) => d.value > 0);
+          const hasData = donutData.some((d: DonutItem) => d.value > 0);
           const displayData = hasData
             ? donutData
             : [
@@ -802,7 +831,7 @@ export default function AgentHistoricalAnalytics({
                           />
                         )}
                       />
-                      {displayData.map((entry) => (
+                      {displayData.map((entry: DonutItem) => (
                         <Cell
                           key={`cell-${entry.name}`}
                           fill={entry.fill}
@@ -818,7 +847,7 @@ export default function AgentHistoricalAnalytics({
               {/* Legend */}
               {hasData && (
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {displayData.map((item) => (
+                  {displayData.map((item: DonutItem) => (
                     <div
                       key={item.name}
                       className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
@@ -849,7 +878,7 @@ export default function AgentHistoricalAnalytics({
 
       {/* Website Performance Cards */}
       <div className="relative space-y-6">
-        {displayedWebsites.map((ws) => {
+        {displayedWebsites.map((ws: WebsiteStats) => {
           const projectColors = getProjectColors(ws.website);
 
           return (
@@ -907,7 +936,7 @@ export default function AgentHistoricalAnalytics({
               </div>
 
               {/* Use Cases Breakdown */}
-              {filteredUseCases.some((uc) => uc.website === ws.website) && (
+              {filteredUseCases.some((uc: UseCaseStats) => uc.website === ws.website) && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Text className="text-xs font-semibold text-white/70 uppercase tracking-wider">
@@ -924,8 +953,8 @@ export default function AgentHistoricalAnalytics({
                         // Auto-load tasks for all use cases when expanding
                         if (newState === ws.website) {
                           filteredUseCases
-                            .filter((uc) => uc.website === ws.website)
-                            .forEach((uc) => {
+                            .filter((uc: UseCaseStats) => uc.website === ws.website)
+                            .forEach((uc: UseCaseStats) => {
                               const key = `${uc.website}:${uc.useCase}`;
                               // Only fetch if not already loaded
                               if (!useCaseTasks[key]) {
@@ -953,8 +982,8 @@ export default function AgentHistoricalAnalytics({
                   {expandedWebsite === ws.website ? (
                     <div className="space-y-2">
                       {filteredUseCases
-                        .filter((uc) => uc.website === ws.website)
-                        .map((uc, ucIndex) => {
+                        .filter((uc: UseCaseStats) => uc.website === ws.website)
+                        .map((uc: UseCaseStats, ucIndex: number) => {
                           const key = `${uc.website}:${uc.useCase}`;
                           const taskData = useCaseTasks[key];
 
@@ -1014,7 +1043,7 @@ export default function AgentHistoricalAnalytics({
                                       <tbody>
                                         {[1, 2, 3, 4, 5].map((i) => (
                                           <tr
-                                            key={i}
+                                            key={`skeleton-row-${i}`}
                                             className="border-t border-white/5 animate-pulse"
                                           >
                                             <td className="p-2 sm:p-3">
@@ -1076,7 +1105,7 @@ export default function AgentHistoricalAnalytics({
                                       </tbody>
                                     </table>
                                   </div>
-                                ) : taskData?.tasks?.length > 0 ? (
+                                ) : (taskData?.tasks?.length ?? 0) > 0 ? (
                                   <>
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-sm table-fixed min-w-[700px]">
@@ -1107,7 +1136,7 @@ export default function AgentHistoricalAnalytics({
                                             >
                                               <td className="p-2 sm:p-3">
                                                 <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
-                                                  {(task as any).evaluationId || task.taskId}
+                                                  {task.evaluationId ?? task.taskId}
                                                 </span>
                                               </td>
                                               <td className="p-2 sm:p-3">
@@ -1116,14 +1145,7 @@ export default function AgentHistoricalAnalytics({
                                                 </span>
                                               </td>
                                               <td className="p-2 sm:p-3 text-center">
-                                                <span
-                                                  className={cn(
-                                                    "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold",
-                                                    (task.score ?? 0) >= 0.8 && "bg-emerald-500/20 text-emerald-300",
-                                                    (task.score ?? 0) >= 0.5 && (task.score ?? 0) < 0.8 && "bg-yellow-500/20 text-yellow-300",
-                                                    (task.score ?? 0) < 0.5 && "bg-red-500/20 text-red-300"
-                                                  )}
-                                                >
+                                                <span className={getScoreBadgeClass(task.score ?? 0)}>
                                                   {Math.round(
                                                     (task.score || 0) * 100
                                                   )}
@@ -1132,7 +1154,9 @@ export default function AgentHistoricalAnalytics({
                                               </td>
                                               <td className="p-2 sm:p-3 text-center">
                                                 <span className="text-[10px] sm:text-xs text-white/70">
-                                                  {task.duration == null ? "—" : task.duration.toFixed(1)} s
+                                                  {task.duration !== undefined && task.duration !== null
+                                                    ? `${task.duration.toFixed(1)} s`
+                                                    : "—"}
                                                 </span>
                                               </td>
                                               <td className="p-2 sm:p-3 text-center">
@@ -1140,10 +1164,7 @@ export default function AgentHistoricalAnalytics({
                                                   size="sm"
                                                   variant="text"
                                                   onClick={() => {
-                                                    // Use evaluationId if available, otherwise use taskId
-                                                    // Keep the full evaluation ID format (evaluation_xxx_xxx_xxx)
-                                                    const evaluationId = (task as any).evaluationId || task.taskId;
-                                                    // Ensure it has the "evaluation_" prefix if it's just a UUID
+                                                    const evaluationId = task.evaluationId ?? task.taskId;
                                                     const normalizedId = normalizeEvaluationId(evaluationId);
                                                     router.push(
                                                       `${routes.evaluations}/${normalizedId}`
@@ -1240,8 +1261,8 @@ export default function AgentHistoricalAnalytics({
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                       {filteredUseCases
-                        .filter((uc) => uc.website === ws.website)
-                        .map((uc, ucIndex) => (
+                        .filter((uc: UseCaseStats) => uc.website === ws.website)
+                        .map((uc: UseCaseStats, ucIndex: number) => (
                           <div
                             key={`${uc.useCase}-${ucIndex}`}
                             className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
@@ -1280,24 +1301,6 @@ export default function AgentHistoricalAnalytics({
 
 // Constants for pie chart
 const HIGHLIGHT_COLOR = "#FDF5E6";
-const PROGRESS_COLORS = [
-  "#EF4444", // red-500
-  "#F97316", // orange-500
-  "#EAB308", // yellow-500
-  "#84CC16", // lime-500
-  "#22C55E", // green-500
-  "#10B981", // emerald-500
-  "#14B8A6", // teal-500
-  "#06B6D4", // cyan-500
-  "#0EA5E9", // sky-500
-  "#3B82F6", // blue-500
-  "#6366F1", // indigo-500
-  "#8B5CF6", // violet-500
-  "#A855F7", // purple-500
-  "#D946EF", // fuchsia-500
-  "#EC4899", // pink-500
-  "#F43F5E", // rose-500
-];
 
 // Center label component for pie chart
 function CenterLabel({
