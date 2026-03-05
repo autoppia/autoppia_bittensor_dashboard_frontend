@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import MetricCard from "@core/components/cards/metric-card";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
@@ -68,13 +67,15 @@ interface OverviewMetricsProps {
   onRefetch?: () => void;
 }
 
-export default function OverviewMetrics({ 
+const SKELETON_KEYS = ["metrics-skeleton-0", "metrics-skeleton-1", "metrics-skeleton-2", "metrics-skeleton-3"] as const;
+
+export default function OverviewMetrics({
   className,
   metrics: metricsProp,
   loading: loadingProp,
   error: errorProp,
-  onRefetch
-}: OverviewMetricsProps) {
+  onRefetch,
+}: Readonly<OverviewMetricsProps>) {
   // Use props if provided, otherwise fallback to hook (for backward compatibility)
   const hookResult = useOverviewMetrics();
   const metrics = metricsProp ?? hookResult.data;
@@ -119,9 +120,9 @@ export default function OverviewMetrics({
           className
         )}
       >
-        {Array.from({ length: 4 }).map((_, index) => (
+        {SKELETON_KEYS.map((skeletonKey) => (
           <div
-            key={index}
+            key={skeletonKey}
             className="rounded-2xl p-5 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
           >
             <div className="flex space-x-4 mb-3">
@@ -275,24 +276,24 @@ export default function OverviewMetrics({
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-white/10 min-w-0 space-y-1">
-              {(metric as any).topLabel && (
+              {metric.topLabel != null && metric.topLabel !== "" && (
                 <div
                   className={cn(
                     "text-xs text-center truncate font-bold",
                     metric.descriptionClassName
                   )}
                 >
-                  {(metric as any).topLabel}
+                  {metric.topLabel}
                 </div>
               )}
-              {(metric as any).bottomLabel && (
+              {metric.bottomLabel != null && metric.bottomLabel !== "" && (
                 <div
                   className={cn(
                     "text-[10px] text-center truncate opacity-70",
                     metric.descriptionClassName
                   )}
                 >
-                  {(metric as any).bottomLabel}
+                  {metric.bottomLabel}
                 </div>
               )}
             </div>
