@@ -1546,3 +1546,8 @@ div[style="z-index: 1000001;"],
 [dir="rtl"] :is(.rizzui-checkbox-icon, .rizzui-switch-on-icon) {
   @apply -scale-x-100;
 }
+
+/* Card border hover: uses CSS variables set on .group to avoid JS handlers (a11y) */
+.group:hover .card-dynamic-border {
+  border-color: var(--card-border-hover);
+}
