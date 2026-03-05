@@ -4,7 +4,7 @@ import cn from "@core/utils/class-names";
 import { CHIP_STYLES } from "@/config/theme-styles";
 import { Select } from "rizzui";
 import type { AgentRunDetailData } from "./agent-run-types";
-import { PiTrendUp, PiTrendDown, PiChartBar, PiTarget } from "react-icons/pi";
+import { PiTrendUp, PiTrendDown, PiChartBar } from "react-icons/pi";
 
 const PROGRESS_COLORS = [
   "#10B981", // emerald-500
@@ -55,7 +55,7 @@ export default function AgentRunDetail({
   period,
   setPeriod,
   data,
-}: AgentRunDetailProps) {
+}: Readonly<AgentRunDetailProps>) {
   const agentDetailsData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentDetailsData.websites.length > 0;
 
@@ -65,12 +65,6 @@ export default function AgentRunDetail({
       value: web.name ?? `Website ${index + 1}`,
       label: web.name ?? `Website ${index + 1}`,
     })),
-  ];
-
-  const periodOptions = [
-    { value: "24h", label: "Last 24h" },
-    { value: "7d", label: "Last 7d" },
-    { value: "__all__", label: "All time" },
   ];
 
   const chartData =
@@ -153,7 +147,7 @@ export default function AgentRunDetail({
 
         <div className="flex flex-wrap items-center gap-3">
           <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1`}>
-            Active
+            Active{" "}
             <span className="h-2 w-2 rounded-full bg-white/90" />
           </span>
           <span className="text-xs text-white/70">
