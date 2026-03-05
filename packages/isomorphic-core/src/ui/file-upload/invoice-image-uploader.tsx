@@ -6,10 +6,11 @@ import cn from "../../utils/class-names";
 import UploadIcon from "../../components/shape/upload";
 import React, { ChangeEvent, useState } from "react";
 import { PiPencilBold, PiTrashBold } from "react-icons/pi";
+import type { FieldValues, UseFormSetValue } from "react-hook-form";
 
 interface InvoiceImageUploaderProps {
   name: string;
-  setValue: any;
+  setValue: UseFormSetValue<FieldValues>;
   className?: string;
   imageClassName?: string;
   dropZoneClassName?: string;

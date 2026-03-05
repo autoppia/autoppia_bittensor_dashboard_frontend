@@ -15,12 +15,13 @@ import UploadIcon from "../../components/shape/upload";
 import endsWith from "lodash/endsWith";
 import { FileWithPath } from "react-dropzone";
 import { ClientUploadedFileData } from "uploadthing/types";
+import type { FieldValues, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 
 interface UploadZoneProps {
   label?: string;
   name: string;
-  getValues: any;
-  setValue: any;
+  getValues: UseFormGetValues<FieldValues>;
+  setValue: UseFormSetValue<FieldValues>;
   className?: string;
   error?: string;
 }
@@ -38,7 +39,7 @@ export default function UploadZone({
   getValues,
   setValue,
   error,
-}: UploadZoneProps) {
+}: Readonly<UploadZoneProps>) {
   const [files, setFiles] = useState<File[]>([]);
 
   const onDrop = useCallback(
@@ -56,15 +57,8 @@ export default function UploadZone({
     [files]
   );
 
-  function handleRemoveFile(index: number) {
-    // Make a copy of the files array
-    const updatedFiles = [...files];
-
-    // Remove the file at the specified index
-    updatedFiles.splice(index, 1);
-
-    // Update the state
-    setFiles(updatedFiles);
+  function handleRemoveFile(fileToRemove: FileWithPath & { preview?: string }) {
+    setFiles((prev) => prev.filter((f) => f !== fileToRemove));
   }
 
   const uploadedItems = isEmpty(getValues(name)) ? [] : getValues(name);
@@ -77,7 +71,6 @@ export default function UploadZone({
     onClientUploadComplete: (res: ClientUploadedFileData<any>[] | undefined) => {
       console.log("res", res);
       if (setValue) {
-        // const respondedUrls = res?.map((r) => r.url);
         setFiles([]);
         const respondedUrls = res?.map((r) => ({
           name: r.name,
@@ -159,9 +152,9 @@ export default function UploadZone({
 
       {(!isEmpty(uploadedItems) || !isEmpty(notUploadedItems)) && (
         <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fit,_minmax(140px,_1fr))]">
-          {uploadedItems.map((file: any, index: number) => (
+          {uploadedItems.map((file: FileType) => (
             <div
-              key={index}
+              key={file.url}
               className={cn("relative")}
             >
               <figure className="group relative h-40 rounded-md bg-gray-50">
@@ -182,9 +175,9 @@ export default function UploadZone({
               />
             </div>
           ))}
-          {notUploadedItems.map((file: any, index: number) => (
+          {notUploadedItems.map((file: FileWithPath & { preview?: string }) => (
             <div
-              key={index}
+              key={file.path ?? file.name}
               className={cn("relative")}
             >
               <figure className="group relative h-40 rounded-md bg-gray-50">
@@ -199,7 +192,7 @@ export default function UploadZone({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleRemoveFile(index)}
+                    onClick={() => handleRemoveFile(file)}
                     className="absolute right-0 top-0 rounded-full bg-gray-700/70 p-1.5 opacity-20 transition duration-300 hover:bg-red-dark group-hover:opacity-100"
                   >
                     <PiTrashBold className="text-white" />
@@ -225,12 +218,12 @@ function UploadButtons({
   onClear,
   onUpload,
   isLoading,
-}: {
-  files: any[];
+}: Readonly<{
+  files: (FileWithPath & { preview?: string })[] | FileType[];
   isLoading: boolean;
   onClear: () => void;
   onUpload: () => void;
-}) {
+}>) {
   return (
     <div className="flex w-full flex-wrap items-center justify-center gap-4 px-6 pb-5 @sm:flex-nowrap @xl:w-auto @xl:justify-end @xl:px-0 @xl:pb-0">
       <Button
@@ -253,7 +246,7 @@ function UploadButtons({
   );
 }
 
-function MediaPreview({ name, url }: { name: string; url: string }) {
+function MediaPreview({ name, url }: Readonly<{ name: string; url: string }>) {
   return endsWith(name, ".pdf") ? (
     <object
       data={url}
@@ -275,7 +268,7 @@ function MediaPreview({ name, url }: { name: string; url: string }) {
   );
 }
 
-function MediaCaption({ name, size }: { name: string; size: number }) {
+function MediaCaption({ name, size }: Readonly<{ name: string; size: number }>) {
   return (
     <div className="mt-1 text-xs">
       <p className="break-words font-medium text-gray-700">{name}</p>

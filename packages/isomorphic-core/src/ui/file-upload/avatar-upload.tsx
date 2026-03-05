@@ -13,11 +13,12 @@ import { PiPencilSimple } from "react-icons/pi";
 import { LoadingSpinner } from "../../ui/file-upload/upload-zone";
 import { FileWithPath } from "react-dropzone";
 import { ClientUploadedFileData } from "uploadthing/types";
+import type { FieldValues, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 
 interface UploadZoneProps {
   name: string;
-  getValues?: any;
-  setValue?: any;
+  getValues?: UseFormGetValues<FieldValues>;
+  setValue?: UseFormSetValue<FieldValues>;
   className?: string;
   error?: string;
 }
