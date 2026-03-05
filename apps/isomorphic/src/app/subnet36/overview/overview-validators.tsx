@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PageHeader from "@/app/shared/page-header";
-import { routes } from "@/config/routes";
 import cn from "@core/utils/class-names";
 import {
   PiCurrencyDollarDuotone,
@@ -20,7 +19,6 @@ import {
   PiGlobe,
   PiTarget,
 } from "react-icons/pi";
-import BannerText from "@/app/shared/banner-text";
 import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
 import { useValidators } from "@/services/hooks/useOverview";
@@ -77,30 +75,36 @@ export default function OverviewValidators({
     default: "bg-yellow-500/20 text-yellow-500",
   };
 
-  const runningRoundBadge = roundLoading ? (
-    <span
-      className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <PiSpinnerGapBold className="h-5 w-5 animate-spin text-slate-100" />
-      <span>Loading current round…</span>
-    </span>
-  ) : roundNumber ? (
-    <span className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm">
-      {isRoundActive ? (
-        <PiArrowClockwiseDuotone className="h-5 w-5 animate-spin text-blue-300" />
-      ) : (
-        <PiCheckCircleFill className="h-5 w-5 text-emerald-300" />
-      )}
-      <span>{isRoundActive ? "Current round:" : "Last round:"}</span>
-      {currentSeason !== null && currentSeason !== undefined ? (
-        <span className="font-extrabold text-white">Season {currentSeason} - Round {roundNumber}</span>
-      ) : (
-        <span className="font-extrabold text-white">{roundNumber}</span>
-      )}
-    </span>
-  ) : null;
+  const runningRoundBadge = (() => {
+    if (roundLoading) {
+      return (
+        <span
+          className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <PiSpinnerGapBold className="h-5 w-5 animate-spin text-slate-100" />
+          <span>Loading current round…</span>
+        </span>
+      );
+    }
+    const hasRound = roundNumber !== null && roundNumber !== undefined;
+    if (hasRound) {
+      const seasonLabel = currentSeason == null ? String(roundNumber) : `Season ${currentSeason} - Round ${roundNumber}`;
+      return (
+      <span className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm">
+        {isRoundActive ? (
+          <PiArrowClockwiseDuotone className="h-5 w-5 animate-spin text-blue-300" />
+        ) : (
+          <PiCheckCircleFill className="h-5 w-5 text-emerald-300" />
+        )}
+        <span>{isRoundActive ? "Current round:" : "Last round:"}</span>
+        <span className="font-extrabold text-white">{seasonLabel}</span>
+      </span>
+      );
+    }
+    return null;
+  })();
 
   // Show loading state
   if (validatorsLoading || roundLoading) {
@@ -114,9 +118,9 @@ export default function OverviewValidators({
           {runningRoundBadge}
         </PageHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, index) => (
+          {Array.from({ length: 6 }, (_, i) => `validator-skeleton-${i}`).map((skeletonId) => (
             <div
-              key={index}
+              key={skeletonId}
               className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden"
             >
               <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -224,8 +228,7 @@ export default function OverviewValidators({
           const secondaryStats = [
             {
               title: "UID",
-              metric:
-                validator.validatorUid != null ? validator.validatorUid : "—",
+              metric: validator.validatorUid ?? "—",
               icon: PiFingerprintDuotone,
               iconClassName: "bg-gradient-to-br from-emerald-500 to-teal-600",
             },
@@ -249,41 +252,46 @@ export default function OverviewValidators({
             },
           ];
 
-          const normalizedStatus =
-            validator.status === "Evaluating"
-              ? "Evaluating"
-              : validator.status === "Finished"
-                ? "Finished"
-                : validator.status === "Not Started"
-                  ? "Not Started"
-                  : validator.status;
+          const normalizedStatus = (() => {
+            switch (validator.status) {
+              case "Evaluating":
+                return "Evaluating";
+              case "Finished":
+                return "Finished";
+              case "Not Started":
+                return "Not Started";
+              default:
+                return validator.status;
+            }
+          })();
 
           const rawCurrentTask = validator.currentTask?.trim() ?? "";
           const showCurrentTask =
             rawCurrentTask.length > 0 &&
             !DEFAULT_TASK_MESSAGES.has(rawCurrentTask);
 
-          const resolvedRoundNumber =
-            typeof validator.roundNumber === "number"
-              ? validator.roundNumber
-              : typeof currentRound === "number"
-                ? currentRound
-                : undefined;
+          const resolvedRoundNumber = (() => {
+            if (typeof validator.roundNumber === "number") return validator.roundNumber;
+            if (typeof currentRound === "number") return currentRound;
+            return undefined;
+          })();
 
-          const lastSeenSeason = validator.lastSeenSeason != null ? validator.lastSeenSeason : undefined;
-          const lastSeenRoundInSeason = validator.lastSeenRoundInSeason != null ? validator.lastSeenRoundInSeason : undefined;
-          const lastSeenLabel =
-            lastSeenSeason != null && (lastSeenRoundInSeason != null || resolvedRoundNumber != null)
-              ? `Last seen season ${lastSeenSeason}, round #${lastSeenRoundInSeason ?? resolvedRoundNumber}`
-              : resolvedRoundNumber != null
-                ? `Last seen round #${resolvedRoundNumber}`
-                : "—";
+          const lastSeenSeason = validator.lastSeenSeason ?? undefined;
+          const lastSeenRoundInSeason = validator.lastSeenRoundInSeason ?? undefined;
+          const lastSeenLabel = (() => {
+            const hasSeasonAndRound = lastSeenSeason != null && (lastSeenRoundInSeason != null || resolvedRoundNumber != null);
+            if (hasSeasonAndRound) {
+              return `Last seen season ${lastSeenSeason}, round #${lastSeenRoundInSeason ?? resolvedRoundNumber}`;
+            }
+            if (resolvedRoundNumber != null) {
+              return `Last seen round #${resolvedRoundNumber}`;
+            }
+            return "—";
+          })();
 
           // Build validator details link using validator UID
           const validatorUid = validator.validatorUid;
-          const validatorLink = validatorUid != null
-            ? `/validator/${validatorUid}`
-            : undefined;
+          const validatorLink = validatorUid == null ? undefined : `/validator/${validatorUid}`;
 
           return validatorLink ? (
             <Link key={`validator-${validator.id}`} href={validatorLink}>
