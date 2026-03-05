@@ -134,7 +134,8 @@ export interface MinerHistoricalResponse {
       }>;
     }>;
     roundsHistory: Array<{
-      round: number;
+      /** Round identifier: number or "season/round" string (e.g. "83/20") */
+      round: number | string;
       post_consensus_rank: number | null;
       post_consensus_avg_reward: number;
       post_consensus_avg_eval_score: number;
