@@ -6,25 +6,25 @@ import { Text, Input } from 'rizzui';
 type PriceFieldTypes = {
   label?: string;
   value: string[];
-  onChange: ([]: string[]) => void;
+  onChange: (values: string[]) => void;
 };
 
 export default function PriceField({
   label = 'Amount',
   value,
   onChange,
-}: PriceFieldTypes) {
+}: Readonly<PriceFieldTypes>) {
   const [minPrice, setMinPrice] = useState(value[0] ?? '');
   const [maxPrice, setMaxPrice] = useState(value[1] ?? '');
 
-  function handleMinPrice(value: string) {
-    setMinPrice(() => value);
-    onChange([value, maxPrice]);
+  function handleMinPrice(val: string) {
+    setMinPrice(val);
+    onChange([val, maxPrice]);
   }
 
-  function handleMaxPrice(value: string) {
-    setMaxPrice(() => value);
-    onChange([minPrice, value]);
+  function handleMaxPrice(val: string) {
+    setMaxPrice(val);
+    onChange([minPrice, val]);
   }
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function PriceField({
           placeholder="100.00"
           value={maxPrice}
           onChange={(event) => handleMaxPrice(event.target.value)}
-          disabled={minPrice.length > 0 ? false : true}
+          disabled={minPrice.length === 0}
         />
       </div>
     </div>
