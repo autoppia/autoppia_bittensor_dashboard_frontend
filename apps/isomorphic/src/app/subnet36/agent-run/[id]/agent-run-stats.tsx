@@ -36,14 +36,16 @@ interface AgentRunStatsProps {
   stats?: AgentRunStatsData | null;
 }
 
-export default function AgentRunStats({ stats }: AgentRunStatsProps) {
+export default function AgentRunStats({
+  stats,
+}: Readonly<AgentRunStatsProps>) {
   const overallScore = clampPercentage(stats?.overallScore);
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
-    stats?.failedTasks != null
-      ? clampNonNegative(stats.failedTasks)
-      : Math.max(totalTasks - successfulTasks, 0);
+    stats?.failedTasks == null
+      ? Math.max(totalTasks - successfulTasks, 0)
+      : clampNonNegative(stats.failedTasks);
   const websitesCount = clampNonNegative(
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
   );
