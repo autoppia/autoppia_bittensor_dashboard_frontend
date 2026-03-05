@@ -8,21 +8,21 @@ export const metadata = {
   ...metaObject(),
 };
 
-interface PageProps {
+type PageProps = Readonly<{
   params: Promise<{
     season: string;
     round: string;
   }>;
-}
+}>;
 
 export default async function Page({ params }: PageProps) {
   const { season, round } = await params;
-  
+
   // Validate that season and round are numbers
-  const seasonNum = parseInt(season, 10);
-  const roundNum = parseInt(round, 10);
-  
-  if (isNaN(seasonNum) || isNaN(roundNum) || seasonNum < 1 || roundNum < 1) {
+  const seasonNum = Number.parseInt(season, 10);
+  const roundNum = Number.parseInt(round, 10);
+
+  if (Number.isNaN(seasonNum) || Number.isNaN(roundNum) || seasonNum < 1 || roundNum < 1) {
     notFound();
   }
 
