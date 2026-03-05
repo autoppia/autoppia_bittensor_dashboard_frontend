@@ -1,16 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const useCountdown = (targetDate: any) => {
+const useCountdown = (targetDate: string | number | Date) => {
   const countDownDate = new Date(targetDate).getTime();
 
-  const [countDown, setCountDown] = useState(
-    countDownDate - new Date().getTime()
-  );
+  const [countDown, setCountDown] = useState(countDownDate - Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCountDown(countDownDate - new Date().getTime());
+      setCountDown(countDownDate - Date.now());
     }, 1000);
 
     return () => clearInterval(interval);
@@ -19,8 +17,7 @@ const useCountdown = (targetDate: any) => {
   return getReturnValues(countDown);
 };
 
-const getReturnValues = (countDown: any) => {
-  // calculate time left
+const getReturnValues = (countDown: number): [number, number, number, number] => {
   const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
   const hours = Math.floor(
     (countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
