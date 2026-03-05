@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import LoadingScreen from "@/app/shared/loading-screen";
 
 const HIDE_DELAY_MS = 250;
 
@@ -34,7 +33,7 @@ export default function NavigationLoader() {
         return;
       }
 
-      const currentPath = `${window.location.pathname}${window.location.search}`;
+      const currentPath = `${globalThis.window.location.pathname}${globalThis.window.location.search}`;
       if (href === currentPath) {
         return;
       }
