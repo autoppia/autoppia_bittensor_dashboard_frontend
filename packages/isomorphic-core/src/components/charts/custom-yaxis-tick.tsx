@@ -18,9 +18,9 @@ export function CustomYAxisTick({
   return (
     <g transform={`translate(${x},${y})`}>
       <text x={0} y={0} dy={16} textAnchor="end" className="fill-gray-500">
-        {prefix && prefix}
+        {prefix}
         {formattedValue}
-        {postfix && postfix}
+        {postfix}
       </text>
     </g>
   );
