@@ -4,7 +4,7 @@ import Link from "next/link";
 import BannerText from "@/app/shared/banner-text";
 import { createColumnHelper } from "@tanstack/react-table";
 import { PiArrowRightBold } from "react-icons/pi";
-import { Button, Progressbar, Text } from "rizzui";
+import { Button, Text } from "rizzui";
 import { TasksDataType } from "./table";
 import { websitesDataMap } from "@/data/websites-data";
 import { routes } from "@/config/routes";
