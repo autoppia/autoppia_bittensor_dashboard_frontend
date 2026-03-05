@@ -11,16 +11,16 @@ interface WebsiteItemProps {
   website: WebsiteDataType;
 }
 
-export function WebsiteItem({ website }: WebsiteItemProps) {
+export function WebsiteItem({ website }: Readonly<WebsiteItemProps>) {
   const isComingSoon = website.isComingSoon;
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
+          r: Number.parseInt(result[1], 16),
+          g: Number.parseInt(result[2], 16),
+          b: Number.parseInt(result[3], 16),
         }
       : { r: 0, g: 255, b: 255 };
   };
@@ -37,6 +37,14 @@ export function WebsiteItem({ website }: WebsiteItemProps) {
         "group relative block h-full",
         isComingSoon && "pointer-events-none"
       )}
+      style={
+        isComingSoon
+          ? undefined
+          : ({
+              ["--card-border"]: colorBorder,
+              ["--card-border-hover"]: colorBorderHover,
+            } as React.CSSProperties)
+      }
     >
       <div
         className={cn(
@@ -45,21 +53,11 @@ export function WebsiteItem({ website }: WebsiteItemProps) {
           "border-2 hover:scale-[1.02]",
           isComingSoon
             ? "bg-gray-500/10 border-gray-500/30 opacity-70"
-            : "hover:-translate-y-1"
+            : "card-dynamic-border hover:-translate-y-1"
         )}
         style={{
           backgroundColor: isComingSoon ? undefined : colorWithOpacity,
           borderColor: isComingSoon ? undefined : colorBorder,
-        }}
-        onMouseEnter={(e) => {
-          if (!isComingSoon) {
-            e.currentTarget.style.borderColor = colorBorderHover;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isComingSoon) {
-            e.currentTarget.style.borderColor = colorBorder;
-          }
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5"></div>
@@ -86,15 +84,15 @@ export function WebsiteItem({ website }: WebsiteItemProps) {
             >
               {website.origin}
             </div>
-            {!isComingSoon ? (
-              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400">
-                <PiCheckCircleDuotone className="w-4 h-4" />
-                <span>Active</span>
-              </div>
-            ) : (
+            {isComingSoon ? (
               <div className="flex items-center gap-1 text-xs font-medium text-gray-600">
                 <PiClockDuotone className="w-4 h-4" />
                 <span>Soon</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400">
+                <PiCheckCircleDuotone className="w-4 h-4" />
+                <span>Active</span>
               </div>
             )}
           </div>
