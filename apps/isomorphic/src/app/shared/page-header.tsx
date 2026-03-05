@@ -10,12 +10,27 @@ export type PageHeaderProps = {
   className?: string;
 };
 
+const descriptionClassName = "mt-1 text-md lg:text-lg text-gray-500";
+
 export default function PageHeader({
   title,
   description,
   className,
   children,
 }: React.PropsWithChildren<PageHeaderProps>) {
+  let descriptionNode: ReactNode = null;
+  if (description != null) {
+    if (typeof description === "string" || typeof description === "number") {
+      descriptionNode = (
+        <Text className={descriptionClassName}>{description}</Text>
+      );
+    } else {
+      descriptionNode = (
+        <div className={descriptionClassName}>{description}</div>
+      );
+    }
+  }
+
   return (
     <header className={cn("mb-6", className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -26,17 +41,7 @@ export default function PageHeader({
           >
             {title}
           </Title>
-          {description ? (
-            typeof description === "string" || typeof description === "number" ? (
-              <Text className="mt-1 text-md lg:text-lg text-gray-500">
-                {description}
-              </Text>
-            ) : (
-              <div className="mt-1 text-md lg:text-lg text-gray-500">
-                {description}
-              </div>
-            )
-          ) : null}
+          {descriptionNode}
         </div>
         {children}
       </div>
