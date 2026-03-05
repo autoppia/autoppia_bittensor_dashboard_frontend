@@ -3,7 +3,6 @@
  * Provides skeleton loading states for all agent-related components
  */
 
-import { Text } from "rizzui";
 import cn from "@core/utils/class-names";
 
 const BAR_SKELETON_HEIGHTS = [
@@ -74,26 +73,30 @@ export function AgentStatsPlaceholder() {
   );
 }
 
+const CHART_CTRL_KEYS = ["chart-ctrl-1", "chart-ctrl-2", "chart-ctrl-3"] as const;
+const BAR_KEYS = ["bar-1", "bar-2", "bar-3", "bar-4", "bar-5", "bar-6", "bar-7", "bar-8", "bar-9", "bar-10"] as const;
+
 // ===== AGENT SCORE CHART PLACEHOLDER =====
-export function AgentScoreChartPlaceholder({ className }: { className?: string }) {
+export function AgentScoreChartPlaceholder(props: Readonly<{ className?: string }>) {
+  const { className } = props;
   return (
     <div className={cn(PLACEHOLDER_PANEL, "rounded-2xl p-6", className)}>
       <div className="flex items-center justify-between mb-6">
         <div className={cn("h-6 w-32 rounded animate-pulse", SKELETON_BASE)}></div>
         <div className="flex gap-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={cn("h-8 w-12 rounded animate-pulse", SKELETON_BASE)}></div>
+          {CHART_CTRL_KEYS.map((key) => (
+            <div key={key} className={cn("h-8 w-12 rounded animate-pulse", SKELETON_BASE)}></div>
           ))}
         </div>
       </div>
       
       <div className={cn("h-[273px] w-full rounded-lg animate-pulse p-4", PLACEHOLDER_SECTION)}>
         <div className="flex items-end justify-between h-full">
-          {Array.from({ length: 10 }).map((_, i) => {
+          {BAR_KEYS.map((key, i) => {
             const height = BAR_SKELETON_HEIGHTS[i % BAR_SKELETON_HEIGHTS.length];
             return (
               <div
-                key={i}
+                key={key}
                 className={cn("rounded-t animate-pulse", SKELETON_BASE)}
                 style={{
                   height: `${height}%`,
@@ -110,7 +113,8 @@ export function AgentScoreChartPlaceholder({ className }: { className?: string }
 }
 
 // ===== AGENT SCORE ANALYTICS PLACEHOLDER =====
-export function AgentScoreAnalyticsPlaceholder({ className }: { className?: string }) {
+export function AgentScoreAnalyticsPlaceholder(props: Readonly<{ className?: string }>) {
+  const { className } = props;
   const analytics = [
     {
       title: "Current Score",
@@ -123,7 +127,7 @@ export function AgentScoreAnalyticsPlaceholder({ className }: { className?: stri
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5 2xl:gap-6">
-        {analytics.map((stat, index) => (
+        {analytics.map((stat) => (
           <div key={stat.title}>
             <div
               className={cn(
@@ -169,9 +173,9 @@ export function AgentValidatorsPlaceholder() {
 
       {/* Common Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {Array.from({ length: 4 }).map((_, index) => (
+        {(["metric-card-1", "metric-card-2", "metric-card-3", "metric-card-4"] as const).map((key) => (
           <div
-            key={index}
+            key={key}
             className={cn("p-4 rounded-xl animate-pulse", PLACEHOLDER_PANEL)}
           >
             <div className="flex items-center mb-2">
@@ -185,9 +189,9 @@ export function AgentValidatorsPlaceholder() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, index) => (
+        {(["validator-card-1", "validator-card-2", "validator-card-3", "validator-card-4", "validator-card-5", "validator-card-6"] as const).map((key) => (
           <div
-            key={index}
+            key={key}
             className={cn("relative overflow-hidden rounded-2xl animate-pulse", PLACEHOLDER_PANEL)}
           >
             {/* Header */}
@@ -223,8 +227,8 @@ export function AgentValidatorsPlaceholder() {
 
               {/* Secondary Stats */}
               <div className={cn("flex items-center justify-around gap-3 rounded-lg p-3", PLACEHOLDER_SECTION)}>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                {(["secondary-stat-1", "secondary-stat-2", "secondary-stat-3"] as const).map((key) => (
+                  <div key={key} className="flex items-center gap-2">
                     <div className={cn("w-7 h-7 rounded-lg animate-pulse", SKELETON_BASE)}></div>
                     <div className="flex flex-col min-w-0">
                       <div className={cn("h-3 w-12 rounded mb-1 animate-pulse", SKELETON_BASE)}></div>
@@ -286,9 +290,9 @@ export function AgentSidebarPlaceholder() {
             <div className="mb-2">
               <div className={cn("h-10 w-full rounded animate-pulse", SKELETON_BASE)}></div>
             </div>
-            {Array.from({ length: 10 }).map((_, index) => (
+            {(["sidebar-item-1", "sidebar-item-2", "sidebar-item-3", "sidebar-item-4", "sidebar-item-5", "sidebar-item-6", "sidebar-item-7", "sidebar-item-8", "sidebar-item-9", "sidebar-item-10"] as const).map((key) => (
               <div
-                key={index}
+                key={key}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 animate-pulse",
                   PLACEHOLDER_SECTION,
