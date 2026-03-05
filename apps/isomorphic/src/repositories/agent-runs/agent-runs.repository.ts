@@ -177,7 +177,7 @@ export class AgentRunsRepository {
   ): Promise<PaginatedResult<AgentRunListItem>> {
     const response = await apiClient.get<AgentRunsListResponse>(
       this.baseEndpoint,
-      { ...(params ?? {}), agentId }
+      { ...params, agentId }
     );
     return {
       runs: response.data.data.runs,
