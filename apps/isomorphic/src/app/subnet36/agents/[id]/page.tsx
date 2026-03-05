@@ -351,9 +351,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {(stat as any).badge ? (
+                      {"badge" in stat && stat.badge != null ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                          {(stat as any).badge}
+                          {String(stat.badge)}
                         </span>
                       ) : null}
                     </div>
@@ -2477,7 +2477,7 @@ export default function Page() {
           {headerStats.length > 0 && (
             <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
               {headerStats.map((stat) => {
-                const Icon = stat.icon as any;
+                const Icon = stat.icon as ComponentType<{ className?: string }>;
                 return (
                   <div
                     key={stat.title}
@@ -2534,9 +2534,9 @@ export default function Page() {
                           <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
-                          {(stat as any).badge ? (
+                          {"badge" in stat && stat.badge != null ? (
                             <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                              {(stat as any).badge}
+                              {String(stat.badge)}
                             </span>
                           ) : null}
                         </div>
