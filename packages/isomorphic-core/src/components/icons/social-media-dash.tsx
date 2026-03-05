@@ -1,4 +1,4 @@
-export default function SocialMediaDashIcon({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function SocialMediaDashIcon({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

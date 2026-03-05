@@ -1,6 +1,6 @@
 export default function SmokeAlarmIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

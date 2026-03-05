@@ -1,4 +1,4 @@
-export default function PlayStoreIcon({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function PlayStoreIcon({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" {...props}>
       <path

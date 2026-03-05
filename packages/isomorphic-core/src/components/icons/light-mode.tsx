@@ -1,4 +1,4 @@
-export default function LightMode({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function LightMode({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 172 102"
