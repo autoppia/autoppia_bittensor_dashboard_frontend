@@ -6,6 +6,7 @@ import {
   UseFormReturn,
   UseFormProps,
   FieldValues,
+  FieldError,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -18,15 +19,15 @@ type FormProps<TFormValues extends FieldValues> = {
   children: (methods: UseFormReturn<TFormValues>) => React.ReactNode;
   useFormProps?: UseFormProps<TFormValues>;
   validationSchema?: Schema<TFormValues>;
-  fieldErrors?: any[] | null;
-  formError?: string | string[] | null | any;
+  fieldErrors?: FieldError[] | null;
+  formError?: string | string[] | null;
   serverError?: ServerErrors<Partial<TFormValues>> | null;
-  resetValues?: any | null;
+  resetValues?: TFormValues | null;
   className?: string;
 };
 
 export const Form = <
-  TFormValues extends Record<string, any> = Record<string, any>,
+  TFormValues extends Record<string, unknown> = Record<string, unknown>,
 >({
   onSubmit,
   children,
