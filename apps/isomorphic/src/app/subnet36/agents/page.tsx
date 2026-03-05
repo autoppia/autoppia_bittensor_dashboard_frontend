@@ -59,11 +59,7 @@ function AgentsLanding() {
   } = useLatestRoundTopMiner(needsRedirect);
 
   // Get rounds list from useRoundsData (without round to get all rounds)
-  const {
-    data: roundsListData,
-    loading: roundsListLoading,
-    error: roundsListError,
-  } = useRoundsData(undefined);
+  const { data: roundsListData } = useRoundsData();
 
   // Rounds are strings "season/round" (e.g. "83/20")
   const availableRoundKeys = useMemo(() => {
@@ -90,7 +86,7 @@ function AgentsLanding() {
       name: miner.name,
       ranking: miner.post_consensus_rank,
       score: miner.post_consensus_avg_reward,
-      isSota: false, // TODO: Determine SOTA from miner data if available
+      isSota: false, // TODO: Determine SOTA from miner data when API provides it
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));
   }, [roundsDataWithMiners?.round_selected?.miners]);
@@ -163,7 +159,7 @@ function AgentsLanding() {
 
     // Redirect immediately to the normal URL format with full page reload
     // Using window.location.href instead of router.replace to force a full page reload
-    window.location.href = targetUrl;
+    globalThis.location.href = targetUrl;
 
     // Cleanup function
     return () => {
@@ -219,7 +215,7 @@ function AgentsLanding() {
       sortedMiners.find((miner) => miner.uid !== undefined && miner.uid >= 0) ??
       sortedMiners[0];
 
-    if (!topMiner || topMiner.uid === undefined || topMiner.uid < 0) {
+    if (topMiner?.uid == null || topMiner.uid < 0) {
       return;
     }
 
@@ -227,7 +223,7 @@ function AgentsLanding() {
     hasRedirectedRef.current = true;
 
     // Redirect to top miner with latest round (use season/round in URL)
-    const [s, r] = effectiveRoundKey.includes("/") ? effectiveRoundKey.split("/") : [undefined, effectiveRoundKey];
+    const [s, r] = effectiveRoundKey?.includes("/") ? effectiveRoundKey.split("/") : [undefined, effectiveRoundKey];
     const params = new URLSearchParams();
     if (s) params.set("season", s);
     if (r) params.set("round", r);
@@ -238,7 +234,7 @@ function AgentsLanding() {
     const targetUrl = `${targetPath}?${params.toString()}`;
 
     // Redirect with full page reload
-    window.location.href = targetUrl;
+    globalThis.location.href = targetUrl;
   }, [
     needsRedirect,
     latestRoundTopMiner,
@@ -259,7 +255,7 @@ function AgentsLanding() {
   // Below this point, we're not on the landing page anymore
   // (we have an agent param in the URL)
 
-    if (roundsDataError) {
+  if (roundsDataError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
         <div
