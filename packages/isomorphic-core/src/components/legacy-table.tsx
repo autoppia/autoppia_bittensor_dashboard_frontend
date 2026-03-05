@@ -63,7 +63,7 @@ export default function LegacyTable({
   emptyText,
   className,
   ...props
-}: TableProps) {
+}: Readonly<TableProps>) {
   return (
     <RcTable
       className={cn(
@@ -122,7 +122,7 @@ export function HeaderCell({
   ascending,
   iconClassName,
   className,
-}: HeaderCellProps) {
+}: Readonly<HeaderCellProps>) {
   if (ellipsis && width === undefined) {
     console.warn(
       "When ellipsis is true make sure you are using the same column width in HeaderCell component too."
@@ -187,7 +187,7 @@ export function ToggleColumns<T>({
   checkedColumns,
   setCheckedColumns,
   hideIndex,
-}: ToggleColumnsTypes<T>) {
+}: Readonly<ToggleColumnsTypes<T>>) {
   return (
     <div>
       <Popover shadow="sm" placement="bottom-end">
