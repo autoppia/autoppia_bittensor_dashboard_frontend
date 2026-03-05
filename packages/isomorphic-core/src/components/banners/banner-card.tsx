@@ -21,9 +21,8 @@ export default function BannerCard({
     <div className={cn("relative p-8", className)}>
       <Image
         src={
-          bgImage
-            ? bgImage
-            : "https://isomorphic-furyroad.s3.amazonaws.com/public/upgrade-storage-bg.webp"
+          bgImage ??
+          "https://isomorphic-furyroad.s3.amazonaws.com/public/upgrade-storage-bg.webp"
         }
         alt="Upgrade Storage"
         fill
