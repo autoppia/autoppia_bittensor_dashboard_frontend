@@ -253,34 +253,37 @@ export default function TaskResults() {
         </div>
 
         <div className="space-y-2 rounded-xl border border-slate-700/25 h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto bg-slate-900/60">
-          {actionsLoading ? (
-            // Loading state
-            Array.from({ length: 5 }, (_, index) => (
-              <ListItemPlaceholder key={`action-loading-${index}`} />
-            ))
-          ) : actionsError ? (
-            // Error state
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  Failed to load actions
-                </Text>
-              </div>
-            </div>
-          ) : actions.length === 0 ? (
-            // Empty state
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiPlay className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">No actions found</Text>
-              </div>
-            </div>
-          ) : (
-            // Actions list
-            actions.map((action, index) => {
+          {(() => {
+            if (actionsLoading) {
+              return Array.from({ length: 5 }, (_, index) => (
+                <ListItemPlaceholder key={`action-loading-${index}`} />
+              ));
+            }
+            if (actionsError) {
+              return (
+                <div className="flex items-center justify-center h-full text-red-300">
+                  <div className="text-center space-y-1">
+                    <PiXCircle className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-red-200">
+                      Failed to load actions
+                    </Text>
+                  </div>
+                </div>
+              );
+            }
+            if (actions.length === 0) {
+              return (
+                <div className="flex items-center justify-center h-full text-slate-400">
+                  <div className="text-center space-y-1">
+                    <PiPlay className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-slate-300">No actions found</Text>
+                  </div>
+                </div>
+              );
+            }
+            return actions.map((action, index) => {
               const meta =
-                ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
+                ACTION_TYPE_META[action.type as keyof typeof ACTION_TYPE_META] ?? ACTION_TYPE_META.other;
               const ActionIcon = meta.icon;
               return (
                 <div
@@ -310,8 +313,8 @@ export default function TaskResults() {
                   )}
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
 
         {/* Pagination */}
@@ -361,84 +364,91 @@ export default function TaskResults() {
         </div>
 
         <div className="h-[350px] border border-slate-700/25 rounded-xl overflow-y-auto custom-scrollbar bg-slate-900/60">
-          {isMediaLoading ? (
-            // Loading state
-            <div className="p-4 space-y-4">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div key={`screenshot-loading-${index}`} className="space-y-2">
-                  <Placeholder height="120px" className="rounded-lg" />
-                  <TextPlaceholder lines={2} />
+          {(() => {
+            if (isMediaLoading) {
+              return (
+                <div className="p-4 space-y-4">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <div key={`screenshot-loading-${index}`} className="space-y-2">
+                      <Placeholder height="120px" className="rounded-lg" />
+                      <TextPlaceholder lines={2} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : showMediaError ? (
-            // Error state
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  {screenshotsError ||
-                    resultsError ||
-                    "Failed to load GIF replays"}
-                </Text>
-              </div>
-            </div>
-          ) : showMediaEmpty ? (
-            // Empty state
-            <div className="relative w-full h-full rounded-xl overflow-hidden">
-              <Image
-                src="/images/no_gift_available.png"
-                alt="No GIF replays available"
-                fill
-                className="object-contain rounded-xl"
-              />
-            </div>
-          ) : (
-            // Screenshots grid
-            <div className="p-4 space-y-4">
-              {mediaItems.map((screenshot, index) => {
-                const timestampLabel = formatTimestampLabel(
-                  screenshot.timestamp
-                );
-                return (
-                  <div
-                    key={`gif-${screenshot.id || index}`}
-                    className="space-y-2"
-                  >
-                    <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={screenshot.url}
-                        alt={`GIF Replay ${index + 1}`}
-                        className="w-full h-32 object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          target.nextElementSibling?.classList.remove("hidden");
-                        }}
-                      />
-                      <div className="hidden absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-900/80">
-                        <div className="text-center space-y-1">
-                          <PiCamera className="w-8 h-8 mx-auto" />
-                          <Text className="text-sm text-slate-300">
-                            GIF unavailable
-                          </Text>
+              );
+            }
+            if (showMediaError) {
+              return (
+                <div className="flex items-center justify-center h-full text-red-300">
+                  <div className="text-center space-y-1">
+                    <PiXCircle className="w-8 h-8 mx-auto" />
+                    <Text className="text-sm text-red-200">
+                      {screenshotsError ||
+                        resultsError ||
+                        "Failed to load GIF replays"}
+                    </Text>
+                  </div>
+                </div>
+              );
+            }
+            if (showMediaEmpty) {
+              return (
+                <div className="relative w-full h-full rounded-xl overflow-hidden">
+                  <Image
+                    src="/images/no_gift_available.png"
+                    alt="No GIF replays available"
+                    fill
+                    className="object-contain rounded-xl"
+                  />
+                </div>
+              );
+            }
+            return (
+              <div className="p-4 space-y-4">
+                {mediaItems.map((screenshot, index) => {
+                  const timestampLabel = formatTimestampLabel(
+                    screenshot.timestamp
+                  );
+                  return (
+                    <div
+                      key={`gif-${screenshot.id || index}`}
+                      className="space-y-2"
+                    >
+                      <div className="relative bg-black/60 rounded-lg overflow-hidden border border-slate-700/40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={screenshot.url}
+                          alt={`GIF Replay ${index + 1}`}
+                          className="w-full h-32 object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            target.nextElementSibling?.classList.remove("hidden");
+                          }}
+                        />
+                        <div className="hidden absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-900/80">
+                          <div className="text-center space-y-1">
+                            <PiCamera className="w-8 h-8 mx-auto" />
+                            <Text className="text-sm text-slate-300">
+                              GIF unavailable
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-300">
+                        <div className="font-medium text-slate-200">
+                          {screenshot.description || `GIF Replay ${index + 1}`}
+                        </div>
+                        <div className="text-slate-400">
+                          {timestampLabel ?? "Timestamp unavailable"}
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-300">
-                      <div className="font-medium text-slate-200">
-                        {screenshot.description || `GIF Replay ${index + 1}`}
-                      </div>
-                      <div className="text-slate-400">
-                        {timestampLabel ?? "Timestamp unavailable"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </section>
     </div>
