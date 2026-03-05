@@ -16,7 +16,7 @@ export default function MarqueeText({
   speed = 50, // pixels per second
   pauseDuration = 1, // 1 second pause between cycles
   containerClassName = ""
-}: MarqueeTextProps) {
+}: Readonly<MarqueeTextProps>) {
   const [isAnimating, setIsAnimating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
