@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 
 export function useClientWidth(): number {
-  const [clientWidth, set] = useState<number | null>(null);
+  const [clientWidth, setClientWidth] = useState<number | null>(null);
 
   function handleClientWidth() {
-    set(document.body.clientWidth);
+    setClientWidth(document.body.clientWidth);
   }
 
   useEffect(() => {
