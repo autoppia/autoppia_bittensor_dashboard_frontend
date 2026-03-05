@@ -56,6 +56,13 @@ import type {
 
 type AgentRunLike = { evaluation_results?: unknown[]; evaluationResults?: unknown[]; total_tasks?: number; totalTasks?: number };
 type RoundWinnerLike = { uid: number; name?: string; image?: string | null; imageUrl?: string; hotkey?: string | null };
+type RoundInfoFromData = {
+  season: number;
+  roundInSeason: number;
+  status: "completed" | "active" | "evaluating_finished" | "pending";
+  validatorRounds: ValidatorRoundData[];
+  current?: boolean;
+} | null;
 
 // ============================================================================
 // UTILITY FUNCTIONS - Inline from round-identifier.ts
@@ -2248,7 +2255,7 @@ export default function Round() {
   const { data: progressData, loading: progressLoading } = useRoundProgress(roundKey);
 
   // ✅ Construir roundInfo desde roundData
-  const roundInfo = React.useMemo(() => {
+  const roundInfo = React.useMemo((): RoundInfoFromData => {
     if (!roundData) return null;
     return {
       season: roundData.season,
@@ -2256,7 +2263,7 @@ export default function Round() {
       status: roundData.post_consensus_summary ? "completed" : "active",
       validatorRounds: [], // Ya no necesario, todo viene de roundData.validators
     };
-  }, [roundData]) as any;
+  }, [roundData]);
 
   const roundNumberForLinks = roundData?.round_in_season;
   const topMiners = React.useMemo(() => {
@@ -2623,7 +2630,7 @@ export default function Round() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
           {selectedValidatorCards.map((card) => (
-            <MetricCard key={(card as any).key} card={card} />
+            <MetricCard key={card.key} card={card} />
           ))}
         </div>
       )}
@@ -2657,6 +2664,13 @@ export default function Round() {
       <button
         type="button"
         onClick={handleOpenGlossary}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleOpenGlossary();
+          }
+        }}
+        aria-label="Open rounds glossary"
         className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
       >
         <div className="relative">
