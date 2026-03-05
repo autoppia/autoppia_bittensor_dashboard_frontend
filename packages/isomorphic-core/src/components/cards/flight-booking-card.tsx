@@ -1,5 +1,6 @@
 "use client";
 
+import React, { createContext, useContext } from "react";
 import Image from "next/image";
 import { Button, Text, Title, Badge, Collapse } from "rizzui";
 import cn from "../../utils/class-names";
@@ -8,13 +9,11 @@ import LuggageTwoIcon from "../icons/luggage-two";
 import PlaneIcon from "../icons/plane";
 import { FlightingCardProps } from "../../types";
 
-export default function FlightBookingCard({ data }: { data: FlightingCardProps }) {
+export default function FlightBookingCard({
+  data,
+}: Readonly<{ data: FlightingCardProps }>) {
   return (
-    <>
-      <div
-        key={data.id}
-        className="rounded-lg border border-muted"
-      >
+    <div key={data.id} className="rounded-lg border border-muted">
         <AccordionContent flight={data} />
 
         {/* Footer */}
@@ -46,15 +45,15 @@ export default function FlightBookingCard({ data }: { data: FlightingCardProps }
           </div>
         </div>
       </div>
-    </>
   );
 }
 
-type ContentProps = {
-  flight: FlightingCardProps;
-};
+type ContentProps = Readonly<{ flight: FlightingCardProps }>;
 
-const badgeStyle = {
+const BADGE_STYLE: Record<
+  string,
+  { color: "success" | "secondary"; className: string }
+> = {
   Business: {
     color: "success",
     className: "dark:bg-[#05361e] dark:text-green-light",
@@ -69,90 +68,109 @@ const badgeStyle = {
   },
 };
 
+const DEFAULT_BADGE_STYLE = BADGE_STYLE.Economy;
+
+function getBadgeStyle(flightClass: string) {
+  return BADGE_STYLE[flightClass] ?? DEFAULT_BADGE_STYLE;
+}
+
+type AccordionHeaderProps = Readonly<{
+  open?: boolean;
+  toggle: () => void;
+  flight: FlightingCardProps;
+}>;
+
+const FlightAccordionContext = createContext<FlightingCardProps | null>(null);
+
+function AccordionHeader({ open = false, toggle, flight }: AccordionHeaderProps) {
+  const badgeStyle = getBadgeStyle(flight.class);
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="flex w-full cursor-pointer items-center justify-between gap-4 p-3 md:p-5 text-left"
+    >
+      <div className="flex gap-2 sm:items-center md:gap-4">
+        <div className="relative aspect-square w-20">
+          <Image
+            src={flight.image}
+            alt={flight.title}
+            fill
+            priority
+            placeholder="blur"
+            sizes="(max-width: 768px) 100vw"
+            blurDataURL={`/_next/image?url=${flight.image}&w=10&q=1`}
+            className="h-full w-full object-contain"
+          />
+        </div>
+        <div className="sm:flex sm:flex-col">
+          <Button
+            size="sm"
+            as="span"
+            variant="flat"
+            className="mb-2 h-6 rounded-md bg-secondary-lighter text-xs font-semibold text-secondary-dark dark:bg-secondary-dark dark:text-secondary-lighter sm:hidden"
+          >
+            {flight.class}
+          </Button>
+          <Title as="h5" className="font-semibold text-gray-900">
+            {flight.title}
+          </Title>
+          <ul className="flex items-center divide-x">
+            {flight.meta &&
+              Object.entries(flight.meta).map(([key, value]) => (
+                <li
+                  key={key}
+                  className="hidden px-1.5 first:block first:ps-0 md:block"
+                >
+                  {value}
+                </li>
+              ))}
+          </ul>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Badge
+          rounded="md"
+          variant="flat"
+          color={badgeStyle.color}
+          className={cn("hidden px-3.5 py-1 sm:block", badgeStyle.className)}
+        >
+          {flight.class}
+        </Badge>
+        <div
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-500",
+            open && "bg-gray-900 text-gray-0"
+          )}
+        >
+          <PiCaretDownBold
+            strokeWidth={3}
+            className={cn(
+              "h-3 w-3 transition-transform duration-200",
+              open && "rotate-180 rtl:-rotate-180"
+            )}
+          />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function AccordionHeaderFromContext({
+  open,
+  toggle,
+}: Readonly<{ open?: boolean; toggle: () => void }>) {
+  const flight = useContext(FlightAccordionContext);
+  if (!flight) return null;
+  return (
+    <AccordionHeader open={open ?? false} toggle={toggle} flight={flight} />
+  );
+}
+
 function AccordionContent({ flight }: ContentProps) {
   return (
-    <Collapse
-      header={({ open, toggle }) => (
-        <div
-          onClick={toggle}
-          className="flex cursor-pointer items-center justify-between gap-4 p-3 md:p-5"
-        >
-          <div className="flex gap-2 sm:items-center md:gap-4">
-            <div className="relative aspect-square w-20">
-              <Image
-                src={flight.image}
-                alt={flight.title}
-                fill
-                priority
-                placeholder="blur"
-                sizes="(max-width: 768px) 100vw"
-                blurDataURL={`/_next/image?url=${flight.image}&w=10&q=1`}
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <div className="sm:flex sm:flex-col">
-              <Button
-                size="sm"
-                as="span"
-                variant="flat"
-                className="mb-2 h-6 rounded-md bg-secondary-lighter text-xs font-semibold text-secondary-dark dark:bg-secondary-dark dark:text-secondary-lighter sm:hidden"
-              >
-                {flight.class}
-              </Button>
-              <Title
-                as="h5"
-                className="font-semibold text-gray-900"
-              >
-                {flight.title}
-              </Title>
-              <ul className="flex items-center divide-x">
-                {flight.meta &&
-                  Object.entries(flight.meta).map(([key, value]) => {
-                    return (
-                      <li
-                        key={key}
-                        className="hidden px-1.5 first:block first:ps-0 md:block"
-                      >
-                        {value}
-                      </li>
-                    );
-                  })}
-              </ul>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge
-              rounded="md"
-              variant="flat"
-              // FIXME: Need to fixed this type error
-              // @ts-ignore
-              color={badgeStyle[flight.class].color}
-              className={cn(
-                "hidden px-3.5 py-1 sm:block",
-                // @ts-ignore
-                badgeStyle[flight.class].className
-              )}
-            >
-              {flight.class}
-            </Badge>
-            <div
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-500",
-                open && "bg-gray-900 text-gray-0"
-              )}
-            >
-              <PiCaretDownBold
-                strokeWidth={3}
-                className={cn(
-                  "h-3 w-3 transition-transform duration-200",
-                  open && "rotate-180 rtl:-rotate-180"
-                )}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    >
+    <FlightAccordionContext.Provider value={flight}>
+      <Collapse header={AccordionHeaderFromContext}>
       {/* Body */}
       <div className="flex items-center justify-between gap-4 bg-gray-50 px-5 py-3 text-gray-500 dark:bg-gray-100">
         <span>Include free baggage and cabin in capacity</span>
@@ -210,9 +228,9 @@ function AccordionContent({ flight }: ContentProps) {
             </div>
           </div>
 
-          {flight.routes?.layover?.map((layover, index) => (
+          {flight.routes?.layover?.map((layover) => (
             <div
-              key={index}
+              key={`${layover.layoverCityCode}-${layover.layoverTime}-${layover.layoverTerminal}`}
               className="grid grid-cols-8"
             >
               <div className="hidden flex-col gap-0.5 lg:col-span-2 lg:flex"></div>
@@ -305,5 +323,6 @@ function AccordionContent({ flight }: ContentProps) {
         </div>
       </div>
     </Collapse>
+    </FlightAccordionContext.Provider>
   );
 }
