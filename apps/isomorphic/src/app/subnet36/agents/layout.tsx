@@ -9,9 +9,9 @@ import { ActionIcon } from "rizzui";
 
 export default function AgentsLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   const { openDrawer } = useDrawer();
 
   return (
