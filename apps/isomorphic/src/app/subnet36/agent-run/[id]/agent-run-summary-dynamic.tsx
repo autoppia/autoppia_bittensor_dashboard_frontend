@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useParams } from "next/navigation";
 import cn from "@core/utils/class-names";
 import Placeholder from "@/app/shared/placeholder";
 import AgentRunSummary from "./agent-run-summary";
@@ -15,6 +14,10 @@ import type {
   AgentRunDetailData,
   AgentRunSummaryChartData,
 } from "./agent-run-types";
+import type {
+  AgentRunStats,
+  AgentRunSummary as AgentRunSummaryType,
+} from "@/repositories/agent-runs/agent-runs.types";
 
 interface AgentRunSummaryDynamicProps {
   readonly className?: string;
@@ -36,20 +39,30 @@ export default function AgentRunSummaryDynamic({
   error: summaryError,
 }: AgentRunSummaryDynamicProps) {
 
+  const agentId =
+    summary?.agentId == null ? undefined : String(summary.agentId);
+
   const fallbackDetail = useMemo<AgentRunDetailData>(() => {
-    return getFallbackDetailData(summary?.agentId);
-  }, [summary?.agentId]);
+    return getFallbackDetailData(agentId);
+  }, [agentId]);
 
   const fallbackSummary = useMemo<AgentRunSummaryChartData>(() => {
-    return getFallbackSummaryData(summary?.agentId);
-  }, [summary?.agentId]);
+    return getFallbackSummaryData(agentId);
+  }, [agentId]);
 
   const { data: detailData } = useMemo(() => {
-    return transformStatsToDetailData(stats, fallbackDetail);
+    return transformStatsToDetailData(
+      stats as AgentRunStats | null | undefined,
+      fallbackDetail
+    );
   }, [stats, fallbackDetail]);
 
   const summaryChartData = useMemo(() => {
-    return buildSummaryChartData(summary, detailData, fallbackSummary);
+    return buildSummaryChartData(
+      summary as AgentRunSummaryType | null | undefined,
+      detailData,
+      fallbackSummary
+    );
   }, [summary, detailData, fallbackSummary]);
 
 
@@ -72,22 +85,32 @@ export default function AgentRunSummaryDynamic({
         data={detailData}
         summaryData={summaryChartData}
         summaryTotals={{
-          totalRequests:
-            (summary?.totalTasks ?? 0) > 0
-              ? summary!.totalTasks
-              : (runTasks?.length ?? 0),
-          totalSuccesses:
-            (summary?.successfulTasks ?? 0) > 0
-              ? summary!.successfulTasks
-              : (runTasks?.filter?.((t) => String(t.status).toLowerCase() === 'completed')?.length ?? 0),
-          successRate: summary?.overallScore ?? (summaryChartData?.total ?? 0),
+          totalRequests: (() => {
+            const n = Number(summary?.totalTasks ?? 0);
+            return n > 0 ? n : (runTasks?.length ?? 0);
+          })(),
+          totalSuccesses: (() => {
+            const n = Number(summary?.successfulTasks ?? 0);
+            if (n > 0) return n;
+            const tasks = Array.isArray(runTasks) ? runTasks : [];
+            return tasks.filter(
+              (t: unknown) =>
+                String((t as { status?: unknown })?.status).toLowerCase() ===
+                "completed"
+            ).length;
+          })(),
+          successRate:
+            Number(summary?.overallScore ?? Number.NaN) ||
+            (summaryChartData?.total ?? 0),
         }}
       />
     </div>
   );
 }
 
-function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
+function AgentRunSummaryPlaceholder({
+  className,
+}: Readonly<{ className?: string }>) {
   const donutInner = (
     <div className="relative flex items-center justify-center py-4">
       <div className="relative flex items-center justify-center">
