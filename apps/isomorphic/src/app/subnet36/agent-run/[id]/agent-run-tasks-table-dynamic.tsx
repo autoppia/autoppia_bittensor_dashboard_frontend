@@ -1,23 +1,60 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
-import { createColumnHelper } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
+import { createColumnHelper, flexRender } from "@tanstack/react-table";
 import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
-import { Button, Text, Input } from "rizzui";
+import { Button, Text, Input, Table as RTable } from "rizzui";
 import Link from "next/link";
 import Table from "@core/components/table";
-import { Table as RTable } from "rizzui";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
-import { AgentRunTaskData } from "@/repositories/agent-runs/agent-runs.types";
+import type { AgentRunEvaluationData } from "@/repositories/agent-runs/agent-runs.types";
 import { routes } from "@/config/routes";
-import { useRouter } from "next/navigation";
-import { flexRender } from "@tanstack/react-table";
+import type {
+  Cell,
+  Row,
+  Table as TanStackTableType,
+} from "@tanstack/react-table";
 
-const columnHelper = createColumnHelper<AgentRunTaskData>();
+const columnHelper = createColumnHelper<AgentRunEvaluationData>();
+
+interface TasksTableBodyRowProps {
+  table?: TanStackTableType<AgentRunEvaluationData> | null;
+}
+
+function TasksTableBodyRow({ table }: Readonly<TasksTableBodyRowProps>) {
+  const router = useRouter();
+  if (!table) return null;
+  const rows = table.getRowModel().rows;
+  return (
+    <>
+      {rows.map((row: Row<AgentRunEvaluationData>) => {
+        const taskId = row.original.taskId;
+        const href = `${routes.tasks}/${taskId}`;
+        return (
+          <RTable.Row
+            key={row.id}
+            className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
+            onClick={() => router.push(href)}
+          >
+            {row.getVisibleCells().map((cell: Cell<AgentRunEvaluationData, unknown>) => (
+              <RTable.Cell
+                key={cell.id}
+                style={{ width: cell.column.getSize() }}
+                className="text-slate-200"
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </RTable.Cell>
+            ))}
+          </RTable.Row>
+        );
+      })}
+    </>
+  );
+}
 
 const agentRunTasksColumns = [
   columnHelper.display({
@@ -59,12 +96,12 @@ const agentRunTasksColumns = [
       <Text className="font-medium text-gray-600">
         {row.original.useCase
           .split("_")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(" ")}
       </Text>
     ),
   }),
-  columnHelper.accessor("score", {
+  columnHelper.accessor("eval_score", {
     id: "eval_score",
     size: 100,
     header: "Score",
@@ -112,23 +149,24 @@ const agentRunTasksColumns = [
 ];
 
 interface AgentRunTasksTableDynamicProps {
-  tasks?: any[];
+  tasks?: AgentRunEvaluationData[];
   isLoading?: boolean;
   error?: string | null;
+  onRetry?: () => void;
 }
 
-export default function AgentRunTasksTableDynamic({ 
-  tasks: providedTasks = [], 
-  isLoading = false, 
+export default function AgentRunTasksTableDynamic({
+  tasks: providedTasks = [],
+  isLoading = false,
   error,
-}: AgentRunTasksTableDynamicProps) {
-  const router = useRouter();
+  onRetry,
+}: Readonly<AgentRunTasksTableDynamicProps>) {
   const tasks = providedTasks;
   const total = tasks.length;
   const page = 1;
   const limit = 10;
 
-  const { table, setData } = useTanStackTable<AgentRunTaskData>({
+  const { table, setData } = useTanStackTable<AgentRunEvaluationData>({
     tableData: tasks || [],
     columnConfig: agentRunTasksColumns,
     options: {
@@ -208,7 +246,8 @@ export default function AgentRunTasksTableDynamic({
           </div>
           <div className="mb-4 text-sm text-red-300">{error}</div>
           <button
-            onClick={refetch}
+            type="button"
+            onClick={() => onRetry?.()}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Retry
@@ -263,31 +302,7 @@ export default function AgentRunTasksTableDynamic({
                 "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_8px_22px_rgba(56,189,248,0.15)]",
             }}
             components={{
-              bodyRow: ({ table }) => (
-                <>
-                  {table.getRowModel().rows.map((row) => {
-                    const taskId = (row as any).original?.taskId;
-                    const href = `${routes.tasks}/${taskId}`;
-                    return (
-                      <RTable.Row
-                        key={row.id}
-                        className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
-                        onClick={() => router.push(href)}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <RTable.Cell
-                            key={cell.id}
-                            style={{ width: cell.column.getSize() }}
-                            className="text-slate-200"
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </RTable.Cell>
-                        ))}
-                      </RTable.Row>
-                    );
-                  })}
-                </>
-              ),
+              bodyRow: TasksTableBodyRow,
             }}
           />
         ) : (
