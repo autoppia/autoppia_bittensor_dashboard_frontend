@@ -39,8 +39,17 @@ export default function AgentRunSummaryDynamic({
   error: summaryError,
 }: AgentRunSummaryDynamicProps) {
 
-  const agentId =
-    summary?.agentId == null ? undefined : String(summary.agentId);
+  let agentId: string | undefined;
+  const rawAgentId = summary?.agentId;
+  if (rawAgentId == null) {
+    agentId = undefined;
+  } else if (typeof rawAgentId === "string") {
+    agentId = rawAgentId;
+  } else if (typeof rawAgentId === "number" || typeof rawAgentId === "boolean") {
+    agentId = String(rawAgentId);
+  } else {
+    agentId = JSON.stringify(rawAgentId);
+  }
 
   const fallbackDetail = useMemo<AgentRunDetailData>(() => {
     return getFallbackDetailData(agentId);
