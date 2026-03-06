@@ -2,7 +2,10 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
   iconOnly?: boolean;
 }
 
-export default function Logo({ iconOnly = false, ...props }: IconProps) {
+export default function Logo({
+  iconOnly = false,
+  ...props
+}: Readonly<IconProps>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
