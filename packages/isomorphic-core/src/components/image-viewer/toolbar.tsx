@@ -5,7 +5,9 @@ import { useImageViewer } from "./storage";
 import { ActionIcon, FileInput } from "rizzui";
 import { PiChatCircleFill } from "react-icons/pi";
 
-export default function ToolBar({ onClick }: { onClick?: () => void }) {
+export default function ToolBar({
+  onClick,
+}: Readonly<{ onClick?: () => void }>) {
   const { setImage } = useImageViewer();
 
   function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
