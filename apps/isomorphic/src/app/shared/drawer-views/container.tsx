@@ -18,8 +18,8 @@ export default function GlobalDrawer() {
 
   // Adjust width based on screen size
   const getDrawerWidth = () => {
-    if (typeof window !== "undefined") {
-      if (window.innerWidth < 1024) {
+    if (globalThis.window !== undefined) {
+      if (globalThis.window.innerWidth < 1024) {
         // Below lg breakpoint (1024px)
         return "w-[70vw] max-w-[300px]";
       }
