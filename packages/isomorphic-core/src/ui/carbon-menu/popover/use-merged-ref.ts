@@ -6,7 +6,7 @@ export function assignRef<T>(ref: PossibleRef<T>, value: T) {
   if (typeof ref === 'function') {
     ref(value);
   } else if (typeof ref === 'object' && ref !== null && 'current' in ref) {
-    (ref as React.MutableRefObject<T>).current = value;
+    (ref as { current: T }).current = value;
   }
 }
 
