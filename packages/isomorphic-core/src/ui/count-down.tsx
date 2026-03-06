@@ -6,54 +6,49 @@ type CountdownType = {
   target: Date;
 };
 
-function format(value: number) {
+function format(value: number): string {
   if (value > 9) {
-    return value;
+    return String(value);
   }
-  return '0' + value;
+
+  return `0${value}`;
 }
 
-export function CountDown({ target }: CountdownType) {
-  const calculateTimeRemaining = () => {
-    const now = new Date().getTime();
-    const timeRemaining = target.getTime() - now;
+function calculateTimeRemaining(target: Date) {
+  const now = Date.now();
+  const timeRemaining = target.getTime() - now;
 
-    if (timeRemaining <= 0) {
-      return {
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-      };
-    }
-
-    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    const minutes = Math.floor(
-      (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
-    );
-    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
+  if (timeRemaining <= 0) {
     return {
-      days,
-      hours,
-      minutes,
-      seconds,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
     };
-  };
+  }
 
-  const [time, setTime] = useState(calculateTimeRemaining());
+  const hours = Math.floor(
+    (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+  return {
+    hours,
+    minutes,
+    seconds,
+  };
+}
+
+export function CountDown({ target }: Readonly<CountdownType>) {
+  const [time, setTime] = useState(() => calculateTimeRemaining(target));
 
   useEffect(() => {
     const timerInterval = setInterval(() => {
-      setTime(calculateTimeRemaining());
+      setTime(calculateTimeRemaining(target));
     }, 1000);
 
     return () => clearInterval(timerInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [target]);
 
   return (
     <div className="flex flex-col gap-1">
