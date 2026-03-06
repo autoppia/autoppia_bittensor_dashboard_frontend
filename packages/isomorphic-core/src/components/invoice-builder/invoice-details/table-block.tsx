@@ -74,7 +74,7 @@ export default function TableBlock() {
             let r = getValues(`invoiceTable.${index}.rate`);
             let total = q * r;
             return (
-              <Fragment key={`invoice-table-${index}`}>
+              <Fragment key={field.id}>
                 <SortableList.Item id={field.id}>
                   <div className="group grid min-h-10 grid-cols-12 gap-0 border-b border-muted dark:border-muted/20">
                     <div className="col-span-4 py-2 pe-2">
@@ -117,7 +117,7 @@ export default function TableBlock() {
                       />
                     </div>
                     <div className="relative col-span-2 w-full p-2 pe-4 pt-3 text-end text-gray-900 dark:text-gray-0">
-                      {total ? total : 0}
+                      {total ?? 0}
                       <div className="absolute end-0 top-0 hidden translate-x-full grid-cols-1 gap-0 overflow-hidden rounded-md border bg-white shadow-[0px_1px_4px_rgba(0,0,0,0.16)] group-hover:grid dark:border-muted/20">
                         <SortableList.DragHandle className="flex h-auto w-full items-center justify-center p-1.5 text-lg hover:bg-gray-100 dark:text-gray-50 dark:hover:bg-gray-700">
                           <PiArrowsOutCardinalBold className="size-4" />
@@ -163,10 +163,10 @@ export default function TableBlock() {
 function TableHeaderCell({
   className,
   children,
-}: {
+}: Readonly<{
   className?: string;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <div
       className={cn(
