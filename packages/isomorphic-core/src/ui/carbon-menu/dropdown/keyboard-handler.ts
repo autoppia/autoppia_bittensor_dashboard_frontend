@@ -99,46 +99,49 @@ export function keydownHandler({
       findElement(
         event.currentTarget,
         parentSelector
-      )?.querySelectorAll<HTMLButtonElement>(siblingSelector) || []
+      )?.querySelectorAll<HTMLButtonElement>(siblingSelector) ?? []
     ).filter((node) =>
       haveSameParent(event.currentTarget, node, parentSelector)
     );
 
-    const current = elements.findIndex((el) => event.currentTarget === el);
+    const current = elements.indexOf(event.currentTarget as HTMLButtonElement);
     const isNextIndex = findNextIndex(current, elements, loop);
     const isPreviousIndex = findPreviousIndex(current, elements, loop);
     const nextIndex = dir === 'rtl' ? isPreviousIndex : isNextIndex;
     const previousIndex = dir === 'rtl' ? isNextIndex : isPreviousIndex;
 
-    if (event.key === 'ArrowRight' && orientation === 'horizontal') {
+    const focusAndMaybeActivate = (index: number) => {
       event.stopPropagation();
       event.preventDefault();
-      elements[nextIndex].focus();
-      activateOnFocus && elements[nextIndex].click();
-    } else if (event.key === 'ArrowLeft' && orientation === 'horizontal') {
+      elements[index].focus();
+      if (activateOnFocus) elements[index].click();
+    };
+
+    const key = event.key;
+    const arrowIndexByKey: Partial<
+      Record<string, () => number>
+    > = {};
+    if (orientation === 'horizontal') {
+      arrowIndexByKey['ArrowRight'] = () => nextIndex;
+      arrowIndexByKey['ArrowLeft'] = () => previousIndex;
+    }
+    if (orientation === 'vertical') {
+      arrowIndexByKey['ArrowUp'] = () => isPreviousIndex;
+      arrowIndexByKey['ArrowDown'] = () => isNextIndex;
+    }
+
+    const getArrowIndex = arrowIndexByKey[key];
+    if (getArrowIndex) {
+      focusAndMaybeActivate(getArrowIndex());
+    } else if (key === 'Home') {
       event.stopPropagation();
       event.preventDefault();
-      elements[previousIndex].focus();
-      activateOnFocus && elements[previousIndex].click();
-    } else if (event.key === 'ArrowUp' && orientation === 'vertical') {
-      event.stopPropagation();
-      event.preventDefault();
-      elements[isPreviousIndex].focus();
-      activateOnFocus && elements[isPreviousIndex].click();
-    } else if (event.key === 'ArrowDown' && orientation === 'vertical') {
-      event.stopPropagation();
-      event.preventDefault();
-      elements[isNextIndex].focus();
-      activateOnFocus && elements[isNextIndex].click();
-    } else if (event.key === 'Home') {
-      event.stopPropagation();
-      event.preventDefault();
-      !elements[0].disabled && elements[0].focus();
-    } else if (event.key === 'End') {
+      if (!elements[0].disabled) elements[0].focus();
+    } else if (key === 'End') {
       event.stopPropagation();
       event.preventDefault();
       const last = elements.length - 1;
-      !elements[last].disabled && elements[last].focus();
+      if (!elements[last].disabled) elements[last].focus();
     }
   };
 }
