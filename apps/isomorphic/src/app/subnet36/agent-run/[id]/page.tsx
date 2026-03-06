@@ -1695,6 +1695,27 @@ function AgentRunDetailPlaceholder({ className }: Readonly<{ className?: string 
 // Summary donut + list
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 
+function DonutCenterLabelContent(
+  props: Readonly<{
+    viewBox?: { cx?: number; cy?: number };
+    successRate: number;
+    totalRequests: number;
+    totalSuccesses: number;
+  }>
+) {
+  const viewBox = props.viewBox;
+  const cx = viewBox && "cx" in viewBox ? viewBox.cx ?? 0 : 0;
+  const cy = viewBox && "cy" in viewBox ? viewBox.cy ?? 0 : 0;
+  return (
+    <CenterLabel
+      value={(props.successRate * 100).toFixed(0)}
+      totalRequests={Math.round(props.totalRequests).toString()}
+      totalSuccesses={Math.round(props.totalSuccesses).toString()}
+      viewBox={{ cx, cy }}
+    />
+  );
+}
+
 function AgentRunSummary({
   className,
   selectedWebsite,
@@ -1882,19 +1903,13 @@ function AgentRunSummary({
               >
                 <Label
                   position="center"
-                  content={(props) => {
-                    const viewBox = props?.viewBox as { cx?: number; cy?: number } | undefined;
-                    const cx = viewBox && "cx" in viewBox ? viewBox.cx ?? 0 : 0;
-                    const cy = viewBox && "cy" in viewBox ? viewBox.cy ?? 0 : 0;
-                    return (
-                      <CenterLabel
-                        value={(successRate * 100).toFixed(0)}
-                        totalRequests={Math.round(totalRequests).toString()}
-                        totalSuccesses={Math.round(totalSuccesses).toString()}
-                        viewBox={{ cx, cy }}
-                      />
-                    );
-                  }}
+                  content={
+                    <DonutCenterLabelContent
+                      successRate={successRate}
+                      totalRequests={totalRequests}
+                      totalSuccesses={totalSuccesses}
+                    />
+                  }
                 />
                 {finalDonutData.map((entry: { label: string; fill?: string; stroke?: string }, idx: number) => (
                   <Cell
