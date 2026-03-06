@@ -47,6 +47,14 @@ type ListingCardProps = {
   title?: React.ReactNode;
 };
 
+function toKeyString(x: React.ReactNode): string {
+  if (x == null) return "";
+  if (typeof x === "string" || typeof x === "number" || typeof x === "boolean")
+    return String(x);
+  if (typeof x === "object") return JSON.stringify(x);
+  return String(x);
+}
+
 export default function ListingCard({
   product,
   className,
@@ -101,7 +109,7 @@ export default function ListingCard({
           {features.map((item: string) => (
             <Text
               as="span"
-              key={`${title}-${item}`}
+              key={`${toKeyString(title)}-${item}`}
               className="relative -inset-y-1/2 inline-block px-2 after:absolute after:-end-[1px] after:top-1/2 after:h-1 after:w-1 after:rounded-full after:bg-gray-500 first:ps-0 last:pe-0 last:after:hidden"
             >
               {item}
