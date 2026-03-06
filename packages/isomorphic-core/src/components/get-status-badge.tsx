@@ -19,7 +19,9 @@ const classes = {
   },
 };
 
-export default function StatusBadge({ status }: { status: string }) {
+export default function StatusBadge({
+  status,
+}: Readonly<{ status: string }>) {
   const { layout } = useLayout();
   const colorStatus = status?.toLowerCase() === 'new' ? 'danger' : 'success';
   const layoutKey = layout as keyof typeof classes.layout;
