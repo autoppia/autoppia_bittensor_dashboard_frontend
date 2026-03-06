@@ -18,7 +18,7 @@ export default function NavLink({
   className,
   onClick,
   prefetch = false,
-}: NavLinkProps) {
+}: Readonly<NavLinkProps>) {
   const [isClicking, setIsClicking] = useState(false);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
