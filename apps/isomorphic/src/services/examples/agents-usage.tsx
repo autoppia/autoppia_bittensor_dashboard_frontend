@@ -11,10 +11,8 @@ import {
   useAgent,
   useAgentPerformance,
   useAgentRuns,
-  useAgentActivity,
   useAgentStatistics,
   useTopAgents,
-  useAgentSummary,
   useAgentRealtime,
 } from '../hooks/useAgents';
 
@@ -94,7 +92,9 @@ export function AgentsListExample() {
 }
 
 // Example 2: Agent Details Component
-export function AgentDetailsExample({ agentId }: { agentId: string }) {
+export function AgentDetailsExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
   const { data: agent, loading, error } = useAgent(agentId);
   const { data: performance } = useAgentPerformance(agentId, { timeRange: '7d' });
   const { data: recentRuns } = useAgentRuns(agentId, { limit: 5 });
@@ -171,7 +171,9 @@ export function AgentDetailsExample({ agentId }: { agentId: string }) {
 }
 
 // Example 3: Agent Performance Chart Component
-export function AgentPerformanceChartExample({ agentId }: { agentId: string }) {
+export function AgentPerformanceChartExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
   const { data: performance, loading } = useAgentPerformance(agentId, { 
     timeRange: '30d',
     granularity: 'day'
@@ -265,7 +267,9 @@ export function AgentStatisticsExample() {
 }
 
 // Example 5: Real-time Agent Monitor
-export function RealTimeAgentMonitorExample({ agentId }: { agentId: string }) {
+export function RealTimeAgentMonitorExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
   const { data, loading, error } = useAgentRealtime(agentId, 10000); // Update every 10 seconds
 
   if (loading) return <div>Loading real-time data...</div>;
@@ -345,7 +349,7 @@ export function AgentComparisonExample() {
       {/* Time Range Selection */}
       <div style={{ marginBottom: '20px' }}>
         <label>
-          Time Range:
+          Time Range:{' '}
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value as any)}>
             <option value="7d">Last 7 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -471,16 +475,27 @@ export function DirectApiUsageExample() {
   );
 }
 
+// Wrapper components for examples that require fixed props (defined at module level to satisfy Sonar)
+function DetailsExampleContent() {
+  return <AgentDetailsExample agentId="autoppia-bittensor" />;
+}
+function PerformanceExampleContent() {
+  return <AgentPerformanceChartExample agentId="autoppia-bittensor" />;
+}
+function RealtimeExampleContent() {
+  return <RealTimeAgentMonitorExample agentId="autoppia-bittensor" />;
+}
+
 // Main Example Component
 export function AgentsApiExamples() {
   const [selectedExample, setSelectedExample] = useState('list');
 
   const examples = {
     list: AgentsListExample,
-    details: () => <AgentDetailsExample agentId="autoppia-bittensor" />,
-    performance: () => <AgentPerformanceChartExample agentId="autoppia-bittensor" />,
+    details: DetailsExampleContent,
+    performance: PerformanceExampleContent,
     statistics: AgentStatisticsExample,
-    realtime: () => <RealTimeAgentMonitorExample agentId="autoppia-bittensor" />,
+    realtime: RealtimeExampleContent,
     comparison: AgentComparisonExample,
     direct: DirectApiUsageExample,
   };
@@ -494,7 +509,7 @@ export function AgentsApiExamples() {
       {/* Example Selector */}
       <div style={{ marginBottom: '20px' }}>
         <label>
-          Select Example:
+          Select Example:{' '}
           <select value={selectedExample} onChange={(e) => setSelectedExample(e.target.value)}>
             <option value="list">Agents List</option>
             <option value="details">Agent Details</option>
