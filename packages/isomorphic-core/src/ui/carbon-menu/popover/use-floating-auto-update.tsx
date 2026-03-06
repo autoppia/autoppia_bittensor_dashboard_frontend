@@ -1,5 +1,5 @@
 import { autoUpdate } from '@floating-ui/react';
-import { useEffect, useState } from 'react';
+import { type RefObject, useEffect, useState } from 'react';
 import { FloatingPosition } from './types';
 import { useUpdate } from './use-update';
 
@@ -8,8 +8,8 @@ interface FloatingAutoUpdateProps {
   floating: {
     update: () => void;
     refs: {
-      floating: React.MutableRefObject<any>;
-      reference: React.MutableRefObject<any>;
+      floating: RefObject<HTMLElement | null>;
+      reference: RefObject<HTMLElement | null>;
     };
   };
   positionDependencies: unknown[];
