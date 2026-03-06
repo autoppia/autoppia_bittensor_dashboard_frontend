@@ -172,13 +172,10 @@ function AgentStats({
     return <AgentStatsPlaceholder />;
   }
 
-  const rankNum =
-    (roundMetrics?.rank && roundMetrics.rank > 0)
-      ? roundMetrics.rank
-      : (agent.currentRank && agent.currentRank > 0)
-        ? agent.currentRank
-        : null;
-  const currentRankValue = rankNum != null ? `#${rankNum}` : "N/A";
+  let rankNum: number | null = null;
+  if (roundMetrics?.rank && roundMetrics.rank > 0) rankNum = roundMetrics.rank;
+  else if (agent.currentRank && agent.currentRank > 0) rankNum = agent.currentRank;
+  const currentRankValue = rankNum == null ? "N/A" : `#${rankNum}`;
 
   const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
   const bestRoundScoreValue =
@@ -399,6 +396,50 @@ const BENCHMARK_COLOR_PALETTE = [
   "#EC4899",
 ];
 
+function RewardChartTooltipContent(props: Readonly<{ active?: boolean; payload?: Array<{ payload?: any }>; label?: string }>) {
+  const { active, payload, label } = props;
+  if (active !== true || !payload?.length) return null;
+  const data = payload[0]?.payload;
+  const reward = data?.reward ?? 0;
+  const evalScore = data?.eval_score != null && typeof data.eval_score === "number" ? data.eval_score : null;
+  const evalTime = data?.eval_time != null && typeof data.eval_time === "number" ? data.eval_time : null;
+  const rankSuffix = data?.rank == null ? "" : ` (Rank #${data.rank})`;
+  return (
+    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
+      <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
+        Round {label}{rankSuffix}
+      </div>
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#F59E0B" }} />
+            <span className="text-white/90 font-semibold">Reward:</span>
+          </div>
+          <span className="font-black text-white text-base">{(reward * 100).toFixed(2)}%</span>
+        </div>
+        {evalScore != null && Number.isFinite(evalScore) && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#3B82F6" }} />
+              <span className="text-white/90 font-semibold">Score:</span>
+            </div>
+            <span className="font-black text-white text-base">{(evalScore * 100).toFixed(2)}%</span>
+          </div>
+        )}
+        {evalTime != null && Number.isFinite(evalTime) && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#10B981" }} />
+              <span className="text-white/90 font-semibold">Avg Time:</span>
+            </div>
+            <span className="font-black text-white text-base">{Number(evalTime).toFixed(2)}s</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type AgentScoreChartProps = Readonly<{
   className?: string;
   scoreRoundData?: ScoreRoundDataPoint[];
@@ -519,8 +560,10 @@ function AgentScoreChart({
   const getFilteredData = (data: any[]) => {
     if (data.length === 0 || timeRange === "all") return data;
     const maxRound = Math.max(...data.map((d) => d.round));
-    const roundsToShow =
-      timeRange === "7r" ? 7 : timeRange === "15r" ? 15 : 30;
+    let roundsToShow: number;
+    if (timeRange === "7r") roundsToShow = 7;
+    else if (timeRange === "15r") roundsToShow = 15;
+    else roundsToShow = 30;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
@@ -528,7 +571,7 @@ function AgentScoreChart({
   const displayData = getFilteredData(processedRows).map((entry: any) => {
     const scaled: Record<string, number | string | null> = {
       ...entry,
-      score: entry.score != null ? Number(entry.score) * 100 : entry.score,
+      score: entry.score == null ? entry.score : Number(entry.score) * 100,
       topBenchmarkScore:
         entry.topBenchmarkScore == null
           ? entry.topBenchmarkScore
@@ -536,7 +579,8 @@ function AgentScoreChart({
     };
     benchmarkSeries.forEach((series) => {
       const val = scaled[series.key];
-      if (val != null) scaled[series.key] = Number(val) * 100;
+      if (val == null) return;
+      scaled[series.key] = Number(val) * 100;
     });
     return scaled;
   });
@@ -657,72 +701,7 @@ function AgentScoreChart({
                 tick={<CustomYAxisTick postfix="%" />}
                 stroke="rgba(148,163,184,0.3)"
               />
-              <Tooltip
-                content={({ active, payload, label }: any) => {
-                  if (!active || !payload?.length) return null;
-                  const data = payload[0]?.payload;
-                  
-                  // Get post-consensus data from the payload
-                  const reward = data?.reward ?? 0;
-                  const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
-                  const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
-                  
-                  return (
-                    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
-                      <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
-                        Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        {/* Reward */}
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-                              style={{ backgroundColor: "#F59E0B" }}
-                            />
-                            <span className="text-white/90 font-semibold">Reward:</span>
-                          </div>
-                          <span className="font-black text-white text-base">
-                            {(reward * 100).toFixed(2)}%
-                          </span>
-                        </div>
-                        
-                        {/* Score (eval_score) */}
-                        {evalScore != null && !Number.isNaN(evalScore) && (
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2.5">
-                              <span
-                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-                                style={{ backgroundColor: "#3B82F6" }}
-                              />
-                              <span className="text-white/90 font-semibold">Score:</span>
-                            </div>
-                            <span className="font-black text-white text-base">
-                              {(evalScore * 100).toFixed(2)}%
-                            </span>
-                          </div>
-                        )}
-                        
-                        {/* Avg Time (eval_time) */}
-                        {evalTime != null && !Number.isNaN(evalTime) && (
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2.5">
-                              <span
-                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-                                style={{ backgroundColor: "#10B981" }}
-                              />
-                              <span className="text-white/90 font-semibold">Avg Time:</span>
-                            </div>
-                            <span className="font-black text-white text-base">
-                              {Number(evalTime).toFixed(2)}s
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }}
-              />
+              <Tooltip content={RewardChartTooltipContent} />
               <Area
                 type="monotone"
                 dataKey="score"
@@ -852,9 +831,9 @@ function AgentValidators({
   }
 
   const filteredRuns =
-    selectedRound != null
-      ? runs.filter((run) => run.roundId === selectedRound)
-      : runs;
+    selectedRound == null
+      ? runs
+      : runs.filter((run) => run.roundId === selectedRound);
 
   const runsByValidator = filteredRuns.reduce(
     (acc, run) => {
@@ -1180,28 +1159,35 @@ function AgentValidators({
                       );
                     })}
                     </div>
-                    <Link 
-                      href={agentRunId 
-                        ? `${routes.agent_run}/${agentRunId}`
-                        : `${routes.agent_run}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${selectedRound ? `&round=${selectedRound}` : ''}`
-                      } 
-                      className="block"
-                    >
+                    {(() => {
+                      const baseRun = routes.agent_run;
+                      const roundSuffix = selectedRound == null ? "" : "&round=" + selectedRound;
+                      const runHref = agentRunId
+                        ? `${baseRun}/${agentRunId}`
+                        : `${baseRun}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${roundSuffix}`;
+                      return (
+                    <Link href={runHref} className="block">
                       <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
                         View Agent Run Details
                       </div>
                     </Link>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-      ) : filteredRuns.length === 0 ? (
-        <div className="mt-6 text-center text-white/70">
-          No runs available for the selected round.
-        </div>
-      ) : (
+      ) : (() => {
+        if (filteredRuns.length === 0) {
+          return (
+            <div className="mt-6 text-center text-white/70">
+              No runs available for the selected round.
+            </div>
+          );
+        }
+        return (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
@@ -1372,7 +1358,8 @@ function AgentValidators({
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </>
   );
 }
@@ -1482,7 +1469,7 @@ function RoundWebsitesChart({
       total: number;
     }>
   >([]);
-  const [, setTotals] = useState<{ successful: number; total: number }>({
+  const [websiteTotals, setWebsiteTotals] = useState<{ successful: number; total: number }>({
     successful: 0,
     total: 0,
   });
@@ -1503,7 +1490,7 @@ function RoundWebsitesChart({
       ) {
         setLoading(false);
         setChartRows([]);
-        setTotals({ successful: 0, total: 0 });
+        setWebsiteTotals({ successful: 0, total: 0 });
         onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         return;
       }
@@ -1514,7 +1501,7 @@ function RoundWebsitesChart({
           runsForRound.map(async (run) => {
             try {
               return await agentsRepository.getAgentRun(agentId, run.runId);
-            } catch (e) {
+            } catch {
               return null;
             }
           })
@@ -1550,7 +1537,7 @@ function RoundWebsitesChart({
 
         if (!cancelled) {
           setChartRows(rows);
-          setTotals({ successful: totalSuccessful, total: totalTasks });
+          setWebsiteTotals({ successful: totalSuccessful, total: totalTasks });
           onSummaryChange?.({
             uniqueWebsites: rows.length,
             totalTasks: totalTasks,
@@ -1572,21 +1559,27 @@ function RoundWebsitesChart({
     };
   }, [agentId, onSummaryChange, runsForRound, selectedRound]);
 
-  return (
-    <div className="relative">
-      {loading ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">
-          Loading website stats…
-        </div>
-      ) : error ? (
-        <div className="relative flex h-[420px] items-center justify-center text-rose-200">
-          {error}
-        </div>
-      ) : chartRows.length === 0 ? (
-        <div className="relative flex h-[420px] items-center justify-center text-white/70">
-          No website stats available for this round.
-        </div>
-      ) : (
+  let bodyContent: React.ReactNode;
+  if (loading) {
+    bodyContent = (
+      <div className="relative flex h-[420px] items-center justify-center text-white/70">
+        Loading website stats…
+      </div>
+    );
+  } else if (error) {
+    bodyContent = (
+      <div className="relative flex h-[420px] items-center justify-center text-rose-200">
+        {error}
+      </div>
+    );
+  } else if (chartRows.length === 0) {
+    bodyContent = (
+      <div className="relative flex h-[420px] items-center justify-center text-white/70">
+        No website stats available for this round.
+      </div>
+    );
+  } else {
+    bodyContent = (
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
@@ -1599,6 +1592,7 @@ function RoundWebsitesChart({
           <div className="relative h-[300px] md:h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
+                key={`website-chart-${websiteTotals.total}-${websiteTotals.successful}`}
                 data={chartRows}
                 margin={{ top: 20, left: -10 }}
                 onMouseMove={(state) => {
@@ -1688,7 +1682,12 @@ function RoundWebsitesChart({
                   animationDuration={800}
                   animationEasing="ease-out"
                 >
-                  {chartRows.map((entry, index) => (
+                  {chartRows.map((entry, index) => {
+                    let fillOpacity: number;
+                    if (activeIndex === null) fillOpacity = 0.9;
+                    else if (activeIndex === index) fillOpacity = 1;
+                    else fillOpacity = 0.4;
+                    return (
                     <Cell
                       key={`cell-${entry.websiteOriginal}`}
                       fill={`url(#barGradient${index})`}
@@ -1697,26 +1696,26 @@ function RoundWebsitesChart({
                           ? `url(#glow${index})`
                           : undefined
                       }
-                      fillOpacity={
-                        activeIndex === null
-                          ? 0.9
-                          : activeIndex === index
-                            ? 1
-                            : 0.4
-                      }
+                      fillOpacity={fillOpacity}
                       style={{
                         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                         cursor: "pointer",
                         transformOrigin: "center bottom",
                       }}
                     />
-                  ))}
+                    );
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </>
-      )}
+    );
+  }
+
+  return (
+    <div className="relative">
+      {bodyContent}
     </div>
   );
 }
@@ -1743,7 +1742,7 @@ export default function Page() {
   }, [seasonParam, roundParam]);
 
   const normalizedAgentId = useMemo(() => {
-    if (!trimmedId) return null;
+    if (trimmedId === "" || trimmedId.length === 0) return null;
     if (/^\d+$/.test(trimmedId)) return trimmedId;
     if (/^agent-\d+$/i.test(trimmedId)) return trimmedId;
     const matches = trimmedId.match(/\d+/g);
@@ -1763,7 +1762,7 @@ export default function Page() {
 
   const agentIdForQuery =
     normalizedAgentId ??
-    (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
+    (numericUidFromParam == null ? null : `agent-${numericUidFromParam}`);
 
   // Declare viewMode first before using it in hooks
   const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
@@ -1833,8 +1832,9 @@ export default function Page() {
   
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
-  const effectiveAgent: AgentData | null = viewMode === "historical" && minerHistorical
-    ? {
+  const effectiveAgent: AgentData | null = (() => {
+    if (viewMode === "historical" && minerHistorical) {
+      return {
         id: minerHistorical.miner.uid.toString(),
         uid: minerHistorical.miner.uid,
         name: minerHistorical.miner.name,
@@ -1864,44 +1864,48 @@ export default function Page() {
         status: "active" as const,
         githubUrl: undefined,
         taostatsUrl: undefined,
-      }
-    : minerRoundDetails && minerRoundDetails.miner
-      ? {
-          id: minerRoundDetails.miner.uid.toString(),
-          uid: minerRoundDetails.miner.uid,
-          name: minerRoundDetails.miner.name,
-          hotkey: minerRoundDetails.miner.hotkey ?? null,
-          type: "autoppia",
-          imageUrl: minerRoundDetails.miner.image ?? "",
-          isSota: false,
-          totalTasks: minerRoundDetails.tasks_received ?? 0,
-          completedTasks: minerRoundDetails.tasks_success ?? 0,
-          currentScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          currentTopScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          currentRank: minerRoundDetails.post_consensus_rank ?? null,
-          bestRankEver: minerRoundDetails.post_consensus_rank ?? 0,
-          bestRankRoundId: undefined,
-          roundsParticipated: 0,
-          roundsWon: 0,
-          alphaWonInPrizes: 0,
-          taoWonInPrizes: 0,
-          bestRoundScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          bestRoundId: undefined,
-          totalRuns: 0,
-          successfulRuns: 0,
-          averageResponseTime: minerRoundDetails.post_consensus_avg_eval_time ?? 0,
-          lastSeen: "",
-          createdAt: "",
-          updatedAt: "",
-          status: "active" as const,
-          githubUrl: minerRoundDetails.miner.github_url ?? undefined,
-          taostatsUrl: undefined,
-        }
-      : null;
+      };
+    }
+    const miner = minerRoundDetails?.miner;
+    if (miner) {
+      return {
+        id: miner.uid.toString(),
+        uid: miner.uid,
+        name: miner.name,
+        hotkey: miner.hotkey ?? null,
+        type: "autoppia",
+        imageUrl: miner.image ?? "",
+        isSota: false,
+        totalTasks: minerRoundDetails?.tasks_received ?? 0,
+        completedTasks: minerRoundDetails?.tasks_success ?? 0,
+        currentScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
+        currentTopScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
+        currentRank: minerRoundDetails?.post_consensus_rank ?? null,
+        bestRankEver: minerRoundDetails?.post_consensus_rank ?? 0,
+        bestRankRoundId: undefined,
+        roundsParticipated: 0,
+        roundsWon: 0,
+        alphaWonInPrizes: 0,
+        taoWonInPrizes: 0,
+        bestRoundScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
+        bestRoundId: undefined,
+        totalRuns: 0,
+        successfulRuns: 0,
+        averageResponseTime: minerRoundDetails?.post_consensus_avg_eval_time ?? 0,
+        lastSeen: "",
+        createdAt: "",
+        updatedAt: "",
+        status: "active" as const,
+        githubUrl: miner.github_url ?? undefined,
+        taostatsUrl: undefined,
+      };
+    }
+    return null;
+  })();
   
-  const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
+  const githubAvailable = Boolean(effectiveAgent?.githubUrl && effectiveAgent?.isSota !== true);
   const taoStatsAvailable = Boolean(
-    !effectiveAgent?.isSota && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
+    effectiveAgent?.isSota !== true && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
   );
 
   const defaultAvatar = useMemo(
@@ -1933,16 +1937,20 @@ export default function Page() {
     [setWebsitesSummary]
   );
 
-  const currentRoundRaw =
-    selectedRoundFromQuery ??
-    (roundMetrics !== null && "roundId" in roundMetrics ? (roundMetrics as AgentRoundMetrics).roundId : undefined) ??
-    (availableRounds.length > 0 ? availableRounds[0] : undefined);
-  const currentRound: number | undefined =
-    typeof currentRoundRaw === "number"
-      ? currentRoundRaw
-      : (typeof currentRoundRaw === "string" && /^\d+$/.test(currentRoundRaw)
-          ? Number(currentRoundRaw)
-          : undefined);
+  const fromRoundMetrics =
+    roundMetrics != null && "roundId" in roundMetrics
+      ? (roundMetrics as AgentRoundMetrics).roundId
+      : undefined;
+  const fallbackRound = availableRounds.length > 0 ? availableRounds[0] : undefined;
+  const currentRoundRaw = selectedRoundFromQuery ?? fromRoundMetrics ?? fallbackRound;
+  let currentRound: number | undefined;
+  if (typeof currentRoundRaw === "number") {
+    currentRound = currentRoundRaw;
+  } else if (typeof currentRoundRaw === "string" && /^\d+$/.test(currentRoundRaw)) {
+    currentRound = Number(currentRoundRaw);
+  } else {
+    currentRound = undefined;
+  }
 
   // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
@@ -1993,12 +2001,14 @@ export default function Page() {
         reward: point.reward ?? 0,
         eval_score: (point.eval_score ?? raw.post_consensus_avg_eval_score ?? raw.avg_eval_score) as number | undefined,
         eval_time: (point.eval_time ?? raw.post_consensus_avg_eval_time ?? raw.avg_eval_time) as number | undefined,
-        timestamp:
-          typeof point.timestamp === "string"
-            ? point.timestamp
-            : (point.timestamp != null && typeof (point.timestamp as { toString?: () => string }).toString === "function")
-              ? (point.timestamp as { toString: () => string }).toString()
-              : "",
+        timestamp: (() => {
+          if (typeof point.timestamp === "string") return point.timestamp;
+          const ts = point.timestamp;
+          if (ts != null && typeof (ts as { toString?: () => string }).toString === "function") {
+            return (ts as { toString: () => string }).toString();
+          }
+          return "";
+        })(),
         topScore:
           normalizeScore(
             point.topScore ?? (raw.top_score as number | undefined) ?? (raw.bestScore as number | undefined)
@@ -2037,7 +2047,7 @@ export default function Page() {
       const avgTasks = minerRoundDetails.avg_tasks_per_validator ?? 0;
       
       return {
-        avgRank: avgRank !== null ? avgRank.toFixed(1) : "N/A",
+        avgRank: avgRank == null ? "N/A" : avgRank.toFixed(1),
         avgScore: `${Math.round(avgScore * 100)}%`,
         avgResp: `${Math.round(avgResp)}s`,
         avgTasks: `${Math.round(avgTasks)}`,
@@ -2061,7 +2071,7 @@ export default function Page() {
   // Show loading only if we don't have data yet
   const isLoading = 
     (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
+    (viewMode !== "historical" && (minerRoundDetails == null) && minerRoundDetailsLoading);
   
   if (isLoading) {
     return (
@@ -2080,7 +2090,8 @@ export default function Page() {
   }
   
   // Show error only if we don't have any data source available
-  if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
+  const hasAnyData = Boolean(effectiveAgent || hasHistoricalData || hasRoundDetailsData);
+  if (hasAnyData === false) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -2094,12 +2105,17 @@ export default function Page() {
   }
 
   // Use minerRoundDetails if available, otherwise fallback to roundMetrics
-  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).rank : undefined) ?? effectiveAgent?.currentRank;
-  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).score : undefined) ?? effectiveAgent?.currentScore;
+  const roundRank = roundMetrics == null ? undefined : (roundMetrics as AgentRoundMetrics).rank;
+  const roundScore = roundMetrics == null ? undefined : (roundMetrics as AgentRoundMetrics).score;
+  const roundTotalTasks = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).totalTasks;
+  const roundCompletedTasks = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).completedTasks;
+  const roundTotalValidators = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).totalValidators;
+  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundRank ?? effectiveAgent?.currentRank;
+  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundScore ?? effectiveAgent?.currentScore;
   const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).totalTasks : 0);
-  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).completedTasks : 0);
-  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? (roundMetrics != null ? (roundMetrics as AgentRoundMetrics).totalValidators : 0);
+  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundTotalTasks;
+  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? roundCompletedTasks;
+  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? roundTotalValidators;
   const effectiveAvgTasksPerValidator = minerRoundDetails?.avg_tasks_per_validator ?? null;
   const effectivePerformanceByWebsite = minerRoundDetails?.performanceByWebsite ?? [];
   const effectiveWebsitesCount = effectivePerformanceByWebsite.length || websitesSummary.unique;
@@ -2115,7 +2131,7 @@ export default function Page() {
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
       title: "Round",
-      metric: roundParam ? roundParam : "N/A",
+      metric: roundParam ?? "N/A",
       badge: seasonParam ? `Season ${seasonParam}` : null,
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
@@ -2148,9 +2164,9 @@ export default function Page() {
     },
     {
       title: "Task Per Validator",
-      metric: effectiveAvgTasksPerValidator !== null 
-        ? effectiveAvgTasksPerValidator.toFixed(1) 
-        : (preAvg?.avgTasks ?? "0"),
+      metric: effectiveAvgTasksPerValidator == null
+        ? (preAvg?.avgTasks ?? "0")
+        : effectiveAvgTasksPerValidator.toFixed(1),
       icon: PiListChecksDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
@@ -2162,9 +2178,9 @@ export default function Page() {
     },
     {
       title: "Avg Response Time",
-      metric: effectiveEvalTime !== null 
-        ? `${effectiveEvalTime.toFixed(1)}s` 
-        : (preAvg?.avgResp ?? "0s"),
+      metric: effectiveEvalTime == null
+        ? (preAvg?.avgResp ?? "0s")
+        : `${effectiveEvalTime.toFixed(1)}s`,
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
@@ -2235,12 +2251,10 @@ export default function Page() {
     },
   ];
 
-  const headerStats =
-    viewMode === "current"
-      ? currentStats
-      : viewMode === "historical"
-        ? historicalStats
-        : [];
+  let headerStats: typeof currentStats;
+  if (viewMode === "current") headerStats = currentStats;
+  else if (viewMode === "historical") headerStats = historicalStats;
+  else headerStats = [];
 
   return (
     <div className="flex flex-col">
@@ -2302,13 +2316,11 @@ export default function Page() {
                           ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
-                      title={
-                        effectiveAgent?.isSota
-                          ? "GitHub repository not available for SOTA benchmarks"
-                          : effectiveAgent?.githubUrl
-                            ? "View GitHub repository"
-                            : "GitHub repository not available"
-                      }
+                      title={(() => {
+                        if (effectiveAgent?.isSota) return "GitHub repository not available for SOTA benchmarks";
+                        if (effectiveAgent?.githubUrl) return "View GitHub repository";
+                        return "GitHub repository not available";
+                      })()}
                     >
                       {githubAvailable ? (
                         <a
@@ -2330,13 +2342,11 @@ export default function Page() {
                           ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
-                      title={
-                        effectiveAgent?.isSota
-                          ? "On-chain explorer is not available for SOTA benchmarks"
-                          : effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey
-                            ? "View on TaoStats"
-                            : "TaoStats link not available"
-                      }
+                      title={(() => {
+                        if (effectiveAgent?.isSota) return "On-chain explorer is not available for SOTA benchmarks";
+                        if (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey) return "View on TaoStats";
+                        return "TaoStats link not available";
+                      })()}
                     >
                       {taoStatsAvailable ? (
                         <a
@@ -2368,11 +2378,14 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <PiKeyDuotone className="w-4 h-4 text-sky-300" />
                     <span className="font-mono text-xs font-semibold">
-                      {effectiveAgent?.isSota
-                        ? "No on-chain hotkey"
-                        : effectiveAgent?.hotkey
-                          ? `${effectiveAgent.hotkey.slice(0, 8)}...${effectiveAgent.hotkey.slice(-8)}`
-                          : "unknown"}
+                      {(() => {
+                        if (effectiveAgent?.isSota) return "No on-chain hotkey";
+                        if (effectiveAgent?.hotkey) {
+                          const h = effectiveAgent.hotkey;
+                          return h.slice(0, 8) + "..." + h.slice(-8);
+                        }
+                        return "unknown";
+                      })()}
                     </span>
                     {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
                       <button
