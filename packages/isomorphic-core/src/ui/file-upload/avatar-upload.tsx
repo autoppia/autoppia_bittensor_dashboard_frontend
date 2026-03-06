@@ -16,11 +16,11 @@ import { ClientUploadedFileData } from "uploadthing/types";
 import type { FieldValues, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 
 interface UploadZoneProps {
-  name: string;
-  getValues?: UseFormGetValues<FieldValues>;
-  setValue?: UseFormSetValue<FieldValues>;
-  className?: string;
-  error?: string;
+  readonly name: string;
+  readonly getValues?: UseFormGetValues<FieldValues>;
+  readonly setValue?: UseFormSetValue<FieldValues>;
+  readonly className?: string;
+  readonly error?: string;
 }
 
 export default function AvatarUpload({
@@ -29,7 +29,7 @@ export default function AvatarUpload({
   className,
   getValues,
   setValue,
-}: UploadZoneProps) {
+}: Readonly<UploadZoneProps>) {
   const [files, setFiles] = useState<File[]>([]);
 
   const formValue = getValues(name);
