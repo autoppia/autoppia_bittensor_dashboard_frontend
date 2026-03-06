@@ -59,6 +59,13 @@ export type Shadow = keyof typeof popoverStyle.shadow;
 export type Size = keyof typeof popoverStyle.size;
 export type Rounded = keyof typeof popoverStyle.rounded;
 
+function isSize(s: string): s is Size {
+  return s in popoverStyle.size;
+}
+function isRounded(r: string): r is Rounded {
+  return r in popoverStyle.rounded;
+}
+
 export interface PopoverTargetProps {
   children: React.ReactNode;
   className?: string;
@@ -133,8 +140,8 @@ export const PopoverContent = React.forwardRef<
               className,
               popoverStyle.base,
               popoverStyle.shadow[shadow],
-              popoverStyle.size[size as Size],
-              popoverStyle.rounded[rounded as Rounded]
+              popoverStyle.size[isSize(size) ? size : 'sm'],
+              popoverStyle.rounded[isRounded(rounded) ? rounded : 'md']
             )}
           >
             {children}
