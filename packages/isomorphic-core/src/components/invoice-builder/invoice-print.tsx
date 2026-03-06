@@ -19,9 +19,9 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(
             <table className="w-full">
               <thead>
                 <tr>
-                  <td>
-                    <div className="h-10"></div>
-                  </td>
+                  <th scope="col" className="font-normal">
+                    <div className="h-10" aria-hidden="true" />
+                  </th>
                 </tr>
               </thead>
 
@@ -40,7 +40,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(
                           alt="logo"
                           width={80}
                           height={80}
-                          src={data.logo!}
+                          src={data.logo}
                           className="h-24 w-32 object-contain"
                         />
                       )}
@@ -108,7 +108,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(
                       </div>
                       {data.invoiceTable.map((item, index) => (
                         <div
-                          key={index}
+                          key={`${item.title}-${item.quantity}-${item.rate}-${index}`}
                           className="!mb-2 grid break-inside-avoid grid-cols-12 gap-2 px-2"
                         >
                           <span className="col-span-4 block py-2">
