@@ -42,7 +42,7 @@ export default function RangeSlider({
   color = 'DEFAULT',
   className,
   ...props
-}: RangeSliderProps) {
+}: Readonly<RangeSliderProps>) {
   return (
     <Slider
       className={cn(
