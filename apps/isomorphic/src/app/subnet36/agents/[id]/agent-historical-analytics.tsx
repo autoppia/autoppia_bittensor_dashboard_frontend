@@ -52,6 +52,14 @@ function normalizeEvaluationId(evaluationId: string): string {
   return evaluationId;
 }
 
+/** Converts a value to string without using Object's default '[object Object]' for objects. */
+function safeString(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
+
 interface AgentHistoricalAnalyticsProps {
   agentId: string | number;
   className?: string;
@@ -557,16 +565,16 @@ export default function AgentHistoricalAnalytics({
           return "completed";
         };
         const mappedTasks: TaskDataWithEval[] = taskDetails.map((detail: Record<string, unknown>) => {
-          const status = mapDetailStatus(String(detail.status ?? ""));
-          const timestamp = String(detail.createdAt ?? new Date().toISOString());
+          const status = mapDetailStatus(safeString(detail.status));
+          const timestamp = detail.createdAt == null ? new Date().toISOString() : safeString(detail.createdAt);
           const evaluationId = detail.evaluationId ?? detail.taskId;
           return {
-            taskId: String(detail.taskId ?? detail.evaluationId ?? detail.agentRunId ?? `${useCase}-${website}`),
-            evaluationId: String(evaluationId ?? ""),
-            agentRunId: String(detail.agentRunId ?? detail.evaluationId ?? detail.taskId ?? ""),
+            taskId: safeString(detail.taskId ?? detail.evaluationId ?? detail.agentRunId ?? `${useCase}-${website}`),
+            evaluationId: safeString(evaluationId),
+            agentRunId: safeString(detail.agentRunId ?? detail.evaluationId ?? detail.taskId),
             website,
-            useCase: String(detail.useCase ?? useCase),
-            prompt: String(detail.prompt ?? ""),
+            useCase: safeString(detail.useCase ?? useCase),
+            prompt: safeString(detail.prompt),
             status,
             score: typeof detail.score === "number" ? detail.score : 0,
             successRate: typeof detail.score === "number" ? detail.score : 0,
