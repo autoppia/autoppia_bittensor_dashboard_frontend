@@ -94,6 +94,11 @@ function truncateMiddle(value?: string, visible: number = 8) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
+function formatCost(value?: number | null): string {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 3 });
+}
+
 function extractRoundNumber(value?: string | null): number | null {
   if (!value) return null;
   const roundRegex = /round[-_\s]?(\d+)/i;
@@ -326,7 +331,7 @@ export default function TaskSearch() {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit]);
+  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit, selectedWebsite]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -742,15 +747,22 @@ export default function TaskSearch() {
                 "/miners/30.svg "
               );
 
-              // Get round number directly from backend (no legacy formats)
+              // Season and round from backend for "Season-Round" display
+              const season = (task as any).season;
               const roundNumber = (task as any).roundNumber;
-              const roundDisplay =
-                typeof roundNumber === "number" && Number.isFinite(roundNumber)
-                  ? `#${roundNumber}`
-                  : "—";
+              const hasSeason = typeof season === "number" && Number.isFinite(season);
+              const hasRound = typeof roundNumber === "number" && Number.isFinite(roundNumber);
+              const seasonRoundDisplay =
+                hasSeason && hasRound
+                  ? `${season}/${roundNumber}`
+                  : hasRound
+                    ? `—/${roundNumber}`
+                    : hasSeason
+                      ? `${season}/—`
+                      : "—";
 
-              // Get season directly from backend (no legacy formats)
-              const seasonValue = (task as any).season;
+              // Evaluation cost in USD (from backend llmCost; support both camelCase and snake_case)
+              const evaluationCost = (task as any).llmCost ?? (task as any).llm_cost;
 
               const taskDetailUrl = task.evaluationId
                 ? `${routes.evaluations}/${task.evaluationId}`
@@ -893,15 +905,15 @@ export default function TaskSearch() {
                       </p>
                     </div>
 
-                    {/* Stats - Round, Score, Duration */}
+                    {/* Stats - Season-Round, Score, Cost; Reason (when score 0) */}
                     <div className="mt-auto pt-3 border-t border-slate-600/60">
                       <div className="grid grid-cols-3 gap-3">
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold mb-1">
-                            Round
+                            Season-Round
                           </div>
                           <div className="text-base font-bold text-amber-300 drop-shadow-sm">
-                            {roundDisplay}
+                            {seasonRoundDisplay}
                           </div>
                         </div>
                         <div className="text-center">
@@ -916,15 +928,26 @@ export default function TaskSearch() {
                         </div>
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-sky-300/70 font-semibold mb-1">
-                            Season
+                            Cost
                           </div>
                           <div className="text-base font-bold text-sky-300 drop-shadow-sm">
-                            {typeof seasonValue === "number" && seasonValue > 0
-                              ? seasonValue
-                              : "—"}
+                            {formatCost(evaluationCost)}
                           </div>
                         </div>
                       </div>
+                      {(scorePercent === 0 || !Number.isFinite(scorePercent)) && task.zeroReason && (
+                        <div className="mt-2 pt-2 border-t border-slate-600/40 text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-amber-400/80 font-semibold mb-0.5">
+                            Reason
+                          </div>
+                          <div className="text-xs font-medium text-amber-300/90">
+                            {task.zeroReason
+                              .split("_")
+                              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                              .join(" ")}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>

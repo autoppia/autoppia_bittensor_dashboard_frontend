@@ -31,7 +31,7 @@ const SKELETON_SUBTLE = "bg-white/8";
 export function AgentStatsPlaceholder() {
   const stats = [
     { title: "Current Rank" },
-    { title: "Best Rank Ever" },
+    { title: "Best Rank in Season" },
     { title: "Current Score" },
     { title: "Rounds Participated" },
     { title: "Alpha Won in Prizes" },
@@ -57,12 +57,12 @@ export function AgentStatsPlaceholder() {
                     <div className={cn("w-1 h-1 rounded-full animate-pulse", SKELETON_SUBTLE)}></div>
                   </div>
                 </div>
-                
+
                 <div className="mb-3">
                   <div className={cn("h-3 w-24 rounded mb-2 animate-pulse", SKELETON_BASE)}></div>
                   <div className={cn("h-10 w-16 rounded animate-pulse", SKELETON_BASE)}></div>
                 </div>
-                
+
                 <div className={cn("h-4 w-32 rounded animate-pulse", SKELETON_BASE)}></div>
               </div>
             </div>
@@ -89,7 +89,7 @@ export function AgentScoreChartPlaceholder(props: Readonly<{ className?: string 
           ))}
         </div>
       </div>
-      
+
       <div className={cn("h-[273px] w-full rounded-lg animate-pulse p-4", PLACEHOLDER_SECTION)}>
         <div className="flex items-end justify-between h-full">
           {BAR_KEYS.map((key, i) => {
@@ -143,12 +143,12 @@ export function AgentScoreAnalyticsPlaceholder(props: Readonly<{ className?: str
                     <div className={cn("w-1 h-1 rounded-full animate-pulse", SKELETON_SUBTLE)}></div>
                   </div>
                 </div>
-                
+
                 <div className="mb-3">
                   <div className={cn("h-3 w-24 rounded mb-2 animate-pulse", SKELETON_BASE)}></div>
                   <div className={cn("h-10 w-16 rounded animate-pulse", SKELETON_BASE)}></div>
                 </div>
-                
+
                 <div className={cn("h-4 w-32 rounded animate-pulse", SKELETON_BASE)}></div>
               </div>
             </div>
@@ -187,7 +187,7 @@ export function AgentValidatorsPlaceholder() {
           </div>
         ))}
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
         {(["validator-card-1", "validator-card-2", "validator-card-3", "validator-card-4", "validator-card-5", "validator-card-6"] as const).map((key) => (
           <div
@@ -268,7 +268,7 @@ export function AgentHeaderPlaceholder() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-3">
         <div className={cn("w-8 h-8 rounded-lg animate-pulse", SKELETON_BASE)}></div>
         <div className={cn("w-8 h-8 rounded-lg animate-pulse", SKELETON_BASE)}></div>

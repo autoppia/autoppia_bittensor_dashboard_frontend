@@ -24,12 +24,12 @@ export default function NavLink({
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Add immediate visual feedback
     setIsClicking(true);
-    
+
     // Reset after a short delay
     setTimeout(() => {
       setIsClicking(false);
     }, 300);
-    
+
     // Call the original onClick if provided
     if (onClick) {
       onClick(e);
@@ -51,4 +51,3 @@ export default function NavLink({
     </Link>
   );
 }
-

@@ -9,9 +9,9 @@ export default function DebugImagesPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Validator Image Debug</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+
         {/* Test 1: ValidatorImageFill Component */}
         <div className="border p-6 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">ValidatorImageFill Component</h2>
@@ -27,7 +27,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Medium (96x96):</p>
               <div className="w-24 h-24 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
@@ -39,7 +39,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Large (192x192):</p>
               <div className="w-48 h-48 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
@@ -71,7 +71,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Medium (96x96):</p>
               <div className="w-24 h-24 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
@@ -85,7 +85,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Large (192x192):</p>
               <div className="w-48 h-48 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
@@ -117,7 +117,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Medium (96x96):</p>
               <div className="w-24 h-24 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
@@ -129,7 +129,7 @@ export default function DebugImagesPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-gray-600 mb-2">Large (192x192):</p>
               <div className="w-48 h-48 border border-gray-300 rounded-full overflow-hidden bg-gray-100">

@@ -22,7 +22,7 @@ interface ValidatorPerformance {
 
 export default function ValidatorsPage() {
   const router = useRouter();
-  
+
   const {
     data: validatorsData,
     loading: validatorsLoading,
@@ -47,7 +47,7 @@ export default function ValidatorsPage() {
       const autoppia = validators.find(
         (v) => v.name.toLowerCase().includes("autoppia")
       );
-      
+
       if (autoppia) {
         router.push(`/validator/${autoppia.uid}`);
       } else if (validators.length > 0) {
@@ -85,4 +85,3 @@ export default function ValidatorsPage() {
     </div>
   );
 }
-

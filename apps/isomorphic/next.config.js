@@ -39,13 +39,13 @@ module.exports = {
   experimental: {
     // Enable faster refresh
     optimizePackageImports: ["@core/components", "@core/utils"],
+  },
+  turbopack: {
     // Disable Turbopack development overlay
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },

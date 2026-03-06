@@ -16,12 +16,12 @@ export default function TestImagesPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Validator Images Test</h1>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
         {testImages.map((image) => (
           <div key={image.name} className="border p-4 rounded-lg">
             <h3 className="font-semibold mb-2">{image.name}</h3>
-            
+
             {/* Test 1: ValidatorImageFill Component */}
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">ValidatorImageFill:</p>

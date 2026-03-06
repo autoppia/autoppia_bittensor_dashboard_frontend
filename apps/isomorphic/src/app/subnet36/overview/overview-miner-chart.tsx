@@ -195,6 +195,16 @@ export default function MinerChart({
     return rawChartData.filter((entry) => entry.season === season);
   }, [rawChartData, season]);
 
+  // When season filter leaves < 2 points, use all data so the chart can render (and show a note)
+  const effectiveChartSource = useMemo<NormalizedLeaderboardDatum[]>(() => {
+    if (filteredBySeason.length >= 2) return filteredBySeason;
+    return rawChartData;
+  }, [filteredBySeason, rawChartData]);
+
+  const showAllSeasonsFallback = Boolean(
+    season != null && season !== undefined && filteredBySeason.length < 2 && rawChartData.length >= 2
+  );
+
   const scaleScoreValue = (value?: number | null) => {
     if (value === null || value === undefined) return undefined;
     const numeric = Number(value);
@@ -204,7 +214,7 @@ export default function MinerChart({
   };
 
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
-    return filteredBySeason.map((entry) => ({
+    return effectiveChartSource.map((entry) => ({
       ...entry,
       Score: scaleScoreValue(entry.subnet36) ?? 0,
       subnet36: scaleScoreValue(entry.subnet36) ?? 0,
@@ -212,7 +222,7 @@ export default function MinerChart({
       anthropic_cua: scaleScoreValue(entry.anthropic_cua),
       browser_use: scaleScoreValue(entry.browser_use),
     }));
-  }, [filteredBySeason]);
+  }, [effectiveChartSource]);
 
   // Generate X-axis ticks every 4 rounds
   const xAxisTicks = useMemo<number[]>(() => {
@@ -541,6 +551,11 @@ export default function MinerChart({
       rounded="lg"
       className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
     >
+      {showAllSeasonsFallback && (
+        <p className="text-xs text-amber-200/90 mb-1">
+          No data for Season {season}; showing all seasons.
+        </p>
+      )}
       <div
         className="flex min-h-0 w-full flex-1 pt-2"
         style={chartContainerStyle}

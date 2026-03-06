@@ -35,5 +35,3 @@ export default function WebsiteInfo(props: Readonly<WebsiteInfoProps>) {
     </div>
   );
 }
-
-

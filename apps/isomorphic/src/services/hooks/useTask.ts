@@ -178,10 +178,10 @@ export function useEvaluationComplete(evaluationId: string) {
     fetchComplete();
   }, [fetchComplete]);
 
-  return { 
-    data, 
-    isLoading, 
-    error, 
+  return {
+    data,
+    isLoading,
+    error,
     refetch: fetchComplete,
     // Convenience getters
     details: data?.task_details ?? null,

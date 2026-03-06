@@ -5,6 +5,11 @@ import { FieldError } from "rizzui";
 import cn from "../utils/class-names";
 import "react-quill-new/dist/quill.snow.css";
 
+/**
+ * When displaying this editor's value as HTML elsewhere (e.g. getHTML() / getSemanticHTML()),
+ * use SafeQuillHtml or sanitizeQuillHtml() to prevent XSS (CVE-2025-15056).
+ */
+
 interface QuillEditorProps extends ReactQuill.ReactQuillProps {
   error?: string;
   label?: React.ReactNode;
