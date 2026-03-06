@@ -46,6 +46,13 @@ import type {
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
+
+function safeString(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
 import {
   PiGithubLogoDuotone,
   PiHashDuotone,
@@ -350,7 +357,7 @@ function AgentStats({
                       </Text>
                       {"badge" in stat && stat.badge != null ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                          {String(stat.badge)}
+                          {safeString(stat.badge)}
                         </span>
                       ) : null}
                     </div>
@@ -1793,7 +1800,7 @@ export default function Page() {
   );
   
   // Get rounds data to extract latest season
-  const { data: roundsData } = useRoundsData(undefined);
+  const { data: roundsData } = useRoundsData();
   
   // Extract latest season from rounds data
   const latestSeason = useMemo(() => {
@@ -1956,18 +1963,15 @@ export default function Page() {
   const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
     if (viewMode === "historical" && minerHistorical?.roundsHistory) {
       // Use historical data - sort by round descending (format: "season/round")
-      return minerHistorical.roundsHistory
-        .sort((a, b) => {
-          // Parse "season/round" format for sorting
-          const aStr = String(a.round);
-          const bStr = String(b.round);
-          const [aSeason, aRound] = aStr.includes("/") ? aStr.split("/").map(Number) : [Number(aStr), 0];
-          const [bSeason, bRound] = bStr.includes("/") ? bStr.split("/").map(Number) : [Number(bStr), 0];
-          // Sort by season first, then by round (descending)
-          if (bSeason !== aSeason) return bSeason - aSeason;
-          return bRound - aRound;
-        })
-        .map((round, index) => ({
+      const sorted = [...minerHistorical.roundsHistory].sort((a, b) => {
+        const aStr = String(a.round);
+        const bStr = String(b.round);
+        const [aSeason, aRound] = aStr.includes("/") ? aStr.split("/").map(Number) : [Number(aStr), 0];
+        const [bSeason, bRound] = bStr.includes("/") ? bStr.split("/").map(Number) : [Number(bStr), 0];
+        if (bSeason !== aSeason) return bSeason - aSeason;
+        return bRound - aRound;
+      });
+      return sorted.map((round, index) => ({
           round_id: typeof round.round === "number" ? round.round : index + 1,
           score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
           rank: round.post_consensus_rank,
@@ -2097,7 +2101,7 @@ export default function Page() {
         <div className="text-center">
           <div className="text-red-500 text-lg mb-2">Error loading agent</div>
           <div className="text-gray-500 text-sm">
-            {error || "Agent not found"}
+            {error ?? "Agent not found"}
           </div>
         </div>
       </div>
