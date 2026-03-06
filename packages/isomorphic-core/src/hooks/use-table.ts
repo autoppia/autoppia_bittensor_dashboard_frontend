@@ -10,7 +10,18 @@ type DateLike = string | number | Date;
 function safeString(val: unknown): string {
   if (val == null) return '';
   if (typeof val === 'object') return JSON.stringify(val);
-  return String(val);
+  switch (typeof val) {
+    case 'string':
+      return val;
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'symbol':
+    case 'function':
+      return String(val);
+    default:
+      return '';
+  }
 }
 
 function valueMatchesSearch(value: unknown, term: string): boolean {
