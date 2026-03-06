@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import type { IconType } from "react-icons";
 import { Title, Text } from "rizzui/typography";
-import { Tooltip } from "rizzui";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
