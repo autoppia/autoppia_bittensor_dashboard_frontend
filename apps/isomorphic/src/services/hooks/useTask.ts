@@ -93,7 +93,7 @@ export function useTask(
     fetchData();
   }, [fetchData]);
 
-  const isAnyLoading = Object.values(data.loading).some((loading) => loading);
+  const isAnyLoading = Object.values(data.loading).some(Boolean);
   const hasAnyError = Object.keys(data.errors).length > 0;
 
   return {
@@ -311,7 +311,7 @@ export function useTaskActions(
   );
 
   const desiredLimit = useMemo(() => {
-    const raw = (stableParams as Record<string, unknown>).limit;
+    const raw = stableParams.limit;
     return typeof raw === "number" ? raw : undefined;
   }, [stableParams]);
 
@@ -539,7 +539,7 @@ export function useTasksList(
   );
 
   const desiredLimit = useMemo(() => {
-    const raw = (stableParams as Record<string, unknown>).limit;
+    const raw = stableParams.limit;
     return typeof raw === "number" ? raw : undefined;
   }, [stableParams]);
 
