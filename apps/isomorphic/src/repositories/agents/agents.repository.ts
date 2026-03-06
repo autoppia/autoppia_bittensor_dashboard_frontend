@@ -16,7 +16,7 @@ import {
   AgentData,
   AgentPerformanceMetrics,
   AgentRunOverview,
-  ScoreRoundDataPoint,
+  RewardRoundDataPoint,
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
   MinerHistoricalResponse,
@@ -64,17 +64,17 @@ export class AgentsRepository {
   async getRoundsData(roundIdentifier?: string | number): Promise<{
     rounds: string[];
     round_selected: {
-      round: string;
-      miners: Array<{
-        uid: number;
-        name: string;
-        image: string | null;
-        post_consensus_avg_reward: number;
-        round_score?: number;
-        best_score_in_season?: number;
-        effective_round_score?: number;
-        post_consensus_rank: number;
-      }>;
+        round: string;
+        miners: Array<{
+          uid: number;
+          name: string;
+          image: string | null;
+          post_consensus_avg_reward: number;
+          round_reward?: number;
+          best_reward_in_season?: number;
+          effective_round_reward?: number;
+          post_consensus_rank: number;
+        }>;
     } | null;
   }> {
     const params: Record<string, string | number> = {};
@@ -96,9 +96,9 @@ export class AgentsRepository {
             name: string;
             image: string | null;
             post_consensus_avg_reward: number;
-            round_score?: number;
-            best_score_in_season?: number;
-            effective_round_score?: number;
+            round_reward?: number;
+            best_reward_in_season?: number;
+            effective_round_reward?: number;
             post_consensus_rank: number;
           }>;
         } | null;
@@ -142,7 +142,7 @@ export class AgentsRepository {
         },
         round: parsedRound,
         post_consensus_rank: Number(roundMetrics.rank ?? agent.currentRank ?? 0),
-        post_consensus_avg_reward: Number(roundMetrics.score ?? agent.currentScore ?? 0),
+        post_consensus_avg_reward: Number(roundMetrics.reward ?? agent.currentReward ?? 0),
         post_consensus_avg_eval_score: 0,
         post_consensus_avg_eval_time: Number(roundMetrics.averageResponseTime ?? agent.averageResponseTime ?? 0),
         tasks_received: Number(roundMetrics.totalTasks ?? agent.totalTasks ?? 0),
@@ -201,7 +201,7 @@ export class AgentsRepository {
           payload.season_leadership ??
           roundMetrics.seasonLeadership ??
           undefined,
-        scoreRoundData: Array.isArray(payload.scoreRoundData) ? payload.scoreRoundData : [],
+        rewardRoundData: Array.isArray(payload.rewardRoundData) ? payload.rewardRoundData : [],
       } as MinerRoundDetailsResponse['data'];
     }
 
@@ -234,7 +234,7 @@ export class AgentsRepository {
     params?: { round?: number }
   ): Promise<{
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
+    rewardRoundData: RewardRoundDataPoint[];
     availableRounds?: number[];
     roundMetrics?: AgentRoundMetrics | null;
   }> {
@@ -279,7 +279,7 @@ export class AgentsRepository {
     params?: { round?: number }
   ): Promise<{
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
+    rewardRoundData: RewardRoundDataPoint[];
     availableRounds?: number[];
     roundMetrics?: AgentRoundMetrics | null;
   }> {
@@ -289,7 +289,7 @@ export class AgentsRepository {
     );
     return {
       agent: response.data.data.agent,
-      scoreRoundData: response.data.data.scoreRoundData,
+      rewardRoundData: response.data.data.rewardRoundData,
       availableRounds: response.data.data.availableRounds,
       roundMetrics: response.data.data.roundMetrics,
     };

@@ -153,7 +153,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       .filter((r) => r !== null) as number[];
 
     // Sort descending (most recent first)
-    const sorted = [...new Set(roundsInSeason)].sort((a, b) => b - a);
+    const sorted = Array.from(new Set(roundsInSeason)).sort((a, b) => b - a);
 
     return sorted.map((r) => ({
       label: `Round ${r}`,
@@ -298,9 +298,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     minersFromApi.forEach((miner: any) => {
       const uid = Number(miner?.uid);
       if (!Number.isFinite(uid)) return;
-      const round = Number(miner?.round_score ?? miner?.post_consensus_avg_reward ?? 0);
-      const best = Number(miner?.best_score_in_season ?? round);
-      const effective = Number(miner?.effective_round_score ?? Math.max(round, best));
+      const round = Number(miner?.round_reward ?? miner?.post_consensus_avg_reward ?? 0);
+      const best = Number(miner?.best_reward_in_season ?? round);
+      const effective = Number(
+        miner?.effective_round_reward ?? Math.max(round, best)
+      );
       byUid.set(uid, {
         round: Number.isFinite(round) ? round : 0,
         best: Number.isFinite(best) ? best : 0,
@@ -313,7 +315,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   // Map miners from API format to MinimalAgentData format
   // Use JSON.stringify to create a stable dependency key
   const minersFromApiKey = useMemo(() => {
-    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, score: m.post_consensus_avg_reward })));
+    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, reward: m.post_consensus_avg_reward })));
   }, [minersFromApi]);
 
   const minersData = useMemo(() => {
@@ -325,7 +327,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       uid: miner.uid,
       name: miner.name,
       ranking: miner.post_consensus_rank,
-      score: miner.post_consensus_avg_reward,
+      reward: miner.post_consensus_avg_reward,
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));
@@ -340,7 +342,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       const ar = Number.isFinite(a.ranking) ? a.ranking : Number.MAX_SAFE_INTEGER;
       const br = Number.isFinite(b.ranking) ? b.ranking : Number.MAX_SAFE_INTEGER;
       if (ar !== br) return ar - br;
-      return (b.score ?? 0) - (a.score ?? 0);
+      return (b.reward ?? 0) - (a.reward ?? 0);
     });
     const map = new Map<number, number>();
     sorted.forEach((m, idx) => map.set(Number(m.uid), idx + 1));
@@ -475,7 +477,14 @@ export default function AgentsSidebar({ className }: { className?: string }) {
           <div className="flex flex-col gap-2">
             <div className="mb-1">
               <Select
-                options={seasonOptions.length > 0 ? seasonOptions : [loadingOption]}
+                options={
+                  seasonOptions.length > 0
+                    ? seasonOptions.map((option) => ({
+                        label: option.label,
+                        value: Number(option.value),
+                      }))
+                    : [{ label: loadingOption.label, value: -1 }]
+                }
                 value={seasonSelectValue}
                 onChange={handleSeasonChange}
                 disabled={!seasonOptions.length}
@@ -486,7 +495,14 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
             <div className="mb-1">
               <Select
-                options={roundInSeasonOptions.length > 0 ? roundInSeasonOptions : [loadingOption]}
+                options={
+                  roundInSeasonOptions.length > 0
+                    ? roundInSeasonOptions.map((option) => ({
+                        label: option.label,
+                        value: Number(option.value),
+                      }))
+                    : [{ label: loadingOption.label, value: -1 }]
+                }
                 value={roundSelectValue}
                 onChange={handleRoundInSeasonChange}
                 disabled={!roundInSeasonOptions.length}
@@ -533,9 +549,9 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               const displayRank = normalizedRank !== undefined ? normalizedRank : undefined;
               const showRankBadge = typeof displayRank === "number";
               const scoreMeta = minerScoreMetaByUid.get(Number(miner.uid));
-              const roundScore = scoreMeta?.round ?? Number(miner.score ?? 0);
-              const bestScore = scoreMeta?.best ?? roundScore;
-              const isBoostedBySeason = bestScore > roundScore;
+              const roundReward = scoreMeta?.round ?? Number(miner.reward ?? 0);
+              const bestReward = scoreMeta?.best ?? roundReward;
+              const isBoostedBySeason = bestReward > roundReward;
 
               const rankBadgePalette = (() => {
                 switch (displayRank) {
@@ -675,7 +691,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           )}
                           title="Reward achieved in this round"
                         >
-                          Reward {(roundScore * 100).toFixed(2)}%
+                          Reward {(roundReward * 100).toFixed(2)}%
                         </span>
                         <span
                           className={cn(
@@ -690,7 +706,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           )}
                           title="Best reward achieved in this season"
                         >
-                          Best {(bestScore * 100).toFixed(2)}%
+                          Best {(bestReward * 100).toFixed(2)}%
                         </span>
                       </div>
                     </div>

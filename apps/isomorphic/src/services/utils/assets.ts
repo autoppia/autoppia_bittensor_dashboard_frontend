@@ -38,7 +38,7 @@ const isAllowedHost = (hostname: string | null): boolean => {
   if (allowedHosts.has(lower)) {
     return true;
   }
-  for (const host of allowedHosts) {
+  for (const host of Array.from(allowedHosts)) {
     if (host.startsWith("*.")) {
       const suffix = host.slice(1);
       if (lower.endsWith(suffix)) {

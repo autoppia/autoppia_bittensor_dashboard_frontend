@@ -207,7 +207,7 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
 
   return {
     ...run,
-    overallScore: normalizePercentage(run.overallScore),
+    overallReward: normalizePercentage(run.overallReward),
     successRate,
     successfulTasks: run.successfulTasks ?? completed,
     completedTasks: run.completedTasks ?? completed,
@@ -284,7 +284,7 @@ export default function AgentRunSearch() {
 
     const parsed = rounds
       .map((r) => parseSeasonRound(r))
-      .filter((r) => r !== null && r.season === currentSeason)
+      .filter((r): r is { season: number; round: number } => r !== null && r.season === currentSeason)
       .map((r) => r.round)
       .sort((a, b) => b - a);
 
@@ -642,8 +642,8 @@ export default function AgentRunSearch() {
     const totalTasks = run.totalTasks ?? run.tasks?.length ?? 0;
     const completedTasks = run.completedTasks ?? run.successfulTasks ?? 0;
     const successfulTasks = run.successfulTasks ?? completedTasks;
-    const baseScore = normalizePercentage(
-      typeof run.overallScore === "number" ? run.overallScore : run.score
+    const baseReward = normalizePercentage(
+      typeof run.overallReward === "number" ? run.overallReward : run.reward
     );
     const successRate =
       totalTasks > 0
@@ -668,7 +668,7 @@ export default function AgentRunSearch() {
       completedTasks,
       successfulTasks,
       successRate,
-      overallScore: baseScore,
+      overallReward: baseReward,
       ranking: sanitizeRanking(run.ranking),
       isReused: run.isReused ?? (run as any).is_reused ?? false,
       reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as any).reusedFromAgentRunId ?? (run as any).reused_from_agent_run_id ?? null,
@@ -679,9 +679,10 @@ export default function AgentRunSearch() {
   const handleSearch = async () => {
     const trimmedRunId = searchTerm.trim();
     const hasRunId = trimmedRunId.length > 0;
-    const roundIdParam = roundInput.trim()
-      ? Number(roundInput.trim())
-      : undefined;
+    const roundIdParam =
+      selectedSeason !== undefined && selectedRound !== undefined
+        ? `${selectedSeason}/${selectedRound}`
+        : undefined;
     const validatorIdParam = selectedValidator || undefined;
     const agentIdParam = agentInput.trim() || undefined;
 
@@ -1254,7 +1255,7 @@ export default function AgentRunSearch() {
               const totalTasks = run.totalTasks ?? 0;
               const rewardOutOf100 = Math.max(
                 0,
-                Math.min(100, Math.round(run.overallScore ?? 0))
+                Math.min(100, Math.round(run.overallReward ?? 0))
               );
               const minerImageSrc = resolveMinerImage(run);
 

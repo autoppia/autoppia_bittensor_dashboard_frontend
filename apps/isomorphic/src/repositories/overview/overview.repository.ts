@@ -27,7 +27,7 @@ export class OverviewRepository {
   private readonly validatorsFilterEndpoint = `${this.baseEndpoint}/validators/filter`;
 
   /**
-   * Get overview metrics (top score, total websites, validators, miners, etc.)
+   * Get overview metrics (top reward, total websites, validators, miners, etc.)
    */
   async getMetrics(): Promise<OverviewMetrics> {
     try {
@@ -41,13 +41,13 @@ export class OverviewRepository {
       }
 
       // Handle both nested and flat response structures
-      if (response.data?.data?.metrics) {
-        return response.data.data.metrics;
-      } else if (response.data?.metrics) {
-        return response.data.metrics;
+      const payload = response.data as any;
+      if (payload?.data?.metrics) {
+        return payload.data.metrics as OverviewMetrics;
+      } else if (payload?.metrics) {
+        return payload.metrics as OverviewMetrics;
       } else {
-        // Fallback to direct data structure
-        return response.data as OverviewMetrics;
+        return payload as OverviewMetrics;
       }
     } catch (error: any) {
       // If there's an error, throw it with a more descriptive message
@@ -143,11 +143,10 @@ export class OverviewRepository {
     // Handle both nested and flat response structures
     if (response.data?.data?.round) {
       return response.data.data.round;
-    } else if (response.data?.round) {
-      return response.data.round;
+    } else if ((response.data as any)?.round) {
+      return (response.data as any).round as OverviewRoundData;
     } else {
-      // Fallback to direct data structure
-      return response.data as OverviewRoundData;
+      return response.data as unknown as OverviewRoundData;
     }
   }
 
@@ -240,7 +239,7 @@ export class OverviewRepository {
       return response.data.data;
     } else {
       // Fallback to direct data structure
-      return response.data as {
+      return response.data as unknown as {
         status: 'healthy' | 'degraded' | 'down';
         message: string;
         lastChecked: string;
@@ -305,7 +304,7 @@ export class OverviewRepository {
   async getPerformanceTrends(days: number = 7): Promise<{
     trends: Array<{
       date: string;
-      averageScore: number;
+      averageReward: number;
       totalTasks: number;
       activeValidators: number;
       networkUptime: number;
@@ -317,7 +316,7 @@ export class OverviewRepository {
       data?: {
         trends: Array<{
           date: string;
-          averageScore: number;
+          averageReward: number;
           totalTasks: number;
           activeValidators: number;
           networkUptime: number;
@@ -326,7 +325,7 @@ export class OverviewRepository {
       };
       trends?: Array<{
         date: string;
-        averageScore: number;
+        averageReward: number;
         totalTasks: number;
         activeValidators: number;
         networkUptime: number;

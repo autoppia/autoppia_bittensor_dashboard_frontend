@@ -400,7 +400,7 @@ export class AgentRunsRepository {
   async compareAgentRuns(runIds: string[]): Promise<{
     runs: AgentRunData[];
     comparison: {
-      bestScore: string;
+      bestReward: string;
       fastest: string;
       mostTasks: string;
       bestSuccessRate: string;
@@ -695,10 +695,10 @@ export class AgentRunsRepository {
 
     return {
       runId: raw.runId ?? raw.run_id ?? "",
-      overallScore: this.normalizePercentage(
+      overallReward: this.normalizePercentage(
         this.getNumberWithFallback(
           raw,
-          ["overallScore", "overall_score", "score"],
+          ["overallReward", "overall_reward", "overallScore", "overall_score", "reward", "score"],
           0
         )
       ),
@@ -723,6 +723,13 @@ export class AgentRunsRepository {
           ["websites", "websiteCount", "website_count"],
           0
         ) || normalizedWebsites.length,
+      avg_reward: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ["avg_reward", "averageReward", "average_reward"], 0)
+      ),
+      avg_time: this.roundTo(
+        this.getNumberWithFallback(raw, ["avg_time", "averageTime", "average_time"], 0),
+        1
+      ),
       averageTaskDuration: this.roundTo(
         this.getNumberWithFallback(
           raw,
@@ -756,10 +763,10 @@ export class AgentRunsRepository {
     const normalizedTopWebsite = rawTopWebsite
       ? {
           website: rawTopWebsite.website ?? rawTopWebsite.name ?? "",
-          score: this.normalizePercentage(
+          averageEvalScore: this.normalizePercentage(
             this.getNumberWithFallback(
               rawTopWebsite,
-              ["score", "success_rate", "averageScore", "average_score"],
+              ["averageEvalScore", "average_eval_score", "score", "success_rate", "averageScore", "average_score"],
               0
             )
           ),
@@ -771,7 +778,7 @@ export class AgentRunsRepository {
         }
       : {
           website: "",
-          score: 0,
+          averageEvalScore: 0,
           tasks: 0,
         };
 
@@ -782,10 +789,10 @@ export class AgentRunsRepository {
             rawTopUseCase.use_case ??
             rawTopUseCase.name ??
             "",
-          score: this.normalizePercentage(
+          averageEvalScore: this.normalizePercentage(
             this.getNumberWithFallback(
               rawTopUseCase,
-              ["score", "success_rate", "averageScore", "average_score"],
+              ["averageEvalScore", "average_eval_score", "score", "success_rate", "averageScore", "average_score"],
               0
             )
           ),
@@ -797,7 +804,7 @@ export class AgentRunsRepository {
         }
       : {
           useCase: "",
-          score: 0,
+          averageEvalScore: 0,
           tasks: 0,
         };
 
@@ -816,10 +823,10 @@ export class AgentRunsRepository {
       startTime: raw.startTime ?? raw.start_time ?? "",
       endTime: raw.endTime ?? raw.end_time,
       status: raw.status ?? "",
-      overallScore: this.normalizePercentage(
+      overallReward: this.normalizePercentage(
         this.getNumberWithFallback(
           raw,
-          ["overallScore", "overall_score", "score"],
+          ["overallReward", "overall_reward", "overallScore", "overall_score", "reward", "score"],
           0
         )
       ),

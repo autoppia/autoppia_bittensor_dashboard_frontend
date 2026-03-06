@@ -12,8 +12,8 @@ export interface ValidatorRoundData {
   status: "active" | "finished" | "pending" | "evaluating_finished";
   startTime: string;
   endTime?: string;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   totalTasks: number;
   completedTasks: number;
   icon?: string;
@@ -26,6 +26,8 @@ export interface RoundData {
   round?: number;
   roundNumber?: number;
   roundKey?: string;
+  season?: number;
+  roundInSeason?: number;
   startBlock: number;
   endBlock: number;
   current: boolean;
@@ -34,8 +36,8 @@ export interface RoundData {
   status: "active" | "finished" | "pending" | "evaluating_finished";
   totalTasks: number;
   completedTasks: number;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   currentBlock?: number;
   blocksRemaining?: number;
   progress?: number;
@@ -51,11 +53,11 @@ export interface RoundStatistics {
   completedTasks: number;
   totalValidators: number;
   averageTasksPerValidator: number;
-  averageScore: number;
-  winnerAverageScore?: number;
+  averageReward: number;
+  winnerAverageReward?: number;
   winnerMinerUid?: number;
-  validatorAverageTopScore?: number;
-  topScore: number;
+  validatorAverageTopReward?: number;
+  topReward: number;
   successRate: number;
   averageDuration: number;
   totalStake: number;
@@ -68,8 +70,9 @@ export interface MinerPerformance {
   uid: number;
   name?: string;
   hotkey?: string | null;
+  image?: string | null;
   success: boolean;
-  score: number;
+  reward: number;
   duration: number;
   ranking: number;
   tasksCompleted: number;
@@ -81,14 +84,16 @@ export interface MinerPerformance {
   isSota?: boolean;
   provider?: string;
   imageUrl?: string;
-  /** Reason for score 0 when applicable (from agent run) */
+  githubUrl?: string | null;
+  github_url?: string | null;
+  /** Reason for reward 0 when applicable (from agent run) */
   zeroReason?: string | null;
 }
 
 export interface BenchmarkPerformance {
   id: string;
   name: string;
-  score: number;
+  reward: number;
   provider?: string;
   imageUrl?: string;
 }
@@ -104,8 +109,8 @@ export interface ValidatorPerformance {
   completedTasks: number;
   totalMiners: number;
   activeMiners: number;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   weight: number;
   trust: number;
   version: number;
@@ -222,14 +227,14 @@ export interface RoundsListQueryParams {
   page?: number;
   limit?: number;
   status?: "active" | "finished" | "pending" | "evaluating_finished";
-  sortBy?: "id" | "startTime" | "endTime" | "totalTasks" | "averageScore";
+  sortBy?: "id" | "startTime" | "endTime" | "totalTasks" | "averageReward";
   sortOrder?: "asc" | "desc";
 }
 
 export interface RoundMinersQueryParams {
   page?: number;
   limit?: number;
-  sortBy?: "score" | "duration" | "ranking" | "uid";
+  sortBy?: "reward" | "score" | "duration" | "ranking" | "uid";
   sortOrder?: "asc" | "desc";
   success?: boolean;
   minScore?: number;
@@ -266,8 +271,8 @@ export interface ValidatorRoundData {
   validator_uid: number;
   validator_name: string;
   validator_hotkey: string | null;
-  local_avg_winner_score: number;
-  topScore: number;
+  local_avg_winner_reward: number;
+  topReward: number;
   local_avg_eval_time: number;
   local_miners_evaluated: number;
   local_tasks_evaluated: number;

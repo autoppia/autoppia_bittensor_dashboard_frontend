@@ -137,14 +137,16 @@ export const mockCurrentRound: OverviewRoundData = {
   status: "active",
   totalTasks: 1247,
   completedTasks: 892,
-  averageScore: 0.78,
-  topScore: 0.95,
+  averageReward: 0.78,
+  topReward: 0.95,
 };
 
 export const mockLeaderboard: LeaderboardData[] = [
   {
     round: 42,
     subnet36: 0.95,
+    post_consensus_reward: 0.95,
+    reward: 0.95,
     openai_cua: 0.87,
     anthropic_cua: 0.89,
     browser_use: 0.92,
@@ -153,6 +155,8 @@ export const mockLeaderboard: LeaderboardData[] = [
   {
     round: 41,
     subnet36: 0.92,
+    post_consensus_reward: 0.92,
+    reward: 0.92,
     openai_cua: 0.85,
     anthropic_cua: 0.87,
     browser_use: 0.9,
@@ -161,6 +165,8 @@ export const mockLeaderboard: LeaderboardData[] = [
   {
     round: 40,
     subnet36: 0.89,
+    post_consensus_reward: 0.89,
+    reward: 0.89,
     openai_cua: 0.83,
     anthropic_cua: 0.85,
     browser_use: 0.88,
@@ -169,6 +175,8 @@ export const mockLeaderboard: LeaderboardData[] = [
   {
     round: 39,
     subnet36: 0.87,
+    post_consensus_reward: 0.87,
+    reward: 0.87,
     openai_cua: 0.81,
     anthropic_cua: 0.83,
     browser_use: 0.86,
@@ -177,6 +185,8 @@ export const mockLeaderboard: LeaderboardData[] = [
   {
     round: 38,
     subnet36: 0.85,
+    post_consensus_reward: 0.85,
+    reward: 0.85,
     openai_cua: 0.79,
     anthropic_cua: 0.81,
     browser_use: 0.84,
@@ -249,49 +259,49 @@ export const mockPerformanceTrends = {
   trends: [
     {
       date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.76,
+      averageReward: 0.76,
       totalTasks: 1156,
       activeValidators: 6,
       networkUptime: 98.8,
     },
     {
       date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.77,
+      averageReward: 0.77,
       totalTasks: 1189,
       activeValidators: 6,
       networkUptime: 99.1,
     },
     {
       date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.78,
+      averageReward: 0.78,
       totalTasks: 1203,
       activeValidators: 6,
       networkUptime: 99.3,
     },
     {
       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.79,
+      averageReward: 0.79,
       totalTasks: 1215,
       activeValidators: 6,
       networkUptime: 99.0,
     },
     {
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.78,
+      averageReward: 0.78,
       totalTasks: 1234,
       activeValidators: 6,
       networkUptime: 99.2,
     },
     {
       date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      averageScore: 0.8,
+      averageReward: 0.8,
       totalTasks: 1240,
       activeValidators: 6,
       networkUptime: 99.4,
     },
     {
       date: new Date().toISOString(),
-      averageScore: 0.78,
+      averageReward: 0.78,
       totalTasks: 1247,
       activeValidators: 6,
       networkUptime: 99.2,

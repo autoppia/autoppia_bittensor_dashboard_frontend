@@ -131,12 +131,12 @@ export default function AgentHistoricalAnalytics({
     return set;
   }, [minerHistorical?.performanceByWebsite, selectedSeason]);
   const sourceRound = useMemo(() => {
-    const bestScoreRound = minerHistorical?.summary?.bestScoreRound;
-    if (bestScoreRound) {
-      const bestScoreRoundStr = String(bestScoreRound);
-      const seasonPart = Number.parseInt(bestScoreRoundStr.split("/")[0] ?? "", 10);
-      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestScoreRoundStr)) {
-        return bestScoreRoundStr;
+    const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
+    if (bestRewardRound) {
+      const bestRewardRoundStr = String(bestRewardRound);
+      const seasonPart = Number.parseInt(bestRewardRoundStr.split("/")[0] ?? "", 10);
+      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestRewardRoundStr)) {
+        return bestRewardRoundStr;
       }
     }
     const bestRankRound = minerHistorical?.summary?.bestRankRound;
@@ -170,7 +170,7 @@ export default function AgentHistoricalAnalytics({
     }
     return latestStr;
   }, [
-    minerHistorical?.summary?.bestScoreRound,
+    minerHistorical?.summary?.bestRewardRound,
     minerHistorical?.summary?.bestRankRound,
     minerHistorical?.roundsHistory,
     roundsWithTaskDetails,

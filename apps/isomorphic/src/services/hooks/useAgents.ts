@@ -10,7 +10,7 @@ import type {
   AgentPerformanceMetrics,
   AgentRunOverview,
   AgentRoundMetrics,
-  ScoreRoundDataPoint,
+  RewardRoundDataPoint,
   AgentsListQueryParams,
   AgentRunsQueryParams,
   AgentPerformanceQueryParams,
@@ -193,7 +193,7 @@ export function useAgents(params?: AgentsListQueryParams) {
 // Hook for specific agent details
 type AgentDetailPayload = {
   agent: AgentData | null;
-  scoreRoundData: ScoreRoundDataPoint[];
+  rewardRoundData: RewardRoundDataPoint[];
   availableRounds?: number[];
   roundMetrics?: AgentRoundMetrics | null;
 };
@@ -205,7 +205,7 @@ export function useAgent(id?: string | null, params?: { round?: number }) {
 
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
-      return Promise.resolve({ agent: null, scoreRoundData: [] });
+      return Promise.resolve({ agent: null, rewardRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);

@@ -28,9 +28,9 @@ export default function OverviewAnnouncementModal() {
             <Text className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-300">
               Launch date
             </Text>
-            <Title as="p" className="mt-1 text-4xl font-black !text-white">
+            <Text className="mt-1 text-4xl font-black !text-white">
               21 October
-            </Title>
+            </Text>
           </div>
         </div>
         <ActionIcon

@@ -15,6 +15,7 @@ import {
   RoundStatistics,
   MinerPerformance,
   ValidatorPerformance,
+  ValidatorRoundData,
   RoundActivity,
   RoundProgress,
   GetRoundResponse,
@@ -178,10 +179,10 @@ export class RoundsRepository {
             validator.validatorHotkey ??
             validator.validator_hotkey ??
             validator.hotkey,
-          status: (() => {
-            const vStatus = (
-              validator.status ?? validator.Status
-            )?.toLowerCase();
+	          status: (() => {
+	            const vStatus = (
+	              validator.status ?? validator.Status
+	            )?.toLowerCase();
             if (
               vStatus === "evaluating_finished" ||
               vStatus === "evaluating-finished"
@@ -194,8 +195,8 @@ export class RoundsRepository {
             } else if (vStatus === "active") {
               return "active" as const;
             }
-            return (validator.current ? "active" : "finished") as const;
-          })(),
+	            return validator.current ? "active" : "finished";
+	          })() as ValidatorRoundData["status"],
           startTime:
             ensureIso(
               validator.startTime ??
@@ -211,12 +212,12 @@ export class RoundsRepository {
               validator.endedAt ??
               validator.end_at
           ),
-          averageScore:
+          averageReward:
+            validator.averageReward ??
+            validator.average_reward ??
             validator.averageScore ??
-            validator.average_score ??
-            validator.score ??
             0,
-          topScore: validator.topScore ?? validator.top_score ?? 0,
+          topReward: validator.topReward ?? validator.top_reward ?? validator.topScore ?? 0,
           totalTasks:
             validator.totalTasks ??
             validator.total_tasks ??
@@ -297,8 +298,8 @@ export class RoundsRepository {
       status,
       totalTasks,
       completedTasks,
-      averageScore: rawRound.averageScore ?? rawRound.average_score ?? 0,
-      topScore: rawRound.topScore ?? rawRound.top_score ?? 0,
+      averageReward: rawRound.averageReward ?? rawRound.average_reward ?? rawRound.averageScore ?? 0,
+      topReward: rawRound.topReward ?? rawRound.top_reward ?? rawRound.topScore ?? 0,
       currentBlock:
         currentBlock ?? (status === "finished" ? endBlock : undefined),
       blocksRemaining:
@@ -367,8 +368,9 @@ export class RoundsRepository {
       ? this.normalizeRoundData(currentRoundRaw)
       : undefined;
 
-    return {
-      data: {
+	    return {
+	      success: true,
+	      data: {
         rounds: normalizedRounds,
         total,
         page,
@@ -450,14 +452,15 @@ export class RoundsRepository {
       `${this.baseEndpoint}/${path}/validators`
     );
     return response.data.data.validators.map(
-      (validator: ValidatorPerformance & { top_score?: number }) => ({
-        ...validator,
-        topScore:
-          validator.topScore ??
-          validator.top_score ??
-          validator.averageScore ??
-          0,
-      })
+	      (validator: ValidatorPerformance & { top_score?: number; top_reward?: number; averageReward?: number; average_score?: number }) => ({
+	        ...validator,
+	        topReward:
+	          validator.topReward ??
+	          validator.top_reward ??
+	          validator.averageReward ??
+	          validator.average_score ??
+	          0,
+	      })
     );
   }
 
@@ -499,7 +502,7 @@ export class RoundsRepository {
         image: string | null;
         hotkey: string | null;
       } | null;
-      avg_winner_score: number;
+      avg_winner_reward: number;
       avg_eval_time: number;
       miners_evaluated: number;
       tasks_evaluated: number;
@@ -514,7 +517,7 @@ export class RoundsRepository {
         image: string | null;
         hotkey: string | null;
       } | null;
-      local_avg_winner_score: number;
+      local_avg_winner_reward: number;
       local_avg_eval_time: number;
       local_miners_evaluated: number;
       local_tasks_evaluated: number;
@@ -554,7 +557,7 @@ export class RoundsRepository {
         image: string | null;
         hotkey: string | null;
       } | null;
-      local_avg_winner_score: number;
+      local_avg_winner_reward: number;
       local_avg_eval_time: number;
       local_miners_evaluated: number;
       local_tasks_evaluated: number;
@@ -599,8 +602,8 @@ export class RoundsRepository {
           image: string | null;
           hotkey: string | null;
         } | null;
-        topScore: number;
-        local_avg_winner_score: number;
+        topReward: number;
+        local_avg_winner_reward: number;
         local_avg_eval_time: number;
         local_miners_evaluated: number;
         local_tasks_evaluated: number;
@@ -696,8 +699,8 @@ export class RoundsRepository {
     status: string;
     progress: number;
     totalMiners: number;
-    averageScore: number;
-    topScore: number;
+    averageReward: number;
+    topReward: number;
     timeRemaining?: string;
   }> {
     const { path } = this.buildRoundPath(identifier);
@@ -707,8 +710,8 @@ export class RoundsRepository {
         status: string;
         progress: number;
         totalMiners: number;
-        averageScore: number;
-        topScore: number;
+        averageReward: number;
+        topReward: number;
         timeRemaining?: string;
       };
     }>(`${this.baseEndpoint}/${path}/summary`);

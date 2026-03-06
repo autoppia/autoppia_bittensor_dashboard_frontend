@@ -95,7 +95,7 @@ function RoundsListTest() {
                 </span>
               </div>
               <div className="text-xs text-gray-500">
-                Score: {round.averageScore} | Tasks: {round.completedTasks}/{round.totalTasks}
+                Reward: {round.averageReward} | Tasks: {round.completedTasks}/{round.totalTasks}
               </div>
             </div>
           ))}
@@ -122,12 +122,12 @@ function RoundStatisticsTest({ roundId }: { roundId: number }) {
         <p className="text-2xl font-bold text-green-600">{data?.activeMiners}</p>
       </div>
       <div className="bg-purple-50 p-3 rounded">
-        <h4 className="font-medium text-purple-800">Average Score</h4>
-        <p className="text-2xl font-bold text-purple-600">{data?.averageScore}</p>
+        <h4 className="font-medium text-purple-800">Average Reward</h4>
+        <p className="text-2xl font-bold text-purple-600">{data?.averageReward}</p>
       </div>
       <div className="bg-orange-50 p-3 rounded">
-        <h4 className="font-medium text-orange-800">Top Score</h4>
-        <p className="text-2xl font-bold text-orange-600">{data?.topScore}</p>
+        <h4 className="font-medium text-orange-800">Top Reward</h4>
+        <p className="text-2xl font-bold text-orange-600">{data?.topReward}</p>
       </div>
       <div className="bg-red-50 p-3 rounded col-span-2">
         <h4 className="font-medium text-red-800">Success Rate</h4>
@@ -140,7 +140,7 @@ function RoundStatisticsTest({ roundId }: { roundId: number }) {
 function RoundMinersTest({ roundId }: { roundId: number }) {
   const { data, loading, error } = useRoundMiners(roundId, {
     limit: 5,
-    sortBy: 'score',
+    sortBy: 'reward',
     sortOrder: 'desc'
   });
 
@@ -155,11 +155,11 @@ function RoundMinersTest({ roundId }: { roundId: number }) {
             <div>
               <h4 className="font-medium">Miner {miner.uid}</h4>
               <p className="text-sm text-gray-600">
-                {miner.hotkey.slice(0, 8)}...{miner.hotkey.slice(-8)}
+                {(miner.hotkey ?? "unknown").slice(0, 8)}...{(miner.hotkey ?? "unknown").slice(-8)}
               </p>
             </div>
             <div className="text-right">
-              <p className="font-bold text-lg">{miner.score}</p>
+              <p className="font-bold text-lg">{miner.reward}</p>
               <p className="text-sm text-gray-600">Rank #{miner.ranking}</p>
             </div>
           </div>

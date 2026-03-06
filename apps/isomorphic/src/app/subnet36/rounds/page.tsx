@@ -27,7 +27,7 @@ export default async function Page() {
 
     try {
       const roundsList = await roundsRepository.getRounds({ limit: 1, sortBy: "id", sortOrder: "desc" });
-      const rounds = roundsList?.data?.rounds || roundsList?.rounds;
+      const rounds = roundsList?.data?.rounds ?? [];
       if (Array.isArray(rounds) && rounds.length > 0) {
         const round = rounds[0];
 

@@ -6,6 +6,7 @@
 // ===== TASK DATA =====
 export interface TaskData {
   taskId: string;
+  evaluationId?: string;
   agentRunId: string;
   website: string;
   seed?: string | null;
@@ -35,6 +36,7 @@ export interface TaskData {
   relationships?: TaskRelationships | null;
   /** Reason for score 0 at evaluation level (e.g. task_timeout, tests_failed) */
   zeroReason?: string | null;
+  zero_reason?: string | null;
 }
 
 // ===== TASK ACTION =====

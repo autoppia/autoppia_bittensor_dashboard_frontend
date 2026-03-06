@@ -4,6 +4,7 @@ import type {
   AgentRunWebsite,
   AgentRunSummaryChartData,
   AgentRunResult,
+  AgentRunUseCase,
 } from "./agent-run-types";
 import type {
   AgentRunStats,
@@ -104,22 +105,23 @@ export function transformStatsToDetailData(
     };
   }
 
-  const fallbackByName = new Map(
+  const fallbackByName = new Map<string, AgentRunWebsite>(
     fallback.websites.map((site) => [site.name.toLowerCase(), cloneWebsite(site)])
   );
   const fallbackWebsites = fallback.websites.map(cloneWebsite);
   const useCaseStats = stats.performanceByUseCase ?? [];
 
   const websites = (stats.performanceByWebsite ?? []).map((site, index) => {
-    const fallbackMatch =
-      (site.website &&
-        fallbackByName.get(site.website.toLowerCase())) ??
+    const fallbackMatch: AgentRunWebsite | undefined =
+      (site.website
+        ? fallbackByName.get(site.website.toLowerCase())
+        : undefined) ??
       fallbackWebsites[index];
 
-    const fallbackResults = (fallbackMatch?.results ?? []).map((result) => ({
+    const fallbackResults = (fallbackMatch?.results ?? []).map((result: AgentRunResult) => ({
       ...result,
     }));
-    const fallbackUseCases = (fallbackMatch?.useCases ?? []).map((useCase) => ({
+    const fallbackUseCases = (fallbackMatch?.useCases ?? []).map((useCase: AgentRunUseCase) => ({
       ...useCase,
     }));
 
@@ -144,7 +146,7 @@ export function transformStatsToDetailData(
           const normalized = normalizeLabel(
             entry.useCase ?? `use-case-${idx}`
           );
-          const fallbackUseCase = fallbackUseCaseLookup.get(normalized);
+          const fallbackUseCase = fallbackUseCaseLookup.get(normalized) as AgentRunUseCase | undefined;
           return {
             id:
               fallbackUseCase?.id ??
@@ -156,7 +158,7 @@ export function transformStatsToDetailData(
               `Use Case ${idx + 1}`,
           };
         })
-      : fallbackUseCases.map((useCase) => ({ ...useCase }));
+      : fallbackUseCases.map((useCase: AgentRunUseCase) => ({ ...useCase }));
 
     let results: AgentRunResult[] = [];
 
@@ -199,7 +201,7 @@ export function transformStatsToDetailData(
         ])
       );
 
-      results = fallbackResults.map((result) => {
+      results = fallbackResults.map((result: AgentRunResult) => {
         const matched =
           statsLookup.get(normalizeLabel(result.name)) ?? null;
 
@@ -283,7 +285,7 @@ export function buildSummaryChartData(
   const computedTotal =
     summary && summary.totalTasks
       ? (summary.successfulTasks / summary.totalTasks) * 100
-      : summary?.overallScore ?? fallbackSummary.total;
+      : summary?.overallReward ?? fallbackSummary.total;
 
   return {
     usecases: aggregatedUsecases.length

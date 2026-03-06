@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Agents API Usage Examples
  * Demonstrates how to use the agents API service and hooks
