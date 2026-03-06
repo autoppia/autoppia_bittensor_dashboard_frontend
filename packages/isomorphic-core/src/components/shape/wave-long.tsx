@@ -1,6 +1,6 @@
 export default function WaveLongShape({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 237 57"
