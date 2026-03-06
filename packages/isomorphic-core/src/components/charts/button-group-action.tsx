@@ -24,7 +24,7 @@ export default function ButtonGroupAction({
   activeClassName,
 }: Readonly<ButtonGroupActionProps>) {
   const [state, setState] = useState(
-    defaultActive ?? options[options.length - 1]
+    defaultActive ?? options.at(-1)
   );
   function handleOnChange(value: string) {
     setState(value);
