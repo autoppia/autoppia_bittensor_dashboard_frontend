@@ -106,7 +106,7 @@ export function PerformanceAnalyticsPlaceholder() {
           <div className={cn("h-10 w-40 rounded", SKELETON_BASE)}></div>
         </div>
       </div>
-      
+
       <div className="space-y-6">
         {(["validator-list-item-placeholder-1", "validator-list-item-placeholder-2", "validator-list-item-placeholder-3", "validator-list-item-placeholder-4", "validator-list-item-placeholder-5"] as const).map((key) => (
           <div
@@ -149,13 +149,13 @@ export function SummaryPlaceholder() {
   return (
     <div className={cn("rounded-3xl border border-white/15 p-6 shadow-2xl backdrop-blur-xl", PLACEHOLDER_PANEL)}>
       <div className={cn("h-7 w-32 rounded mb-6", SKELETON_BASE)}></div>
-      
+
       <div className="flex flex-col items-center mb-6">
         <div className={cn("w-48 h-48 rounded-full mb-4", SKELETON_BASE)}></div>
         <div className={cn("h-5 w-24 rounded mb-2", SKELETON_BASE)}></div>
         <div className={cn("h-4 w-32 rounded", SKELETON_SUBTLE)}></div>
       </div>
-      
+
       <div className="space-y-3">
         {(["validator-compact-item-placeholder-1", "validator-compact-item-placeholder-2", "validator-compact-item-placeholder-3", "validator-compact-item-placeholder-4"] as const).map((key) => (
           <div
@@ -181,4 +181,3 @@ export function SummaryPlaceholder() {
     </div>
   );
 }
-

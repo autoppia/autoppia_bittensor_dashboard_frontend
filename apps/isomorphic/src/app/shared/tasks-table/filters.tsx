@@ -91,7 +91,7 @@ function FilterElements<T extends Record<string, any>>({
     table.getState().globalFilter || table.getState().columnFilters.length > 0;
   return (
     <>
-      
+
       <StatusField
         options={statusOptions}
         value={table.getColumn('status')?.getFilterValue() ?? []}

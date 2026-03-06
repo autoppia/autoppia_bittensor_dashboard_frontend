@@ -142,7 +142,7 @@ export default function ValidatorsSelector({
                 resolveAssetUrl("/validators/Other.png")
               );
               const isActive = selectedValidatorId === validator.id;
-              
+
               const cardContent = (
                 <div
                   className={cn(
@@ -257,4 +257,3 @@ export default function ValidatorsSelector({
     </div>
   );
 }
-

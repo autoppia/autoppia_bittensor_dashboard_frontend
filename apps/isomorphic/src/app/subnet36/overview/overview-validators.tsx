@@ -34,6 +34,26 @@ const DEFAULT_TASK_MESSAGES = new Set([
   "Round completed",
 ]);
 
+function formatStakeValue(stake: number | null | undefined): string {
+  if (stake === null || stake === undefined || Number.isNaN(stake)) {
+    return "—";
+  }
+  const value = Number(stake);
+  if (value <= 0) {
+    return "0";
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(2)}K`;
+  }
+  if (value < 1) {
+    return value.toFixed(4);
+  }
+  return value.toFixed(2);
+}
+
 export default function OverviewValidators({
   currentRound,
   currentSeason,
@@ -207,10 +227,7 @@ export default function OverviewValidators({
           );
           const statusColorClass =
             statusColorClasses[validator.status] ?? statusColorClasses.default;
-          const stakeMetric =
-            typeof validator.weight === "number"
-              ? `${(validator.weight / 1000).toFixed(0)}K`
-              : "—";
+          const stakeMetric = formatStakeValue(validator.stake);
           const trustMetric =
             typeof validator.trust === "number"
               ? validator.trust.toFixed(2)

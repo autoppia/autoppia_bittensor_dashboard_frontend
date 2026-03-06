@@ -11,7 +11,7 @@ interface PlaceholderProps {
   animation?: 'pulse' | 'wave' | 'none';
 }
 
-export default function Placeholder({ 
+export default function Placeholder({
   className = "",
   variant = 'rectangular',
   width = '100%',
@@ -94,7 +94,7 @@ export function StatsCardPlaceholder({ className = "" }: Readonly<{ className?: 
       <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-gray-300/50 rounded-tr-lg"></div>
       <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-gray-300/50 rounded-bl-lg"></div>
       <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-gray-300/50 rounded-br-lg"></div>
-      
+
       <div className="relative z-10">
         {/* Icon and Title */}
         <div className="flex items-center space-x-2 mb-2">
@@ -132,7 +132,7 @@ export function ProgressBarPlaceholder({ className = "" }: Readonly<{ className?
           <Placeholder height="0.875rem" width="4rem" />
         </div>
       </div>
-      
+
       {/* Progress Cells */}
       <div className="w-full flex items-center justify-between mb-4">
         {Array.from({ length: 50 }, (_, index) => (
@@ -146,7 +146,7 @@ export function ProgressBarPlaceholder({ className = "" }: Readonly<{ className?
           />
         ))}
       </div>
-      
+
       {/* Block Info */}
       <div className="w-full flex items-center justify-between">
         <div className="flex items-center space-x-4">

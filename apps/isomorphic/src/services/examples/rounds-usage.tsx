@@ -16,7 +16,7 @@ export function RoundPageExample({ roundId }: Readonly<{ roundId: number }>) {
   return (
     <div>
       <h1>Round {roundId} Dashboard</h1>
-      
+
       {/* Round Info */}
       <div>
         <h2>Round Information</h2>
@@ -138,7 +138,7 @@ export function RoundsListExample() {
           </div>
         ))}
       </div>
-      
+
       {data.currentRound && (
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <h3 className="font-semibold text-green-800">Current Round</h3>

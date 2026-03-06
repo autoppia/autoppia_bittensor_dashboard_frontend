@@ -19,17 +19,17 @@ else
             echo "   - PID $PID: $PROCESS_INFO"
         fi
     done
-    
+
     echo "🧹 Terminando procesos..."
     echo "$PIDS" | while read PID; do
         if [ ! -z "$PID" ]; then
             kill -9 $PID 2>/dev/null && echo "   ✓ Proceso $PID terminado" || echo "   ✗ No se pudo terminar el proceso $PID"
         fi
     done
-    
+
     # Esperar un momento para que los procesos se terminen
     sleep 1
-    
+
     # Verificar que el puerto esté libre
     REMAINING=$(lsof -ti :$PORT 2>/dev/null || echo "")
     if [ -z "$REMAINING" ]; then

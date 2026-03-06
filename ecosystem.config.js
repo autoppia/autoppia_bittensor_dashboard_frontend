@@ -15,7 +15,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
-      
+
       // Development environment
       env: {
         NODE_ENV: "development",
@@ -23,7 +23,7 @@ module.exports = {
         NEXT_PUBLIC_API_BASE_URL: "https://dev-api-leaderboard.autoppia.com",
         NEXT_PUBLIC_API_URL: "https://dev-api-leaderboard.autoppia.com",
       },
-      
+
       error_file: path.join(userHome, ".pm2/logs/dev-infinitewebarena.autoppia.com-error.log"),
       out_file: path.join(userHome, ".pm2/logs/dev-infinitewebarena.autoppia.com-out.log"),
       log_file: path.join(userHome, ".pm2/logs/dev-infinitewebarena.autoppia.com-combined.log"),
@@ -39,7 +39,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
-      
+
       // Production environment
       env: {
         NODE_ENV: "production",
@@ -47,7 +47,7 @@ module.exports = {
         NEXT_PUBLIC_API_BASE_URL: "https://api-leaderboard.autoppia.com",
         NEXT_PUBLIC_API_URL: "https://api-leaderboard.autoppia.com",
       },
-      
+
       error_file: path.join(userHome, ".pm2/logs/infinitewebarena.autoppia.com-error.log"),
       out_file: path.join(userHome, ".pm2/logs/infinitewebarena.autoppia.com-out.log"),
       log_file: path.join(userHome, ".pm2/logs/infinitewebarena.autoppia.com-combined.log"),

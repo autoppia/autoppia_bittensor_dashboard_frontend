@@ -21,4 +21,3 @@ class SubnetsRepository {
 }
 
 export const subnetsRepository = new SubnetsRepository();
-

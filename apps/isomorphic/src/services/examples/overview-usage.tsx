@@ -17,7 +17,7 @@ export function OverviewPageExample() {
   return (
     <div>
       <h1>Overview Dashboard</h1>
-      
+
       {/* Metrics */}
       <div>
         <h2>Metrics</h2>

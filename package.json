@@ -4,7 +4,7 @@
   "description": "A nextjs template to build dashboard",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true turbo dev",
     "lint": "turbo lint",
     "type:check": "turbo type:check",
     "build": "turbo build",
@@ -29,5 +29,28 @@
   "packageManager": "pnpm@9.1.4",
   "dependencies": {
     "react-icons": "^5.5.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "next": ">=15.5.12",
+      "minimatch": ">=10.2.3",
+      "basic-ftp": ">=5.2.0",
+      "glob": ">=11.1.0",
+      "@isaacs/brace-expansion": ">=5.0.1",
+      "lodash": ">=4.17.23",
+      "lodash-es": ">=4.17.23",
+      "next-auth": ">=4.24.12",
+      "nodemailer": ">=7.0.7",
+      "@babel/helpers": ">=7.26.10",
+      "@babel/runtime": ">=7.26.10",
+      "@babel/runtime-corejs3": ">=7.26.10",
+      "ajv": ">=6.14.0",
+      "js-yaml": ">=4.1.1",
+      "esbuild": ">=0.25.0",
+      "prismjs": ">=1.30.0",
+      "diff": ">=5.2.2",
+      "tmp": ">=0.2.4",
+      "@eslint/plugin-kit": ">=0.3.4"
+    }
   }
 }
