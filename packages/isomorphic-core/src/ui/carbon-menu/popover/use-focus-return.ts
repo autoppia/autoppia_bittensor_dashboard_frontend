@@ -23,11 +23,11 @@ export function useFocusReturn({
   };
 
   useUpdate(() => {
-    let timeout = -1;
+    let timeout: ReturnType<typeof globalThis.setTimeout>;
 
     const clearFocusTimeout = (event: KeyboardEvent) => {
       if (event.key === 'Tab') {
-        window.clearTimeout(timeout);
+        globalThis.clearTimeout(timeout);
       }
     };
 
@@ -36,11 +36,11 @@ export function useFocusReturn({
     if (opened) {
       lastActiveElement.current = document.activeElement as HTMLElement;
     } else if (shouldReturnFocus) {
-      timeout = window.setTimeout(returnFocus, 10);
+      timeout = globalThis.setTimeout(returnFocus, 10);
     }
 
     return () => {
-      window.clearTimeout(timeout);
+      globalThis.clearTimeout(timeout);
       document.removeEventListener('keydown', clearFocusTimeout);
     };
   }, [opened, shouldReturnFocus]);
