@@ -4,7 +4,9 @@ import { useFormContext } from 'react-hook-form';
 import { InvoiceInput } from './invoice-forms/invoice-input';
 import InvoiceImageUploader from '../../../ui/file-upload/invoice-image-uploader';
 
-export default function FirstBlock({ setValue }: { setValue: any }) {
+export default function FirstBlock({
+  setValue,
+}: Readonly<{ setValue: any }>) {
   const { register } = useFormContext();
 
   return (
