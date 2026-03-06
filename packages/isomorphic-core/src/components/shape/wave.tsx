@@ -1,4 +1,6 @@
-export default function WaveShape({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function WaveShape({
+  ...props
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 156 59"
