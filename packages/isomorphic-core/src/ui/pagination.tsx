@@ -80,7 +80,12 @@ type IconProps = {
   className: string;
 };
 
-const PrevIcon = ({ icon, rounded, outline, className }: IconProps) => (
+const PrevIcon = ({
+  icon,
+  rounded,
+  outline,
+  className,
+}: Readonly<IconProps>) => (
   <div
     className={cn(
       iconClasses.base,
@@ -108,7 +113,12 @@ const PrevIcon = ({ icon, rounded, outline, className }: IconProps) => (
   </div>
 );
 
-const NextIcon = ({ icon, rounded, outline, className }: IconProps) => (
+const NextIcon = ({
+  icon,
+  rounded,
+  outline,
+  className,
+}: Readonly<IconProps>) => (
   <div
     className={cn(
       iconClasses.base,
@@ -136,21 +146,12 @@ const NextIcon = ({ icon, rounded, outline, className }: IconProps) => (
   </div>
 );
 
-const JumpPrevIcon = ({ icon, rounded, outline, className }: IconProps) => (
-  <div
-    className={cn(
-      iconClasses.base,
-      outline ? iconClasses.outline : iconClasses.center,
-      iconClasses.rounded[rounded],
-      !icon && outline && 'py-0 leading-[26px]',
-      className
-    )}
-  >
-    {icon || '•••'}
-  </div>
-);
-
-const JumpNextIcon = ({ icon, rounded, outline, className }: IconProps) => (
+const JumpIcon = ({
+  icon,
+  rounded,
+  outline,
+  className,
+}: Readonly<IconProps>) => (
   <div
     className={cn(
       iconClasses.base,
@@ -217,7 +218,7 @@ export default function Pagination({
   jumpNextIconClassName,
   className,
   ...props
-}: PaginationProps) {
+}: Readonly<PaginationProps>) {
   return (
     <RcPagination
       locale={locale || localeDefault}
@@ -238,7 +239,7 @@ export default function Pagination({
         />
       }
       jumpPrevIcon={
-        <JumpPrevIcon
+        <JumpIcon
           icon={jumpPrevIcon as React.ReactNode}
           rounded={rounded}
           outline={outline}
@@ -246,7 +247,7 @@ export default function Pagination({
         />
       }
       jumpNextIcon={
-        <JumpNextIcon
+        <JumpIcon
           icon={jumpNextIcon as React.ReactNode}
           rounded={rounded}
           outline={outline}
