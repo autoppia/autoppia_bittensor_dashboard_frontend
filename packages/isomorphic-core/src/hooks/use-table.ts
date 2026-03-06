@@ -7,15 +7,21 @@ interface AnyObject {
 
 type DateLike = string | number | Date;
 
+function safeString(val: unknown): string {
+  if (val == null) return '';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+}
+
 function valueMatchesSearch(value: unknown, term: string): boolean {
   if (typeof value === 'object' && value !== null) {
     return Object.values(value).some(
       (nestedItem) =>
         nestedItem != null &&
-        String(nestedItem).toLowerCase().includes(term)
+        safeString(nestedItem).toLowerCase().includes(term)
     );
   }
-  return value != null && String(value).toLowerCase().includes(term);
+  return value != null && safeString(value).toLowerCase().includes(term);
 }
 
 export function useTable<T extends AnyObject>(
