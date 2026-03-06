@@ -377,7 +377,7 @@ function TaskDetailsDynamic({
 
   // Parse season and round from roundInfo
   const { season: parsedSeason, round: parsedRound } = (() => {
-    const roundData = roundInfo as any;
+    const roundData = roundInfo;
 
     // Priority 1: roundId as string "season/round"
     if (typeof roundData?.roundId === "string" && roundData.roundId.includes("/")) {
@@ -1012,7 +1012,7 @@ function TaskDetailsDynamic({
                 <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <InfoRow
                     label="Evaluation Cost"
-                    value={hasPrice ? formatCost(priceValue as number) : "—"}
+                    value={hasPrice ? formatCost(priceValue) : "—"}
                     valueClassName="font-semibold text-emerald-200"
                   />
                 </div>
@@ -1658,7 +1658,7 @@ export default function TaskDynamic() {
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
-                {truncateMiddle(evaluationIdDisplay as string, 8)}
+                {truncateMiddle(evaluationIdDisplay, 8)}
               </span>
               {info?.evaluationId && (
                 <span className="ml-auto">
@@ -1679,7 +1679,7 @@ export default function TaskDynamic() {
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
-                {truncateMiddle(runIdDisplay as string, 8)}
+                {truncateMiddle(runIdDisplay, 8)}
               </span>
               {(info?.miner_run_id ?? details?.agentRunId) && (
                 <span className="ml-auto">
@@ -1696,7 +1696,7 @@ export default function TaskDynamic() {
               </span>
               <div className="h-3.5 w-px bg-slate-600/70" />
               <span className="font-mono text-sm font-semibold text-white/90 truncate flex-1 sm:flex-none sm:max-w-[420px]">
-                {truncateMiddle(taskId as string, 8)}
+                {truncateMiddle(taskId, 8)}
               </span>
               {(info?.taskId ?? details?.taskId) && (
                 <span className="ml-auto">
