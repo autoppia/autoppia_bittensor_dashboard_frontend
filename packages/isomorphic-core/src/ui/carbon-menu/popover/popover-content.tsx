@@ -8,20 +8,22 @@ import { useMergedRef } from './use-merged-ref';
 interface Options {
   active: boolean | undefined;
   onTrigger?: () => void;
-  onKeyDown?: (event: React.KeyboardEvent) => void;
+  onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
 }
 
-const noop = () => { };
+const noop = () => {};
+
+const DEFAULT_CLOSE_ON_ESCAPE_OPTIONS: Options = { active: true };
 
 export function closeOnEscape(
-  callback?: (event: React.KeyboardEvent) => void,
-  options: Options = { active: true }
-) {
+  callback?: React.KeyboardEventHandler<HTMLElement>,
+  options: Options = DEFAULT_CLOSE_ON_ESCAPE_OPTIONS
+): React.KeyboardEventHandler<HTMLElement> {
   if (typeof callback !== 'function' || !options.active) {
-    return options.onKeyDown || noop;
+    return options.onKeyDown ?? noop;
   }
 
-  return (event: React.KeyboardEvent) => {
+  return (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
       callback(event);
       options.onTrigger?.();
@@ -62,7 +64,7 @@ export interface PopoverTargetProps {
   className?: string;
   variant?: string;
   as?: React.ElementType;
-  onKeyDown?: React.KeyboardEventHandler<HTMLDivElement> | undefined;
+  onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
   shadow?: Shadow;
   size?: Size;
   rounded?: Rounded;
@@ -119,7 +121,7 @@ export const PopoverContent = React.forwardRef<
             onKeyDownCapture={closeOnEscape(ctx.onClose, {
               active: ctx.closeOnEscape,
               onTrigger: returnFocus,
-              onKeyDown: onKeyDown,
+              onKeyDown: onKeyDown as React.KeyboardEventHandler<HTMLElement> | undefined,
             })}
             data-position={ctx.placement}
             style={{
@@ -131,8 +133,8 @@ export const PopoverContent = React.forwardRef<
               className,
               popoverStyle.base,
               popoverStyle.shadow[shadow],
-              popoverStyle.size[size as keyof typeof popoverStyle.size],
-              popoverStyle.rounded[rounded as keyof typeof popoverStyle.rounded]
+              popoverStyle.size[size as Size],
+              popoverStyle.rounded[rounded as Rounded]
             )}
           >
             {children}
