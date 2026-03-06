@@ -102,6 +102,199 @@ function getScoreBadgeClass(score: number): string {
   return `${base} bg-red-500/20 text-red-300`;
 }
 
+type UseCaseTaskTableContentProps = Readonly<{
+  taskData: { tasks: TaskDataWithEval[]; page: number; total: number };
+  onPrevPage: () => void;
+  onNextPage: () => void;
+  projectColors: { mainColor: string };
+  tasksPerPage: number;
+  onInspectTask: (task: TaskDataWithEval) => void;
+}>;
+
+type UseCaseTaskSectionProps = Readonly<{
+  loading: boolean;
+  taskData: { tasks: TaskDataWithEval[]; page: number; total: number } | null | undefined;
+  uc: UseCaseStats;
+  handlePageChange: (website: string, useCase: string, page: number) => void;
+  onInspectTask: (task: TaskDataWithEval) => void;
+  projectColors: { mainColor: string };
+  tasksPerPage: number;
+}>;
+
+function UseCaseTaskSection({
+  loading,
+  taskData,
+  uc,
+  handlePageChange,
+  onInspectTask,
+  projectColors,
+  tasksPerPage,
+}: UseCaseTaskSectionProps) {
+  if (loading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">Evaluation ID</th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">Prompt</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">Score</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">Duration</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <tr key={`skeleton-row-${i}`} className="border-t border-white/5 animate-pulse">
+                <td className="p-2 sm:p-3"><div className="h-4 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></td>
+                <td className="p-2 sm:p-3"><div className="space-y-2"><div className="h-3 rounded w-3/4" style={{ backgroundColor: `${projectColors.mainColor}20` }} /><div className="h-3 rounded w-1/2" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-12 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-4 w-10 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-16 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  const hasTasks = taskData != null && (taskData.tasks?.length ?? 0) > 0;
+  if (!hasTasks || taskData == null) {
+    return (
+      <div className="p-4 text-center text-white/60 text-sm">
+        No tasks found for this use case
+      </div>
+    );
+  }
+  const onPrevPage = () => handlePageChange(uc.website, uc.useCase, taskData.page - 1);
+  const onNextPage = () => handlePageChange(uc.website, uc.useCase, taskData.page + 1);
+  return (
+    <UseCaseTaskTableContent
+      taskData={taskData}
+      onPrevPage={onPrevPage}
+      onNextPage={onNextPage}
+      projectColors={projectColors}
+      tasksPerPage={tasksPerPage}
+      onInspectTask={onInspectTask}
+    />
+  );
+}
+
+function TaskTableRow({ task, onInspect }: Readonly<{ task: TaskDataWithEval; onInspect: (task: TaskDataWithEval) => void }>) {
+  return (
+    <tr className="border-t border-white/5 hover:bg-white/5 transition-colors">
+      <td className="p-2 sm:p-3">
+        <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
+          {task.evaluationId ?? task.taskId}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3">
+        <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
+          {task.prompt || "—"}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <span className={getScoreBadgeClass(task.score ?? 0)}>
+          {Math.round((task.score || 0) * 100)}%
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <span className="text-[10px] sm:text-xs text-white/70">
+          {task.duration !== undefined && task.duration !== null
+            ? `${task.duration.toFixed(1)} s`
+            : "—"}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <Button
+          size="sm"
+          variant="text"
+          onClick={() => onInspect(task)}
+          className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+        >
+          <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Inspect</span>
+          <span className="sm:hidden">View</span>
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
+function UseCaseTaskTableContent({
+  taskData,
+  onPrevPage,
+  onNextPage,
+  projectColors,
+  tasksPerPage,
+  onInspectTask,
+}: UseCaseTaskTableContentProps) {
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                Evaluation ID
+              </th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                Prompt
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                Score
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                Duration
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {taskData.tasks.map((task) => (
+              <TaskTableRow key={task.taskId} task={task} onInspect={onInspectTask} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {taskData.total > tasksPerPage && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
+          <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
+            Showing{" "}
+            {(taskData.page - 1) * tasksPerPage + 1} to{" "}
+            {Math.min(taskData.page * tasksPerPage, taskData.total)} of {taskData.total} tasks
+          </Text>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPrevPage}
+              disabled={taskData.page === 1}
+              className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+            >
+              Previous
+            </Button>
+            <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
+              Page {taskData.page} of {Math.ceil(taskData.total / tasksPerPage)}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onNextPage}
+              disabled={taskData.page >= Math.ceil(taskData.total / tasksPerPage)}
+              className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function AgentHistoricalAnalytics({
   agentId,
   className,
@@ -1018,241 +1211,19 @@ export default function AgentHistoricalAnalytics({
 
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
-                                {taskData?.loading ? (
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-sm table-fixed min-w-[700px]">
-                                      <thead className="bg-white/5">
-                                        <tr>
-                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                            Evaluation ID
-                                          </th>
-                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                            Prompt
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
-                                            Score
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
-                                            Duration
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
-                                            Action
-                                          </th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {[1, 2, 3, 4, 5].map((i) => (
-                                          <tr
-                                            key={`skeleton-row-${i}`}
-                                            className="border-t border-white/5 animate-pulse"
-                                          >
-                                            <td className="p-2 sm:p-3">
-                                              <div
-                                                className="h-4 rounded"
-                                                style={{
-                                                  backgroundColor: `${projectColors.mainColor}20`,
-                                                }}
-                                              />
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="space-y-2">
-                                                <div
-                                                  className="h-3 rounded w-3/4"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                                <div
-                                                  className="h-3 rounded w-1/2"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-6 w-12 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-4 w-10 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-6 w-16 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                ) : (taskData?.tasks?.length ?? 0) > 0 ? (
-                                  <>
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-sm table-fixed min-w-[700px]">
-                                        <thead className="bg-white/5">
-                                          <tr>
-                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                              Evaluation ID
-                                            </th>
-                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                              Prompt
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
-                                              Score
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
-                                              Duration
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
-                                              Action
-                                            </th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {taskData.tasks.map((task) => (
-                                            <tr
-                                              key={task.taskId}
-                                              className="border-t border-white/5 hover:bg-white/5 transition-colors"
-                                            >
-                                              <td className="p-2 sm:p-3">
-                                                <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
-                                                  {task.evaluationId ?? task.taskId}
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3">
-                                                <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
-                                                  {task.prompt || "—"}
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <span className={getScoreBadgeClass(task.score ?? 0)}>
-                                                  {Math.round(
-                                                    (task.score || 0) * 100
-                                                  )}
-                                                  %
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <span className="text-[10px] sm:text-xs text-white/70">
-                                                  {task.duration !== undefined && task.duration !== null
-                                                    ? `${task.duration.toFixed(1)} s`
-                                                    : "—"}
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <Button
-                                                  size="sm"
-                                                  variant="text"
-                                                  onClick={() => {
-                                                    const evaluationId = task.evaluationId ?? task.taskId;
-                                                    const normalizedId = normalizeEvaluationId(evaluationId);
-                                                    router.push(
-                                                      `${routes.evaluations}/${normalizedId}`
-                                                    );
-                                                  }}
-                                                  className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
-                                                >
-                                                  <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                  <span className="hidden sm:inline">
-                                                    Inspect
-                                                  </span>
-                                                  <span className="sm:hidden">
-                                                    View
-                                                  </span>
-                                                </Button>
-                                              </td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-
-                                    {/* Pagination */}
-                                    {taskData.total > TASKS_PER_PAGE && (
-                                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
-                                        <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
-                                          Showing{" "}
-                                          {(taskData.page - 1) *
-                                            TASKS_PER_PAGE +
-                                            1}{" "}
-                                          to{" "}
-                                          {Math.min(
-                                            taskData.page * TASKS_PER_PAGE,
-                                            taskData.total
-                                          )}{" "}
-                                          of {taskData.total} tasks
-                                        </Text>
-                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                              handlePageChange(
-                                                uc.website,
-                                                uc.useCase,
-                                                taskData.page - 1
-                                              )
-                                            }
-                                            disabled={taskData.page === 1}
-                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
-                                          >
-                                            Previous
-                                          </Button>
-                                          <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
-                                            Page {taskData.page} of{" "}
-                                            {Math.ceil(
-                                              taskData.total / TASKS_PER_PAGE
-                                            )}
-                                          </span>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                              handlePageChange(
-                                                uc.website,
-                                                uc.useCase,
-                                                taskData.page + 1
-                                              )
-                                            }
-                                            disabled={
-                                              taskData.page >=
-                                              Math.ceil(
-                                                taskData.total / TASKS_PER_PAGE
-                                              )
-                                            }
-                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
-                                          >
-                                            Next
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </>
-                                ) : (
-                                  <div className="p-4 text-center text-white/60 text-sm">
-                                    No tasks found for this use case
-                                  </div>
-                                )}
+                                <UseCaseTaskSection
+                                  loading={taskData?.loading ?? false}
+                                  taskData={taskData}
+                                  uc={uc}
+                                  handlePageChange={handlePageChange}
+                                  onInspectTask={(task) => {
+                                    const evaluationId = task.evaluationId ?? task.taskId;
+                                    const normalizedId = normalizeEvaluationId(evaluationId);
+                                    router.push(`${routes.evaluations}/${normalizedId}`);
+                                  }}
+                                  projectColors={projectColors}
+                                  tasksPerPage={TASKS_PER_PAGE}
+                                />
                               </div>
                             </div>
                           );
