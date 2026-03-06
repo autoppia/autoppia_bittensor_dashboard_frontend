@@ -2616,12 +2616,13 @@ export default function Page() {
                                   margin={{ top: 20, left: -10 }}
                                 >
                                   <defs>
-                                    {effectivePerformanceByWebsite.map((entry, index) => {
+                                    {effectivePerformanceByWebsite.map((entry) => {
                                       const colors = getProjectColors(entry.website);
+                                      const gradientId = `barGradient-${String(entry.website).replaceAll(/\s+/g, "-")}`;
                                       return (
                                         <linearGradient
-                                          key={`barGradient${index}`}
-                                          id={`barGradient${index}`}
+                                          key={gradientId}
+                                          id={gradientId}
                                           x1="0"
                                           y1="0"
                                           x2="0"
@@ -2673,10 +2674,12 @@ export default function Page() {
                                     animationDuration={800}
                                     animationEasing="ease-out"
                                   >
-                                    {effectivePerformanceByWebsite.map((entry, index) => (
+                                    {effectivePerformanceByWebsite.map((entry) => {
+                                      const cellGradientId = `barGradient-${String(entry.website).replaceAll(/\s+/g, "-")}`;
+                                      return (
                                         <Cell
-                                          key={`cell-${entry.website}-${index}`}
-                                          fill={`url(#barGradient${index})`}
+                                          key={cellGradientId}
+                                          fill={`url(#${cellGradientId})`}
                                           fillOpacity={0.9}
                                           style={{
                                             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -2684,7 +2687,8 @@ export default function Page() {
                                             transformOrigin: "center bottom",
                                           }}
                                         />
-                                    ))}
+                                      );
+                                    })}
                                   </Bar>
                                 </BarChart>
                               </ResponsiveContainer>
