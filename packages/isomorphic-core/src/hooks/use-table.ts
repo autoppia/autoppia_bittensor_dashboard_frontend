@@ -5,6 +5,19 @@ interface AnyObject {
   [key: string]: any;
 }
 
+type DateLike = string | number | Date;
+
+function valueMatchesSearch(value: unknown, term: string): boolean {
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value).some(
+      (nestedItem) =>
+        nestedItem != null &&
+        String(nestedItem).toLowerCase().includes(term)
+    );
+  }
+  return value != null && String(value).toLowerCase().includes(term);
+}
+
 export function useTable<T extends AnyObject>(
   initialData: T[],
   countPerPage: number = 10,
@@ -129,58 +142,56 @@ export function useTable<T extends AnyObject>(
     }));
   }
 
+  function filterEntryMatchesItem(
+    columnId: string,
+    filterValue: unknown,
+    item: T
+  ): boolean {
+    if (
+      Array.isArray(filterValue) &&
+      filterValue.length === 2 &&
+      typeof filterValue[1] === 'object'
+    ) {
+      const itemValue = new Date(item[columnId] as DateLike).getTime();
+      const min = new Date(filterValue[0] as DateLike).getTime();
+      const max = new Date(filterValue[1] as DateLike).getTime();
+      return itemValue >= min && itemValue <= max;
+    }
+    if (
+      Array.isArray(filterValue) &&
+      filterValue.length === 2 &&
+      typeof filterValue[1] === 'string'
+    ) {
+      const itemPrice = Math.ceil(Number(item[columnId]));
+      return (
+        itemPrice >= Number(filterValue[0]) &&
+        itemPrice <= Number(filterValue[1])
+      );
+    }
+    if (isString(filterValue) && !Array.isArray(filterValue)) {
+      const itemValue = item[columnId]?.toString().toLowerCase();
+      return itemValue === filterValue.toString().toLowerCase();
+    }
+    return false;
+  }
+
+  function itemMatchesSearch(item: T, term: string): boolean {
+    return Object.values(item).some((value) =>
+      valueMatchesSearch(value, term)
+    );
+  }
+
   function applyFilters() {
     const searchTermLower = searchTerm.toLowerCase();
 
-    return (
-      sortedData
-        .filter((item) => {
-          const isMatchingItem = Object.entries(filters).some(
-            ([columnId, filterValue]) => {
-              if (
-                Array.isArray(filterValue) &&
-                typeof filterValue[1] === 'object'
-              ) {
-                const itemValue = new Date(item[columnId]);
-                return (
-                  // @ts-ignore
-                  itemValue >= filterValue[0] && itemValue <= filterValue[1]
-                );
-              }
-              if (
-                Array.isArray(filterValue) &&
-                typeof filterValue[1] === 'string'
-              ) {
-                const itemPrice = Math.ceil(Number(item[columnId]));
-                return (
-                  itemPrice >= Number(filterValue[0]) &&
-                  itemPrice <= Number(filterValue[1])
-                );
-              }
-              if (isString(filterValue) && !Array.isArray(filterValue)) {
-                const itemValue = item[columnId]?.toString().toLowerCase();
-                if (itemValue !== filterValue.toString().toLowerCase()) {
-                  return false;
-                }
-                return true;
-              }
-            }
-          );
-          return isMatchingItem;
-        })
-        // global search after running filters
-        .filter((item) =>
-          Object.values(item).some((value) =>
-            typeof value === 'object'
-              ? value &&
-                Object.values(value).some(
-                  (nestedItem) =>
-                    nestedItem &&
-                    String(nestedItem).toLowerCase().includes(searchTermLower)
-                )
-              : value && String(value).toLowerCase().includes(searchTermLower)
-          )
-        )
+    const filteredByColumns = sortedData.filter((item) =>
+      Object.entries(filters).some(([columnId, filterValue]) =>
+        filterEntryMatchesItem(columnId, filterValue, item)
+      )
+    );
+
+    return filteredByColumns.filter((item) =>
+      itemMatchesSearch(item, searchTermLower)
     );
   }
 
@@ -195,18 +206,8 @@ export function useTable<T extends AnyObject>(
     if (!searchTerm) return sortedData;
 
     const searchTermLower = searchTerm.toLowerCase();
-
     return sortedData.filter((item) =>
-      Object.values(item).some((value) =>
-        typeof value === 'object'
-          ? value &&
-            Object.values(value).some(
-              (nestedItem) =>
-                nestedItem &&
-                String(nestedItem).toLowerCase().includes(searchTermLower)
-            )
-          : value && String(value).toLowerCase().includes(searchTermLower)
-      )
+      itemMatchesSearch(item, searchTermLower)
     );
   }
 
