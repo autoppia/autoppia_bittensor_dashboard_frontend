@@ -13,12 +13,16 @@ export function useDelayedHover({
   openDelay,
   closeDelay,
 }: UseDelayedHoverProps) {
-  const openTimeout = useRef(-1);
-  const closeTimeout = useRef(-1);
+  const openTimeout = useRef<ReturnType<typeof globalThis.setTimeout> | undefined>(
+    undefined
+  );
+  const closeTimeout = useRef<ReturnType<typeof globalThis.setTimeout> | undefined>(
+    undefined
+  );
 
   const clearTimeouts = () => {
-    window.clearTimeout(openTimeout.current);
-    window.clearTimeout(closeTimeout.current);
+    globalThis.clearTimeout(openTimeout.current);
+    globalThis.clearTimeout(closeTimeout.current);
   };
 
   const openDropdown = () => {
@@ -27,7 +31,7 @@ export function useDelayedHover({
     if (openDelay === 0 || openDelay === undefined) {
       open();
     } else {
-      openTimeout.current = window.setTimeout(open, openDelay);
+      openTimeout.current = globalThis.setTimeout(open, openDelay);
     }
   };
 
@@ -37,7 +41,7 @@ export function useDelayedHover({
     if (closeDelay === 0 || closeDelay === undefined) {
       close();
     } else {
-      closeTimeout.current = window.setTimeout(close, closeDelay);
+      closeTimeout.current = globalThis.setTimeout(close, closeDelay);
     }
   };
 
