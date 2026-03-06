@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { websitesData } from "@/data/websites-data";
+import { websitesData, type UseCase } from "@/data/websites-data";
 import Image from "next/image";
 import Link from "next/link";
 import { Title, Text, Button } from "rizzui";
@@ -62,9 +62,9 @@ export default function WebsiteDetailPage() {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
+          r: Number.parseInt(result[1], 16),
+          g: Number.parseInt(result[2], 16),
+          b: Number.parseInt(result[3], 16),
         }
       : { r: 0, g: 255, b: 255 };
   };
@@ -83,7 +83,7 @@ export default function WebsiteDetailPage() {
   };
 
   // ✅ Generate random example prompts from predefined pool
-  const generateExamplePrompts = (useCase: any, count: number = 1) => {
+  const generateExamplePrompts = (useCase: UseCase, count: number = 1) => {
     const allPrompts = useCase.examplePrompt || [];
     if (allPrompts.length <= count) return allPrompts;
 
@@ -209,7 +209,7 @@ export default function WebsiteDetailPage() {
                         max="300"
                         value={seed}
                         onChange={(e) => {
-                          const value = parseInt(e.target.value) || 1;
+                          const value = Number.parseInt(e.target.value, 10) || 1;
                           setSeed(Math.min(300, Math.max(1, value)));
                         }}
                         className="w-16 px-2 py-1 rounded-lg bg-white/10 border text-white font-bold text-center text-sm focus:outline-none focus:ring-2 transition-all"
@@ -335,7 +335,7 @@ export default function WebsiteDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {useCases.map((useCase, index) => (
                 <div
-                  key={index}
+                  key={`${useCase.name}-${index}`}
                   className="group/card relative rounded-2xl border-2 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden"
                   style={{
                     backgroundColor: colorWithOpacity10,
@@ -366,7 +366,7 @@ export default function WebsiteDetailPage() {
 
                       {useCase.examplePrompt?.map((prompt, i) => (
                         <div
-                          key={i}
+                          key={`${useCase.name}-prompt-${i}`}
                           className="p-4 rounded-xl text-sm italic border backdrop-blur-sm"
                           style={{
                             backgroundColor: colorWithOpacity10,
