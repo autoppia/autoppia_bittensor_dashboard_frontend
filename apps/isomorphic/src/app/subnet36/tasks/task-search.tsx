@@ -752,14 +752,16 @@ export default function TaskSearch() {
               const roundNumber = (task as any).roundNumber;
               const hasSeason = typeof season === "number" && Number.isFinite(season);
               const hasRound = typeof roundNumber === "number" && Number.isFinite(roundNumber);
-              const seasonRoundDisplay =
-                hasSeason && hasRound
-                  ? `${season}/${roundNumber}`
-                  : hasRound
-                    ? `—/${roundNumber}`
-                    : hasSeason
-                      ? `${season}/—`
-                      : "—";
+              let seasonRoundDisplay: string;
+              if (hasSeason && hasRound) {
+                seasonRoundDisplay = `${season}/${roundNumber}`;
+              } else if (hasRound) {
+                seasonRoundDisplay = `—/${roundNumber}`;
+              } else if (hasSeason) {
+                seasonRoundDisplay = `${season}/—`;
+              } else {
+                seasonRoundDisplay = "—";
+              }
 
               // Evaluation cost in USD (from backend llmCost; support both camelCase and snake_case)
               const evaluationCost = (task as any).llmCost ?? (task as any).llm_cost;
