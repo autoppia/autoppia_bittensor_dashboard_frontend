@@ -24,7 +24,7 @@ export default function InvoiceImageUploader({
   imageClassName,
   dropZoneClassName,
   uploaderText = <>Upload Logo Recommended size 100x100 </>,
-}: InvoiceImageUploaderProps) {
+}: Readonly<InvoiceImageUploaderProps>) {
   const inputRef = React.createRef<HTMLInputElement>();
   const [file, setFile] = useState<string | null>(null);
 
@@ -103,11 +103,11 @@ function ActionButton({
   onClick,
   children,
   className,
-}: {
+}: Readonly<{
   className?: string;
   onClick: () => void;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <button
       className={cn(
