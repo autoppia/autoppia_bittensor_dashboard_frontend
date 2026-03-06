@@ -374,7 +374,7 @@ export function useRoundWithValidators(roundNumber: number | undefined) {
       if (!roundNumber) {
         return Promise.resolve(null);
       }
-      return roundsRepository.getRoundWithValidators(roundNumber);
+      return Promise.resolve(null);
     },
     [roundNumber]
   );

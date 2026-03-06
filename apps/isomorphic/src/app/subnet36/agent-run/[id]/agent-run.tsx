@@ -23,12 +23,11 @@ export default function AgentRun() {
 
   // Use the complete endpoint for all data in one call
   const {
-    data: agentRunData,
     isLoading,
     error,
     refetch,
     statistics,
-    tasks,
+    evaluations,
     info,
   } = useAgentRunComplete(runId);
 
@@ -104,7 +103,7 @@ export default function AgentRun() {
             period={period}
             setPeriod={setPeriod}
             statistics={statistics}
-            summary={summary}
+            summary={null}
             isLoading={isLoading}
             error={error}
           />
@@ -114,9 +113,9 @@ export default function AgentRun() {
         <div className="xl:col-span-4">
           <AgentRunSummaryDynamic
             selectedWebsite={selectedWebsite}
-            summary={summary}
+            summary={null}
             statistics={statistics}
-            tasks={tasks}
+            tasks={evaluations}
             isLoading={isLoading}
             error={error}
           />
@@ -126,9 +125,10 @@ export default function AgentRun() {
       {/* Tasks Table */}
       <div className="mb-6">
         <AgentRunTasksTableDynamic
-          tasks={tasks}
+          tasks={evaluations}
           isLoading={isLoading}
           error={error}
+          refetch={refetch}
         />
       </div>
 

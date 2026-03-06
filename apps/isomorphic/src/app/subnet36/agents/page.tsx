@@ -88,7 +88,7 @@ function AgentsLanding() {
       uid: miner.uid,
       name: miner.name,
       ranking: miner.post_consensus_rank,
-      score: miner.post_consensus_avg_reward,
+      reward: miner.post_consensus_avg_reward,
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));

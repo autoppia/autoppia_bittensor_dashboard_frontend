@@ -39,7 +39,7 @@ import AgentHistoricalAnalytics from "./agent-historical-analytics";
 import { useAgent, useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
-  ScoreRoundDataPoint,
+  RewardRoundDataPoint,
   AgentData,
   AgentRoundMetrics,
   AgentRunOverview,
@@ -184,10 +184,10 @@ function AgentStats({
     agent.bestRankEver && agent.bestRankEver > 0
       ? `#${agent.bestRankEver}`
       : "N/A";
-  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  const bestRoundScoreValue =
-    agent.bestRoundScore ?? agent.currentTopScore ?? 0;
-  const bestEverScorePercentage = `${(bestRoundScoreValue * 100).toFixed(1)}%`;
+  const currentRewardPercentage = `${((roundMetrics?.reward ?? agent.currentReward ?? 0) * 100).toFixed(1)}%`;
+  const bestRoundRewardValue =
+    agent.bestRoundReward ?? agent.currentTopReward ?? 0;
+  const bestEverRewardPercentage = `${(bestRoundRewardValue * 100).toFixed(1)}%`;
   const bestRoundBadge =
     agent.bestRoundId && agent.bestRoundId > 0
       ? `Round ${agent.bestRoundId}`
@@ -229,8 +229,8 @@ function AgentStats({
       ...METRIC_CARD_GRADIENTS.blue,
     },
     {
-      title: "Current Score",
-      metric: currentScorePercentage,
+      title: "Current Reward",
+      metric: currentRewardPercentage,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
@@ -253,8 +253,8 @@ function AgentStats({
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Best Ever Score",
-      metric: bestEverScorePercentage,
+      title: "Best Ever Reward",
+      metric: bestEverRewardPercentage,
       badge: bestRoundBadge,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.blue,
@@ -408,13 +408,13 @@ const BENCHMARK_COLOR_PALETTE = [
 
 function AgentScoreChart({
   className,
-  scoreRoundData = [] as ScoreRoundDataPoint[],
+  rewardRoundData = [] as RewardRoundDataPoint[],
   loading = false,
   error,
   title = "Reward Over Time",
 }: {
   className?: string;
-  scoreRoundData?: ScoreRoundDataPoint[];
+  rewardRoundData?: RewardRoundDataPoint[];
   loading?: boolean;
   error?: string | null;
   title?: string;
@@ -426,21 +426,20 @@ function AgentScoreChart({
   const { processedRows, benchmarkSeries } = useMemo(() => {
     const seriesMap = new Map<string, { label: string; color: string }>();
 
-    const rows = scoreRoundData
+    const rows = rewardRoundData
       .map((point) => {
         const row: Record<string, number | string | null> = {
           round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
           roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
-          score: normalizeScore(point.score) ?? 0,
+          reward: normalizeScore(point.reward) ?? 0,
           rank: point.rank ?? null,
-          reward: point.reward ?? null,
           eval_score: point.eval_score ?? null,
           eval_time: point.eval_time ?? null,
           timestamp: point.timestamp,
         };
 
-        const topScore = normalizeScore(point.topScore);
-        if (topScore !== null) row.topBenchmarkScore = topScore;
+        const topReward = normalizeScore(point.topReward);
+        if (topReward !== null) row.topBenchmarkScore = topReward;
 
         if (Array.isArray(point.benchmarks) && point.benchmarks.length > 0) {
           point.benchmarks.forEach((benchmark, idx) => {
@@ -448,7 +447,7 @@ function AgentScoreChart({
               benchmark.provider || benchmark.name || `benchmark-${idx}`;
             const slug = slugify(rawId);
             const key = `benchmark_${slug || idx}`;
-            const normalized = normalizeScore(benchmark.score);
+            const normalized = normalizeScore(benchmark.reward);
 
             if (!seriesMap.has(key)) {
               const color =
@@ -482,7 +481,7 @@ function AgentScoreChart({
         color: meta.color,
       })),
     };
-  }, [scoreRoundData]);
+  }, [rewardRoundData]);
 
   function handleFilterBy(option: string) {
     if (option === "7R") setTimeRange("7r");
@@ -534,7 +533,7 @@ function AgentScoreChart({
   const displayData = getFilteredData(processedRows).map((entry: any) => {
     const scaled: Record<string, number | string | null> = {
       ...entry,
-      score: entry.score != null ? Number(entry.score) * 100 : entry.score,
+      reward: entry.reward != null ? Number(entry.reward) * 100 : entry.reward,
       topBenchmarkScore:
         entry.topBenchmarkScore != null
           ? Number(entry.topBenchmarkScore) * 100
@@ -550,10 +549,10 @@ function AgentScoreChart({
   const hasTopBenchmark = displayData.some(
     (entry) => typeof entry.topBenchmarkScore === "number"
   );
-  const scoreValues = displayData
+  const rewardValues = displayData
     .flatMap((entry) => {
       const values: number[] = [];
-      if (typeof entry.score === "number") values.push(entry.score);
+      if (typeof entry.reward === "number") values.push(entry.reward);
       if (typeof entry.topBenchmarkScore === "number")
         values.push(entry.topBenchmarkScore);
       benchmarkSeries.forEach((series) => {
@@ -565,9 +564,9 @@ function AgentScoreChart({
     .filter((value) => Number.isFinite(value));
 
   const computeDomain = () => {
-    if (!scoreValues.length) return [0, 100] as [number, number];
-    const minValue = Math.min(...scoreValues);
-    const maxValue = Math.max(...scoreValues);
+    if (!rewardValues.length) return [0, 100] as [number, number];
+    const minValue = Math.min(...rewardValues);
+    const maxValue = Math.max(...rewardValues);
     const range = maxValue - minValue;
     const padding = range > 0 ? range * 0.2 : Math.max(5, maxValue * 0.1 || 5);
     const lowerBound = Math.max(0, minValue - padding);
@@ -577,9 +576,9 @@ function AgentScoreChart({
 
   const yAxisDomain = computeDomain();
   const legendItems = [
-    { label: "Miner score", color: "#10B981" },
+    { label: "Miner reward", color: "#10B981" },
     ...(hasTopBenchmark
-      ? [{ label: "Top miner score", color: "#FACC15" }]
+      ? [{ label: "Top miner reward", color: "#FACC15" }]
       : []),
     ...benchmarkSeries.map((series) => ({
       label: series.label,
@@ -627,7 +626,7 @@ function AgentScoreChart({
               margin={{ top: 10, left: -10, bottom: 20 }}
             >
               <defs>
-                <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="rewardArea" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
                   <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                 </linearGradient>
@@ -731,12 +730,12 @@ function AgentScoreChart({
               />
               <Area
                 type="monotone"
-                dataKey="score"
+                dataKey="reward"
                 stroke="#10B981"
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#scoreArea)"
-                name="Miner score"
+                fill="url(#rewardArea)"
+                name="Miner reward"
               />
               {hasTopBenchmark && (
                 <Line
@@ -746,7 +745,7 @@ function AgentScoreChart({
                   strokeWidth={2}
                   dot={false}
                   strokeDasharray="6 4"
-                  name="Top miner score"
+                  name="Top miner reward"
                 />
               )}
               {benchmarkSeries.map((series) => (
@@ -1007,9 +1006,9 @@ function AgentValidators({
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  In each new round, your effective competition score is
+                  In each new round, your effective competition reward is
                   <span className="font-mono text-white/90"> max(round_reward, best_reward_in_season)</span>.
-                  Rank is computed with that effective score against other miners.
+                  Rank is computed with that effective reward against other miners.
                 </p>
               </div>
               <div
@@ -1030,7 +1029,7 @@ function AgentValidators({
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
                   Faster execution and lower cost improve reward shaping.
-                  Exceeding timeout/cost thresholds can force failures or zero-score outcomes.
+                  Exceeding timeout/cost thresholds can force failures or zero-reward outcomes.
                 </p>
               </div>
             </div>
@@ -1121,10 +1120,10 @@ function AgentValidators({
                   ? latestRun.ranking
                   : null;
               localAvgReward =
-                typeof latestRun?.overallScore === "number" && Number.isFinite(latestRun.overallScore)
-                  ? latestRun.overallScore
-                  : typeof (latestRun as any)?.score === "number" && Number.isFinite((latestRun as any)?.score)
-                    ? (latestRun as any).score
+                typeof latestRun?.overallReward === "number" && Number.isFinite(latestRun.overallReward)
+                  ? latestRun.overallReward
+                  : typeof (latestRun as any)?.reward === "number" && Number.isFinite((latestRun as any)?.reward)
+                    ? (latestRun as any).reward
                     : 0;
               localAvgEvalTime =
                 typeof latestRun?.averageEvaluationTime === "number" &&
@@ -1336,7 +1335,7 @@ function AgentValidators({
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
           {Object.entries(runsByValidator).map(([validatorId, runs]) => {
             const latestRun = runs[0];
-            const scorePct = Math.round((latestRun.score ?? 0) * 100);
+            const rewardPct = Math.round((latestRun.reward ?? 0) * 100);
             const responseTimeSeconds = (() => {
               if (
                 typeof latestRun.averageEvaluationTime === "number" &&
@@ -1393,8 +1392,8 @@ function AgentValidators({
                 metricClassName: "text-yellow-600",
               },
               {
-                title: "Score",
-                metric: `${scorePct}%`,
+                title: "Reward",
+                metric: `${rewardPct}%`,
                 icon: PiChartLineUpDuotone,
                 iconClassName:
                   "bg-gradient-to-br from-emerald-500 to-green-600",
@@ -1921,16 +1920,16 @@ export default function Page() {
   );
   const [roundMetricsMode, setRoundMetricsMode] = useState<"round" | "effective">("round");
 
-  // Removed useAgent call - we use useMinerRoundDetails and useMinerHistorical instead
-  // This eliminates the unnecessary /api/v1/agents/{id}?round=X call
-  const agentDetail = null;
-  const loading = false;
-  const error = null;
+  const {
+    data: agentDetail,
+    loading,
+    error,
+  } = useAgent(agentIdForQuery);
 
-  const agent = null;
-  const roundMetrics = null;
-  const availableRounds: number[] = [];
-  const apiScoreRoundData: ScoreRoundDataPoint[] = [];
+  const agent = agentDetail?.agent ?? null;
+  const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
+  const availableRounds: Array<string | number> = agentDetail?.availableRounds ?? [];
+  const apiRewardRoundData: RewardRoundDataPoint[] = agentDetail?.rewardRoundData ?? [];
 
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
@@ -2015,12 +2014,12 @@ export default function Page() {
     numericUidFromParam
   );
   const historicalBestRoundIdentifier = useMemo(() => {
-    const bestScoreRound = minerHistorical?.summary?.bestScoreRound;
-    if (bestScoreRound) return String(bestScoreRound);
+    const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
+    if (bestRewardRound) return String(bestRewardRound);
     const bestRankRound = minerHistorical?.summary?.bestRankRound;
     if (bestRankRound) return String(bestRankRound);
     return undefined;
-  }, [minerHistorical?.summary?.bestScoreRound, minerHistorical?.summary?.bestRankRound]);
+  }, [minerHistorical?.summary?.bestRewardRound, minerHistorical?.summary?.bestRankRound]);
   const {
     data: historicalBestRoundDetails,
   } = useMinerRoundDetails(
@@ -2041,8 +2040,8 @@ export default function Page() {
         isSota: false,
         totalTasks: minerHistorical.summary.totalTasks,
         completedTasks: minerHistorical.summary.totalTasksSuccessful,
-        currentScore: minerHistorical.summary.averageScore,
-        currentTopScore: minerHistorical.summary.bestScore,
+        currentReward: minerHistorical.summary.averageReward,
+        currentTopReward: minerHistorical.summary.bestReward,
         currentRank: minerHistorical.summary.bestRank,
         bestRankEver: minerHistorical.summary.bestRank,
         bestRankRoundId: minerHistorical.summary.bestRankRound,
@@ -2050,8 +2049,8 @@ export default function Page() {
         roundsWon: minerHistorical.summary.roundsWon,
         alphaWonInPrizes: minerHistorical.summary.totalAlphaEarned,
         taoWonInPrizes: minerHistorical.summary.totalTaoEarned,
-        bestRoundScore: minerHistorical.summary.bestScore,
-        bestRoundId: minerHistorical.summary.bestScoreRound,
+        bestRoundReward: minerHistorical.summary.bestReward,
+        bestRoundId: minerHistorical.summary.bestRewardRound,
         totalRuns: minerHistorical.summary.roundsParticipated,
         successfulRuns: minerHistorical.summary.roundsWon,
         averageResponseTime: minerHistorical.summary.averageDuration,
@@ -2073,17 +2072,17 @@ export default function Page() {
           isSota: false,
           totalTasks: minerRoundDetails.tasks_received ?? 0,
           completedTasks: minerRoundDetails.tasks_success ?? 0,
-          currentScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          currentTopScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentTopReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
           currentRank: minerRoundDetails.post_consensus_rank ?? null,
           bestRankEver: minerRoundDetails.post_consensus_rank ?? null,
-          bestRankRoundId: selectedRoundFromQuery ?? null,
+          bestRankRoundId: null,
           roundsParticipated: 0,
           roundsWon: 0,
           alphaWonInPrizes: 0,
           taoWonInPrizes: 0,
-          bestRoundScore: minerRoundDetails.post_consensus_avg_reward ?? 0,
-          bestRoundId: selectedRoundFromQuery ?? null,
+          bestRoundReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          bestRoundId: null,
           totalRuns: 0,
           successfulRuns: 0,
           averageResponseTime: minerRoundDetails.post_consensus_avg_eval_time ?? 0,
@@ -2135,15 +2134,15 @@ export default function Page() {
     roundMetrics?.roundId ??
     (availableRounds.length > 0 ? availableRounds[0] : undefined);
 
-  // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
-  const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
+  // Build rewardRoundData from historical data if in historical mode, otherwise from agentDetail
+  const rewardRoundData: RewardRoundDataPoint[] = useMemo(() => {
     if (viewMode === "historical" && minerHistorical?.roundsHistory) {
       // Use historical data - sort by round descending (format: "season/round")
-      return minerHistorical.roundsHistory
+      return [...minerHistorical.roundsHistory]
         .sort((a, b) => {
           // Parse "season/round" format for sorting
-          const [aSeason, aRound] = a.round.split('/').map(Number);
-          const [bSeason, bRound] = b.round.split('/').map(Number);
+          const [aSeason, aRound] = String(a.round).split('/').map(Number);
+          const [bSeason, bRound] = String(b.round).split('/').map(Number);
           // Sort by season first, then by round (descending)
           if (bSeason !== aSeason) return bSeason - aSeason;
           return bRound - aRound;
@@ -2151,21 +2150,22 @@ export default function Page() {
         .map((round, index) => ({
           round_id: round.round, // Keep as string "season/round"
           round: index + 1, // Sequential number for chart x-axis
-          score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
           rank: round.post_consensus_rank,
           reward: round.post_consensus_avg_reward ?? 0,
           eval_score: round.post_consensus_avg_eval_score ?? undefined,
           eval_time: round.post_consensus_avg_eval_time ?? undefined,
           timestamp: "", // Historical data doesn't have timestamp
-          topScore: undefined,
+          topReward: undefined,
           benchmarks: undefined,
         }));
     }
 
     // Use agentDetail data for current/runs mode
-    const source =
-      agentDetail?.scoreRoundData ??
-      ((minerRoundDetails as any)?.scoreRoundData ?? []);
+    const source: RewardRoundDataPoint[] =
+      agentDetail?.rewardRoundData ??
+      (((minerRoundDetails as any)?.rewardRoundData as
+        | RewardRoundDataPoint[]
+        | undefined) ?? []);
     if (!source.length) {
       const fallbackReward = Number((minerRoundDetails as any)?.post_consensus_avg_reward ?? 0);
       const fallbackRank = Number((minerRoundDetails as any)?.post_consensus_rank ?? 0);
@@ -2174,13 +2174,12 @@ export default function Page() {
         return [
           {
             round_id: fallbackRoundId as any,
-            score: normalizeScore(fallbackReward) ?? 0,
             rank: Number.isFinite(fallbackRank) && fallbackRank > 0 ? fallbackRank : null,
             reward: fallbackReward,
             eval_score: (minerRoundDetails as any)?.post_consensus_avg_eval_score ?? undefined,
             eval_time: (minerRoundDetails as any)?.post_consensus_avg_eval_time ?? undefined,
             timestamp: "",
-            topScore: undefined,
+            topReward: undefined,
             benchmarks: undefined,
           },
         ];
@@ -2197,7 +2196,6 @@ export default function Page() {
         0;
       return {
         round_id: Number(roundId),
-        score: normalizeScore(point.score) ?? 0,
         rank: point.rank ?? point.position ?? null,
         reward: point.reward ?? 0,
         eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
@@ -2206,20 +2204,20 @@ export default function Page() {
           typeof point.timestamp === "string"
             ? point.timestamp
             : (point.timestamp?.toString() ?? ""),
-        topScore:
+        topReward:
           normalizeScore(
-            point.topScore ?? point.top_score ?? point.bestScore
+            point.topReward ?? point.top_reward ?? point.topScore ?? point.top_score ?? point.bestReward ?? point.bestScore
           ) ?? undefined,
         benchmarks: Array.isArray(point.benchmarks)
           ? point.benchmarks.map((benchmark: any) => ({
               name: benchmark.name ?? benchmark.provider ?? "Benchmark",
               provider: benchmark.provider,
-              score: normalizeScore(benchmark.score) ?? 0,
+              reward: normalizeScore(benchmark.reward) ?? 0,
             }))
           : undefined,
       };
     });
-  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData, minerRoundDetails, selectedRoundFromQuery]);
+  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.rewardRoundData, minerRoundDetails, selectedRoundFromQuery]);
 
   const selectedRoundEncoded = useMemo(() => {
     if (typeof selectedRoundFromQuery === "string" && selectedRoundFromQuery.includes("/")) {
@@ -2397,14 +2395,14 @@ export default function Page() {
         ? `#${effectiveAgent.currentRank}`
         : "N/A";
 
-  const currentScorePercentage = `${((roundMetrics?.score ?? effectiveAgent?.currentScore ?? 0) * 100).toFixed(1)}%`;
+  const currentRewardPercentage = `${((roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0) * 100).toFixed(1)}%`;
 
   // Historical metrics
   const bestRankEver =
     effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
       ? `#${effectiveAgent.bestRankEver}`
       : "N/A";
-  const bestEverScorePercentage = `${((effectiveAgent?.bestRoundScore ?? 0) * 100).toFixed(1)}%`;
+  const bestEverRewardPercentage = `${((effectiveAgent?.bestRoundReward ?? 0) * 100).toFixed(1)}%`;
   const bestRoundBadge =
     effectiveAgent?.bestRoundId && (effectiveAgent.bestRoundId ?? 0) > 0
       ? `Round ${effectiveAgent.bestRoundId}`
@@ -2432,17 +2430,17 @@ export default function Page() {
   // - bestRewardInSeason: best reward achieved by this miner in the season
   // - effectiveRewardForRanking: max(roundReward, bestRewardInSeason)
   const roundReward = Number(
-    roundSelectedMiner?.round_score ??
+    roundSelectedMiner?.round_reward ??
       minerRoundDetails?.post_consensus_avg_reward ??
-      roundMetrics?.score ??
-      effectiveAgent?.currentScore ??
+      roundMetrics?.reward ??
+      effectiveAgent?.currentReward ??
       0
   );
   const bestRewardInSeason = Number(
-    roundSelectedMiner?.best_score_in_season ?? roundReward
+    roundSelectedMiner?.best_reward_in_season ?? roundReward
   );
   const effectiveRewardForRanking = Number(
-    roundSelectedMiner?.effective_round_score ??
+    roundSelectedMiner?.effective_round_reward ??
       Math.max(roundReward, bestRewardInSeason)
   );
   const isUsingSeasonBestForRanking = effectiveRewardForRanking > roundReward + 1e-12;
@@ -2544,18 +2542,18 @@ export default function Page() {
       toNullableNumber((seasonSummary as any).required_improvement_pct) ??
       toNullableNumber((decision as any).required_improvement_pct) ??
       0;
-    const topCandidateScore =
-      toNullableNumber((leadership as any)?.top_candidate_score) ??
-      toNullableNumber((decision as any).top_candidate_score);
-    const reigningScore =
-      toNullableNumber((leadership as any)?.reigning_score_before_round) ??
-      toNullableNumber((decision as any).reigning_score_before_round);
+    const topCandidateReward =
+      toNullableNumber((leadership as any)?.top_candidate_reward) ??
+      toNullableNumber((decision as any).top_candidate_reward);
+    const reigningReward =
+      toNullableNumber((leadership as any)?.reigning_reward_before_round) ??
+      toNullableNumber((decision as any).reigning_reward_before_round);
     const reigningUidBeforeRound =
       toNullableNumber((leadership as any)?.reigning_uid_before_round) ??
       toNullableNumber((decision as any).reigning_uid_before_round);
-    const roundWinnerScore =
-      toNullableNumber((leadership as any)?.round_winner_score) ??
-      toNullableNumber((winner as any)?.score);
+    const roundWinnerReward =
+      toNullableNumber((leadership as any)?.round_winner_reward) ??
+      toNullableNumber((winner as any)?.avg_reward);
 
     if (
       roundWinnerUid === null &&
@@ -2567,13 +2565,13 @@ export default function Page() {
 
     return {
       roundWinnerUid,
-      roundWinnerScore,
+      roundWinnerReward,
       topCandidateUid,
       seasonLeaderUid,
       dethroned,
       requiredImprovementPct,
-      topCandidateScore,
-      reigningScore,
+      topCandidateReward,
+      reigningReward,
       reigningUidBeforeRound,
     };
   })();
@@ -2695,11 +2693,11 @@ export default function Page() {
     },
     {
       title: "Best Reward Ever",
-      metric: minerHistorical?.summary?.bestScore
-        ? `${(minerHistorical.summary.bestScore * 100).toFixed(1)}%`
+      metric: minerHistorical?.summary?.bestReward
+        ? `${(minerHistorical.summary.bestReward * 100).toFixed(1)}%`
         : "0%",
-      badge: minerHistorical?.summary?.bestScoreRound
-        ? `Round ${minerHistorical.summary.bestScoreRound}`
+      badge: minerHistorical?.summary?.bestRewardRound
+        ? `Round ${minerHistorical.summary.bestRewardRound}`
         : null,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.amber,
@@ -2992,17 +2990,17 @@ export default function Page() {
                           , reward:{" "}
                           <span className="text-cyan-300 font-semibold">
                             {formatLeadershipReward(
-                              seasonCompetitionState?.topCandidateScore ??
-                              seasonCompetitionState?.reigningScore
+                              seasonCompetitionState?.topCandidateReward ??
+                              seasonCompetitionState?.reigningReward
                             )}
                           </span>
                         </p>
                         <p className="mt-0.5 text-xs text-white/85">
-                          Same leader still has the best season score (reward:{" "}
+                          Same leader still has the best season reward (reward:{" "}
                           <span className="text-amber-300 font-semibold">
                             {formatLeadershipReward(
-                              seasonCompetitionState?.topCandidateScore ??
-                              seasonCompetitionState?.reigningScore
+                              seasonCompetitionState?.topCandidateReward ??
+                              seasonCompetitionState?.reigningReward
                             )}
                           </span>
                           ). No other miner beat the +{((seasonCompetitionState?.requiredImprovementPct ?? 0.05) * 100).toFixed(1)}% threshold to dethrone.
@@ -3017,7 +3015,7 @@ export default function Page() {
                           </span>
                           , reward:{" "}
                           <span className="text-cyan-300 font-semibold">
-                            {formatLeadershipReward(seasonCompetitionState?.reigningScore)}
+                            {formatLeadershipReward(seasonCompetitionState?.reigningReward)}
                           </span>
                         </p>
                         <p className="mt-0.5 text-xs text-white/85">
@@ -3027,7 +3025,7 @@ export default function Page() {
                           </span>
                           , reward:{" "}
                           <span className="text-amber-300 font-semibold">
-                            {formatLeadershipReward(seasonCompetitionState?.topCandidateScore)}
+                            {formatLeadershipReward(seasonCompetitionState?.topCandidateReward)}
                           </span>
                         </p>
                       </>
@@ -3039,7 +3037,7 @@ export default function Page() {
                         <span className="text-white font-semibold">
                           UID {seasonCompetitionState.roundWinnerUid}
                         </span>
-                        {" "}(reward: {formatLeadershipReward(seasonCompetitionState?.roundWinnerScore)})
+                        {" "}(reward: {formatLeadershipReward(seasonCompetitionState?.roundWinnerReward)})
                         {" "}— below dethrone threshold.
                       </p>
                     )}
@@ -3365,7 +3363,7 @@ export default function Page() {
                     ) : (
                       <RoundWebsitesChart
                         agentId={agentIdForQuery ?? trimmedId}
-                        selectedRound={currentRound ?? null}
+                        selectedRound={typeof currentRound === "number" ? currentRound : null}
                         runs={runsState.runs}
                         onSummaryChange={handleSummaryChange}
                       />
@@ -3375,7 +3373,7 @@ export default function Page() {
                   <div className="space-y-6">
                     <AgentScoreChart
                       className="w-full"
-                      scoreRoundData={scoreRoundData}
+                      rewardRoundData={rewardRoundData}
                       loading={minerHistoricalLoading || loading}
                       error={historicalChartError || error}
                       title={`Reward Over Time · Season ${seasonForHistorical ?? "N/A"}`}

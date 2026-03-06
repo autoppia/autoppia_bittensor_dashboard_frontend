@@ -252,7 +252,9 @@ export default function TestAgent() {
         should_record_gif: false,
       };
 
-      const data = await playgroundRepository.runAgentBenchmark(payload);
+      const data = (await playgroundRepository.runAgentBenchmark(
+        payload
+      )) as Record<string, any>;
       setApiResponse(data);
 
       // Parse the nested structure: Project -> AgentRun -> use_cases -> UseCase -> TaskId -> details

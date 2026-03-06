@@ -279,8 +279,10 @@ export default function TaskResults() {
           ) : (
             // Actions list
             actions.map((action, index) => {
-              const meta =
-                ACTION_TYPE_META[action.type] ?? ACTION_TYPE_META.other;
+	              const meta =
+	                ACTION_TYPE_META[
+	                  (action.type as TaskAction["type"]) ?? "other"
+	                ] ?? ACTION_TYPE_META.other;
               const ActionIcon = meta.icon;
               return (
                 <div

@@ -80,7 +80,7 @@ export default function AgentRunSummaryDynamic({
             (summary?.successfulTasks ?? 0) > 0
               ? summary!.successfulTasks
               : (runTasks?.filter?.((t) => String(t.status).toLowerCase() === 'completed')?.length ?? 0),
-          successRate: summary?.overallScore ?? (summaryChartData?.total ?? 0),
+          successRate: summary?.overallReward ?? (summaryChartData?.total ?? 0),
         }}
       />
     </div>

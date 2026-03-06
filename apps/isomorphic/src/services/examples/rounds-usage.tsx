@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Example usage of the Rounds API Service
  * This file demonstrates how to use the new rounds API service in React components

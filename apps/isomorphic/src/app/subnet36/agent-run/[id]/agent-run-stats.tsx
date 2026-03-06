@@ -37,7 +37,7 @@ interface AgentRunStatsProps {
 }
 
 export default function AgentRunStats({ stats }: AgentRunStatsProps) {
-  const overallScore = clampPercentage(stats?.overallScore);
+  const overallReward = clampPercentage(stats?.overallReward);
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
@@ -52,7 +52,7 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
   );
   const averageDuration = stats?.averageTaskDuration ?? 0;
 
-  const displayOverallScore = formatPercentage(overallScore);
+  const displayOverallReward = formatPercentage(overallReward);
   const displaySuccessRate = formatPercentage(successRate);
   const displayAverageDuration = formatDuration(averageDuration);
 
@@ -137,7 +137,7 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
 
       {/* Mobile Layout - Stacked */}
       <div className="flex flex-col space-y-6 md:hidden relative">
-        {/* Overall Score - Prominent on mobile */}
+        {/* Overall Reward - Prominent on mobile */}
         <div className="flex flex-col items-center justify-center">
           <div
             className="text-4xl font-extrabold sm:text-5xl bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_15px_35px_rgba(244,197,94,0.45)]"
@@ -145,10 +145,10 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
               WebkitTextStroke: "0.4px rgba(249, 250, 251, 0.15)",
             }}
           >
-            {displayOverallScore}
+            {displayOverallReward}
           </div>
           <div className="mt-2 text-sm font-medium text-white/70">
-            Overall evaluation score
+            Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
             Success rate {displaySuccessRate} • Avg duration {displayAverageDuration}
@@ -173,10 +173,10 @@ export default function AgentRunStats({ stats }: AgentRunStatsProps) {
               WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)",
             }}
           >
-            {displayOverallScore}
+            {displayOverallReward}
           </div>
           <div className="mt-2 text-sm font-medium text-white/70">
-            Overall evaluation score
+            Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
             Success rate {displaySuccessRate} • Avg duration {displayAverageDuration}

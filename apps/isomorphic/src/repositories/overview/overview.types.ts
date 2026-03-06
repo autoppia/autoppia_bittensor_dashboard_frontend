@@ -79,16 +79,17 @@ export interface OverviewRoundData {
   status: "active" | "finished" | "pending" | "evaluating_finished";
   totalTasks: number;
   completedTasks: number;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
 }
 
 // ===== LEADERBOARD DATA =====
 export interface LeaderboardData {
   round: number;
   season?: number | null; // season_number from backend
-  subnet36: number; // post_consensus_avg_reward (mantener por compatibilidad)
+  subnet36: number; // Compatibility mirror of post_consensus_reward
   post_consensus_reward: number; // post_consensus_avg_reward
+  reward: number; // post_consensus_avg_reward
   winnerUid?: number | null;
   winnerName?: string | null;
   openai_cua?: number | null;
@@ -97,15 +98,13 @@ export interface LeaderboardData {
   timestamp: string;
   post_consensus_eval_score?: number | null; // post_consensus_avg_eval_score
   post_consensus_eval_time?: number | null; // post_consensus_avg_eval_time
-  // Campos legacy (mantener por compatibilidad)
-  score?: number | null; // post_consensus_avg_eval_score (alias)
   time?: number | null; // post_consensus_avg_eval_time (alias)
 }
 
 // ===== MINER PERFORMANCE DATA =====
 export interface MinerPerformanceData {
   round: number;
-  score: number;
+  reward: number;
   rank: number;
   tasksCompleted: number;
   averageResponseTime: number;

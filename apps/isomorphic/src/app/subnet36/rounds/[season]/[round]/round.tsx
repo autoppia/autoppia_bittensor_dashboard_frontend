@@ -349,14 +349,14 @@ function RoundHeaderInline({
 
   // Check if validator rounds have evaluation results (tasks evaluated)
   const validatorRounds = round?.validatorRounds ?? [];
-  const hasEvaluationsComplete = validatorRounds.some((vr) => {
+  const hasEvaluationsComplete = validatorRounds.some((vr: any) => {
     // Check if this validator has finished evaluating
     if (vr.status === "evaluating_finished" || vr.status === "finished") {
       return true;
     }
     // Check if there are agent runs with evaluation results
     const agentRuns = vr.agentEvaluationRuns ?? [];
-    return agentRuns.some((run) => {
+    return agentRuns.some((run: any) => {
       const evalResults = run.evaluation_results ?? run.evaluationResults ?? [];
       return (
         evalResults.length > 0 &&
@@ -854,7 +854,7 @@ function RoundStatsInline({
 }) {
   // ✅ Usar datos de post_consensus_summary si están disponibles
   const winner = postConsensusSummary?.winner;
-  const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
+  const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageReward ?? statistics?.averageReward ?? 0;
   const winnerEvalScore = winner?.avg_eval_score ?? 0;
   const averageEvalTime = winner?.avg_eval_time ?? 0;
   const minersEvaluated = postConsensusSummary?.miners_evaluated ?? statistics?.totalMiners ?? 0;
@@ -1246,7 +1246,7 @@ function RoundValidatorsInline({
       uid: v.validator_uid,
       name: v.validator_name || `Validator ${v.validator_uid}`,
       icon: v.validator_image || `/validators/Other.png`,
-      topScore: v.topScore || 0,
+      topReward: v.topReward || 0,
       topMiner: v.winner,
       hotkey: v.validator_hotkey || null,
       // Agregar otros campos necesarios
@@ -1575,10 +1575,10 @@ function RoundMinerScoresInline({
         miners = Array.from(uniqueMiners.values());
       }
 
-      // ✅ Mapear los miners al formato esperado (agregar score desde local_avg_reward)
+      // Mapear los miners al formato esperado usando reward desde local_avg_reward.
       const mappedMiners = miners.map((miner: any) => ({
         ...miner,
-        score: miner.local_avg_reward ?? miner.reward ?? 0, // ✅ score para el gráfico
+        reward: miner.local_avg_reward ?? miner.reward ?? 0,
         validatorId: selectedValidator?.id || `validator-${roundData.validators[0]?.validator_uid}`, // ✅ Agregar validatorId
       }));
 
@@ -1604,7 +1604,7 @@ function RoundMinerScoresInline({
     // ✅ Los miners ya vienen filtrados desde chartSource según selectedValidator
     const filteredMiners = chartSource.miners;
     const minerEntries = filteredMiners.map((miner: any) => {
-      const score = normalizeScore(miner.score);
+      const reward = normalizeScore(miner.reward);
       const rawIsSota =
         miner.isSota ??
         miner.is_sota ??
@@ -1640,7 +1640,6 @@ function RoundMinerScoresInline({
       }
       return {
         name: label,
-        score,
         isSota,
         uid: miner.uid,
         color,
@@ -1654,7 +1653,7 @@ function RoundMinerScoresInline({
       };
     });
     const benchmarkEntries = benchmarks.map((benchmark) => {
-      const score = normalizeScore(benchmark.score);
+      const reward = normalizeScore(benchmark.reward);
       const label = benchmark.name;
       const slug = benchmark.provider
         ? slugify(benchmark.provider)
@@ -1674,7 +1673,7 @@ function RoundMinerScoresInline({
       }
       return {
         name: label,
-        score,
+        reward,
         isSota: true,
         uid: `benchmark-${benchmark.id}`,
         color,
@@ -1683,7 +1682,7 @@ function RoundMinerScoresInline({
       };
     });
     return [...minerEntries, ...benchmarkEntries].sort(
-      (a, b) => b.score - a.score
+      (a, b) => b.reward - a.reward
     );
   }, [minersData, selectedValidator, chartSource?.benchmarks, chartSource?.miners]);
 
@@ -1914,7 +1913,7 @@ function RoundMinerScoresInline({
               cursor={{ fill: "rgba(148,163,184,0.1)" }}
             />
             <Bar
-              dataKey="score"
+              dataKey="reward"
               fill="url(#barGradient)"
               strokeWidth={0}
               radius={[8, 8, 0, 0]}
@@ -2001,7 +2000,7 @@ function RoundTopMinersInline({
           name: miner.name,
           imageUrl: miner.image,
           hotkey: miner.hotkey,
-          score: miner.local_avg_reward, // ✅ Usar local_avg_reward con 2 decimales
+          reward: miner.local_avg_reward,
           ranking: miner.local_rank,
           validatorId: selectedValidator.id,
         }));
@@ -2014,7 +2013,7 @@ function RoundTopMinersInline({
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
-      (miner) => miner.validatorId === selectedValidator.id
+      (miner: any) => miner.validatorId === selectedValidator.id
     );
     return filtered.length > 0 ? filtered : [];
   }, [roundData, minersData, selectedValidator]);
@@ -2213,7 +2212,7 @@ function RoundTopMinersInline({
                           UID {miner.uid}
                         </span>
                       </div>
-                      {(miner.zero_reason ?? miner.zeroReason) && (Number(miner.score ?? miner.local_avg_reward ?? 0) <= 0) && (
+                      {(miner.zero_reason ?? miner.zeroReason) && (Number(miner.reward ?? miner.local_avg_reward ?? 0) <= 0) && (
                         <div className="mt-1.5 text-[11px] text-amber-200/90 font-medium">
                           Reason: {(miner.zero_reason ?? miner.zeroReason).split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
                         </div>
@@ -2231,7 +2230,7 @@ function RoundTopMinersInline({
                           )}
                         >
                           {(() => {
-                            const reward = Number(miner.score ?? miner.local_avg_reward ?? 0);
+                            const reward = Number(miner.reward ?? miner.local_avg_reward ?? 0);
                             const truncated = truncateDecimal(reward, 4); // ✅ Truncar a 4 decimales (0.7458)
                             return (truncated * 100).toFixed(2) + "%"; // ✅ Mostrar como porcentaje con 2 decimales (74.58%)
                           })()}
@@ -2329,8 +2328,10 @@ export default function Round() {
     return {
       winnerUid: roundData.post_consensus_summary?.winner?.uid,
       winnerAverage: roundData.post_consensus_summary?.winner?.avg_reward,
-      topScore: roundData.post_consensus_summary?.winner?.avg_reward,
+      topReward: roundData.post_consensus_summary?.winner?.avg_reward,
       avgEvalTime: roundData.post_consensus_summary?.winner?.avg_eval_time,
+      totalMiners: roundData.post_consensus_summary?.miners_evaluated ?? 0,
+      totalTasks: roundData.post_consensus_summary?.tasks_evaluated ?? 0,
       minersEvaluated: roundData.post_consensus_summary?.miners_evaluated,
       tasksEvaluated: roundData.post_consensus_summary?.tasks_evaluated,
     };
@@ -2340,10 +2341,10 @@ export default function Round() {
   const validatorRounds = roundInfo?.validatorRounds ?? [];
   const isWaitingForConsensus =
     roundInfo?.status === "evaluating_finished" ||
-    (validatorRounds.some((vr) => {
+    (validatorRounds.some((vr: any) => {
       if (vr.status === "evaluating_finished") return true;
       const agentRuns = vr.agentEvaluationRuns ?? [];
-      return agentRuns.some((run) => {
+      return agentRuns.some((run: any) => {
         const evalResults =
           run.evaluation_results ?? run.evaluationResults ?? [];
         return (
@@ -2354,13 +2355,35 @@ export default function Round() {
     }) &&
       roundInfo?.status === "active");
 
-  const aggregatedTopMiner: MinerPerformance | null = React.useMemo(() => {
+  const aggregatedTopMiner = React.useMemo<{
+    uid?: number;
+    name?: string | null;
+    image?: string | null;
+    imageUrl?: string | null;
+    hotkey?: string | null;
+    githubUrl?: string | null;
+    github_url?: string | null;
+    avg_reward?: number;
+    avg_eval_score?: number;
+    avg_eval_time?: number;
+  } | null>(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
     return topMiners[0] ?? null;
   }, [topMiners]);
 
   // ✅ Usar winner de roundData.validators[selectedValidator] si está disponible
-  const selectedValidatorWinner = React.useMemo(() => {
+  const selectedValidatorWinner = React.useMemo<{
+    uid?: number;
+    name?: string | null;
+    image?: string | null;
+    imageUrl?: string | null;
+    hotkey?: string | null;
+    githubUrl?: string | null;
+    github_url?: string | null;
+    avg_reward?: number;
+    avg_eval_score?: number;
+    avg_eval_time?: number;
+  } | null>(() => {
     if (roundData?.validators && selectedValidator?.id) {
       const validatorUid = selectedValidator.id.replace("validator-", "");
       const validator = roundData.validators.find(
@@ -2371,7 +2394,7 @@ export default function Round() {
       }
     }
     // Fallback al endpoint antiguo
-    return selectedValidator?.topMiner ?? null;
+    return (selectedValidator?.topMiner as any) ?? null;
   }, [roundData, selectedValidator]);
 
   const seasonCompetitionState = React.useMemo(() => {
@@ -2426,8 +2449,12 @@ export default function Round() {
       toNullableNumber((decision as any).required_improvement_pct) ??
       toNullableNumber((seasonSummary as any).required_improvement_pct) ??
       0;
-    const topCandidateScore = toNullableNumber((decision as any).top_candidate_score);
-    const reigningScore = toNullableNumber((decision as any).reigning_score_before_round);
+    const topCandidateReward = toNullableNumber((decision as any).top_candidate_reward);
+    const reigningReward = toNullableNumber((decision as any).reigning_reward_before_round);
+    const reigningUidBeforeRound =
+      toNullableNumber((decision as any).reigning_uid_before_round) ??
+      toNullableNumber((decision as any).reigning_miner_uid) ??
+      toNullableNumber((seasonSummary as any).previous_winner_uid);
 
     if (
       roundWinnerUid === null &&
@@ -2441,10 +2468,11 @@ export default function Round() {
       roundWinnerUid,
       topCandidateUid,
       seasonLeaderUid,
+      reigningUidBeforeRound,
       dethroned,
       requiredImprovementPct,
-      topCandidateScore,
-      reigningScore,
+      topCandidateReward,
+      reigningReward,
     };
   }, [roundData, selectedValidator]);
 
@@ -2500,13 +2528,13 @@ export default function Round() {
           valueClass: "text-base md:text-2xl",
         },
         {
-          key: "score",
+          key: "reward",
           title: "Top Reward",
           value: `${(() => {
-            const score = roundData?.validators?.find(
+            const reward = roundData?.validators?.find(
               (v: any) => v.validator_uid?.toString() === selectedValidator.id.replace("validator-", "") || v.validator_uid?.toString() === selectedValidator.id
-            )?.local_avg_winner_score ?? selectedValidator.topScore ?? selectedValidator.averageScore ?? 0;
-            const truncated = truncateDecimal(score, 4); // ✅ Truncar a 4 decimales
+            )?.local_avg_winner_reward ?? selectedValidator.topReward ?? selectedValidator.averageReward ?? 0;
+            const truncated = truncateDecimal(reward, 4);
             return formatNumber(truncated * 100, 2);
           })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
           helper: "Best run recorded by this validator",
@@ -2726,7 +2754,7 @@ export default function Round() {
               topMiners={topMiners}
               postConsensusSummary={roundData?.post_consensus_summary ?? null}
               loading={roundDataLoading}
-              error={roundDataError}
+              error={roundDataError ?? undefined}
             />
             {seasonCompetitionState && (
               <div
@@ -2755,9 +2783,9 @@ export default function Round() {
                   <span className="text-cyan-300 font-semibold">
                     UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? "—"}
                   </span>
-                  , score:{" "}
+                  , reward:{" "}
                   <span className="text-cyan-300 font-semibold">
-                    {seasonCompetitionState.reigningScore ?? "—"}
+                    {seasonCompetitionState.reigningReward ?? "—"}
                   </span>
                 </p>
                 <p className="mt-0.5 text-xs text-white/85">
@@ -2765,9 +2793,9 @@ export default function Round() {
                   <span className="text-amber-300 font-semibold">
                     UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
                   </span>
-                  , score:{" "}
+                  , reward:{" "}
                   <span className="text-amber-300 font-semibold">
-                    {seasonCompetitionState.topCandidateScore ?? "—"}
+                    {seasonCompetitionState.topCandidateReward ?? "—"}
                   </span>
                 </p>
                 <p className="mt-1 text-sm text-white">
@@ -2819,7 +2847,7 @@ export default function Round() {
         requestedValidatorId={requestedValidatorId}
         roundData={roundData}
         loading={roundDataLoading}
-        error={roundDataError}
+              error={roundDataError ?? undefined}
       />
 
       {/* Selected validator metric cards */}
@@ -3193,7 +3221,7 @@ export default function Round() {
                 <div className="space-y-4 text-white/85 text-sm leading-relaxed">
                   <p>
                     1. Each validator evaluates miners locally and computes pre-consensus metrics
-                    (`reward`, `score`, `time`, tasks stats).
+                    (`reward`, `eval_score`, `time`, tasks stats).
                   </p>
                   <p>
                     2. Each validator uploads its local payload to IPFS (`IPFS Uploaded`), then downloads
@@ -3261,7 +3289,7 @@ export default function Round() {
           minersData={undefined}
           roundData={roundData}
           loading={roundDataLoading}
-          error={roundDataError}
+          error={roundDataError ?? undefined}
         />
         <RoundTopMinersInline
           className="w-full xl:w-[400px]"
@@ -3271,7 +3299,7 @@ export default function Round() {
           minersData={undefined}
           roundData={roundData} // ✅ Pasar roundData
           loading={roundDataLoading}
-          error={roundDataError}
+          error={roundDataError ?? undefined}
         />
       </div>
         </>

@@ -56,12 +56,12 @@ const agentRunTasksColumns = [
       <Text className="font-medium text-gray-600">
         {row.original.useCase
           .split("_")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(" ")}
       </Text>
     ),
   }),
-  columnHelper.accessor("score", {
+  columnHelper.accessor("eval_score", {
     id: "eval_score",
     size: 100,
     header: "Score",
@@ -109,15 +109,17 @@ const agentRunTasksColumns = [
 ];
 
 interface AgentRunTasksTableDynamicProps {
-  tasks?: any[];
+  tasks?: AgentRunTaskData[];
   isLoading?: boolean;
   error?: string | null;
+  refetch?: () => void;
 }
 
 export default function AgentRunTasksTableDynamic({
   tasks: providedTasks = [],
   isLoading = false,
   error,
+  refetch,
 }: AgentRunTasksTableDynamicProps) {
   const router = useRouter();
   const tasks = providedTasks;
@@ -150,7 +152,7 @@ export default function AgentRunTasksTableDynamic({
 
 
   // Show loading state
-  if (isLoading && !tasks) {
+  if (isLoading && tasks.length === 0) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-gradient-to-br from-violet-500/10 via-violet-400/5 to-transparent blur-[120px]" />
@@ -192,7 +194,7 @@ export default function AgentRunTasksTableDynamic({
   }
 
   // Show error state
-  if (error && !tasks) {
+  if (error && tasks.length === 0) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-20 right-0 h-56 w-56 rounded-full bg-gradient-to-br from-rose-500/15 via-rose-400/5 to-transparent blur-[110px]" />
@@ -205,7 +207,7 @@ export default function AgentRunTasksTableDynamic({
           </div>
           <div className="mb-4 text-sm text-red-300">{error}</div>
           <button
-            onClick={refetch}
+            onClick={() => refetch?.()}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Retry
@@ -235,12 +237,12 @@ export default function AgentRunTasksTableDynamic({
             type="search"
             clearable={true}
             placeholder="Search task..."
-            onClear={() => table.setGlobalFilter("")}
-            value={table.getState().globalFilter ?? ""}
+            onClear={() => table?.setGlobalFilter("")}
+            value={table?.getState().globalFilter ?? ""}
             prefix={
               <PiMagnifyingGlassBold className="size-4 text-slate-400" />
             }
-            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            onChange={(e) => table?.setGlobalFilter(e.target.value)}
             className="w-full xs:max-w-60"
           />
         </div>
@@ -259,13 +261,13 @@ export default function AgentRunTasksTableDynamic({
               rowClassName:
                 "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_8px_22px_rgba(56,189,248,0.15)]",
             }}
-            components={{
-              bodyRow: ({ table }) => (
-                <>
-                  {table.getRowModel().rows.map((row) => {
-                    const taskId = (row as any).original?.taskId;
-                    const href = `${routes.tasks}/${taskId}`;
-                    return (
+	            components={{
+	              bodyRow: ({ table }) => (
+	                <>
+	                  {(table?.getRowModel().rows ?? []).map((row) => {
+	                    const taskId = (row as any).original?.taskId;
+	                    const href = `${routes.tasks}/${taskId}`;
+	                    return (
                       <RTable.Row
                         key={row.id}
                         className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
@@ -299,7 +301,7 @@ export default function AgentRunTasksTableDynamic({
         )}
       </div>
 
-      {tasks && tasks.length > 0 && (
+      {table && tasks.length > 0 && (
         <TablePagination
           table={table}
           className="relative py-4 text-slate-300"

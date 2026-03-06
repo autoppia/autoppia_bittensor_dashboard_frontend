@@ -587,7 +587,7 @@ function TaskDetailsDynamic({
       (row.provider || row.model || row.tokens != null || row.cost != null)
     );
   });
-  const usageTotals = usageRows.reduce(
+  const usageTotals = usageRows.reduce<{ tokens: number; cost: number }>(
     (acc, row) => {
       const tokens = row.tokens != null ? Number(row.tokens) : 0;
       const cost = row.cost != null ? Number(row.cost) : 0;
@@ -1360,6 +1360,7 @@ type TaskResultsProps = {
       status: string;
       eval_score: number;
       eval_time: number;
+      zero_reason?: string | null;
     } | null;
     actions: any[];
     screenshots: any[];
@@ -1429,7 +1430,7 @@ function TaskResults({ evaluationData }: TaskResultsProps) {
 
   const handleDownloadAll = () => {
     if (!mediaItems || mediaItems.length === 0) return;
-    const baseId = Array.isArray(id) ? id[0] : (id as string);
+    const baseId = "task";
     mediaItems.forEach((item: any, index: number) => {
       if (!item?.url) return;
       const a = document.createElement("a");
@@ -1820,7 +1821,7 @@ export default function TaskDynamic() {
         successCount={evaluationData.actions.filter((a: any) => a.success).length}
         failCount={evaluationData.actions.filter((a: any) => !a.success || a.error).length}
         info={info}
-        evaluationZeroReason={evaluationData?.result?.zero_reason ?? undefined}
+        evaluationZeroReason={(evaluationData?.result as any)?.zero_reason ?? undefined}
       />
 
       <div className="mb-10">

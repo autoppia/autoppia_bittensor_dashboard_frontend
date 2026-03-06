@@ -237,13 +237,13 @@ function buildDetailDataFromStats(
     ["avg_time", "averageTaskDuration", "average_task_duration", "avg_duration"],
     0
   );
-  const avgScoreRaw = readNumber(
-    ["avg_score", "overallScore", "average_score", "successRate", "success_rate"],
+  const avgRewardRaw = readNumber(
+    ["avg_reward", "overallReward", "average_reward", "avg_score", "overallScore", "average_score", "successRate", "success_rate"],
     0
   );
-  const avgScore = avgScoreRaw > 1 ? avgScoreRaw / 100 : avgScoreRaw;
+  const avgReward = avgRewardRaw > 1 ? avgRewardRaw / 100 : avgRewardRaw;
   const fallbackSuccessRate =
-    avgScore > 0 ? avgScore : totalTasks > 0 ? successfulTasks / totalTasks : 0;
+    avgReward > 0 ? avgReward : totalTasks > 0 ? successfulTasks / totalTasks : 0;
 
   let websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
@@ -343,7 +343,7 @@ export default function Page() {
     !isLoading &&
     error &&
     (!stats ||
-      (stats.totalTasks === 0 && stats.overallScore === 0));
+      (stats.totalTasks === 0 && stats.overallReward === 0));
 
   const reusedRoundInSeason = normalizeRoundInSeason(
     info?.reusedFrom?.roundNumber,
@@ -511,10 +511,10 @@ export default function Page() {
         <AgentRunStats stats={stats || null} />
       )}
 
-      {/* Zero score reason: show when overall score is 0 and we have a reason (below stats card) */}
-      {!isLoading && stats && (stats.overallScore === 0 || (stats.avg_score !== undefined && stats.avg_score <= 0)) && (info?.zeroReason ?? (stats as any)?.zeroReason) && (
+      {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
+      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (info?.zeroReason ?? (stats as any)?.zeroReason) && (
         <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
-          <span className="font-semibold">Reason for zero score:</span>{" "}
+          <span className="font-semibold">Reason for zero reward:</span>{" "}
           {humanizeZeroReason((info?.zeroReason ?? (stats as any)?.zeroReason) as string)}
         </div>
       )}
@@ -907,270 +907,6 @@ function AgentRunPersonasFromInfo({
   );
 }
 
-// Personas card group (legacy - kept for backward compatibility)
-function AgentRunPersonas({
-  personas,
-  summary,
-}: {
-  personas?: any;
-  summary?: any;
-}) {
-  function extractUidNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value))
-      return Math.max(0, Math.abs(value));
-    if (typeof value === "string") {
-      // Extract first sequence of digits; treat hyphens as delimiters, not signs
-      const match = value.match(/\d+/);
-      if (match) {
-        const parsed = Number.parseInt(match[0], 10);
-        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
-      }
-    }
-    return null;
-  }
-  const roundData = personas?.round || {
-    id: "—",
-    status: "Active",
-    startTime: null,
-    totalValidators: personas?.validatorCount || 0,
-  };
-  const validatorData = personas?.validator || {
-    name: "Autoppia Validator",
-    image: "/validators/Autoppia.png",
-    id: null,
-    country: "—",
-    track: "—",
-  };
-  const agentData = personas?.agent || {
-    name: "Benchmark Agent",
-    image: "/images/autoppia-logo.png",
-    id: "—",
-    uid: null,
-    hotkey: null,
-    provider: "—",
-    github: null,
-  };
-
-  const validatorHotkey =
-    summary?.validatorId || validatorData.id || validatorData.name;
-  const validatorUid =
-    extractUidNumber(summary?.validatorId) ?? extractUidNumber(validatorHotkey);
-  const taoStatsUrl = validatorHotkey
-    ? `https://taostats.io/validators/${validatorHotkey}`
-    : null;
-
-  const agentUid =
-    (typeof agentData.uid === "number" ? agentData.uid : null) ??
-    (typeof summary?.agentUid === "number" ? summary?.agentUid : null) ??
-    extractUidNumber(agentData.id) ??
-    extractUidNumber(summary?.agentId);
-
-  const agentHotkey =
-    agentData.hotkey ??
-    summary?.agentHotkey ??
-    agentData.id ??
-    summary?.agentId;
-
-  const fallbackMinerImage = (() => {
-    const uidCandidate = minerUid;
-    if (uidCandidate === null) return "/images/autoppia-logo.png";
-    const normalized = Math.abs(uidCandidate % 50);
-    return `/miners/${normalized}.svg`;
-  })();
-
-  const minerImageSrc = minerData.image
-    ? resolveAssetUrl(minerData.image)
-    : resolveAssetUrl(fallbackMinerImage);
-  const validatorImageSrc = validatorData.image
-    ? resolveAssetUrl(validatorData.image)
-    : resolveAssetUrl("/validators/Other.png");
-
-  // Epoch helpers
-  const epochStart = roundData.startEpoch ?? null;
-  const epochEnd = roundData.endEpoch ?? null;
-  const formatEpoch = (value: number | null) =>
-    typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-
-  // Round number/ID
-  const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
-  const roundStatus = roundData.status || "Active";
-
-  return (
-    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      {/* Round */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
-              <PiClock className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Round
-              </p>
-              <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                #{roundNumber}
-              </p>
-            </div>
-          </div>
-          <span
-            className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-            style={{
-              borderColor: "rgba(253, 245, 230, 0.45)",
-              backgroundColor: "rgba(253, 245, 230, 0.12)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
-            {roundStatus.replace(/^\w/, (c: string) =>
-              c.toUpperCase()
-            )}
-          </span>
-        </header>
-
-        <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
-            <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-              Epoch:
-            </span>
-            <span className="whitespace-nowrap">
-              {formatEpoch(epochStart)} - {formatEpoch(epochEnd ?? Math.floor(Date.now() / 1000))}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Validator */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Image
-              alt={validatorData.name}
-              src={validatorImageSrc}
-              width={56}
-              height={56}
-              unoptimized
-              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1"
-            />
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Validator
-              </p>
-              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {validatorData.name || "Unknown Validator"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {validatorUid !== null && (
-              <span
-                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                style={{
-                  borderColor: "rgba(59, 130, 246, 0.45)",
-                  backgroundColor: "rgba(59, 130, 246, 0.12)",
-                  color: "#60A5FA",
-                }}
-              >
-                UID {validatorUid}
-              </span>
-            )}
-            {taoStatsUrl ? (
-              <a
-                href={taoStatsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-400 text-black shadow hover:bg-sky-300"
-                title="Open TaoStats"
-              >
-                <PiArrowSquareOutDuotone className="h-4 w-4" />
-              </a>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="mt-4">
-          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                  Hotkey:
-                </span>
-                <span className="font-mono text-sm text-white">
-                  {truncateMiddle(validatorHotkey)}
-                </span>
-              </div>
-              {validatorHotkey && validatorHotkey !== "—" && <IDCopyButton text={validatorHotkey} />}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Miner */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Image
-              alt={agentData.name}
-              src={minerImageSrc}
-              width={56}
-              height={56}
-              unoptimized
-              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1"
-            />
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Miner
-              </p>
-              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {minerData.name || "Unknown Miner"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {minerUid !== null && (
-              <span
-                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                style={{
-                  borderColor: "rgba(16, 185, 129, 0.45)",
-                  backgroundColor: "rgba(16, 185, 129, 0.12)",
-                  color: "#34D399",
-                }}
-              >
-                UID {minerUid}
-              </span>
-            )}
-            {minerData.github ? (
-              <a
-                href={minerData.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300"
-                title="Open GitHub"
-              >
-                <PiGithubLogoDuotone className="h-4 w-4" />
-              </a>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="mt-4">
-          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                  Hotkey:
-                </span>
-                <span className="font-mono text-sm text-white">
-                  {truncateMiddle(minerHotkey)}
-                </span>
-              </div>
-              {minerHotkey && minerHotkey !== "—" && <IDCopyButton text={minerHotkey} />}
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 // Personas placeholder
 function AgentRunPersonasPlaceholder() {
@@ -1255,8 +991,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const formatDuration = (v: number | null | undefined) =>
     v && v > 0 ? `${percentageFormatter.format(v)}s` : "—";
 
-  // Use new fields: avg_score, avg_reward, avg_time
-  const overallScore = clampPercentage((stats?.avg_score ?? 0) * 100);
+  // Reward/time use the post-run reward metrics; website rows keep eval_score separately.
   const overallReward = clampPercentage((stats?.avg_reward ?? 0) * 100);
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
@@ -1272,7 +1007,6 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   );
   const averageDuration = stats?.avg_time ?? 0;
 
-  const displayOverallScore = formatPercentage(overallScore);
   const displayOverallReward = formatPercentage(overallReward);
   const displaySuccessRate = formatPercentage(successRate);
   const displayAverageDuration = formatDuration(averageDuration);
@@ -1361,7 +1095,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Score {displayOverallScore} • Time {displayAverageDuration}
+            Reward {displayOverallReward} • Time {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -1384,7 +1118,7 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Score {displayOverallScore} • Time {displayAverageDuration}
+            Reward {displayOverallReward} • Time {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
