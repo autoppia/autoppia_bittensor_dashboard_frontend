@@ -77,7 +77,7 @@ export default function MetricCard({
               {metric}
             </Text>
 
-            {info ? info : null}
+            {info ?? null}
           </div>
         </div>
 
