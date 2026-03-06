@@ -10,11 +10,11 @@ export type OS =
   | 'linux';
 
 function getOS(): OS {
-  if (typeof window === 'undefined') {
+  if (globalThis.window === undefined) {
     return 'undetermined';
   }
 
-  const { userAgent } = window.navigator;
+  const { userAgent } = globalThis.navigator;
   const macosPlatforms = /(Macintosh)|(MacIntel)|(MacPPC)|(Mac68K)/i;
   const windowsPlatforms = /(Win32)|(Win64)|(Windows)|(WinCE)/i;
   const iosPlatforms = /(iPhone)|(iPad)|(iPod)/i;
@@ -42,7 +42,9 @@ interface UseOsOptions {
   getValueInEffect: boolean;
 }
 
-export function useOs(options: UseOsOptions = { getValueInEffect: true }): OS {
+const DEFAULT_USE_OS_OPTIONS: UseOsOptions = { getValueInEffect: true };
+
+export function useOs(options: UseOsOptions = DEFAULT_USE_OS_OPTIONS): OS {
   const [value, setValue] = useState<OS>(
     options.getValueInEffect ? 'undetermined' : getOS()
   );
