@@ -64,6 +64,8 @@ type RoundInfoFromData = {
   current?: boolean;
 } | null;
 
+type RoundStatus = "active" | "completed" | "pending";
+
 // ============================================================================
 // UTILITY FUNCTIONS - Inline from round-identifier.ts
 // ============================================================================
@@ -305,12 +307,14 @@ function RoundHeaderInline({
     const previousRound = progressData?.previousRound;
     const nextRound = progressData?.nextRound;
     const season = seasonParam ?? round?.season_number;
-    const buildKey = (r: number) => (season != null ? `${season}/${r}` : null);
+    const buildKey = (r: number) => (season == null ? null : `${season}/${r}`);
     const toRoundKey = (val: string | number | null | undefined): string | null => {
-      if (val == null) return null;
-      if (typeof val === "string" && val.includes("/")) return val; // Ya viene "season/round"
-      const r = typeof val === "number" ? val : Number(val);
-      return Number.isFinite(r) ? buildKey(r) : null;
+      if (val != null) {
+        if (typeof val === "string" && val.includes("/")) return val; // Ya viene "season/round"
+        const r = typeof val === "number" ? val : Number(val);
+        return Number.isFinite(r) ? buildKey(r) : null;
+      }
+      return null;
     };
     const extractRoundNum = (val: string | number | null | undefined): number | undefined => {
       if (val == null) return undefined;
@@ -325,8 +329,8 @@ function RoundHeaderInline({
     const prevKey = toRoundKey(previousRound);
     const nextKeyVal = toRoundKey(nextRound);
     return {
-      previous: prevKey != null ? { roundNumber: extractRoundNum(previousRound), roundKey: prevKey } : null,
-      next: nextKeyVal != null ? { roundNumber: extractRoundNum(nextRound), roundKey: nextKeyVal } : null,
+      previous: prevKey == null ? null : { roundNumber: extractRoundNum(previousRound), roundKey: prevKey },
+      next: nextKeyVal == null ? null : { roundNumber: extractRoundNum(nextRound), roundKey: nextKeyVal },
     };
   }, [progressData, seasonParam, round?.season_number]);
 
@@ -368,49 +372,37 @@ function RoundHeaderInline({
   });
 
   // ✅ Status ya viene de progressData
-  let status: "active" | "completed" | "pending";
-  let statusLabel: string;
+  let status: RoundStatus = "completed";
+  let statusLabel: string = "Finished";
 
   if (backendStatus === "pending") {
     status = "pending";
     statusLabel = "Pending";
   } else if (backendStatus === "finished") {
-    status = "completed";
-    statusLabel = "Finished";
+    // keep completed/Finished
   } else if (backendStatus === "evaluating_finished") {
     // Evaluating finished - waiting for consensus/weights
     status = "active";
     statusLabel = "Waiting for Consensus";
-  } else if (backendStatus === "active") {
-    // Active round - check if evaluations are done
-    if (hasEvaluationsComplete) {
-      status = "active";
-      statusLabel = "Waiting for Consensus";
-    } else {
-      status = "active";
-      statusLabel = "Running";
-    }
-  } else {
-    // No backend status - fallback to round.current flag
-    if (round?.current) {
-      status = "active";
-      statusLabel = "Running";
-    } else {
-      status = "completed";
-      statusLabel = "Finished";
-    }
+  } else if (backendStatus === "active" || round?.current) {
+    status = "active";
+    statusLabel =
+      backendStatus === "active" && hasEvaluationsComplete
+        ? "Waiting for Consensus"
+        : "Running";
   }
+  // else: keep default completed/Finished
 
   const isActive = status === "active" || round?.current === true;
 
-  const progressPercentageRaw =
+  const progressFromData =
     typeof progressData?.progress === "number"
       ? progressData.progress * 100
-      : typeof round?.progress === "number"
-        ? round.progress * 100
-        : isActive
-          ? 0
-          : 100;
+      : undefined;
+  const progressFromRound =
+    typeof round?.progress === "number" ? round.progress * 100 : undefined;
+  const progressPercentageRaw =
+    progressFromData ?? progressFromRound ?? (isActive ? 0 : 100);
   const progressPercentage = Math.max(
     0,
     Math.min(100, Math.round(progressPercentageRaw))
@@ -466,19 +458,19 @@ function RoundHeaderInline({
     );
   }
 
+  let roundAccentClass: string | undefined;
+  if (isActive) roundAccentClass = roundAccentActive;
+  else if (status === "completed") roundAccentClass = roundAccentCompleted;
+  else if (status === "pending") roundAccentClass = roundAccentPending;
+  else roundAccentClass = undefined;
+
   return (
     <section className="mb-10">
       <div
         className={cn(
           roundGlassBackgroundClass,
           "rounded-3xl p-8 text-white shadow-2xl relative",
-          isActive
-            ? roundAccentActive
-            : status === "completed"
-              ? roundAccentCompleted
-              : status === "pending"
-                ? roundAccentPending
-                : undefined
+          roundAccentClass
         )}
       >
         <div className="relative space-y-8">
@@ -832,7 +824,7 @@ function RoundStatsInline({
   postConsensusSummary,
   loading,
   error,
-}: {
+}: Readonly<{
   selectedValidator?: ValidatorPerformance | null;
   statistics?: any;
   topMiners?: any[];
@@ -851,7 +843,7 @@ function RoundStatsInline({
   } | null;
   loading?: boolean;
   error?: string;
-}) {
+}>) {
   // ✅ Usar datos de post_consensus_summary si están disponibles
   const winner = postConsensusSummary?.winner;
   const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageScore ?? statistics?.averageScore ?? 0;
@@ -921,7 +913,7 @@ function RoundStatsInline({
       uid: topMiner?.uid,
       hotkey: topMiner?.hotkey,
       imageUrl: topMiner?.imageUrl,
-      helper: !topMiner ? "Awaiting validator results" : undefined,
+      helper: topMiner ? undefined : "Awaiting validator results",
       icon: PiCrownDuotone,
       gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
       bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
@@ -983,7 +975,7 @@ function RoundStatsInline({
   );
 }
 
-function MetricCard({ card }: { card: any }) {
+function MetricCard({ card }: Readonly<{ card: any }>) {
   const Icon = card.icon;
   const isWinner = card.key === "winner" && typeof card.uid === "number";
   const [copied, setCopied] = React.useState(false);
@@ -1093,11 +1085,16 @@ function MetricCard({ card }: { card: any }) {
               </button>
             </div>
           </div>
-        ) : card.helper ? (
-          <p className="text-xs font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-relaxed">
-            {card.helper}
-          </p>
-        ) : null}
+        ) : (() => {
+          if (card.helper) {
+            return (
+              <p className="text-xs font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-relaxed">
+                {card.helper}
+              </p>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* Desktop Layout */}
@@ -1180,11 +1177,16 @@ function MetricCard({ card }: { card: any }) {
                 </button>
               </div>
             </div>
-          ) : card.helper ? (
-            <p className="text-sm font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-relaxed">
-              {card.helper}
-            </p>
-          ) : null}
+          ) : (() => {
+            if (card.helper) {
+              return (
+                <p className="text-sm font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-relaxed">
+                  {card.helper}
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -1199,7 +1201,7 @@ function RoundValidatorsInline({
   roundData,
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   onValidatorSelect?: (v: ValidatorPerformance) => void;
   selectedValidatorId?: string | null;
@@ -1207,7 +1209,7 @@ function RoundValidatorsInline({
   roundData?: any;
   loading?: boolean;
   error?: string | null;
-}) {
+}>) {
   // ✅ Validators ahora vienen de roundData (useGetRound)
   const validatorsData = React.useMemo(() => {
     if (!roundData?.validators) return [];
@@ -1472,7 +1474,7 @@ function RoundMinerScoresInline({
   roundData,
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundInfo?: any;
@@ -1480,18 +1482,16 @@ function RoundMinerScoresInline({
   roundData?: any;
   loading?: boolean;
   error?: string;
-}) {
+}>) {
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
     | "completed"
     | "pending";
-  const accentClass =
-    roundStatus === "active"
-      ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
-        : roundAccentPending;
+  let accentClass: string;
+  if (roundStatus === "active") accentClass = roundAccentActive;
+  else if (roundStatus === "completed") accentClass = roundAccentCompleted;
+  else accentClass = roundAccentPending;
   const cardClassName = React.useMemo(
     () =>
       cn(
@@ -1507,8 +1507,14 @@ function RoundMinerScoresInline({
     "(min-width: 768px) and (max-width: 1023px)",
     false
   );
-  const barSize = isSmallScreen ? 10 : isMediumScreen ? 20 : 25;
-  const minWidth = isSmallScreen ? 200 : isMediumScreen ? 640 : 840;
+  let barSize: number;
+  if (isSmallScreen) barSize = 10;
+  else if (isMediumScreen) barSize = 20;
+  else barSize = 25;
+  let minWidth: number;
+  if (isSmallScreen) minWidth = 200;
+  else if (isMediumScreen) minWidth = 640;
+  else minWidth = 840;
 
   // ✅ Priorizar roundData (nuevo endpoint) sobre minersData (antiguo)
   const chartSource = React.useMemo(() => {
@@ -1582,13 +1588,16 @@ function RoundMinerScoresInline({
       const resolvedName = miner.name?.trim() || miner.provider?.trim() || "";
       const uidLabel =
         miner.uid !== undefined && miner.uid !== null ? String(miner.uid) : "";
-      const label = isSota
-        ? resolvedName || `Benchmark ${uidLabel || "unknown"}`
-        : resolvedName
-          ? `${resolvedName} · ${uidLabel || "unknown"}`
-          : uidLabel
-            ? `Miner ${uidLabel}`
-            : "Miner";
+      let label: string;
+      if (isSota) {
+        label = resolvedName || `Benchmark ${uidLabel || "unknown"}`;
+      } else if (resolvedName) {
+        label = `${resolvedName} · ${uidLabel || "unknown"}`;
+      } else if (uidLabel) {
+        label = `Miner ${uidLabel}`;
+      } else {
+        label = "Miner";
+      }
       const slug = miner.provider ? slugify(miner.provider) : slugify(label);
       let color = "#06B6D4";
       if (isSota) {
@@ -1930,7 +1939,7 @@ function RoundTopMinersInline({
   roundData, // ✅ Agregar roundData como prop
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
@@ -1939,18 +1948,16 @@ function RoundTopMinersInline({
   roundData?: any; // ✅ Agregar roundData al tipo
   loading?: boolean;
   error?: string;
-}) {
+}>) {
   const roundStatus = (roundInfo?.status ??
     (roundInfo?.current ? "active" : "completed")) as
     | "active"
     | "completed"
     | "pending";
-  const accentClass =
-    roundStatus === "active"
-      ? roundAccentActive
-      : roundStatus === "completed"
-        ? roundAccentCompleted
-        : roundAccentPending;
+  let accentClass: string;
+  if (roundStatus === "active") accentClass = roundAccentActive;
+  else if (roundStatus === "completed") accentClass = roundAccentCompleted;
+  else accentClass = roundAccentPending;
   // ✅ Usar roundData.validators[selectedValidator].miners si está disponible
   const topMinersList = React.useMemo(() => {
     // Si tenemos roundData y un validator seleccionado, usar sus miners
@@ -1998,8 +2005,8 @@ function RoundTopMinersInline({
       >
         <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
           <div className="flex flex-col gap-3">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div key={index} className="flex items-center w-full px-4 py-1.5">
+            {Array.from({ length: 10 }, (_, index) => (
+              <div key={`skeleton-row-${index}`} className="flex items-center w-full px-4 py-1.5">
                 <Skeleton className="h-10 w-10 rounded-full me-3" />
                 <div className="flex-1">
                   <Skeleton className="h-4 w-24 mb-2" />
@@ -2014,10 +2021,13 @@ function RoundTopMinersInline({
     );
   }
 
+  const allMinersTitle =
+    "All Miners" + (selectedValidator?.name ? " - " + selectedValidator.name : "");
+
   if (error) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={allMinersTitle}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2040,7 +2050,7 @@ function RoundTopMinersInline({
   if (!topMinersList.length) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={allMinersTitle}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2066,7 +2076,7 @@ function RoundTopMinersInline({
 
   return (
     <WidgetCard
-      title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+      title={allMinersTitle}
       className={cn(
         tallCardClass,
         accentClass,
@@ -2096,9 +2106,15 @@ function RoundTopMinersInline({
               `/miners/${Math.abs(miner.uid % 50)}.svg`
             );
             const avatarSrc = resolveAssetUrl(miner.imageUrl, fallbackAvatar);
+            let top3GlowGradient: string;
+            if (rank === 1) top3GlowGradient = "from-amber-400 via-yellow-400 to-amber-500";
+            else if (rank === 2) top3GlowGradient = "from-slate-300 via-slate-200 to-slate-400";
+            else top3GlowGradient = "from-orange-400 via-amber-500 to-orange-600";
+            const linkKey =
+              miner.uid == null ? `top-miner-fallback-${index}` : `top-miner-${miner.uid}`;
             return (
               <Link
-                key={`top-miner-${index}`}
+                key={linkKey}
                 href={agentHref}
                 title="Inspect Agent Run"
               >
@@ -2116,11 +2132,7 @@ function RoundTopMinersInline({
                     <div
                       className={cn(
                         "absolute -inset-0.5 rounded-2xl bg-gradient-to-br opacity-0 group-hover:opacity-20 blur transition-opacity duration-500",
-                        rank === 1
-                          ? "from-amber-400 via-yellow-400 to-amber-500"
-                          : rank === 2
-                            ? "from-slate-300 via-slate-200 to-slate-400"
-                            : "from-orange-400 via-amber-500 to-orange-600"
+                        top3GlowGradient
                       )}
                     />
                   )}
@@ -2327,13 +2339,18 @@ export default function Round() {
     return selectedValidator?.topMiner ?? null;
   }, [roundData, selectedValidator]);
 
-  const winnerLabel = selectedValidatorWinner
-    ? selectedValidatorWinner.name?.trim() ||
-      `Miner ${selectedValidatorWinner.uid ?? "unknown"}`
-    : aggregatedTopMiner
-      ? aggregatedTopMiner.name?.trim() ||
-        `Miner ${aggregatedTopMiner.uid ?? "unknown"}`
-      : "No winner yet";
+  let winnerLabel: string;
+  if (selectedValidatorWinner) {
+    winnerLabel =
+      selectedValidatorWinner.name?.trim() ||
+      `Miner ${selectedValidatorWinner.uid ?? "unknown"}`;
+  } else if (aggregatedTopMiner) {
+    winnerLabel =
+      aggregatedTopMiner.name?.trim() ||
+      `Miner ${aggregatedTopMiner.uid ?? "unknown"}`;
+  } else {
+    winnerLabel = "No winner yet";
+  }
   const winnerUidVal =
     selectedValidatorWinner?.uid ?? aggregatedTopMiner?.uid;
 
@@ -2358,12 +2375,13 @@ export default function Round() {
             (selectedValidatorWinner as RoundWinnerLike | null)?.imageUrl ??
             selectedValidator?.topMiner?.imageUrl ??
             aggregatedTopMiner?.imageUrl,
-          helper:
-            winnerUidVal != null
-              ? `UID ${winnerUidVal}`
-              : selectedValidator.name
-                ? `${selectedValidator.name} latest champion`
-                : "Champion for this validator",
+          helper: (() => {
+            if (winnerUidVal == null) {
+              if (selectedValidator.name) return `${selectedValidator.name} latest champion`;
+              return "Champion for this validator";
+            }
+            return `UID ${winnerUidVal}`;
+          })(),
           icon: PiCrownDuotone,
           gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
           bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
@@ -2473,6 +2491,8 @@ export default function Round() {
   const hasNoData =
     isCurrentRound && !statistics?.totalMiners && !statistics?.totalTasks;
   const isRoundStarting = roundInfo?.status === "pending";
+  const hasRoundData = roundDataError == null;
+  const showNoDataMessage = hasRoundData && (isRoundStarting || hasNoData);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-24">
@@ -2485,43 +2505,48 @@ export default function Round() {
       )}
 
       {/* Show "Data Not Available" message if round is starting or has no data */}
-      {!roundDataError && (isRoundStarting || hasNoData) ? (
-        <div className="mt-10 mb-10">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
-            <div className="relative px-8 py-12 text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
-                <PiInfoDuotone className="h-10 w-10 text-amber-300" />
-              </div>
-              <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
-                Round Data Not Available Yet
-              </h3>
-              <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
-                This round is currently being processed by validators. Data will
-                appear here shortly once evaluations are complete.
-              </p>
-              <p className="text-sm text-white/50 font-semibold">
-                Please check back in a few minutes or navigate to a different
-                round.
-              </p>
-              <div className="mt-8 flex justify-center gap-4">
-                <Button
-                  onClick={() => globalThis.location.reload()}
-                  className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
-                >
-                  Retry
-                </Button>
-                <Button
-                  onClick={() => router.push(routes.rounds)}
-                  className="!bg-gradient-to-r !from-amber-500 !to-orange-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
-                >
-                  View All Rounds
-                </Button>
+      {(() => {
+        if (showNoDataMessage) {
+          return (
+            <div className="mt-10 mb-10">
+              <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
+                <div className="relative px-8 py-12 text-center">
+                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+                    <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+                  </div>
+                  <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
+                    Round Data Not Available Yet
+                  </h3>
+                  <p className="mb-2 text-base text-white/70 font-medium max-w-2xl mx-auto">
+                    This round is currently being processed by validators. Data will
+                    appear here shortly once evaluations are complete.
+                  </p>
+                  <p className="text-sm text-white/50 font-semibold">
+                    Please check back in a few minutes or navigate to a different
+                    round.
+                  </p>
+                  <div className="mt-8 flex justify-center gap-4">
+                    <Button
+                      onClick={() => globalThis.location.reload()}
+                      className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                    >
+                      Retry
+                    </Button>
+                    <Button
+                      onClick={() => router.push(routes.rounds)}
+                      className="!bg-gradient-to-r !from-amber-500 !to-orange-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
+                    >
+                      View All Rounds
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      ) : !roundDataError ? (
+          );
+        }
+        if (roundDataError) return null;
+        return (
         <>
       {/* Header */}
           <RoundHeaderInline
@@ -2682,7 +2707,8 @@ export default function Round() {
         <span className="uppercase tracking-wider">Glossary</span>
       </button>
         </>
-      ) : null}
+        );
+      })()}
     </div>
   );
 }
