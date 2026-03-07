@@ -34,6 +34,14 @@ const resolveBaseUrl = () => {
     return envBaseUrl;
   }
 
+  const isDevelopment =
+    process.env.NODE_ENV !== "production" ||
+    process.env.NEXT_PUBLIC_NODE_ENV !== "production";
+
+  if (isDevelopment) {
+    return "http://localhost:8080";
+  }
+
   // Default to production API when no explicit base URL is configured.
   return "https://api-leaderboard.autoppia.com";
 };

@@ -57,25 +57,39 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     []
   );
 
-  // Parse season and round from separate URL parameters
+  const prioritizeReigningLeader = useCallback((miners: MinimalAgentData[]) => {
+    const ordered = [...miners];
+    ordered.sort((a, b) => {
+      const aIsReigning = a.slug === "reigning-leader";
+      const bIsReigning = b.slug === "reigning-leader";
+      if (aIsReigning && !bIsReigning) return -1;
+      if (!aIsReigning && bIsReigning) return 1;
+
+      const aRank = Number.isFinite(a.ranking) ? a.ranking : Number.MAX_SAFE_INTEGER;
+      const bRank = Number.isFinite(b.ranking) ? b.ranking : Number.MAX_SAFE_INTEGER;
+      if (aRank !== bRank) return aRank - bRank;
+
+      const bReward = Number.isFinite(b.reward) ? b.reward : 0;
+      const aReward = Number.isFinite(a.reward) ? a.reward : 0;
+      if (bReward !== aReward) return bReward - aReward;
+
+      return a.uid - b.uid;
+    });
+    return ordered;
+  }, []);
+
+  // Parse season from URL. Round is ignored in the season ranking sidebar.
   const seasonParam = searchParams.get("season");
-  const roundParam = searchParams.get("round");
 
-  const { selectedSeason, selectedRoundInSeason } = useMemo(() => {
+  const { selectedSeason } = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
-    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
-
-    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
-      return { selectedSeason: season, selectedRoundInSeason: round };
+    if (season !== undefined && Number.isFinite(season)) {
+      return { selectedSeason: season };
     }
+    return { selectedSeason: undefined };
+  }, [seasonParam]);
 
-    return { selectedSeason: undefined, selectedRoundInSeason: undefined };
-  }, [seasonParam, roundParam]);
-
-  const roundReady = selectedSeason !== undefined && selectedRoundInSeason !== undefined;
-
-  // Use new unified endpoint to get rounds list (no round = list of rounds only)
-  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData(undefined);
+  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData();
 
   const loadingOption = useMemo<SelectOption>(
     () => ({
@@ -86,10 +100,10 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   );
 
   // Parse available rounds to extract seasons and rounds
-  const { seasonOptions, latestSeason, latestRoundInSeason } = useMemo(() => {
+  const { seasonOptions, latestSeason } = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     if (rounds.length === 0) {
-      return { seasonOptions: [], latestSeason: undefined, latestRoundInSeason: undefined };
+      return { seasonOptions: [], latestSeason: undefined };
     }
 
     // Parse rounds in format "season/round"
@@ -125,58 +139,19 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     return {
       seasonOptions: seasonOpts,
       latestSeason: latest?.season,
-      latestRoundInSeason: latest?.round,
     };
   }, [roundsData?.rounds]);
 
-  // Get round options for selected season
-  const roundInSeasonOptions = useMemo(() => {
-    const rounds = roundsData?.rounds ?? [];
-    const currentSeason = selectedSeason ?? latestSeason;
-
-    if (!currentSeason) {
-      return [];
-    }
-
-    const roundsInSeason = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          const season = Number.parseInt(parts[0], 10);
-          const round = Number.parseInt(parts[1], 10);
-          if (season === currentSeason && Number.isFinite(round)) {
-            return round;
-          }
-        }
-        return null;
-      })
-      .filter((r) => r !== null) as number[];
-
-    // Sort descending (most recent first)
-    const sorted = Array.from(new Set(roundsInSeason)).sort((a, b) => b - a);
-
-    return sorted.map((r) => ({
-      label: `Round ${r}`,
-      value: r,
-    }));
-  }, [roundsData?.rounds, selectedSeason, latestSeason]);
-
   const effectiveSeason = selectedSeason ?? latestSeason;
-  const effectiveRoundInSeason = selectedRoundInSeason ?? latestRoundInSeason;
-  const effectiveRound = effectiveSeason && effectiveRoundInSeason
-    ? `${effectiveSeason}/${effectiveRoundInSeason}`
-    : undefined;
-
-  // Fetch miners for the selected round (season/round from URL or latest)
-  const { data: roundsDataWithMiners } = useRoundsData(effectiveRound);
+  const {
+    data: roundsDataWithMiners,
+    loading: minersLoading,
+    error: minersError,
+  } = useRoundsData(effectiveSeason ? { season: effectiveSeason } : undefined);
 
   const [seasonSelectValue, setSeasonSelectValue] = useState<SelectOption>(
     seasonOptions.length > 0 ? seasonOptions[0] : loadingOption
   );
-  const [roundSelectValue, setRoundSelectValue] = useState<SelectOption>(
-    roundInSeasonOptions.length > 0 ? roundInSeasonOptions[0] : loadingOption
-  );
-
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
 
@@ -196,55 +171,32 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     );
   }, [effectiveSeason, loadingOption, seasonOptions]);
 
-  // Update round select value
+  // Redirigir a la última season si no hay season en la URL
   useEffect(() => {
-    if (!roundInSeasonOptions.length) {
-      setRoundSelectValue(loadingOption);
-      return;
-    }
-
-    const nextOption =
-      roundInSeasonOptions.find((option) => option.value === effectiveRoundInSeason) ??
-      roundInSeasonOptions[0];
-
-    setRoundSelectValue((current) =>
-      current?.value === nextOption.value ? current : nextOption
-    );
-  }, [effectiveRoundInSeason, loadingOption, roundInSeasonOptions]);
-
-  // Redirigir a la última round si no hay round en la URL
-  useEffect(() => {
-    // Si está cargando, esperar
     if (roundsLoading) {
       return;
     }
 
-    // Si ya hay un round válido en la URL, resetear flag
-    if (roundReady) {
+    if (selectedSeason !== undefined) {
       hasRedirectedRef.current = false;
       return;
     }
 
-    // Si no hay última round disponible, esperar
-    if (latestSeason === undefined || latestRoundInSeason === undefined) {
+    if (latestSeason === undefined) {
       return;
     }
 
-    // Si ya redirigimos, no volver a redirigir
     if (hasRedirectedRef.current) {
       return;
     }
 
-    // Marcar redirección
     hasRedirectedRef.current = true;
 
-    // Redirigir a la última round con parámetros separados
     const params = new URLSearchParams();
     params.set("season", String(latestSeason));
-    params.set("round", String(latestRoundInSeason));
 
     router.replace(`${pathname}?${params.toString()}`);
-  }, [latestSeason, latestRoundInSeason, id, pathname, roundReady, router, roundsLoading, searchParams]);
+  }, [latestSeason, pathname, router, roundsLoading, selectedSeason]);
 
   const handleSeasonChange = (option: SelectOption | null) => {
     if (!option || option.value === loadingOption.value) {
@@ -256,55 +208,29 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       return;
     }
 
-    // When season changes, default to round 1 of that season
     const params = new URLSearchParams(searchParamsString);
     params.set("season", String(season));
-    params.set("round", "1");
+    params.delete("round");
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleRoundInSeasonChange = (option: SelectOption | null) => {
-    if (!option || option.value === loadingOption.value) {
-      return;
-    }
-    const round = typeof option.value === "number" ? option.value : Number.parseInt(String(option.value), 10);
-
-    if (!Number.isFinite(round) || !effectiveSeason) {
-      return;
-    }
-
-    // Update URL with separate season and round parameters
-    const params = new URLSearchParams(searchParamsString);
-    params.set("season", String(effectiveSeason));
-    params.set("round", String(round));
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  // Get miners for the selected round (from round-specific fetch when we have season/round)
   const minersFromApi = useMemo(
-    () =>
-      effectiveRound
-        ? (roundsDataWithMiners?.round_selected?.miners ?? [])
-        : (roundsData?.round_selected?.miners ?? []),
-    [
-      effectiveRound,
-      roundsDataWithMiners?.round_selected?.miners,
-      roundsData?.round_selected?.miners,
-    ]
+    () => roundsDataWithMiners?.round_selected?.miners ?? [],
+    [roundsDataWithMiners?.round_selected?.miners]
   );
 
   const minerScoreMetaByUid = useMemo(() => {
-    const byUid = new Map<number, { round: number; effective: number; best: number }>();
+    const byUid = new Map<number, { effective: number; best: number }>();
     minersFromApi.forEach((miner: any) => {
       const uid = Number(miner?.uid);
       if (!Number.isFinite(uid)) return;
-      const round = Number(miner?.round_reward ?? miner?.post_consensus_avg_reward ?? 0);
-      const best = Number(miner?.best_reward_in_season ?? round);
+      const best = Number(
+        miner?.best_reward_in_season ?? miner?.post_consensus_avg_reward ?? 0
+      );
       const effective = Number(
-        miner?.effective_round_reward ?? Math.max(round, best)
+        miner?.effective_round_reward ?? best
       );
       byUid.set(uid, {
-        round: Number.isFinite(round) ? round : 0,
         best: Number.isFinite(best) ? best : 0,
         effective: Number.isFinite(effective) ? effective : 0,
       });
@@ -315,7 +241,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   // Map miners from API format to MinimalAgentData format
   // Use JSON.stringify to create a stable dependency key
   const minersFromApiKey = useMemo(() => {
-    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, reward: m.post_consensus_avg_reward })));
+    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, reward: m.best_reward_in_season ?? m.post_consensus_avg_reward })));
   }, [minersFromApi]);
 
   const minersData = useMemo(() => {
@@ -327,30 +253,17 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       uid: miner.uid,
       name: miner.name,
       ranking: miner.post_consensus_rank,
-      reward: miner.post_consensus_avg_reward,
+      reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
+      slug: miner.is_reigning_leader ? "reigning-leader" : undefined,
     }));
 
     return { miners };
   }, [minersFromApiKey, minersFromApi]);
 
-  // Normalize displayed rank to the participating set (handshake miners shown in this round),
-  // instead of keeping the global metagraph rank (e.g. 26, 234, ...).
-  const normalizedRankByUid = useMemo(() => {
-    const sorted = [...(minersData.miners ?? [])].sort((a, b) => {
-      const ar = Number.isFinite(a.ranking) ? a.ranking : Number.MAX_SAFE_INTEGER;
-      const br = Number.isFinite(b.ranking) ? b.ranking : Number.MAX_SAFE_INTEGER;
-      if (ar !== br) return ar - br;
-      return (b.reward ?? 0) - (a.reward ?? 0);
-    });
-    const map = new Map<number, number>();
-    sorted.forEach((m, idx) => map.set(Number(m.uid), idx + 1));
-    return map;
-  }, [minersData.miners]);
-
-  const loading = roundsLoading;
-  const error = roundsError;
+  const loading = roundsLoading || minersLoading;
+  const error = roundsError || minersError;
 
   // Update filtered agents when data / SOTA / query changes
   // Use a ref to track previous values and prevent unnecessary updates
@@ -382,8 +295,8 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       );
     }
 
-    setFilteredAgents(filtered);
-  }, [minersData, includeSota, query, minersFromApiKey, applySotaFilter]);
+    setFilteredAgents(prioritizeReigningLeader(filtered));
+  }, [minersData, includeSota, query, minersFromApiKey, applySotaFilter, prioritizeReigningLeader]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextQuery = event.target.value;
@@ -402,11 +315,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
       );
     }
 
-    setFilteredAgents(filtered);
+    setFilteredAgents(prioritizeReigningLeader(filtered));
   };
 
   // Show loading placeholder
-  if (loading || (!roundReady && seasonOptions.length === 0)) {
+  if (loading || (selectedSeason === undefined && seasonOptions.length === 0)) {
     return <AgentSidebarPlaceholder />;
   }
 
@@ -493,24 +406,6 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               />
             </div>
 
-            <div className="mb-1">
-              <Select
-                options={
-                  roundInSeasonOptions.length > 0
-                    ? roundInSeasonOptions.map((option) => ({
-                        label: option.label,
-                        value: Number(option.value),
-                      }))
-                    : [{ label: loadingOption.label, value: -1 }]
-                }
-                value={roundSelectValue}
-                onChange={handleRoundInSeasonChange}
-                disabled={!roundInSeasonOptions.length}
-                placeholder="Select round"
-                className="w-full !rounded-xl !border-2 !border-white/20 !bg-transparent !text-white hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
-              />
-            </div>
-
             <div className="mb-2">
               <Input
                 prefix={<LuSearch className="w-4 text-white/60" />}
@@ -525,7 +420,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       minersData.miners,
                       includeSota
                     );
-                    setFilteredAgents(filtered);
+                    setFilteredAgents(prioritizeReigningLeader(filtered));
                   }
                 }}
                 className="!rounded-xl !border-2 !border-white/20 !bg-transparent !text-white placeholder:!text-white/50 hover:!border-emerald-400/60 focus:!border-emerald-500/70 !shadow-sm hover:!shadow-md transition-all duration-300 backdrop-blur-sm"
@@ -533,40 +428,36 @@ export default function AgentsSidebar({ className }: { className?: string }) {
               />
             </div>
 
-            {filteredAgents.map((miner) => {
-              const isActive = miner.uid.toString() === id;
-              const firstNonSotaUid = filteredAgents.find(
-                (agent) => !agent.isSota
-              )?.uid;
-              const normalizedRank = normalizedRankByUid.get(Number(miner.uid));
-              const isTopRanked = normalizedRank === 1;
-              const showCrown = includeSota
-                ? isTopRanked
-                : firstNonSotaUid === miner.uid;
-              const highlightTop =
-                (!includeSota && firstNonSotaUid === miner.uid) ||
-                (includeSota && isTopRanked);
-              const displayRank = normalizedRank !== undefined ? normalizedRank : undefined;
-              const showRankBadge = typeof displayRank === "number";
-              const scoreMeta = minerScoreMetaByUid.get(Number(miner.uid));
-              const roundReward = scoreMeta?.round ?? Number(miner.reward ?? 0);
-              const bestReward = scoreMeta?.best ?? roundReward;
-              const isBoostedBySeason = bestReward > roundReward;
+            <div className="mb-3 rounded-xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/12 via-sky-500/10 to-transparent px-3 py-2.5 shadow-sm shadow-cyan-500/10">
+              <div className="flex items-start gap-2.5">
+                <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-cyan-300/35 bg-cyan-400/12">
+                  <BiInfoCircle className="h-3.5 w-3.5 text-cyan-200" />
+                </div>
+                <p className="text-[11px] leading-5 text-cyan-50/90">
+                  To dethrone the current season leader, a miner must beat its best reward by{" "}
+                  <span className="font-bold text-white">5%</span>.
+                </p>
+              </div>
+            </div>
 
-              const rankBadgePalette = (() => {
+            {filteredAgents.map((miner, index) => {
+              const isActive = miner.uid.toString() === id;
+              const displayRank = index + 1;
+              const showCrown = displayRank === 1;
+              const highlightTop = displayRank === 1;
+              const scoreMeta = minerScoreMetaByUid.get(Number(miner.uid));
+              const bestReward = scoreMeta?.best ?? Number(miner.reward ?? 0);
+
+              const cornerBadgePalette = (() => {
                 switch (displayRank) {
                   case 1:
-                    // Oro
-                    return "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-black shadow-sm";
+                    return "bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 text-white border-amber-300";
                   case 2:
-                    // Plata
-                    return "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 text-black shadow-sm";
+                    return "bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-black border-slate-100";
                   case 3:
-                    // Bronce (sin amarillo)
-                    return "bg-gradient-to-r from-amber-800 via-amber-700 to-orange-800 text-white shadow-sm";
+                    return "bg-gradient-to-br from-amber-800 via-amber-700 to-orange-800 text-white border-amber-500/60";
                   default:
-                    // #4+ (evitar look plata/gris): azul/cian
-                    return "bg-gradient-to-r from-sky-700 via-cyan-700 to-blue-800 text-cyan-50 border border-cyan-300/40 shadow-sm";
+                    return "bg-gradient-to-br from-sky-700 via-cyan-700 to-blue-800 text-cyan-50 border-cyan-300/40";
                 }
               })();
 
@@ -574,19 +465,17 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                   <NavLink
                     key={`miner-menu-${miner.uid}`}
                     href={
-                      effectiveSeason && effectiveRoundInSeason
-                        ? `${routes.agents}/${miner.uid}?season=${effectiveSeason}&round=${effectiveRoundInSeason}`
+                      effectiveSeason
+                        ? `${routes.agents}/${miner.uid}?season=${effectiveSeason}`
                         : `${routes.agents}/${miner.uid}`
                     }
                   >
                   <div
                     className={cn(
                       "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
-                      isActive
-                        ? "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]"
-                        : highlightTop
+                      highlightTop
                         ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                        : "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]"
+                        : "bg-gradient-to-r from-emerald-500/14 via-teal-500/10 to-cyan-500/14 text-white border border-emerald-400/35 shadow-md shadow-emerald-500/10 hover:border-emerald-300/55 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.01]"
                     )}
                   >
                     {/* Animated gradient shimmer for active state */}
@@ -594,13 +483,24 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
                     )}
 
-                    {/* Crown for winner only */}
-                    {showCrown && (
-                      <div className="absolute -top-1 -right-1 rounded-full p-1.5 shadow-xl border-2 z-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 border-amber-300 animate-pulse">
-                        <FaCrown className="w-3 h-3 text-white drop-shadow-lg" />
-                        <div className="absolute inset-0 rounded-full bg-amber-400 blur-md opacity-60 animate-pulse pointer-events-none" />
-                      </div>
-                    )}
+                    <div
+                      className={cn(
+                        "absolute -top-1 -right-1 min-w-[28px] h-7 px-2 rounded-full flex items-center justify-center shadow-xl border z-10",
+                        cornerBadgePalette,
+                        showCrown && "animate-pulse"
+                      )}
+                    >
+                      {showCrown ? (
+                        <>
+                          <FaCrown className="w-3 h-3 drop-shadow-lg" />
+                          <div className="absolute inset-0 rounded-full bg-amber-400 blur-md opacity-60 animate-pulse pointer-events-none" />
+                        </>
+                      ) : (
+                        <span className="text-[10px] font-black tracking-wide">
+                          #{displayRank}
+                        </span>
+                      )}
+                    </div>
 
                     <div
                       className={cn(
@@ -656,22 +556,6 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       </div>
 
                       <div className="flex items-center gap-2 mt-1 flex-nowrap min-w-0 overflow-x-auto overflow-y-hidden scrollbar-none">
-                        {showRankBadge && displayRank !== 1 ? (
-                          <span
-                            className={cn(
-                              "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300 shrink-0",
-                              rankBadgePalette,
-                              isActive
-                                ? "ring-2 ring-white/40 shadow-md"
-                                : highlightTop
-                                ? "ring-1 ring-amber-400/50 shadow-sm"
-                                : ""
-                            )}
-                          >
-                            #{displayRank}
-                          </span>
-                        ) : null}
-
                         <span
                           className={cn(
                             "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300 shrink-0",
@@ -681,24 +565,10 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                         >
                           UID {miner.uid}
                         </span>
-
-                        <span
-                          className={cn(
-                            "text-[10px] font-semibold transition-all duration-300 shrink-0 whitespace-nowrap",
-                            isActive
-                              ? "text-white/75"
-                              : "text-white/60 group-hover:text-white/80"
-                          )}
-                          title="Reward achieved in this round"
-                        >
-                          Reward {(roundReward * 100).toFixed(2)}%
-                        </span>
                         <span
                           className={cn(
                             "text-[10px] font-bold transition-all duration-300 shrink-0 whitespace-nowrap",
-                            isBoostedBySeason
-                              ? "text-amber-300"
-                              : isActive
+                            isActive
                               ? "text-emerald-200"
                               : highlightTop
                               ? "text-amber-300"
@@ -706,7 +576,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           )}
                           title="Best reward achieved in this season"
                         >
-                          Best {(bestReward * 100).toFixed(2)}%
+                          Best reward {(bestReward * 100).toFixed(2)}%
                         </span>
                       </div>
                     </div>

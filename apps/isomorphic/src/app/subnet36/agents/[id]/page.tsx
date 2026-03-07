@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
-import { Button, Text } from "rizzui";
+import { Button, Select, Text } from "rizzui";
 import {
   formatWebsiteName,
   getProjectColors,
@@ -68,7 +68,6 @@ import {
   PiTimerDuotone,
   PiCaretDownDuotone,
   PiCaretUpDuotone,
-  PiWarning,
 } from "react-icons/pi";
 import {
   LuCircleCheckBig,
@@ -93,6 +92,26 @@ const slugify = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+const formatBestRoundBadge = (value: number | string | null | undefined) => {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    if (!value.trim()) return null;
+    if (value.includes("/")) {
+      const [seasonRaw, roundRaw] = value.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (Number.isFinite(season) && Number.isFinite(round)) {
+        return `Season ${season} · Round ${round}`;
+      }
+    }
+    return `Round ${value}`;
+  }
+  if (Number.isFinite(value) && value > 0) {
+    return `Round ${value}`;
+  }
+  return null;
+};
 
 const RUNS_PAGE_SIZE = 100;
 
@@ -188,10 +207,7 @@ function AgentStats({
   const bestRoundRewardValue =
     agent.bestRoundReward ?? agent.currentTopReward ?? 0;
   const bestEverRewardPercentage = `${(bestRoundRewardValue * 100).toFixed(1)}%`;
-  const bestRoundBadge =
-    agent.bestRoundId && agent.bestRoundId > 0
-      ? `Round ${agent.bestRoundId}`
-      : null;
+  const bestRoundBadge = formatBestRoundBadge(agent.bestRoundId);
   const roundsParticipated = (
     agent.roundsParticipated || agent.totalRuns
   ).toLocaleString();
@@ -801,6 +817,7 @@ function AgentValidators({
   post_consensus_summary,
   minerRoundDetailsValidators,
   roundAvgCostPerTask,
+  postConsensusRounds,
 }: {
   selectedRound?: number | string | null;
   selectedSeason?: number | null;
@@ -826,11 +843,124 @@ function AgentValidators({
     agent_run_id?: string;
   }>;
   roundAvgCostPerTask?: number | null;
+  postConsensusRounds?: Array<{
+    round: string | number;
+    post_consensus_rank: number | null;
+    post_consensus_avg_reward: number;
+    post_consensus_avg_eval_time: number;
+    tasks_received: number;
+    tasks_success: number;
+    validators_count: number;
+    weight?: number;
+  }>;
 }) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [selectedRunsRoundKey, setSelectedRunsRoundKey] = useState<string>("all");
 
-  // Prefer validators from minerRoundDetails (round-details endpoint) over validators from runs
-  const effectiveValidators = minerRoundDetailsValidators || validators;
+  const getRoundMeta = useCallback((value: number | string | null | undefined) => {
+    if (value == null) return null;
+    if (typeof value === "string" && value.includes("/")) {
+      const [seasonRaw, roundRaw] = value.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (!Number.isFinite(season) || !Number.isFinite(round)) return null;
+      return {
+        key: `${season}/${round}`,
+        season,
+        round,
+        label: `Season ${season} · Round ${round}`,
+      };
+    }
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    const season = parsed >= 10000 ? Math.floor(parsed / 10000) : selectedSeason ?? 0;
+    const round = parsed >= 10000 ? parsed % 10000 : parsed;
+    return {
+      key: `${season}/${round}`,
+      season,
+      round,
+      label: season > 0 ? `Season ${season} · Round ${round}` : `Round ${round}`,
+    };
+  }, [selectedSeason]);
+
+  const normalizedRuns = useMemo(() => {
+    return [...runs]
+      .map((run) => {
+        const meta = getRoundMeta(run.roundId);
+        return meta ? { ...run, __roundMeta: meta } : null;
+      })
+      .filter((run): run is AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } } => Boolean(run))
+      .sort((a, b) => {
+        if (a.__roundMeta.season !== b.__roundMeta.season) {
+          return b.__roundMeta.season - a.__roundMeta.season;
+        }
+        if (a.__roundMeta.round !== b.__roundMeta.round) {
+          return b.__roundMeta.round - a.__roundMeta.round;
+        }
+        return String(b.startTime ?? "").localeCompare(String(a.startTime ?? ""));
+      });
+  }, [getRoundMeta, runs]);
+
+  const roundOptions = useMemo(() => {
+    const options = [{ label: "All rounds", value: "all" }];
+    const seen = new Set<string>();
+    normalizedRuns.forEach((run) => {
+      if (seen.has(run.__roundMeta.key)) return;
+      seen.add(run.__roundMeta.key);
+      options.push({ label: run.__roundMeta.label, value: run.__roundMeta.key });
+    });
+    return options;
+  }, [normalizedRuns]);
+
+  useEffect(() => {
+    if (selectedRunsRoundKey === "all") return;
+    if (!roundOptions.some((option) => option.value === selectedRunsRoundKey)) {
+      setSelectedRunsRoundKey("all");
+    }
+  }, [roundOptions, selectedRunsRoundKey]);
+
+  const groupedRuns = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        season: number;
+        round: number;
+        label: string;
+        runs: Array<AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } }>;
+      }
+    >();
+
+    normalizedRuns.forEach((run) => {
+      if (selectedRunsRoundKey !== "all" && run.__roundMeta.key !== selectedRunsRoundKey) {
+        return;
+      }
+      const existing = groups.get(run.__roundMeta.key);
+      if (existing) {
+        existing.runs.push(run);
+        return;
+      }
+      groups.set(run.__roundMeta.key, {
+        key: run.__roundMeta.key,
+        season: run.__roundMeta.season,
+        round: run.__roundMeta.round,
+        label: run.__roundMeta.label,
+        runs: [run],
+      });
+    });
+
+    return Array.from(groups.values());
+  }, [normalizedRuns, selectedRunsRoundKey]);
+
+  const postConsensusByRound = useMemo(() => {
+    const byRound = new Map<string, NonNullable<typeof postConsensusRounds>[number]>();
+    (postConsensusRounds ?? []).forEach((entry) => {
+      const meta = getRoundMeta(entry.round);
+      if (!meta) return;
+      byRound.set(meta.key, entry);
+    });
+    return byRound;
+  }, [getRoundMeta, postConsensusRounds]);
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -844,79 +974,52 @@ function AgentValidators({
     );
   }
 
-  // Check if we have validators from minerRoundDetails, even if runs is empty
-  if (!effectiveValidators || effectiveValidators.length === 0) {
-    if (!runs.length) {
-      return (
-        <div className="mt-6">
-          <div className="text-center py-12 text-white/70">
-            No validator runs found for this agent
-          </div>
+  if (!groupedRuns.length) {
+    return (
+      <div className="mt-6">
+        <div className="text-center py-12 text-white/70">
+          No validator runs found for this agent in the selected season.
         </div>
-      );
-    }
+      </div>
+    );
   }
-
-  const parseRoundInSeason = (value: number | string | null | undefined): number | null => {
-    if (value == null) return null;
-    if (typeof value === "number" && Number.isFinite(value)) {
-      // Encoded form season*10000 + round
-      return value >= 10000 ? value % 10000 : value;
-    }
-    const raw = String(value).trim();
-    if (!raw) return null;
-    if (raw.includes("/")) {
-      const roundPart = Number(raw.split("/")[1]);
-      return Number.isFinite(roundPart) ? roundPart : null;
-    }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return null;
-    return parsed >= 10000 ? parsed % 10000 : parsed;
-  };
-
-  const selectedRoundInSeasonValue = parseRoundInSeason(selectedRound);
-  const filteredRuns =
-    selectedRoundInSeasonValue != null
-      ? runs.filter((run) => parseRoundInSeason(run.roundId) === selectedRoundInSeasonValue)
-      : runs;
-
-  const runsByValidator = filteredRuns.reduce(
-    (acc, run) => {
-      if (!acc[run.validatorId])
-        acc[run.validatorId] = [] as typeof filteredRuns;
-      acc[run.validatorId].push(run);
-      return acc;
-    },
-    {} as Record<string, typeof filteredRuns>
-  );
 
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-md sm:text-2xl text-center font-bold text-white">
-            Agent Evaluation Runs ({effectiveValidators?.length ?? Object.keys(runsByValidator).length ?? 0})
-            {selectedSeason && selectedRoundInSeason ? ` - Season ${selectedSeason} - Round ${selectedRoundInSeason}` : ""}
+            Agent Runs by Round
+            {selectedSeason ? ` · Season ${selectedSeason}` : ""}
           </Text>
         </div>
-        <button
-          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-          className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
-              <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+        <div className="flex w-full sm:w-auto items-center gap-3">
+          <Select
+            options={roundOptions}
+            value={roundOptions.find((option) => option.value === selectedRunsRoundKey) ?? roundOptions[0]}
+            onChange={(option: any) => setSelectedRunsRoundKey(String(option?.value ?? "all"))}
+            className="w-full sm:w-[240px]"
+            placeholder="Filter rounds"
+          />
+          <button
+            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+            className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
+                <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span>How it works</span>
             </div>
-            <span>How it works</span>
-          </div>
-          <div className="transition-transform duration-300 group-hover:scale-110">
-            {isInfoExpanded ? (
-              <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-            ) : (
-              <PiCaretDownDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-            )}
-          </div>
-        </button>
+            <div className="transition-transform duration-300 group-hover:scale-110">
+              {isInfoExpanded ? (
+                <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
+              ) : (
+                <PiCaretDownDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
+              )}
+            </div>
+          </button>
+        </div>
       </div>
 
       {isInfoExpanded && (
@@ -1037,486 +1140,141 @@ function AgentValidators({
         </div>
       )}
 
-      {/* Removed duplicate Avg cards from validators section */}
+      <div className="space-y-8">
+        {groupedRuns.map((group) => {
+          const runsByValidator = group.runs.reduce(
+            (acc, run) => {
+              if (!acc[run.validatorId]) acc[run.validatorId] = [];
+              acc[run.validatorId].push(run);
+              return acc;
+            },
+            {} as Record<string, typeof group.runs>
+          );
+          const postConsensus = postConsensusByRound.get(group.key);
 
-      {/* Show validators with local and post-consensus data if available */}
-      {effectiveValidators && effectiveValidators.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {effectiveValidators
-            .sort((a, b) => {
-              // Sort: Autoppia (UID 83 or 124) first, then others
-              const aIsAutoppia = a.validator_uid === 83 || a.validator_uid === 124;
-              const bIsAutoppia = b.validator_uid === 83 || b.validator_uid === 124;
-              if (aIsAutoppia && !bIsAutoppia) return -1;
-              if (!aIsAutoppia && bIsAutoppia) return 1;
-              return 0;
-            })
-            .map((validator: any) => {
-            const isAutoppia = validator.validator_uid === 83 || validator.validator_uid === 124;
+          return (
+            <div key={group.key} className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <Text className="text-lg sm:text-xl font-bold text-white">
+                  {group.label}
+                </Text>
+                <Text className="text-xs sm:text-sm text-white/60">
+                  {Object.keys(runsByValidator).length} validator run{Object.keys(runsByValidator).length === 1 ? "" : "s"}
+                </Text>
+              </div>
 
-            // Check if this is from minerRoundDetails (has validator_image) or from runs (has miners array)
-            const isFromRoundDetails = 'validator_image' in validator;
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
+                {Object.entries(runsByValidator).map(([validatorId, validatorRuns]) => {
+                  const latestRun = validatorRuns[0];
+                  const responseTimeSeconds =
+                    typeof latestRun.averageEvaluationTime === "number" && Number.isFinite(latestRun.averageEvaluationTime)
+                      ? latestRun.averageEvaluationTime
+                      : latestRun.duration ?? 0;
+                  const websitesCount = (() => {
+                    const anyRun: any = latestRun as any;
+                    if (typeof anyRun.websitesCount === "number") return anyRun.websitesCount;
+                    if (typeof anyRun.totalWebsites === "number") return anyRun.totalWebsites;
+                    return 0;
+                  })();
 
-            // Use validator_image if available (from round-details), otherwise fallback
-            const validatorImage = validator.validator_image
-              ? resolveAssetUrl(validator.validator_image)
-              : resolveAssetUrl("/validators/Other.png");
+                  const stats = [
+                    { title: "Rank", metric: latestRun.ranking ? `#${latestRun.ranking}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600" },
+                    { title: "Reward", metric: `${((latestRun.overallReward ?? latestRun.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                    { title: "Time", metric: `${Number(responseTimeSeconds).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                    { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? latestRun.completedTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                    { title: "Websites", metric: websitesCount, icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                    { title: "Avg Cost", metric: latestRun.avgCostPerTask != null ? `$${Number(latestRun.avgCostPerTask).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                  ];
 
-            // Find corresponding run for this validator (for agent_run_id or fallback)
-            const validatorRuns = filteredRuns.filter(
-              (run) =>
-                Number.parseInt(String(run.validatorId).replace(/^validator-/i, ""), 10) ===
-                Number(validator.validator_uid)
-            );
-            const latestRun = validatorRuns[0];
-            const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
-            const isReusedRun = Boolean(
-              (isFromRoundDetails && (validator as any)?.is_reused) ||
-              (latestRun as any)?.isReused
-            );
-            const reusedFromAgentRunId =
-              (isFromRoundDetails && (validator as any)?.reused_from_agent_run_id) ||
-              (latestRun as any)?.reusedFromAgentRunId ||
-              null;
-            const reusedFromRoundRaw =
-              (isFromRoundDetails && (validator as any)?.reused_from_round) ||
-              (latestRun as any)?.reusedFromRoundDisplay ||
-              (latestRun as any)?.reusedFromRound ||
-              null;
-            const reusedFromRoundLabel = (() => {
-              const raw = String(reusedFromRoundRaw ?? "").trim();
-              if (!raw) return "—";
-              if (raw.includes("/")) {
-                const [season, round] = raw.split("/");
-                if (season && round) return `Season ${season}, Round ${round}`;
-              }
-              return raw;
-            })();
-
-            // Use direct validator data (from round-details) or fallback to miners list
-            let localRank: number | null = null;
-            let localAvgReward: number = 0;
-            let localAvgEvalTime: number = 0;
-            let localTasksReceived: number = 0;
-            let localTasksSuccess: number = 0;
-            const hasRichRoundDetailsStats =
-              validator.local_rank != null ||
-              Number(validator.local_avg_reward ?? 0) > 0 ||
-              Number(validator.local_avg_eval_time ?? 0) > 0 ||
-              Number(validator.local_tasks_received ?? 0) > 0 ||
-              Number(validator.local_tasks_success ?? 0) > 0;
-
-            if (isFromRoundDetails && hasRichRoundDetailsStats) {
-              // Data from round-details endpoint (direct fields)
-              localRank = validator.local_rank;
-              localAvgReward = validator.local_avg_reward ?? 0;
-              localAvgEvalTime = validator.local_avg_eval_time ?? 0;
-              localTasksReceived = validator.local_tasks_received ?? 0;
-              localTasksSuccess = validator.local_tasks_success ?? 0;
-            } else {
-              // Fallback to run-level data when round-details validators are skeletal.
-              localRank =
-                typeof latestRun?.ranking === "number" && Number.isFinite(latestRun.ranking)
-                  ? latestRun.ranking
-                  : null;
-              localAvgReward =
-                typeof latestRun?.overallReward === "number" && Number.isFinite(latestRun.overallReward)
-                  ? latestRun.overallReward
-                  : typeof (latestRun as any)?.reward === "number" && Number.isFinite((latestRun as any)?.reward)
-                    ? (latestRun as any).reward
-                    : 0;
-              localAvgEvalTime =
-                typeof latestRun?.averageEvaluationTime === "number" &&
-                Number.isFinite(latestRun.averageEvaluationTime)
-                  ? latestRun.averageEvaluationTime
-                  : typeof latestRun?.duration === "number" && Number.isFinite(latestRun.duration)
-                    ? latestRun.duration
-                    : Number.NaN;
-              localTasksReceived =
-                typeof latestRun?.totalTasks === "number" && Number.isFinite(latestRun.totalTasks)
-                  ? latestRun.totalTasks
-                  : 0;
-              localTasksSuccess =
-                typeof latestRun?.completedTasks === "number" && Number.isFinite(latestRun.completedTasks)
-                  ? latestRun.completedTasks
-                  : typeof latestRun?.successfulTasks === "number" && Number.isFinite(latestRun.successfulTasks)
-                    ? latestRun.successfulTasks
-                    : 0;
-            }
-
-            const safeRoundMetric = (() => {
-              if (typeof selectedRound === "number" && Number.isFinite(selectedRound)) {
-                return selectedRound;
-              }
-              if (typeof selectedRound === "string") {
-                const raw = selectedRound.trim();
-                if (!raw) return "N/A";
-                if (raw.includes("/")) {
-                  const roundPart = raw.split("/")[1];
-                  const n = Number(roundPart);
-                  return Number.isFinite(n) ? n : roundPart ?? raw;
-                }
-                const parsed = Number(raw);
-                return Number.isFinite(parsed) ? parsed : raw;
-              }
-              if (selectedRoundInSeason != null && Number.isFinite(selectedRoundInSeason)) {
-                return selectedRoundInSeason;
-              }
-              return "N/A";
-            })();
-            const safeLocalAvgReward =
-              typeof localAvgReward === "number" && Number.isFinite(localAvgReward)
-                ? localAvgReward
-                : 0;
-            const safeLocalAvgEvalTime =
-              typeof localAvgEvalTime === "number" && Number.isFinite(localAvgEvalTime)
-                ? localAvgEvalTime
-                : 0;
-            const hasLocalAvgReward =
-              typeof localAvgReward === "number" && Number.isFinite(localAvgReward);
-            const hasLocalAvgEvalTime =
-              typeof localAvgEvalTime === "number" && Number.isFinite(localAvgEvalTime);
-            const resolvedAvgCostPerTask = (() => {
-              const fromRun = (latestRun as any)?.avgCostPerTask;
-              if (typeof fromRun === "number" && Number.isFinite(fromRun)) return fromRun;
-              const direct = (validator as any)?.avg_cost_per_task;
-              if (typeof direct === "number" && Number.isFinite(direct)) return direct;
-              const local = (validator as any)?.local_avg_cost_per_task;
-              if (typeof local === "number" && Number.isFinite(local)) return local;
-              if (typeof roundAvgCostPerTask === "number" && Number.isFinite(roundAvgCostPerTask)) return roundAvgCostPerTask;
-              return null;
-            })();
-
-            const secondaryStats = [
-              {
-                title: "Round",
-                metric: safeRoundMetric,
-                icon: PiClockDuotone,
-                iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600",
-              },
-              {
-                title: "Rank",
-                metric: localRank
-                  ? `#${localRank}`
-                  : "N/A",
-                icon: PiHashDuotone,
-                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
-              },
-              {
-                title: "Reward",
-                metric: hasLocalAvgReward
-                  ? `${(safeLocalAvgReward * 100).toFixed(2)}%`
-                  : "N/A",
-                icon: PiChartLineUpDuotone,
-                iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600",
-              },
-              {
-                title: "Time",
-                metric: hasLocalAvgEvalTime
-                  ? `${safeLocalAvgEvalTime.toFixed(2)}s`
-                  : "N/A",
-                icon: PiTimerDuotone,
-                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
-              },
-              {
-                title: "Tasks",
-                metric: `${localTasksSuccess}/${localTasksReceived}`,
-                icon: PiListChecksDuotone,
-                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
-              },
-              {
-                title: "Avg Cost",
-                metric:
-                  resolvedAvgCostPerTask !== null
-                    ? `$${Number(resolvedAvgCostPerTask).toFixed(3)}`
-                    : "N/A",
-                icon: PiCurrencyDollarDuotone,
-                iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600",
-              },
-            ];
-
-            return (
-              <div key={`validator-${validator.validator_uid}`} className="relative">
-                <div
-                  className={cn(
-                    "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
-                    isAutoppia
-                      ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
-                      : "border-white/20 hover:border-white/40"
-                  )}
-                  style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
-                >
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                          <Image
-                            src={validatorImage}
-                            alt={validator.validator_name}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
-                            {validator.validator_name}
-                          </Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                            {validator.validator_hotkey
-                              ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
-                              : `UID: ${validator.validator_uid}`}
-                          </Text>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="relative p-2 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
-                    {secondaryStats.map((stat) => {
-                      const Icon = stat.icon as any;
-                      return (
-                        <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
-                          <div className={cn(
-                            "flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
-                            stat.iconClassName
-                          )}>
-                            <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
-                              {stat.title}
-                            </Text>
-                            <Text className="font-bold text-xs sm:text-base truncate text-white">
-                              {stat.metric}
-                            </Text>
+                  return (
+                    <Link key={`agent-run-${group.key}-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
+                      <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40">
+                        <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30">
+                                <Image
+                                  src={resolveAssetUrl(latestRun.validatorImage || "/validators/default.png")}
+                                  alt={latestRun.validatorName || validatorId}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <Text className="font-bold text-white text-base">
+                                  {latestRun.validatorName || validatorId}
+                                </Text>
+                                <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
+                                  {validatorId}
+                                </Text>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      );
-                    })}
-                    </div>
-                    {isReusedRun && (
-                      <div className="rounded-lg border border-amber-400/50 bg-amber-500/12 px-3 py-2 text-xs text-amber-100">
-                        <span className="font-semibold">Reused run from round {reusedFromRoundLabel}.</span>{" "}
-                        {reusedFromAgentRunId ? (
-                          <Link
-                            href={`${routes.agent_run}/${reusedFromAgentRunId}`}
-                            className="underline underline-offset-2 hover:text-white"
-                          >
-                            Open original run
-                          </Link>
-                        ) : (
-                          <span>Open original run in Agent Run list.</span>
-                        )}
-                      </div>
-                    )}
-                    <Link
-                      href={agentRunId
-                        ? `${routes.agent_run}/${agentRunId}`
-                        : `${routes.agent_run}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${selectedRound ? `&round=${selectedRound}` : ''}`
-                      }
-                      className="block"
-                    >
-                      <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
-                        View Agent Run Details
+                        <div className="relative p-2 sm:p-5 space-y-3">
+                          <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                            {stats.map((stat) => {
+                              const Icon = stat.icon as any;
+                              return (
+                                <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                                  <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                    <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                    <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </Link>
+                  );
+                })}
+
+                {postConsensus ? (
+                  <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
+                    <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                      <Text className="font-bold text-white text-base">Post-consensus</Text>
+                      <Text className="text-xs text-white/60 tracking-wide">
+                        Final aggregate for {group.label}
+                      </Text>
+                    </div>
+                    <div className="relative p-2 sm:p-5">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                        {[
+                          { title: "Rank", metric: postConsensus.post_consensus_rank ? `#${postConsensus.post_consensus_rank}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600" },
+                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                          { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                          { title: "Validators", metric: String(postConsensus.validators_count ?? 0), icon: PiTrophyDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                          { title: "Weight", metric: typeof postConsensus.weight === "number" ? postConsensus.weight.toFixed(4) : "N/A", icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                        ].map((stat) => {
+                          const Icon = stat.icon as any;
+                          return (
+                            <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                              <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
-            );
-          })}
-        </div>
-      ) : filteredRuns.length === 0 ? (
-        <div className="mt-6 text-center text-white/70">
-          No runs available for the selected round.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {Object.entries(runsByValidator).map(([validatorId, runs]) => {
-            const latestRun = runs[0];
-            const rewardPct = Math.round((latestRun.reward ?? 0) * 100);
-            const responseTimeSeconds = (() => {
-              if (
-                typeof latestRun.averageEvaluationTime === "number" &&
-                Number.isFinite(latestRun.averageEvaluationTime)
-              ) {
-                return Math.round(Math.abs(latestRun.averageEvaluationTime));
-              }
-              if (
-                typeof latestRun.duration === "number" &&
-                Number.isFinite(latestRun.duration)
-              ) {
-                return Math.round(Math.abs(latestRun.duration));
-              }
-              return 0;
-            })();
-            const validatorName =
-              latestRun.validatorName ||
-              `Validator ${validatorId.slice(0, 6)}...`;
-            const validatorImage = resolveAssetUrl(
-              latestRun.validatorImage || "/validators/default.png"
-            );
-
-            const roundDisplayOnly = (() => {
-              const rid = latestRun.roundId;
-              if (rid == null) return "N/A";
-              if (typeof rid === "number" && Number.isFinite(rid)) return rid;
-              const s = String(rid).trim();
-              if (s.includes("/")) {
-                const roundPart = s.split("/")[1];
-                const n = Number(roundPart);
-                return Number.isFinite(n) ? n : roundPart ?? s;
-              }
-              const n = Number(s);
-              return Number.isFinite(n) ? n : s;
-            })();
-
-            const secondaryStats = [
-              {
-                title: "Round",
-                metric: roundDisplayOnly,
-                icon: PiClockDuotone,
-                iconClassName:
-                  "bg-gradient-to-br from-purple-500 to-violet-600",
-                metricClassName: "text-purple-600",
-              },
-              {
-                title: "Rank",
-                metric:
-                  typeof latestRun.ranking === "number" && latestRun.ranking > 0
-                    ? `#${latestRun.ranking}`
-                    : "N/A",
-                icon: PiHashDuotone,
-                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
-                metricClassName: "text-yellow-600",
-              },
-              {
-                title: "Reward",
-                metric: `${rewardPct}%`,
-                icon: PiChartLineUpDuotone,
-                iconClassName:
-                  "bg-gradient-to-br from-emerald-500 to-green-600",
-                metricClassName: "text-emerald-600",
-              },
-              {
-                title: "Time",
-                metric: `${responseTimeSeconds}s`,
-                icon: PiTimerDuotone,
-                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
-                metricClassName: "text-blue-600",
-              },
-              {
-                title: "Tasks",
-                metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`,
-                icon: PiListChecksDuotone,
-                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
-                metricClassName: "text-indigo-600",
-              },
-              {
-                title: "Websites",
-                metric: (() => {
-                  const anyRun: any = latestRun as any;
-                  if (typeof anyRun.websitesCount === "number")
-                    return anyRun.websitesCount;
-                  const ws = anyRun.websites;
-                  if (Array.isArray(ws)) return ws.length;
-                  if (typeof ws === "number") return ws;
-                  if (typeof anyRun.totalWebsites === "number")
-                    return anyRun.totalWebsites;
-                  return 0;
-                })(),
-                icon: PiChartBarDuotone,
-                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
-                metricClassName: "text-pink-600",
-              },
-            ];
-
-            return (
-              <Link
-                key={`agent-run-${validatorId}`}
-                href={`${routes.agent_run}/${latestRun.runId}`}
-              >
-                <div
-                  className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40"
-                  style={{ background: "transparent", boxShadow: "none" }}
-                >
-                  <div
-                    className="pulse-bg-rounded-2xl"
-                    style={{ display: "none" }}
-                  />
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                          <Image
-                            src={validatorImage}
-                            alt={validatorName}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
-                            {validatorName}
-                          </Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                            {validatorId.slice(0, 8)}...{validatorId.slice(-8)}
-                          </Text>
-                        </div>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
-                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
-                        <span
-                          className="font-mono break-all"
-                          title={latestRun.runId}
-                        >
-                          {latestRun.runId}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="relative p-2 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3  gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
-                      {secondaryStats.map((stat) => {
-                        const Icon = stat.icon as any;
-                        return (
-                          <div
-                            key={stat.title}
-                            className="flex items-center sm:gap-2.5 gap-2 min-w-0"
-                          >
-                            <div
-                              className={cn(
-                                "flex items-center justify-center  w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
-                                stat.iconClassName
-                              )}
-                            >
-                              <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
-                                {stat.title}
-                              </Text>
-                              <Text
-                                className={cn(
-                                  "font-bold text-xs sm:text-base truncate text-white"
-                                )}
-                              >
-                                {stat.metric}
-                              </Text>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }
@@ -1879,6 +1637,10 @@ export default function Page() {
   const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
   const [copiedHotkey, setCopiedHotkey] = useState(false);
+  const selectedSeasonNumber = useMemo(() => {
+    const parsed = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    return parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined;
+  }, [seasonParam]);
 
   const selectedRoundFromQuery = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
@@ -1918,19 +1680,19 @@ export default function Page() {
   const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
     "current"
   );
-  const [roundMetricsMode, setRoundMetricsMode] = useState<"round" | "effective">("round");
+  const [websitePanelMode, setWebsitePanelMode] = useState<"chart" | "details">(
+    "chart"
+  );
 
   const {
     data: agentDetail,
     loading,
     error,
-  } = useAgent(agentIdForQuery);
+  } = useAgent(agentIdForQuery, selectedSeasonNumber ? { season: selectedSeasonNumber } : undefined);
 
   const agent = agentDetail?.agent ?? null;
   const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
   const availableRounds: Array<string | number> = agentDetail?.availableRounds ?? [];
-  const apiRewardRoundData: RewardRoundDataPoint[] = agentDetail?.rewardRoundData ?? [];
-
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
@@ -1944,7 +1706,13 @@ export default function Page() {
   );
 
   // Get rounds data (list + selected round miners when round is provided)
-  const { data: roundsData } = useRoundsData(selectedRoundFromQuery);
+  const { data: roundsData } = useRoundsData(
+    selectedRoundFromQuery
+      ? { roundIdentifier: selectedRoundFromQuery, season: selectedSeasonNumber }
+      : selectedSeasonNumber
+        ? { season: selectedSeasonNumber }
+        : undefined
+  );
 
   // Extract latest season from rounds data
   const latestSeason = useMemo(() => {
@@ -1970,8 +1738,7 @@ export default function Page() {
   // Get miner historical data only when needed:
   // - Historical tab
   // - Current tab in Effective mode (to resolve source best round)
-  const shouldFetchHistorical =
-    viewMode === "historical" || (viewMode === "current" && roundMetricsMode === "effective");
+  const shouldFetchHistorical = numericUidFromParam !== undefined;
   // Always filter by season: use season from URL, or latest season as fallback
   const seasonForHistorical = seasonParam
     ? Number.parseInt(seasonParam, 10)
@@ -2023,7 +1790,7 @@ export default function Page() {
   const {
     data: historicalBestRoundDetails,
   } = useMinerRoundDetails(
-    viewMode === "historical" ? historicalBestRoundIdentifier : undefined,
+    historicalBestRoundIdentifier,
     numericUidFromParam
   );
 
@@ -2093,7 +1860,7 @@ export default function Page() {
           githubUrl: minerRoundDetails.miner.github_url ?? undefined,
           taostatsUrl: undefined,
         }
-      : null;
+      : agent ?? null;
 
   const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
   const taoStatsAvailable = Boolean(
@@ -2350,7 +2117,8 @@ export default function Page() {
   // In historical mode, we can use minerHistorical data even if agent is null
   const hasHistoricalData = viewMode === "historical" && minerHistorical;
   // In current/runs mode, we can use minerRoundDetails data
-  const hasRoundDetailsData = viewMode !== "historical" && minerRoundDetails;
+  const hasRoundDetailsData =
+    viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
 
   // Show loading only if we don't have data yet
   const isLoading =
@@ -2403,10 +2171,7 @@ export default function Page() {
       ? `#${effectiveAgent.bestRankEver}`
       : "N/A";
   const bestEverRewardPercentage = `${((effectiveAgent?.bestRoundReward ?? 0) * 100).toFixed(1)}%`;
-  const bestRoundBadge =
-    effectiveAgent?.bestRoundId && (effectiveAgent.bestRoundId ?? 0) > 0
-      ? `Round ${effectiveAgent.bestRoundId}`
-      : null;
+  const bestRoundBadge = formatBestRoundBadge(effectiveAgent?.bestRoundId);
   const roundsParticipated = (
     effectiveAgent?.roundsParticipated ||
     effectiveAgent?.totalRuns ||
@@ -2425,59 +2190,37 @@ export default function Page() {
     if (!uid) return null;
     return miners.find((m: any) => Number(m?.uid) === Number(uid)) ?? null;
   })();
-  // Round vs Effective reward model:
-  // - roundReward: reward submitted in this round
-  // - bestRewardInSeason: best reward achieved by this miner in the season
-  // - effectiveRewardForRanking: max(roundReward, bestRewardInSeason)
+  const bestRoundDetails = historicalBestRoundDetails ?? minerRoundDetails;
   const roundReward = Number(
-    roundSelectedMiner?.round_reward ??
-      minerRoundDetails?.post_consensus_avg_reward ??
+    bestRoundDetails?.post_consensus_avg_reward ??
       roundMetrics?.reward ??
       effectiveAgent?.currentReward ??
       0
   );
-  const bestRewardInSeason = Number(
-    roundSelectedMiner?.best_reward_in_season ?? roundReward
-  );
-  const effectiveRewardForRanking = Number(
-    roundSelectedMiner?.effective_round_reward ??
-      Math.max(roundReward, bestRewardInSeason)
-  );
-  const isUsingSeasonBestForRanking = effectiveRewardForRanking > roundReward + 1e-12;
-  // Rank shown:
-  // - Effective mode: official rank in leaderboard (post-consensus/effective model)
-  // - Round mode: still the same rank field (no separate raw-rank in API yet), but clearly labeled
-  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundMetrics?.rank ?? effectiveAgent?.currentRank;
-  const displayedReward = roundMetricsMode === "effective" ? effectiveRewardForRanking : roundReward;
-  const sourceMetricsDetails =
-    roundMetricsMode === "effective" && isUsingSeasonBestForRanking
-      ? (effectiveSourceRoundDetails ?? minerRoundDetails)
-      : minerRoundDetails;
+  const seasonRank =
+    roundSelectedMiner?.post_consensus_rank ??
+    effectiveAgent?.seasonRank ??
+    effectiveAgent?.currentRank ??
+    null;
+  const displayedReward = roundReward;
+  const sourceMetricsDetails = bestRoundDetails;
   const effectiveEvalScore = sourceMetricsDetails?.post_consensus_avg_eval_score ?? null;
   const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
   const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
   const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
   const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
   const effectiveAvgTasksPerValidator = sourceMetricsDetails?.avg_tasks_per_validator ?? null;
-  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? [];
+  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
   const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
     ? effectivePerformanceByWebsite.length
     : websitesSummary.unique;
-  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? null;
+  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? agentDetail?.avg_cost_per_task ?? null;
   const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
   const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
   const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
-  const sourceRoundForEffective =
-    roundMetricsMode === "effective" && isUsingSeasonBestForRanking
-      ? (effectiveSourceRoundIdentifier ?? selectedRoundFromQuery ?? null)
-      : (selectedRoundFromQuery ?? null);
+  const sourceRoundForEffective = historicalBestRoundIdentifier ?? selectedRoundFromQuery ?? null;
   const sourceRoundParts = String(sourceRoundForEffective ?? "").split("/");
-  const sourceSeason = Number.parseInt(sourceRoundParts[0] ?? "", 10);
   const sourceRound = Number.parseInt(sourceRoundParts[1] ?? "", 10);
-  const sourceRoundHref =
-    Number.isFinite(sourceSeason) && Number.isFinite(sourceRound) && (effectiveAgent?.uid ?? numericUidFromParam)
-      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${sourceSeason}&round=${sourceRound}`
-      : null;
   const isAvgResponseTimeout =
     effectiveEvalTime !== null &&
     Number.isFinite(effectiveEvalTime) &&
@@ -2488,96 +2231,6 @@ export default function Page() {
     Number.isFinite(effectiveAvgCostPerTask) &&
     Number.isFinite(maxTaskCostUsd) &&
     effectiveAvgCostPerTask >= maxTaskCostUsd;
-  const reusedRunInfo =
-    (minerRoundDetails?.validators ?? []).find(
-      (validator: any) => validator?.is_reused && validator?.reused_from_agent_run_id
-    ) ?? null;
-  const reusedRoundParts = String(reusedRunInfo?.reused_from_round ?? "").split("/");
-  const reusedSeason = Number.parseInt(reusedRoundParts[0] ?? "", 10);
-  const reusedRound = Number.parseInt(reusedRoundParts[1] ?? "", 10);
-  const reusedRoundDetailsHref =
-    Number.isFinite(reusedSeason) && Number.isFinite(reusedRound) && (effectiveAgent?.uid ?? numericUidFromParam)
-      ? `/subnet36/agents/${effectiveAgent?.uid ?? numericUidFromParam}?season=${reusedSeason}&round=${reusedRound}`
-      : null;
-  const seasonCompetitionState = (() => {
-    const leadership = (minerRoundDetails as any)?.season_leadership;
-    const validators = minerRoundDetails?.validators;
-    const validator = Array.isArray(validators) && validators.length > 0 ? (validators[0] as any) : null;
-    const post = validator?.evaluation_post_consensus;
-    const hasNewLeadership = leadership && typeof leadership === "object";
-    const hasLegacyPost = post && typeof post === "object";
-    if (!hasNewLeadership && !hasLegacyPost) return null;
-
-    const roundSummary = hasLegacyPost && post.round_summary && typeof post.round_summary === "object" ? post.round_summary : {};
-    const decision = hasLegacyPost && roundSummary.decision && typeof roundSummary.decision === "object" ? roundSummary.decision : {};
-    const seasonSummary = hasLegacyPost && post.season_summary && typeof post.season_summary === "object" ? post.season_summary : {};
-    const winner = hasLegacyPost && roundSummary.winner && typeof roundSummary.winner === "object" ? roundSummary.winner : {};
-
-    const toNullableNumber = (value: unknown): number | null => {
-      if (typeof value === "number" && Number.isFinite(value)) return value;
-      if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-      }
-      return null;
-    };
-
-    const roundWinnerUid =
-      toNullableNumber((leadership as any)?.round_winner_uid) ??
-      toNullableNumber((winner as any).miner_uid) ??
-      toNullableNumber((winner as any).uid);
-    const topCandidateUid =
-      toNullableNumber((leadership as any)?.top_candidate_uid) ??
-      toNullableNumber((decision as any).top_candidate_uid);
-    const seasonLeaderUid =
-      toNullableNumber((leadership as any)?.season_leader_uid) ??
-      toNullableNumber((seasonSummary as any).current_winner_uid);
-    const dethroned = Boolean(
-      (leadership as any)?.dethroned ??
-      (seasonSummary as any).dethroned ??
-      (decision as any).dethroned
-    );
-    const requiredImprovementPct =
-      toNullableNumber((leadership as any)?.required_improvement_pct) ??
-      toNullableNumber((seasonSummary as any).required_improvement_pct) ??
-      toNullableNumber((decision as any).required_improvement_pct) ??
-      0;
-    const topCandidateReward =
-      toNullableNumber((leadership as any)?.top_candidate_reward) ??
-      toNullableNumber((decision as any).top_candidate_reward);
-    const reigningReward =
-      toNullableNumber((leadership as any)?.reigning_reward_before_round) ??
-      toNullableNumber((decision as any).reigning_reward_before_round);
-    const reigningUidBeforeRound =
-      toNullableNumber((leadership as any)?.reigning_uid_before_round) ??
-      toNullableNumber((decision as any).reigning_uid_before_round);
-    const roundWinnerReward =
-      toNullableNumber((leadership as any)?.round_winner_reward) ??
-      toNullableNumber((winner as any)?.avg_reward);
-
-    if (
-      roundWinnerUid === null &&
-      topCandidateUid === null &&
-      seasonLeaderUid === null
-    ) {
-      return null;
-    }
-
-    return {
-      roundWinnerUid,
-      roundWinnerReward,
-      topCandidateUid,
-      seasonLeaderUid,
-      dethroned,
-      requiredImprovementPct,
-      topCandidateReward,
-      reigningReward,
-      reigningUidBeforeRound,
-    };
-  })();
-  const formatLeadershipReward = (value: number | null | undefined) =>
-    typeof value === "number" && Number.isFinite(value) ? value.toFixed(3) : "—";
-
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
     const total = effectiveTasksReceived;
@@ -2588,37 +2241,24 @@ export default function Page() {
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
-      title: roundMetricsMode === "effective" ? "Source Round" : "Round",
+      title: "Best Round",
       metric:
-        roundMetricsMode === "effective" && Number.isFinite(sourceRound)
+        Number.isFinite(sourceRound)
           ? `${sourceRound}`
-          : (roundParam ? roundParam : "N/A"),
-      badge:
-        roundMetricsMode === "effective"
-          ? "From best round"
-          : (seasonParam ? `Season ${seasonParam}` : null),
+          : "N/A",
+      badge: seasonParam ? `Season ${seasonParam}` : "Best in season",
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: roundMetricsMode === "effective" ? "Effective Rank" : "Round Rank",
-      metric: effectiveRank && effectiveRank > 0 ? `#${effectiveRank}` : "N/A",
-      badge:
-        roundMetricsMode === "round" && isUsingSeasonBestForRanking
-          ? "Official rank uses Effective Reward"
-          : null,
+      title: "Season Rank",
+      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
-      title: roundMetricsMode === "effective" ? "Effective Reward" : "Round Reward",
+      title: "Avg Reward",
       metric: `${((displayedReward ?? 0) * 100).toFixed(1)}%`,
-      badge:
-        roundMetricsMode === "effective" && isUsingSeasonBestForRanking
-          ? `Best in season ${(bestRewardInSeason * 100).toFixed(1)}%`
-          : roundMetricsMode === "round" && isUsingSeasonBestForRanking
-            ? `Season best ${(bestRewardInSeason * 100).toFixed(1)}%`
-            : null,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
@@ -2667,14 +2307,14 @@ export default function Page() {
   const historicalStats = [
     // 2 filas × 3 columnas. Col1 mismo estilo que Avg Cost (amber), Col2 violet, Col3 green/emerald
     {
-      title: "Best Rank (Season)",
+      title: "Season Rank",
       metric: minerHistorical?.summary?.bestRank
         ? `#${minerHistorical.summary.bestRank}`
         : derivedBestRankFromHistory.rank != null && Number.isFinite(derivedBestRankFromHistory.rank)
           ? `#${derivedBestRankFromHistory.rank}`
           : "—",
       badge: minerHistorical?.summary?.bestRankRound
-        ? `Round ${minerHistorical.summary.bestRankRound}`
+        ? formatBestRoundBadge(minerHistorical.summary.bestRankRound)
         : derivedBestRankFromHistory.round ?? null,
       icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.amber,
@@ -2692,12 +2332,12 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.green,
     },
     {
-      title: "Best Reward Ever",
+      title: "Best Reward (Season)",
       metric: minerHistorical?.summary?.bestReward
         ? `${(minerHistorical.summary.bestReward * 100).toFixed(1)}%`
         : "0%",
       badge: minerHistorical?.summary?.bestRewardRound
-        ? `Round ${minerHistorical.summary.bestRewardRound}`
+        ? formatBestRoundBadge(minerHistorical.summary.bestRewardRound)
         : null,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.amber,
@@ -2778,9 +2418,9 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
                         githubAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
                       title={
@@ -2796,19 +2436,23 @@ export default function Page() {
                           href={effectiveAgent?.githubUrl ?? "#"}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center group"
+                          className="flex h-full w-full items-center justify-center gap-1.5 group"
                         >
-                          <PiGithubLogoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white">GitHub</span>
                         </a>
                       ) : (
-                        <PiGithubLogoDuotone className="w-4 h-4 text-white/30" />
+                        <>
+                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white/30">GitHub</span>
+                        </>
                       )}
                     </div>
                     <div
                       className={cn(
-                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
                         taoStatsAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
                       title={
@@ -2829,12 +2473,16 @@ export default function Page() {
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center group"
+                          className="flex h-full w-full items-center justify-center gap-1.5 group"
                         >
-                          <PiInfoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white">TaoStats</span>
                         </a>
                       ) : (
-                        <PiInfoDuotone className="w-4 h-4 text-white/30" />
+                        <>
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white/30">TaoStats</span>
+                        </>
                       )}
                     </div>
                   </div>
@@ -2852,7 +2500,7 @@ export default function Page() {
                       {effectiveAgent?.isSota
                         ? "No on-chain hotkey"
                         : effectiveAgent?.hotkey
-                          ? `${effectiveAgent.hotkey.slice(0, 8)}...${effectiveAgent.hotkey.slice(-8)}`
+                          ? effectiveAgent.hotkey
                           : "unknown"}
                     </span>
                     {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
@@ -2900,7 +2548,7 @@ export default function Page() {
                       viewMode === "current" && "scale-110"
                     )}
                   />
-                  <span className="relative z-10 hidden sm:inline">Round</span>
+                  <span className="relative z-10 hidden sm:inline">Best Round</span>
                 </button>
                 <button
                   type="button"
@@ -2953,194 +2601,6 @@ export default function Page() {
               )}
             </div>
           </div>
-
-          {viewMode === "current" && (
-            <>
-            {roundMetricsMode === "round" && (
-              <div
-                className={cn(
-                  "mb-4 rounded-xl border px-4 py-3",
-                  seasonCompetitionState?.dethroned
-                    ? "border-emerald-400/50 bg-emerald-500/12"
-                    : "border-amber-400/50 bg-amber-500/12"
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-shrink-0 items-center justify-center">
-                    <PiWarning
-                      className={cn(
-                        "h-12 w-12 flex-shrink-0",
-                        seasonCompetitionState?.dethroned ? "text-emerald-300" : "text-amber-300"
-                      )}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-white">
-                      Season leadership rule (+{(((seasonCompetitionState?.requiredImprovementPct ?? 0.05) as number) * 100).toFixed(1)}% to dethrone):
-                    </p>
-                    {seasonCompetitionState?.reigningUidBeforeRound != null &&
-                     seasonCompetitionState?.topCandidateUid != null &&
-                     seasonCompetitionState.reigningUidBeforeRound === seasonCompetitionState.topCandidateUid ? (
-                      <>
-                        <p className="mt-1 text-xs text-white/85">
-                          Reigning season leader before round:{" "}
-                          <span className="text-cyan-300 font-semibold">
-                            UID {seasonCompetitionState.reigningUidBeforeRound}
-                          </span>
-                          , reward:{" "}
-                          <span className="text-cyan-300 font-semibold">
-                            {formatLeadershipReward(
-                              seasonCompetitionState?.topCandidateReward ??
-                              seasonCompetitionState?.reigningReward
-                            )}
-                          </span>
-                        </p>
-                        <p className="mt-0.5 text-xs text-white/85">
-                          Same leader still has the best season reward (reward:{" "}
-                          <span className="text-amber-300 font-semibold">
-                            {formatLeadershipReward(
-                              seasonCompetitionState?.topCandidateReward ??
-                              seasonCompetitionState?.reigningReward
-                            )}
-                          </span>
-                          ). No other miner beat the +{((seasonCompetitionState?.requiredImprovementPct ?? 0.05) * 100).toFixed(1)}% threshold to dethrone.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mt-1 text-xs text-white/85">
-                          Reigning season leader before round:{" "}
-                          <span className="text-cyan-300 font-semibold">
-                            UID {seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid ?? "—"}
-                          </span>
-                          , reward:{" "}
-                          <span className="text-cyan-300 font-semibold">
-                            {formatLeadershipReward(seasonCompetitionState?.reigningReward)}
-                          </span>
-                        </p>
-                        <p className="mt-0.5 text-xs text-white/85">
-                          Candidate miner to dethrone:{" "}
-                          <span className="text-amber-300 font-semibold">
-                            UID {seasonCompetitionState?.topCandidateUid ?? seasonCompetitionState?.roundWinnerUid ?? "—"}
-                          </span>
-                          , reward:{" "}
-                          <span className="text-amber-300 font-semibold">
-                            {formatLeadershipReward(seasonCompetitionState?.topCandidateReward)}
-                          </span>
-                        </p>
-                      </>
-                    )}
-                    {seasonCompetitionState?.roundWinnerUid != null &&
-                     seasonCompetitionState.roundWinnerUid !== (seasonCompetitionState?.reigningUidBeforeRound ?? seasonCompetitionState?.seasonLeaderUid) && (
-                      <p className="mt-0.5 text-xs text-white/85">
-                        Best in this round:{" "}
-                        <span className="text-white font-semibold">
-                          UID {seasonCompetitionState.roundWinnerUid}
-                        </span>
-                        {" "}(reward: {formatLeadershipReward(seasonCompetitionState?.roundWinnerReward)})
-                        {" "}— below dethrone threshold.
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-white">
-                      Verdict:{" "}
-                      {seasonCompetitionState == null ? (
-                        <>
-                          <span className="text-white/80">No season leadership data available for this round yet.</span>
-                        </>
-                      ) : seasonCompetitionState.dethroned ? (
-                        <>
-                          Next winner:{" "}
-                          <span className="text-emerald-300 font-bold">
-                            UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                          </span>{" "}
-                          (candidate surpassed +{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%).
-                        </>
-                      ) : (
-                        <>
-                          Season leader remains{" "}
-                          <span className="text-cyan-300 font-bold">
-                            UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                          </span>
-                          {seasonCompetitionState?.reigningUidBeforeRound != null &&
-                           seasonCompetitionState?.topCandidateUid != null &&
-                           seasonCompetitionState.reigningUidBeforeRound === seasonCompetitionState.topCandidateUid
-                            ? " (no other miner met the dethrone threshold this round)."
-                            : " (candidate could not dethrone)."}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="mb-4 w-full">
-              <div className="flex w-full rounded-xl border border-white/15 bg-slate-800/50 p-1 gap-1 backdrop-blur-sm">
-                <button
-                  type="button"
-                  onClick={() => setRoundMetricsMode("round")}
-                  className={cn(
-                    "flex-1 min-w-0 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-150 text-center",
-                    roundMetricsMode === "round"
-                      ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40"
-                      : "text-white/55 hover:text-white/85 hover:bg-white/5 border border-transparent"
-                  )}
-                  aria-pressed={roundMetricsMode === "round"}
-                >
-                  Round metrics view
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRoundMetricsMode("effective")}
-                  className={cn(
-                    "flex-1 min-w-0 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-150 text-center",
-                    roundMetricsMode === "effective"
-                      ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40"
-                      : "text-white/55 hover:text-white/85 hover:bg-white/5 border border-transparent"
-                  )}
-                  aria-pressed={roundMetricsMode === "effective"}
-                >
-                  Effective metrics view
-                </button>
-              </div>
-            </div>
-            </>
-          )}
-
-          {/* Reused run banner: only in Round metrics view */}
-          {viewMode === "current" && roundMetricsMode === "round" && reusedRunInfo ? (
-            <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              <span className="font-semibold">Reused run:</span>{" "}
-              This round reuses results from{" "}
-              {reusedRunInfo.reused_from_round
-                ? `Season ${String(reusedRunInfo.reused_from_round).split("/")[0]}, Round ${String(reusedRunInfo.reused_from_round).split("/")[1]}`
-                : "a previous round"}.
-              {" "}
-              <a
-                className="underline underline-offset-2 hover:text-white"
-                href={reusedRoundDetailsHref ?? "#"}
-              >
-                Open original round details
-              </a>
-              .
-            </div>
-          ) : null}
-          {viewMode === "current" && roundMetricsMode === "effective" && isUsingSeasonBestForRanking && sourceRoundHref ? (
-            <div className="mb-4 rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
-              <span className="font-semibold">Effective metrics:</span>{" "}
-              These metrics were obtained in{" "}
-              {Number.isFinite(sourceSeason) && Number.isFinite(sourceRound)
-                ? `Season ${sourceSeason}, Round ${sourceRound}`
-                : "a previous round"}.
-              {" "}
-              <a
-                className="underline underline-offset-2 hover:text-white"
-                href={sourceRoundHref}
-              >
-                Open source round details
-              </a>
-              .
-            </div>
-          ) : null}
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
@@ -3243,131 +2703,173 @@ export default function Page() {
                 post_consensus_summary={runsState.post_consensus_summary}
                 minerRoundDetailsValidators={minerRoundDetails?.validators}
                 roundAvgCostPerTask={(minerRoundDetails as any)?.avg_cost_per_task ?? (minerRoundDetails as any)?.avgCostPerTask ?? null}
+                postConsensusRounds={minerHistorical?.roundsHistory}
               />
             ) : (
               <>
                 {viewMode === "current" ? (
-                  <div>
-                    {minerRoundDetails && effectivePerformanceByWebsite.length > 0 ? (
-                      <div className="relative">
-                        {minerRoundDetailsLoading ? (
-                          <div className="relative flex h-[420px] items-center justify-center text-white/70">
-                            Loading website stats…
+                  <div className="space-y-8">
+                    <div className="space-y-5">
+                      <div className="flex w-full rounded-2xl border border-white/15 bg-slate-900/35 p-1.5 gap-1.5 backdrop-blur-sm">
+                        <button
+                          type="button"
+                          onClick={() => setWebsitePanelMode("chart")}
+                          className={cn(
+                            "flex-1 min-w-0 py-4 px-5 text-sm sm:text-base font-semibold rounded-xl transition-all duration-150 text-center",
+                            websitePanelMode === "chart"
+                              ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.12)]"
+                              : "text-white/60 hover:text-white/90 hover:bg-white/5 border border-transparent"
+                          )}
+                          aria-pressed={websitePanelMode === "chart"}
+                        >
+                          Performance by website
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWebsitePanelMode("details")}
+                          className={cn(
+                            "flex-1 min-w-0 py-4 px-5 text-sm sm:text-base font-semibold rounded-xl transition-all duration-150 text-center",
+                            websitePanelMode === "details"
+                              ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.12)]"
+                              : "text-white/60 hover:text-white/90 hover:bg-white/5 border border-transparent"
+                          )}
+                          aria-pressed={websitePanelMode === "details"}
+                        >
+                          Performance details per website
+                        </button>
+                      </div>
+
+                      {websitePanelMode === "chart" ? (
+                        sourceMetricsDetails && effectivePerformanceByWebsite.length > 0 ? (
+                          <div className="relative">
+                            {minerRoundDetailsLoading ? (
+                              <div className="relative flex h-[420px] items-center justify-center text-white/70">
+                                Loading website stats…
+                              </div>
+                            ) : (
+                              <>
+                                <div className="mb-6">
+                                  <h3 className="text-xl font-bold text-white mb-2">
+                                    Performance per website
+                                  </h3>
+                                  <p className="text-sm text-white/60">
+                                    Task success rate by website for the best round in this season
+                                  </p>
+                                </div>
+                                <div className="relative h-[300px] md:h-[450px] w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                      data={effectivePerformanceByWebsite.map((website) => {
+                                        const websiteName = website.website;
+                                        const formattedName = formatWebsiteName(websiteName);
+                                        return {
+                                          website: formattedName,
+                                          websiteOriginal: websiteName,
+                                          successRate: website.success_rate * 100,
+                                          successful: website.tasks_success,
+                                          total: website.tasks_received,
+                                        };
+                                      })}
+                                      margin={{ top: 20, left: -10 }}
+                                    >
+                                      <defs>
+                                        {effectivePerformanceByWebsite.map((entry, index) => {
+                                          const colors = getProjectColors(entry.website);
+                                          return (
+                                            <linearGradient
+                                              key={`barGradient${index}`}
+                                              id={`barGradient${index}`}
+                                              x1="0"
+                                              y1="0"
+                                              x2="0"
+                                              y2="1"
+                                            >
+                                              <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
+                                              <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
+                                              <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
+                                            </linearGradient>
+                                          );
+                                        })}
+                                      </defs>
+                                      <CartesianGrid
+                                        vertical={false}
+                                        strokeDasharray="3 3"
+                                        stroke="rgba(148,163,184,0.15)"
+                                      />
+                                      <XAxis
+                                        dataKey="website"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{
+                                          fill: "rgba(226,232,240,0.9)",
+                                          fontSize: 13,
+                                          fontWeight: 500,
+                                        }}
+                                      />
+                                      <YAxis
+                                        domain={[0, 100]}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={<CustomYAxisTick postfix="%" />}
+                                        stroke="rgba(148,163,184,0.3)"
+                                      />
+                                      <Tooltip
+                                        content={<WebsitePerformanceTooltip />}
+                                        cursor={{
+                                          fill: "rgba(255, 255, 255, 0.08)",
+                                        }}
+                                        wrapperStyle={{
+                                          outline: "none",
+                                          zIndex: 1000,
+                                        }}
+                                      />
+                                      <Bar
+                                        dataKey="successRate"
+                                        radius={[12, 12, 0, 0]}
+                                        maxBarSize={80}
+                                        animationDuration={800}
+                                        animationEasing="ease-out"
+                                      >
+                                        {effectivePerformanceByWebsite.map((entry, index) => {
+                                          const colors = getProjectColors(entry.website);
+                                          return (
+                                            <Cell
+                                              key={`cell-${index}`}
+                                              fill={`url(#barGradient${index})`}
+                                              fillOpacity={0.9}
+                                              style={{
+                                                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                cursor: "pointer",
+                                                transformOrigin: "center bottom",
+                                              }}
+                                            />
+                                          );
+                                        })}
+                                      </Bar>
+                                    </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </>
+                            )}
                           </div>
                         ) : (
-                          <>
-                            <div className="mb-6">
-                              <h3 className="text-xl font-bold text-white mb-2">
-                                Performance per website
-                              </h3>
-                              <p className="text-sm text-white/60">
-                                Task success rate by website for this round
-                              </p>
-                            </div>
-                            <div className="relative h-[300px] md:h-[450px] w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                  data={effectivePerformanceByWebsite.map((website) => {
-                                    const websiteName = website.website;
-                                    const formattedName = formatWebsiteName(websiteName);
-                                    return {
-                                      website: formattedName,
-                                      websiteOriginal: websiteName,
-                                      successRate: website.success_rate * 100,
-                                      successful: website.tasks_success,
-                                      total: website.tasks_received,
-                                    };
-                                  })}
-                                  margin={{ top: 20, left: -10 }}
-                                >
-                                  <defs>
-                                    {effectivePerformanceByWebsite.map((entry, index) => {
-                                      const colors = getProjectColors(entry.website);
-                                      return (
-                                        <linearGradient
-                                          key={`barGradient${index}`}
-                                          id={`barGradient${index}`}
-                                          x1="0"
-                                          y1="0"
-                                          x2="0"
-                                          y2="1"
-                                        >
-                                          <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
-                                          <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
-                                          <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
-                                        </linearGradient>
-                                      );
-                                    })}
-                                  </defs>
-                                  <CartesianGrid
-                                    vertical={false}
-                                    strokeDasharray="3 3"
-                                    stroke="rgba(148,163,184,0.15)"
-                                  />
-                                  <XAxis
-                                    dataKey="website"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{
-                                      fill: "rgba(226,232,240,0.9)",
-                                      fontSize: 13,
-                                      fontWeight: 500,
-                                    }}
-                                  />
-                                  <YAxis
-                                    domain={[0, 100]}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={<CustomYAxisTick postfix="%" />}
-                                    stroke="rgba(148,163,184,0.3)"
-                                  />
-                                  <Tooltip
-                                    content={<WebsitePerformanceTooltip />}
-                                    cursor={{
-                                      fill: "rgba(255, 255, 255, 0.08)",
-                                    }}
-                                    wrapperStyle={{
-                                      outline: "none",
-                                      zIndex: 1000,
-                                    }}
-                                  />
-                                  <Bar
-                                    dataKey="successRate"
-                                    radius={[12, 12, 0, 0]}
-                                    maxBarSize={80}
-                                    animationDuration={800}
-                                    animationEasing="ease-out"
-                                  >
-                                    {effectivePerformanceByWebsite.map((entry, index) => {
-                                      const colors = getProjectColors(entry.website);
-                                      return (
-                                        <Cell
-                                          key={`cell-${index}`}
-                                          fill={`url(#barGradient${index})`}
-                                          fillOpacity={0.9}
-                                          style={{
-                                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            cursor: "pointer",
-                                            transformOrigin: "center bottom",
-                                          }}
-                                        />
-                                      );
-                                    })}
-                                  </Bar>
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <RoundWebsitesChart
-                        agentId={agentIdForQuery ?? trimmedId}
-                        selectedRound={typeof currentRound === "number" ? currentRound : null}
-                        runs={runsState.runs}
-                        onSummaryChange={handleSummaryChange}
-                      />
-                    )}
+                          <RoundWebsitesChart
+                            agentId={agentIdForQuery ?? trimmedId}
+                            selectedRound={typeof currentRound === "number" ? currentRound : null}
+                            runs={runsState.runs}
+                            onSummaryChange={handleSummaryChange}
+                          />
+                        )
+                      ) : (
+                        <AgentHistoricalAnalytics
+                          agentId={agentIdForQuery ?? trimmedId}
+                          className="w-full"
+                          minerHistorical={minerHistorical}
+                          loading={minerHistoricalLoading}
+                          selectedSeason={seasonForHistorical}
+                        />
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -3377,13 +2879,6 @@ export default function Page() {
                       loading={minerHistoricalLoading || loading}
                       error={historicalChartError || error}
                       title={`Reward Over Time · Season ${seasonForHistorical ?? "N/A"}`}
-                    />
-                    <AgentHistoricalAnalytics
-                      agentId={agentIdForQuery ?? trimmedId}
-                      className="w-full"
-                      minerHistorical={minerHistorical}
-                      loading={minerHistoricalLoading}
-                      selectedSeason={seasonForHistorical}
                     />
                   </div>
                 )}

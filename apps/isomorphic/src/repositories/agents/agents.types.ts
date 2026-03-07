@@ -37,14 +37,15 @@ export interface AgentData {
   currentReward: number;
   currentTopReward: number;
   currentRank: number | null;
+  seasonRank?: number | null;
   bestRankEver: number | null;
-  bestRankRoundId?: number | null;
+  bestRankRoundId?: number | string | null;
   roundsParticipated: number; // NEW FIELD
   roundsWon?: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
   taoWonInPrizes?: number; // NEW FIELD (derived)
   bestRoundReward: number;
-  bestRoundId?: number | null;
+  bestRoundId?: number | string | null;
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
@@ -112,9 +113,9 @@ export interface MinerHistoricalResponse {
       overallSuccessRate: number;
       averageDuration: number;
       bestReward: number;
-      bestRewardRound: number | null;
+      bestRewardRound: number | string | null;
       bestRank: number | null;
-      bestRankRound: number | null;
+      bestRankRound: number | string | null;
       averageReward: number;
       totalAlphaEarned: number;
       totalTaoEarned: number;
@@ -394,8 +395,20 @@ export interface AgentDetailsResponse {
   data: {
     agent: AgentData;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: number[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
@@ -404,8 +417,20 @@ export interface MinerDetailsResponse {
   data: {
     agent: AgentData;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: number[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
