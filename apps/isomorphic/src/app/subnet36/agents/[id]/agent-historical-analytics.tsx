@@ -177,6 +177,13 @@ export default function AgentHistoricalAnalytics({
     selectedSeason,
   ]);
 
+  const strongestRoundLabel = useMemo(() => {
+    if (!sourceRound) return "Metrics from your strongest round in this season";
+    const [, roundPart] = sourceRound.split("/");
+    const normalizedRound = roundPart ?? sourceRound;
+    return `Metrics from Round ${normalizedRound}`;
+  }, [sourceRound]);
+
   // Use external historical data - never fetch from agent-runs
   // This component should only be used when minerHistorical is provided
   useEffect(() => {
@@ -784,11 +791,7 @@ export default function AgentHistoricalAnalytics({
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
                 Best-Round Performance Analytics
               </h2>
-              <p className="text-xs sm:text-sm text-emerald-200/70">
-                {sourceRound
-                  ? `Metrics from your strongest round in this season (${sourceRound})`
-                  : "Metrics from your strongest round in this season"}
-              </p>
+              <p className="text-xs sm:text-sm text-emerald-200/70">{strongestRoundLabel}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -906,6 +909,8 @@ export default function AgentHistoricalAnalytics({
                 return filteredUseCases.map((uc, idx) => ({
                   name: uc.useCase,
                   value: uc.completedTasks,
+                  completed: uc.completedTasks,
+                  total: uc.totalTasks,
                   fill: colorVariations[idx] || projectColors.mainColor,
                   stroke: colorVariations[idx] || projectColors.mainColor,
                   percentage:
@@ -918,6 +923,8 @@ export default function AgentHistoricalAnalytics({
                 return {
                   name: ws.displayName,
                   value: ws.completedTasks,
+                  completed: ws.completedTasks,
+                  total: ws.totalTasks,
                   fill: projectColors.mainColor,
                   stroke: projectColors.mainColor,
                   percentage:
@@ -995,7 +1002,7 @@ export default function AgentHistoricalAnalytics({
                           {item.name}
                         </div>
                         <div className="text-[10px] text-white/60">
-                          {item.value} tasks ({item.percentage.toFixed(1)}%)
+                          {(item as any).completed ?? item.value}/{(item as any).total ?? 0} ({item.percentage.toFixed(1)}%)
                         </div>
                       </div>
                     </div>

@@ -15,7 +15,6 @@ import type {
   RoundsListQueryParams,
   RoundMinersQueryParams,
   RoundActivityQueryParams,
-  GetRoundResponse,
 } from "@/repositories/rounds/rounds.types";
 
 type SerializableParams = Record<string, any> | undefined;
@@ -218,16 +217,49 @@ export function useRoundProgress(roundId?: RoundIdentifier) {
   return useApiCall(request, identifierKey(roundId), enabled);
 }
 
-// Hook for new simplified get-round endpoint
-export function useGetRound(season?: number, roundInSeason?: number) {
+export function useRoundStatusView(season?: number, roundInSeason?: number) {
   const enabled =
-    typeof season === "number" && Number.isFinite(season) && season > 0 &&
-    typeof roundInSeason === "number" && Number.isFinite(roundInSeason) && roundInSeason > 0;
+    typeof season === "number" &&
+    Number.isFinite(season) &&
+    season > 0 &&
+    typeof roundInSeason === "number" &&
+    Number.isFinite(roundInSeason) &&
+    roundInSeason > 0;
   const request = useCallback(
-    () => roundsRepository.getRoundSimplified(season as number, roundInSeason as number),
+    () => roundsRepository.getRoundStatusView(season as number, roundInSeason as number),
     [season, roundInSeason]
   );
-  return useApiCall(request, `round-${season}-${roundInSeason}`, enabled);
+  return useApiCall(request, `round-status-${season}-${roundInSeason}`, enabled);
+}
+
+export function useRoundSeasonSummaryView(season?: number, roundInSeason?: number) {
+  const enabled =
+    typeof season === "number" &&
+    Number.isFinite(season) &&
+    season > 0 &&
+    typeof roundInSeason === "number" &&
+    Number.isFinite(roundInSeason) &&
+    roundInSeason > 0;
+  const request = useCallback(
+    () => roundsRepository.getRoundSeasonSummaryView(season as number, roundInSeason as number),
+    [season, roundInSeason]
+  );
+  return useApiCall(request, `round-season-summary-${season}-${roundInSeason}`, enabled);
+}
+
+export function useRoundValidatorsView(season?: number, roundInSeason?: number) {
+  const enabled =
+    typeof season === "number" &&
+    Number.isFinite(season) &&
+    season > 0 &&
+    typeof roundInSeason === "number" &&
+    Number.isFinite(roundInSeason) &&
+    roundInSeason > 0;
+  const request = useCallback(
+    () => roundsRepository.getRoundValidatorsView(season as number, roundInSeason as number),
+    [season, roundInSeason]
+  );
+  return useApiCall(request, `round-validators-view-${season}-${roundInSeason}`, enabled);
 }
 
 // Hook for top miners

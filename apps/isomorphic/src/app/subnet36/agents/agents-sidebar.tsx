@@ -22,7 +22,7 @@ import {
 import { LuSearch } from "react-icons/lu";
 import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
-import { useRoundsData } from "@/services/hooks/useAgents";
+import { useSeasonRank } from "@/services/hooks/useAgents";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import type {
   MinimalAgentData,
@@ -89,8 +89,6 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     return { selectedSeason: undefined };
   }, [seasonParam]);
 
-  const { data: roundsData, loading: roundsLoading, error: roundsError } = useRoundsData();
-
   const loadingOption = useMemo<SelectOption>(
     () => ({
       label: "Loading...",
@@ -99,55 +97,26 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     []
   );
 
-  // Parse available rounds to extract seasons and rounds
-  const { seasonOptions, latestSeason } = useMemo(() => {
-    const rounds = roundsData?.rounds ?? [];
-    if (rounds.length === 0) {
-      return { seasonOptions: [], latestSeason: undefined };
-    }
+  const seasonRef = selectedSeason ?? "latest";
+  const {
+    data: seasonRankData,
+    loading,
+    error,
+  } = useSeasonRank(seasonRef);
 
-    // Parse rounds in format "season/round"
-    const parsedRounds = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          return {
-            season: Number.parseInt(parts[0], 10),
-            round: Number.parseInt(parts[1], 10),
-            full: r,
-          };
-        }
-        return null;
-      })
-      .filter((r) => r !== null && Number.isFinite(r.season) && Number.isFinite(r.round)) as Array<{
-        season: number;
-        round: number;
-        full: string;
-      }>;
-
-    // Get unique seasons, sorted descending (most recent first)
-    const seasons = Array.from(new Set(parsedRounds.map((r) => r.season))).sort((a, b) => b - a);
-
+  const { seasonOptions, latestSeason, effectiveSeason } = useMemo(() => {
+    const seasons = seasonRankData?.availableSeasons ?? [];
     const seasonOpts = seasons.map((s) => ({
       label: `Season ${s}`,
       value: s,
     }));
-
-    // Get latest round (highest season, highest round in that season)
-    const latest = parsedRounds.length > 0 ? parsedRounds[0] : null;
-
+    const latest = seasonRankData?.latestSeason ?? seasons[0];
     return {
       seasonOptions: seasonOpts,
-      latestSeason: latest?.season,
+      latestSeason: latest,
+      effectiveSeason: selectedSeason ?? latest,
     };
-  }, [roundsData?.rounds]);
-
-  const effectiveSeason = selectedSeason ?? latestSeason;
-  const {
-    data: roundsDataWithMiners,
-    loading: minersLoading,
-    error: minersError,
-  } = useRoundsData(effectiveSeason ? { season: effectiveSeason } : undefined);
+  }, [seasonRankData?.availableSeasons, seasonRankData?.latestSeason, selectedSeason]);
 
   const [seasonSelectValue, setSeasonSelectValue] = useState<SelectOption>(
     seasonOptions.length > 0 ? seasonOptions[0] : loadingOption
@@ -173,10 +142,6 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   // Redirigir a la última season si no hay season en la URL
   useEffect(() => {
-    if (roundsLoading) {
-      return;
-    }
-
     if (selectedSeason !== undefined) {
       hasRedirectedRef.current = false;
       return;
@@ -196,7 +161,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
     params.set("season", String(latestSeason));
 
     router.replace(`${pathname}?${params.toString()}`);
-  }, [latestSeason, pathname, router, roundsLoading, selectedSeason]);
+  }, [latestSeason, pathname, router, selectedSeason]);
 
   const handleSeasonChange = (option: SelectOption | null) => {
     if (!option || option.value === loadingOption.value) {
@@ -215,8 +180,8 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   };
 
   const minersFromApi = useMemo(
-    () => roundsDataWithMiners?.round_selected?.miners ?? [],
-    [roundsDataWithMiners?.round_selected?.miners]
+    () => seasonRankData?.miners ?? [],
+    [seasonRankData?.miners]
   );
 
   const minerScoreMetaByUid = useMemo(() => {
@@ -228,7 +193,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
         miner?.best_reward_in_season ?? miner?.post_consensus_avg_reward ?? 0
       );
       const effective = Number(
-        miner?.effective_round_reward ?? best
+        miner?.best_local_round_reward ?? best
       );
       byUid.set(uid, {
         best: Number.isFinite(best) ? best : 0,
@@ -261,9 +226,6 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
     return { miners };
   }, [minersFromApiKey, minersFromApi]);
-
-  const loading = roundsLoading || minersLoading;
-  const error = roundsError || minersError;
 
   // Update filtered agents when data / SOTA / query changes
   // Use a ref to track previous values and prevent unnecessary updates

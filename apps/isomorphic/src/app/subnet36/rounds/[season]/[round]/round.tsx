@@ -52,8 +52,9 @@ import {
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
-  useRoundProgress,
-  useGetRound,
+  useRoundStatusView,
+  useRoundSeasonSummaryView,
+  useRoundValidatorsView,
 } from "@/services/hooks/useRounds";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
@@ -146,7 +147,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 
 // Local helpers
@@ -180,13 +180,23 @@ function CustomTooltip({ label, active, payload, className }: any) {
   if (!active || !payload?.length) return null;
   const minerData = payload[0]?.payload;
 
-  // ✅ Obtener datos del miner (eval_score, eval_time, reward)
-  // Score: usar eval_score específico, NO score (que puede ser reward)
-  const evalScore = minerData?.eval_score ?? minerData?.local_avg_eval_score ?? 0;
-  // Time: usar eval_time específico
-  const evalTime = minerData?.eval_time ?? minerData?.local_avg_eval_time ?? minerData?.avgTime ?? null;
-  // Reward: usar reward específico, NUNCA score como fallback
-  const reward = minerData?.reward ?? minerData?.local_avg_reward ?? 0;
+  const bestReward = minerData?.best_reward ?? minerData?.reward ?? minerData?.best_local_reward ?? 0;
+  const localReward =
+    minerData?.local_reward ?? minerData?.local_avg_reward ?? null;
+  const hasLocalRun = localReward !== null && localReward !== undefined;
+  const evalScore =
+    (hasLocalRun
+      ? minerData?.local_eval_score ?? minerData?.local_avg_eval_score
+      : minerData?.eval_score ?? minerData?.best_local_eval_score ?? minerData?.local_avg_eval_score) ?? 0;
+  const evalTime =
+    (hasLocalRun
+      ? minerData?.local_eval_time ?? minerData?.local_avg_eval_time
+      : minerData?.eval_time ?? minerData?.best_local_eval_time ?? minerData?.local_avg_eval_time ?? minerData?.avgTime) ?? null;
+  const avgCost =
+    (hasLocalRun
+      ? minerData?.local_avg_cost ?? minerData?.local_avg_eval_cost
+      : minerData?.avg_cost ?? minerData?.best_local_eval_cost ?? minerData?.local_avg_eval_cost) ?? null;
+  const resolvedAvgCost = avgCost == null ? null : Number(avgCost);
 
   return (
     <div
@@ -199,76 +209,68 @@ function CustomTooltip({ label, active, payload, className }: any) {
         {minerData?.name}
       </Text>
       <div className="px-4 py-3 text-sm space-y-2">
-        {/* Score (eval_score) */}
-        <div className="chart-tooltip-item flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-              style={{
-                backgroundColor: "#3B82F6", // Blue for score
-              }}
-            />
-            <Text
-              as="span"
-              className="capitalize text-white/90 font-semibold"
-            >
-              Score:
-            </Text>
-          </div>
-          <Text as="span" className="font-black text-white text-base">
-            {(() => {
-              const truncated = truncateDecimal(evalScore, 4);
-              return (truncated * 100).toFixed(2) + "%";
-            })()}
-          </Text>
-        </div>
-
-        {/* Time (eval_time) - SIEMPRE mostrar si está disponible */}
-        {evalTime != null && Number(evalTime) > 0 && (
-          <div className="chart-tooltip-item flex items-center justify-between gap-4">
+        {[
+          {
+            label: "Score",
+            color: "#8B5CF6",
+            value: `${(truncateDecimal(evalScore, 4) * 100).toFixed(2)}%`,
+            divider: false,
+          },
+          {
+            label: "Time",
+            color: "#06B6D4",
+            value:
+              evalTime != null && Number.isFinite(Number(evalTime))
+                ? `${Number(evalTime).toFixed(2)}s`
+                : "—",
+            divider: false,
+          },
+          {
+            label: "Avg cost",
+            color: "#F97316",
+            value:
+              resolvedAvgCost != null && Number.isFinite(resolvedAvgCost)
+                ? `$${resolvedAvgCost.toFixed(3)}`
+                : "—",
+            divider: false,
+          },
+          {
+            label: "Local reward",
+            color: "#22C55E",
+            value: `${(truncateDecimal(hasLocalRun ? Number(localReward) : 0, 4) * 100).toFixed(2)}%`,
+            divider: true,
+          },
+          {
+            label: "Best reward",
+            color: "#3B82F6",
+            value: `${(truncateDecimal(bestReward, 4) * 100).toFixed(2)}%`,
+            divider: false,
+          },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className={cn(
+              "chart-tooltip-item flex items-center justify-between gap-4",
+              item.divider && "pt-1 border-t border-white/10"
+            )}
+          >
             <div className="flex items-center gap-2.5">
               <span
                 className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-                style={{
-                  backgroundColor: "#10B981", // Green for time
-                }}
+                style={{ backgroundColor: item.color }}
               />
               <Text
                 as="span"
                 className="capitalize text-white/90 font-semibold"
               >
-                Time:
+                {item.label}:
               </Text>
             </div>
             <Text as="span" className="font-black text-white text-base">
-              {Number(evalTime).toFixed(2)}s
+              {item.value}
             </Text>
           </div>
-        )}
-
-        {/* Reward */}
-        <div className="chart-tooltip-item flex items-center justify-between gap-4 pt-1 border-t border-white/10">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
-              style={{
-                backgroundColor: "#F59E0B", // Amber for reward
-              }}
-            />
-            <Text
-              as="span"
-              className="capitalize text-white/90 font-semibold"
-            >
-              Reward:
-            </Text>
-          </div>
-          <Text as="span" className="font-black text-white text-base">
-            {(() => {
-              const truncated = truncateDecimal(reward, 4);
-              return (truncated * 100).toFixed(2) + "%";
-            })()}
-          </Text>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -937,7 +939,6 @@ function RoundStatsInline({
     if (displayUid == null) return null;
     const params = new URLSearchParams();
     if (seasonParam != null) params.set("season", String(seasonParam));
-    if (roundParam != null) params.set("round", String(roundParam));
     const qs = params.toString();
     return `${routes.agents}/${displayUid}${qs ? `?${qs}` : ""}`;
   })();
@@ -1823,10 +1824,19 @@ function RoundMinerScoresInline({
         miners = Array.from(uniqueMiners.values());
       }
 
-      // Mapear los miners al formato esperado usando reward desde local_avg_reward.
+      // Competition chart is based on best reward, while local run metrics stay available for tooltip/details.
       const mappedMiners = miners.map((miner: any) => ({
         ...miner,
-        reward: miner.local_avg_reward ?? miner.reward ?? 0,
+        reward: miner.best_local_reward ?? miner.local_avg_reward ?? miner.reward ?? 0,
+        best_reward: miner.best_local_reward ?? miner.reward ?? 0,
+        best_local_reward: miner.best_local_reward ?? miner.reward ?? 0,
+        best_local_eval_score: miner.best_local_eval_score ?? miner.local_avg_eval_score ?? 0,
+        best_local_eval_time: miner.best_local_eval_time ?? miner.local_avg_eval_time ?? null,
+        best_local_eval_cost: miner.best_local_eval_cost ?? null,
+        local_reward: miner.local_reward ?? miner.local_avg_reward ?? null,
+        local_eval_score: miner.local_eval_score ?? miner.local_avg_eval_score ?? null,
+        local_eval_time: miner.local_eval_time ?? miner.local_avg_eval_time ?? null,
+        local_avg_cost: miner.local_avg_cost ?? null,
         validatorId: selectedValidator?.id || `validator-${roundData.validators[0]?.validator_uid}`, // ✅ Agregar validatorId
       }));
 
@@ -1890,14 +1900,19 @@ function RoundMinerScoresInline({
         name: label,
         isSota,
         uid: miner.uid,
-        color,
         provider: miner.provider,
         xAxisLabel: isSota ? "" : uidLabel,
-        // ✅ Agregar datos para el tooltip
-        // Priorizar datos del nuevo endpoint (roundData) que ya vienen con local_avg_*
-        eval_score: miner.local_avg_eval_score ?? miner.eval_score ?? 0, // Score (eval_score)
-        eval_time: miner.local_avg_eval_time ?? miner.avgTime ?? miner.eval_time ?? null, // Time (eval_time)
-        reward: miner.local_avg_reward ?? miner.reward ?? 0, // Reward (reward) - NUNCA usar score como fallback
+        best_reward: miner.best_reward ?? miner.best_local_reward ?? miner.reward ?? 0,
+        best_reward_bar: miner.best_reward ?? miner.best_local_reward ?? miner.reward ?? 0,
+        local_reward_bar: miner.local_reward ?? miner.local_avg_reward ?? 0,
+        local_reward: miner.local_reward ?? miner.local_avg_reward ?? null,
+        eval_score: miner.best_local_eval_score ?? miner.local_avg_eval_score ?? miner.eval_score ?? 0,
+        eval_time: miner.best_local_eval_time ?? miner.local_avg_eval_time ?? miner.avgTime ?? miner.eval_time ?? null,
+        avg_cost: miner.best_local_eval_cost ?? miner.local_avg_cost ?? null,
+        local_eval_score: miner.local_eval_score ?? miner.local_avg_eval_score ?? null,
+        local_eval_time: miner.local_eval_time ?? miner.local_avg_eval_time ?? null,
+        local_avg_cost: miner.local_avg_cost ?? null,
+        reward: miner.best_reward ?? miner.best_local_reward ?? miner.reward ?? 0,
       };
     });
     const benchmarkEntries = benchmarks.map((benchmark) => {
@@ -1922,9 +1937,10 @@ function RoundMinerScoresInline({
       return {
         name: label,
         reward,
+        best_reward_bar: reward,
+        local_reward_bar: 0,
         isSota: true,
         uid: `benchmark-${benchmark.id}`,
-        color,
         provider: benchmark.provider,
         xAxisLabel: "",
       };
@@ -1934,18 +1950,13 @@ function RoundMinerScoresInline({
     );
   }, [minersData, selectedValidator, chartSource?.benchmarks, chartSource?.miners]);
 
-  const legendItems = React.useMemo(() => {
-    const sotaEntries = new Map<string, string>();
-    chartData.forEach((entry: any) => {
-      if (entry.isSota) sotaEntries.set(entry.name, entry.color);
-    });
-    return [
-      ...Array.from(sotaEntries.entries()).map(([label, color]) => ({
-        label,
-        color,
-      })),
-    ];
-  }, [chartData]);
+  const legendItems = React.useMemo(
+    () => [
+      { label: "Local reward", color: "#22C55E" },
+      { label: "Best reward", color: "#06B6D4" },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -1985,7 +1996,7 @@ function RoundMinerScoresInline({
                 <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
               </div>
               <div>
-                <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+                <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
                 <p className="text-[11px] text-white/40 font-medium">Pre-consensus · per validator</p>
               </div>
             </div>
@@ -2027,7 +2038,7 @@ function RoundMinerScoresInline({
                 <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
               </div>
               <div>
-                <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+                <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
                 <p className="text-[11px] text-white/40 font-medium">Pre-consensus · per validator</p>
               </div>
             </div>
@@ -2068,9 +2079,9 @@ function RoundMinerScoresInline({
               <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
             </div>
             <div>
-              <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+              <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
               <p className="text-[11px] text-white/40 font-medium">
-                Pre-consensus{selectedValidator?.name ? ` · ${selectedValidator.name}` : " · per validator"}
+                Reward/score/time/cost from this round, compared against the best local reward in this validator
               </p>
             </div>
           </div>
@@ -2133,24 +2144,30 @@ function RoundMinerScoresInline({
               cursor={{ fill: "rgba(148,163,184,0.1)" }}
             />
             <Bar
-              dataKey="reward"
+              dataKey="local_reward_bar"
+              fill="#22C55E"
+              strokeWidth={0}
+              radius={[8, 8, 0, 0]}
+              barSize={Math.max(8, Math.floor(barSize * 0.48))}
+              isAnimationActive
+              animationBegin={0}
+              animationDuration={700}
+            />
+            <Bar
+              dataKey="best_reward_bar"
               fill="url(#barGradient)"
               strokeWidth={0}
               radius={[8, 8, 0, 0]}
-              barSize={barSize}
+              barSize={Math.max(8, Math.floor(barSize * 0.48))}
               isAnimationActive
-              animationBegin={0}
+              animationBegin={100}
               animationDuration={900}
-            >
-              {chartData.map((entry: any, index: number) => (
-                <Cell key={`cell-${entry.uid}-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
       {legendItems.length > 0 && (
-        <div className="mt-3 flex flex-wrap justify-center gap-6">
+        <div className="mt-1 flex flex-wrap justify-center gap-6">
           {legendItems.map((item) => (
             <div
               key={item.label}
@@ -2272,7 +2289,7 @@ function RoundTopMinersInline({
   if (error) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2295,7 +2312,7 @@ function RoundTopMinersInline({
   if (!topMinersList.length) {
     return (
       <WidgetCard
-        title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2321,7 +2338,7 @@ function RoundTopMinersInline({
 
   return (
     <WidgetCard
-      title={`All Miners${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+      title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
       className={cn(
         tallCardClass,
         accentClass,
@@ -2331,12 +2348,12 @@ function RoundTopMinersInline({
       headerClassName="px-3 pb-2"
       titleClassName="text-white text-xl font-bold"
     >
-      <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto mt-3">
-        <div className="flex flex-col">
+      <div className="custom-scrollbar h-[360px] md:h-[460px] xl:h-[560px] overflow-y-auto overflow-x-hidden mt-3">
+        <div className="flex flex-col min-w-0">
           {topMinersList.map((miner: any, index: number) => {
-            // Use separate season and round parameters
-            const agentHref = roundInfo?.season && roundInfo?.roundInSeason
-                ? `${routes.agents}/${miner.uid}?season=${roundInfo.season}&round=${roundInfo.roundInSeason}`
+            // Link to agent with season filter only (dropdown on agent page filters by season)
+            const agentHref = roundInfo?.season != null
+                ? `${routes.agents}/${miner.uid}?season=${roundInfo.season}`
                 : `${routes.agents}/${miner.uid}`;
             const rank = index + 1;
             const rawIsSota =
@@ -2395,18 +2412,13 @@ function RoundTopMinersInline({
                       sizes="(max-width: 768px) 100vw"
                       className="object-cover"
                     />
-                    {rank === 1 && (
-                      <div className="absolute -top-1 -right-1 p-1 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-2 ring-white/50 shadow-lg">
-                        <PiCrownFill className="h-3 w-3 text-white" />
-                      </div>
-                    )}
                   </div>
-                  <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex w-full min-w-0 items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 min-w-0">
                         <RizzText
                           className={cn(
-                            "text-base font-black transition-all duration-300",
+                            "text-base font-black transition-all duration-300 truncate min-w-0",
                             rank === 1
                               ? "text-amber-300 group-hover:text-amber-200"
                               : "text-white group-hover:scale-105"
@@ -2420,11 +2432,6 @@ function RoundTopMinersInline({
                           <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white border-2 border-white/20 shadow-sm">
                             SOTA
                           </span>
-                        )}
-                        {rank === 1 && (
-                          <div className="relative ms-1">
-                            <PiCrownFill className="h-5 w-5 text-amber-400 animate-pulse" />
-                          </div>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-white/70">
@@ -2440,9 +2447,6 @@ function RoundTopMinersInline({
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-end gap-1">
-                        <RizzText className="text-xs text-white/60 font-bold uppercase tracking-wider">
-                          Reward
-                        </RizzText>
                         <div
                           className={cn(
                             "text-xl font-black transition-all duration-300 group-hover:scale-110",
@@ -2450,11 +2454,20 @@ function RoundTopMinersInline({
                           )}
                         >
                           {(() => {
-                            const reward = Number(miner.reward ?? miner.local_avg_reward ?? 0);
+                            const reward = Number(miner.best_reward ?? miner.reward ?? miner.local_avg_reward ?? 0);
                             const truncated = truncateDecimal(reward, 4); // ✅ Truncar a 4 decimales (0.7458)
                             return (truncated * 100).toFixed(2) + "%"; // ✅ Mostrar como porcentaje con 2 decimales (74.58%)
                           })()}
                         </div>
+                        {miner.local_reward != null && (
+                          <RizzText className="text-[11px] text-white/65 font-semibold">
+                            Local {(() => {
+                              const reward = Number(miner.local_reward ?? 0);
+                              const truncated = truncateDecimal(reward, 4);
+                              return (truncated * 100).toFixed(2) + "%";
+                            })()}
+                          </RizzText>
+                        )}
                       </div>
                       <div className="text-white transition-all duration-300 group-hover:translate-x-1">
                         <svg
@@ -2517,63 +2530,178 @@ export default function Round() {
     return [undefined, undefined];
   }, [roundKey]);
 
-  // ✅ Solo estas dos llamadas: get-round y progress
-  const { data: roundData, loading: roundDataLoading, error: roundDataError } = useGetRound(seasonFromKey, roundFromKey);
-  const { data: progressData, loading: progressLoading } = useRoundProgress(roundKey);
+  const {
+    data: roundStatusData,
+    loading: roundStatusLoading,
+    error: roundStatusError,
+  } = useRoundStatusView(seasonFromKey, roundFromKey);
+  const {
+    data: seasonSummaryData,
+    loading: seasonSummaryLoading,
+    error: seasonSummaryError,
+  } = useRoundSeasonSummaryView(seasonFromKey, roundFromKey);
+  const {
+    data: validatorsViewData,
+    loading: validatorsViewLoading,
+    error: validatorsViewError,
+  } = useRoundValidatorsView(seasonFromKey, roundFromKey);
 
-  // ✅ Construir roundInfo desde roundData
+  const roundDataLoading =
+    roundStatusLoading || seasonSummaryLoading || validatorsViewLoading;
+  const roundDataError =
+    roundStatusError || seasonSummaryError || validatorsViewError || null;
+
   const roundInfo = React.useMemo(() => {
-    if (!roundData) return null;
+    if (!roundStatusData) return null;
     return {
-      season: roundData.season,
-      roundInSeason: roundData.round_in_season,
-      status: roundData.post_consensus_summary ? "completed" : "active",
-      validatorRounds: [], // Ya no necesario, todo viene de roundData.validators
+      season: roundStatusData.season,
+      roundInSeason: roundStatusData.round_in_season,
+      status: roundStatusData.status,
+      current: roundStatusData.status === "active",
+      startBlock: roundStatusData.start_block,
+      endBlock: roundStatusData.end_block,
+      progress: roundStatusData.progress,
+      totalTasks: roundStatusData.tasks_total,
+      completedTasks: roundStatusData.completed_tasks,
+      validatorRounds: [],
     };
-  }, [roundData]) as any;
+  }, [roundStatusData]) as any;
 
-  const roundNumberForLinks = roundData?.round_in_season;
+  const progressData = React.useMemo(() => {
+    if (!roundStatusData) return null;
+    return {
+      season: roundStatusData.season,
+      roundInSeason: roundStatusData.round_in_season,
+      currentBlock: roundStatusData.current_block,
+      startBlock: roundStatusData.start_block,
+      endBlock: roundStatusData.end_block,
+      blocksRemaining: roundStatusData.blocks_remaining,
+      progress: roundStatusData.progress,
+      status: roundStatusData.status,
+      nextRound: roundStatusData.next_round ?? null,
+      previousRound: roundStatusData.previous_round ?? null,
+    };
+  }, [roundStatusData]);
+
+  const roundNumberForLinks = roundStatusData?.round_in_season ?? roundFromKey;
   const roundLabel = roundKey;
+  const seasonSummary = seasonSummaryData?.summary ?? null;
+  const validatorsDataPayload = validatorsViewData?.validators ?? [];
   const topMiners = React.useMemo(() => {
-    // Obtener top miners de roundData.post_consensus_summary.winner o de validators
-    if (roundData?.post_consensus_summary?.winner) {
-      return [roundData.post_consensus_summary.winner];
+    if (seasonSummary?.leader_after) {
+      return [
+        {
+          uid: seasonSummary.leader_after.uid,
+          name: seasonSummary.leader_after.name,
+          image: seasonSummary.leader_after.image ?? null,
+          hotkey: seasonSummary.leader_after.hotkey ?? null,
+          github_url: seasonSummary.leader_after.github_url ?? null,
+          avg_reward: seasonSummary.leader_after.reward,
+          avg_eval_score: seasonSummary.avg_eval_score,
+          avg_eval_time: seasonSummary.avg_eval_time,
+          avg_eval_cost: seasonSummary.avg_eval_cost ?? null,
+        },
+      ];
     }
     return [];
-  }, [roundData]);
+  }, [seasonSummary]);
 
   const statistics = React.useMemo(() => {
-    // Construir statistics desde roundData
-    if (!roundData) return null;
+    if (!seasonSummary) return null;
     return {
-      winnerUid: roundData.post_consensus_summary?.winner?.uid,
-      winnerAverage: roundData.post_consensus_summary?.winner?.avg_reward,
-      topReward: roundData.post_consensus_summary?.winner?.avg_reward,
-      avgEvalTime: roundData.post_consensus_summary?.winner?.avg_eval_time,
-      totalMiners: roundData.post_consensus_summary?.miners_evaluated ?? 0,
-      totalTasks: roundData.post_consensus_summary?.tasks_evaluated ?? 0,
-      minersEvaluated: roundData.post_consensus_summary?.miners_evaluated,
-      tasksEvaluated: roundData.post_consensus_summary?.tasks_evaluated,
+      winnerUid: seasonSummary.leader_after?.uid,
+      winnerAverage: seasonSummary.leader_after?.reward,
+      topReward: seasonSummary.leader_after?.reward,
+      avgEvalTime: seasonSummary.avg_eval_time,
+      totalMiners: seasonSummary.miners_evaluated ?? 0,
+      totalTasks: seasonSummary.tasks_evaluated ?? 0,
+      minersEvaluated: seasonSummary.miners_evaluated,
+      tasksEvaluated: seasonSummary.tasks_evaluated,
     };
-  }, [roundData]);
+  }, [seasonSummary]);
+
+  const roundData = React.useMemo(() => {
+    const leadershipRule = seasonSummary
+      ? {
+          required_improvement_pct: seasonSummary.required_improvement_pct,
+          reigning_uid: seasonSummary.leader_before?.uid ?? null,
+          reigning_name: seasonSummary.leader_before?.name ?? null,
+          reigning_reward: seasonSummary.leader_before?.reward ?? null,
+          reigning_score: seasonSummary.leader_before?.reward ?? null,
+          challenger_uid: seasonSummary.candidate?.uid ?? null,
+          challenger_name: seasonSummary.candidate?.name ?? null,
+          challenger_reward: seasonSummary.candidate?.reward ?? null,
+          challenger_score: seasonSummary.candidate?.reward ?? null,
+          dethroned: seasonSummary.dethroned,
+          season_leader_uid: seasonSummary.leader_after?.uid ?? null,
+        }
+      : null;
+
+    return {
+      season: roundStatusData?.season ?? seasonSummaryData?.season ?? validatorsViewData?.season,
+      round_in_season:
+        roundStatusData?.round_in_season ??
+        seasonSummaryData?.round_in_season ??
+        validatorsViewData?.round_in_season,
+      post_consensus_summary: seasonSummary
+        ? {
+            winner: topMiners[0] ?? null,
+            miners_evaluated: seasonSummary.miners_evaluated,
+            tasks_evaluated: seasonSummary.tasks_evaluated,
+            leadership_rule: leadershipRule,
+            raw_summary: seasonSummary.raw_summary,
+          }
+        : null,
+      validators: validatorsDataPayload.map((validator: any) => ({
+        validator_uid: validator.validator_uid,
+        validator_name: validator.validator_name,
+        validator_hotkey: validator.validator_hotkey,
+        validator_image: validator.validator_image,
+        winner: validator.competition_state?.winner
+          ? {
+              ...validator.competition_state.winner,
+              hotkey: validator.competition_state.winner.hotkey ?? null,
+            }
+          : null,
+        topReward: validator.competition_state?.top_reward ?? 0,
+        local_avg_winner_reward: validator.competition_state?.top_reward ?? 0,
+        local_avg_eval_time:
+          validator.competition_state?.winner?.best_local_eval_time ?? 0,
+        local_miners_evaluated:
+          validator.competition_state?.miners_participated ?? 0,
+        local_tasks_evaluated:
+          validator.competition_state?.tasks_evaluated ?? 0,
+        miners: (validator.competition_state?.miners ?? []).map((miner: any) => ({
+          uid: miner.uid,
+          name: miner.name,
+          hotkey: miner.hotkey ?? null,
+          image: miner.image ?? null,
+          local_rank: miner.competition_rank ?? null,
+          local_avg_reward: miner.best_local_reward ?? 0,
+          local_avg_eval_score: miner.best_local_eval_score ?? 0,
+          local_avg_eval_time: miner.best_local_eval_time ?? 0,
+          best_local_reward: miner.best_local_reward ?? 0,
+          best_local_eval_score: miner.best_local_eval_score ?? 0,
+          best_local_eval_time: miner.best_local_eval_time ?? 0,
+          best_local_eval_cost: miner.best_local_eval_cost ?? null,
+          local_reward: miner.local_avg_reward ?? null,
+          local_eval_score: miner.local_avg_eval_score ?? null,
+          local_eval_time: miner.local_avg_eval_time ?? null,
+          local_avg_cost: miner.local_avg_eval_cost ?? null,
+          is_reused: Boolean(miner.is_reused),
+        })),
+        ipfs_uploaded: validator.ipfs?.uploaded ?? null,
+        ipfs_downloaded: validator.ipfs?.downloaded ?? null,
+        consensus_summary: validator.consensus?.pre_consensus ?? null,
+        post_consensus_evaluation: validator.consensus?.post_consensus ?? null,
+        evaluation_pre_consensus: validator.consensus?.pre_consensus ?? null,
+        evaluation_post_consensus: validator.consensus?.post_consensus ?? null,
+      })),
+    };
+  }, [roundStatusData, seasonSummaryData, validatorsViewData, seasonSummary, topMiners, validatorsDataPayload]);
 
   // Determine if round is waiting for consensus
-  const validatorRounds = roundInfo?.validatorRounds ?? [];
-  const isWaitingForConsensus =
-    roundInfo?.status === "evaluating_finished" ||
-    (validatorRounds.some((vr: any) => {
-      if (vr.status === "evaluating_finished") return true;
-      const agentRuns = vr.agentEvaluationRuns ?? [];
-      return agentRuns.some((run: any) => {
-        const evalResults =
-          run.evaluation_results ?? run.evaluationResults ?? [];
-        return (
-          evalResults.length > 0 &&
-          evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
-        );
-      });
-    }) &&
-      roundInfo?.status === "active");
+  const isWaitingForConsensus = roundInfo?.status === "evaluating_finished";
 
   const aggregatedTopMiner = React.useMemo<{
     uid?: number;
@@ -2604,97 +2732,22 @@ export default function Round() {
     avg_eval_score?: number;
     avg_eval_time?: number;
   } | null>(() => {
-    if (roundData?.validators && selectedValidator?.id) {
+    if (validatorsDataPayload && selectedValidator?.id) {
       const validatorUid = selectedValidator.id.replace("validator-", "");
-      const validator = roundData.validators.find(
+      const validator = validatorsDataPayload.find(
         (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
       );
-      if (validator?.winner) {
-        return validator.winner;
+      if (validator?.competition_state?.winner) {
+        return {
+          ...validator.competition_state.winner,
+          avg_reward: validator.competition_state.winner.best_local_reward,
+          avg_eval_score: validator.competition_state.winner.best_local_eval_score,
+          avg_eval_time: validator.competition_state.winner.best_local_eval_time,
+        };
       }
     }
-    // Fallback al endpoint antiguo
     return (selectedValidator?.topMiner as any) ?? null;
-  }, [roundData, selectedValidator]);
-
-  const seasonCompetitionState = React.useMemo(() => {
-    if (!roundData?.validators || !Array.isArray(roundData.validators) || roundData.validators.length === 0) return null;
-    const selectedId = selectedValidator?.id ?? null;
-    const validator = selectedId
-      ? (roundData.validators.find(
-          (v: any) =>
-            v.validator_uid?.toString() === selectedId.replace("validator-", "") ||
-            v.validator_uid?.toString() === selectedId
-        ) as any)
-      : (roundData.validators[0] as any);
-    if (!validator) return null;
-
-    const post = validator.evaluation_post_consensus;
-    if (!post || typeof post !== "object") return null;
-
-    const roundSummary =
-      post.round_summary && typeof post.round_summary === "object"
-        ? post.round_summary
-        : {};
-    const decision =
-      roundSummary.decision && typeof roundSummary.decision === "object"
-        ? roundSummary.decision
-        : {};
-    const seasonSummary =
-      post.season_summary && typeof post.season_summary === "object"
-        ? post.season_summary
-        : {};
-    const winner =
-      roundSummary.winner && typeof roundSummary.winner === "object"
-        ? roundSummary.winner
-        : {};
-
-    const toNullableNumber = (value: unknown): number | null => {
-      if (typeof value === "number" && Number.isFinite(value)) return value;
-      if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-      }
-      return null;
-    };
-
-    const roundWinnerUid =
-      toNullableNumber((winner as any).miner_uid) ??
-      toNullableNumber((winner as any).uid);
-    const topCandidateUid = toNullableNumber((decision as any).top_candidate_uid);
-    const seasonLeaderUid = toNullableNumber((seasonSummary as any).current_winner_uid);
-    const dethronedRaw = (seasonSummary as any).dethroned ?? (decision as any).dethroned;
-    const dethroned = Boolean(dethronedRaw);
-    const requiredImprovementPct =
-      toNullableNumber((decision as any).required_improvement_pct) ??
-      toNullableNumber((seasonSummary as any).required_improvement_pct) ??
-      0;
-    const topCandidateReward = toNullableNumber((decision as any).top_candidate_reward);
-    const reigningReward = toNullableNumber((decision as any).reigning_reward_before_round);
-    const reigningUidBeforeRound =
-      toNullableNumber((decision as any).reigning_uid_before_round) ??
-      toNullableNumber((decision as any).reigning_miner_uid) ??
-      toNullableNumber((seasonSummary as any).previous_winner_uid);
-
-    if (
-      roundWinnerUid === null &&
-      topCandidateUid === null &&
-      seasonLeaderUid === null
-    ) {
-      return null;
-    }
-
-    return {
-      roundWinnerUid,
-      topCandidateUid,
-      seasonLeaderUid,
-      reigningUidBeforeRound,
-      dethroned,
-      requiredImprovementPct,
-      topCandidateReward,
-      reigningReward,
-    };
-  }, [roundData, selectedValidator]);
+  }, [validatorsDataPayload, selectedValidator]);
 
   const winnerLabel = selectedValidatorWinner
     ? selectedValidatorWinner.name?.trim() ||
@@ -2718,7 +2771,7 @@ export default function Round() {
     ? [
         {
           key: "winner",
-          title: "Validator Winner",
+          title: "Winner in this validator",
           value: winnerLabel,
           uid: winnerUidVal,
           hotkey: selectedValidatorWinner?.hotkey ?? selectedValidator?.topMiner?.hotkey,
@@ -2757,7 +2810,7 @@ export default function Round() {
             const truncated = truncateDecimal(reward, 4);
             return formatNumber(truncated * 100, 2);
           })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
-          helper: "Best run recorded by this validator",
+          helper: "Best local reward in this validator",
           icon: PiTrophyDuotone,
           gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
           bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
@@ -2768,7 +2821,7 @@ export default function Round() {
         },
         {
           key: "miners",
-          title: "Miners Participated",
+          title: "Agents evaluated",
           value: formatNumber((() => {
             // ✅ Obtener desde roundData.validators[selectedValidator].miners.length o local_miners_evaluated
             if (roundData?.validators && selectedValidator?.id) {
@@ -2783,7 +2836,7 @@ export default function Round() {
             }
             return selectedValidator.totalMiners ?? 0;
           })()),
-          helper: "Unique miners assessed this round",
+          helper: "Agents evaluated this round",
           icon: PiUsersThreeDuotone,
           gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30",
           bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10",
@@ -2808,7 +2861,7 @@ export default function Round() {
             }
             return selectedValidator.totalTasks ?? 0;
           })()),
-          helper: "Total tasks executed by this validator",
+          helper: "Tasks per agent evaluation run",
           icon: PiListChecksDuotone,
           gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
           bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10",
@@ -2912,7 +2965,7 @@ export default function Round() {
             round={roundInfo}
             roundLoading={roundDataLoading}
             progressData={progressData}
-            progressLoading={progressLoading}
+            progressLoading={roundStatusLoading}
           />
 
       {/* Recents removed: using Prev/Next navigation in header */}
@@ -2978,11 +3031,13 @@ export default function Round() {
               const lr = roundData?.post_consensus_summary?.leadership_rule;
               if (!lr) return null;
               const det = lr.dethroned;
-              const reignPct = lr.reigning_score != null ? `${(lr.reigning_score * 100).toFixed(2)}%` : "—";
-              const chalPct = lr.challenger_score != null ? `${(lr.challenger_score * 100).toFixed(2)}%` : null;
+              const reigningReward = lr.reigning_reward ?? lr.reigning_score;
+              const challengerReward = lr.challenger_reward ?? lr.challenger_score;
+              const reignPct = reigningReward != null ? `${(reigningReward * 100).toFixed(2)}%` : "—";
+              const chalPct = challengerReward != null ? `${(challengerReward * 100).toFixed(2)}%` : null;
               const thresholdPct = `+${(lr.required_improvement_pct * 100).toFixed(1)}%`;
-              const needed = lr.reigning_score != null && lr.challenger_score != null
-                ? `${((lr.reigning_score * (1 + lr.required_improvement_pct) - lr.challenger_score) * 100).toFixed(3)}%`
+              const needed = reigningReward != null && challengerReward != null
+                ? `${((reigningReward * (1 + lr.required_improvement_pct) - challengerReward) * 100).toFixed(3)}%`
                 : null;
               return (
                 <div className={cn(
@@ -3098,106 +3153,22 @@ export default function Round() {
               );
             })()}
 
-            <RoundStatsInline
-              selectedValidator={selectedValidator}
-              statistics={statistics}
-              topMiners={topMiners}
-              postConsensusSummary={roundData?.post_consensus_summary ?? null}
-              loading={roundDataLoading}
-              error={roundDataError ?? undefined}
-              seasonParam={seasonParam ?? undefined}
-              roundParam={roundNumberForLinks ?? undefined}
-            />
-
-            {/* Legacy seasonCompetitionState fallback (only shown if no leadership_rule) */}
-            {!roundData?.post_consensus_summary?.leadership_rule && seasonCompetitionState && (() => {
-              const det = seasonCompetitionState.dethroned;
-              const rNum = roundNumberForLinks;
-              const reignUid = seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid;
-              const challengerUid = seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid;
-              const leaderAfterRound = det ? challengerUid : reignUid;
-              const reignRewardPct = seasonCompetitionState.reigningReward != null
-                ? `${(Number(seasonCompetitionState.reigningReward) * 100).toFixed(2)}%`
-                : "—";
-              const challengerRewardPct = seasonCompetitionState.topCandidateReward != null
-                ? `${(Number(seasonCompetitionState.topCandidateReward) * 100).toFixed(2)}%`
-                : "—";
-              const thresholdPct = `+${(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%`;
-              return (
-                <div className="mt-6 mb-2">
-                  <div className={cn(
-                    "relative overflow-hidden rounded-2xl border-2 shadow-2xl",
-                    det
-                      ? "border-emerald-400/50 bg-gradient-to-br from-emerald-900/50 via-teal-900/40 to-cyan-900/30"
-                      : "border-amber-400/40 bg-gradient-to-br from-amber-900/50 via-yellow-900/40 to-orange-900/30"
-                  )}>
-                    <div className={cn(
-                      "pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-20",
-                      det ? "bg-emerald-400" : "bg-amber-400"
-                    )} />
-                    <div className={cn(
-                      "flex items-center gap-3 px-5 py-3 border-b",
-                      det ? "border-emerald-400/20 bg-emerald-500/10" : "border-amber-400/20 bg-amber-500/10"
-                    )}>
-                      <PiCrownFill className={cn("h-5 w-5 flex-shrink-0", det ? "text-emerald-300" : "text-amber-300")} />
-                      <p className="text-sm font-black uppercase tracking-widest text-white/90">
-                        Season leader after round {rNum ?? "—"}
-                      </p>
-                      <span className={cn(
-                        "ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider border",
-                        det
-                          ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
-                          : "border-amber-400/40 bg-amber-500/20 text-amber-200"
-                      )}>
-                        {det ? "🎉 New champion" : "👑 Champion holds"}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-white/10 px-0">
-                      <div className="flex flex-col gap-2 px-5 py-4">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Reigning champion (before round)</p>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/30 to-orange-500/30 shadow-lg">
-                            <PiCrownDuotone className="h-5 w-5 text-amber-300" />
-                          </div>
-                          <div>
-                            <p className="text-xl font-black text-white">UID {reignUid ?? "—"}</p>
-                            <p className="text-xs font-semibold text-amber-300/80">Reward: {reignRewardPct}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2 px-5 py-4">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Best challenger (this round)</p>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/30 to-indigo-500/30 shadow-lg">
-                            <PiChartLineUpDuotone className="h-5 w-5 text-sky-300" />
-                          </div>
-                          <div>
-                            <p className="text-xl font-black text-white">UID {challengerUid ?? "—"}</p>
-                            <p className="text-xs font-semibold text-sky-300/80">
-                              Reward: {challengerRewardPct}
-                              <span className="ml-2 text-white/40">(needed {thresholdPct} more to dethrone)</span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className={cn(
-                      "border-t px-5 py-3 flex items-center gap-3",
-                      det ? "border-emerald-400/20 bg-emerald-500/10" : "border-amber-400/20 bg-amber-500/10"
-                    )}>
-                      <PiCheckCircleDuotone className={cn("h-5 w-5 flex-shrink-0", det ? "text-emerald-300" : "text-amber-300")} />
-                      <p className="text-sm font-bold text-white/90">
-                        {det ? (
-                          <>Season leader after this round: <span className="text-emerald-300">UID {leaderAfterRound}</span> — dethroned the previous champion.</>
-                        ) : (
-                          <>Season leader after this round: <span className="text-amber-300">UID {leaderAfterRound}</span> — challenger did not reach the {thresholdPct} threshold.</>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+            {seasonSummary ? (
+              <RoundStatsInline
+                selectedValidator={selectedValidator}
+                statistics={statistics}
+                topMiners={topMiners}
+                postConsensusSummary={roundData?.post_consensus_summary ?? null}
+                loading={roundDataLoading}
+                error={roundDataError ?? undefined}
+                seasonParam={seasonParam ?? undefined}
+                roundParam={roundNumberForLinks ?? undefined}
+              />
+            ) : (
+              <div className="mb-4 rounded-2xl border border-white/15 bg-white/5 px-6 py-6 text-white/70">
+                No post-consensus season summary has been materialized for this round yet.
+              </div>
+            )}
 
       </div>
 
@@ -3212,7 +3183,7 @@ export default function Round() {
               Validators
             </Text>
             <Text className="text-xs text-white/60 font-semibold">
-              Each validator evaluates miners independently — select one to inspect its local metrics
+              Each validator carries its own competition state — select one to inspect best-local rewards, IPFS and consensus payloads
             </Text>
           </div>
         </div>
@@ -3247,14 +3218,14 @@ export default function Round() {
             <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
             <div>
               <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
-                Local metrics
+                Validator competition state
               </span>
               <span className="mx-2 text-white/30">·</span>
               <span className="text-sm font-semibold text-sky-300">
                 {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
               </span>
               <p className="text-xs text-white/50 mt-0.5">
-                Pre-consensus evaluation — independent assessment by this validator
+                Best local rewards used by this validator for round competition
               </p>
             </div>
           </div>
@@ -3455,6 +3426,31 @@ export default function Round() {
               <p className="text-white/50 text-sm mb-4">No IPFS/consensus data for this validator in this round yet. Data appears after the round ends and the validator sends results.</p>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Validator consensus — final metrics (first card) */}
+              {evaluationPost ? (
+                <button
+                  type="button"
+                  className={cardClass}
+                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Final metrics after validator consensus", data: evaluationPost })}
+                >
+                  <div className={cn(cardTitleRowClass, "text-orange-400")}>
+                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
+                  </div>
+                  <p className="text-white/80 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
+                  <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
+                </button>
+              ) : (
+                <div className={cardClass}>
+                  <div className={cn(cardTitleRowClass, "text-orange-400/70")}>
+                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
+                  </div>
+                  <p className="text-white/60 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
+                </div>
+              )}
               {/* IPFS Upload — always visible */}
               {ipfsUp ? (
                 <button
@@ -3558,31 +3554,6 @@ export default function Round() {
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}
-              {/* Evaluation post-consensus — after consensus */}
-              {evaluationPost ? (
-                <button
-                  type="button"
-                  className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Evaluation post-consensus — After consensus", data: evaluationPost })}
-                >
-                  <div className={cn(cardTitleRowClass, "text-orange-400")}>
-                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-semibold text-sm uppercase tracking-wider">Post-consensus</span>
-                  </div>
-                  <p className="text-white/80 text-sm">Evaluation after consensus.</p>
-                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
-                  <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
-                </button>
-              ) : (
-                <div className={cardClass}>
-                  <div className={cn(cardTitleRowClass, "text-orange-400/70")}>
-                    <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-semibold text-sm uppercase tracking-wider">Post-consensus</span>
-                  </div>
-                  <p className="text-white/60 text-sm">Evaluation after consensus.</p>
-                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
-                </div>
-              )}
             </div>
           </div>
         );
@@ -3634,8 +3605,8 @@ export default function Round() {
                     post-consensus metrics and ranks.
                   </p>
                   <p>
-                    4. `Pre-consensus` card shows this validator local values. `Post-consensus` card shows
-                    final values after combining all validators.
+                    4. `Pre-consensus` card shows this validator local values. `Validator consensus` card shows
+                    final metrics after combining all validators.
                   </p>
                 </div>
               ) : ipfsConsensusDetail.type === "download" ? (

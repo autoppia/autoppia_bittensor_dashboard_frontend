@@ -124,8 +124,7 @@ function useApiCall<T>(
   return { data, loading, error, refetch };
 }
 
-// Hook for agents page selection data.
-// Supports season-wide rankings and optional round-specific selections.
+// Legacy rounds hook retained for screens outside the season-first agents UI.
 export function useRoundsData(options?: {
   roundIdentifier?: string | number;
   season?: number;
@@ -135,6 +134,14 @@ export function useRoundsData(options?: {
     [options]
   );
   return useApiCall(request, `rounds-data:${JSON.stringify(options ?? null)}`);
+}
+
+export function useSeasonRank(seasonRef?: number | "latest") {
+  const request = useCallback(
+    () => agentsRepository.getSeasonRank(seasonRef),
+    [seasonRef]
+  );
+  return useApiCall(request, `season-rank:${String(seasonRef ?? "latest")}`);
 }
 
 // Hook for latest round and top miner (for initial redirect)

@@ -18,7 +18,9 @@ import {
   ValidatorRoundData,
   RoundActivity,
   RoundProgress,
-  GetRoundResponse,
+  RoundStatusView,
+  RoundSeasonSummaryView,
+  RoundValidatorsViewResponse,
 } from "./rounds.types";
 
 export class RoundsRepository {
@@ -490,187 +492,33 @@ export class RoundsRepository {
     );
   }
 
-  /**
-   * Get aggregated metrics and validators data from the new simplified endpoint (DEPRECATED - use getRoundSimplified)
-   */
-  async getRoundOld(roundNumber: number): Promise<{
-    round_number: number;
-    aggregated: {
-      winner: {
-        uid: number;
-        name: string;
-        image: string | null;
-        hotkey: string | null;
-      } | null;
-      avg_winner_reward: number;
-      avg_eval_time: number;
-      miners_evaluated: number;
-      tasks_evaluated: number;
-    };
-    validators: Array<{
-      validator_uid: number;
-      validator_name: string;
-      validator_hotkey: string;
-      winner: {
-        uid: number;
-        name: string;
-        image: string | null;
-        hotkey: string | null;
-      } | null;
-      local_avg_winner_reward: number;
-      local_avg_eval_time: number;
-      local_miners_evaluated: number;
-      local_tasks_evaluated: number;
-    }>;
-  }> {
-    // DEPRECATED: This method uses the old API format
-    throw new Error("getRoundOld is deprecated. Use getRoundSimplified with season and roundInSeason.");
+  async getRoundStatusView(
+    season: number,
+    roundInSeason: number
+  ): Promise<RoundStatusView> {
+    const response = await apiClient.get<{ success: boolean; data: RoundStatusView }>(
+      `${this.baseEndpoint}/${season}/${roundInSeason}/status`
+    );
+    return response.data.data;
   }
 
-  /**
-   * Get round details from simplified endpoint using season and round_in_season
-   */
-  async getRoundSimplified(season: number, roundInSeason: number): Promise<{
-    round_number: number;
-    season: number;
-    round_in_season: number;
-    post_consensus_summary: {
-      winner: {
-        uid: number;
-        name: string;
-        image: string | null;
-        hotkey: string | null;
-        github_url?: string | null;
-        avg_reward: number;
-        avg_eval_score: number;
-        avg_eval_time: number;
-        avg_eval_cost?: number | null;
-      } | null;
-      miners_evaluated: number;
-      tasks_evaluated: number;
-      leadership_rule?: {
-        required_improvement_pct: number;
-        reigning_uid: number | null;
-        reigning_name: string | null;
-        reigning_score: number | null;
-        challenger_uid: number | null;
-        challenger_name: string | null;
-        challenger_score: number | null;
-        dethroned: boolean;
-        season_leader_uid: number | null;
-      } | null;
-    };
-    validators: Array<{
-      validator_uid: number;
-      validator_name: string;
-      validator_hotkey: string;
-      winner: {
-        uid: number;
-        name: string;
-        image: string | null;
-        hotkey: string | null;
-      } | null;
-      local_avg_winner_reward: number;
-      local_avg_eval_time: number;
-      local_miners_evaluated: number;
-      local_tasks_evaluated: number;
-      miners: Array<{
-        uid: number;
-        name: string;
-        hotkey: string | null;
-        image: string | null;
-        local_rank: number | null;
-        local_avg_reward: number;
-        local_avg_eval_score: number;
-        local_avg_eval_time: number;
-      }>;
-    }>;
-  }> {
-    const response = await apiClient.get<{
-      success: boolean;
-      data: {
-        round_number: number;
-        season: number;
-        round_in_season: number;
-        post_consensus_summary: {
-          winner: {
-            uid: number;
-            name: string;
-            image: string | null;
-            hotkey: string | null;
-            github_url?: string | null;
-            avg_reward: number;
-            avg_eval_score: number;
-            avg_eval_time: number;
-            avg_eval_cost?: number | null;
-          } | null;
-          miners_evaluated: number;
-          tasks_evaluated: number;
-          leadership_rule?: {
-            required_improvement_pct: number;
-            reigning_uid: number | null;
-            reigning_name: string | null;
-            reigning_score: number | null;
-            challenger_uid: number | null;
-            challenger_name: string | null;
-            challenger_score: number | null;
-            dethroned: boolean;
-            season_leader_uid: number | null;
-          } | null;
-        };
-      validators: Array<{
-        validator_uid: number;
-        validator_name: string;
-        validator_hotkey: string;
-        winner: {
-          uid: number;
-          name: string;
-          image: string | null;
-          hotkey: string | null;
-        } | null;
-        topReward: number;
-        local_avg_winner_reward: number;
-        local_avg_eval_time: number;
-        local_miners_evaluated: number;
-        local_tasks_evaluated: number;
-        miners: Array<{
-          uid: number;
-          name: string;
-          hotkey: string | null;
-          image: string | null;
-          local_rank: number | null;
-          local_avg_reward: number;
-          local_avg_eval_score: number;
-          local_avg_eval_time: number;
-        }>;
-        ipfs_uploaded?: {
-          cid?: string;
-          published_at?: number;
-          commit_version?: number;
-          note?: string;
-        } | null;
-        ipfs_downloaded?: {
-          validators_participated?: number;
-          total_stake?: number;
-          timestamp?: number;
-        } | null;
-        consensus_summary?: {
-          validators_participated?: number;
-          total_stake?: number;
-          miners_count?: number;
-        } | null;
-        post_consensus_evaluation?: {
-          miners?: Array<{
-            miner_uid?: number;
-            rank?: number;
-            weight?: number;
-            consensus_reward?: number;
-          }>;
-          timestamp?: number;
-        } | null;
-      }>;
-      };
-    }>(`${this.baseEndpoint}/get-round`, { season, round_in_season: roundInSeason });
+  async getRoundSeasonSummaryView(
+    season: number,
+    roundInSeason: number
+  ): Promise<RoundSeasonSummaryView> {
+    const response = await apiClient.get<{ success: boolean; data: RoundSeasonSummaryView }>(
+      `${this.baseEndpoint}/${season}/${roundInSeason}/season-summary`
+    );
+    return response.data.data;
+  }
+
+  async getRoundValidatorsView(
+    season: number,
+    roundInSeason: number
+  ): Promise<RoundValidatorsViewResponse> {
+    const response = await apiClient.get<{ success: boolean; data: RoundValidatorsViewResponse }>(
+      `${this.baseEndpoint}/${season}/${roundInSeason}/validators`
+    );
     return response.data.data;
   }
 
@@ -744,19 +592,6 @@ export class RoundsRepository {
     return response.data.data;
   }
 
-  /**
-   * Get round details with validators local and post-consensus data
-   */
-  async getRoundWithValidators(
-    season: number,
-    roundInSeason: number
-  ): Promise<GetRoundResponse> {
-    const response = await apiClient.get<GetRoundResponse>(
-      `${this.baseEndpoint}/get-round`,
-      { season, round_in_season: roundInSeason }
-    );
-    return response.data;
-  }
 }
 
 // Create a singleton instance
