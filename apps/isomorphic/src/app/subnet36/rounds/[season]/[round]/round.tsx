@@ -44,8 +44,8 @@ import {
   PiChartLineUpDuotone,
   PiChartLineDownDuotone,
   PiGithubLogoDuotone,
-  PiWarning,
   PiXBold,
+  PiArrowSquareOutDuotone,
 } from "react-icons/pi";
 
 // Services & helpers
@@ -60,6 +60,7 @@ import type {
   ValidatorPerformance,
   MinerPerformance,
   BenchmarkPerformance,
+  PostConsensusSummary,
 } from "@/repositories/rounds/rounds.types";
 
 // ============================================================================
@@ -831,34 +832,25 @@ function RoundStatsInline({
   postConsensusSummary,
   loading,
   error,
+  seasonParam,
+  roundParam,
 }: {
   selectedValidator?: ValidatorPerformance | null;
   statistics?: any;
   topMiners?: any[];
-  postConsensusSummary?: {
-    winner: {
-      uid: number;
-      name: string;
-      image: string | null;
-      hotkey: string | null;
-      github_url?: string | null;
-      avg_reward: number;
-      avg_eval_score: number;
-      avg_eval_time: number;
-    } | null;
-    miners_evaluated: number;
-    tasks_evaluated: number;
-  } | null;
+  postConsensusSummary?: PostConsensusSummary | null;
   loading?: boolean;
   error?: string;
+  seasonParam?: string | number;
+  roundParam?: number;
 }) {
   // ✅ Usar datos de post_consensus_summary si están disponibles
   const winner = postConsensusSummary?.winner;
   const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageReward ?? statistics?.averageReward ?? 0;
-  const winnerEvalScore = winner?.avg_eval_score ?? 0;
   const averageEvalTime = winner?.avg_eval_time ?? 0;
-  const minersEvaluated = postConsensusSummary?.miners_evaluated ?? statistics?.totalMiners ?? 0;
+  const averageEvalCost = winner?.avg_eval_cost ?? null;
   const winnerUid = winner?.uid ?? statistics?.winnerMinerUid ?? null;
+  const [hotkeycopied, setHotkeyCopied] = React.useState(false);
 
   // Aggregated winner should NOT change when validator is selected
   // It always shows the overall round winner
@@ -881,109 +873,230 @@ function RoundStatsInline({
     return topMiners[0];
   }, [winner, topMiners, winnerUid]);
 
-  if (loading || (!postConsensusSummary && !statistics) || (!topMiner && !topMiners)) {
+  if (loading || (!postConsensusSummary && !statistics) || (!topMiner && (!topMiners || topMiners.length === 0))) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className={cn("h-36", skeletonCard)} />
-        ))}
+      <div className="overflow-hidden rounded-2xl border border-amber-400/15 bg-gradient-to-br from-[#1a1510] via-[#161412] to-[#111110] shadow-xl mb-4">
+        <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col gap-4 px-7 py-6 md:w-[42%] md:flex-shrink-0 border-b md:border-b-0 md:border-r border-white/[0.06]">
+            <Skeleton className="h-3 w-28 bg-white/10" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-20 w-20 rounded-2xl bg-white/10 flex-shrink-0" />
+              <div className="flex flex-col gap-2 flex-1">
+                <Skeleton className="h-5 w-36 bg-white/10" />
+                <Skeleton className="h-4 w-20 rounded-full bg-white/10" />
+              </div>
+            </div>
+            <Skeleton className="h-7 w-full rounded-xl bg-white/10" />
+          </div>
+          <div className="flex flex-1 divide-x divide-white/[0.06]">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center justify-center gap-2 px-5 py-6">
+                <Skeleton className="h-3 w-14 bg-white/10" />
+                <Skeleton className="h-8 w-20 bg-white/10" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="mb-6">
-        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
-          <p className="text-red-400 text-sm">
-            ⚠️ Failed to load round statistics: {error}
-          </p>
+      <div className="mb-4">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-xl p-4">
+          <p className="text-red-400 text-sm">⚠️ Failed to load round statistics: {error}</p>
         </div>
       </div>
     );
   }
 
   const formatNumber = (value: number | undefined | null, digits = 0) => {
-    if (value === undefined || value === null || Number.isNaN(value))
-      return "0";
+    if (value === undefined || value === null || Number.isNaN(value)) return "0";
     return Number(value).toLocaleString(undefined, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     });
   };
 
-  const topMinerLabel = topMiner
-    ? (topMiner.name?.trim() || `Miner ${topMiner.uid ?? "pending"}`)
-    : "Top miner pending";
+  // Use winner (postConsensusSummary) as primary source; fall back to topMiner from validators
+  const displayUid: number | null = winner?.uid ?? topMiner?.uid ?? null;
+  const displayName: string = winner?.name?.trim() || topMiner?.name?.trim() || (displayUid != null ? `Miner ${displayUid}` : "—");
+  const displayHotkey: string | null = winner?.hotkey ?? topMiner?.hotkey ?? null;
+  const displayGithub: string | null = winner?.github_url ?? topMiner?.githubUrl ?? null;
+  const displayImage: string | null = winner?.image ?? topMiner?.imageUrl ?? null;
 
-  const aggregatedCards = [
-    {
-      key: "winner",
-      title: "Winner",
-      value: topMinerLabel,
-      uid: topMiner?.uid,
-      hotkey: topMiner?.hotkey,
-      imageUrl: topMiner?.imageUrl,
-      githubUrl: topMiner?.githubUrl ?? topMiner?.github_url,
-      helper: !topMiner ? "Awaiting validator results" : undefined,
-      icon: PiCrownDuotone,
-      gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
-      bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
-      iconGradient: "from-amber-400 to-orange-500",
-      borderColor: "border-amber-400/50",
-      glowColor: "rgba(251,191,36,0.5)",
-      valueClass: "text-2xl",
-    },
-    {
-      key: "winnerAverageReward",
-      title: "Winner Average Reward",
-      value: `${(() => {
-        const truncated = truncateDecimal(winnerAverageReward, 4); // ✅ Truncar a 4 decimales
-        return formatNumber(truncated * 100, 2);
-      })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
-      helper: "Average reward achieved by the winning miner across validators",
-      icon: PiTrophyDuotone,
-      gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
-      bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
-      iconGradient: "from-emerald-400 to-teal-500",
-      borderColor: "border-emerald-400/50",
-      glowColor: "rgba(16,185,129,0.5)",
-      valueClass: "text-4xl",
-    },
-    {
-      key: "averageTime",
-      title: "Average Time",
-      value: `${formatNumber(averageEvalTime, 1)}s`,
-      helper: "Average evaluation time for the winner miner across validators",
-      icon: PiClockDuotone,
-      gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
-      bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10",
-      iconGradient: "from-blue-400 to-indigo-500",
-      borderColor: "border-blue-400/50",
-      glowColor: "rgba(59,130,246,0.5)",
-      valueClass: "text-4xl",
-    },
-    {
-      key: "miners",
-      title: "Miners Evaluated",
-      value: formatNumber(minersEvaluated, 0),
-      helper: "Unique miners participating this round",
-      icon: PiUsersThreeDuotone,
-      gradient: "from-purple-500/30 via-violet-500/25 to-fuchsia-500/30",
-      bgGradient: "from-purple-500/20 via-violet-500/15 to-fuchsia-500/10",
-      iconGradient: "from-purple-400 to-violet-500",
-      borderColor: "border-purple-400/50",
-      glowColor: "rgba(168,85,247,0.5)",
-      valueClass: "text-4xl",
-    },
-  ];
+  const fallbackAvatarIndex = displayUid != null ? Math.abs(displayUid % 50) : 0;
+  const fallbackAvatar = resolveAssetUrl(`/miners/${fallbackAvatarIndex}.svg`);
+  const winnerAvatar = resolveAssetUrl(displayImage, fallbackAvatar);
+  const rewardPct = `${formatNumber(truncateDecimal(winnerAverageReward, 4) * 100, 2)}%`;
+  const costStr = averageEvalCost != null
+    ? `$${Number(averageEvalCost).toFixed(4)}`
+    : "—";
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      {aggregatedCards.map((card) => (
-        <MetricCard key={card.key} card={card} />
-      ))}
+  const agentHref = (() => {
+    if (displayUid == null) return null;
+    const params = new URLSearchParams();
+    if (seasonParam != null) params.set("season", String(seasonParam));
+    if (roundParam != null) params.set("round", String(roundParam));
+    const qs = params.toString();
+    return `${routes.agents}/${displayUid}${qs ? `?${qs}` : ""}`;
+  })();
+
+  const cardContent = (
+    <div className="relative overflow-hidden rounded-2xl shadow-2xl mb-4">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-amber-400/8 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-orange-400/6 blur-2xl" />
+
+      {/* Card border + bg */}
+      <div className="relative border border-amber-400/20 rounded-2xl bg-gradient-to-br from-[#1c1710] via-[#161412] to-[#111110] overflow-hidden">
+        {/* Top accent line */}
+        <div className="h-[1.5px] w-full bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+
+        <div className="flex flex-col md:flex-row gap-0">
+
+          {/* ——— LEFT: Season leader identity (wider, more prominent) ——— */}
+          <div className="relative flex flex-col gap-5 px-7 py-7 md:w-[42%] md:flex-shrink-0 border-b md:border-b-0 md:border-r border-white/[0.06]">
+            {/* Subtle inner glow */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] to-transparent rounded-l-2xl" />
+
+            {/* Top row: label + round badge + link icon */}
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <PiCrownFill className="h-3 w-3 text-amber-400" />
+                <span className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-400/70">Season leader</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {roundParam != null && (
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-white/25 border border-white/[0.07] bg-white/[0.03] px-2.5 py-0.5 rounded-full">
+                    Round {roundParam}
+                  </span>
+                )}
+                {agentHref && (
+                  <span className="flex items-center justify-center h-5 w-5 rounded-md border border-amber-400/20 bg-amber-500/10 text-amber-400/50 group-hover:border-amber-400/50 group-hover:text-amber-400 transition-all duration-200" title="Ver agente">
+                    <PiArrowSquareOutDuotone className="h-3 w-3" />
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Avatar + name block */}
+            <div className="relative flex items-center gap-5">
+              <div className="relative flex-shrink-0">
+                <div className="h-20 w-20 overflow-hidden rounded-2xl border-2 border-amber-400/40 shadow-2xl shadow-amber-900/40 ring-4 ring-amber-400/10">
+                  <Image src={winnerAvatar} alt={displayName} width={80} height={80} className="object-cover w-full h-full" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg ring-2 ring-black/60">
+                  <PiCrownFill className="h-3.5 w-3.5 text-white" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <p className="text-xl font-black text-white leading-tight">
+                  {displayName}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {displayUid != null && (
+                    <span className="inline-flex items-center rounded-full border border-amber-400/25 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-black text-amber-200">
+                      UID {displayUid}
+                    </span>
+                  )}
+                  {typeof displayGithub === "string" && displayGithub.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(displayGithub, "_blank", "noopener,noreferrer"); }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-white/10 bg-white/5 text-white/40 hover:text-amber-300 hover:bg-amber-500/10 hover:border-amber-400/20 transition-all duration-150 text-[10px] font-medium"
+                      title="GitHub"
+                    >
+                      <PiGithubLogoDuotone className="h-3.5 w-3.5" />
+                      <span>GitHub</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Hotkey row */}
+            {displayHotkey && (
+              <div className="relative flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2">
+                <span className="text-[10px] font-semibold text-white/25 flex-shrink-0 uppercase tracking-wider">Hotkey</span>
+                <span className="text-[11px] font-mono text-white/40 truncate flex-1 hidden lg:block">
+                  {displayHotkey}
+                </span>
+                <span className="text-[11px] font-mono text-white/40 truncate flex-1 lg:hidden">
+                  {displayHotkey.slice(0, 10)}…{displayHotkey.slice(-10)}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(displayHotkey).then(() => {
+                      setHotkeyCopied(true);
+                      setTimeout(() => setHotkeyCopied(false), 2000);
+                    });
+                  }}
+                  className="flex-shrink-0 flex items-center justify-center h-5 w-5 rounded-md border border-white/[0.08] bg-white/[0.03] text-white/25 hover:text-amber-300 hover:border-amber-400/20 hover:bg-amber-500/10 transition-all duration-150"
+                  title="Copy hotkey"
+                >
+                  {hotkeycopied
+                    ? <PiCheckDuotone className="h-3 w-3 text-emerald-400" />
+                    : <PiCopyDuotone className="h-3 w-3" />
+                  }
+                </button>
+              </div>
+            )}
+
+          </div>
+
+          {/* ——— RIGHT: 3 compact stat blocks ——— */}
+          <div className="flex flex-1 flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
+
+            {/* Avg Reward */}
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
+              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-emerald-500/25 bg-emerald-500/10 mb-1">
+                <PiTrophyDuotone className="h-4.5 w-4.5 text-emerald-300" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Reward</p>
+              <p className="text-3xl font-black text-emerald-300 leading-none">{rewardPct}</p>
+            </div>
+
+            {/* Avg Time */}
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
+              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-sky-500/25 bg-sky-500/10 mb-1">
+                <PiClockDuotone className="h-4.5 w-4.5 text-sky-300" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Time</p>
+              <p className="text-3xl font-black text-sky-300 leading-none">
+                {`${formatNumber(averageEvalTime, 1)}s`}
+              </p>
+            </div>
+
+            {/* Avg Cost */}
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
+              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-violet-500/25 bg-violet-500/10 mb-1">
+                <PiChartLineUpDuotone className="h-4.5 w-4.5 text-violet-300" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Cost</p>
+              <p className={cn("text-3xl font-black leading-none", averageEvalCost != null ? "text-violet-300" : "text-white/20")}>
+                {costStr}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Bottom accent line */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" />
+      </div>
     </div>
   );
+
+  return agentHref ? (
+    <Link href={agentHref} className="group block transition-all duration-200 hover:opacity-95">
+      {cardContent}
+    </Link>
+  ) : cardContent;
 }
 
 function MetricCard({ card }: { card: any }) {
@@ -1212,6 +1325,141 @@ function MetricCard({ card }: { card: any }) {
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function LocalMetricCard({ card }: { card: any }) {
+  const Icon = card.icon;
+  const isWinner = card.key === "winner" && typeof card.uid === "number";
+  const [copied, setCopied] = React.useState(false);
+  const fallbackAvatarIndex = (() => {
+    const uidValue = card?.uid;
+    if (typeof uidValue === "number" && Number.isFinite(uidValue)) return Math.abs(uidValue % 50);
+    return 0;
+  })();
+  const fallbackAvatar = resolveAssetUrl(`/miners/${fallbackAvatarIndex}.svg`);
+  const winnerAvatar = resolveAssetUrl(card?.imageUrl, fallbackAvatar);
+
+  const handleCopyHotkey = async (hotkey: string) => {
+    try {
+      await navigator.clipboard.writeText(hotkey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        "group relative overflow-hidden border backdrop-blur-md shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:shadow-sky-500/10",
+        isWinner
+          ? "rounded-[28px] border-sky-400/18 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_38%),linear-gradient(135deg,rgba(14,23,41,0.96),rgba(10,16,31,0.94))]"
+          : "rounded-[28px] border-sky-400/18 bg-[linear-gradient(145deg,rgba(12,20,38,0.94),rgba(8,14,29,0.92))]"
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.03),transparent)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+      <div className="absolute right-3 top-3 z-10">
+        <span
+          className="inline-flex items-center gap-1 rounded-full border border-sky-300/25 bg-sky-400/12 px-2 py-1 text-[9px] font-black uppercase tracking-[0.22em] text-sky-200/85"
+        >
+          Local
+        </span>
+      </div>
+
+      {isWinner ? (
+        <div className="grid gap-3 px-4 py-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-sky-400/30 shadow-xl ring-4 ring-sky-400/10">
+            <Image
+              src={winnerAvatar}
+              alt={`UID ${card.uid ?? "winner"}`}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+            <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 shadow-lg ring-2 ring-[#08111f]">
+              <PiCrownFill className="h-3 w-3 text-white" />
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <div className="mb-1.5 flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300/70">
+                {card.title}
+              </span>
+            </div>
+            <div className={cn("font-black text-white leading-tight", card.valueClass ?? "text-xl md:text-2xl")}>
+              {card.value}
+            </div>
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              {typeof card.uid === "number" ? (
+                <span className="inline-flex items-center rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-black text-sky-100">
+                  UID {card.uid}
+                </span>
+              ) : null}
+              {typeof card.githubUrl === "string" && card.githubUrl.trim().length > 0 ? (
+                <Link
+                  href={card.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-white/70 transition-all duration-200 hover:border-sky-300/20 hover:bg-sky-400/10 hover:text-sky-100"
+                  title="Open GitHub URL"
+                >
+                  <PiGithubLogoDuotone className="h-4 w-4" />
+                  <span>GitHub</span>
+                </Link>
+              ) : null}
+            </div>
+            {card.hotkey ? (
+              <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-white/8 bg-black/20 px-3 py-2">
+                <span className="flex-1 break-all text-[11px] font-mono text-white/55">
+                  {card.hotkey}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCopyHotkey(card.hotkey);
+                  }}
+                  className="flex-shrink-0 rounded-lg bg-white/8 p-1.5 transition-all duration-150 hover:bg-white/15"
+                  title="Copy hotkey"
+                >
+                  {copied ? (
+                    <PiCheckDuotone className="h-3.5 w-3.5 text-emerald-300" />
+                  ) : (
+                    <PiCopyDuotone className="h-3.5 w-3.5 text-white/60" />
+                  )}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <div className="relative flex h-full min-h-[188px] flex-col px-4 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-sky-400/18 bg-gradient-to-br from-sky-500/16 to-cyan-500/10 shadow-md">
+              {Icon && <Icon className="h-5 w-5 text-sky-300" />}
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <span className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-sky-300/70">
+              {card.title}
+            </span>
+            <div className={cn("font-black leading-none text-white", card.valueClass ?? "text-3xl")}>
+              {card.value}
+            </div>
+            {card.helper ? (
+              <p className="mt-3 max-w-[18ch] text-[11px] leading-snug text-white/42">
+                {card.helper}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1733,22 +1981,13 @@ function RoundMinerScoresInline({
         title={
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
-                <svg
-                  className="h-6 w-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2z"
-                  />
-                </svg>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
+                <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
               </div>
-              <span className="text-2xl font-bold">Miner Scores</span>
+              <div>
+                <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+                <p className="text-[11px] text-white/40 font-medium">Pre-consensus · per validator</p>
+              </div>
             </div>
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -1784,22 +2023,13 @@ function RoundMinerScoresInline({
         title={
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
-                <svg
-                  className="h-6 w-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2z"
-                  />
-                </svg>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
+                <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
               </div>
-              <span className="text-2xl font-bold">Miner Scores</span>
+              <div>
+                <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+                <p className="text-[11px] text-white/40 font-medium">Pre-consensus · per validator</p>
+              </div>
             </div>
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -1834,25 +2064,15 @@ function RoundMinerScoresInline({
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 md:h-10 md:w-10 xl:h-12 xl:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
-              <svg
-                className="h-4 w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2z"
-                />
-              </svg>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
+              <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
             </div>
-            <span className="text-md sm:text-2xl font-bold">
-              Miner Scores
-              {selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}
-            </span>
+            <div>
+              <p className="text-base font-black text-white uppercase tracking-wider">Local miner rewards</p>
+              <p className="text-[11px] text-white/40 font-medium">
+                Pre-consensus{selectedValidator?.name ? ` · ${selectedValidator.name}` : " · per validator"}
+              </p>
+            </div>
           </div>
         </div>
       }
@@ -2721,33 +2941,163 @@ export default function Round() {
         </div>
       ) : (
         <>
-      {/* Aggregated Metrics */}
+      {/* Post-Consensus Metrics */}
       <div className="mt-10 mb-6">
             {roundDataLoading ? (
               <div className="flex items-center gap-4 mb-5">
-                <Skeleton className="w-10 h-10 rounded-xl bg-white/10" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-40 mb-2 bg-white/10" />
-                  <Skeleton className="h-3 w-64 bg-white/10" />
+                <Skeleton className="w-10 h-10 rounded-xl bg-white/10 flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-56 bg-white/10" />
+                  <Skeleton className="h-3 w-36 bg-white/10" />
                 </div>
               </div>
             ) : (
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20">
-            <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
-          </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              Aggregated Metrics
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20 flex-shrink-0">
+                  <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+                </div>
+                <div>
+                  <p className="text-base font-black text-white leading-tight">
                     {isWaitingForConsensus
-                      ? "⚠️ Provisional metrics - Waiting for validator consensus"
-                      : "Comprehensive stats across all validators"}
-            </Text>
-          </div>
-        </div>
+                      ? "Waiting for consensus…"
+                      : (() => {
+                          const rNum = roundNumberForLinks;
+                          return rNum != null ? `Season rank after round ${rNum}` : "Season rank";
+                        })()}
+                  </p>
+                  <p className="mt-0.5 inline-flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                      Post-Consensus Metrics
+                    </span>
+                  </p>
+                </div>
+              </div>
             )}
+            {/* ── Leadership Rule Strip ── */}
+            {(() => {
+              const lr = roundData?.post_consensus_summary?.leadership_rule;
+              if (!lr) return null;
+              const det = lr.dethroned;
+              const reignPct = lr.reigning_score != null ? `${(lr.reigning_score * 100).toFixed(2)}%` : "—";
+              const chalPct = lr.challenger_score != null ? `${(lr.challenger_score * 100).toFixed(2)}%` : null;
+              const thresholdPct = `+${(lr.required_improvement_pct * 100).toFixed(1)}%`;
+              const needed = lr.reigning_score != null && lr.challenger_score != null
+                ? `${((lr.reigning_score * (1 + lr.required_improvement_pct) - lr.challenger_score) * 100).toFixed(3)}%`
+                : null;
+              return (
+                <div className={cn(
+                  "relative overflow-hidden rounded-xl border mb-4 mt-4",
+                  det
+                    ? "border-emerald-500/25 bg-emerald-950/40"
+                    : "border-amber-400/15 bg-amber-950/35"
+                )}>
+                  <div className={cn("h-[1.5px] w-full", det
+                    ? "bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent"
+                    : "bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
+                  )} />
+
+                  <div className="flex flex-col sm:flex-row sm:items-stretch gap-0 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
+
+                    {/* Col 1: Season rule label */}
+                    <div className="flex items-center gap-2.5 px-4 py-3 sm:w-auto sm:flex-shrink-0">
+                      <PiInfoDuotone className={cn("h-3.5 w-3.5 flex-shrink-0", det ? "text-emerald-400" : "text-amber-400/70")} />
+                      <div>
+                        <p className={cn("text-[9px] font-black uppercase tracking-[0.2em]", det ? "text-emerald-400/70" : "text-amber-400/60")}>
+                          Season rule
+                        </p>
+                        <p className="text-[10px] text-white/55 font-semibold">{thresholdPct} to dethrone</p>
+                      </div>
+                    </div>
+
+                    {/* Col 2: Reigning before this round */}
+                    {lr.reigning_uid != null && (
+                      <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-0">
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-500/15">
+                          <PiTrophyDuotone className="h-3.5 w-3.5 text-amber-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-400/50 mb-0.5">
+                            Reigning before this round
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center rounded-md border border-amber-400/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-black text-amber-300">
+                              UID {lr.reigning_uid}
+                            </span>
+                            <span className="text-[12px] font-bold text-amber-100 truncate">
+                              {lr.reigning_name || "—"}
+                            </span>
+                            <span className="text-[12px] font-black font-mono text-amber-300">{reignPct}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* vs */}
+                    {lr.challenger_uid != null && chalPct && (
+                      <div className="hidden sm:flex items-center justify-center w-7 flex-shrink-0">
+                        <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">vs</span>
+                      </div>
+                    )}
+
+                    {/* Col 3: Challenger this round */}
+                    {lr.challenger_uid != null && chalPct && (
+                      <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-0">
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-sky-400/30 bg-sky-500/15">
+                          <PiChartLineUpDuotone className="h-3.5 w-3.5 text-sky-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-sky-400/50 mb-0.5">
+                            Challenger this round
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center rounded-md border border-sky-400/20 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
+                              UID {lr.challenger_uid}
+                            </span>
+                            <span className="text-[12px] font-bold text-sky-100 truncate">
+                              {lr.challenger_name || "—"}
+                            </span>
+                            <span className="text-[12px] font-black font-mono text-sky-300">{chalPct}</span>
+                            {!det && needed && (
+                              <span className="inline-flex items-center gap-1 rounded-md border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-black text-rose-300/70 self-center">
+                                −{needed}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Col 4: Current leader after round */}
+                    <div className="flex items-center gap-3 px-4 py-3 sm:flex-shrink-0">
+                      <div className={cn(
+                        "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border",
+                        det ? "border-emerald-400/35 bg-emerald-500/20" : "border-amber-400/30 bg-amber-500/15"
+                      )}>
+                        <PiCrownDuotone className={cn("h-3.5 w-3.5", det ? "text-emerald-300" : "text-amber-300")} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={cn("text-[9px] font-black uppercase tracking-[0.15em] mb-0.5", det ? "text-emerald-400/60" : "text-amber-400/60")}>
+                          Current leader
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={cn(
+                            "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-black",
+                            det ? "border-emerald-400/25 bg-emerald-500/15 text-emerald-300" : "border-amber-400/20 bg-amber-500/10 text-amber-300"
+                          )}>
+                            UID {lr.season_leader_uid ?? lr.reigning_uid ?? "—"}
+                          </span>
+                          <span className={cn("text-[12px] font-bold truncate", det ? "text-emerald-100" : "text-amber-100")}>
+                            {det ? (lr.challenger_name || "—") : (lr.reigning_name || "—")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })()}
+
             <RoundStatsInline
               selectedValidator={selectedValidator}
               statistics={statistics}
@@ -2755,73 +3105,100 @@ export default function Round() {
               postConsensusSummary={roundData?.post_consensus_summary ?? null}
               loading={roundDataLoading}
               error={roundDataError ?? undefined}
+              seasonParam={seasonParam ?? undefined}
+              roundParam={roundNumberForLinks ?? undefined}
             />
-            {seasonCompetitionState && (
-              <div
-                className={cn(
-                  "mt-4 mb-2 rounded-xl border px-4 py-3",
-                  seasonCompetitionState.dethroned
-                    ? "border-emerald-400/50 bg-emerald-500/12"
-                    : "border-amber-400/50 bg-amber-500/12"
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-shrink-0 items-center justify-center">
-                    <PiWarning
-                      className={cn(
-                        "h-12 w-12 flex-shrink-0",
-                        seasonCompetitionState.dethroned ? "text-emerald-300" : "text-amber-300"
-                      )}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-white">
-                  Season leadership rule (+{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}% to dethrone):
-                </p>
-                <p className="mt-1 text-xs text-white/85">
-                  Reigning miner before round:{" "}
-                  <span className="text-cyan-300 font-semibold">
-                    UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? "—"}
-                  </span>
-                  , reward:{" "}
-                  <span className="text-cyan-300 font-semibold">
-                    {seasonCompetitionState.reigningReward ?? "—"}
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs text-white/85">
-                  Candidate miner to dethrone:{" "}
-                  <span className="text-amber-300 font-semibold">
-                    UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                  </span>
-                  , reward:{" "}
-                  <span className="text-amber-300 font-semibold">
-                    {seasonCompetitionState.topCandidateReward ?? "—"}
-                  </span>
-                </p>
-                <p className="mt-1 text-sm text-white">
-                  Verdict:{" "}
-                  {seasonCompetitionState.dethroned ? (
-                    <>
-                      Next winner:{" "}
-                      <span className="text-emerald-300 font-bold">
-                        UID {seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                      </span>{" "}
-                      (candidate surpassed +{(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%).
-                    </>
-                  ) : (
-                    <>
-                      Next winner continues being{" "}
-                      <span className="text-cyan-300 font-bold">
-                        UID {seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid ?? seasonCompetitionState.roundWinnerUid ?? "—"}
-                      </span>{" "}
-                      (candidate did not dethrone).
-                    </>
-                  )}
-                </p>
+
+            {/* Legacy seasonCompetitionState fallback (only shown if no leadership_rule) */}
+            {!roundData?.post_consensus_summary?.leadership_rule && seasonCompetitionState && (() => {
+              const det = seasonCompetitionState.dethroned;
+              const rNum = roundNumberForLinks;
+              const reignUid = seasonCompetitionState.reigningUidBeforeRound ?? seasonCompetitionState.seasonLeaderUid;
+              const challengerUid = seasonCompetitionState.topCandidateUid ?? seasonCompetitionState.roundWinnerUid;
+              const leaderAfterRound = det ? challengerUid : reignUid;
+              const reignRewardPct = seasonCompetitionState.reigningReward != null
+                ? `${(Number(seasonCompetitionState.reigningReward) * 100).toFixed(2)}%`
+                : "—";
+              const challengerRewardPct = seasonCompetitionState.topCandidateReward != null
+                ? `${(Number(seasonCompetitionState.topCandidateReward) * 100).toFixed(2)}%`
+                : "—";
+              const thresholdPct = `+${(seasonCompetitionState.requiredImprovementPct * 100).toFixed(1)}%`;
+              return (
+                <div className="mt-6 mb-2">
+                  <div className={cn(
+                    "relative overflow-hidden rounded-2xl border-2 shadow-2xl",
+                    det
+                      ? "border-emerald-400/50 bg-gradient-to-br from-emerald-900/50 via-teal-900/40 to-cyan-900/30"
+                      : "border-amber-400/40 bg-gradient-to-br from-amber-900/50 via-yellow-900/40 to-orange-900/30"
+                  )}>
+                    <div className={cn(
+                      "pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-20",
+                      det ? "bg-emerald-400" : "bg-amber-400"
+                    )} />
+                    <div className={cn(
+                      "flex items-center gap-3 px-5 py-3 border-b",
+                      det ? "border-emerald-400/20 bg-emerald-500/10" : "border-amber-400/20 bg-amber-500/10"
+                    )}>
+                      <PiCrownFill className={cn("h-5 w-5 flex-shrink-0", det ? "text-emerald-300" : "text-amber-300")} />
+                      <p className="text-sm font-black uppercase tracking-widest text-white/90">
+                        Season leader after round {rNum ?? "—"}
+                      </p>
+                      <span className={cn(
+                        "ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider border",
+                        det
+                          ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
+                          : "border-amber-400/40 bg-amber-500/20 text-amber-200"
+                      )}>
+                        {det ? "🎉 New champion" : "👑 Champion holds"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-white/10 px-0">
+                      <div className="flex flex-col gap-2 px-5 py-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Reigning champion (before round)</p>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/30 to-orange-500/30 shadow-lg">
+                            <PiCrownDuotone className="h-5 w-5 text-amber-300" />
+                          </div>
+                          <div>
+                            <p className="text-xl font-black text-white">UID {reignUid ?? "—"}</p>
+                            <p className="text-xs font-semibold text-amber-300/80">Reward: {reignRewardPct}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 px-5 py-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Best challenger (this round)</p>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/30 to-indigo-500/30 shadow-lg">
+                            <PiChartLineUpDuotone className="h-5 w-5 text-sky-300" />
+                          </div>
+                          <div>
+                            <p className="text-xl font-black text-white">UID {challengerUid ?? "—"}</p>
+                            <p className="text-xs font-semibold text-sky-300/80">
+                              Reward: {challengerRewardPct}
+                              <span className="ml-2 text-white/40">(needed {thresholdPct} more to dethrone)</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "border-t px-5 py-3 flex items-center gap-3",
+                      det ? "border-emerald-400/20 bg-emerald-500/10" : "border-amber-400/20 bg-amber-500/10"
+                    )}>
+                      <PiCheckCircleDuotone className={cn("h-5 w-5 flex-shrink-0", det ? "text-emerald-300" : "text-amber-300")} />
+                      <p className="text-sm font-bold text-white/90">
+                        {det ? (
+                          <>Season leader after this round: <span className="text-emerald-300">UID {leaderAfterRound}</span> — dethroned the previous champion.</>
+                        ) : (
+                          <>Season leader after this round: <span className="text-amber-300">UID {leaderAfterRound}</span> — challenger did not reach the {thresholdPct} threshold.</>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
       </div>
 
       {/* Validators selector */}
@@ -2832,10 +3209,10 @@ export default function Round() {
           </div>
           <div className="flex-1">
             <Text className="text-base font-black text-white uppercase tracking-wider">
-              Multiple Validators
+              Validators
             </Text>
             <Text className="text-xs text-white/60 font-semibold">
-              Select a validator to view detailed performance metrics
+              Each validator evaluates miners independently — select one to inspect its local metrics
             </Text>
           </div>
         </div>
@@ -2851,21 +3228,46 @@ export default function Round() {
       />
 
       {/* Selected validator metric cards */}
-      {roundDataLoading || !selectedValidator ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className={cn("h-36", skeletonCard)} />
-          ))}
-        </div>
-      ) : (
+      {roundDataLoading ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
-            {selectedValidatorCards.map((card) => (
-              <MetricCard key={(card as any).key} card={card} />
+          <div className="flex items-center gap-3 mt-6 mb-4">
+            <Skeleton className="w-1.5 h-8 rounded-full bg-white/10" />
+            <Skeleton className="h-4 w-56 bg-white/10" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div key={index} className={cn("h-36", skeletonCard)} />
             ))}
           </div>
         </>
-      )}
+      ) : selectedValidator ? (
+        <>
+          {/* Local metrics header */}
+          <div className="flex items-center gap-3 mt-6 mb-4">
+            <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
+            <div>
+              <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
+                Local metrics
+              </span>
+              <span className="mx-2 text-white/30">·</span>
+              <span className="text-sm font-semibold text-sky-300">
+                {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
+              </span>
+              <p className="text-xs text-white/50 mt-0.5">
+                Pre-consensus evaluation — independent assessment by this validator
+              </p>
+            </div>
+          </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)]">
+            <LocalMetricCard card={selectedValidatorCards[0]} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {selectedValidatorCards.slice(1).map((card) => (
+                <LocalMetricCard key={(card as any).key} card={card} />
+              ))}
+            </div>
+          </div>
+        </>
+      ) : null}
 
       {/* IPFS & Consensus (validator detail) — always show section; cards clickable when data exists */}
       {selectedValidator && roundData?.validators && (() => {

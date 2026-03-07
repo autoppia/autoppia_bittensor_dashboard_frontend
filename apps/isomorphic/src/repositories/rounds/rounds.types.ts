@@ -290,9 +290,21 @@ export interface PostConsensusSummary {
     avg_reward: number;
     avg_eval_score: number;
     avg_eval_time: number;
+    avg_eval_cost?: number | null;
   } | null;
   miners_evaluated: number;
   tasks_evaluated: number;
+  leadership_rule?: {
+    required_improvement_pct: number;
+    reigning_uid: number | null;
+    reigning_name: string | null;
+    reigning_score: number | null;
+    challenger_uid: number | null;
+    challenger_name: string | null;
+    challenger_score: number | null;
+    dethroned: boolean;
+    season_leader_uid: number | null;
+  } | null;
 }
 
 export interface GetRoundResponse {

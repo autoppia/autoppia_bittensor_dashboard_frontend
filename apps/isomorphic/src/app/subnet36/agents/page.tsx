@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useRoundsData, useLatestRoundTopMiner } from "@/services/hooks/useAgents";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useRoundsData } from "@/services/hooks/useAgents";
 import { routes } from "@/config/routes";
 import {
   AgentHeaderPlaceholder,
@@ -27,37 +27,21 @@ function AgentsPageFallback() {
 }
 
 function AgentsLanding() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
   const seasonParam = searchParams.get("season");
-  const roundParam = searchParams.get("round");
-
-  // Build round key "season/round" from URL (e.g. "83/20")
-  const roundKeyFromQuery = useMemo(() => {
+  const selectedSeason = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
-    const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
-    if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
-      return `${season}/${round}`;
-    }
-    return undefined;
-  }, [seasonParam, roundParam]);
+    return season !== undefined && Number.isFinite(season) ? season : undefined;
+  }, [seasonParam]);
 
   // Check if we're on the landing page (no agent ID in URL path)
-  // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam
-  // roundParam doesn't prevent redirect - we always go to latest round with top miner
+  // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam.
   const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
   const needsRedirect = isOnAgentsLanding;
 
-  // Get latest round and top miner for initial redirect (only if we need to redirect)
-  const {
-    data: latestRoundTopMiner,
-    loading: latestRoundLoading,
-    error: latestRoundError,
-  } = useLatestRoundTopMiner(needsRedirect);
-
-  // Get rounds list from useRoundsData (without round to get all rounds)
+  // Get rounds list from useRoundsData (without selection to get all rounds)
   const {
     data: roundsListData,
     loading: roundsListLoading,
@@ -71,15 +55,22 @@ function AgentsLanding() {
     return rounds.filter((r): r is string => typeof r === "string" && r.includes("/"));
   }, [roundsListData?.rounds]);
 
-  // selectedRoundKey: "season/round" - URL is source of truth
-  const selectedRoundKey = roundKeyFromQuery ?? availableRoundKeys[0];
+  const latestSeason = useMemo(() => {
+    const latestRoundKey = availableRoundKeys[0];
+    if (!latestRoundKey) return undefined;
+    const [seasonRaw] = latestRoundKey.split("/");
+    const season = Number.parseInt(seasonRaw ?? "", 10);
+    return Number.isFinite(season) ? season : undefined;
+  }, [availableRoundKeys]);
 
-  // Use useRoundsData with selected round (only when we have a valid key to avoid redundant calls)
+  const effectiveSeason = selectedSeason ?? latestSeason;
+
+  // Use useRoundsData with season-wide selection
   const {
     data: roundsDataWithMiners,
     loading: roundsDataLoading,
     error: roundsDataError,
-  } = useRoundsData(selectedRoundKey);
+  } = useRoundsData(effectiveSeason ? { season: effectiveSeason } : undefined);
 
   // Get miners from roundsDataWithMiners.round_selected.miners
   const miners = useMemo(() => {
@@ -88,113 +79,29 @@ function AgentsLanding() {
       uid: miner.uid,
       name: miner.name,
       ranking: miner.post_consensus_rank,
-      reward: miner.post_consensus_avg_reward,
+      reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));
   }, [roundsDataWithMiners?.round_selected?.miners]);
   const hasMiners = miners.length > 0;
-  const effectiveRoundKey = selectedRoundKey;
 
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
-  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Redirect using latest round and top miner from API (fast path)
-  // This is the primary redirect mechanism - instant redirect when data is available
   useEffect(() => {
-    // Only redirect if we need to (on landing page, no agent param)
     if (!needsRedirect) {
       hasRedirectedRef.current = false;
-      // Clear timeout if redirect is not needed
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-        redirectTimeoutRef.current = null;
-      }
       return;
     }
-
-    // If already redirected, don't do it again
     if (hasRedirectedRef.current) {
       return;
     }
-
-    // Wait for data to load (but don't wait if there's an error - use fallback)
-    if (latestRoundLoading) {
+    if (!effectiveSeason) {
       return;
     }
-
-    // Clear timeout if loading finished
-    if (redirectTimeoutRef.current) {
-      clearTimeout(redirectTimeoutRef.current);
-      redirectTimeoutRef.current = null;
-    }
-
-    // If no data, wait for fallback
-    if (!latestRoundTopMiner) {
+    if (roundsListLoading || roundsDataLoading || roundsListError || roundsDataError) {
       return;
     }
-
-    // Validate data structure (backend returns season and round as numbers)
-    const { season, round: roundInSeason, miner_uid: minerUid } = latestRoundTopMiner;
-    if (season == null || roundInSeason == null || minerUid == null) {
-      console.error('[AgentsLanding] Invalid data structure:', latestRoundTopMiner);
-      return;
-    }
-
-    // Mark that we're about to redirect BEFORE doing it
-    hasRedirectedRef.current = true;
-
-    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y
-    const targetPath = `${routes.agents}/${minerUid}`;
-    const params = new URLSearchParams();
-    params.set("season", String(season));
-    params.set("round", String(roundInSeason));
-
-    const targetUrl = `${targetPath}?${params.toString()}`;
-    console.log(`[AgentsLanding] ✅ Redirecting from ${pathname} to: ${targetUrl}`);
-
-    // Redirect immediately to the normal URL format with full page reload
-    // Using window.location.href instead of router.replace to force a full page reload
-    window.location.href = targetUrl;
-
-    // Cleanup function
-    return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-        redirectTimeoutRef.current = null;
-      }
-    };
-  }, [
-    needsRedirect,
-    pathname,
-    latestRoundLoading,
-    latestRoundError,
-    latestRoundTopMiner,
-    router,
-  ]);
-
-  // Fallback redirect using roundsData (slower path, only if latestRoundTopMiner fails)
-  useEffect(() => {
-    // Only use fallback if we need redirect, latestRoundTopMiner failed or is not available
-    if (!needsRedirect || latestRoundTopMiner) {
-      return;
-    }
-
-    // If already redirected, don't do it again
-    if (hasRedirectedRef.current) {
-      return;
-    }
-
-    // If no round available, wait
-    if (!effectiveRoundKey) {
-      return;
-    }
-    // If loading or error, wait
-    if (roundsDataLoading || roundsDataError) {
-      return;
-    }
-    // If no miners, wait
     if (!hasMiners) {
       return;
     }
@@ -216,29 +123,23 @@ function AgentsLanding() {
       return;
     }
 
-    // Mark that we're about to redirect
     hasRedirectedRef.current = true;
 
-    // Redirect to top miner with latest round (use season/round in URL)
-    const [s, r] = effectiveRoundKey.includes("/") ? effectiveRoundKey.split("/") : [undefined, effectiveRoundKey];
     const params = new URLSearchParams();
-    if (s) params.set("season", s);
-    if (r) params.set("round", r);
-    // Build the target URL: /subnet36/agents/{miner_uid}?season=X&round=Y
+    params.set("season", String(effectiveSeason));
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
 
-    // Redirect with full page reload
     window.location.href = targetUrl;
   }, [
     needsRedirect,
-    latestRoundTopMiner,
-    effectiveRoundKey,
+    effectiveSeason,
     hasMiners,
     miners,
+    roundsListError,
+    roundsListLoading,
     roundsDataError,
     roundsDataLoading,
-    router,
   ]);
 
   // If we need redirect (on landing page), just show skeleton
@@ -274,7 +175,7 @@ function AgentsLanding() {
   if (
     !roundsDataLoading &&
     !roundsDataError &&
-    effectiveRoundKey &&
+    effectiveSeason &&
     !hasMiners
   ) {
     return (
@@ -287,8 +188,8 @@ function AgentsLanding() {
         >
           <h2 className="text-xl font-bold text-gray-900">No agents found</h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            Recent rounds did not return any miners. Try selecting a different
-            round or refreshing once new data is available.
+            This season did not return any miners. Try selecting a different
+            season or refreshing once new data is available.
           </p>
         </div>
       </div>

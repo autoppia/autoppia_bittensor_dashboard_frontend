@@ -631,6 +631,19 @@ export default function AgentHistoricalAnalytics({
     [fetchUseCaseTasks, useCaseTasks]
   );
 
+  useEffect(() => {
+    if (!selectedWebsite) return;
+    setExpandedWebsite(selectedWebsite);
+    filteredUseCases
+      .filter((uc) => uc.website === selectedWebsite)
+      .forEach((uc) => {
+        const key = `${uc.website}:${uc.useCase}`;
+        if (!useCaseTasks[key]) {
+          fetchUseCaseTasks(uc.website, uc.useCase, 1);
+        }
+      });
+  }, [selectedWebsite, filteredUseCases, fetchUseCaseTasks, useCaseTasks]);
+
   // Use external loading state if provided
   const isLoading = externalLoading !== undefined ? externalLoading : loading;
 
@@ -1160,8 +1173,8 @@ export default function AgentHistoricalAnalytics({
                                           <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
                                             Duration
                                           </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
-                                            Action
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
+                                            Evaluation
                                           </th>
                                         </tr>
                                       </thead>
@@ -1248,8 +1261,8 @@ export default function AgentHistoricalAnalytics({
                                             <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
                                               Duration
                                             </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
-                                              Action
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
+                                              Evaluation
                                             </th>
                                           </tr>
                                         </thead>
@@ -1311,10 +1324,10 @@ export default function AgentHistoricalAnalytics({
                                                 >
                                                   <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
                                                   <span className="hidden sm:inline">
-                                                    Inspect
+                                                    Open evaluation
                                                   </span>
                                                   <span className="sm:hidden">
-                                                    View
+                                                    Open
                                                   </span>
                                                 </Button>
                                               </td>
