@@ -36,7 +36,7 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useAgent, useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails, useMinerHistorical } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
   RewardRoundDataPoint,
@@ -62,6 +62,7 @@ import {
   PiChartLineDuotone,
   PiChartLineUpDuotone,
   PiChartBarDuotone,
+  PiTargetDuotone,
   PiTrophyDuotone,
   PiListChecksDuotone,
   PiTrendUpDuotone,
@@ -847,10 +848,14 @@ function AgentValidators({
     round: string | number;
     post_consensus_rank: number | null;
     post_consensus_avg_reward: number;
+    post_consensus_avg_eval_score?: number | null;
     post_consensus_avg_eval_time: number;
+    post_consensus_avg_eval_cost?: number | null;
     tasks_received: number;
     tasks_success: number;
     validators_count: number;
+    websites_count?: number;
+    post_consensus_available?: boolean;
     weight?: number;
   }>;
 }) {
@@ -1151,6 +1156,16 @@ function AgentValidators({
             {} as Record<string, typeof group.runs>
           );
           const postConsensus = postConsensusByRound.get(group.key);
+          const groupWebsitesCount = Object.values(runsByValidator).reduce((maxCount, validatorRuns) => {
+            const latestRun = validatorRuns[0];
+            const count =
+              typeof latestRun.websitesCount === "number"
+                ? latestRun.websitesCount
+                : typeof latestRun.totalWebsites === "number"
+                  ? latestRun.totalWebsites
+                  : 0;
+            return Math.max(maxCount, count);
+          }, 0);
 
           return (
             <div key={group.key} className="space-y-4">
@@ -1164,6 +1179,41 @@ function AgentValidators({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
+                {postConsensus?.post_consensus_available ? (
+                  <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
+                    <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                      <Text className="font-bold text-white text-base">Validator consensus</Text>
+                      <Text className="text-xs text-white/60 tracking-wide">
+                        Final metrics after validator consensus
+                      </Text>
+                    </div>
+                    <div className="relative p-2 sm:p-5">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                        {[
+                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                          { title: "Score", metric: `${((postConsensus.post_consensus_avg_eval_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                          { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                          { title: "Websites", metric: String(postConsensus.websites_count ?? groupWebsitesCount ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                          { title: "Avg Cost", metric: postConsensus.post_consensus_avg_eval_cost != null ? `$${Number(postConsensus.post_consensus_avg_eval_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                        ].map((stat) => {
+                          const Icon = stat.icon as any;
+                          return (
+                            <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                              <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
                 {Object.entries(runsByValidator).map(([validatorId, validatorRuns]) => {
                   const latestRun = validatorRuns[0];
                   const responseTimeSeconds =
@@ -1178,8 +1228,8 @@ function AgentValidators({
                   })();
 
                   const stats = [
-                    { title: "Rank", metric: latestRun.ranking ? `#${latestRun.ranking}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600" },
                     { title: "Reward", metric: `${((latestRun.overallReward ?? latestRun.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                    { title: "Score", metric: `${((latestRun.averageScore ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
                     { title: "Time", metric: `${Number(responseTimeSeconds).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
                     { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? latestRun.completedTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
                     { title: "Websites", metric: websitesCount, icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
@@ -1234,42 +1284,6 @@ function AgentValidators({
                     </Link>
                   );
                 })}
-
-                {postConsensus ? (
-                  <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
-                    <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                      <Text className="font-bold text-white text-base">Post-consensus</Text>
-                      <Text className="text-xs text-white/60 tracking-wide">
-                        Final aggregate for {group.label}
-                      </Text>
-                    </div>
-                    <div className="relative p-2 sm:p-5">
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
-                        {[
-                          { title: "Rank", metric: postConsensus.post_consensus_rank ? `#${postConsensus.post_consensus_rank}` : "N/A", icon: PiHashDuotone, iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600" },
-                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
-                          { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
-                          { title: "Validators", metric: String(postConsensus.validators_count ?? 0), icon: PiTrophyDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
-                          { title: "Weight", metric: typeof postConsensus.weight === "number" ? postConsensus.weight.toFixed(4) : "N/A", icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
-                        ].map((stat) => {
-                          const Icon = stat.icon as any;
-                          return (
-                            <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
-                              <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
-                                <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
-                                <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </div>
             </div>
           );
@@ -1705,18 +1719,9 @@ export default function Page() {
     numericUidFromParam
   );
 
-  // Get rounds data (list + selected round miners when round is provided)
-  const { data: roundsData } = useRoundsData(
-    selectedRoundFromQuery
-      ? { roundIdentifier: selectedRoundFromQuery, season: selectedSeasonNumber }
-      : selectedSeasonNumber
-        ? { season: selectedSeasonNumber }
-        : undefined
-  );
-
-  // Extract latest season from rounds data
+  // Extract latest season from agent detail available rounds
   const latestSeason = useMemo(() => {
-    const rounds = roundsData?.rounds ?? [];
+    const rounds = availableRounds ?? [];
     if (rounds.length === 0) {
       return undefined;
     }
@@ -1733,12 +1738,14 @@ export default function Page() {
       .filter((s) => s !== null && Number.isFinite(s)) as number[];
 
     return seasons.length > 0 ? Math.max(...seasons) : undefined;
-  }, [roundsData?.rounds]);
+  }, [availableRounds]);
 
   // Get miner historical data only when needed:
   // - Historical tab
   // - Current tab in Effective mode (to resolve source best round)
-  const shouldFetchHistorical = numericUidFromParam !== undefined;
+  const shouldFetchHistorical =
+    numericUidFromParam !== undefined &&
+    (viewMode === "historical" || websitePanelMode === "details");
   // Always filter by season: use season from URL, or latest season as fallback
   const seasonForHistorical = seasonParam
     ? Number.parseInt(seasonParam, 10)
@@ -1780,19 +1787,18 @@ export default function Page() {
     effectiveSourceRoundIdentifier,
     numericUidFromParam
   );
-  const historicalBestRoundIdentifier = useMemo(() => {
-    const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
-    if (bestRewardRound) return String(bestRewardRound);
-    const bestRankRound = minerHistorical?.summary?.bestRankRound;
-    if (bestRankRound) return String(bestRankRound);
+  const bestRoundIdentifierFromAgentDetail = useMemo(() => {
+    const bestRoundId = agentDetail?.agent?.bestRoundId;
+    if (bestRoundId == null) return undefined;
+    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
+      return bestRoundId;
+    }
+    const bestRoundNumber = Number(bestRoundId);
+    if (Number.isFinite(bestRoundNumber) && selectedSeasonNumber) {
+      return `${selectedSeasonNumber}/${bestRoundNumber}`;
+    }
     return undefined;
-  }, [minerHistorical?.summary?.bestRewardRound, minerHistorical?.summary?.bestRankRound]);
-  const {
-    data: historicalBestRoundDetails,
-  } = useMinerRoundDetails(
-    historicalBestRoundIdentifier,
-    numericUidFromParam
-  );
+  }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
 
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -1825,7 +1831,7 @@ export default function Page() {
         createdAt: "",
         updatedAt: "",
         status: "active" as const,
-        githubUrl: historicalBestRoundDetails?.miner?.github_url ?? undefined,
+        githubUrl: agentDetail?.agent?.githubUrl ?? undefined,
         taostatsUrl: undefined,
       }
     : minerRoundDetails && minerRoundDetails.miner
@@ -2184,32 +2190,35 @@ export default function Page() {
   const totalTaoEarned = (
     Number((effectiveAgent as any)?.taoWonInPrizes ?? effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
   ).toFixed(2);
-  const roundSelectedMiner = (() => {
-    const miners = roundsData?.round_selected?.miners ?? [];
-    const uid = minerRoundDetails?.miner?.uid ?? numericUidFromParam;
-    if (!uid) return null;
-    return miners.find((m: any) => Number(m?.uid) === Number(uid)) ?? null;
-  })();
-  const bestRoundDetails = historicalBestRoundDetails ?? minerRoundDetails;
+  const sourceMetricsDetails = selectedRoundFromQuery
+    ? minerRoundDetails ?? null
+    : {
+        post_consensus_avg_reward:
+          roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
+        post_consensus_avg_eval_time:
+          roundMetrics?.averageResponseTime ?? effectiveAgent?.averageResponseTime ?? null,
+        tasks_received: roundMetrics?.totalTasks ?? effectiveAgent?.totalTasks ?? 0,
+        tasks_success: roundMetrics?.completedTasks ?? effectiveAgent?.completedTasks ?? 0,
+        validators_count: roundMetrics?.totalValidators ?? 0,
+        avg_cost_per_task: agentDetail?.avg_cost_per_task ?? null,
+        performanceByWebsite:
+          agentDetail?.performanceByWebsite ?? [],
+      };
   const roundReward = Number(
-    bestRoundDetails?.post_consensus_avg_reward ??
+    sourceMetricsDetails?.post_consensus_avg_reward ??
       roundMetrics?.reward ??
       effectiveAgent?.currentReward ??
       0
   );
   const seasonRank =
-    roundSelectedMiner?.post_consensus_rank ??
     effectiveAgent?.seasonRank ??
     effectiveAgent?.currentRank ??
     null;
   const displayedReward = roundReward;
-  const sourceMetricsDetails = bestRoundDetails;
-  const effectiveEvalScore = sourceMetricsDetails?.post_consensus_avg_eval_score ?? null;
   const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
   const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
   const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
   const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
-  const effectiveAvgTasksPerValidator = sourceMetricsDetails?.avg_tasks_per_validator ?? null;
   const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
   const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
     ? effectivePerformanceByWebsite.length
@@ -2218,7 +2227,7 @@ export default function Page() {
   const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
   const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
   const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
-  const sourceRoundForEffective = historicalBestRoundIdentifier ?? selectedRoundFromQuery ?? null;
+  const sourceRoundForEffective = selectedRoundFromQuery ?? bestRoundIdentifierFromAgentDetail ?? null;
   const sourceRoundParts = String(sourceRoundForEffective ?? "").split("/");
   const sourceRound = Number.parseInt(sourceRoundParts[1] ?? "", 10);
   const isAvgResponseTimeout =

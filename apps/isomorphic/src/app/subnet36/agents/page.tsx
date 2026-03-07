@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
-import { useRoundsData } from "@/services/hooks/useAgents";
+import { useSeasonRank } from "@/services/hooks/useAgents";
 import { routes } from "@/config/routes";
 import {
   AgentHeaderPlaceholder,
@@ -41,40 +41,18 @@ function AgentsLanding() {
   const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
   const needsRedirect = isOnAgentsLanding;
 
-  // Get rounds list from useRoundsData (without selection to get all rounds)
+  const seasonRef = selectedSeason ?? "latest";
   const {
-    data: roundsListData,
-    loading: roundsListLoading,
-    error: roundsListError,
-  } = useRoundsData(undefined);
-
-  // Rounds are strings "season/round" (e.g. "83/20")
-  const availableRoundKeys = useMemo(() => {
-    const rounds = roundsListData?.rounds ?? [];
-    if (!Array.isArray(rounds) || rounds.length === 0) return [];
-    return rounds.filter((r): r is string => typeof r === "string" && r.includes("/"));
-  }, [roundsListData?.rounds]);
-
-  const latestSeason = useMemo(() => {
-    const latestRoundKey = availableRoundKeys[0];
-    if (!latestRoundKey) return undefined;
-    const [seasonRaw] = latestRoundKey.split("/");
-    const season = Number.parseInt(seasonRaw ?? "", 10);
-    return Number.isFinite(season) ? season : undefined;
-  }, [availableRoundKeys]);
-
+    data: seasonRankData,
+    loading: seasonRankLoading,
+    error: seasonRankError,
+  } = useSeasonRank(seasonRef);
+  const latestSeason = seasonRankData?.latestSeason ?? undefined;
   const effectiveSeason = selectedSeason ?? latestSeason;
-
-  // Use useRoundsData with season-wide selection
-  const {
-    data: roundsDataWithMiners,
-    loading: roundsDataLoading,
-    error: roundsDataError,
-  } = useRoundsData(effectiveSeason ? { season: effectiveSeason } : undefined);
 
   // Get miners from roundsDataWithMiners.round_selected.miners
   const miners = useMemo(() => {
-    const minersFromRounds = roundsDataWithMiners?.round_selected?.miners ?? [];
+    const minersFromRounds = seasonRankData?.miners ?? [];
     return minersFromRounds.map((miner) => ({
       uid: miner.uid,
       name: miner.name,
@@ -83,7 +61,7 @@ function AgentsLanding() {
       isSota: false, // TODO: Determine SOTA from miner data if available
       imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
     }));
-  }, [roundsDataWithMiners?.round_selected?.miners]);
+  }, [seasonRankData?.miners]);
   const hasMiners = miners.length > 0;
 
   // Ref para evitar loops infinitos en la redirección
@@ -99,7 +77,7 @@ function AgentsLanding() {
     if (!effectiveSeason) {
       return;
     }
-    if (roundsListLoading || roundsDataLoading || roundsListError || roundsDataError) {
+    if (seasonRankLoading || seasonRankError) {
       return;
     }
     if (!hasMiners) {
@@ -136,10 +114,8 @@ function AgentsLanding() {
     effectiveSeason,
     hasMiners,
     miners,
-    roundsListError,
-    roundsListLoading,
-    roundsDataError,
-    roundsDataLoading,
+    seasonRankError,
+    seasonRankLoading,
   ]);
 
   // If we need redirect (on landing page), just show skeleton
@@ -151,7 +127,7 @@ function AgentsLanding() {
   // Below this point, we're not on the landing page anymore
   // (we have an agent param in the URL)
 
-    if (roundsDataError) {
+    if (seasonRankError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
         <div
@@ -164,7 +140,7 @@ function AgentsLanding() {
             Unable to load agents
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            {roundsDataError}. Please try refreshing the page once the service is
+            {seasonRankError}. Please try refreshing the page once the service is
             available again.
           </p>
         </div>
@@ -173,8 +149,8 @@ function AgentsLanding() {
   }
 
   if (
-    !roundsDataLoading &&
-    !roundsDataError &&
+    !seasonRankLoading &&
+    !seasonRankError &&
     effectiveSeason &&
     !hasMiners
   ) {

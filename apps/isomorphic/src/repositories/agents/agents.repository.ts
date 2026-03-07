@@ -58,8 +58,8 @@ export class AgentsRepository {
   }
 
   /**
-   * Get rounds data with optional miners for selected round (new unified endpoint)
-   * @param roundIdentifier - "season/round" (e.g. "83/20") or legacy round_number
+   * Legacy rounds endpoint retained for non-agents screens still depending on it.
+   * Agents sidebar/landing no longer use this route.
    */
   async getRoundsData(options?: {
     roundIdentifier?: string | number;
@@ -77,7 +77,7 @@ export class AgentsRepository {
           image: string | null;
           post_consensus_avg_reward: number;
           best_reward_in_season?: number;
-          effective_round_reward?: number;
+          best_local_round_reward?: number;
           best_round_in_season?: number | null;
           post_consensus_rank: number;
           is_reigning_leader?: boolean;
@@ -110,7 +110,7 @@ export class AgentsRepository {
             image: string | null;
             post_consensus_avg_reward: number;
             best_reward_in_season?: number;
-            effective_round_reward?: number;
+            best_local_round_reward?: number;
             best_round_in_season?: number | null;
             post_consensus_rank: number;
             is_reigning_leader?: boolean;
@@ -118,6 +118,49 @@ export class AgentsRepository {
         } | null;
       };
     }>(`${this.baseEndpoint}/rounds`, Object.keys(params).length ? params : undefined);
+    return response.data.data;
+  }
+
+  async getSeasonRank(seasonRef?: number | "latest"): Promise<{
+    season: number | null;
+    latestSeason: number | null;
+    availableSeasons: number[];
+    season_leader_uid?: number | null;
+    season_leader_reward?: number | null;
+    miners: Array<{
+      uid: number;
+      name: string;
+      image: string | null;
+      post_consensus_avg_reward: number;
+      best_reward_in_season?: number;
+      best_local_round_reward?: number;
+      best_round_in_season?: number | null;
+      post_consensus_rank: number;
+      is_reigning_leader?: boolean;
+    }>;
+  }> {
+    const ref = seasonRef === undefined || seasonRef === null ? "latest" : String(seasonRef);
+    const response = await apiClient.get<{
+      success: boolean;
+      data: {
+        season: number | null;
+        latestSeason: number | null;
+        availableSeasons: number[];
+        season_leader_uid?: number | null;
+        season_leader_reward?: number | null;
+        miners: Array<{
+          uid: number;
+          name: string;
+          image: string | null;
+          post_consensus_avg_reward: number;
+          best_reward_in_season?: number;
+          best_local_round_reward?: number;
+          best_round_in_season?: number | null;
+          post_consensus_rank: number;
+          is_reigning_leader?: boolean;
+        }>;
+      };
+    }>(`${this.baseEndpoint}/seasons/${ref}/rank`);
     return response.data.data;
   }
 

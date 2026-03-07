@@ -155,11 +155,14 @@ export interface MinerHistoricalResponse {
       post_consensus_avg_reward: number;
       post_consensus_avg_eval_score: number;
       post_consensus_avg_eval_time: number;
+      post_consensus_avg_eval_cost?: number | null;
       tasks_received: number;
       tasks_success: number;
       tasks_failed: number;
       is_winner: boolean;
       validators_count: number;
+      websites_count?: number;
+      post_consensus_available?: boolean;
       subnet_price: number | null;
       weight: number;
     }>;
@@ -286,11 +289,11 @@ export interface AgentRunOverview {
   successfulTasks: number;
   failedTasks: number;
   averageReward: number;
+  averageScore?: number;
   reward: number;
   successRate: number;
   overallReward: number;
   overallRewardRaw?: number;
-  ranking: number;
   duration: number;
   averageEvaluationTime?: number | null;
   avgCostPerTask?: number | null;
@@ -539,7 +542,7 @@ export interface AgentRunsQueryParams {
   roundId?: number;
   validatorId?: string;
   status?: 'running' | 'completed' | 'failed' | 'timeout';
-  sortBy?: 'startTime' | 'reward' | 'duration' | 'ranking';
+  sortBy?: 'startTime' | 'reward' | 'duration';
   sortOrder?: 'asc' | 'desc';
   startDate?: string;
   endDate?: string;
