@@ -221,33 +221,6 @@ export default function MinerChart({
     }));
   }, [effectiveChartSource]);
 
-  // Generate X-axis ticks from the same visible slice shown in the chart.
-  const xAxisTicks = useMemo<number[]>(() => {
-    if (!filteredData.length) {
-      return [];
-    }
-    const rounds = filteredData.map((d) => d.round);
-    const minRound = Math.min(...rounds);
-    const maxRound = Math.max(...rounds);
-
-    const ticks: number[] = [];
-    // Start from the first multiple of 4 >= minRound
-    const startTick = Math.ceil(minRound / 4) * 4;
-    for (let i = startTick; i <= maxRound; i += 4) {
-      ticks.push(i);
-    }
-
-    // Always include min and max if not already included
-    if (!ticks.includes(minRound)) {
-      ticks.unshift(minRound);
-    }
-    if (!ticks.includes(maxRound)) {
-      ticks.push(maxRound);
-    }
-
-    return ticks.sort((a, b) => a - b);
-  }, [filteredData]);
-
   const availableSotaSeries = useMemo<string[]>(() => {
     if (!chartData.length) {
       return [];
@@ -319,6 +292,31 @@ export default function MinerChart({
     const totalRounds = rangeToLimit[timeRange] ?? chartData.length;
     return chartData.slice(-totalRounds);
   }, [chartData, timeRange]);
+
+  // Generate X-axis ticks from the same visible slice shown in the chart.
+  const xAxisTicks = useMemo<number[]>(() => {
+    if (!filteredData.length) {
+      return [];
+    }
+    const rounds = filteredData.map((d) => d.round);
+    const minRound = Math.min(...rounds);
+    const maxRound = Math.max(...rounds);
+
+    const ticks: number[] = [];
+    const startTick = Math.ceil(minRound / 4) * 4;
+    for (let i = startTick; i <= maxRound; i += 4) {
+      ticks.push(i);
+    }
+
+    if (!ticks.includes(minRound)) {
+      ticks.unshift(minRound);
+    }
+    if (!ticks.includes(maxRound)) {
+      ticks.push(maxRound);
+    }
+
+    return ticks.sort((a, b) => a - b);
+  }, [filteredData]);
 
   const roundLabelMap = useMemo(() => {
     const map = new Map<number, string>();
