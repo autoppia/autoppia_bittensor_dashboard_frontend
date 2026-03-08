@@ -2511,7 +2511,7 @@ export default function Round() {
     React.useState<ValidatorPerformance | null>(null);
   // IPFS / Consensus detail modal: click on Upload, Download or Consensus to see full data
   const [ipfsConsensusDetail, setIpfsConsensusDetail] = React.useState<{
-    type: "upload" | "download" | "pre_consensus" | "post_consensus" | "how_consensus";
+    type: "upload" | "download" | "post_consensus" | "how_consensus";
     title: string;
     data: unknown;
   } | null>(null);
@@ -3274,18 +3274,34 @@ export default function Round() {
         const hasIpfs =
           vAny?.ipfs_uploaded ||
           vAny?.ipfs_downloaded ||
-          vAny?.evaluation_pre_consensus ||
           vAny?.evaluation_post_consensus ||
-          vAny?.consensus_summary ||
           vAny?.post_consensus_evaluation;
         const ipfsUp = vAny?.ipfs_uploaded as Record<string, unknown> | undefined;
         const ipfsDown = vAny?.ipfs_downloaded as Record<string, unknown> | undefined;
-        const evaluationPre = (vAny?.evaluation_pre_consensus ?? vAny?.consensus_summary) as Record<string, unknown> | undefined;
         const evaluationPost = (vAny?.evaluation_post_consensus ?? vAny?.post_consensus_evaluation) as Record<string, unknown> | undefined;
         const ipfsGateway = (cid: string) => `https://ipfs.io/ipfs/${cid}`;
         const pickCanonicalIpfsPayload = (raw: unknown, depth = 0): Record<string, unknown> | null => {
           if (!raw || typeof raw !== "object" || depth > 5) return null;
           const obj = raw as any;
+
+          const hasMiners = Array.isArray(obj?.miners);
+          if (hasMiners) {
+            return {
+              v: obj?.v ?? null,
+              s: obj?.s ?? obj?.season ?? null,
+              r: obj?.r ?? obj?.round ?? null,
+              es: obj?.es ?? null,
+              et: obj?.et ?? null,
+              hk: obj?.hk ?? obj?.validator_hotkey ?? null,
+              uid: obj?.uid ?? obj?.validator_uid ?? null,
+              validator_uid: obj?.validator_uid ?? obj?.uid ?? null,
+              validator_hotkey: obj?.validator_hotkey ?? obj?.hk ?? null,
+              validator_version: obj?.validator_version ?? null,
+              validator_round_id: obj?.validator_round_id ?? null,
+              miners: obj?.miners ?? [],
+              summary: obj?.summary ?? null,
+            };
+          }
 
           const hasScores = obj?.scores && typeof obj.scores === "object" && !Array.isArray(obj.scores);
           if (hasScores) {
@@ -3368,7 +3384,6 @@ export default function Round() {
           const payload =
             raw?.evaluation_post_consensus ??
             raw?.post_consensus_evaluation ??
-            raw?.evaluation_pre_consensus ??
             raw?.consensus_summary ??
             raw;
 
@@ -3448,7 +3463,7 @@ export default function Round() {
             ) : (
               <p className="text-white/50 text-sm mb-4">No IPFS/consensus data for this validator in this round yet. Data appears after the round ends and the validator sends results.</p>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Validator consensus — final metrics (first card) */}
               {evaluationPost ? (
                 <button
@@ -3491,7 +3506,7 @@ export default function Round() {
                     <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">IPFS Uploaded</span>
                   </div>
-                  <p className="text-white/80 text-sm">What this validator published for consensus.</p>
+                  <p className="text-white/80 text-sm">Local validator snapshot published for consensus.</p>
                   {(ipfsUp as any).cid && (
                     <a
                       href={ipfsGateway((ipfsUp as any).cid)}
@@ -3511,7 +3526,7 @@ export default function Round() {
                     <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">IPFS Uploaded</span>
                   </div>
-                  <p className="text-white/60 text-sm">What this validator published for consensus.</p>
+                  <p className="text-white/60 text-sm">Local validator snapshot published for consensus.</p>
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}
@@ -3549,31 +3564,6 @@ export default function Round() {
                     <span className="font-semibold text-sm uppercase tracking-wider">IPFS Downloaded</span>
                   </div>
                   <p className="text-white/60 text-sm">Payloads downloaded from other validators.</p>
-                  <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
-                </div>
-              )}
-              {/* Evaluation pre-consensus — local evaluation before consensus */}
-              {evaluationPre ? (
-                <button
-                  type="button"
-                  className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "pre_consensus", title: "Evaluation pre-consensus — Local evaluation", data: evaluationPre })}
-                >
-                  <div className={cn(cardTitleRowClass, "text-emerald-400")}>
-                    <PiChartLineUpDuotone className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-semibold text-sm uppercase tracking-wider">Pre-consensus</span>
-                  </div>
-                  <p className="text-white/80 text-sm">Local evaluation before consensus.</p>
-                  <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPre)} miners</p>
-                  <p className="text-emerald-400/80 text-xs mt-2">Click to view full payload →</p>
-                </button>
-              ) : (
-                <div className={cardClass}>
-                  <div className={cn(cardTitleRowClass, "text-emerald-400/70")}>
-                    <PiChartLineUpDuotone className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-semibold text-sm uppercase tracking-wider">Pre-consensus</span>
-                  </div>
-                  <p className="text-white/60 text-sm">Local evaluation before consensus.</p>
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}
@@ -3616,20 +3606,20 @@ export default function Round() {
               {ipfsConsensusDetail.type === "how_consensus" ? (
                 <div className="space-y-4 text-white/85 text-sm leading-relaxed">
                   <p>
-                    1. Each validator evaluates miners locally and computes pre-consensus metrics
-                    (`reward`, `eval_score`, `time`, tasks stats).
+                    1. Each validator evaluates miners locally and keeps two local views per miner:
+                    `best_run` and `current_run`.
                   </p>
                   <p>
-                    2. Each validator uploads its local payload to IPFS (`IPFS Uploaded`), then downloads
-                    peers&apos; payloads (`IPFS Downloaded`).
+                    2. Each validator uploads that local snapshot to IPFS (`IPFS Uploaded`), then downloads
+                    peers&apos; snapshots (`IPFS Downloaded`).
                   </p>
                   <p>
-                    3. Final consensus combines validators using stake-weighted aggregation to produce
-                    post-consensus metrics and ranks.
+                    3. Final consensus combines validators using stake-weighted aggregation of `best_run`
+                    to produce final ranks and weights.
                   </p>
                   <p>
-                    4. `Pre-consensus` card shows this validator local values. `Validator consensus` card shows
-                    final metrics after combining all validators.
+                    4. `Validator consensus` shows the final post-consensus result. `IPFS Uploaded`
+                    shows the raw local snapshot this validator published.
                   </p>
                 </div>
               ) : ipfsConsensusDetail.type === "download" ? (
