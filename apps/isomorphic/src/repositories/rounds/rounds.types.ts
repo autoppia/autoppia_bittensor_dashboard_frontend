@@ -313,7 +313,7 @@ export interface GetRoundResponse {
   success: boolean;
   data: {
     round_number: number;
-    post_consensus_summary: PostConsensusSummary;
+    post_consensus_json: PostConsensusSummary;
     validators: ValidatorRoundData[];
   };
 }
@@ -368,8 +368,7 @@ export interface RoundSeasonSummaryView {
     avg_eval_score: number;
     avg_eval_time: number;
     avg_eval_cost?: number | null;
-    raw_summary?: unknown;
-    post_consensus_summary?: unknown;
+    post_consensus_json?: unknown;
   } | null;
 }
 

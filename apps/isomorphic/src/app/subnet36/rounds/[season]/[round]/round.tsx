@@ -846,7 +846,7 @@ function RoundStatsInline({
   seasonParam?: string | number;
   roundParam?: number;
 }) {
-  // ✅ Usar datos de post_consensus_summary si están disponibles
+  // Use post_consensus_json if available.
   const winner = postConsensusSummary?.winner;
   const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageReward ?? statistics?.averageReward ?? 0;
   const averageEvalTime = winner?.avg_eval_time ?? 0;
@@ -857,7 +857,7 @@ function RoundStatsInline({
   // Aggregated winner should NOT change when validator is selected
   // It always shows the overall round winner
   const topMiner = React.useMemo(() => {
-    // ✅ Priorizar winner de post_consensus_summary
+    // Prioritize winner from post_consensus_json.
     if (winner) {
       return {
         uid: winner.uid,
@@ -2669,13 +2669,12 @@ export default function Round() {
         roundStatusData?.round_in_season ??
         seasonSummaryData?.round_in_season ??
         validatorsViewData?.round_in_season,
-      post_consensus_summary: seasonSummary
+      post_consensus_json: seasonSummary
         ? {
             winner: topMiners[0] ?? null,
             miners_evaluated: seasonSummary.miners_evaluated,
             tasks_evaluated: seasonSummary.tasks_evaluated,
             leadership_rule: leadershipRule,
-            raw_summary: seasonSummary.raw_summary,
           }
         : null,
       validators: validatorsDataPayload.map((validator: any) => ({
@@ -3049,7 +3048,7 @@ export default function Round() {
             )}
             {/* ── Leadership Rule Strip ── */}
             {(() => {
-              const lr = roundData?.post_consensus_summary?.leadership_rule;
+              const lr = roundData?.post_consensus_json?.leadership_rule;
               if (!lr) return null;
               const det = lr.dethroned;
               const reigningReward = lr.reigning_reward ?? lr.reigning_score;
@@ -3179,7 +3178,7 @@ export default function Round() {
                 selectedValidator={selectedValidator}
                 statistics={statistics}
                 topMiners={topMiners}
-                postConsensusSummary={roundData?.post_consensus_summary ?? null}
+                postConsensusSummary={roundData?.post_consensus_json ?? null}
                 loading={roundDataLoading}
                 error={roundDataError ?? undefined}
                 seasonParam={seasonParam ?? undefined}
