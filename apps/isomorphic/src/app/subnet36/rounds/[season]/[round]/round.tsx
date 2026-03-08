@@ -2589,22 +2589,48 @@ export default function Round() {
   const validatorsDataPayload = validatorsViewData?.validators ?? [];
   const topMiners = React.useMemo(() => {
     if (seasonSummary?.leader_after) {
+      const leaderUid = seasonSummary.leader_after.uid;
+      // Fallback: if avg_eval_time / avg_eval_cost from round_summary are 0/null,
+      // use the leader's best_local_eval_time / best_local_eval_cost from the
+      // validators' competition data (which is always populated from the agent run).
+      let fallbackTime: number | null = null;
+      let fallbackCost: number | null = null;
+      for (const v of validatorsDataPayload) {
+        const miners: any[] = v?.competition_state?.miners ?? [];
+        const leaderMiner = miners.find((m: any) => m?.uid === leaderUid);
+        if (leaderMiner) {
+          if (fallbackTime === null && leaderMiner.best_local_eval_time) {
+            fallbackTime = Number(leaderMiner.best_local_eval_time);
+          }
+          if (fallbackCost === null && leaderMiner.best_local_eval_cost != null) {
+            fallbackCost = Number(leaderMiner.best_local_eval_cost);
+          }
+        }
+      }
+      const resolvedTime =
+        seasonSummary.avg_eval_time && seasonSummary.avg_eval_time > 0
+          ? seasonSummary.avg_eval_time
+          : (fallbackTime ?? null);
+      const resolvedCost =
+        seasonSummary.avg_eval_cost != null
+          ? seasonSummary.avg_eval_cost
+          : fallbackCost;
       return [
         {
-          uid: seasonSummary.leader_after.uid,
+          uid: leaderUid,
           name: seasonSummary.leader_after.name,
           image: seasonSummary.leader_after.image ?? null,
           hotkey: seasonSummary.leader_after.hotkey ?? null,
           github_url: seasonSummary.leader_after.github_url ?? null,
           avg_reward: seasonSummary.leader_after.reward,
           avg_eval_score: seasonSummary.avg_eval_score,
-          avg_eval_time: seasonSummary.avg_eval_time,
-          avg_eval_cost: seasonSummary.avg_eval_cost ?? null,
+          avg_eval_time: resolvedTime,
+          avg_eval_cost: resolvedCost ?? null,
         },
       ];
     }
     return [];
-  }, [seasonSummary]);
+  }, [seasonSummary, validatorsDataPayload]);
 
   const statistics = React.useMemo(() => {
     if (!seasonSummary) return null;
@@ -2904,11 +2930,8 @@ export default function Round() {
       backendStatus === "evaluating_finished" ||
       roundInfo?.current === true);
 
-  // Determine if round data is not yet available (statistics already loaded above)
-  // Only show "no data" message for current/active rounds that truly have no data
-  const isCurrentRound = roundInfo?.current === true || roundInfo?.status === "active";
-  const hasNoData =
-    isCurrentRound && !statistics?.totalMiners && !statistics?.totalTasks;
+  // Only show full-screen "data not available" when round is still pending (not started).
+  // For active rounds we always show header + progress + "Round in progress" banner below.
   const isRoundStarting = roundInfo?.status === "pending";
 
   return (
@@ -2921,8 +2944,8 @@ export default function Round() {
         </div>
       )}
 
-      {/* Show "Data Not Available" message if round is starting or has no data */}
-      {!roundDataError && (isRoundStarting || hasNoData) ? (
+      {/* Show "Data Not Available" only when round is pending (not yet started) */}
+      {!roundDataError && isRoundStarting ? (
         <div className="mt-10 mb-10">
           <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
