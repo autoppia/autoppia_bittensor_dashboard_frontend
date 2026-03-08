@@ -2718,9 +2718,7 @@ export default function Round() {
         })),
         ipfs_uploaded: validator.ipfs?.uploaded ?? null,
         ipfs_downloaded: validator.ipfs?.downloaded ?? null,
-        consensus_summary: validator.consensus?.pre_consensus ?? null,
         post_consensus_evaluation: validator.consensus?.post_consensus ?? null,
-        evaluation_pre_consensus: validator.consensus?.pre_consensus ?? null,
         evaluation_post_consensus: validator.consensus?.post_consensus ?? null,
       })),
     };
@@ -3384,7 +3382,6 @@ export default function Round() {
           const payload =
             raw?.evaluation_post_consensus ??
             raw?.post_consensus_evaluation ??
-            raw?.consensus_summary ??
             raw;
 
           if (Array.isArray(payload.miners)) {
