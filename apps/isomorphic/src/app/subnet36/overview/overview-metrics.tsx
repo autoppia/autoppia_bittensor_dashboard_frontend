@@ -226,7 +226,7 @@ export default function OverviewMetrics({
       id: "total-miners",
       title: "Miners",
       value: metrics?.totalMiners ?? 0,
-      topLabel: "Active miners",
+      topLabel: "Season miners",
       bottomLabel: seasonLabel || `Round ${latestFinishedRound}`,
       icon: LuPickaxe,
       bgColor:
