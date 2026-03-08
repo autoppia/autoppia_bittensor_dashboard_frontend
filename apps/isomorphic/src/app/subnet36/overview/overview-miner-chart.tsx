@@ -221,12 +221,12 @@ export default function MinerChart({
     }));
   }, [effectiveChartSource]);
 
-  // Generate X-axis ticks every 4 rounds
+  // Generate X-axis ticks from the same visible slice shown in the chart.
   const xAxisTicks = useMemo<number[]>(() => {
-    if (!chartData.length) {
+    if (!filteredData.length) {
       return [];
     }
-    const rounds = chartData.map((d) => d.round);
+    const rounds = filteredData.map((d) => d.round);
     const minRound = Math.min(...rounds);
     const maxRound = Math.max(...rounds);
 
@@ -246,7 +246,7 @@ export default function MinerChart({
     }
 
     return ticks.sort((a, b) => a - b);
-  }, [chartData]);
+  }, [filteredData]);
 
   const availableSotaSeries = useMemo<string[]>(() => {
     if (!chartData.length) {
