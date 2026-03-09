@@ -13,7 +13,7 @@ import {
 
 // UI & Utils
 import PageHeader from "@/app/shared/page-header";
-import { Button, Text } from "rizzui";
+import { Button, Select, Text } from "rizzui";
 import { Text as RizzText } from "rizzui/typography";
 import { Skeleton } from "@core/ui/skeleton";
 import WidgetCard from "@core/components/cards/widget-card";
@@ -351,6 +351,15 @@ function RoundHeaderInline({
     [router, roundKey]
   );
 
+  const seasonOptions = React.useMemo(
+    () =>
+      (availableSeasons ?? []).map((season) => ({
+        label: `Season ${season}`,
+        value: String(season),
+      })),
+    [availableSeasons]
+  );
+
   const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
   const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
   const currentBlock =
@@ -505,21 +514,6 @@ function RoundHeaderInline({
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
                   ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
                 </h1>
-                <div className="relative">
-                  <select
-                    value={String(round?.season ?? seasonParam ?? progressData?.season ?? "")}
-                    onChange={(event) => goToSeason(Number.parseInt(event.target.value, 10))}
-                    disabled={seasonsLoading || !availableSeasons?.length}
-                    className="appearance-none rounded-full border-2 border-cyan-400/70 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 px-4 py-2 pr-10 text-xs font-bold uppercase tracking-wider text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {(availableSeasons ?? []).map((season) => (
-                      <option key={season} value={season} className="bg-slate-900 text-white">
-                        Season {season}
-                      </option>
-                    ))}
-                  </select>
-                  <PiCaretRightBold className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-90 text-white/80" />
-                </div>
                 <span
                   className={cn(
                     chipBase,
@@ -586,12 +580,27 @@ function RoundHeaderInline({
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
+                <Select
+                  options={seasonOptions}
+                  value={seasonOptions.find(
+                    (option) =>
+                      option.value ===
+                      String(round?.season ?? seasonParam ?? progressData?.season ?? "")
+                  )}
+                  onChange={(option: { label: string; value: string }) =>
+                    goToSeason(Number.parseInt(option.value, 10))
+                  }
+                  disabled={seasonsLoading || !seasonOptions.length}
+                  className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
+                  selectClassName="!h-[42px] !rounded-xl !border-0 !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none"
+                  dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
+                />
                 {/* Previous round (lower number) on the left */}
                 <button
                   type="button"
                   onClick={() => goToRound(previousKey)}
                   disabled={!previousKey}
-                  className={cn(roundNavButton)}
+                  className={cn(roundNavButton, "h-[42px]")}
                 >
                   <PiCaretLeftBold className="h-4 w-4" />
                   <span>
@@ -603,7 +612,7 @@ function RoundHeaderInline({
                   <button
                     type="button"
                     onClick={() => goToRound(nextKey)}
-                    className={cn(roundNavButton)}
+                    className={cn(roundNavButton, "h-[42px]")}
                   >
                     <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
                     <PiCaretRightBold className="h-4 w-4" />
