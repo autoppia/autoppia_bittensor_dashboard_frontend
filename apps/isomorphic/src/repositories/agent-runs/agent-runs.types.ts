@@ -30,11 +30,17 @@ export interface AgentRunData {
   completedTasks: number;
   successfulTasks: number;
   failedTasks: number;
-  score: number;
+  reward: number;
   ranking?: number;
   duration: number;
-  overallScore: number;
+  overallReward: number;
   averageEvaluationTime?: number | null;
+  /** Reason for score 0 when applicable (e.g. over_cost_limit, deploy_failed, all_tasks_failed) */
+  zeroReason?: string | null;
+  isReused?: boolean;
+  reusedFromAgentRunId?: string | null;
+  reusedFromRoundDisplay?: string | null;
+  tasks?: AgentRunTaskData[];
   /** Optional per-website stats (from run details API) */
   websites?: Array<{
     website?: string;
@@ -62,7 +68,7 @@ export interface AgentRunListItem {
   totalTasks: number;
   completedTasks?: number;
   successfulTasks?: number;
-  overallScore: number;
+  overallReward: number;
   successRate?: number | null;
   ranking?: number;
   averageEvaluationTime?: number | null;
@@ -85,8 +91,10 @@ export interface AgentRunEvaluationData {
   // actions, screenshots, logs removed - not needed in simplified response
 }
 
+export interface AgentRunTaskData extends AgentRunEvaluationData {}
+
 // ===== TASK ACTION =====
-export interface TaskAction {
+export interface AgentRunTaskAction {
   id: string;
   type:
     | "navigate"
@@ -113,15 +121,40 @@ export interface TaskAction {
 
 // ===== AGENT RUN STATS =====
 export interface AgentRunStats {
+  runId?: string;
+  overallReward?: number;
   totalTasks: number;
   websites: number;
-  avg_score: number;
   avg_reward: number;
   avg_time: number;
   successfulTasks: number;
   failedTasks: number;
+  successRate?: number;
+  averageTaskDuration?: number;
+  scoreDistribution?: {
+    excellent: number;
+    good: number;
+    average: number;
+    poor: number;
+  };
   performanceByWebsite: {
     website: string;
+    tasks: number;
+    successful: number;
+    failed: number;
+    averageScore: number;
+    averageDuration: number;
+    useCases?: {
+      useCase: string;
+      tasks: number;
+      successful: number;
+      failed: number;
+      averageScore: number;
+      averageDuration: number;
+    }[];
+  }[];
+  performanceByUseCase?: {
+    useCase: string;
     tasks: number;
     successful: number;
     failed: number;
@@ -142,7 +175,7 @@ export interface AgentRunSummary {
   startTime: string;
   endTime?: string;
   status: string;
-  overallScore: number;
+  overallReward: number;
   totalTasks: number;
   successfulTasks: number;
   failedTasks: number;
@@ -150,12 +183,12 @@ export interface AgentRunSummary {
   ranking?: number;
   topPerformingWebsite: {
     website: string;
-    score: number;
+    averageEvalScore: number;
     tasks: number;
   };
   topPerformingUseCase: {
     useCase: string;
-    score: number;
+    averageEvalScore: number;
     tasks: number;
   };
   recentActivity: {
@@ -257,7 +290,7 @@ export interface AgentRunQueryParams {
   website?: string;
   useCase?: string;
   status?: "pending" | "running" | "completed" | "failed";
-  sortBy?: "startTime" | "score" | "duration" | "ranking";
+  sortBy?: "startTime" | "reward" | "duration" | "ranking";
   sortOrder?: "asc" | "desc";
 }
 
@@ -279,7 +312,7 @@ export interface AgentRunsListQueryParams {
   validatorId?: string;
   agentId?: string;
   status?: "pending" | "running" | "completed" | "failed" | "timeout";
-  sortBy?: "startTime" | "score" | "duration" | "ranking";
+  sortBy?: "startTime" | "reward" | "duration" | "ranking";
   sortOrder?: "asc" | "desc";
   startDate?: string;
   endDate?: string;

@@ -7,6 +7,8 @@ import {
   useCallback,
   useEffect,
   type CSSProperties,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
@@ -27,6 +29,7 @@ import type { LeaderboardData } from "@/repositories/overview/overview.types";
 
 const filterOptions = ["7R", "15R", "30R", "All"] as const;
 type FilterOption = (typeof filterOptions)[number];
+const filterOptionValues = [...filterOptions];
 const CHART_HEIGHT = 200;
 const MAX_CHART_HEIGHT = 460;
 
@@ -147,45 +150,44 @@ export default function MinerChart({
       return [];
     }
 
-    return (
-      apiLeaderboard
-        .map((entry, index) => {
-          const normalizedRound =
-            resolveRoundNumber(entry.round) ??
-            resolveRoundNumber(entry.roundNumber) ??
-            resolveRoundNumber((entry as LeaderboardSource).round_id) ??
-            resolveRoundNumber((entry as LeaderboardSource).roundId) ??
-            resolveRoundNumber((entry as LeaderboardSource).id) ??
-            (Number.isFinite(index) ? index + 1 : undefined);
+    const normalized = apiLeaderboard.reduce<NormalizedLeaderboardDatum[]>(
+      (acc, entry, index) => {
+        const source = entry as LeaderboardSource;
+        const normalizedRound =
+          resolveRoundNumber(entry.round) ??
+          resolveRoundNumber(source.roundNumber) ??
+          resolveRoundNumber(source.round_id) ??
+          resolveRoundNumber(source.roundId) ??
+          resolveRoundNumber(source.id) ??
+          (Number.isFinite(index) ? index + 1 : undefined);
 
-          if (normalizedRound === undefined) {
-            return null;
-          }
+        if (normalizedRound === undefined) {
+          return acc;
+        }
 
-          const source = entry as LeaderboardSource;
-          const labelSource =
-            source.roundLabel ??
-            source.roundDisplay ??
-            source.roundText ??
-            source.roundTitle ??
-            entry.round ??
-            entry.roundNumber ??
-            source.round_id ??
-            source.roundId;
+        const labelSource =
+          source.roundLabel ??
+          source.roundDisplay ??
+          source.roundText ??
+          source.roundTitle ??
+          entry.round ??
+          source.roundNumber ??
+          source.round_id ??
+          source.roundId;
 
-          return {
-            ...entry,
-            round: normalizedRound,
-            roundLabel: deriveRoundLabel(labelSource, normalizedRound),
-            // Explicitly preserve winner fields (support both camelCase and snake_case)
-            winnerUid: entry.winnerUid ?? (entry as LeaderboardEntryWithSnake).winner_uid,
-            winnerName: entry.winnerName ?? (entry as LeaderboardEntryWithSnake).winner_name,
-          };
-        })
-        .filter((entry): entry is NormalizedLeaderboardDatum => entry !== null)
-        // Sort after normalization so the x-axis stays in ascending order.
-        .sort((a, b) => a.round - b.round)
+        acc.push({
+          ...entry,
+          round: normalizedRound,
+          roundLabel: deriveRoundLabel(labelSource, normalizedRound),
+          winnerUid: entry.winnerUid ?? (entry as LeaderboardEntryWithSnake).winner_uid,
+          winnerName: entry.winnerName ?? (entry as LeaderboardEntryWithSnake).winner_name,
+        });
+        return acc;
+      },
+      []
     );
+
+    return normalized.sort((a, b) => a.round - b.round);
   }, [leaderboardData?.data?.leaderboard]);
 
   const filteredBySeason = useMemo<NormalizedLeaderboardDatum[]>(() => {
@@ -216,40 +218,13 @@ export default function MinerChart({
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     return effectiveChartSource.map((entry) => ({
       ...entry,
-      Score: scaleScoreValue(entry.subnet36) ?? 0,
-      subnet36: scaleScoreValue(entry.subnet36) ?? 0,
-      openai_cua: scaleScoreValue(entry.openai_cua),
-      anthropic_cua: scaleScoreValue(entry.anthropic_cua),
-      browser_use: scaleScoreValue(entry.browser_use),
+      reward: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      subnet36: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      openai_cua: scaleScoreValue((entry as Record<string, unknown>).openai_cua as number | null | undefined),
+      anthropic_cua: scaleScoreValue((entry as Record<string, unknown>).anthropic_cua as number | null | undefined),
+      browser_use: scaleScoreValue((entry as Record<string, unknown>).browser_use as number | null | undefined),
     }));
   }, [effectiveChartSource]);
-
-  // Generate X-axis ticks every 4 rounds
-  const xAxisTicks = useMemo<number[]>(() => {
-    if (!chartData.length) {
-      return [];
-    }
-    const rounds = chartData.map((d) => d.round);
-    const minRound = Math.min(...rounds);
-    const maxRound = Math.max(...rounds);
-
-    const ticks: number[] = [];
-    // Start from the first multiple of 4 >= minRound
-    const startTick = Math.ceil(minRound / 4) * 4;
-    for (let i = startTick; i <= maxRound; i += 4) {
-      ticks.push(i);
-    }
-
-    // Always include min and max if not already included
-    if (!ticks.includes(minRound)) {
-      ticks.unshift(minRound);
-    }
-    if (!ticks.includes(maxRound)) {
-      ticks.push(maxRound);
-    }
-
-    return ticks.sort((a, b) => a - b);
-  }, [chartData]);
 
   const availableSotaSeries = useMemo<string[]>(() => {
     if (!chartData.length) {
@@ -258,7 +233,7 @@ export default function MinerChart({
     const detected = new Set<string>();
     chartData.forEach((entry) => {
       sotaAgents.forEach((agent) => {
-        const value = (entry as Record<string, unknown>)[agent.value];
+        const value = (entry as unknown as Record<string, unknown>)[agent.value];
         if (typeof value === "number" && Number.isFinite(value)) {
           detected.add(agent.value);
         }
@@ -299,10 +274,15 @@ export default function MinerChart({
     [availableSotaSeries]
   );
 
-  const handleCompareChange = useCallback((values: string[]) => {
-    setUserTouchedSeries(true);
-    setCompareWith(values);
-  }, []);
+  const handleCompareChange = useCallback<Dispatch<SetStateAction<string[]>>>(
+    (values) => {
+      setUserTouchedSeries(true);
+      setCompareWith((previous) =>
+        typeof values === "function" ? values(previous) : values
+      );
+    },
+    []
+  );
 
   const filteredData = useMemo(() => {
     if (!chartData.length) return [];
@@ -318,6 +298,27 @@ export default function MinerChart({
     return chartData.slice(-totalRounds);
   }, [chartData, timeRange]);
 
+  const xAxisTicks = useMemo<number[]>(() => {
+    if (!filteredData.length) return [];
+    const rounds = filteredData.map((d) => d.round);
+    const minRound = Math.min(...rounds);
+    const maxRound = Math.max(...rounds);
+    const ticks: number[] = [];
+    const startTick = Math.ceil(minRound / 4) * 4;
+    for (let i = startTick; i <= maxRound; i += 4) ticks.push(i);
+    if (!ticks.includes(minRound)) ticks.unshift(minRound);
+    if (!ticks.includes(maxRound)) ticks.push(maxRound);
+    return ticks.sort((a, b) => a - b);
+  }, [filteredData]);
+
+  const roundLabelMap = useMemo(() => {
+    const map = new Map<number, string>();
+    chartData.forEach((entry) => {
+      if (typeof entry.round === "number") map.set(entry.round, entry.roundLabel);
+    });
+    return map;
+  }, [chartData]);
+
   const selectedSeries = useMemo(
     () =>
       sotaAgents
@@ -330,12 +331,12 @@ export default function MinerChart({
     if (!filteredData.length) {
       return [0, 100];
     }
-    const keys = ["Score", ...selectedSeries];
+    const keys = ["reward", ...selectedSeries];
     let minValue = Infinity;
     let maxValue = -Infinity;
     filteredData.forEach((entry) => {
       keys.forEach((key) => {
-        const rawValue = (entry as Record<string, unknown>)[key];
+        const rawValue = (entry as unknown as Record<string, unknown>)[key];
         if (typeof rawValue === "number" && !Number.isNaN(rawValue)) {
           minValue = Math.min(minValue, rawValue);
           maxValue = Math.max(maxValue, rawValue);
@@ -383,7 +384,7 @@ export default function MinerChart({
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
       const roundNum = data.round;
-      const score = data.subnet36;
+      const reward = (data as Record<string, unknown>).reward ?? (data as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
       const winnerName = data.winnerName ?? (data as LeaderboardEntryWithSnake).winner_name;
       const winnerUid = data.winnerUid ?? (data as LeaderboardEntryWithSnake).winner_uid;
 
@@ -442,7 +443,7 @@ export default function MinerChart({
                 Reward:
               </span>
               <span style={{ color: "#10b981" }} className="text-lg font-bold">
-                {score.toFixed(1)}%
+                {reward.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -466,7 +467,7 @@ export default function MinerChart({
           title="Top Miner Reward"
           action={
             <ButtonGroupAction
-              options={filterOptions}
+              options={filterOptionValues}
               defaultActive={timeRange}
               onChange={(option) => handleFilterBy(option)}
             />
@@ -513,7 +514,7 @@ export default function MinerChart({
           title="Top Miner Reward"
           action={
             <ButtonGroupAction
-              options={filterOptions}
+              options={filterOptionValues}
               defaultActive={timeRange}
               onChange={(option) => handleFilterBy(option)}
             />
@@ -537,12 +538,12 @@ export default function MinerChart({
     <WidgetCard
       title={
         season !== null && season !== undefined
-          ? `Top Miner Score - Season ${season}`
-          : "Top Miner Score"
+          ? `Top Miner Reward - Season ${season}`
+          : "Top Miner Reward"
       }
       action={
         <ButtonGroupAction
-          options={filterOptions}
+          options={filterOptionValues}
           defaultActive={timeRange}
           onChange={(option) => handleFilterBy(option)}
         />
@@ -611,7 +612,7 @@ export default function MinerChart({
               <Tooltip content={<CustomLeaderboardTooltip />} />
               <Area
                 type="monotone"
-                dataKey="Score"
+                dataKey="reward"
                 stroke="#10b981"
                 strokeWidth={2}
                 strokeLinecap="round"

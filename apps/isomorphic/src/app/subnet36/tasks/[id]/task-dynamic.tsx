@@ -1263,6 +1263,7 @@ type TaskResultsProps = {
       status: string;
       eval_score: number;
       eval_time: number;
+      zero_reason?: string | null;
     } | null;
     actions: any[];
     screenshots: any[];
@@ -1740,6 +1741,7 @@ export default function TaskDynamic() {
         successCount={evaluationData.actions.filter((a: any) => a.success).length}
         failCount={evaluationData.actions.filter((a: any) => !a.success || a.error).length}
         info={info}
+        evaluationZeroReason={(evaluationData?.result as Record<string, unknown> | undefined)?.zero_reason as string | undefined}
       />
 
       <div className="mb-10">

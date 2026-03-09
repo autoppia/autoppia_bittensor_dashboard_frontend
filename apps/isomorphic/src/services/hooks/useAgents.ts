@@ -8,7 +8,7 @@ import { agentsRepository } from '@/repositories/agents/agents.repository';
 import type {
   AgentData,
   AgentRoundMetrics,
-  ScoreRoundDataPoint,
+  RewardRoundDataPoint,
   AgentsListQueryParams,
   AgentRunsQueryParams,
   AgentPerformanceQueryParams,
@@ -122,14 +122,24 @@ function useApiCall<T>(
   return { data, loading, error, refetch };
 }
 
-// Hook for rounds data with miners (new unified endpoint)
-// roundIdentifier: "season/round" (e.g. "83/20") or legacy number
-export function useRoundsData(roundIdentifier?: string | number) {
+// Legacy rounds hook retained for screens outside the season-first agents UI.
+export function useRoundsData(options?: {
+  roundIdentifier?: string | number;
+  season?: number;
+}) {
   const request = useCallback(
-    () => agentsRepository.getRoundsData(roundIdentifier),
-    [roundIdentifier]
+    () => agentsRepository.getRoundsData(options),
+    [options]
   );
-  return useApiCall(request, `rounds-data:${roundIdentifier ?? 'all'}`);
+  return useApiCall(request, `rounds-data:${JSON.stringify(options ?? null)}`);
+}
+
+export function useSeasonRank(seasonRef?: number | "latest") {
+  const request = useCallback(
+    () => agentsRepository.getSeasonRank(seasonRef),
+    [seasonRef]
+  );
+  return useApiCall(request, `season-rank:${String(seasonRef ?? "latest")}`);
 }
 
 // Hook for latest round and top miner (for initial redirect)
@@ -169,7 +179,7 @@ export function useMinerHistorical(miner_uid: number | undefined, season?: numbe
 }
 
 // Hook for specific miner details by UID (optimized endpoint)
-export function useMinerDetails(uid: number, params?: { round?: number }) {
+export function useMinerDetails(uid: number, params?: { round?: number; season?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
   const request = useCallback(
     () => agentsRepository.getMinerDetails(uid, stableParams),
@@ -191,19 +201,31 @@ export function useAgents(params?: AgentsListQueryParams) {
 // Hook for specific agent details
 type AgentDetailPayload = {
   agent: AgentData | null;
-  scoreRoundData: ScoreRoundDataPoint[];
-  availableRounds?: number[];
+  rewardRoundData: RewardRoundDataPoint[];
+  availableRounds?: Array<number | string>;
   roundMetrics?: AgentRoundMetrics | null;
+  performanceByWebsite?: Array<{
+    website: string;
+    tasks_received: number;
+    tasks_success: number;
+    success_rate: number;
+  }>;
+  avg_cost_per_task?: number | null;
+  is_reused?: boolean;
+  reused_from_agent_run_id?: string | null;
+  reused_from_round?: string | null;
+  zero_reason?: string | null;
+  season_leadership?: any;
 };
 
-export function useAgent(id?: string | null, params?: { round?: number }) {
+export function useAgent(id?: string | null, params?: { round?: number; season?: number }) {
   const { paramsKey, stableParams } = useStableParams(params);
   // If id is null/undefined, don't make any API calls
   const shouldFetch = !!id;
 
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
-      return Promise.resolve({ agent: null, scoreRoundData: [] });
+      return Promise.resolve({ agent: null, rewardRoundData: [] });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);

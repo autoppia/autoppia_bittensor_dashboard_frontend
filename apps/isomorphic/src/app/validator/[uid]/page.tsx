@@ -374,7 +374,7 @@ function ValidatorDetailsCard({ data }: Readonly<{ data: ValidatorDetailsData }>
             <div className="flex items-center gap-2">
               {(() => {
                 const lastRound = validator.lastRoundEvaluated;
-                if (lastRound == null) {
+                if (lastRound == null || String(lastRound) === "—") {
                   return <p className="text-xl font-bold text-white">—</p>;
                 }
                 // Parse "season/round" format (string) or display number

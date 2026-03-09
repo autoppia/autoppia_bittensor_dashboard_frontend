@@ -253,37 +253,32 @@ export default function TaskResults() {
         </div>
 
         <div className="space-y-2 rounded-xl border border-slate-700/25 h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto bg-slate-900/60">
-          {(() => {
-            if (actionsLoading) {
-              return Array.from({ length: 5 }, (_, index) => (
-                <ListItemPlaceholder key={`action-loading-${index}`} />
-              ));
-            }
-            if (actionsError) {
-              return (
-                <div className="flex items-center justify-center h-full text-red-300">
-                  <div className="text-center space-y-1">
-                    <PiXCircle className="w-8 h-8 mx-auto" />
-                    <Text className="text-sm text-red-200">
-                      Failed to load actions
-                    </Text>
-                  </div>
-                </div>
-              );
-            }
-            if (actions.length === 0) {
-              return (
-                <div className="flex items-center justify-center h-full text-slate-400">
-                  <div className="text-center space-y-1">
-                    <PiPlay className="w-8 h-8 mx-auto" />
-                    <Text className="text-sm text-slate-300">No actions found</Text>
-                  </div>
-                </div>
-              );
-            }
-            return actions.map((action, index) => {
+          {actionsLoading ? (
+            Array.from({ length: 5 }, (_, index) => (
+              <ListItemPlaceholder key={`action-loading-${index}`} />
+            ))
+          ) : actionsError ? (
+            <div className="flex items-center justify-center h-full text-red-300">
+              <div className="text-center space-y-1">
+                <PiXCircle className="w-8 h-8 mx-auto" />
+                <Text className="text-sm text-red-200">
+                  Failed to load actions
+                </Text>
+              </div>
+            </div>
+          ) : actions.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <div className="text-center space-y-1">
+                <PiPlay className="w-8 h-8 mx-auto" />
+                <Text className="text-sm text-slate-300">No actions found</Text>
+              </div>
+            </div>
+          ) : (
+            actions.map((action, index) => {
               const meta =
-                ACTION_TYPE_META[action.type as keyof typeof ACTION_TYPE_META] ?? ACTION_TYPE_META.other;
+                ACTION_TYPE_META[
+                  (action.type as keyof typeof ACTION_TYPE_META) ?? "other"
+                ] ?? ACTION_TYPE_META.other;
               const ActionIcon = meta.icon;
               return (
                 <div
@@ -313,8 +308,8 @@ export default function TaskResults() {
                   )}
                 </div>
               );
-            });
-          })()}
+            })
+          )}
         </div>
 
         {/* Pagination */}

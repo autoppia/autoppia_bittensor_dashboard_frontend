@@ -156,9 +156,55 @@ function formatUseCaseName(name?: string | null): string {
     .join(" ");
 }
 
+function humanizeZeroReason(reason: string): string {
+  if (!reason || typeof reason !== "string") return reason || "—";
+  return reason
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function normalizeRoundInSeason(
+  roundValue: unknown,
+  seasonValue?: unknown
+): number | null {
+  const parseNumber = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+  };
+  const roundNum = parseNumber(roundValue);
+  const seasonNum = parseNumber(seasonValue);
+  if (roundNum === null) return null;
+  if (roundNum >= 10000) {
+    if (seasonNum !== null && roundNum >= seasonNum * 10000) {
+      const decoded = roundNum - seasonNum * 10000;
+      if (decoded > 0) return decoded;
+    }
+    const mod = roundNum % 10000;
+    if (mod > 0) return mod;
+  }
+  return roundNum > 0 ? roundNum : null;
+}
+
+function normalizePositiveInt(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+}
+
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
-  stats?: AgentRunStatsData | null
+  stats?: AgentRunStatsData | null,
+  _evaluations?: AgentRunEvaluationData[] | null
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
 
@@ -217,8 +263,40 @@ export default function Page() {
 
   // Derived detail data from stats for charts/summary
   const detailData = useMemo(() => {
-    return buildDetailDataFromStats(stats);
-  }, [stats]);
+    return buildDetailDataFromStats(stats, evaluations);
+  }, [stats, evaluations]);
+
+  // Check if agent run has no data yet
+  const hasNoData =
+    !isLoading &&
+    error &&
+    (!stats ||
+      (stats.totalTasks === 0 && stats.overallReward === 0));
+
+  const roundInfo = info?.round as Record<string, unknown> | undefined;
+  const currentSeasonNumber =
+    normalizePositiveInt(roundInfo?.season_number ?? roundInfo?.season) ?? null;
+  const currentRoundInSeason =
+    normalizeRoundInSeason(
+      roundInfo?.round_number_in_season ??
+        roundInfo?.roundNumber ??
+        roundInfo?.round,
+      currentSeasonNumber
+    ) ?? null;
+  const roundDisplayLabel =
+    currentSeasonNumber !== null && currentRoundInSeason !== null
+      ? `Season ${currentSeasonNumber}, Round ${currentRoundInSeason}`
+      : (roundInfo?.roundId as string | undefined) ??
+        (roundInfo?.validatorRoundId as string | undefined) ??
+        "—";
+  const roundLinkHref =
+    currentSeasonNumber !== null && currentRoundInSeason !== null
+      ? `${routes.rounds}/${currentSeasonNumber}/${currentRoundInSeason}`
+      : "#";
+  const reusedRoundInSeason = normalizeRoundInSeason(
+    (info?.reusedFrom as Record<string, unknown> | undefined)?.roundNumber,
+    (info?.reusedFrom as Record<string, unknown> | undefined)?.seasonNumber
+  );
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -338,6 +416,14 @@ export default function Page() {
         <AgentRunStatsPlaceholder />
       ) : (
         <AgentRunStats stats={stats || null} />
+      )}
+
+      {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
+      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (info?.zeroReason ?? (stats as Record<string, unknown>)?.zeroReason) && (
+        <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+          <span className="font-semibold">Reason for zero reward:</span>{" "}
+          {humanizeZeroReason(String(info?.zeroReason ?? (stats as Record<string, unknown>)?.zeroReason ?? ""))}
+        </div>
       )}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
@@ -705,257 +791,6 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
   );
 }
 
-// Personas card group (legacy - kept for backward compatibility)
-function AgentRunPersonas({
-  personas,
-  summary,
-}: Readonly<{
-  personas?: any;
-  summary?: any;
-}>) {
-  const roundData = personas?.round || {
-    id: "—",
-    status: "Active",
-    startTime: null,
-    totalValidators: personas?.validatorCount || 0,
-  };
-  const validatorData = personas?.validator || {
-    name: "Autoppia Validator",
-    image: "/validators/Autoppia.png",
-    id: null,
-    country: "—",
-    track: "—",
-  };
-  const agentData = personas?.agent || {
-    name: "Benchmark Agent",
-    image: "/images/autoppia-logo.png",
-    id: "—",
-    uid: null,
-    hotkey: null,
-    provider: "—",
-    github: null,
-  };
-
-  const validatorHotkey =
-    summary?.validatorId || validatorData.id || validatorData.name;
-  const validatorUid =
-    extractUidNumber(summary?.validatorId) ?? extractUidNumber(validatorHotkey);
-  const taoStatsUrl = validatorHotkey
-    ? `https://taostats.io/validators/${validatorHotkey}`
-    : null;
-
-  const agentUid =
-    (typeof agentData.uid === "number" ? agentData.uid : null) ??
-    (typeof summary?.agentUid === "number" ? summary?.agentUid : null) ??
-    extractUidNumber(agentData.id) ??
-    extractUidNumber(summary?.agentId);
-
-  const agentHotkey =
-    agentData.hotkey ??
-    summary?.agentHotkey ??
-    agentData.id ??
-    summary?.agentId;
-
-  const fallbackMinerImage = (() => {
-    if (agentUid === null) return "/images/autoppia-logo.png";
-    const normalized = Math.abs(agentUid % 50);
-    return `/miners/${normalized}.svg`;
-  })();
-
-  const minerImageSrc = agentData.image
-    ? resolveAssetUrl(agentData.image)
-    : resolveAssetUrl(fallbackMinerImage);
-  const validatorImageSrc = validatorData.image
-    ? resolveAssetUrl(validatorData.image)
-    : resolveAssetUrl("/validators/Other.png");
-
-  // Epoch helpers
-  const epochStart = roundData.startEpoch ?? null;
-  const epochEnd = roundData.endEpoch ?? null;
-  const formatEpoch = (value: number | null) =>
-    typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-  
-  // Round number/ID
-  const roundNumber = roundData.roundNumber ?? roundData.validatorRoundId ?? "—";
-  const roundStatus = roundData.status || "Active";
-
-  return (
-    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      {/* Round */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400 text-black shadow">
-              <PiClock className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Round
-              </p>
-              <p className="text-xl font-semibold leading-tight text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.35)]">
-                #{roundNumber}
-              </p>
-            </div>
-          </div>
-          <span
-            className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-            style={{
-              borderColor: "rgba(253, 245, 230, 0.45)",
-              backgroundColor: "rgba(253, 245, 230, 0.12)",
-              color: HIGHLIGHT_COLOR,
-            }}
-          >
-            {roundStatus.replace(/^\w/, (c: string) =>
-              c.toUpperCase()
-            )}
-          </span>
-        </header>
-
-        <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-white/80 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3 font-mono text-base text-white">
-            <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-              Epoch:
-            </span>
-            <span className="whitespace-nowrap">
-              {formatEpoch(epochStart)} - {formatEpoch(epochEnd ?? Math.floor(Date.now() / 1000))}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Validator */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-sky-400/30 bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Image
-              alt={validatorData.name}
-              src={validatorImageSrc}
-              width={56}
-              height={56}
-              unoptimized
-              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-sky-400/40 bg-white/10 p-1"
-            />
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Validator
-              </p>
-              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {validatorData.name || "Unknown Validator"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {validatorUid !== null && (
-              <span
-                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                style={{
-                  borderColor: "rgba(59, 130, 246, 0.45)",
-                  backgroundColor: "rgba(59, 130, 246, 0.12)",
-                  color: "#60A5FA",
-                }}
-              >
-                UID {validatorUid}
-              </span>
-            )}
-            {taoStatsUrl ? (
-              <a
-                href={taoStatsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-400 text-black shadow hover:bg-sky-300"
-                title="Open TaoStats"
-              >
-                <PiArrowSquareOutDuotone className="h-4 w-4" />
-              </a>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="mt-4">
-          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                  Hotkey:
-                </span>
-                <span className="font-mono text-sm text-white">
-                  {truncateMiddle(validatorHotkey)}
-                </span>
-              </div>
-              {validatorHotkey && validatorHotkey !== "—" && <IDCopyButton text={validatorHotkey} />}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Miner */}
-      <section className="relative overflow-hidden rounded-3xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15 p-5 text-white shadow-lg">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Image
-              alt={agentData.name}
-              src={minerImageSrc}
-              width={56}
-              height={56}
-              unoptimized
-              className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-2 ring-emerald-400/40 bg-white/10 p-1"
-            />
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                Miner
-              </p>
-              <p className="text-xl font-semibold text-white drop-shadow-[0_4px_12px_rgba(15,23,42,0.35)]">
-                {agentData.name || "Unknown Miner"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {agentUid !== null && (
-              <span
-                className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                style={{
-                  borderColor: "rgba(16, 185, 129, 0.45)",
-                  backgroundColor: "rgba(16, 185, 129, 0.12)",
-                  color: "#34D399",
-                }}
-              >
-                UID {agentUid}
-              </span>
-            )}
-            {agentData.github ? (
-              <a
-                href={agentData.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-black shadow hover:bg-emerald-300"
-                title="Open GitHub"
-              >
-                <PiGithubLogoDuotone className="h-4 w-4" />
-              </a>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="mt-4">
-          <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="uppercase tracking-[0.3em] text-xs text-white/60">
-                  Hotkey:
-                </span>
-                <span className="font-mono text-sm text-white">
-                  {truncateMiddle(agentHotkey)}
-                </span>
-              </div>
-              {agentHotkey && agentHotkey !== "—" && <IDCopyButton text={agentHotkey} />}
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 // Personas placeholder
 const PERSONA_PLACEHOLDER_KEYS = ["round", "validator", "miner"] as const;
 function AgentRunPersonasPlaceholder() {
@@ -1040,8 +875,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   const formatDuration = (v: number | null | undefined) =>
     v && v > 0 ? `${percentageFormatter.format(v)}s` : "—";
 
-  // Use new fields: avg_score, avg_reward, avg_time
-  const overallScore = clampPercentage((stats?.avg_score ?? 0) * 100);
+  // Reward/time use the post-run reward metrics; website rows keep eval_score separately.
   const overallReward = clampPercentage((stats?.avg_reward ?? 0) * 100);
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
@@ -1054,7 +888,6 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   );
   const averageDuration = stats?.avg_time ?? 0;
 
-  const displayOverallScore = formatPercentage(overallScore);
   const displayOverallReward = formatPercentage(overallReward);
   const displayAverageDuration = formatDuration(averageDuration);
 
@@ -1142,7 +975,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Score {displayOverallScore} • Time {displayAverageDuration}
+            Reward {displayOverallReward} • Time {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -1165,7 +998,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Score {displayOverallScore} • Time {displayAverageDuration}
+            Reward {displayOverallReward} • Time {displayAverageDuration}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">

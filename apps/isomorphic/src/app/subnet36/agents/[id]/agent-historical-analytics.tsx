@@ -334,6 +334,74 @@ export default function AgentHistoricalAnalytics({
 
   const TASKS_PER_PAGE = 10;
   const hasInitializedRef = useRef(false);
+  const roundsWithTaskDetails = useMemo(() => {
+    const set = new Set<string>();
+    const websites = minerHistorical?.performanceByWebsite ?? [];
+    websites.forEach((ws: Record<string, unknown>) => {
+      ((ws?.useCases ?? []) as Array<Record<string, unknown>>).forEach((uc) => {
+        ((uc?.taskDetails ?? []) as Array<Record<string, unknown>>).forEach((detail) => {
+          const round = detail?.round;
+          if (!round) return;
+          const roundStr = String(round);
+          if (selectedSeason != null) {
+            const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
+            if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return;
+          }
+          set.add(roundStr);
+        });
+      });
+    });
+    return set;
+  }, [minerHistorical?.performanceByWebsite, selectedSeason]);
+  const sourceRound = useMemo(() => {
+    const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
+    if (bestRewardRound) {
+      const bestRewardRoundStr = String(bestRewardRound);
+      const seasonPart = Number.parseInt(bestRewardRoundStr.split("/")[0] ?? "", 10);
+      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestRewardRoundStr)) {
+        return bestRewardRoundStr;
+      }
+    }
+    const bestRankRound = minerHistorical?.summary?.bestRankRound;
+    if (bestRankRound) {
+      const bestRankRoundStr = String(bestRankRound);
+      const seasonPart = Number.parseInt(bestRankRoundStr.split("/")[0] ?? "", 10);
+      if ((selectedSeason == null || seasonPart === selectedSeason) && roundsWithTaskDetails.has(bestRankRoundStr)) {
+        return bestRankRoundStr;
+      }
+    }
+    if (roundsWithTaskDetails.size > 0) {
+      const entries = Array.from(roundsWithTaskDetails);
+      entries.sort((a, b) => {
+        const [as, ar] = a.split("/").map((v) => Number.parseInt(v, 10) || 0);
+        const [bs, br] = b.split("/").map((v) => Number.parseInt(v, 10) || 0);
+        if (as !== bs) return bs - as;
+        return br - ar;
+      });
+      return entries[0];
+    }
+    const latest = minerHistorical?.roundsHistory?.[0]?.round;
+    if (!latest) return null;
+    const latestStr = String(latest);
+    if (selectedSeason != null) {
+      const seasonPart = Number.parseInt(latestStr.split("/")[0] ?? "", 10);
+      if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return null;
+    }
+    return latestStr;
+  }, [
+    minerHistorical?.summary?.bestRewardRound,
+    minerHistorical?.summary?.bestRankRound,
+    minerHistorical?.roundsHistory,
+    roundsWithTaskDetails,
+    selectedSeason,
+  ]);
+
+  const strongestRoundLabel = useMemo(() => {
+    if (!sourceRound) return "Metrics from your strongest round in this season";
+    const [, roundPart] = sourceRound.split("/");
+    const normalizedRound = roundPart ?? sourceRound;
+    return `Metrics from Round ${normalizedRound}`;
+  }, [sourceRound]);
 
   // Use external historical data - never fetch from agent-runs
   // This component should only be used when minerHistorical is provided
@@ -714,6 +782,19 @@ export default function AgentHistoricalAnalytics({
     [fetchUseCaseTasks, useCaseTasks]
   );
 
+  useEffect(() => {
+    if (!selectedWebsite) return;
+    setExpandedWebsite(selectedWebsite);
+    filteredUseCases
+      .filter((uc) => uc.website === selectedWebsite)
+      .forEach((uc) => {
+        const key = `${uc.website}:${uc.useCase}`;
+        if (!useCaseTasks[key]) {
+          fetchUseCaseTasks(uc.website, uc.useCase, 1);
+        }
+      });
+  }, [selectedWebsite, filteredUseCases, fetchUseCaseTasks, useCaseTasks]);
+
   // Use external loading state if provided
   const isLoading = externalLoading ?? loading;
   
@@ -854,9 +935,7 @@ export default function AgentHistoricalAnalytics({
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
                 Historical Performance Analytics
               </h2>
-              <p className="text-xs sm:text-sm text-emerald-200/70">
-                Accumulated results across all rounds
-              </p>
+              <p className="text-xs sm:text-sm text-emerald-200/70">{strongestRoundLabel}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -974,6 +1053,8 @@ export default function AgentHistoricalAnalytics({
                 return filteredUseCases.map((uc: UseCaseStats, idx: number) => ({
                   name: uc.useCase,
                   value: uc.completedTasks,
+                  completed: uc.completedTasks,
+                  total: uc.totalTasks,
                   fill: colorVariations[idx] || projectColors.mainColor,
                   stroke: colorVariations[idx] || projectColors.mainColor,
                   percentage:
@@ -986,6 +1067,8 @@ export default function AgentHistoricalAnalytics({
                 return {
                   name: ws.displayName,
                   value: ws.completedTasks,
+                  completed: ws.completedTasks,
+                  total: ws.totalTasks,
                   fill: projectColors.mainColor,
                   stroke: projectColors.mainColor,
                   percentage:
@@ -1062,7 +1145,7 @@ export default function AgentHistoricalAnalytics({
                           {item.name}
                         </div>
                         <div className="text-[10px] text-white/60">
-                          {item.value} tasks ({item.percentage.toFixed(1)}%)
+                          {(item as any).completed ?? item.value}/{(item as any).total ?? 0} ({item.percentage.toFixed(1)}%)
                         </div>
                       </div>
                     </div>
@@ -1219,19 +1302,253 @@ export default function AgentHistoricalAnalytics({
 
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
-                                <UseCaseTaskSection
-                                  loading={taskData?.loading ?? false}
-                                  taskData={taskData}
-                                  uc={uc}
-                                  handlePageChange={handlePageChange}
-                                  onInspectTask={(task) => {
-                                    const evaluationId = task.evaluationId ?? task.taskId;
-                                    const normalizedId = normalizeEvaluationId(evaluationId);
-                                    router.push(`${routes.evaluations}/${normalizedId}`);
-                                  }}
-                                  projectColors={projectColors}
-                                  tasksPerPage={TASKS_PER_PAGE}
-                                />
+                                {taskData?.loading ? (
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm table-fixed min-w-[700px]">
+                                      <thead className="bg-white/5">
+                                        <tr>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                                            Evaluation ID
+                                          </th>
+                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                            Prompt
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                                            Score
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                                            Duration
+                                          </th>
+                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
+                                            Evaluation
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                          <tr
+                                            key={i}
+                                            className="border-t border-white/5 animate-pulse"
+                                          >
+                                            <td className="p-2 sm:p-3">
+                                              <div
+                                                className="h-4 rounded"
+                                                style={{
+                                                  backgroundColor: `${projectColors.mainColor}20`,
+                                                }}
+                                              />
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="space-y-2">
+                                                <div
+                                                  className="h-3 rounded w-3/4"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                                <div
+                                                  className="h-3 rounded w-1/2"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-12 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-4 w-10 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                              <div className="flex justify-center">
+                                                <div
+                                                  className="h-6 w-16 rounded"
+                                                  style={{
+                                                    backgroundColor: `${projectColors.mainColor}20`,
+                                                  }}
+                                                />
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                ) : taskData?.tasks?.length > 0 ? (
+                                  <>
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm table-fixed min-w-[700px]">
+                                        <thead className="bg-white/5">
+                                          <tr>
+                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                                              Evaluation ID
+                                            </th>
+                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                              Prompt
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                                              Score
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                                              Duration
+                                            </th>
+                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
+                                              Evaluation
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {taskData.tasks.map((task) => (
+                                            <tr
+                                              key={task.taskId}
+                                              className="border-t border-white/5 hover:bg-white/5 transition-colors"
+                                            >
+                                              <td className="p-2 sm:p-3">
+                                                <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
+                                                  {((task as Record<string, unknown>).evaluationId as string) || task.taskId}
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3">
+                                                <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
+                                                  {task.prompt || "—"}
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <span
+                                                  className={cn(
+                                                    "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold",
+                                                    (task.score || 0) >= 0.8
+                                                      ? "bg-emerald-500/20 text-emerald-300"
+                                                      : (task.score || 0) >= 0.5
+                                                        ? "bg-yellow-500/20 text-yellow-300"
+                                                        : "bg-red-500/20 text-red-300"
+                                                  )}
+                                                >
+                                                  {Math.round(
+                                                    (task.score || 0) * 100
+                                                  )}
+                                                  %
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <span className="text-[10px] sm:text-xs text-white/70">
+                                                  {task.duration?.toFixed(1) ||
+                                                    "—"}
+                                                  s
+                                                </span>
+                                              </td>
+                                              <td className="p-2 sm:p-3 text-center">
+                                                <Button
+                                                  size="sm"
+                                                  variant="text"
+                                                  onClick={() => {
+                                                    // Use evaluationId if available, otherwise use taskId
+                                                    // Keep the full evaluation ID format (evaluation_xxx_xxx_xxx)
+                                                    const evaluationId = ((task as Record<string, unknown>).evaluationId as string) || task.taskId;
+                                                    // Ensure it has the "evaluation_" prefix if it's just a UUID
+                                                    const normalizedId = normalizeEvaluationId(evaluationId);
+                                                    router.push(
+                                                      `${routes.evaluations}/${normalizedId}`
+                                                    );
+                                                  }}
+                                                  className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+                                                >
+                                                  <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                  <span className="hidden sm:inline">
+                                                    Open evaluation
+                                                  </span>
+                                                  <span className="sm:hidden">
+                                                    Open
+                                                  </span>
+                                                </Button>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+
+                                    {/* Pagination */}
+                                    {taskData.total > TASKS_PER_PAGE && (
+                                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
+                                        <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
+                                          Showing{" "}
+                                          {(taskData.page - 1) *
+                                            TASKS_PER_PAGE +
+                                            1}{" "}
+                                          to{" "}
+                                          {Math.min(
+                                            taskData.page * TASKS_PER_PAGE,
+                                            taskData.total
+                                          )}{" "}
+                                          of {taskData.total} tasks
+                                        </Text>
+                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() =>
+                                              handlePageChange(
+                                                uc.website,
+                                                uc.useCase,
+                                                taskData.page - 1
+                                              )
+                                            }
+                                            disabled={taskData.page === 1}
+                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+                                          >
+                                            Previous
+                                          </Button>
+                                          <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
+                                            Page {taskData.page} of{" "}
+                                            {Math.ceil(
+                                              taskData.total / TASKS_PER_PAGE
+                                            )}
+                                          </span>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() =>
+                                              handlePageChange(
+                                                uc.website,
+                                                uc.useCase,
+                                                taskData.page + 1
+                                              )
+                                            }
+                                            disabled={
+                                              taskData.page >=
+                                              Math.ceil(
+                                                taskData.total / TASKS_PER_PAGE
+                                              )
+                                            }
+                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+                                          >
+                                            Next
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="p-4 text-center text-white/60 text-sm">
+                                    No tasks found for this use case
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );

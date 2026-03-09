@@ -2,7 +2,13 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { createColumnHelper, flexRender } from "@tanstack/react-table";
+import {
+  createColumnHelper,
+  flexRender,
+  type Cell,
+  type Row,
+  type Table as TanStackTableType,
+} from "@tanstack/react-table";
 import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input, Table as RTable } from "rizzui";
@@ -13,11 +19,6 @@ import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
 import type { AgentRunEvaluationData } from "@/repositories/agent-runs/agent-runs.types";
 import { routes } from "@/config/routes";
-import type {
-  Cell,
-  Row,
-  Table as TanStackTableType,
-} from "@tanstack/react-table";
 
 const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 
@@ -152,14 +153,14 @@ interface AgentRunTasksTableDynamicProps {
   tasks?: AgentRunEvaluationData[];
   isLoading?: boolean;
   error?: string | null;
-  onRetry?: () => void;
+  refetch?: () => void;
 }
 
 export default function AgentRunTasksTableDynamic({
   tasks: providedTasks = [],
   isLoading = false,
   error,
-  onRetry,
+  refetch,
 }: Readonly<AgentRunTasksTableDynamicProps>) {
   const tasks = providedTasks;
   const total = tasks.length;
@@ -191,7 +192,7 @@ export default function AgentRunTasksTableDynamic({
 
 
   // Show loading state
-  if (isLoading && !tasks) {
+  if (isLoading && tasks.length === 0) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-gradient-to-br from-violet-500/10 via-violet-400/5 to-transparent blur-[120px]" />
@@ -233,7 +234,7 @@ export default function AgentRunTasksTableDynamic({
   }
 
   // Show error state
-  if (error && !tasks) {
+  if (error && tasks.length === 0) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/30 bg-slate-800/30 p-6 shadow-2xl">
         <div className="pointer-events-none absolute -top-20 right-0 h-56 w-56 rounded-full bg-gradient-to-br from-rose-500/15 via-rose-400/5 to-transparent blur-[110px]" />
@@ -247,7 +248,7 @@ export default function AgentRunTasksTableDynamic({
           <div className="mb-4 text-sm text-red-300">{error}</div>
           <button
             type="button"
-            onClick={() => onRetry?.()}
+            onClick={() => refetch?.()}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Retry
@@ -277,12 +278,12 @@ export default function AgentRunTasksTableDynamic({
             type="search"
             clearable={true}
             placeholder="Search task..."
-            onClear={() => table.setGlobalFilter("")}
-            value={table.getState().globalFilter ?? ""}
+            onClear={() => table?.setGlobalFilter("")}
+            value={table?.getState().globalFilter ?? ""}
             prefix={
               <PiMagnifyingGlassBold className="size-4 text-slate-400" />
             }
-            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            onChange={(e) => table?.setGlobalFilter(e.target.value)}
             className="w-full xs:max-w-60"
           />
         </div>
@@ -318,8 +319,8 @@ export default function AgentRunTasksTableDynamic({
       </div>
 
       {tasks && tasks.length > 0 && (
-        <TablePagination 
-          table={table} 
+        <TablePagination
+          table={table}
           className="relative py-4 text-slate-300"
         />
       )}
