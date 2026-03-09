@@ -20,6 +20,7 @@ import {
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
   MinerHistoricalResponse,
+  AgentRunsByRoundResponse,
 } from './agents.types';
 import type {
   AgentRunData,
@@ -391,6 +392,25 @@ export class AgentsRepository {
     }
 
     throw new Error(`Agent performance metrics for ${id} not found`);
+  }
+
+  /**
+   * Get runs grouped by round for a given agent and season.
+   * Used exclusively by the "Runs" tab on the agent page.
+   */
+  async getAgentRunsByRound(
+    agentId: string,
+    season?: number
+  ): Promise<AgentRunsByRoundResponse['data']> {
+    const params: Record<string, string> = {};
+    if (season !== undefined) {
+      params.season = String(season);
+    }
+    const response = await apiClient.get<AgentRunsByRoundResponse>(
+      `${this.baseEndpoint}/${agentId}/runs-by-round`,
+      params
+    );
+    return response.data.data;
   }
 
   /**
