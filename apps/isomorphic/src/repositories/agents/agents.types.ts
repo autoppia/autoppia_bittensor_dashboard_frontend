@@ -397,6 +397,24 @@ export interface AgentDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
+    bestRound?: {
+      round_id: string;
+      round: number;
+      post_consensus_avg_reward: number;
+      post_consensus_avg_eval_time: number;
+      tasks_received: number;
+      tasks_success: number;
+      validators_count: number;
+      avg_cost_per_task?: number | null;
+      performanceByWebsite?: Array<{
+        website: string;
+        tasks_received: number;
+        tasks_success: number;
+        success_rate: number;
+      }>;
+      websites_count?: number;
+      season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
+    } | null;
     rewardRoundData: RewardRoundDataPoint[];
     availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;

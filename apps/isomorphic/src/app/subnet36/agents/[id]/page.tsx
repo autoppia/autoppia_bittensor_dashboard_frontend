@@ -1803,15 +1803,6 @@ export default function Page() {
     }
     return undefined;
   }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
-  const shouldFetchBestRoundDetails =
-    viewMode === "current" &&
-    !selectedRoundFromQuery &&
-    !!bestRoundIdentifierFromAgentDetail &&
-    numericUidFromParam !== undefined;
-  const { data: bestRoundDetails } = useMinerRoundDetails(
-    shouldFetchBestRoundDetails ? bestRoundIdentifierFromAgentDetail : undefined,
-    numericUidFromParam
-  );
 
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -2205,7 +2196,7 @@ export default function Page() {
   ).toFixed(2);
   const sourceMetricsDetails = selectedRoundFromQuery
     ? minerRoundDetails ?? null
-    : bestRoundDetails ?? {
+    : agentDetail?.bestRound ?? {
         post_consensus_avg_reward:
           roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
         post_consensus_avg_eval_time:
