@@ -127,8 +127,9 @@ export default function TaskTimelineDynamic() {
   }
 
   const startTime = timeline[0]?.timestamp;
-  const totalDuration = timeline.length > 0 
-    ? (new Date(timeline[timeline.length - 1].timestamp).getTime() - new Date(startTime).getTime()) / 1000
+  const lastEvent = timeline.at(-1);
+  const totalDuration = timeline.length > 0 && lastEvent
+    ? (new Date(lastEvent.timestamp).getTime() - new Date(startTime).getTime()) / 1000
     : 0;
 
   return (
