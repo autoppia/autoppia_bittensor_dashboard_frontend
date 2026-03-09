@@ -1850,7 +1850,7 @@ export default function Page() {
         githubUrl: agentDetail?.agent?.githubUrl ?? undefined,
         taostatsUrl: undefined,
       }
-    : minerRoundDetails && minerRoundDetails.miner
+    : minerRoundDetails?.miner
       ? {
           id: minerRoundDetails.miner.uid.toString(),
           uid: minerRoundDetails.miner.uid,
