@@ -278,6 +278,9 @@ export interface AgentRunOverview {
   runId: string;
   agentId: string;
   roundId: number;
+  season?: number;
+  round?: number;
+  roundKey?: string;
   validatorId: string;
   validatorName: string;
   validatorImage: string;
@@ -290,17 +293,20 @@ export interface AgentRunOverview {
   failedTasks: number;
   averageReward: number;
   averageScore?: number;
-  reward: number;
-  successRate: number;
-  overallReward: number;
-  overallRewardRaw?: number;
-  duration: number;
+  averageCost?: number | null;
+  duration?: number;
   averageEvaluationTime?: number | null;
-  avgCostPerTask?: number | null;
-  // Optional: number of unique websites involved in this run
   websitesCount?: number;
-  // Optional legacy field present in some backends
   totalWebsites?: number;
+  zeroReason?: string | null;
+  /** @deprecated use averageReward */
+  reward?: number;
+  /** @deprecated use averageReward */
+  overallReward?: number;
+  /** @deprecated derive from successfulTasks/totalTasks */
+  successRate?: number;
+  /** @deprecated use averageCost */
+  avgCostPerTask?: number | null;
 }
 
 // ===== AGENT COMPARISON =====
