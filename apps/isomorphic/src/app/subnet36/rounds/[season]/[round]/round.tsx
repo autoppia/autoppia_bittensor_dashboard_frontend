@@ -600,22 +600,20 @@ function RoundHeaderInline({
                   type="button"
                   onClick={() => goToRound(previousKey)}
                   disabled={!previousKey}
-                  className={cn(roundNavButton, "h-[42px]")}
+                  className={cn(roundNavButton, "h-[42px] whitespace-nowrap")}
                 >
-                  <PiCaretLeftBold className="h-4 w-4" />
-                  <span>
-                    {previousNumber ? `Round ${previousNumber}` : "Prev"}
-                  </span>
+                  <PiCaretLeftBold className="h-4 w-4 shrink-0" />
+                  <span>{previousNumber ? `Round ${previousNumber}` : "Prev"}</span>
                 </button>
                 {/* Next round (higher number) on the right */}
                 {nextKey && (
                   <button
                     type="button"
                     onClick={() => goToRound(nextKey)}
-                    className={cn(roundNavButton, "h-[42px]")}
+                    className={cn(roundNavButton, "h-[42px] whitespace-nowrap")}
                   >
                     <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
-                    <PiCaretRightBold className="h-4 w-4" />
+                    <PiCaretRightBold className="h-4 w-4 shrink-0" />
                   </button>
                 )}
               </div>
