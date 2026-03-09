@@ -3,6 +3,9 @@
  * These types define the structure of data returned by the backend API
  */
 
+/** Round identifier (numeric ID or season/round string) */
+export type RoundId = number | string | null;
+
 // ===== MINIMAL AGENT DATA (for listing) =====
 export interface MinimalAgentData {
   uid: number; // Miner UID
@@ -39,13 +42,13 @@ export interface AgentData {
   currentRank: number | null;
   seasonRank?: number | null;
   bestRankEver: number | null;
-  bestRankRoundId?: number | string | null;
+  bestRankRoundId?: RoundId;
   roundsParticipated: number; // NEW FIELD
   roundsWon?: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
   taoWonInPrizes?: number; // NEW FIELD (derived)
   bestRoundReward: number;
-  bestRoundId?: number | string | null;
+  bestRoundId?: RoundId;
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
