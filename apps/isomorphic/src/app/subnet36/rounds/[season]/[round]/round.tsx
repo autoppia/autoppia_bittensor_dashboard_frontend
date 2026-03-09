@@ -3510,13 +3510,13 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Final metrics after validator consensus", data: evaluationPost })}
+                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Final metrics after validator consensus weighted by stake", data: evaluationPost })}
                 >
                   <div className={cn(cardTitleRowClass, "text-orange-400")}>
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/80 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/80 text-sm">Final metrics after validator consensus weighted by stake.</p>
                   <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
                   <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
                 </button>
@@ -3526,7 +3526,7 @@ export default function Round() {
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/60 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/60 text-sm">Final metrics after validator consensus weighted by stake.</p>
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}

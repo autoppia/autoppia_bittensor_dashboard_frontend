@@ -1186,7 +1186,7 @@ function AgentValidators({
                       <Text className="font-bold text-white text-base">Validator consensus</Text>
                       <Text className="text-xs text-white/60 tracking-wide">
                         {postConsensus.post_consensus_available
-                          ? "Final metrics after validator consensus"
+                          ? "Final metrics after validator consensus weighted by stake"
                           : "Consensus data for this round"}
                       </Text>
                     </div>
@@ -1231,12 +1231,12 @@ function AgentValidators({
                   })();
 
                   const stats = [
-                    { title: "Reward", metric: `${((latestRun.overallReward ?? latestRun.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                    { title: "Reward", metric: `${((latestRun.averageReward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
                     { title: "Score", metric: `${((latestRun.averageScore ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
                     { title: "Time", metric: `${Number(responseTimeSeconds).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
                     { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? latestRun.completedTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
                     { title: "Websites", metric: websitesCount, icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
-                    { title: "Avg Cost", metric: latestRun.avgCostPerTask != null ? `$${Number(latestRun.avgCostPerTask).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                    { title: "Avg Cost", metric: latestRun.averageCost != null ? `$${Number(latestRun.averageCost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                   ];
 
                   return (
