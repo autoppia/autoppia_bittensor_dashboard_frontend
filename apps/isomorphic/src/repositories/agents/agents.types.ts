@@ -501,6 +501,66 @@ export interface AgentRunsResponse {
   };
 }
 
+// ===== RUNS BY ROUND =====
+
+export interface AgentRunsByRoundValidatorEntry {
+  validator_uid: number;
+  validator_name: string;
+  validator_hotkey: string | null;
+  validator_image: string | null;
+  stake: number;
+  weight: number;
+  post_consensus_rank: number | null;
+  post_consensus_reward: number | null;
+  post_consensus_score: number | null;
+  post_consensus_time: number | null;
+  post_consensus_tasks_received: number;
+  post_consensus_tasks_success: number;
+  run_id: string | null;
+  run_status: string | null;
+  run_reward: number | null;
+  run_score: number | null;
+  run_time: number | null;
+  run_total_tasks: number;
+  run_success_tasks: number;
+  run_failed_tasks: number;
+  run_elapsed_sec: number | null;
+  run_avg_cost: number | null;
+  run_websites_count: number;
+  run_started_at: string | null;
+  run_ended_at: string | null;
+}
+
+export interface AgentRunsByRoundEntry {
+  round_id: number;
+  round_key: string;
+  round_label: string;
+  season: number;
+  round_in_season: number;
+  validators_count: number;
+  websites_count: number;
+  post_consensus_available: boolean;
+  consensus: {
+    rank: number | null;
+    reward: number | null;
+    score: number | null;
+    time: number | null;
+    tasks_received: number;
+    tasks_success: number;
+    avg_cost: number | null;
+  };
+  validators: AgentRunsByRoundValidatorEntry[];
+}
+
+export interface AgentRunsByRoundResponse {
+  success: boolean;
+  data: {
+    agent_uid: number;
+    season: number | null;
+    rounds: AgentRunsByRoundEntry[];
+  };
+}
+
 export interface AgentComparisonResponse {
   success: boolean;
   data: {
