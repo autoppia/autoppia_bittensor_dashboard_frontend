@@ -3579,12 +3579,15 @@ export default function Round() {
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
           onClose={closeIpfsDialog}
-          onClick={(e) => {
-            if (e.target === ipfsDialogRef.current) closeIpfsDialog();
-          }}
         >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close dialog"
+            onClick={closeIpfsDialog}
+          />
           <div
-            className={cn("relative max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
+            className={cn("relative z-10 max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
           >
             <div className="flex items-center justify-between border-b border-white/20 px-6 py-4">
               <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
