@@ -131,6 +131,11 @@ export function useRounds(params?: RoundsListQueryParams) {
   return useApiCall(request, paramsKey);
 }
 
+export function useAvailableRoundSeasons() {
+  const request = useCallback(() => roundsRepository.getAvailableSeasons(), []);
+  return useApiCall(request, "round-seasons");
+}
+
 // Hook for basic round info (fast, without nested data)
 export function useRoundBasic(id?: RoundIdentifier) {
   const enabled = isValidRoundIdentifier(id);

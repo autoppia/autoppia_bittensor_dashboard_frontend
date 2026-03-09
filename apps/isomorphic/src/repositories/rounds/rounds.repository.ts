@@ -21,6 +21,7 @@ import {
   RoundStatusView,
   RoundSeasonSummaryView,
   RoundValidatorsViewResponse,
+  RoundSeasonsResponse,
 } from "./rounds.types";
 
 export class RoundsRepository {
@@ -413,6 +414,13 @@ export class RoundsRepository {
     const response = await apiClient.get<any>(`${this.baseEndpoint}/current`);
     const payload = this.extractRoundPayload(response.data);
     return this.normalizeRoundData(payload);
+  }
+
+  async getAvailableSeasons(): Promise<number[]> {
+    const response = await apiClient.get<RoundSeasonsResponse>(
+      `${this.baseEndpoint}/seasons`
+    );
+    return response.data.data.seasons ?? [];
   }
 
   /**
