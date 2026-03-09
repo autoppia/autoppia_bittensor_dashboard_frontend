@@ -292,7 +292,6 @@ export class AgentsRepository {
   ): Promise<{
     agent: AgentData;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: MinerDetailsResponse["data"]["performanceByWebsite"];
     avg_cost_per_task?: number | null;
@@ -344,7 +343,6 @@ export class AgentsRepository {
   ): Promise<{
     agent: AgentData;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: AgentDetailsResponse["data"]["performanceByWebsite"];
     avg_cost_per_task?: number | null;
@@ -361,7 +359,6 @@ export class AgentsRepository {
     return {
       agent: response.data.data.agent,
       rewardRoundData: response.data.data.rewardRoundData,
-      availableRounds: response.data.data.availableRounds,
       roundMetrics: response.data.data.roundMetrics,
       performanceByWebsite: response.data.data.performanceByWebsite,
       avg_cost_per_task: response.data.data.avg_cost_per_task,

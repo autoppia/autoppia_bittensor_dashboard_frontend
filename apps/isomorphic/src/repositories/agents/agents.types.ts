@@ -416,7 +416,6 @@ export interface AgentDetailsResponse {
       season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
     } | null;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: Array<{
       website: string;
@@ -438,7 +437,6 @@ export interface MinerDetailsResponse {
   data: {
     agent: AgentData;
     rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: Array<{
       website: string;

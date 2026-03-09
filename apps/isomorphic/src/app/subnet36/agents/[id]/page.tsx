@@ -1709,7 +1709,6 @@ export default function Page() {
 
   const agent = agentDetail?.agent ?? null;
   const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
-  const availableRounds: Array<string | number> = agentDetail?.availableRounds ?? [];
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
@@ -1722,26 +1721,39 @@ export default function Page() {
     numericUidFromParam
   );
 
-  // Extract latest season from agent detail available rounds
+  // Resolve latest season without depending on legacy availableRounds.
   const latestSeason = useMemo(() => {
-    const rounds = availableRounds ?? [];
-    if (rounds.length === 0) {
-      return undefined;
+    const explicitSeason = selectedSeasonNumber;
+    if (explicitSeason && Number.isFinite(explicitSeason)) {
+      return explicitSeason;
     }
 
-    // Parse rounds in format "season/round" and get highest season
-    const seasons = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          return Number.parseInt(parts[0], 10);
+    const bestRoundId = agentDetail?.bestRound?.round_id;
+    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
+      const season = Number.parseInt(bestRoundId.split("/")[0] ?? "", 10);
+      if (Number.isFinite(season)) return season;
+    }
+
+    const bestRoundFromAgent = agentDetail?.agent?.bestRoundId;
+    if (typeof bestRoundFromAgent === "string" && bestRoundFromAgent.includes("/")) {
+      const season = Number.parseInt(bestRoundFromAgent.split("/")[0] ?? "", 10);
+      if (Number.isFinite(season)) return season;
+    }
+
+    const seasonsFromRewardHistory = (agentDetail?.rewardRoundData ?? [])
+      .map((row: any) => {
+        const roundId = row?.round_id;
+        if (typeof roundId === "string" && roundId.includes("/")) {
+          return Number.parseInt(roundId.split("/")[0] ?? "", 10);
         }
         return null;
       })
-      .filter((s) => s !== null && Number.isFinite(s)) as number[];
+      .filter((value): value is number => Number.isFinite(value as number));
 
-    return seasons.length > 0 ? Math.max(...seasons) : undefined;
-  }, [availableRounds]);
+    return seasonsFromRewardHistory.length > 0
+      ? Math.max(...seasonsFromRewardHistory)
+      : undefined;
+  }, [agentDetail?.agent?.bestRoundId, agentDetail?.bestRound?.round_id, agentDetail?.rewardRoundData, selectedSeasonNumber]);
 
   // Get miner historical data when needed:
   // - Historical tab
@@ -1909,7 +1921,7 @@ export default function Page() {
   const currentRound =
     selectedRoundFromQuery ??
     roundMetrics?.roundId ??
-    (availableRounds.length > 0 ? availableRounds[0] : undefined);
+    bestRoundIdentifierFromAgentDetail;
 
   // Build rewardRoundData from historical data if in historical mode, otherwise from agentDetail
   const rewardRoundData: RewardRoundDataPoint[] = useMemo(() => {
