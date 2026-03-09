@@ -159,7 +159,7 @@ export class OverviewRepository {
       return response.data.data.round;
     }
     if (response.data?.round) {
-      return response.data.round as OverviewRoundData;
+      return response.data.round;
     }
     return response.data as unknown as OverviewRoundData;
   }
