@@ -42,7 +42,7 @@ import type {
   AgentRunStats as AgentRunStatsData,
   AgentRunEvaluationData,
 } from "@/repositories/agent-runs/agent-runs.types";
-import { createColumnHelper } from "@tanstack/react-table";
+import { createColumnHelper, type Table as TanStackTableType } from "@tanstack/react-table";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 // Local types for consolidated view models
@@ -419,12 +419,16 @@ export default function Page() {
       )}
 
       {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
-      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (info?.zeroReason ?? (stats as Record<string, unknown>)?.zeroReason) && (
-        <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
-          <span className="font-semibold">Reason for zero reward:</span>{" "}
-          {humanizeZeroReason(String(info?.zeroReason ?? (stats as Record<string, unknown>)?.zeroReason ?? ""))}
-        </div>
-      )}
+      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (() => {
+        const raw = info?.zeroReason ?? stats.zeroReason;
+        const reason = typeof raw === "string" ? raw : "";
+        return reason ? (
+          <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+            <span className="font-semibold">Reason for zero reward:</span>{" "}
+            {humanizeZeroReason(reason)}
+          </div>
+        ) : null;
+      })()}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
@@ -2237,7 +2241,7 @@ function AgentRunTasksSection({
       <div className="relative mb-2">
         {evaluations && evaluations.length > 0 ? (
           <Table
-            table={table}
+            table={table as unknown as TanStackTableType<Record<string, unknown>>}
             variant="modern"
             classNames={{
               container:
@@ -2262,7 +2266,7 @@ function AgentRunTasksSection({
 
       {evaluations && evaluations.length > 0 && (
         <TablePagination
-          table={table}
+          table={table as unknown as TanStackTableType<Record<string, unknown>>}
           className="relative py-3 sm:py-4 text-slate-300 text-xs sm:text-sm"
         />
       )}
