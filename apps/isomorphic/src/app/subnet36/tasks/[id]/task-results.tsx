@@ -239,6 +239,71 @@ export default function TaskResults() {
 
   const totalPages = Math.ceil(actionsTotal / pageSize);
 
+  const renderActionsListContent = () => {
+    if (actionsLoading) {
+      return Array.from({ length: 5 }, (_, index) => (
+        <ListItemPlaceholder key={`action-loading-${index}`} />
+      ));
+    }
+    if (actionsError) {
+      return (
+        <div className="flex items-center justify-center h-full text-red-300">
+          <div className="text-center space-y-1">
+            <PiXCircle className="w-8 h-8 mx-auto" />
+            <Text className="text-sm text-red-200">
+              Failed to load actions
+            </Text>
+          </div>
+        </div>
+      );
+    }
+    if (actions.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-slate-400">
+          <div className="text-center space-y-1">
+            <PiPlay className="w-8 h-8 mx-auto" />
+            <Text className="text-sm text-slate-300">No actions found</Text>
+          </div>
+        </div>
+      );
+    }
+    return actions.map((action, index) => {
+      const meta =
+        ACTION_TYPE_META[
+          (action.type as keyof typeof ACTION_TYPE_META) ?? "other"
+        ] ?? ACTION_TYPE_META.other;
+      const ActionIcon = meta.icon;
+      return (
+        <div
+          key={`action-item-${action.id || index}`}
+          className="w-full flex items-start justify-between gap-3 rounded-lg px-3 py-3 text-slate-100 bg-slate-800/70 border border-slate-700/40 hover:border-emerald-400/40 hover:bg-emerald-500/10 transition-colors"
+        >
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <span
+              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${meta.badgeBg} ${meta.badgeText}`}
+            >
+              <ActionIcon className="h-5 w-5" />
+            </span>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                {meta.label}
+                {getStatusIcon(action.success, action.error)}
+              </span>
+              <Text className="text-xs text-slate-300 leading-relaxed break-words">
+                {formatActionDetails(action)}
+              </Text>
+            </div>
+          </div>
+          {action.duration && (
+            <Text className="text-xs text-slate-400 whitespace-nowrap">
+              {action.duration}s
+            </Text>
+          )}
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Left Side - Actions */}
@@ -253,63 +318,7 @@ export default function TaskResults() {
         </div>
 
         <div className="space-y-2 rounded-xl border border-slate-700/25 h-[350px] p-4 overflow-y-auto custom-scrollbar scroll-auto bg-slate-900/60">
-          {actionsLoading ? (
-            Array.from({ length: 5 }, (_, index) => (
-              <ListItemPlaceholder key={`action-loading-${index}`} />
-            ))
-          ) : actionsError ? (
-            <div className="flex items-center justify-center h-full text-red-300">
-              <div className="text-center space-y-1">
-                <PiXCircle className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-red-200">
-                  Failed to load actions
-                </Text>
-              </div>
-            </div>
-          ) : actions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center space-y-1">
-                <PiPlay className="w-8 h-8 mx-auto" />
-                <Text className="text-sm text-slate-300">No actions found</Text>
-              </div>
-            </div>
-          ) : (
-            actions.map((action, index) => {
-              const meta =
-                ACTION_TYPE_META[
-                  (action.type as keyof typeof ACTION_TYPE_META) ?? "other"
-                ] ?? ACTION_TYPE_META.other;
-              const ActionIcon = meta.icon;
-              return (
-                <div
-                  key={`action-item-${action.id || index}`}
-                  className="w-full flex items-start justify-between gap-3 rounded-lg px-3 py-3 text-slate-100 bg-slate-800/70 border border-slate-700/40 hover:border-emerald-400/40 hover:bg-emerald-500/10 transition-colors"
-                >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span
-                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${meta.badgeBg} ${meta.badgeText}`}
-                    >
-                      <ActionIcon className="h-5 w-5" />
-                    </span>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                        {meta.label}
-                        {getStatusIcon(action.success, action.error)}
-                      </span>
-                      <Text className="text-xs text-slate-300 leading-relaxed break-words">
-                        {formatActionDetails(action)}
-                      </Text>
-                    </div>
-                  </div>
-                  {action.duration && (
-                    <Text className="text-xs text-slate-400 whitespace-nowrap">
-                      {action.duration}s
-                    </Text>
-                  )}
-                </div>
-              );
-            })
-          )}
+          {renderActionsListContent()}
         </div>
 
         {/* Pagination */}
