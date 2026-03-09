@@ -15,7 +15,8 @@ import {
   AgentPerformanceQueryParams,
   AgentData,
   AgentPerformanceMetrics,
-  ScoreRoundDataPoint,
+  AgentRunOverview,
+  RewardRoundDataPoint,
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
   MinerHistoricalResponse,
@@ -35,7 +36,7 @@ export class AgentsRepository {
    */
   async getLatestRoundTopMiner(): Promise<{
     season: number;
-    round: number;
+    round: number | null;
     miner_uid: number;
     miner_hotkey: string | null;
   } | null> {
@@ -57,31 +58,41 @@ export class AgentsRepository {
   }
 
   /**
-   * Get rounds data with optional miners for selected round (new unified endpoint)
-   * @param roundIdentifier - "season/round" (e.g. "83/20") or legacy round_number
+   * Legacy rounds endpoint retained for non-agents screens still depending on it.
+   * Agents sidebar/landing no longer use this route.
    */
-  async getRoundsData(roundIdentifier?: string | number): Promise<{
+  async getRoundsData(options?: {
+    roundIdentifier?: string | number;
+    season?: number;
+  }): Promise<{
     rounds: string[];
     round_selected: {
-      round: string;
-      miners: Array<{
-        uid: number;
-        name: string;
-        image: string | null;
-        post_consensus_avg_reward: number;
-        round_score?: number;
-        best_score_in_season?: number;
-        effective_round_score?: number;
-        post_consensus_rank: number;
-      }>;
+        round: string;
+        season?: number;
+        season_leader_uid?: number | null;
+        season_leader_reward?: number | null;
+        miners: Array<{
+          uid: number;
+          name: string;
+          image: string | null;
+          post_consensus_avg_reward: number;
+          best_reward_in_season?: number;
+          best_local_round_reward?: number;
+          best_round_in_season?: number | null;
+          post_consensus_rank: number;
+          is_reigning_leader?: boolean;
+        }>;
     } | null;
   }> {
     const params: Record<string, string | number> = {};
-    if (roundIdentifier !== undefined && roundIdentifier !== null) {
-      if (typeof roundIdentifier === 'string' && roundIdentifier.includes('/')) {
-        params.round_identifier = roundIdentifier;
+    if (options?.season !== undefined && options?.season !== null) {
+      params.season = Number(options.season);
+    }
+    if (options?.roundIdentifier !== undefined && options?.roundIdentifier !== null) {
+      if (typeof options.roundIdentifier === 'string' && options.roundIdentifier.includes('/')) {
+        params.round_identifier = options.roundIdentifier;
       } else {
-        params.round_number = Number(roundIdentifier);
+        params.round_number = Number(options.roundIdentifier);
       }
     }
     const response = await apiClient.get<{
@@ -90,19 +101,66 @@ export class AgentsRepository {
         rounds: string[];
         round_selected: {
           round: string;
+          season?: number;
+          season_leader_uid?: number | null;
+          season_leader_reward?: number | null;
           miners: Array<{
             uid: number;
             name: string;
             image: string | null;
             post_consensus_avg_reward: number;
-            round_score?: number;
-            best_score_in_season?: number;
-            effective_round_score?: number;
+            best_reward_in_season?: number;
+            best_local_round_reward?: number;
+            best_round_in_season?: number | null;
             post_consensus_rank: number;
+            is_reigning_leader?: boolean;
           }>;
         } | null;
       };
     }>(`${this.baseEndpoint}/rounds`, Object.keys(params).length ? params : undefined);
+    return response.data.data;
+  }
+
+  async getSeasonRank(seasonRef?: number | "latest"): Promise<{
+    season: number | null;
+    latestSeason: number | null;
+    availableSeasons: number[];
+    season_leader_uid?: number | null;
+    season_leader_reward?: number | null;
+    miners: Array<{
+      uid: number;
+      name: string;
+      image: string | null;
+      post_consensus_avg_reward: number;
+      best_reward_in_season?: number;
+      best_local_round_reward?: number;
+      best_round_in_season?: number | null;
+      post_consensus_rank: number;
+      is_reigning_leader?: boolean;
+    }>;
+  }> {
+    const ref = seasonRef === undefined || seasonRef === null ? "latest" : String(seasonRef);
+    const response = await apiClient.get<{
+      success: boolean;
+      data: {
+        season: number | null;
+        latestSeason: number | null;
+        availableSeasons: number[];
+        season_leader_uid?: number | null;
+        season_leader_reward?: number | null;
+        miners: Array<{
+          uid: number;
+          name: string;
+          image: string | null;
+          post_consensus_avg_reward: number;
+          best_reward_in_season?: number;
+          best_local_round_reward?: number;
+          best_round_in_season?: number | null;
+          post_consensus_rank: number;
+          is_reigning_leader?: boolean;
+        }>;
+      };
+    }>(`${this.baseEndpoint}/seasons/${ref}/rank`);
     return response.data.data;
   }
 
@@ -141,7 +199,7 @@ export class AgentsRepository {
         },
         round: parsedRound,
         post_consensus_rank: Number(roundMetrics.rank ?? agent.currentRank ?? 0),
-        post_consensus_avg_reward: Number(roundMetrics.score ?? agent.currentScore ?? 0),
+        post_consensus_avg_reward: Number(roundMetrics.reward ?? agent.currentReward ?? 0),
         post_consensus_avg_eval_score: 0,
         post_consensus_avg_eval_time: Number(roundMetrics.averageResponseTime ?? agent.averageResponseTime ?? 0),
         tasks_received: Number(roundMetrics.totalTasks ?? agent.totalTasks ?? 0),
@@ -200,7 +258,7 @@ export class AgentsRepository {
           payload.season_leadership ??
           roundMetrics.seasonLeadership ??
           undefined,
-        scoreRoundData: Array.isArray(payload.scoreRoundData) ? payload.scoreRoundData : [],
+        rewardRoundData: Array.isArray(payload.rewardRoundData) ? payload.rewardRoundData : [],
       } as MinerRoundDetailsResponse['data'];
     }
 
@@ -230,12 +288,19 @@ export class AgentsRepository {
    */
   async getMinerDetails(
     uid: number,
-    params?: { round?: number }
+    params?: { round?: number; season?: number }
   ): Promise<{
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
-    availableRounds?: number[];
+    rewardRoundData: RewardRoundDataPoint[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: MinerDetailsResponse["data"]["performanceByWebsite"];
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: MinerDetailsResponse["data"]["season_leadership"];
   }> {
     const candidateIds = [`agent-${uid}`, String(uid)];
 
@@ -275,12 +340,19 @@ export class AgentsRepository {
    */
   async getAgent(
     id: string,
-    params?: { round?: number }
+    params?: { round?: number; season?: number }
   ): Promise<{
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
-    availableRounds?: number[];
+    rewardRoundData: RewardRoundDataPoint[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: AgentDetailsResponse["data"]["performanceByWebsite"];
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: AgentDetailsResponse["data"]["season_leadership"];
   }> {
     const response = await apiClient.get<AgentDetailsResponse>(
       `${this.baseEndpoint}/${id}`,
@@ -288,9 +360,16 @@ export class AgentsRepository {
     );
     return {
       agent: response.data.data.agent,
-      scoreRoundData: response.data.data.scoreRoundData,
+      rewardRoundData: response.data.data.rewardRoundData,
       availableRounds: response.data.data.availableRounds,
       roundMetrics: response.data.data.roundMetrics,
+      performanceByWebsite: response.data.data.performanceByWebsite,
+      avg_cost_per_task: response.data.data.avg_cost_per_task,
+      is_reused: response.data.data.is_reused,
+      reused_from_agent_run_id: response.data.data.reused_from_agent_run_id,
+      reused_from_round: response.data.data.reused_from_round,
+      zero_reason: response.data.data.zero_reason,
+      season_leadership: response.data.data.season_leadership,
     };
   }
 

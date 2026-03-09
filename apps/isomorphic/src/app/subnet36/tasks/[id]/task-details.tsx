@@ -728,10 +728,10 @@ export default function TaskDetails() {
                     label="Started"
                     value={formatDateTime(roundInfo?.startedAt)}
                   />
-                  <InfoRow
-                    label="Ended"
-                    value={formatDateTime(roundInfo?.endedAt)}
-                  />
+	                  <InfoRow
+	                    label="Ended"
+	                    value={formatDateTime(roundInfo?.endedAt ?? undefined)}
+	                  />
                   <InfoRow
                     label="Epoch"
                     value={formatEpochDisplay(roundInfo)}

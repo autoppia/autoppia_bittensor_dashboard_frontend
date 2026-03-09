@@ -1,19 +1,20 @@
 "use client";
 
-import type { ComponentType } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
-import { Button, Text } from "rizzui";
+import { Button, Select, Text } from "rizzui";
 import {
   formatWebsiteName,
   getProjectColors,
+  getProjectMainColor,
 } from "@/utils/website-colors";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
+import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import {
   ComposedChart,
@@ -35,10 +36,10 @@ import {
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
 import AgentHistoricalAnalytics from "./agent-historical-analytics";
-import { useMinerRoundDetails, useMinerHistorical, useRoundsData } from "@/services/hooks/useAgents";
+import { useAgent, useMinerRoundDetails, useMinerHistorical } from "@/services/hooks/useAgents";
 import { agentsRepository } from "@/repositories/agents/agents.repository";
 import type {
-  ScoreRoundDataPoint,
+  RewardRoundDataPoint,
   AgentData,
   AgentRoundMetrics,
   AgentRunOverview,
@@ -46,13 +47,6 @@ import type {
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
-
-function safeString(value: unknown): string {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-}
 import {
   PiGithubLogoDuotone,
   PiHashDuotone,
@@ -68,6 +62,7 @@ import {
   PiChartLineDuotone,
   PiChartLineUpDuotone,
   PiChartBarDuotone,
+  PiTargetDuotone,
   PiTrophyDuotone,
   PiListChecksDuotone,
   PiTrendUpDuotone,
@@ -83,7 +78,7 @@ import {
   LuStar,
   LuCrown,
 } from "react-icons/lu";
-import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
+import { GLASS_STYLES, METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
 // ============================================================================
 // Shared helpers within this page
@@ -96,8 +91,28 @@ const normalizeScore = (value?: number | null): number | null => {
 const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/(^-|-$)/g, "");
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+const formatBestRoundBadge = (value: number | string | null | undefined) => {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    if (!value.trim()) return null;
+    if (value.includes("/")) {
+      const [seasonRaw, roundRaw] = value.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (Number.isFinite(season) && Number.isFinite(round)) {
+        return `Season ${season} · Round ${round}`;
+      }
+    }
+    return `Round ${value}`;
+  }
+  if (Number.isFinite(value) && value > 0) {
+    return `Round ${value}`;
+  }
+  return null;
+};
 
 const RUNS_PAGE_SIZE = 100;
 
@@ -105,8 +120,8 @@ async function fetchAllAgentRuns(
   agentId: string,
   params: { roundId?: number; validatorId?: string } = {},
   signal?: AbortSignal
-): Promise<{ 
-  runs: AgentRunOverview[]; 
+): Promise<{
+  runs: AgentRunOverview[];
   total: number;
   validators?: AgentRunsResponse['data']['validators'];
   post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
@@ -122,7 +137,7 @@ async function fetchAllAgentRuns(
     if (signal?.aborted) {
       throw new Error('Request cancelled');
     }
-    
+
     const response = await agentsRepository.getAgentRuns(agentId, {
       ...params,
       page,
@@ -130,12 +145,12 @@ async function fetchAllAgentRuns(
       sortBy: "startTime",
       sortOrder: "desc",
     });
-    
+
     // Check again after the request (in case it was cancelled during the request)
     if (signal?.aborted) {
       throw new Error('Request cancelled');
     }
-    
+
     const payload = response?.data;
     const batch = payload?.runs ?? [];
     if (page === 1) {
@@ -154,19 +169,18 @@ async function fetchAllAgentRuns(
   return { runs: aggregated, total, validators, post_consensus_summary };
 }
 
-type AgentStatsProps = Readonly<{
-  agent?: AgentData | null;
-  roundMetrics?: AgentRoundMetrics | null;
-  mode?: "current" | "historical";
-  preAvg?: any;
-}>;
-
+// Agent stats band
 function AgentStats({
   agent,
   roundMetrics,
   mode = "current",
   preAvg,
-}: AgentStatsProps) {
+}: {
+  agent?: AgentData | null;
+  roundMetrics?: AgentRoundMetrics | null;
+  mode?: "current" | "historical";
+  preAvg?: any;
+}) {
   const {
     sliderEl,
     sliderPrevBtn,
@@ -179,19 +193,25 @@ function AgentStats({
     return <AgentStatsPlaceholder />;
   }
 
-  let rankNum: number | null = null;
-  if (roundMetrics?.rank && roundMetrics.rank > 0) rankNum = roundMetrics.rank;
-  else if (agent.currentRank && agent.currentRank > 0) rankNum = agent.currentRank;
-  const currentRankValue = rankNum == null ? "N/A" : `#${rankNum}`;
+  const currentRankValue =
+    roundMetrics?.rank && roundMetrics.rank > 0
+      ? `#${roundMetrics.rank}`
+      : agent.currentRank && agent.currentRank > 0
+        ? `#${agent.currentRank}`
+        : "N/A";
 
-  const currentScorePercentage = `${((roundMetrics?.score ?? agent.currentScore ?? 0) * 100).toFixed(1)}%`;
-  const bestRoundScoreValue =
-    agent.bestRoundScore ?? agent.currentTopScore ?? 0;
-  const bestEverScorePercentage = `${(bestRoundScoreValue * 100).toFixed(1)}%`;
-  const bestRoundBadge =
-    agent.bestRoundId && agent.bestRoundId > 0
-      ? `Round ${agent.bestRoundId}`
-      : null;
+  const bestRankEver =
+    agent.bestRankEver && agent.bestRankEver > 0
+      ? `#${agent.bestRankEver}`
+      : "N/A";
+  const currentRewardPercentage = `${((roundMetrics?.reward ?? agent.currentReward ?? 0) * 100).toFixed(1)}%`;
+  const bestRoundRewardValue =
+    agent.bestRoundReward ?? agent.currentTopReward ?? 0;
+  const bestEverRewardPercentage = `${(bestRoundRewardValue * 100).toFixed(1)}%`;
+  const bestRoundBadge = formatBestRoundBadge(agent.bestRoundId);
+  const roundsParticipated = (
+    agent.roundsParticipated || agent.totalRuns
+  ).toLocaleString();
 
   // Multiplicando por el 7.5% solicitado por robert
   const totalAlphaValue = Number(agent.alphaWonInPrizes ?? 0) * 0.075;
@@ -226,8 +246,8 @@ function AgentStats({
       ...METRIC_CARD_GRADIENTS.blue,
     },
     {
-      title: "Current Score",
-      metric: currentScorePercentage,
+      title: "Current Reward",
+      metric: currentRewardPercentage,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
@@ -250,8 +270,8 @@ function AgentStats({
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Best Ever Score",
-      metric: bestEverScorePercentage,
+      title: "Best Ever Reward",
+      metric: bestEverRewardPercentage,
       badge: bestRoundBadge,
       icon: LuStar,
       ...METRIC_CARD_GRADIENTS.blue,
@@ -295,7 +315,7 @@ function AgentStats({
           className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0"
         >
           {displayStats.map((stat) => {
-            const Icon = stat.icon as ComponentType<{ className?: string }>;
+            const Icon = stat.icon as any;
             return (
               <div
                 key={stat.title}
@@ -355,9 +375,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {"badge" in stat && stat.badge != null ? (
+                      {(stat as any).badge ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                          {safeString(stat.badge)}
+                          {(stat as any).badge}
                         </span>
                       ) : null}
                     </div>
@@ -403,63 +423,19 @@ const BENCHMARK_COLOR_PALETTE = [
   "#EC4899",
 ];
 
-function RewardChartTooltipContent(props: Readonly<{ active?: boolean; payload?: Array<{ payload?: any }>; label?: string }>) {
-  const { active, payload, label } = props;
-  if (active !== true || !payload?.length) return null;
-  const data = payload[0]?.payload;
-  const reward = data?.reward ?? 0;
-  const evalScore = data?.eval_score != null && typeof data.eval_score === "number" ? data.eval_score : null;
-  const evalTime = data?.eval_time != null && typeof data.eval_time === "number" ? data.eval_time : null;
-  const rankSuffix = data?.rank == null ? "" : ` (Rank #${data.rank})`;
-  return (
-    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
-      <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
-        Round {label}{rankSuffix}
-      </div>
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#F59E0B" }} />
-            <span className="text-white/90 font-semibold">Reward:</span>
-          </div>
-          <span className="font-black text-white text-base">{(reward * 100).toFixed(2)}%</span>
-        </div>
-        {evalScore != null && Number.isFinite(evalScore) && (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#3B82F6" }} />
-              <span className="text-white/90 font-semibold">Score:</span>
-            </div>
-            <span className="font-black text-white text-base">{(evalScore * 100).toFixed(2)}%</span>
-          </div>
-        )}
-        {evalTime != null && Number.isFinite(evalTime) && (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <span className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20" style={{ backgroundColor: "#10B981" }} />
-              <span className="text-white/90 font-semibold">Avg Time:</span>
-            </div>
-            <span className="font-black text-white text-base">{Number(evalTime).toFixed(2)}s</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-type AgentScoreChartProps = Readonly<{
-  className?: string;
-  scoreRoundData?: ScoreRoundDataPoint[];
-  loading?: boolean;
-  error?: string | null;
-}>;
-
 function AgentScoreChart({
   className,
-  scoreRoundData = [] as ScoreRoundDataPoint[],
+  rewardRoundData = [] as RewardRoundDataPoint[],
   loading = false,
   error,
-}: AgentScoreChartProps) {
+  title = "Reward Over Time",
+}: {
+  className?: string;
+  rewardRoundData?: RewardRoundDataPoint[];
+  loading?: boolean;
+  error?: string | null;
+  title?: string;
+}) {
   const [timeRange, setTimeRange] = useState<"7r" | "15r" | "30r" | "all">(
     "all"
   );
@@ -467,21 +443,20 @@ function AgentScoreChart({
   const { processedRows, benchmarkSeries } = useMemo(() => {
     const seriesMap = new Map<string, { label: string; color: string }>();
 
-    const rows = scoreRoundData
+    const rows = rewardRoundData
       .map((point) => {
         const row: Record<string, number | string | null> = {
-          round: point.round_id,
-          roundLabel: point.round_id,
-          score: normalizeScore(point.score) ?? 0,
+          round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
+          roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
+          reward: normalizeScore(point.reward) ?? 0,
           rank: point.rank ?? null,
-          reward: point.reward ?? null,
           eval_score: point.eval_score ?? null,
           eval_time: point.eval_time ?? null,
           timestamp: point.timestamp,
         };
 
-        const topScore = normalizeScore(point.topScore);
-        if (topScore !== null) row.topBenchmarkScore = topScore;
+        const topReward = normalizeScore(point.topReward);
+        if (topReward !== null) row.topBenchmarkScore = topReward;
 
         if (Array.isArray(point.benchmarks) && point.benchmarks.length > 0) {
           point.benchmarks.forEach((benchmark, idx) => {
@@ -489,7 +464,7 @@ function AgentScoreChart({
               benchmark.provider || benchmark.name || `benchmark-${idx}`;
             const slug = slugify(rawId);
             const key = `benchmark_${slug || idx}`;
-            const normalized = normalizeScore(benchmark.score);
+            const normalized = normalizeScore(benchmark.reward);
 
             if (!seriesMap.has(key)) {
               const color =
@@ -511,7 +486,7 @@ function AgentScoreChart({
         (entry) =>
           typeof entry.round === "number" &&
           Number.isFinite(entry.round) &&
-          entry.round > 0
+          (entry.round as number) > 0
       )
       .sort((a, b) => Number(a.round) - Number(b.round));
 
@@ -523,7 +498,7 @@ function AgentScoreChart({
         color: meta.color,
       })),
     };
-  }, [scoreRoundData]);
+  }, [rewardRoundData]);
 
   function handleFilterBy(option: string) {
     if (option === "7R") setTimeRange("7r");
@@ -536,10 +511,10 @@ function AgentScoreChart({
     return <AgentScoreChartPlaceholder className={className} />;
   }
 
-  if (error) {
+  if (error && processedRows.length === 0) {
     return (
       <WidgetCard
-        title="Reward Over Time"
+        title={title}
         action={
           <ButtonGroupAction
             options={filterOptions}
@@ -567,10 +542,7 @@ function AgentScoreChart({
   const getFilteredData = (data: any[]) => {
     if (data.length === 0 || timeRange === "all") return data;
     const maxRound = Math.max(...data.map((d) => d.round));
-    let roundsToShow: number;
-    if (timeRange === "7r") roundsToShow = 7;
-    else if (timeRange === "15r") roundsToShow = 15;
-    else roundsToShow = 30;
+    const roundsToShow = timeRange === "7r" ? 7 : timeRange === "15r" ? 15 : 30;
     const minRound = Math.max(1, maxRound - roundsToShow + 1);
     return data.filter((d) => d.round >= minRound);
   };
@@ -578,16 +550,15 @@ function AgentScoreChart({
   const displayData = getFilteredData(processedRows).map((entry: any) => {
     const scaled: Record<string, number | string | null> = {
       ...entry,
-      score: entry.score == null ? entry.score : Number(entry.score) * 100,
+      reward: entry.reward != null ? Number(entry.reward) * 100 : entry.reward,
       topBenchmarkScore:
-        entry.topBenchmarkScore == null
-          ? entry.topBenchmarkScore
-          : Number(entry.topBenchmarkScore) * 100,
+        entry.topBenchmarkScore != null
+          ? Number(entry.topBenchmarkScore) * 100
+          : entry.topBenchmarkScore,
     };
     benchmarkSeries.forEach((series) => {
-      const val = scaled[series.key];
-      if (val == null) return;
-      scaled[series.key] = Number(val) * 100;
+      if (scaled[series.key] != null)
+        scaled[series.key] = Number(scaled[series.key]) * 100;
     });
     return scaled;
   });
@@ -595,10 +566,10 @@ function AgentScoreChart({
   const hasTopBenchmark = displayData.some(
     (entry) => typeof entry.topBenchmarkScore === "number"
   );
-  const scoreValues = displayData
+  const rewardValues = displayData
     .flatMap((entry) => {
       const values: number[] = [];
-      if (typeof entry.score === "number") values.push(entry.score);
+      if (typeof entry.reward === "number") values.push(entry.reward);
       if (typeof entry.topBenchmarkScore === "number")
         values.push(entry.topBenchmarkScore);
       benchmarkSeries.forEach((series) => {
@@ -610,9 +581,9 @@ function AgentScoreChart({
     .filter((value) => Number.isFinite(value));
 
   const computeDomain = () => {
-    if (!scoreValues.length) return [0, 100] as [number, number];
-    const minValue = Math.min(...scoreValues);
-    const maxValue = Math.max(...scoreValues);
+    if (!rewardValues.length) return [0, 100] as [number, number];
+    const minValue = Math.min(...rewardValues);
+    const maxValue = Math.max(...rewardValues);
     const range = maxValue - minValue;
     const padding = range > 0 ? range * 0.2 : Math.max(5, maxValue * 0.1 || 5);
     const lowerBound = Math.max(0, minValue - padding);
@@ -622,9 +593,9 @@ function AgentScoreChart({
 
   const yAxisDomain = computeDomain();
   const legendItems = [
-    { label: "Miner score", color: "#10B981" },
+    { label: "Miner reward", color: "#10B981" },
     ...(hasTopBenchmark
-      ? [{ label: "Top miner score", color: "#FACC15" }]
+      ? [{ label: "Top miner reward", color: "#FACC15" }]
       : []),
     ...benchmarkSeries.map((series) => ({
       label: series.label,
@@ -636,7 +607,7 @@ function AgentScoreChart({
     <WidgetCard
       title={
         <span className="text-md lg:text-2xl font-black text-white">
-          Reward Over Time
+          {title}
         </span>
       }
       action={
@@ -672,7 +643,7 @@ function AgentScoreChart({
               margin={{ top: 10, left: -10, bottom: 20 }}
             >
               <defs>
-                <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="rewardArea" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
                   <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                 </linearGradient>
@@ -708,15 +679,80 @@ function AgentScoreChart({
                 tick={<CustomYAxisTick postfix="%" />}
                 stroke="rgba(148,163,184,0.3)"
               />
-              <Tooltip content={RewardChartTooltipContent} />
+              <Tooltip
+                content={({ active, payload, label }: any) => {
+                  if (!active || !payload?.length) return null;
+                  const data = payload[0]?.payload;
+
+                  // Get post-consensus data from the payload
+                  const reward = data?.reward ?? 0;
+                  const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
+                  const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
+
+                  return (
+                    <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
+                      <div className="text-center font-bold text-sm mb-2 pb-2 border-b border-white/10">
+                        Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        {/* Reward */}
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                              style={{ backgroundColor: "#F59E0B" }}
+                            />
+                            <span className="text-white/90 font-semibold">Reward:</span>
+                          </div>
+                          <span className="font-black text-white text-base">
+                            {(reward * 100).toFixed(2)}%
+                          </span>
+                        </div>
+
+                        {/* Score (eval_score) */}
+                        {evalScore != null && !isNaN(evalScore) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#3B82F6" }}
+                              />
+                              <span className="text-white/90 font-semibold">Score:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              {(evalScore * 100).toFixed(2)}%
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Avg Time (eval_time) */}
+                        {evalTime != null && !isNaN(evalTime) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#10B981" }}
+                              />
+                              <span className="text-white/90 font-semibold">Avg Time:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              {Number(evalTime).toFixed(2)}s
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }}
+              />
               <Area
                 type="monotone"
-                dataKey="score"
+                dataKey="reward"
                 stroke="#10B981"
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#scoreArea)"
-                name="Miner score"
+                fill="url(#rewardArea)"
+                name="Miner reward"
               />
               {hasTopBenchmark && (
                 <Line
@@ -726,7 +762,7 @@ function AgentScoreChart({
                   strokeWidth={2}
                   dot={false}
                   strokeDasharray="6 4"
-                  name="Top miner score"
+                  name="Top miner reward"
                 />
               )}
               {benchmarkSeries.map((series) => (
@@ -769,8 +805,22 @@ function AgentScoreChart({
   );
 }
 
-type AgentValidatorsProps = Readonly<{
-  selectedRound?: number | null;
+// Validators/runs list
+function AgentValidators({
+  selectedRound,
+  selectedSeason,
+  selectedRoundInSeason,
+  runs,
+  loading,
+  error,
+  numericUidFromParam,
+  validators,
+  post_consensus_summary,
+  minerRoundDetailsValidators,
+  roundAvgCostPerTask,
+  postConsensusRounds,
+}: {
+  selectedRound?: number | string | null;
   selectedSeason?: number | null;
   selectedRoundInSeason?: number | null;
   runs: AgentRunOverview[];
@@ -793,24 +843,129 @@ type AgentValidatorsProps = Readonly<{
     local_miners_evaluated: number;
     agent_run_id?: string;
   }>;
-}>;
-
-function AgentValidators({
-  selectedRound,
-  selectedSeason,
-  selectedRoundInSeason,
-  runs,
-  loading,
-  error,
-  numericUidFromParam,
-  validators,
-  post_consensus_summary,
-  minerRoundDetailsValidators,
-}: AgentValidatorsProps) {
+  roundAvgCostPerTask?: number | null;
+  postConsensusRounds?: Array<{
+    round: string | number;
+    post_consensus_rank: number | null;
+    post_consensus_avg_reward: number;
+    post_consensus_avg_eval_score?: number | null;
+    post_consensus_avg_eval_time: number;
+    post_consensus_avg_eval_cost?: number | null;
+    tasks_received: number;
+    tasks_success: number;
+    validators_count: number;
+    websites_count?: number;
+    post_consensus_available?: boolean;
+    weight?: number;
+  }>;
+}) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-  
-  // Prefer validators from minerRoundDetails (round-details endpoint) over validators from runs
-  const effectiveValidators = minerRoundDetailsValidators || validators;
+  const [selectedRunsRoundKey, setSelectedRunsRoundKey] = useState<string>("all");
+
+  const getRoundMeta = useCallback((value: number | string | null | undefined) => {
+    if (value == null) return null;
+    if (typeof value === "string" && value.includes("/")) {
+      const [seasonRaw, roundRaw] = value.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (!Number.isFinite(season) || !Number.isFinite(round)) return null;
+      return {
+        key: `${season}/${round}`,
+        season,
+        round,
+        label: `Season ${season} · Round ${round}`,
+      };
+    }
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    const season = parsed >= 10000 ? Math.floor(parsed / 10000) : selectedSeason ?? 0;
+    const round = parsed >= 10000 ? parsed % 10000 : parsed;
+    return {
+      key: `${season}/${round}`,
+      season,
+      round,
+      label: season > 0 ? `Season ${season} · Round ${round}` : `Round ${round}`,
+    };
+  }, [selectedSeason]);
+
+  const normalizedRuns = useMemo(() => {
+    return [...runs]
+      .map((run) => {
+        const meta = getRoundMeta(run.roundId);
+        return meta ? { ...run, __roundMeta: meta } : null;
+      })
+      .filter((run): run is AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } } => Boolean(run))
+      .sort((a, b) => {
+        if (a.__roundMeta.season !== b.__roundMeta.season) {
+          return b.__roundMeta.season - a.__roundMeta.season;
+        }
+        if (a.__roundMeta.round !== b.__roundMeta.round) {
+          return b.__roundMeta.round - a.__roundMeta.round;
+        }
+        return String(b.startTime ?? "").localeCompare(String(a.startTime ?? ""));
+      });
+  }, [getRoundMeta, runs]);
+
+  const roundOptions = useMemo(() => {
+    const options = [{ label: "All rounds", value: "all" }];
+    const seen = new Set<string>();
+    normalizedRuns.forEach((run) => {
+      if (seen.has(run.__roundMeta.key)) return;
+      seen.add(run.__roundMeta.key);
+      options.push({ label: run.__roundMeta.label, value: run.__roundMeta.key });
+    });
+    return options;
+  }, [normalizedRuns]);
+
+  useEffect(() => {
+    if (selectedRunsRoundKey === "all") return;
+    if (!roundOptions.some((option) => option.value === selectedRunsRoundKey)) {
+      setSelectedRunsRoundKey("all");
+    }
+  }, [roundOptions, selectedRunsRoundKey]);
+
+  const groupedRuns = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        season: number;
+        round: number;
+        label: string;
+        runs: Array<AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } }>;
+      }
+    >();
+
+    normalizedRuns.forEach((run) => {
+      if (selectedRunsRoundKey !== "all" && run.__roundMeta.key !== selectedRunsRoundKey) {
+        return;
+      }
+      const existing = groups.get(run.__roundMeta.key);
+      if (existing) {
+        existing.runs.push(run);
+        return;
+      }
+      groups.set(run.__roundMeta.key, {
+        key: run.__roundMeta.key,
+        season: run.__roundMeta.season,
+        round: run.__roundMeta.round,
+        label: run.__roundMeta.label,
+        runs: [run],
+      });
+    });
+
+    return Array.from(groups.values());
+  }, [normalizedRuns, selectedRunsRoundKey]);
+
+  const postConsensusByRound = useMemo(() => {
+    const byRound = new Map<string, NonNullable<typeof postConsensusRounds>[number]>();
+    (postConsensusRounds ?? []).forEach((entry) => {
+      const meta = getRoundMeta(entry.round);
+      if (!meta) return;
+      byRound.set(meta.key, entry);
+    });
+    return byRound;
+  }, [getRoundMeta, postConsensusRounds]);
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -824,63 +979,52 @@ function AgentValidators({
     );
   }
 
-  // Check if we have validators from minerRoundDetails, even if runs is empty
-  if (!effectiveValidators || effectiveValidators.length === 0) {
-    if (!runs.length) {
-      return (
-        <div className="mt-6">
-          <div className="text-center py-12 text-white/70">
-            No validator runs found for this agent
-          </div>
+  if (!groupedRuns.length) {
+    return (
+      <div className="mt-6">
+        <div className="text-center py-12 text-white/70">
+          No validator runs found for this agent in the selected season.
         </div>
-      );
-    }
+      </div>
+    );
   }
-
-  const filteredRuns =
-    selectedRound == null
-      ? runs
-      : runs.filter((run) => run.roundId === selectedRound);
-
-  const runsByValidator = filteredRuns.reduce(
-    (acc, run) => {
-      if (run.validatorId in acc) {
-        acc[run.validatorId].push(run);
-      } else {
-        acc[run.validatorId] = [run];
-      }
-      return acc;
-    },
-    {} as Record<string, typeof filteredRuns>
-  );
 
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1 mb-3">
         <div className="flex items-center flex-col sm:flex-row gap-3">
           <Text className="text-md sm:text-2xl text-center font-bold text-white">
-            Agent Evaluation Runs ({effectiveValidators?.length ?? Object.keys(runsByValidator).length ?? 0})
-            {selectedSeason && selectedRoundInSeason ? ` - Season ${selectedSeason} - Round ${selectedRoundInSeason}` : ""}
+            Agent Runs by Round
+            {selectedSeason ? ` · Season ${selectedSeason}` : ""}
           </Text>
         </div>
-        <button
-          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-          className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
-              <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+        <div className="flex w-full sm:w-auto items-center gap-3">
+          <Select
+            options={roundOptions}
+            value={roundOptions.find((option) => option.value === selectedRunsRoundKey) ?? roundOptions[0]}
+            onChange={(option: any) => setSelectedRunsRoundKey(String(option?.value ?? "all"))}
+            className="w-full sm:w-[240px]"
+            placeholder="Filter rounds"
+          />
+          <button
+            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+            className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
+                <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span>How it works</span>
             </div>
-            <span>How it works</span>
-          </div>
-          <div className="transition-transform duration-300 group-hover:scale-110">
-            {isInfoExpanded ? (
-              <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-            ) : (
-              <PiCaretDownDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-            )}
-          </div>
-        </button>
+            <div className="transition-transform duration-300 group-hover:scale-110">
+              {isInfoExpanded ? (
+                <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
+              ) : (
+                <PiCaretDownDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
+              )}
+            </div>
+          </button>
+        </div>
       </div>
 
       {isInfoExpanded && (
@@ -917,7 +1061,7 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
                     <PiTrophyDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
@@ -925,9 +1069,8 @@ function AgentValidators({
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Each validator runs independent evaluations of your agent
-                  across different tasks and scenarios to ensure fair and
-                  comprehensive testing.
+                  Each validator evaluates your agent independently on the same task set.
+                  Local results are computed first, then merged in post-consensus.
                 </p>
               </div>
               <div
@@ -939,17 +1082,19 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
-                    <PiChartLineUpDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <PiCurrencyDollarDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Scoring
+                    Reward Formula
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Agents are scored based on task completion accuracy, response
-                  quality, and execution efficiency across multiple evaluation
-                  criteria.
+                  Per solved task, reward combines quality, speed, and efficiency:
+                  <span className="mt-1 block rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[11px] md:text-xs text-white/90">
+                    Reward = (EVAL_SCORE_WEIGHT × 1.0) + (TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)) + (COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR))
+                  </span>
+                  <span className="mt-1 block">If the task is not solved, reward = 0.</span>
                 </p>
               </div>
               <div
@@ -961,17 +1106,17 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
-                    <PiListChecksDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                    <LuAward className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Ranking
+                    Effective Ranking
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Your final rank is determined by your average performance
-                  across all validators in each round, providing a comprehensive
-                  ranking system.
+                  In each new round, your effective competition reward is
+                  <span className="font-mono text-white/90"> max(round_reward, best_reward_in_season)</span>.
+                  Rank is computed with that effective reward against other miners.
                 </p>
               </div>
               <div
@@ -983,17 +1128,16 @@ function AgentValidators({
                 }}
               >
                 <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg ring-1 md:ring-2 ring-white/20">
                     <PiTimerDuotone className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                   </div>
                   <h4 className="font-bold text-white text-sm md:text-base">
-                    Response Time
+                    Time & Cost Limits
                   </h4>
                 </div>
                 <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-                  Faster response times with maintained quality result in higher
-                  scores, balancing speed and accuracy in the evaluation
-                  process.
+                  Faster execution and lower cost improve reward shaping.
+                  Exceeding timeout/cost thresholds can force failures or zero-reward outcomes.
                 </p>
               </div>
             </div>
@@ -1001,379 +1145,157 @@ function AgentValidators({
         </div>
       )}
 
-      {/* Removed duplicate Avg cards from validators section */}
+      <div className="space-y-8">
+        {groupedRuns.map((group) => {
+          const runsByValidator = group.runs.reduce(
+            (acc, run) => {
+              if (!acc[run.validatorId]) acc[run.validatorId] = [];
+              acc[run.validatorId].push(run);
+              return acc;
+            },
+            {} as Record<string, typeof group.runs>
+          );
+          const postConsensus = postConsensusByRound.get(group.key);
+          const groupWebsitesCount = Object.values(runsByValidator).reduce((maxCount, validatorRuns) => {
+            const latestRun = validatorRuns[0];
+            const count =
+              typeof latestRun.websitesCount === "number"
+                ? latestRun.websitesCount
+                : typeof latestRun.totalWebsites === "number"
+                  ? latestRun.totalWebsites
+                  : 0;
+            return Math.max(maxCount, count);
+          }, 0);
 
-      {/* Show validators with local and post-consensus data if available */}
-      {effectiveValidators && effectiveValidators.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {effectiveValidators
-            .sort((a, b) => {
-              // Sort: Autoppia (UID 83 or 124) first, then others
-              const aIsAutoppia = a.validator_uid === 83 || a.validator_uid === 124;
-              const bIsAutoppia = b.validator_uid === 83 || b.validator_uid === 124;
-              if (aIsAutoppia && !bIsAutoppia) return -1;
-              if (!aIsAutoppia && bIsAutoppia) return 1;
-              return 0;
-            })
-            .map((validator: any) => {
-            const isAutoppia = validator.validator_uid === 83 || validator.validator_uid === 124;
-            
-            // Check if this is from minerRoundDetails (has validator_image) or from runs (has miners array)
-            const isFromRoundDetails = 'validator_image' in validator;
-            
-            // Use validator_image if available (from round-details), otherwise fallback
-            const validatorImage = validator.validator_image
-              ? resolveAssetUrl(validator.validator_image)
-              : resolveAssetUrl(`/validators/${validator.validator_uid || "default"}.png`);
-            
-            // Find corresponding run for this validator (for agent_run_id or fallback)
-            const latestRun = filteredRuns.find(
-              (run) => String(run.validatorId) === String(validator.validator_uid)
-            );
-            const agentRunId = (isFromRoundDetails && validator.agent_run_id) || latestRun?.runId;
-            
-            // Use direct validator data (from round-details) or fallback to miners list
-            let localRank: number | null = null;
-            let localAvgReward: number = 0;
-            let localAvgEvalTime: number = 0;
-            let localTasksReceived: number = 0;
-            let localTasksSuccess: number = 0;
-            let localMinersEvaluated: number = 0;
-            
-            if (isFromRoundDetails) {
-              // Data from round-details endpoint (direct fields)
-              localRank = validator.local_rank;
-              localAvgReward = validator.local_avg_reward ?? 0;
-              localAvgEvalTime = validator.local_avg_eval_time ?? 0;
-              localTasksReceived = validator.local_tasks_received ?? 0;
-              localTasksSuccess = validator.local_tasks_success ?? 0;
-              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
-            } else {
-              // Data from runs endpoint (need to find miner in miners array)
-              const currentMinerData = validator.miners?.find(
-                (m: any) => m.uid === numericUidFromParam
-              );
-              localRank = currentMinerData?.local_rank ?? null;
-              localAvgReward = currentMinerData?.local_avg_reward ?? 0;
-              localAvgEvalTime = currentMinerData?.local_avg_eval_time ?? 0;
-              localTasksReceived = validator.local_tasks_evaluated ?? 0;
-              localTasksSuccess = validator.local_tasks_evaluated ?? 0; // Fallback, should be calculated
-              localMinersEvaluated = validator.local_miners_evaluated ?? 0;
-            }
-            
-            const secondaryStats = [
-              {
-                title: "Round",
-                metric: selectedRound ?? "N/A",
-                icon: PiClockDuotone,
-                iconClassName: "bg-gradient-to-br from-purple-500 to-violet-600",
-              },
-              {
-                title: "Rank",
-                metric: localRank 
-                  ? `#${localRank}` 
-                  : "N/A",
-                icon: PiHashDuotone,
-                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
-              },
-              {
-                title: "Reward",
-                metric: localAvgReward 
-                  ? `${(localAvgReward * 100).toFixed(2)}%` 
-                  : "N/A",
-                icon: PiChartLineUpDuotone,
-                iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600",
-              },
-              {
-                title: "Time",
-                metric: localAvgEvalTime 
-                  ? `${localAvgEvalTime.toFixed(2)}s` 
-                  : "N/A",
-                icon: PiTimerDuotone,
-                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
-              },
-              {
-                title: "Tasks",
-                metric: `${localTasksSuccess}/${localTasksReceived}`,
-                icon: PiListChecksDuotone,
-                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
-              },
-              {
-                title: "Miners",
-                metric: localMinersEvaluated,
-                icon: PiChartBarDuotone,
-                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
-              },
-            ];
-            
-            return (
-              <div key={`validator-${validator.validator_uid}`} className="relative">
-                <div
-                  className={cn(
-                    "group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2",
-                    isAutoppia 
-                      ? "border-emerald-400/50 hover:border-emerald-400/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent" 
-                      : "border-white/20 hover:border-white/40"
-                  )}
-                  style={{ background: isAutoppia ? undefined : "transparent", boxShadow: "none" }}
-                >
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                          <Image
-                            src={validatorImage}
-                            alt={validator.validator_name}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
-                            {validator.validator_name}
-                          </Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                            {validator.validator_hotkey 
-                              ? `${validator.validator_hotkey.slice(0, 8)}...${validator.validator_hotkey.slice(-8)}`
-                              : `UID: ${validator.validator_uid}`}
-                          </Text>
-                        </div>
+          return (
+            <div key={group.key} className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <Text className="text-lg sm:text-xl font-bold text-white">
+                  {group.label}
+                </Text>
+                <Text className="text-xs sm:text-sm text-white/60">
+                  {Object.keys(runsByValidator).length} validator run{Object.keys(runsByValidator).length === 1 ? "" : "s"}
+                </Text>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
+                {postConsensus?.post_consensus_available ? (
+                  <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
+                    <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                      <Text className="font-bold text-white text-base">Validator consensus</Text>
+                      <Text className="text-xs text-white/60 tracking-wide">
+                        Final metrics after validator consensus
+                      </Text>
+                    </div>
+                    <div className="relative p-2 sm:p-5">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                        {[
+                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                          { title: "Score", metric: `${((postConsensus.post_consensus_avg_eval_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                          { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                          { title: "Websites", metric: String(postConsensus.websites_count ?? groupWebsitesCount ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                          { title: "Avg Cost", metric: postConsensus.post_consensus_avg_eval_cost != null ? `$${Number(postConsensus.post_consensus_avg_eval_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                        ].map((stat) => {
+                          const Icon = stat.icon as any;
+                          return (
+                            <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                              <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
-                  <div className="relative p-2 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
-                    {secondaryStats.map((stat) => {
-                      const Icon = stat.icon as any;
-                      return (
-                        <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
-                          <div className={cn(
-                            "flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
-                            stat.iconClassName
-                          )}>
-                            <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
-                              {stat.title}
-                            </Text>
-                            <Text className="font-bold text-xs sm:text-base truncate text-white">
-                              {stat.metric}
-                            </Text>
+                ) : null}
+                {Object.entries(runsByValidator).map(([validatorId, validatorRuns]) => {
+                  const latestRun = validatorRuns[0];
+                  const responseTimeSeconds =
+                    typeof latestRun.averageEvaluationTime === "number" && Number.isFinite(latestRun.averageEvaluationTime)
+                      ? latestRun.averageEvaluationTime
+                      : latestRun.duration ?? 0;
+                  const websitesCount = (() => {
+                    const anyRun: any = latestRun as any;
+                    if (typeof anyRun.websitesCount === "number") return anyRun.websitesCount;
+                    if (typeof anyRun.totalWebsites === "number") return anyRun.totalWebsites;
+                    return 0;
+                  })();
+
+                  const stats = [
+                    { title: "Reward", metric: `${((latestRun.overallReward ?? latestRun.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                    { title: "Score", metric: `${((latestRun.averageScore ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                    { title: "Time", metric: `${Number(responseTimeSeconds).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                    { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? latestRun.completedTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                    { title: "Websites", metric: websitesCount, icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                    { title: "Avg Cost", metric: latestRun.avgCostPerTask != null ? `$${Number(latestRun.avgCostPerTask).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                  ];
+
+                  return (
+                    <Link key={`agent-run-${group.key}-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
+                      <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40">
+                        <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30">
+                                <Image
+                                  src={resolveAssetUrl(latestRun.validatorImage || "/validators/default.png")}
+                                  alt={latestRun.validatorName || validatorId}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <Text className="font-bold text-white text-base">
+                                  {latestRun.validatorName || validatorId}
+                                </Text>
+                                <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
+                                  {validatorId}
+                                </Text>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      );
-                    })}
-                    </div>
-                    {(() => {
-                      const baseRun = routes.agent_run;
-                      const roundSuffix = selectedRound == null ? "" : "&round=" + selectedRound;
-                      const runHref = agentRunId
-                        ? `${baseRun}/${agentRunId}`
-                        : `${baseRun}?agent=${numericUidFromParam}&validator=${validator.validator_uid}${roundSuffix}`;
-                      return (
-                    <Link href={runHref} className="block">
-                      <div className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-300">
-                        View Agent Run Details
+                        <div className="relative p-2 sm:p-5 space-y-3">
+                          <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                            {stats.map((stat) => {
+                              const Icon = stat.icon as any;
+                              return (
+                                <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                                  <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                    <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                    <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </Link>
-                      );
-                    })()}
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      ) : (() => {
-        if (filteredRuns.length === 0) {
-          return (
-            <div className="mt-6 text-center text-white/70">
-              No runs available for the selected round.
             </div>
           );
-        }
-        return (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-4">
-          {Object.entries(runsByValidator).map(([validatorId, runs]) => {
-            const latestRun = runs[0];
-            const scorePct = Math.round((latestRun.score ?? 0) * 100);
-            const responseTimeSeconds = (() => {
-              if (
-                typeof latestRun.averageEvaluationTime === "number" &&
-                Number.isFinite(latestRun.averageEvaluationTime)
-              ) {
-                return Math.round(Math.abs(latestRun.averageEvaluationTime));
-              }
-              if (
-                typeof latestRun.duration === "number" &&
-                Number.isFinite(latestRun.duration)
-              ) {
-                return Math.round(Math.abs(latestRun.duration));
-              }
-              return 0;
-            })();
-            const validatorName =
-              latestRun.validatorName ||
-              `Validator ${validatorId.slice(0, 6)}...`;
-            const validatorImage = resolveAssetUrl(
-              latestRun.validatorImage || "/validators/default.png"
-            );
-
-            const secondaryStats = [
-              {
-                title: "Round",
-                metric: latestRun.roundId,
-                icon: PiClockDuotone,
-                iconClassName:
-                  "bg-gradient-to-br from-purple-500 to-violet-600",
-                metricClassName: "text-purple-600",
-              },
-              {
-                title: "Rank",
-                metric:
-                  typeof latestRun.ranking === "number" && latestRun.ranking > 0
-                    ? `#${latestRun.ranking}`
-                    : "N/A",
-                icon: PiHashDuotone,
-                iconClassName: "bg-gradient-to-br from-yellow-500 to-amber-600",
-                metricClassName: "text-yellow-600",
-              },
-              {
-                title: "Score",
-                metric: `${scorePct}%`,
-                icon: PiChartLineUpDuotone,
-                iconClassName:
-                  "bg-gradient-to-br from-emerald-500 to-green-600",
-                metricClassName: "text-emerald-600",
-              },
-              {
-                title: "Time",
-                metric: `${responseTimeSeconds}s`,
-                icon: PiTimerDuotone,
-                iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600",
-                metricClassName: "text-blue-600",
-              },
-              {
-                title: "Tasks",
-                metric: `${Math.max(0, latestRun.successfulTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`,
-                icon: PiListChecksDuotone,
-                iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
-                metricClassName: "text-indigo-600",
-              },
-              {
-                title: "Websites",
-                metric: (() => {
-                  const anyRun: any = latestRun as any;
-                  if (typeof anyRun.websitesCount === "number")
-                    return anyRun.websitesCount;
-                  const ws = anyRun.websites;
-                  if (Array.isArray(ws)) return ws.length;
-                  if (typeof ws === "number") return ws;
-                  if (typeof anyRun.totalWebsites === "number")
-                    return anyRun.totalWebsites;
-                  return 0;
-                })(),
-                icon: PiChartBarDuotone,
-                iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600",
-                metricClassName: "text-pink-600",
-              },
-            ];
-
-            return (
-              <Link
-                key={`agent-run-${validatorId}`}
-                href={`${routes.agent_run}/${latestRun.runId}`}
-              >
-                <div
-                  className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40"
-                  style={{ background: "transparent", boxShadow: "none" }}
-                >
-                  <div
-                    className="pulse-bg-rounded-2xl"
-                    style={{ display: "none" }}
-                  />
-                  <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 group-hover:ring-white/50 shadow-xl transition-all duration-300">
-                          <Image
-                            src={validatorImage}
-                            alt={validatorName}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Text className="font-bold text-white text-base group-hover:text-white transition-colors duration-300">
-                            {validatorName}
-                          </Text>
-                          <Text className="text-xs text-white/60 tracking-wide font-mono truncate group-hover:text-white/80 transition-colors duration-300">
-                            {validatorId.slice(0, 8)}...{validatorId.slice(-8)}
-                          </Text>
-                        </div>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg flex-shrink-0 transition-all duration-300 group-hover:shadow-xl group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 w-full md:w-fit">
-                        <PiHashDuotone className="w-4 h-4 flex-shrink-0" />
-                        <span
-                          className="font-mono break-all"
-                          title={latestRun.runId}
-                        >
-                          {latestRun.runId}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="relative p-2 sm:p-5 space-y-3">
-                    <div className="grid grid-cols-3  gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5 group-hover:border-white/25 transition-all duration-300">
-                      {secondaryStats.map((stat) => {
-                        const Icon = stat.icon as any;
-                        return (
-                          <div
-                            key={stat.title}
-                            className="flex items-center sm:gap-2.5 gap-2 min-w-0"
-                          >
-                            <div
-                              className={cn(
-                                "flex items-center justify-center  w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300",
-                                stat.iconClassName
-                              )}
-                            >
-                              <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <Text className="text-xs text-white/70 group-hover:text-white/90 transition-colors duration-300 font-medium">
-                                {stat.title}
-                              </Text>
-                              <Text
-                                className={cn(
-                                  "font-bold text-xs sm:text-base truncate text-white"
-                                )}
-                              >
-                                {stat.metric}
-                              </Text>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-        );
-      })()}
+        })}
+      </div>
     </>
   );
 }
 
 // Enhanced custom tooltip for bar chart
 const WebsitePerformanceTooltip = ({ active, payload }: any) => {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
   const successRate = Math.round(data.successRate);
@@ -1449,7 +1371,13 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
   );
 };
 
-type RoundWebsitesChartProps = Readonly<{
+// Websites performance for current round
+function RoundWebsitesChart({
+  agentId,
+  selectedRound,
+  runs,
+  onSummaryChange,
+}: {
   agentId: string;
   selectedRound?: number | null;
   runs: AgentRunOverview[];
@@ -1457,14 +1385,7 @@ type RoundWebsitesChartProps = Readonly<{
     uniqueWebsites: number;
     totalTasks: number;
   }) => void;
-}>;
-
-function RoundWebsitesChart({
-  agentId,
-  selectedRound,
-  runs,
-  onSummaryChange,
-}: RoundWebsitesChartProps) {
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chartRows, setChartRows] = useState<
@@ -1476,7 +1397,7 @@ function RoundWebsitesChart({
       total: number;
     }>
   >([]);
-  const [websiteTotals, setWebsiteTotals] = useState<{ successful: number; total: number }>({
+  const [totals, setTotals] = useState<{ successful: number; total: number }>({
     successful: 0,
     total: 0,
   });
@@ -1497,7 +1418,7 @@ function RoundWebsitesChart({
       ) {
         setLoading(false);
         setChartRows([]);
-        setWebsiteTotals({ successful: 0, total: 0 });
+        setTotals({ successful: 0, total: 0 });
         onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         return;
       }
@@ -1508,7 +1429,7 @@ function RoundWebsitesChart({
           runsForRound.map(async (run) => {
             try {
               return await agentsRepository.getAgentRun(agentId, run.runId);
-            } catch {
+            } catch (e) {
               return null;
             }
           })
@@ -1518,12 +1439,16 @@ function RoundWebsitesChart({
         let totalSuccessful = 0;
         let totalTasks = 0;
         details.forEach((run) => {
-          if (!run?.websites?.length) return;
-          run.websites.forEach((w: { website?: string; successful?: number; tasks?: number }) => {
-            const key = (w.website ?? "unknown").toString();
-            const entry = bySite.get(key) ?? { successful: 0, total: 0 };
-            const succ = Number.isFinite(Number(w.successful)) ? Math.max(0, Number(w.successful)) : 0;
-            const tasks = Number.isFinite(Number(w.tasks)) ? Math.max(0, Number(w.tasks)) : 0;
+          if (!run || !Array.isArray(run.websites)) return;
+          run.websites.forEach((w) => {
+            const key = (w.website || "unknown").toString();
+            const entry = bySite.get(key) || { successful: 0, total: 0 };
+            const succ = Number.isFinite(w.successful as any)
+              ? Math.max(0, Number(w.successful))
+              : 0;
+            const tasks = Number.isFinite(w.tasks as any)
+              ? Math.max(0, Number(w.tasks))
+              : 0;
             entry.successful += succ;
             entry.total += tasks;
             bySite.set(key, entry);
@@ -1544,16 +1469,15 @@ function RoundWebsitesChart({
 
         if (!cancelled) {
           setChartRows(rows);
-          setWebsiteTotals({ successful: totalSuccessful, total: totalTasks });
+          setTotals({ successful: totalSuccessful, total: totalTasks });
           onSummaryChange?.({
             uniqueWebsites: rows.length,
             totalTasks: totalTasks,
           });
         }
-      } catch (e: unknown) {
+      } catch (e: any) {
         if (!cancelled) {
-          const message = e instanceof Error ? e.message : "Failed to load website stats";
-          setError(message);
+          setError(e?.message || "Failed to load website stats");
           onSummaryChange?.({ uniqueWebsites: 0, totalTasks: 0 });
         }
       } finally {
@@ -1566,27 +1490,24 @@ function RoundWebsitesChart({
     };
   }, [agentId, onSummaryChange, runsForRound, selectedRound]);
 
-  let bodyContent: React.ReactNode;
-  if (loading) {
-    bodyContent = (
-      <div className="relative flex h-[420px] items-center justify-center text-white/70">
-        Loading website stats…
-      </div>
-    );
-  } else if (error) {
-    bodyContent = (
-      <div className="relative flex h-[420px] items-center justify-center text-rose-200">
-        {error}
-      </div>
-    );
-  } else if (chartRows.length === 0) {
-    bodyContent = (
-      <div className="relative flex h-[420px] items-center justify-center text-white/70">
-        No website stats available for this round.
-      </div>
-    );
-  } else {
-    bodyContent = (
+  const totalRate =
+    totals.total > 0 ? Math.round((totals.successful / totals.total) * 100) : 0;
+
+  return (
+    <div className="relative">
+      {loading ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">
+          Loading website stats…
+        </div>
+      ) : error ? (
+        <div className="relative flex h-[420px] items-center justify-center text-rose-200">
+          {error}
+        </div>
+      ) : chartRows.length === 0 ? (
+        <div className="relative flex h-[420px] items-center justify-center text-white/70">
+          No website stats available for this round.
+        </div>
+      ) : (
         <>
           {/* Performance per website heading */}
           <div className="mb-6">
@@ -1599,7 +1520,6 @@ function RoundWebsitesChart({
           <div className="relative h-[300px] md:h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                key={`website-chart-${websiteTotals.total}-${websiteTotals.successful}`}
                 data={chartRows}
                 margin={{ top: 20, left: -10 }}
                 onMouseMove={(state) => {
@@ -1620,7 +1540,7 @@ function RoundWebsitesChart({
                     const colors = getProjectColors(websiteNameForColor);
                     return (
                       <linearGradient
-                        key={`barGradient-${websiteNameForColor}`}
+                        key={`barGradient${index}`}
                         id={`barGradient${index}`}
                         x1="0"
                         y1="0"
@@ -1636,7 +1556,7 @@ function RoundWebsitesChart({
                   {/* Generate glow filters for hover effect */}
                   {chartRows.map((entry, index) => (
                     <filter
-                      key={`glow-${entry.websiteOriginal}`}
+                      key={`glow${index}`}
                       id={`glow${index}`}
                       x="-50%"
                       y="-50%"
@@ -1689,40 +1609,35 @@ function RoundWebsitesChart({
                   animationDuration={800}
                   animationEasing="ease-out"
                 >
-                  {chartRows.map((entry, index) => {
-                    let fillOpacity: number;
-                    if (activeIndex === null) fillOpacity = 0.9;
-                    else if (activeIndex === index) fillOpacity = 1;
-                    else fillOpacity = 0.4;
-                    return (
+                  {chartRows.map((entry, index) => (
                     <Cell
-                      key={`cell-${entry.websiteOriginal}`}
+                      key={`cell-${index}`}
                       fill={`url(#barGradient${index})`}
                       filter={
                         activeIndex === index
                           ? `url(#glow${index})`
                           : undefined
                       }
-                      fillOpacity={fillOpacity}
+                      fillOpacity={
+                        activeIndex === null
+                          ? 0.9
+                          : activeIndex === index
+                            ? 1
+                            : 0.4
+                      }
                       style={{
                         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                         cursor: "pointer",
                         transformOrigin: "center bottom",
                       }}
                     />
-                    );
-                  })}
+                  ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </>
-    );
-  }
-
-  return (
-    <div className="relative">
-      {bodyContent}
+      )}
     </div>
   );
 }
@@ -1736,20 +1651,24 @@ export default function Page() {
   const seasonParam = searchParams.get("season");
   const roundParam = searchParams.get("round");
   const [copiedHotkey, setCopiedHotkey] = useState(false);
+  const selectedSeasonNumber = useMemo(() => {
+    const parsed = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
+    return parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined;
+  }, [seasonParam]);
 
   const selectedRoundFromQuery = useMemo(() => {
     const season = seasonParam ? Number.parseInt(seasonParam, 10) : undefined;
     const round = roundParam ? Number.parseInt(roundParam, 10) : undefined;
-    
+
     if (season !== undefined && Number.isFinite(season) && round !== undefined && Number.isFinite(round)) {
       return `${season}/${round}`;
     }
-    
+
     return undefined;
   }, [seasonParam, roundParam]);
 
   const normalizedAgentId = useMemo(() => {
-    if (trimmedId === "" || trimmedId.length === 0) return null;
+    if (!trimmedId) return null;
     if (/^\d+$/.test(trimmedId)) return trimmedId;
     if (/^agent-\d+$/i.test(trimmedId)) return trimmedId;
     const matches = trimmedId.match(/\d+/g);
@@ -1769,46 +1688,44 @@ export default function Page() {
 
   const agentIdForQuery =
     normalizedAgentId ??
-    (numericUidFromParam == null ? null : `agent-${numericUidFromParam}`);
+    (numericUidFromParam != null ? `agent-${numericUidFromParam}` : null);
 
   // Declare viewMode first before using it in hooks
   const [viewMode, setViewMode] = useState<"current" | "historical" | "runs">(
     "current"
   );
+  const [websitePanelMode, setWebsitePanelMode] = useState<"chart" | "details">(
+    "chart"
+  );
 
-  // Removed useAgent call - we use useMinerRoundDetails and useMinerHistorical instead
-  // This eliminates the unnecessary /api/v1/agents/{id}?round=X call
-  const agentDetail = null as { scoreRoundData?: ScoreRoundDataPoint[] } | null;
-  const loading = false;
-  const error = null;
+  const {
+    data: agentDetail,
+    loading,
+    error,
+  } = useAgent(agentIdForQuery, selectedSeasonNumber ? { season: selectedSeasonNumber } : undefined);
 
-  const agent = null;
-  const roundMetrics: AgentRoundMetrics | null = null;
-  const availableRounds: number[] = [];
-  const apiScoreRoundData: ScoreRoundDataPoint[] = [];
-  
+  const agent = agentDetail?.agent ?? null;
+  const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
+  const availableRounds: Array<string | number> = agentDetail?.availableRounds ?? [];
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
   const {
     data: minerRoundDetails,
     loading: minerRoundDetailsLoading,
-    error: _minerRoundDetailsError,
+    error: minerRoundDetailsError,
   } = useMinerRoundDetails(
     selectedRoundFromQuery, // Always fetch if round is selected (needed for round-details)
     numericUidFromParam
   );
-  
-  // Get rounds data to extract latest season
-  const { data: roundsData } = useRoundsData();
-  
-  // Extract latest season from rounds data
+
+  // Extract latest season from agent detail available rounds
   const latestSeason = useMemo(() => {
-    const rounds = roundsData?.rounds ?? [];
+    const rounds = availableRounds ?? [];
     if (rounds.length === 0) {
       return undefined;
     }
-    
+
     // Parse rounds in format "season/round" and get highest season
     const seasons = rounds
       .map((r) => {
@@ -1819,29 +1736,74 @@ export default function Page() {
         return null;
       })
       .filter((s) => s !== null && Number.isFinite(s)) as number[];
-    
+
     return seasons.length > 0 ? Math.max(...seasons) : undefined;
-  }, [roundsData?.rounds]);
-  
-  // Get miner historical data - only when viewMode is "historical"
+  }, [availableRounds]);
+
+  // Get miner historical data only when needed:
+  // - Historical tab
+  // - Current tab in Effective mode (to resolve source best round)
+  const shouldFetchHistorical =
+    numericUidFromParam !== undefined &&
+    (viewMode === "historical" || websitePanelMode === "details");
   // Always filter by season: use season from URL, or latest season as fallback
-  const seasonForHistorical = seasonParam 
-    ? Number.parseInt(seasonParam, 10) 
+  const seasonForHistorical = seasonParam
+    ? Number.parseInt(seasonParam, 10)
     : latestSeason;
   const {
     data: minerHistorical,
     loading: minerHistoricalLoading,
     error: minerHistoricalError,
   } = useMinerHistorical(
-    viewMode === "historical" ? numericUidFromParam : undefined,
+    shouldFetchHistorical ? numericUidFromParam : undefined,
     seasonForHistorical
   );
-  
+  const effectiveSourceFromHistory = useMemo(() => {
+    const roundsHistory = minerHistorical?.roundsHistory ?? [];
+    if (!roundsHistory.length) return null;
+    const target = roundsHistory.reduce((best: any, row: any) => {
+      if (!best) return row;
+      const bestReward = Number(best?.post_consensus_avg_reward ?? 0);
+      const rowReward = Number(row?.post_consensus_avg_reward ?? 0);
+      if (rowReward > bestReward) return row;
+      if (rowReward < bestReward) return best;
+      const [bestSeason, bestRound] = String(best?.round ?? "0/0").split("/").map((v) => Number.parseInt(v, 10) || 0);
+      const [rowSeason, rowRound] = String(row?.round ?? "0/0").split("/").map((v) => Number.parseInt(v, 10) || 0);
+      if (rowSeason > bestSeason) return row;
+      if (rowSeason < bestSeason) return best;
+      return rowRound >= bestRound ? row : best;
+    }, null as any);
+    return target ? String(target.round) : null;
+  }, [minerHistorical?.roundsHistory]);
+  const effectiveSourceRoundIdentifier =
+    effectiveSourceFromHistory &&
+    selectedRoundFromQuery &&
+    effectiveSourceFromHistory !== selectedRoundFromQuery
+      ? effectiveSourceFromHistory
+      : undefined;
+  const {
+    data: effectiveSourceRoundDetails,
+  } = useMinerRoundDetails(
+    effectiveSourceRoundIdentifier,
+    numericUidFromParam
+  );
+  const bestRoundIdentifierFromAgentDetail = useMemo(() => {
+    const bestRoundId = agentDetail?.agent?.bestRoundId;
+    if (bestRoundId == null) return undefined;
+    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
+      return bestRoundId;
+    }
+    const bestRoundNumber = Number(bestRoundId);
+    if (Number.isFinite(bestRoundNumber) && selectedSeasonNumber) {
+      return `${selectedSeasonNumber}/${bestRoundNumber}`;
+    }
+    return undefined;
+  }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
+
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
-  const effectiveAgent: AgentData | null = (() => {
-    if (viewMode === "historical" && minerHistorical) {
-      return {
+  const effectiveAgent: AgentData | null = viewMode === "historical" && minerHistorical
+    ? {
         id: minerHistorical.miner.uid.toString(),
         uid: minerHistorical.miner.uid,
         name: minerHistorical.miner.name,
@@ -1851,17 +1813,17 @@ export default function Page() {
         isSota: false,
         totalTasks: minerHistorical.summary.totalTasks,
         completedTasks: minerHistorical.summary.totalTasksSuccessful,
-        currentScore: minerHistorical.summary.averageScore,
-        currentTopScore: minerHistorical.summary.bestScore,
-        currentRank: minerHistorical.summary.bestRank ?? 0,
-        bestRankEver: minerHistorical.summary.bestRank ?? 0,
-        bestRankRoundId: minerHistorical.summary.bestRankRound ?? undefined,
+        currentReward: minerHistorical.summary.averageReward,
+        currentTopReward: minerHistorical.summary.bestReward,
+        currentRank: minerHistorical.summary.bestRank,
+        bestRankEver: minerHistorical.summary.bestRank,
+        bestRankRoundId: minerHistorical.summary.bestRankRound,
         roundsParticipated: minerHistorical.summary.roundsParticipated,
         roundsWon: minerHistorical.summary.roundsWon,
         alphaWonInPrizes: minerHistorical.summary.totalAlphaEarned,
         taoWonInPrizes: minerHistorical.summary.totalTaoEarned,
-        bestRoundScore: minerHistorical.summary.bestScore,
-        bestRoundId: minerHistorical.summary.bestScoreRound ?? undefined,
+        bestRoundReward: minerHistorical.summary.bestReward,
+        bestRoundId: minerHistorical.summary.bestRewardRound,
         totalRuns: minerHistorical.summary.roundsParticipated,
         successfulRuns: minerHistorical.summary.roundsWon,
         averageResponseTime: minerHistorical.summary.averageDuration,
@@ -1869,50 +1831,46 @@ export default function Page() {
         createdAt: "",
         updatedAt: "",
         status: "active" as const,
-        githubUrl: undefined,
+        githubUrl: agentDetail?.agent?.githubUrl ?? undefined,
         taostatsUrl: undefined,
-      };
-    }
-    const miner = minerRoundDetails?.miner;
-    if (miner) {
-      return {
-        id: miner.uid.toString(),
-        uid: miner.uid,
-        name: miner.name,
-        hotkey: miner.hotkey ?? null,
-        type: "autoppia",
-        imageUrl: miner.image ?? "",
-        isSota: false,
-        totalTasks: minerRoundDetails?.tasks_received ?? 0,
-        completedTasks: minerRoundDetails?.tasks_success ?? 0,
-        currentScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
-        currentTopScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
-        currentRank: minerRoundDetails?.post_consensus_rank ?? null,
-        bestRankEver: minerRoundDetails?.post_consensus_rank ?? 0,
-        bestRankRoundId: undefined,
-        roundsParticipated: 0,
-        roundsWon: 0,
-        alphaWonInPrizes: 0,
-        taoWonInPrizes: 0,
-        bestRoundScore: minerRoundDetails?.post_consensus_avg_reward ?? 0,
-        bestRoundId: undefined,
-        totalRuns: 0,
-        successfulRuns: 0,
-        averageResponseTime: minerRoundDetails?.post_consensus_avg_eval_time ?? 0,
-        lastSeen: "",
-        createdAt: "",
-        updatedAt: "",
-        status: "active" as const,
-        githubUrl: miner.github_url ?? undefined,
-        taostatsUrl: undefined,
-      };
-    }
-    return null;
-  })();
-  
-  const githubAvailable = Boolean(effectiveAgent?.githubUrl && effectiveAgent?.isSota !== true);
+      }
+    : minerRoundDetails && minerRoundDetails.miner
+      ? {
+          id: minerRoundDetails.miner.uid.toString(),
+          uid: minerRoundDetails.miner.uid,
+          name: minerRoundDetails.miner.name,
+          hotkey: minerRoundDetails.miner.hotkey ?? null,
+          type: "autoppia",
+          imageUrl: minerRoundDetails.miner.image ?? "",
+          isSota: false,
+          totalTasks: minerRoundDetails.tasks_received ?? 0,
+          completedTasks: minerRoundDetails.tasks_success ?? 0,
+          currentReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentTopReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          currentRank: minerRoundDetails.post_consensus_rank ?? null,
+          bestRankEver: minerRoundDetails.post_consensus_rank ?? null,
+          bestRankRoundId: null,
+          roundsParticipated: 0,
+          roundsWon: 0,
+          alphaWonInPrizes: 0,
+          taoWonInPrizes: 0,
+          bestRoundReward: minerRoundDetails.post_consensus_avg_reward ?? 0,
+          bestRoundId: null,
+          totalRuns: 0,
+          successfulRuns: 0,
+          averageResponseTime: minerRoundDetails.post_consensus_avg_eval_time ?? 0,
+          lastSeen: "",
+          createdAt: "",
+          updatedAt: "",
+          status: "active" as const,
+          githubUrl: minerRoundDetails.miner.github_url ?? undefined,
+          taostatsUrl: undefined,
+        }
+      : agent ?? null;
+
+  const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
   const taoStatsAvailable = Boolean(
-    effectiveAgent?.isSota !== true && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
+    !effectiveAgent?.isSota && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
   );
 
   const defaultAvatar = useMemo(
@@ -1944,102 +1902,165 @@ export default function Page() {
     [setWebsitesSummary]
   );
 
-  const fromRoundMetrics =
-    roundMetrics != null && "roundId" in roundMetrics
-      ? (roundMetrics as AgentRoundMetrics).roundId
-      : undefined;
-  const fallbackRound = availableRounds.length > 0 ? availableRounds[0] : undefined;
-  const currentRoundRaw = selectedRoundFromQuery ?? fromRoundMetrics ?? fallbackRound;
-  let currentRound: number | undefined;
-  if (typeof currentRoundRaw === "number") {
-    currentRound = currentRoundRaw;
-  } else if (typeof currentRoundRaw === "string" && /^\d+$/.test(currentRoundRaw)) {
-    currentRound = Number(currentRoundRaw);
-  } else {
-    currentRound = undefined;
-  }
+  const currentRound =
+    selectedRoundFromQuery ??
+    roundMetrics?.roundId ??
+    (availableRounds.length > 0 ? availableRounds[0] : undefined);
 
-  // Build scoreRoundData from historical data if in historical mode, otherwise from agentDetail
-  const scoreRoundData: ScoreRoundDataPoint[] = useMemo(() => {
+  // Build rewardRoundData from historical data if in historical mode, otherwise from agentDetail
+  const rewardRoundData: RewardRoundDataPoint[] = useMemo(() => {
     if (viewMode === "historical" && minerHistorical?.roundsHistory) {
       // Use historical data - sort by round descending (format: "season/round")
-      const sorted = [...minerHistorical.roundsHistory].sort((a, b) => {
-        const aStr = String(a.round);
-        const bStr = String(b.round);
-        const [aSeason, aRound] = aStr.includes("/") ? aStr.split("/").map(Number) : [Number(aStr), 0];
-        const [bSeason, bRound] = bStr.includes("/") ? bStr.split("/").map(Number) : [Number(bStr), 0];
-        if (bSeason !== aSeason) return bSeason - aSeason;
-        return bRound - aRound;
-      });
-      return sorted.map((round, index) => ({
-          round_id: typeof round.round === "number" ? round.round : index + 1,
-          score: normalizeScore(round.post_consensus_avg_reward) ?? 0,
+      return [...minerHistorical.roundsHistory]
+        .sort((a, b) => {
+          // Parse "season/round" format for sorting
+          const [aSeason, aRound] = String(a.round).split('/').map(Number);
+          const [bSeason, bRound] = String(b.round).split('/').map(Number);
+          // Sort by season first, then by round (descending)
+          if (bSeason !== aSeason) return bSeason - aSeason;
+          return bRound - aRound;
+        })
+        .map((round, index) => ({
+          round_id: round.round, // Keep as string "season/round"
+          round: index + 1, // Sequential number for chart x-axis
           rank: round.post_consensus_rank,
           reward: round.post_consensus_avg_reward ?? 0,
           eval_score: round.post_consensus_avg_eval_score ?? undefined,
           eval_time: round.post_consensus_avg_eval_time ?? undefined,
           timestamp: "", // Historical data doesn't have timestamp
-          topScore: undefined,
+          topReward: undefined,
           benchmarks: undefined,
         }));
     }
-    
+
     // Use agentDetail data for current/runs mode
-    const source: ScoreRoundDataPoint[] = agentDetail?.scoreRoundData ?? [];
-    if (!source.length) return [];
-    return source.map((point: ScoreRoundDataPoint) => {
-      const raw = point as ScoreRoundDataPoint & Record<string, unknown>;
+    const source: RewardRoundDataPoint[] =
+      agentDetail?.rewardRoundData ??
+      (((minerRoundDetails as any)?.rewardRoundData as
+        | RewardRoundDataPoint[]
+        | undefined) ?? []);
+    if (!source.length) {
+      const fallbackReward = Number((minerRoundDetails as any)?.post_consensus_avg_reward ?? 0);
+      const fallbackRank = Number((minerRoundDetails as any)?.post_consensus_rank ?? 0);
+      const fallbackRoundId = selectedRoundFromQuery ?? Number((minerRoundDetails as any)?.round ?? 0);
+      if (fallbackRoundId) {
+        return [
+          {
+            round_id: fallbackRoundId as any,
+            rank: Number.isFinite(fallbackRank) && fallbackRank > 0 ? fallbackRank : null,
+            reward: fallbackReward,
+            eval_score: (minerRoundDetails as any)?.post_consensus_avg_eval_score ?? undefined,
+            eval_time: (minerRoundDetails as any)?.post_consensus_avg_eval_time ?? undefined,
+            timestamp: "",
+            topReward: undefined,
+            benchmarks: undefined,
+          },
+        ];
+      }
+      return [];
+    }
+    return source.map((point: any) => {
       const roundId =
         point.round_id ??
-        raw.validator_round_id ??
-        raw.roundId ??
-        raw.validatorRoundId ??
-        raw.round ??
+        point.validator_round_id ??
+        point.roundId ??
+        point.validatorRoundId ??
+        point.round ??
         0;
-      const rankVal = point.rank ?? raw.position;
-      const rank = rankVal != null && typeof rankVal === "number" ? rankVal : null;
       return {
         round_id: Number(roundId),
-        score: normalizeScore(point.score) ?? 0,
-        rank,
+        rank: point.rank ?? point.position ?? null,
         reward: point.reward ?? 0,
-        eval_score: (point.eval_score ?? raw.post_consensus_avg_eval_score ?? raw.avg_eval_score) as number | undefined,
-        eval_time: (point.eval_time ?? raw.post_consensus_avg_eval_time ?? raw.avg_eval_time) as number | undefined,
-        timestamp: (() => {
-          if (typeof point.timestamp === "string") return point.timestamp;
-          const ts = point.timestamp;
-          if (ts != null && typeof (ts as { toString?: () => string }).toString === "function") {
-            return (ts as { toString: () => string }).toString();
-          }
-          return "";
-        })(),
-        topScore:
+        eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
+        eval_time: point.eval_time ?? point.post_consensus_avg_eval_time ?? point.avg_eval_time ?? undefined,
+        timestamp:
+          typeof point.timestamp === "string"
+            ? point.timestamp
+            : (point.timestamp?.toString() ?? ""),
+        topReward:
           normalizeScore(
-            point.topScore ?? (raw.top_score as number | undefined) ?? (raw.bestScore as number | undefined)
+            point.topReward ?? point.top_reward ?? point.topScore ?? point.top_score ?? point.bestReward ?? point.bestScore
           ) ?? undefined,
         benchmarks: Array.isArray(point.benchmarks)
-          ? point.benchmarks.map((benchmark: { name?: string; provider?: string; score?: number }) => ({
+          ? point.benchmarks.map((benchmark: any) => ({
               name: benchmark.name ?? benchmark.provider ?? "Benchmark",
               provider: benchmark.provider,
-              score: normalizeScore(Number(benchmark.score)) ?? 0,
+              reward: normalizeScore(benchmark.reward) ?? 0,
             }))
           : undefined,
       };
     });
-  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.scoreRoundData]);
+  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.rewardRoundData, minerRoundDetails, selectedRoundFromQuery]);
 
-  // Removed fetchAllAgentRuns call - we use minerRoundDetails instead
-  // This eliminates the unnecessary /api/v1/agent-runs call
-  const runsState = useMemo(() => {
-    const post_consensus_summary = minerRoundDetails?.post_consensus_summary ?? undefined;
-    return {
-      loading: false,
-      runs: [] as AgentRunOverview[],
-      error: null,
-      validators: minerRoundDetails?.validators,
-      post_consensus_summary,
+  const selectedRoundEncoded = useMemo(() => {
+    if (typeof selectedRoundFromQuery === "string" && selectedRoundFromQuery.includes("/")) {
+      const [seasonRaw, roundRaw] = selectedRoundFromQuery.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (Number.isFinite(season) && Number.isFinite(round)) {
+        return season * 10000 + round;
+      }
+      return undefined;
+    }
+    if (typeof selectedRoundFromQuery === "number" && Number.isFinite(selectedRoundFromQuery)) {
+      return selectedRoundFromQuery;
+    }
+    return undefined;
+  }, [selectedRoundFromQuery]);
+
+  const [runsState, setRunsState] = useState<{
+    loading: boolean;
+    runs: AgentRunOverview[];
+    error: string | null;
+    validators?: AgentRunsResponse["data"]["validators"];
+    post_consensus_summary?: AgentRunsResponse["data"]["post_consensus_summary"];
+  }>({
+    loading: false,
+    runs: [],
+    error: null,
+    validators: undefined,
+    post_consensus_summary: undefined,
+  });
+
+  useEffect(() => {
+    if (viewMode !== "runs" || !agentIdForQuery) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let isActive = true;
+
+    setRunsState((prev) => ({ ...prev, loading: true, error: null }));
+
+    fetchAllAgentRuns(
+      agentIdForQuery,
+      selectedRoundEncoded != null ? { roundId: selectedRoundEncoded } : {},
+      controller.signal
+    )
+      .then((result) => {
+        if (!isActive) return;
+        setRunsState({
+          loading: false,
+          runs: result.runs ?? [],
+          error: null,
+          validators: result.validators,
+          post_consensus_summary: result.post_consensus_summary,
+        });
+      })
+      .catch((err) => {
+        if (!isActive || controller.signal.aborted) return;
+        setRunsState((prev) => ({
+          ...prev,
+          loading: false,
+          error: err instanceof Error ? err.message : String(err),
+        }));
+      });
+
+    return () => {
+      isActive = false;
+      controller.abort();
     };
-  }, [minerRoundDetails]);
+  }, [viewMode, agentIdForQuery, selectedRoundEncoded]);
 
   // Calculate preAvg from minerRoundDetails instead of runs
   const preAvg = useMemo(() => {
@@ -2049,15 +2070,15 @@ export default function Page() {
       const avgScore = minerRoundDetails.post_consensus_avg_reward ?? 0;
       const avgResp = minerRoundDetails.post_consensus_avg_eval_time ?? 0;
       const avgTasks = minerRoundDetails.avg_tasks_per_validator ?? 0;
-      
+
       return {
-        avgRank: avgRank == null ? "N/A" : avgRank.toFixed(1),
+        avgRank: avgRank !== null ? avgRank.toFixed(1) : "N/A",
         avgScore: `${Math.round(avgScore * 100)}%`,
         avgResp: `${Math.round(avgResp)}s`,
         avgTasks: `${Math.round(avgTasks)}`,
       };
     }
-    
+
     // Fallback to empty values if no data
     return {
       avgRank: "N/A",
@@ -2066,17 +2087,50 @@ export default function Page() {
       avgTasks: "0",
     };
   }, [minerRoundDetails]);
+  const derivedBestRankFromHistory = useMemo(() => {
+    const rows = minerHistorical?.roundsHistory ?? [];
+    const ranks = rows
+      .map((row: any) => Number(row?.post_consensus_rank))
+      .filter((rank: number) => Number.isFinite(rank) && rank > 0);
+    if (!ranks.length) return { rank: null as number | null, round: null as string | null };
+    const bestRank = Math.min(...ranks);
+    const candidateRounds = rows
+      .filter((row: any) => Number(row?.post_consensus_rank) === bestRank && row?.round)
+      .map((row: any) => String(row.round));
+    if (!candidateRounds.length) return { rank: bestRank, round: null as string | null };
+    // "When achieved": pick earliest round in season/round order (e.g. 25/1 before 25/12)
+    candidateRounds.sort((a, b) => {
+      const [as, ar] = a.split("/").map((v) => Number.parseInt(v, 10) || 0);
+      const [bs, br] = b.split("/").map((v) => Number.parseInt(v, 10) || 0);
+      if (as !== bs) return as - bs;
+      return ar - br;
+    });
+    return { rank: bestRank, round: candidateRounds[0] };
+  }, [minerHistorical?.roundsHistory]);
+  const distinctGithubUrlsInSeason = useMemo(() => {
+    const value = Number(minerHistorical?.summary?.distinctGithubUrls ?? 0);
+    if (!Number.isFinite(value) || value < 0) return 0;
+    return Math.floor(value);
+  }, [minerHistorical?.summary?.distinctGithubUrls]);
+  const historicalChartError = useMemo(() => {
+    if (!minerHistoricalError) return null;
+    const msg = String(minerHistoricalError);
+    // For historical chart UX, treat 404 as "no history yet" instead of hard error card.
+    if (msg.includes("404")) return null;
+    return msg;
+  }, [minerHistoricalError]);
 
   // In historical mode, we can use minerHistorical data even if agent is null
   const hasHistoricalData = viewMode === "historical" && minerHistorical;
   // In current/runs mode, we can use minerRoundDetails data
-  const hasRoundDetailsData = viewMode !== "historical" && minerRoundDetails;
-  
+  const hasRoundDetailsData =
+    viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
+
   // Show loading only if we don't have data yet
-  const isLoading = 
+  const isLoading =
     (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" && (minerRoundDetails == null) && minerRoundDetailsLoading);
-  
+    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
+
   if (isLoading) {
     return (
       <>
@@ -2092,38 +2146,100 @@ export default function Page() {
       </>
     );
   }
-  
+
   // Show error only if we don't have any data source available
-  const hasAnyData = Boolean(effectiveAgent || hasHistoricalData || hasRoundDetailsData);
-  if (hasAnyData === false) {
+  if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-red-500 text-lg mb-2">Error loading agent</div>
           <div className="text-gray-500 text-sm">
-            {error ?? "Agent not found"}
+            {error || "Agent not found"}
           </div>
         </div>
       </div>
     );
   }
 
-  // Use minerRoundDetails if available, otherwise fallback to roundMetrics
-  const roundRank = roundMetrics == null ? undefined : (roundMetrics as AgentRoundMetrics).rank;
-  const roundScore = roundMetrics == null ? undefined : (roundMetrics as AgentRoundMetrics).score;
-  const roundTotalTasks = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).totalTasks;
-  const roundCompletedTasks = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).completedTasks;
-  const roundTotalValidators = roundMetrics == null ? 0 : (roundMetrics as AgentRoundMetrics).totalValidators;
-  const effectiveRank = minerRoundDetails?.post_consensus_rank ?? roundRank ?? effectiveAgent?.currentRank;
-  const effectiveScore = minerRoundDetails?.post_consensus_avg_reward ?? roundScore ?? effectiveAgent?.currentScore;
-  const effectiveEvalTime = minerRoundDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = minerRoundDetails?.tasks_received ?? roundTotalTasks;
-  const effectiveTasksSuccess = minerRoundDetails?.tasks_success ?? roundCompletedTasks;
-  const effectiveValidatorsCount = minerRoundDetails?.validators_count ?? roundTotalValidators;
-  const effectiveAvgTasksPerValidator = minerRoundDetails?.avg_tasks_per_validator ?? null;
-  const effectivePerformanceByWebsite = minerRoundDetails?.performanceByWebsite ?? [];
-  const effectiveWebsitesCount = effectivePerformanceByWebsite.length || websitesSummary.unique;
+  // Current mode stats for header - showing only the 5 key metrics
+  const currentRankValue =
+    roundMetrics?.rank && roundMetrics.rank > 0
+      ? `#${roundMetrics.rank}`
+      : effectiveAgent?.currentRank && (effectiveAgent.currentRank ?? 0) > 0
+        ? `#${effectiveAgent.currentRank}`
+        : "N/A";
 
+  const currentRewardPercentage = `${((roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0) * 100).toFixed(1)}%`;
+
+  // Historical metrics
+  const bestRankEver =
+    effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
+      ? `#${effectiveAgent.bestRankEver}`
+      : "N/A";
+  const bestEverRewardPercentage = `${((effectiveAgent?.bestRoundReward ?? 0) * 100).toFixed(1)}%`;
+  const bestRoundBadge = formatBestRoundBadge(effectiveAgent?.bestRoundId);
+  const roundsParticipated = (
+    effectiveAgent?.roundsParticipated ||
+    effectiveAgent?.totalRuns ||
+    0
+  ).toLocaleString();
+  // Multiplicando por el 7.5% solicitado por robert
+  const totalAlphaEarned = Math.round(
+    Number(effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
+  );
+  const totalTaoEarned = (
+    Number((effectiveAgent as any)?.taoWonInPrizes ?? effectiveAgent?.alphaWonInPrizes ?? 0) * 0.075
+  ).toFixed(2);
+  const sourceMetricsDetails = selectedRoundFromQuery
+    ? minerRoundDetails ?? null
+    : {
+        post_consensus_avg_reward:
+          roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
+        post_consensus_avg_eval_time:
+          roundMetrics?.averageResponseTime ?? effectiveAgent?.averageResponseTime ?? null,
+        tasks_received: roundMetrics?.totalTasks ?? effectiveAgent?.totalTasks ?? 0,
+        tasks_success: roundMetrics?.completedTasks ?? effectiveAgent?.completedTasks ?? 0,
+        validators_count: roundMetrics?.totalValidators ?? 0,
+        avg_cost_per_task: agentDetail?.avg_cost_per_task ?? null,
+        performanceByWebsite:
+          agentDetail?.performanceByWebsite ?? [],
+      };
+  const roundReward = Number(
+    sourceMetricsDetails?.post_consensus_avg_reward ??
+      roundMetrics?.reward ??
+      effectiveAgent?.currentReward ??
+      0
+  );
+  const seasonRank =
+    effectiveAgent?.seasonRank ??
+    effectiveAgent?.currentRank ??
+    null;
+  const displayedReward = roundReward;
+  const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
+  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
+  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
+  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
+  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
+  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
+    ? effectivePerformanceByWebsite.length
+    : websitesSummary.unique;
+  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? agentDetail?.avg_cost_per_task ?? null;
+  const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
+  const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
+  const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
+  const sourceRoundForEffective = selectedRoundFromQuery ?? bestRoundIdentifierFromAgentDetail ?? null;
+  const sourceRoundParts = String(sourceRoundForEffective ?? "").split("/");
+  const sourceRound = Number.parseInt(sourceRoundParts[1] ?? "", 10);
+  const isAvgResponseTimeout =
+    effectiveEvalTime !== null &&
+    Number.isFinite(effectiveEvalTime) &&
+    Number.isFinite(timeoutThresholdSeconds) &&
+    effectiveEvalTime >= timeoutThresholdSeconds;
+  const isAvgCostOverLimit =
+    effectiveAvgCostPerTask !== null &&
+    Number.isFinite(effectiveAvgCostPerTask) &&
+    Number.isFinite(maxTaskCostUsd) &&
+    effectiveAvgCostPerTask >= maxTaskCostUsd;
   // Calculate Success Rate for current round: completed tasks / total tasks
   const roundSuccessRate = (() => {
     const total = effectiveTasksReceived;
@@ -2134,21 +2250,24 @@ export default function Page() {
   const currentStats = [
     // Primera fila: Round, Rank, Avg Score, Avg Response Time
     {
-      title: "Round",
-      metric: roundParam ?? "N/A",
-      badge: seasonParam ? `Season ${seasonParam}` : null,
+      title: "Best Round",
+      metric:
+        Number.isFinite(sourceRound)
+          ? `${sourceRound}`
+          : "N/A",
+      badge: seasonParam ? `Season ${seasonParam}` : "Best in season",
       icon: PiClockDuotone,
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Rank",
-      metric: effectiveRank && effectiveRank > 0 ? `#${effectiveRank}` : "N/A",
+      title: "Season Rank",
+      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
       icon: LuAward,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
-      title: "Reward",
-      metric: `${((effectiveScore ?? 0) * 100).toFixed(1)}%`,
+      title: "Avg Reward",
+      metric: `${((displayedReward ?? 0) * 100).toFixed(1)}%`,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
@@ -2159,7 +2278,7 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.green,
     },
 
-    // Segunda fila: Validators, Avg Tasks Per Validator, Websites, Success Rate (debajo de Avg Response Time)
+    // Segunda fila: Validators, Websites, Avg Cost Per Task, Avg Response Time
     {
       title: "Validators",
       metric: effectiveValidatorsCount.toString(),
@@ -2167,55 +2286,53 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Task Per Validator",
-      metric: effectiveAvgTasksPerValidator == null
-        ? (preAvg?.avgTasks ?? "0")
-        : effectiveAvgTasksPerValidator.toFixed(1),
-      icon: PiListChecksDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
       title: "Websites",
       metric: effectiveWebsitesCount.toString(),
       icon: PiChartBarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
+    },
+    {
+      title: "Avg Cost Per Task",
+      metric: effectiveAvgCostPerTask != null && Number.isFinite(effectiveAvgCostPerTask)
+        ? `$${Number(effectiveAvgCostPerTask).toFixed(3)}`
+        : "—",
+      badge: isAvgCostOverLimit ? `Over $${maxTaskCostUsd.toFixed(3)} limit` : null,
+      badgeClassName: isAvgCostOverLimit ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
+      icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.amber,
     },
     {
       title: "Avg Response Time",
-      metric: effectiveEvalTime == null
-        ? (preAvg?.avgResp ?? "0s")
-        : `${effectiveEvalTime.toFixed(1)}s`,
+      metric: effectiveEvalTime !== null
+        ? `${effectiveEvalTime.toFixed(1)}s`
+        : (preAvg?.avgResp ?? "0s"),
+      badge: isAvgResponseTimeout ? `Timeout >= ${Math.round(timeoutThresholdSeconds)}s` : null,
+      badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
       icon: PiTimerDuotone,
       ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
   const historicalStats = [
-    // Primera fila: Success Rate, Tasks Success, Best Score Ever, Alpha Earned
+    // 2 filas × 3 columnas. Col1 mismo estilo que Avg Cost (amber), Col2 violet, Col3 green/emerald
     {
-      title: "Success Rate",
-      metric: minerHistorical?.summary?.overallSuccessRate
-        ? `${Math.round(minerHistorical.summary.overallSuccessRate * 100)}%`
-        : "0%",
-      icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Tasks Success",
-      metric: (minerHistorical?.summary?.totalTasksSuccessful ?? 0).toLocaleString(),
-      icon: LuCircleCheckBig,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "Best Reward Ever",
-      metric: minerHistorical?.summary?.bestScore
-        ? `${(minerHistorical.summary.bestScore * 100).toFixed(1)}%`
-        : "0%",
-      badge: minerHistorical?.summary?.bestScoreRound
-        ? `Round ${minerHistorical.summary.bestScoreRound}`
-        : null,
-      icon: LuStar,
+      title: "Season Rank",
+      metric: minerHistorical?.summary?.bestRank
+        ? `#${minerHistorical.summary.bestRank}`
+        : derivedBestRankFromHistory.rank != null && Number.isFinite(derivedBestRankFromHistory.rank)
+          ? `#${derivedBestRankFromHistory.rank}`
+          : "—",
+      badge: minerHistorical?.summary?.bestRankRound
+        ? formatBestRoundBadge(minerHistorical.summary.bestRankRound)
+        : derivedBestRankFromHistory.round ?? null,
+      icon: LuCrown,
       ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "Rounds Won",
+      metric: `${minerHistorical?.summary?.roundsWon ?? 0}/${minerHistorical?.summary?.roundsParticipated ?? 0}`,
+      icon: LuTrophy,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "Alpha Earned",
@@ -2223,42 +2340,37 @@ export default function Page() {
       icon: PiCurrencyDollarDuotone,
       ...METRIC_CARD_GRADIENTS.green,
     },
-    // Segunda fila: Best Rank Ever, Tasks Failed, Rounds Won, TAO Earned
     {
-      title: "Best Rank Ever",
-      metric: minerHistorical?.summary?.bestRank
-        ? `#${minerHistorical.summary.bestRank}`
-        : "N/A",
-      badge: minerHistorical?.summary?.bestRankRound
-        ? `Round ${minerHistorical.summary.bestRankRound}`
+      title: "Best Reward (Season)",
+      metric: minerHistorical?.summary?.bestReward
+        ? `${(minerHistorical.summary.bestReward * 100).toFixed(1)}%`
+        : "0%",
+      badge: minerHistorical?.summary?.bestRewardRound
+        ? formatBestRoundBadge(minerHistorical.summary.bestRewardRound)
         : null,
-      icon: LuCrown,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Tasks Failed",
-      metric: (minerHistorical?.summary?.totalTasksFailed ?? 0).toLocaleString(),
-      icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "Rounds Won",
-      metric: `${minerHistorical?.summary?.roundsWon ?? 0}/${minerHistorical?.summary?.roundsParticipated ?? 0}`,
-      icon: LuTrophy,
+      icon: LuStar,
       ...METRIC_CARD_GRADIENTS.amber,
+    },
+    {
+      title: "GitHub URLs (Season)",
+      metric: distinctGithubUrlsInSeason.toLocaleString(),
+      icon: PiGithubLogoDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
     {
       title: "TAO Earned",
       metric: `${(minerHistorical?.summary?.totalTaoEarned ?? 0).toFixed(2)} τ`,
       icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...METRIC_CARD_GRADIENTS.emerald,
     },
   ];
 
-  let headerStats: typeof currentStats;
-  if (viewMode === "current") headerStats = currentStats;
-  else if (viewMode === "historical") headerStats = historicalStats;
-  else headerStats = [];
+  const headerStats =
+    viewMode === "current"
+      ? currentStats
+      : viewMode === "historical"
+        ? historicalStats
+        : [];
 
   return (
     <div className="flex flex-col">
@@ -2315,42 +2427,50 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
                         githubAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
-                      title={(() => {
-                        if (effectiveAgent?.isSota) return "GitHub repository not available for SOTA benchmarks";
-                        if (effectiveAgent?.githubUrl) return "View GitHub repository";
-                        return "GitHub repository not available";
-                      })()}
+                      title={
+                        effectiveAgent?.isSota
+                          ? "GitHub repository not available for SOTA benchmarks"
+                          : effectiveAgent?.githubUrl
+                            ? "View GitHub repository"
+                            : "GitHub repository not available"
+                      }
                     >
                       {githubAvailable ? (
                         <a
                           href={effectiveAgent?.githubUrl ?? "#"}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center group"
+                          className="flex h-full w-full items-center justify-center gap-1.5 group"
                         >
-                          <PiGithubLogoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white">GitHub</span>
                         </a>
                       ) : (
-                        <PiGithubLogoDuotone className="w-4 h-4 text-white/30" />
+                        <>
+                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white/30">GitHub</span>
+                        </>
                       )}
                     </div>
                     <div
                       className={cn(
-                        "flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
                         taoStatsAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-110 active:scale-95"
+                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
                           : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
                       )}
-                      title={(() => {
-                        if (effectiveAgent?.isSota) return "On-chain explorer is not available for SOTA benchmarks";
-                        if (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey) return "View on TaoStats";
-                        return "TaoStats link not available";
-                      })()}
+                      title={
+                        effectiveAgent?.isSota
+                          ? "On-chain explorer is not available for SOTA benchmarks"
+                          : effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey
+                            ? "View on TaoStats"
+                            : "TaoStats link not available"
+                      }
                     >
                       {taoStatsAvailable ? (
                         <a
@@ -2362,12 +2482,16 @@ export default function Page() {
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center group"
+                          className="flex h-full w-full items-center justify-center gap-1.5 group"
                         >
-                          <PiInfoDuotone className="w-4 h-4 text-white transition-transform duration-300 group-hover:scale-110" />
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white">TaoStats</span>
                         </a>
                       ) : (
-                        <PiInfoDuotone className="w-4 h-4 text-white/30" />
+                        <>
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold text-white/30">TaoStats</span>
+                        </>
                       )}
                     </div>
                   </div>
@@ -2382,14 +2506,11 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <PiKeyDuotone className="w-4 h-4 text-sky-300" />
                     <span className="font-mono text-xs font-semibold">
-                      {(() => {
-                        if (effectiveAgent?.isSota) return "No on-chain hotkey";
-                        if (effectiveAgent?.hotkey) {
-                          const h = effectiveAgent.hotkey;
-                          return h.slice(0, 8) + "..." + h.slice(-8);
-                        }
-                        return "unknown";
-                      })()}
+                      {effectiveAgent?.isSota
+                        ? "No on-chain hotkey"
+                        : effectiveAgent?.hotkey
+                          ? effectiveAgent.hotkey
+                          : "unknown"}
                     </span>
                     {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
                       <button
@@ -2436,7 +2557,7 @@ export default function Page() {
                       viewMode === "current" && "scale-110"
                     )}
                   />
-                  <span className="relative z-10 hidden sm:inline">Round</span>
+                  <span className="relative z-10 hidden sm:inline">Best Round</span>
                 </button>
                 <button
                   type="button"
@@ -2492,9 +2613,16 @@ export default function Page() {
 
           {/* Metrics Grid */}
           {headerStats.length > 0 && (
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 z-10">
+            <div
+              className={cn(
+                "relative grid gap-4 z-10",
+                viewMode === "historical"
+                  ? "grid-cols-2 sm:grid-cols-3"
+                  : "grid-cols-2 md:grid-cols-4"
+              )}
+            >
               {headerStats.map((stat) => {
-                const Icon = stat.icon as ComponentType<{ className?: string }>;
+                const Icon = stat.icon as any;
                 return (
                   <div
                     key={stat.title}
@@ -2551,9 +2679,14 @@ export default function Page() {
                           <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
                             {stat.metric}
                           </Text>
-                          {"badge" in stat && stat.badge != null ? (
-                            <span className="hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                              {String(stat.badge)}
+                          {(stat as any).badge ? (
+                            <span
+                              className={cn(
+                                "hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase shadow-sm flex-shrink-0",
+                                (stat as any).badgeClassName ?? "bg-white/15 text-white/90 border border-white/25"
+                              )}
+                            >
+                              {(stat as any).badge}
                             </span>
                           ) : null}
                         </div>
@@ -2575,149 +2708,186 @@ export default function Page() {
                 loading={runsState.loading}
                 error={runsState.error ?? undefined}
                 numericUidFromParam={numericUidFromParam}
-                validators={undefined}
+                validators={runsState.validators}
                 post_consensus_summary={runsState.post_consensus_summary}
                 minerRoundDetailsValidators={minerRoundDetails?.validators}
+                roundAvgCostPerTask={(minerRoundDetails as any)?.avg_cost_per_task ?? (minerRoundDetails as any)?.avgCostPerTask ?? null}
+                postConsensusRounds={minerHistorical?.roundsHistory}
               />
             ) : (
               <>
                 {viewMode === "current" ? (
-                  <div>
-                    {minerRoundDetails && effectivePerformanceByWebsite.length > 0 ? (
-                      <div className="relative">
-                        {minerRoundDetailsLoading ? (
-                          <div className="relative flex h-[420px] items-center justify-center text-white/70">
-                            Loading website stats…
+                  <div className="space-y-8">
+                    <div className="space-y-5">
+                      <div className="flex w-full rounded-2xl border border-white/15 bg-slate-900/35 p-1.5 gap-1.5 backdrop-blur-sm">
+                        <button
+                          type="button"
+                          onClick={() => setWebsitePanelMode("chart")}
+                          className={cn(
+                            "flex-1 min-w-0 py-4 px-5 text-sm sm:text-base font-semibold rounded-xl transition-all duration-150 text-center",
+                            websitePanelMode === "chart"
+                              ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.12)]"
+                              : "text-white/60 hover:text-white/90 hover:bg-white/5 border border-transparent"
+                          )}
+                          aria-pressed={websitePanelMode === "chart"}
+                        >
+                          Performance by website
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWebsitePanelMode("details")}
+                          className={cn(
+                            "flex-1 min-w-0 py-4 px-5 text-sm sm:text-base font-semibold rounded-xl transition-all duration-150 text-center",
+                            websitePanelMode === "details"
+                              ? "bg-cyan-500/25 text-cyan-100 border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.12)]"
+                              : "text-white/60 hover:text-white/90 hover:bg-white/5 border border-transparent"
+                          )}
+                          aria-pressed={websitePanelMode === "details"}
+                        >
+                          Performance details per website
+                        </button>
+                      </div>
+
+                      {websitePanelMode === "chart" ? (
+                        sourceMetricsDetails && effectivePerformanceByWebsite.length > 0 ? (
+                          <div className="relative">
+                            {minerRoundDetailsLoading ? (
+                              <div className="relative flex h-[420px] items-center justify-center text-white/70">
+                                Loading website stats…
+                              </div>
+                            ) : (
+                              <>
+                                <div className="mb-6">
+                                  <h3 className="text-xl font-bold text-white mb-2">
+                                    Performance per website
+                                  </h3>
+                                  <p className="text-sm text-white/60">
+                                    Task success rate by website for the best round in this season
+                                  </p>
+                                </div>
+                                <div className="relative h-[300px] md:h-[450px] w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                      data={effectivePerformanceByWebsite.map((website) => {
+                                        const websiteName = website.website;
+                                        const formattedName = formatWebsiteName(websiteName);
+                                        return {
+                                          website: formattedName,
+                                          websiteOriginal: websiteName,
+                                          successRate: website.success_rate * 100,
+                                          successful: website.tasks_success,
+                                          total: website.tasks_received,
+                                        };
+                                      })}
+                                      margin={{ top: 20, left: -10 }}
+                                    >
+                                      <defs>
+                                        {effectivePerformanceByWebsite.map((entry, index) => {
+                                          const colors = getProjectColors(entry.website);
+                                          return (
+                                            <linearGradient
+                                              key={`barGradient${index}`}
+                                              id={`barGradient${index}`}
+                                              x1="0"
+                                              y1="0"
+                                              x2="0"
+                                              y2="1"
+                                            >
+                                              <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
+                                              <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
+                                              <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
+                                            </linearGradient>
+                                          );
+                                        })}
+                                      </defs>
+                                      <CartesianGrid
+                                        vertical={false}
+                                        strokeDasharray="3 3"
+                                        stroke="rgba(148,163,184,0.15)"
+                                      />
+                                      <XAxis
+                                        dataKey="website"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{
+                                          fill: "rgba(226,232,240,0.9)",
+                                          fontSize: 13,
+                                          fontWeight: 500,
+                                        }}
+                                      />
+                                      <YAxis
+                                        domain={[0, 100]}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={<CustomYAxisTick postfix="%" />}
+                                        stroke="rgba(148,163,184,0.3)"
+                                      />
+                                      <Tooltip
+                                        content={<WebsitePerformanceTooltip />}
+                                        cursor={{
+                                          fill: "rgba(255, 255, 255, 0.08)",
+                                        }}
+                                        wrapperStyle={{
+                                          outline: "none",
+                                          zIndex: 1000,
+                                        }}
+                                      />
+                                      <Bar
+                                        dataKey="successRate"
+                                        radius={[12, 12, 0, 0]}
+                                        maxBarSize={80}
+                                        animationDuration={800}
+                                        animationEasing="ease-out"
+                                      >
+                                        {effectivePerformanceByWebsite.map((entry, index) => {
+                                          const colors = getProjectColors(entry.website);
+                                          return (
+                                            <Cell
+                                              key={`cell-${index}`}
+                                              fill={`url(#barGradient${index})`}
+                                              fillOpacity={0.9}
+                                              style={{
+                                                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                cursor: "pointer",
+                                                transformOrigin: "center bottom",
+                                              }}
+                                            />
+                                          );
+                                        })}
+                                      </Bar>
+                                    </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </>
+                            )}
                           </div>
                         ) : (
-                          <>
-                            <div className="mb-6">
-                              <h3 className="text-xl font-bold text-white mb-2">
-                                Performance per website
-                              </h3>
-                              <p className="text-sm text-white/60">
-                                Task success rate by website for this round
-                              </p>
-                            </div>
-                            <div className="relative h-[300px] md:h-[450px] w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                  data={effectivePerformanceByWebsite.map((website) => {
-                                    const websiteName = website.website;
-                                    const formattedName = formatWebsiteName(websiteName);
-                                    return {
-                                      website: formattedName,
-                                      websiteOriginal: websiteName,
-                                      successRate: website.success_rate * 100,
-                                      successful: website.tasks_success,
-                                      total: website.tasks_received,
-                                    };
-                                  })}
-                                  margin={{ top: 20, left: -10 }}
-                                >
-                                  <defs>
-                                    {effectivePerformanceByWebsite.map((entry) => {
-                                      const colors = getProjectColors(entry.website);
-                                      const gradientId = `barGradient-${String(entry.website).replaceAll(/\s+/g, "-")}`;
-                                      return (
-                                        <linearGradient
-                                          key={gradientId}
-                                          id={gradientId}
-                                          x1="0"
-                                          y1="0"
-                                          x2="0"
-                                          y2="1"
-                                        >
-                                          <stop offset="0%" stopColor={colors.mainColor} stopOpacity={1} />
-                                          <stop offset="50%" stopColor={colors.mainColor} stopOpacity={0.95} />
-                                          <stop offset="100%" stopColor={colors.mainColor} stopOpacity={0.9} />
-                                        </linearGradient>
-                                      );
-                                    })}
-                                  </defs>
-                                  <CartesianGrid
-                                    vertical={false}
-                                    strokeDasharray="3 3"
-                                    stroke="rgba(148,163,184,0.15)"
-                                  />
-                                  <XAxis
-                                    dataKey="website"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{
-                                      fill: "rgba(226,232,240,0.9)",
-                                      fontSize: 13,
-                                      fontWeight: 500,
-                                    }}
-                                  />
-                                  <YAxis
-                                    domain={[0, 100]}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={<CustomYAxisTick postfix="%" />}
-                                    stroke="rgba(148,163,184,0.3)"
-                                  />
-                                  <Tooltip
-                                    content={<WebsitePerformanceTooltip />}
-                                    cursor={{
-                                      fill: "rgba(255, 255, 255, 0.08)",
-                                    }}
-                                    wrapperStyle={{
-                                      outline: "none",
-                                      zIndex: 1000,
-                                    }}
-                                  />
-                                  <Bar
-                                    dataKey="successRate"
-                                    radius={[12, 12, 0, 0]}
-                                    maxBarSize={80}
-                                    animationDuration={800}
-                                    animationEasing="ease-out"
-                                  >
-                                    {effectivePerformanceByWebsite.map((entry) => {
-                                      const cellGradientId = `barGradient-${String(entry.website).replaceAll(/\s+/g, "-")}`;
-                                      return (
-                                        <Cell
-                                          key={cellGradientId}
-                                          fill={`url(#${cellGradientId})`}
-                                          fillOpacity={0.9}
-                                          style={{
-                                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            cursor: "pointer",
-                                            transformOrigin: "center bottom",
-                                          }}
-                                        />
-                                      );
-                                    })}
-                                  </Bar>
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <RoundWebsitesChart
-                        agentId={agentIdForQuery ?? trimmedId}
-                        selectedRound={currentRound ?? null}
-                        runs={runsState.runs}
-                        onSummaryChange={handleSummaryChange}
-                      />
-                    )}
+                          <RoundWebsitesChart
+                            agentId={agentIdForQuery ?? trimmedId}
+                            selectedRound={typeof currentRound === "number" ? currentRound : null}
+                            runs={runsState.runs}
+                            onSummaryChange={handleSummaryChange}
+                          />
+                        )
+                      ) : (
+                        <AgentHistoricalAnalytics
+                          agentId={agentIdForQuery ?? trimmedId}
+                          className="w-full"
+                          minerHistorical={minerHistorical}
+                          loading={minerHistoricalLoading}
+                          selectedSeason={seasonForHistorical}
+                        />
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     <AgentScoreChart
                       className="w-full"
-                      scoreRoundData={scoreRoundData}
+                      rewardRoundData={rewardRoundData}
                       loading={minerHistoricalLoading || loading}
-                      error={minerHistoricalError || error}
-                    />
-                    <AgentHistoricalAnalytics
-                      agentId={agentIdForQuery ?? trimmedId}
-                      className="w-full"
-                      minerHistorical={minerHistorical}
-                      loading={minerHistoricalLoading}
+                      error={historicalChartError || error}
+                      title={`Reward Over Time · Season ${seasonForHistorical ?? "N/A"}`}
                     />
                   </div>
                 )}
@@ -2725,7 +2895,7 @@ export default function Page() {
             )}
           </div>
         </div>
-        
+
       </div>
     </div>
   );

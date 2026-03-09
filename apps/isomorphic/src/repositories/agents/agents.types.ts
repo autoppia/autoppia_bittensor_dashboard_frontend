@@ -7,8 +7,8 @@
 export interface MinimalAgentData {
   uid: number; // Miner UID
   name: string;
-  ranking: number; // Current ranking based on average score
-  score: number; // Average score (renamed from averageScore for consistency with API)
+  ranking: number; // Current ranking based on reward
+  reward: number; // Current reward for this miner in the selected round
   isSota: boolean; // Whether this is a SOTA agent
   imageUrl: string;
   slug?: string;
@@ -34,17 +34,18 @@ export interface AgentData {
   version?: string; // Agent version
   totalRuns: number;
   successfulRuns: number;
-  currentScore: number; // RENAMED from averageScore
-  currentTopScore: number; // RENAMED from bestScore
-  currentRank: number; // NEW FIELD
-  bestRankEver: number; // NEW FIELD
-  bestRankRoundId?: number; // NEW FIELD
+  currentReward: number;
+  currentTopReward: number;
+  currentRank: number | null;
+  seasonRank?: number | null;
+  bestRankEver: number | null;
+  bestRankRoundId?: number | string | null;
   roundsParticipated: number; // NEW FIELD
   roundsWon?: number; // NEW FIELD
   alphaWonInPrizes: number; // NEW FIELD
   taoWonInPrizes?: number; // NEW FIELD (derived)
-  bestRoundScore: number; // NEW FIELD
-  bestRoundId?: number; // NEW FIELD
+  bestRoundReward: number;
+  bestRoundId?: number | string | null;
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
@@ -54,26 +55,26 @@ export interface AgentData {
 }
 
 // ===== SCORE ROUND DATA =====
-export interface ScoreRoundDataPoint {
-  round_id: number;
-  score: number;
-  rank: number | null;
+export interface RewardRoundDataPoint {
+  round_id: number | string;
+  round?: number | string;
   reward: number;
+  rank: number | null;
   timestamp: string;
-  topScore?: number; // Highest benchmark/miner score for the round
+  topReward?: number; // Highest benchmark/miner reward for the round
   eval_score?: number; // Post-consensus average eval score
   eval_time?: number; // Post-consensus average eval time
   benchmarks?: {
     name: string;
-    score: number;
+    reward: number;
     provider?: string;
   }[];
 }
 
 export interface AgentRoundMetrics {
   roundId: number;
-  score: number;
-  topScore: number;
+  reward: number;
+  topReward: number;
   rank?: number | null;
   totalRuns: number;
   totalValidators: number;
@@ -111,11 +112,11 @@ export interface MinerHistoricalResponse {
       totalTasksFailed: number;
       overallSuccessRate: number;
       averageDuration: number;
-      bestScore: number;
-      bestScoreRound: number | null;
+      bestReward: number;
+      bestRewardRound: number | string | null;
       bestRank: number | null;
-      bestRankRound: number | null;
-      averageScore: number;
+      bestRankRound: number | string | null;
+      averageReward: number;
       totalAlphaEarned: number;
       totalTaoEarned: number;
       distinctGithubUrls?: number;
@@ -155,11 +156,14 @@ export interface MinerHistoricalResponse {
       post_consensus_avg_reward: number;
       post_consensus_avg_eval_score: number;
       post_consensus_avg_eval_time: number;
+      post_consensus_avg_eval_cost?: number | null;
       tasks_received: number;
       tasks_success: number;
       tasks_failed: number;
       is_winner: boolean;
       validators_count: number;
+      websites_count?: number;
+      post_consensus_available?: boolean;
       subnet_price: number | null;
       weight: number;
     }>;
@@ -226,13 +230,13 @@ export interface MinerRoundDetailsResponse {
     };
     season_leadership?: {
       round_winner_uid?: number | null;
-      round_winner_score?: number | null;
+      round_winner_reward?: number | null;
       top_candidate_uid?: number | null;
-      top_candidate_score?: number | null;
+      top_candidate_reward?: number | null;
       reigning_uid_before_round?: number | null;
-      reigning_score_before_round?: number | null;
+      reigning_reward_before_round?: number | null;
       season_leader_uid?: number | null;
-      season_leader_score?: number | null;
+      season_leader_reward?: number | null;
       required_improvement_pct?: number | null;
       dethroned?: boolean | null;
     };
@@ -250,9 +254,9 @@ export interface AgentPerformanceMetrics {
   successfulRuns: number;
   failedRuns: number;
   successRate: number;
-  currentScore: number; // RENAMED from averageScore
-  currentTopScore: number; // RENAMED from bestScore
-  worstScore: number;
+  currentReward: number;
+  currentTopReward: number;
+  worstReward: number;
   averageResponseTime: number;
   totalTasks: number;
   completedTasks: number;
@@ -265,7 +269,7 @@ export interface AgentPerformanceMetrics {
   };
   performanceTrend: {
     round: number;
-    score: number;
+    reward: number;
     responseTime?: number;
     successRate?: number;
   }[];
@@ -285,12 +289,12 @@ export interface AgentRunOverview {
   completedTasks: number;
   successfulTasks: number;
   failedTasks: number;
-  averageScore: number;
-  score: number;
+  averageReward: number;
+  averageScore?: number;
+  reward: number;
   successRate: number;
-  overallScore: number;
-  overallScoreRaw?: number;
-  ranking: number;
+  overallReward: number;
+  overallRewardRaw?: number;
   duration: number;
   averageEvaluationTime?: number | null;
   avgCostPerTask?: number | null;
@@ -306,8 +310,8 @@ export interface AgentComparison {
     agentId: string;
     name: string;
     metrics: {
-      currentScore: number; // RENAMED from averageScore
-      currentTopScore: number; // RENAMED from bestScore
+      currentReward: number;
+      currentTopReward: number;
       successRate: number;
       averageResponseTime: number;
       totalRuns: number;
@@ -333,11 +337,11 @@ export interface AgentStatistics {
   inactiveAgents: number;
   totalRuns: number;
   successfulRuns: number;
-  averageCurrentScore: number; // RENAMED from averageScore
+  averageCurrentReward: number;
   topPerformingAgent: {
     id: string;
     name: string;
-    score: number;
+    reward: number;
   };
   mostActiveAgent: {
     id: string;
@@ -365,7 +369,7 @@ export interface AgentActivity {
     runId?: string;
     roundId?: number;
     validatorId?: string;
-    score?: number;
+    reward?: number;
     duration?: number;
     error?: string;
   };
@@ -394,9 +398,21 @@ export interface AgentDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
-    availableRounds?: number[];
+    rewardRoundData: RewardRoundDataPoint[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
@@ -404,9 +420,21 @@ export interface MinerDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
-    scoreRoundData: ScoreRoundDataPoint[];
-    availableRounds?: number[];
+    rewardRoundData: RewardRoundDataPoint[];
+    availableRounds?: Array<number | string>;
     roundMetrics?: AgentRoundMetrics | null;
+    performanceByWebsite?: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+    avg_cost_per_task?: number | null;
+    is_reused?: boolean;
+    reused_from_agent_run_id?: string | null;
+    reused_from_round?: string | null;
+    zero_reason?: string | null;
+    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
@@ -430,8 +458,8 @@ export interface AgentRunsResponse {
       validator_uid: number;
       validator_name: string;
       validator_hotkey: string | null;
-      local_avg_winner_score: number;
-      topScore: number;
+      local_avg_winner_reward: number;
+      topReward: number;
       local_avg_eval_time: number;
       local_miners_evaluated: number;
       local_tasks_evaluated: number;
@@ -465,14 +493,6 @@ export interface AgentRunsResponse {
       miners_evaluated: number;
       tasks_evaluated: number;
     };
-  };
-  data: {
-    runs: AgentRunOverview[];
-    total: number;
-    page: number;
-    limit: number;
-    availableRounds?: number[];
-    selectedRound?: number | null;
   };
 }
 
@@ -512,7 +532,7 @@ export interface AgentsListQueryParams {
   limit?: number;
   isSota?: boolean; // Filter by SOTA status
   status?: 'active' | 'inactive' | 'maintenance';
-  sortBy?: 'name' | 'uid' | 'currentScore' | 'currentTopScore' | 'currentRank' | 'totalRuns' | 'lastSeen';
+  sortBy?: 'name' | 'uid' | 'currentReward' | 'currentTopReward' | 'currentRank' | 'totalRuns' | 'lastSeen';
   sortOrder?: 'asc' | 'desc';
   search?: string; // Search by name, UID, or hotkey
 }
@@ -523,7 +543,7 @@ export interface AgentRunsQueryParams {
   roundId?: number;
   validatorId?: string;
   status?: 'running' | 'completed' | 'failed' | 'timeout';
-  sortBy?: 'startTime' | 'score' | 'duration' | 'ranking';
+  sortBy?: 'startTime' | 'reward' | 'duration';
   sortOrder?: 'asc' | 'desc';
   startDate?: string;
   endDate?: string;
@@ -550,5 +570,5 @@ export interface AgentComparisonQueryParams {
   timeRange?: '1h' | '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
   startDate?: string;
   endDate?: string;
-  metrics?: ('score' | 'successRate' | 'duration' | 'runs')[];
+  metrics?: ('reward' | 'successRate' | 'duration' | 'runs')[];
 }

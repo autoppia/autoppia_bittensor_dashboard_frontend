@@ -105,8 +105,8 @@ export default function AgentRun() {
             setSelectedWebsite={setSelectedWebsite}
             period={period}
             setPeriod={setPeriod}
-            statistics={statistics as Record<string, unknown> | null}
-            summary={summary}
+            statistics={statistics}
+            summary={null}
             isLoading={isLoading}
             error={error}
           />
@@ -116,8 +116,8 @@ export default function AgentRun() {
         <div className="xl:col-span-4">
           <AgentRunSummaryDynamic 
             selectedWebsite={selectedWebsite}
-            summary={summary}
-            statistics={statistics as Record<string, unknown> | null}
+            summary={null}
+            statistics={statistics}
             tasks={evaluations}
             isLoading={isLoading}
             error={error}
@@ -127,10 +127,11 @@ export default function AgentRun() {
 
       {/* Tasks Table */}
       <div className="mb-6">
-        <AgentRunTasksTableDynamic 
+        <AgentRunTasksTableDynamic
           tasks={evaluations}
           isLoading={isLoading}
           error={error}
+          refetch={refetch}
         />
       </div>
 

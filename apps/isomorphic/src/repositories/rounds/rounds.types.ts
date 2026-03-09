@@ -12,8 +12,8 @@ export interface ValidatorRoundData {
   status: "active" | "finished" | "pending" | "evaluating_finished";
   startTime: string;
   endTime?: string;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   totalTasks: number;
   completedTasks: number;
   icon?: string;
@@ -36,8 +36,8 @@ export interface RoundData {
   status: "active" | "finished" | "pending" | "evaluating_finished";
   totalTasks: number;
   completedTasks: number;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   currentBlock?: number;
   blocksRemaining?: number;
   progress?: number;
@@ -53,11 +53,11 @@ export interface RoundStatistics {
   completedTasks: number;
   totalValidators: number;
   averageTasksPerValidator: number;
-  averageScore: number;
-  winnerAverageScore?: number;
+  averageReward: number;
+  winnerAverageReward?: number;
   winnerMinerUid?: number;
-  validatorAverageTopScore?: number;
-  topScore: number;
+  validatorAverageTopReward?: number;
+  topReward: number;
   successRate: number;
   averageDuration: number;
   totalStake: number;
@@ -70,8 +70,9 @@ export interface MinerPerformance {
   uid: number;
   name?: string;
   hotkey?: string | null;
+  image?: string | null;
   success: boolean;
-  score: number;
+  reward: number;
   duration: number;
   ranking: number;
   tasksCompleted: number;
@@ -83,14 +84,16 @@ export interface MinerPerformance {
   isSota?: boolean;
   provider?: string;
   imageUrl?: string;
-  /** Reason for score 0 when applicable (from agent run) */
+  githubUrl?: string | null;
+  github_url?: string | null;
+  /** Reason for reward 0 when applicable (from agent run) */
   zeroReason?: string | null;
 }
 
 export interface BenchmarkPerformance {
   id: string;
   name: string;
-  score: number;
+  reward: number;
   provider?: string;
   imageUrl?: string;
 }
@@ -106,8 +109,8 @@ export interface ValidatorPerformance {
   completedTasks: number;
   totalMiners: number;
   activeMiners: number;
-  averageScore: number;
-  topScore: number;
+  averageReward: number;
+  topReward: number;
   weight: number;
   trust: number;
   version: number;
@@ -225,14 +228,14 @@ export interface RoundsListQueryParams {
   page?: number;
   limit?: number;
   status?: "active" | "finished" | "pending" | "evaluating_finished";
-  sortBy?: "id" | "startTime" | "endTime" | "totalTasks" | "averageScore";
+  sortBy?: "id" | "startTime" | "endTime" | "totalTasks" | "averageReward";
   sortOrder?: "asc" | "desc";
 }
 
 export interface RoundMinersQueryParams {
   page?: number;
   limit?: number;
-  sortBy?: "score" | "duration" | "ranking" | "uid";
+  sortBy?: "reward" | "score" | "duration" | "ranking" | "uid";
   sortOrder?: "asc" | "desc";
   success?: boolean;
   minScore?: number;
@@ -269,8 +272,8 @@ export interface ValidatorRoundData {
   validator_uid: number;
   validator_name: string;
   validator_hotkey: string | null;
-  local_avg_winner_score: number;
-  topScore: number;
+  local_avg_winner_reward: number;
+  topReward: number;
   local_avg_eval_time: number;
   local_miners_evaluated: number;
   local_tasks_evaluated: number;
@@ -288,16 +291,139 @@ export interface PostConsensusSummary {
     avg_reward: number;
     avg_eval_score: number;
     avg_eval_time: number;
+    avg_eval_cost?: number | null;
   } | null;
   miners_evaluated: number;
   tasks_evaluated: number;
+  leadership_rule?: {
+    required_improvement_pct: number;
+    reigning_uid: number | null;
+    reigning_name: string | null;
+    reigning_reward?: number | null;
+    reigning_score: number | null;
+    challenger_uid: number | null;
+    challenger_name: string | null;
+    challenger_reward?: number | null;
+    challenger_score: number | null;
+    dethroned: boolean;
+    season_leader_uid: number | null;
+  } | null;
 }
 
 export interface GetRoundResponse {
   success: boolean;
   data: {
     round_number: number;
-    post_consensus_summary: PostConsensusSummary;
+    post_consensus_json: PostConsensusSummary;
     validators: ValidatorRoundData[];
   };
+}
+
+export interface RoundStatusView {
+  round_id: number;
+  round_key: string;
+  season: number;
+  round_in_season: number;
+  status: "active" | "finished" | "pending" | "evaluating_finished";
+  start_block: number;
+  current_block: number;
+  end_block: number;
+  blocks_remaining: number;
+  progress: number;
+  started_at?: string | null;
+  ended_at?: string | null;
+  validators_count: number;
+  tasks_total: number;
+  completed_tasks: number;
+  previous_round?: string | null;
+  next_round?: string | null;
+}
+
+export interface SeasonRoundMinerSummary {
+  uid: number;
+  name: string;
+  hotkey?: string | null;
+  github_url?: string | null;
+  image?: string | null;
+  reward: number;
+}
+
+export interface RoundSeasonSummaryView {
+  round_id: number;
+  round_key: string;
+  season: number;
+  round_in_season: number;
+  available: boolean;
+  summary: {
+    leader_before: SeasonRoundMinerSummary | null;
+    candidate: SeasonRoundMinerSummary | null;
+    leader_after: SeasonRoundMinerSummary | null;
+    required_improvement_pct: number;
+    required_reward_to_dethrone?: number | null;
+    dethroned: boolean;
+    validators_count: number;
+    miners_evaluated: number;
+    tasks_evaluated: number;
+    tasks_success: number;
+    avg_reward: number;
+    avg_eval_score: number;
+    avg_eval_time: number;
+    avg_eval_cost?: number | null;
+    post_consensus_json?: unknown;
+  } | null;
+}
+
+export interface RoundValidatorCompetitionMiner {
+  uid: number;
+  name: string;
+  hotkey?: string | null;
+  github_url?: string | null;
+  image?: string | null;
+  competition_rank?: number | null;
+  local_avg_reward?: number | null;
+  local_avg_eval_score?: number | null;
+  local_avg_eval_time?: number | null;
+  local_avg_eval_cost?: number | null;
+  best_local_reward: number;
+  best_local_eval_score: number;
+  best_local_eval_time: number;
+  best_local_eval_cost?: number | null;
+  is_reused: boolean;
+}
+
+export interface RoundValidatorView {
+  validator_uid: number;
+  validator_name: string;
+  validator_hotkey?: string | null;
+  validator_image?: string | null;
+  version?: string;
+  stake?: number;
+  vtrust?: number;
+  started_at?: string | null;
+  finished_at?: string | null;
+  tasks_total: number;
+  competition_basis: "best_local";
+  competition_state: {
+    winner: RoundValidatorCompetitionMiner | null;
+    top_reward: number;
+    miners_participated: number;
+    tasks_evaluated: number;
+    miners: RoundValidatorCompetitionMiner[];
+  };
+  ipfs: {
+    uploaded?: unknown;
+    downloaded?: unknown;
+  };
+  consensus: {
+    pre_consensus?: unknown;
+    post_consensus?: unknown;
+  };
+}
+
+export interface RoundValidatorsViewResponse {
+  round_id: number;
+  round_key: string;
+  season: number;
+  round_in_season: number;
+  validators: RoundValidatorView[];
 }

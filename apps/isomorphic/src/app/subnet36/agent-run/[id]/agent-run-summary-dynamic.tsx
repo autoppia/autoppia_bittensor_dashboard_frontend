@@ -109,7 +109,7 @@ export default function AgentRunSummaryDynamic({
             ).length;
           })(),
           successRate:
-            Number(summary?.overallScore ?? Number.NaN) ||
+            Number(summary?.overallReward ?? Number.NaN) ||
             (summaryChartData?.total ?? 0),
         }}
       />

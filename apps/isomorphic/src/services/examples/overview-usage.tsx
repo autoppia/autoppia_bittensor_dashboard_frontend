@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Example usage of the Overview API Service
  * This file demonstrates how to use the new API service in React components

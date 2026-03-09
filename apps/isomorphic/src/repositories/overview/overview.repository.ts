@@ -37,7 +37,7 @@ export class OverviewRepository {
   private readonly validatorsFilterEndpoint = `${this.baseEndpoint}/validators/filter`;
 
   /**
-   * Get overview metrics (top score, total websites, validators, miners, etc.)
+   * Get overview metrics (top reward, total websites, validators, miners, etc.)
    */
   async getMetrics(): Promise<OverviewMetrics> {
     try {
@@ -55,11 +55,11 @@ export class OverviewRepository {
       }
 
       // Handle both nested and flat response structures
-      if (response.data?.data?.metrics) {
-        return response.data.data.metrics;
-      }
-      if (response.data?.metrics) {
-        return response.data.metrics;
+      const payload = response.data as Record<string, unknown> | undefined;
+      if (payload && typeof payload === "object") {
+        const data = payload.data as { metrics?: OverviewMetrics } | undefined;
+        if (data?.metrics) return data.metrics;
+        if (payload.metrics) return payload.metrics as OverviewMetrics;
       }
       return response.data as unknown as OverviewMetrics;
     } catch (error: unknown) {
@@ -159,7 +159,7 @@ export class OverviewRepository {
       return response.data.data.round;
     }
     if (response.data?.round) {
-      return response.data.round;
+      return response.data.round as OverviewRoundData;
     }
     return response.data as unknown as OverviewRoundData;
   }
@@ -313,7 +313,7 @@ export class OverviewRepository {
   async getPerformanceTrends(days: number = 7): Promise<{
     trends: Array<{
       date: string;
-      averageScore: number;
+      averageReward: number;
       totalTasks: number;
       activeValidators: number;
       networkUptime: number;
@@ -325,7 +325,7 @@ export class OverviewRepository {
       data?: {
         trends: Array<{
           date: string;
-          averageScore: number;
+          averageReward: number;
           totalTasks: number;
           activeValidators: number;
           networkUptime: number;
@@ -334,7 +334,7 @@ export class OverviewRepository {
       };
       trends?: Array<{
         date: string;
-        averageScore: number;
+        averageReward: number;
         totalTasks: number;
         activeValidators: number;
         networkUptime: number;

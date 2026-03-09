@@ -674,7 +674,7 @@ export function MinerAnimationExperience({
     const DotComponent = (props: any) => {
       const { cx = 0, cy = 0, stroke, index } = props;
       if (!activeData.length || index !== activeData.length - 1) {
-        return null;
+        return <g />;
       }
 
       const strokeColor =
@@ -732,12 +732,12 @@ export function MinerAnimationExperience({
       const LineLabelComponent = (props: any) => {
       const { x = 0, y = 0, index } = props;
       if (!activeData.length || index !== activeData.length - 1) {
-        return null;
+        return <g />;
       }
 
       const miner = latestSnapshot.find((snapshot) => snapshot.id === minerId);
       if (!miner) {
-        return null;
+        return <g />;
       }
 
       const isAscending = miner.rankChange > 0;
