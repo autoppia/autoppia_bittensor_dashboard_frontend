@@ -2267,7 +2267,7 @@ function RoundTopMinersInline({
           name: miner.name,
           imageUrl: miner.image,
           hotkey: miner.hotkey,
-          reward: miner.local_avg_reward,
+          reward: miner.best_local_reward ?? miner.local_avg_reward,
           ranking: miner.local_rank,
           validatorId: selectedValidator.id,
         }));
