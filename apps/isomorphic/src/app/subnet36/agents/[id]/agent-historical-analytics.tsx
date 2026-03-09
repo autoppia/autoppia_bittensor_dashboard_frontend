@@ -65,6 +65,8 @@ interface AgentHistoricalAnalyticsProps {
   className?: string;
   minerHistorical?: MinerHistoricalResponse["data"] | null;
   loading?: boolean;
+  /** When set, filter rounds/task details to this season only (e.g. from parent page). */
+  selectedSeason?: number | null;
 }
 
 interface WebsiteStats {
@@ -108,6 +110,34 @@ function getScoreBadgeClass(score: number): string {
   if (score >= 0.8) return `${base} bg-emerald-500/20 text-emerald-300`;
   if (score >= 0.5) return `${base} bg-yellow-500/20 text-yellow-300`;
   return `${base} bg-red-500/20 text-red-300`;
+}
+
+function roundMatchesSeason(roundStr: string, season: number | null): boolean {
+  if (season == null) return true;
+  const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
+  return Number.isFinite(seasonPart) && seasonPart === season;
+}
+
+function collectRoundsWithTaskDetails(
+  performanceByWebsite: MinerHistoricalResponse["data"]["performanceByWebsite"] | undefined,
+  season: number | null
+): Set<string> {
+  const set = new Set<string>();
+  const websites = performanceByWebsite ?? [];
+  for (const ws of websites as Array<Record<string, unknown>>) {
+    const useCases = (ws?.useCases ?? []) as Array<Record<string, unknown>>;
+    for (const uc of useCases) {
+      const taskDetails = (uc?.taskDetails ?? []) as Array<Record<string, unknown>>;
+      for (const detail of taskDetails) {
+        const round = detail?.round;
+        if (!round) continue;
+        const roundStr = String(round);
+        if (!roundMatchesSeason(roundStr, season)) continue;
+        set.add(roundStr);
+      }
+    }
+  }
+  return set;
 }
 
 type UseCaseTaskTableContentProps = Readonly<{
@@ -308,9 +338,12 @@ export default function AgentHistoricalAnalytics({
   className,
   minerHistorical,
   loading: externalLoading,
+  selectedSeason: selectedSeasonProp,
 }: Readonly<AgentHistoricalAnalyticsProps>) {
   const router = useRouter();
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
+  const [selectedSeasonLocal, setSelectedSeasonLocal] = useState<number | null>(null);
+  const selectedSeason = selectedSeasonProp ?? selectedSeasonLocal;
   const [aggregatedData, setAggregatedData] = useState<{
     stats: AgentRunStats[];
     runIds: string[];
@@ -334,25 +367,11 @@ export default function AgentHistoricalAnalytics({
 
   const TASKS_PER_PAGE = 10;
   const hasInitializedRef = useRef(false);
-  const roundsWithTaskDetails = useMemo(() => {
-    const set = new Set<string>();
-    const websites = minerHistorical?.performanceByWebsite ?? [];
-    websites.forEach((ws: Record<string, unknown>) => {
-      ((ws?.useCases ?? []) as Array<Record<string, unknown>>).forEach((uc) => {
-        ((uc?.taskDetails ?? []) as Array<Record<string, unknown>>).forEach((detail) => {
-          const round = detail?.round;
-          if (!round) return;
-          const roundStr = String(round);
-          if (selectedSeason != null) {
-            const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
-            if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return;
-          }
-          set.add(roundStr);
-        });
-      });
-    });
-    return set;
-  }, [minerHistorical?.performanceByWebsite, selectedSeason]);
+
+  const roundsWithTaskDetails = useMemo(
+    () => collectRoundsWithTaskDetails(minerHistorical?.performanceByWebsite ?? undefined, selectedSeason),
+    [minerHistorical?.performanceByWebsite, selectedSeason]
+  );
   const sourceRound = useMemo(() => {
     const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
     if (bestRewardRound) {
@@ -1302,7 +1321,8 @@ export default function AgentHistoricalAnalytics({
 
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
-                                {taskData?.loading ? (
+                                {(() => {
+                                  if (taskData?.loading) return (
                                   <div className="overflow-x-auto">
                                     <table className="w-full text-sm table-fixed min-w-[700px]">
                                       <thead className="bg-white/5">
@@ -1389,7 +1409,8 @@ export default function AgentHistoricalAnalytics({
                                       </tbody>
                                     </table>
                                   </div>
-                                ) : taskData?.tasks?.length > 0 ? (
+                                  );
+                                  if ((taskData?.tasks?.length ?? 0) > 0) return (
                                   <>
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-sm table-fixed min-w-[700px]">
@@ -1420,7 +1441,7 @@ export default function AgentHistoricalAnalytics({
                                             >
                                               <td className="p-2 sm:p-3">
                                                 <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
-                                                  {((task as Record<string, unknown>).evaluationId as string) || task.taskId}
+                                                  {task.evaluationId ?? task.taskId}
                                                 </span>
                                               </td>
                                               <td className="p-2 sm:p-3">
@@ -1430,14 +1451,7 @@ export default function AgentHistoricalAnalytics({
                                               </td>
                                               <td className="p-2 sm:p-3 text-center">
                                                 <span
-                                                  className={cn(
-                                                    "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold",
-                                                    (task.score || 0) >= 0.8
-                                                      ? "bg-emerald-500/20 text-emerald-300"
-                                                      : (task.score || 0) >= 0.5
-                                                        ? "bg-yellow-500/20 text-yellow-300"
-                                                        : "bg-red-500/20 text-red-300"
-                                                  )}
+                                                  className={getScoreBadgeClass(task.score ?? 0)}
                                                 >
                                                   {Math.round(
                                                     (task.score || 0) * 100
@@ -1457,10 +1471,7 @@ export default function AgentHistoricalAnalytics({
                                                   size="sm"
                                                   variant="text"
                                                   onClick={() => {
-                                                    // Use evaluationId if available, otherwise use taskId
-                                                    // Keep the full evaluation ID format (evaluation_xxx_xxx_xxx)
-                                                    const evaluationId = ((task as Record<string, unknown>).evaluationId as string) || task.taskId;
-                                                    // Ensure it has the "evaluation_" prefix if it's just a UUID
+                                                    const evaluationId = task.evaluationId ?? task.taskId;
                                                     const normalizedId = normalizeEvaluationId(evaluationId);
                                                     router.push(
                                                       `${routes.evaluations}/${normalizedId}`
@@ -1544,11 +1555,13 @@ export default function AgentHistoricalAnalytics({
                                       </div>
                                     )}
                                   </>
-                                ) : (
-                                  <div className="p-4 text-center text-white/60 text-sm">
-                                    No tasks found for this use case
-                                  </div>
-                                )}
+                                  );
+                                  return (
+                                    <div className="p-4 text-center text-white/60 text-sm">
+                                      No tasks found for this use case
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
                           );
