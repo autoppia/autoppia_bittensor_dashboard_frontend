@@ -108,7 +108,7 @@ function AgentsLanding() {
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
 
-    window.location.href = targetUrl;
+    globalThis.location.href = targetUrl;
   }, [
     needsRedirect,
     effectiveSeason,
