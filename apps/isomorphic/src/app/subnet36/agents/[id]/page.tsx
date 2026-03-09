@@ -398,6 +398,7 @@ function AgentScoreChart({
           rank: point.rank ?? null,
           eval_score: point.eval_score ?? null,
           eval_time: point.eval_time ?? null,
+          avg_cost: point.avg_cost ?? null,
           timestamp: point.timestamp,
         };
 
@@ -630,10 +631,13 @@ function AgentScoreChart({
                   if (!active || !payload?.length) return null;
                   const data = payload[0]?.payload;
 
-                  // Get post-consensus data from the payload
+                  // Get post-consensus data from the payload.
+                  // reward is already scaled * 100 in displayData, so show directly as %.
+                  // eval_score is NOT pre-scaled, so multiply * 100 here.
                   const reward = data?.reward ?? 0;
                   const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
                   const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
+                  const avgCost = data?.avg_cost != null && typeof data.avg_cost === 'number' ? data.avg_cost : null;
 
                   return (
                     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
@@ -641,7 +645,7 @@ function AgentScoreChart({
                         Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
                       </div>
                       <div className="space-y-2 text-sm">
-                        {/* Reward */}
+                        {/* Reward — already * 100 from displayData */}
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2.5">
                             <span
@@ -651,11 +655,11 @@ function AgentScoreChart({
                             <span className="text-white/90 font-semibold">Reward:</span>
                           </div>
                           <span className="font-black text-white text-base">
-                            {(reward * 100).toFixed(2)}%
+                            {reward.toFixed(2)}%
                           </span>
                         </div>
 
-                        {/* Score (eval_score) */}
+                        {/* Score (eval_score) — raw 0-1 value, multiply here */}
                         {evalScore != null && !isNaN(evalScore) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
@@ -671,7 +675,7 @@ function AgentScoreChart({
                           </div>
                         )}
 
-                        {/* Avg Time (eval_time) */}
+                        {/* Avg Time */}
                         {evalTime != null && !isNaN(evalTime) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
@@ -683,6 +687,22 @@ function AgentScoreChart({
                             </div>
                             <span className="font-black text-white text-base">
                               {Number(evalTime).toFixed(2)}s
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Avg Cost */}
+                        {avgCost != null && !isNaN(avgCost) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#A78BFA" }}
+                              />
+                              <span className="text-white/90 font-semibold">Avg Cost:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              ${Number(avgCost).toFixed(4)}
                             </span>
                           </div>
                         )}
@@ -1702,6 +1722,7 @@ export default function Page() {
         reward: round.post_consensus_avg_reward ?? 0,
         eval_score: round.post_consensus_avg_eval_score ?? undefined,
         eval_time: round.post_consensus_avg_eval_time ?? undefined,
+        avg_cost: round.post_consensus_avg_eval_cost ?? undefined,
         timestamp: "",
         topReward: undefined,
         benchmarks: undefined,

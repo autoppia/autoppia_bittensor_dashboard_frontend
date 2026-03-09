@@ -64,6 +64,7 @@ export interface RewardRoundDataPoint {
   topReward?: number; // Highest benchmark/miner reward for the round
   eval_score?: number; // Post-consensus average eval score
   eval_time?: number; // Post-consensus average eval time
+  avg_cost?: number | null; // Post-consensus average cost per task
   benchmarks?: {
     name: string;
     reward: number;
