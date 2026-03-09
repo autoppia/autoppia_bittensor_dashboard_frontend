@@ -398,14 +398,13 @@ export interface AgentDetailsResponse {
   data: {
     agent: AgentData;
     bestRound?: {
-      round_id: string;
       round: number;
       post_consensus_avg_reward: number;
       post_consensus_avg_eval_time: number;
       tasks_received: number;
       tasks_success: number;
       validators_count: number;
-      avg_cost_per_task?: number | null;
+      post_consensus_avg_cost?: number | null;
       performanceByWebsite?: Array<{
         website: string;
         tasks_received: number;
@@ -415,20 +414,7 @@ export interface AgentDetailsResponse {
       websites_count?: number;
       season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
     } | null;
-    rewardRoundData: RewardRoundDataPoint[];
-    roundMetrics?: AgentRoundMetrics | null;
-    performanceByWebsite?: Array<{
-      website: string;
-      tasks_received: number;
-      tasks_success: number;
-      success_rate: number;
-    }>;
-    avg_cost_per_task?: number | null;
-    is_reused?: boolean;
-    reused_from_agent_run_id?: string | null;
-    reused_from_round?: string | null;
     zero_reason?: string | null;
-    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
@@ -436,8 +422,6 @@ export interface MinerDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
-    rewardRoundData: RewardRoundDataPoint[];
-    roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: Array<{
       website: string;
       tasks_received: number;

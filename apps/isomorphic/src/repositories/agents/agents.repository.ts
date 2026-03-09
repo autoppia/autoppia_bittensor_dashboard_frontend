@@ -342,15 +342,8 @@ export class AgentsRepository {
     params?: { round?: number; season?: number }
   ): Promise<{
     agent: AgentData;
-    rewardRoundData: RewardRoundDataPoint[];
-    roundMetrics?: AgentRoundMetrics | null;
-    performanceByWebsite?: AgentDetailsResponse["data"]["performanceByWebsite"];
-    avg_cost_per_task?: number | null;
-    is_reused?: boolean;
-    reused_from_agent_run_id?: string | null;
-    reused_from_round?: string | null;
+    bestRound?: AgentDetailsResponse["data"]["bestRound"];
     zero_reason?: string | null;
-    season_leadership?: AgentDetailsResponse["data"]["season_leadership"];
   }> {
     const response = await apiClient.get<AgentDetailsResponse>(
       `${this.baseEndpoint}/${id}`,
@@ -358,15 +351,8 @@ export class AgentsRepository {
     );
     return {
       agent: response.data.data.agent,
-      rewardRoundData: response.data.data.rewardRoundData,
-      roundMetrics: response.data.data.roundMetrics,
-      performanceByWebsite: response.data.data.performanceByWebsite,
-      avg_cost_per_task: response.data.data.avg_cost_per_task,
-      is_reused: response.data.data.is_reused,
-      reused_from_agent_run_id: response.data.data.reused_from_agent_run_id,
-      reused_from_round: response.data.data.reused_from_round,
+      bestRound: response.data.data.bestRound,
       zero_reason: response.data.data.zero_reason,
-      season_leadership: response.data.data.season_leadership,
     };
   }
 

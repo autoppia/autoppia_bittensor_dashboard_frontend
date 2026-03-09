@@ -1708,7 +1708,6 @@ export default function Page() {
   } = useAgent(agentIdForQuery, selectedSeasonNumber ? { season: selectedSeasonNumber } : undefined);
 
   const agent = agentDetail?.agent ?? null;
-  const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
@@ -1721,39 +1720,12 @@ export default function Page() {
     numericUidFromParam
   );
 
-  // Resolve latest season without depending on legacy availableRounds.
+  // Resolve latest season from the selected season only; best-round payload is season-scoped.
   const latestSeason = useMemo(() => {
-    const explicitSeason = selectedSeasonNumber;
-    if (explicitSeason && Number.isFinite(explicitSeason)) {
-      return explicitSeason;
-    }
-
-    const bestRoundId = agentDetail?.bestRound?.round_id;
-    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
-      const season = Number.parseInt(bestRoundId.split("/")[0] ?? "", 10);
-      if (Number.isFinite(season)) return season;
-    }
-
-    const bestRoundFromAgent = agentDetail?.agent?.bestRoundId;
-    if (typeof bestRoundFromAgent === "string" && bestRoundFromAgent.includes("/")) {
-      const season = Number.parseInt(bestRoundFromAgent.split("/")[0] ?? "", 10);
-      if (Number.isFinite(season)) return season;
-    }
-
-    const seasonsFromRewardHistory = (agentDetail?.rewardRoundData ?? [])
-      .map((row: any) => {
-        const roundId = row?.round_id;
-        if (typeof roundId === "string" && roundId.includes("/")) {
-          return Number.parseInt(roundId.split("/")[0] ?? "", 10);
-        }
-        return null;
-      })
-      .filter((value): value is number => Number.isFinite(value as number));
-
-    return seasonsFromRewardHistory.length > 0
-      ? Math.max(...seasonsFromRewardHistory)
+    return selectedSeasonNumber && Number.isFinite(selectedSeasonNumber)
+      ? selectedSeasonNumber
       : undefined;
-  }, [agentDetail?.agent?.bestRoundId, agentDetail?.bestRound?.round_id, agentDetail?.rewardRoundData, selectedSeasonNumber]);
+  }, [selectedSeasonNumber]);
 
   // Get miner historical data when needed:
   // - Historical tab
@@ -1804,17 +1776,14 @@ export default function Page() {
     numericUidFromParam
   );
   const bestRoundIdentifierFromAgentDetail = useMemo(() => {
-    const bestRoundId = agentDetail?.agent?.bestRoundId;
-    if (bestRoundId == null) return undefined;
-    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
-      return bestRoundId;
-    }
-    const bestRoundNumber = Number(bestRoundId);
+    const bestRoundNumber = Number(
+      agentDetail?.bestRound?.round ?? agentDetail?.agent?.bestRoundId
+    );
     if (Number.isFinite(bestRoundNumber) && selectedSeasonNumber) {
       return `${selectedSeasonNumber}/${bestRoundNumber}`;
     }
     return undefined;
-  }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
+  }, [agentDetail?.agent?.bestRoundId, agentDetail?.bestRound?.round, selectedSeasonNumber]);
 
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -1920,93 +1889,30 @@ export default function Page() {
 
   const currentRound =
     selectedRoundFromQuery ??
-    roundMetrics?.roundId ??
     bestRoundIdentifierFromAgentDetail;
 
-  // Build rewardRoundData from historical data if in historical mode, otherwise from agentDetail
+  // The reward chart lives in Historical mode; source it only from historical data.
   const rewardRoundData: RewardRoundDataPoint[] = useMemo(() => {
-    if (viewMode === "historical" && minerHistorical?.roundsHistory) {
-      // Use historical data - sort by round descending (format: "season/round")
-      return [...minerHistorical.roundsHistory]
-        .sort((a, b) => {
-          // Parse "season/round" format for sorting
-          const [aSeason, aRound] = String(a.round).split('/').map(Number);
-          const [bSeason, bRound] = String(b.round).split('/').map(Number);
-          // Sort by season first, then by round (descending)
-          if (bSeason !== aSeason) return bSeason - aSeason;
-          return bRound - aRound;
-        })
-        .map((round, index) => ({
-          round_id: round.round, // Keep as string "season/round"
-          round: index + 1, // Sequential number for chart x-axis
-          rank: round.post_consensus_rank,
-          reward: round.post_consensus_avg_reward ?? 0,
-          eval_score: round.post_consensus_avg_eval_score ?? undefined,
-          eval_time: round.post_consensus_avg_eval_time ?? undefined,
-          timestamp: "", // Historical data doesn't have timestamp
-          topReward: undefined,
-          benchmarks: undefined,
-        }));
-    }
-
-    // Use agentDetail data for current/runs mode
-    const source: RewardRoundDataPoint[] =
-      agentDetail?.rewardRoundData ??
-      (((minerRoundDetails as any)?.rewardRoundData as
-        | RewardRoundDataPoint[]
-        | undefined) ?? []);
-    if (!source.length) {
-      const fallbackReward = Number((minerRoundDetails as any)?.post_consensus_avg_reward ?? 0);
-      const fallbackRank = Number((minerRoundDetails as any)?.post_consensus_rank ?? 0);
-      const fallbackRoundId = selectedRoundFromQuery ?? Number((minerRoundDetails as any)?.round ?? 0);
-      if (fallbackRoundId) {
-        return [
-          {
-            round_id: fallbackRoundId as any,
-            rank: Number.isFinite(fallbackRank) && fallbackRank > 0 ? fallbackRank : null,
-            reward: fallbackReward,
-            eval_score: (minerRoundDetails as any)?.post_consensus_avg_eval_score ?? undefined,
-            eval_time: (minerRoundDetails as any)?.post_consensus_avg_eval_time ?? undefined,
-            timestamp: "",
-            topReward: undefined,
-            benchmarks: undefined,
-          },
-        ];
-      }
-      return [];
-    }
-    return source.map((point: any) => {
-      const roundId =
-        point.round_id ??
-        point.validator_round_id ??
-        point.roundId ??
-        point.validatorRoundId ??
-        point.round ??
-        0;
-      return {
-        round_id: Number(roundId),
-        rank: point.rank ?? point.position ?? null,
-        reward: point.reward ?? 0,
-        eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
-        eval_time: point.eval_time ?? point.post_consensus_avg_eval_time ?? point.avg_eval_time ?? undefined,
-        timestamp:
-          typeof point.timestamp === "string"
-            ? point.timestamp
-            : (point.timestamp?.toString() ?? ""),
-        topReward:
-          normalizeScore(
-            point.topReward ?? point.top_reward ?? point.topScore ?? point.top_score ?? point.bestReward ?? point.bestScore
-          ) ?? undefined,
-        benchmarks: Array.isArray(point.benchmarks)
-          ? point.benchmarks.map((benchmark: any) => ({
-              name: benchmark.name ?? benchmark.provider ?? "Benchmark",
-              provider: benchmark.provider,
-              reward: normalizeScore(benchmark.reward) ?? 0,
-            }))
-          : undefined,
-      };
-    });
-  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.rewardRoundData, minerRoundDetails, selectedRoundFromQuery]);
+    if (!minerHistorical?.roundsHistory) return [];
+    return [...minerHistorical.roundsHistory]
+      .sort((a, b) => {
+        const [aSeason, aRound] = String(a.round).split("/").map(Number);
+        const [bSeason, bRound] = String(b.round).split("/").map(Number);
+        if (bSeason !== aSeason) return bSeason - aSeason;
+        return bRound - aRound;
+      })
+      .map((round, index) => ({
+        round_id: round.round,
+        round: index + 1,
+        rank: round.post_consensus_rank,
+        reward: round.post_consensus_avg_reward ?? 0,
+        eval_score: round.post_consensus_avg_eval_score ?? undefined,
+        eval_time: round.post_consensus_avg_eval_time ?? undefined,
+        timestamp: "",
+        topReward: undefined,
+        benchmarks: undefined,
+      }));
+  }, [minerHistorical?.roundsHistory]);
 
   const selectedRoundEncoded = useMemo(() => {
     if (typeof selectedRoundFromQuery === "string" && selectedRoundFromQuery.includes("/")) {
@@ -2177,16 +2083,6 @@ export default function Page() {
     );
   }
 
-  // Current mode stats for header - showing only the 5 key metrics
-  const currentRankValue =
-    roundMetrics?.rank && roundMetrics.rank > 0
-      ? `#${roundMetrics.rank}`
-      : effectiveAgent?.currentRank && (effectiveAgent.currentRank ?? 0) > 0
-        ? `#${effectiveAgent.currentRank}`
-        : "N/A";
-
-  const currentRewardPercentage = `${((roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0) * 100).toFixed(1)}%`;
-
   // Historical metrics
   const bestRankEver =
     effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
@@ -2208,21 +2104,9 @@ export default function Page() {
   ).toFixed(2);
   const sourceMetricsDetails = selectedRoundFromQuery
     ? minerRoundDetails ?? null
-    : agentDetail?.bestRound ?? {
-        post_consensus_avg_reward:
-          roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
-        post_consensus_avg_eval_time:
-          roundMetrics?.averageResponseTime ?? effectiveAgent?.averageResponseTime ?? null,
-        tasks_received: roundMetrics?.totalTasks ?? effectiveAgent?.totalTasks ?? 0,
-        tasks_success: roundMetrics?.completedTasks ?? effectiveAgent?.completedTasks ?? 0,
-        validators_count: roundMetrics?.totalValidators ?? 0,
-        avg_cost_per_task: agentDetail?.avg_cost_per_task ?? null,
-        performanceByWebsite:
-          agentDetail?.performanceByWebsite ?? [],
-      };
+    : agentDetail?.bestRound ?? null;
   const roundReward = Number(
     sourceMetricsDetails?.post_consensus_avg_reward ??
-      roundMetrics?.reward ??
       effectiveAgent?.currentReward ??
       0
   );
@@ -2232,10 +2116,10 @@ export default function Page() {
     null;
   const displayedReward = roundReward;
   const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
-  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
-  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
-  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
+  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? 0;
+  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? 0;
+  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? 0;
+  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? [];
   const effectiveWebsitesCountRaw =
     (sourceMetricsDetails as any)?.websites_count ??
     (sourceMetricsDetails as any)?.websitesCount ??
@@ -2245,7 +2129,11 @@ export default function Page() {
   const effectiveWebsitesCount = Number.isFinite(Number(effectiveWebsitesCountRaw))
     ? Number(effectiveWebsitesCountRaw)
     : 0;
-  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? agentDetail?.avg_cost_per_task ?? null;
+  const effectiveAvgCostPerTaskRaw =
+    (sourceMetricsDetails as any)?.post_consensus_avg_cost ??
+    (sourceMetricsDetails as any)?.avg_cost_per_task ??
+    (sourceMetricsDetails as any)?.avgCostPerTask ??
+    null;
   const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
   const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
   const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
