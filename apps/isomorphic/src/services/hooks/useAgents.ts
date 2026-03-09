@@ -204,7 +204,6 @@ export function useAgents(params?: AgentsListQueryParams) {
 type AgentDetailPayload = {
   agent: AgentData | null;
   rewardRoundData: RewardRoundDataPoint[];
-  availableRounds?: Array<number | string>;
   roundMetrics?: AgentRoundMetrics | null;
   performanceByWebsite?: Array<{
     website: string;
