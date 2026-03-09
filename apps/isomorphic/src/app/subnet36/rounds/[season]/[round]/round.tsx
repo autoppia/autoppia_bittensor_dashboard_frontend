@@ -864,6 +864,11 @@ const truncateDecimal = (value: number, decimals: number = 4): number => {
   return Math.floor(value * multiplier) / multiplier;
 };
 
+const formatRewardPercent = (value?: number | null): string => {
+  if (value === undefined || value === null || Number.isNaN(value)) return "—";
+  return `${(Number(value) * 100).toFixed(2)}%`;
+};
+
 function RoundStatsInline({
   selectedValidator,
   statistics,
@@ -967,7 +972,7 @@ function RoundStatsInline({
   const fallbackAvatarIndex = displayUid != null ? Math.abs(displayUid % 50) : 0;
   const fallbackAvatar = resolveAssetUrl(`/miners/${fallbackAvatarIndex}.svg`);
   const winnerAvatar = resolveAssetUrl(displayImage, fallbackAvatar);
-  const rewardPct = `${formatNumber(truncateDecimal(winnerAverageReward, 4) * 100, 2)}%`;
+  const rewardPct = formatRewardPercent(winnerAverageReward);
   const costStr = averageEvalCost != null
     ? `$${Number(averageEvalCost).toFixed(4)}`
     : "—";
@@ -2553,6 +2558,9 @@ export default function Round() {
     data: unknown;
   } | null>(null);
   const [includeOwnDownloadedPayload, setIncludeOwnDownloadedPayload] = React.useState(false);
+  const [ipfsUploadFullPayload, setIpfsUploadFullPayload] = React.useState<Record<string, unknown> | null>(null);
+  const [ipfsUploadLoading, setIpfsUploadLoading] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -3090,8 +3098,8 @@ export default function Round() {
               const det = lr.dethroned;
               const reigningReward = lr.reigning_reward ?? lr.reigning_score;
               const challengerReward = lr.challenger_reward ?? lr.challenger_score;
-              const reignPct = reigningReward != null ? `${(reigningReward * 100).toFixed(2)}%` : "—";
-              const chalPct = challengerReward != null ? `${(challengerReward * 100).toFixed(2)}%` : null;
+              const reignPct = formatRewardPercent(reigningReward);
+              const chalPct = challengerReward != null ? formatRewardPercent(challengerReward) : null;
               const thresholdPct = `+${(lr.required_improvement_pct * 100).toFixed(1)}%`;
               const needed = reigningReward != null && challengerReward != null
                 ? `${((reigningReward * (1 + lr.required_improvement_pct) - challengerReward) * 100).toFixed(3)}%`
@@ -3527,13 +3535,14 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() =>
+                  onClick={() => {
+                    setIpfsUploadFullPayload(null);
                     setIpfsConsensusDetail({
                       type: "upload",
                       title: "IPFS Uploaded — What this validator published",
                       data: buildIpfsUploadModalData(ipfsUp, ipfsDown),
-                    })
-                  }
+                    });
+                  }}
                 >
                   <div className={cn(cardTitleRowClass, "text-teal-400")}>
                     <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
@@ -3612,6 +3621,7 @@ export default function Round() {
           onClick={() => {
             setIpfsConsensusDetail(null);
             setIncludeOwnDownloadedPayload(false);
+            setIpfsUploadFullPayload(null);
           }}
           role="dialog"
           aria-modal="true"
@@ -3621,19 +3631,72 @@ export default function Round() {
             className={cn("relative max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-white/20 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setIpfsConsensusDetail(null);
-                  setIncludeOwnDownloadedPayload(false);
-                }}
-                className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Close"
-              >
-                <PiXBold className="h-6 w-6" />
-              </button>
+            <div className="flex items-center justify-between border-b border-white/20 px-6 py-4 gap-3">
+              <h3 className="text-lg font-bold text-white truncate min-w-0">{ipfsConsensusDetail.title}</h3>
+              <div className="flex items-center gap-1 shrink-0">
+                {ipfsConsensusDetail.type !== "how_consensus" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const data = ipfsConsensusDetail.data as Record<string, unknown> | undefined;
+                      if (ipfsConsensusDetail.type === "download") {
+                        const payloads = Array.isArray(data?.payloads) ? data.payloads : [];
+                        const selfUid = Number(data?.self_validator_uid);
+                        const filtered =
+                          includeOwnDownloadedPayload || !Number.isFinite(selfUid)
+                            ? payloads
+                            : payloads.filter((e: { validator_uid?: unknown }) => Number(e?.validator_uid) !== selfUid);
+                        const str = JSON.stringify(
+                          {
+                            validators_participated: data?.validators_participated ?? payloads.length,
+                            total_stake: data?.total_stake ?? null,
+                            payloads: filtered,
+                          },
+                          null,
+                          2
+                        );
+                        void navigator.clipboard.writeText(str).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        });
+                      } else {
+                        const toCopy =
+                          ipfsConsensusDetail.type === "upload" && ipfsUploadFullPayload
+                            ? ipfsUploadFullPayload
+                            : data ?? {};
+                        void navigator.clipboard
+                          .writeText(JSON.stringify(toCopy, null, 2))
+                          .then(() => {
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          });
+                      }
+                    }}
+                    className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors inline-flex items-center gap-1.5"
+                    aria-label="Copy payload"
+                    title="Copy payload"
+                  >
+                    {copied ? (
+                      <PiCheckDuotone className="h-5 w-5 text-emerald-400" />
+                    ) : (
+                      <PiCopyDuotone className="h-5 w-5" />
+                    )}
+                    <span className="text-xs font-medium">{copied ? "Copied!" : "Copy"}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIpfsConsensusDetail(null);
+                    setIncludeOwnDownloadedPayload(false);
+                    setIpfsUploadFullPayload(null);
+                  }}
+                  className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Close"
+                >
+                  <PiXBold className="h-6 w-6" />
+                </button>
+              </div>
             </div>
             <div className="overflow-auto max-h-[calc(90vh-80px)] p-6">
               {ipfsConsensusDetail.type === "how_consensus" ? (
@@ -3689,6 +3752,47 @@ export default function Round() {
                     </div>
                   );
                 })()
+              ) : ipfsConsensusDetail.type === "upload" &&
+                (ipfsConsensusDetail.data as { cid?: string } | undefined)?.cid ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://ipfs.io/ipfs/${(ipfsConsensusDetail.data as { cid?: string }).cid}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/50 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors"
+                    >
+                      <PiArrowSquareOutDuotone className="h-4 w-4" />
+                      Open in IPFS
+                    </a>
+                    <button
+                      type="button"
+                      disabled={ipfsUploadLoading}
+                      onClick={() => {
+                        const cid = (ipfsConsensusDetail.data as { cid?: string }).cid;
+                        if (!cid) return;
+                        setIpfsUploadLoading(true);
+                        fetch(`https://ipfs.io/ipfs/${cid}`)
+                          .then((r) => r.json())
+                          .then((body) => {
+                            setIpfsUploadFullPayload(body ?? null);
+                          })
+                          .catch(() => setIpfsUploadFullPayload(null))
+                          .finally(() => setIpfsUploadLoading(false));
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg border border-violet-400/50 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                    >
+                      {ipfsUploadLoading ? "Loading…" : "Load full payload from IPFS"}
+                    </button>
+                  </div>
+                  <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
+                    {JSON.stringify(
+                      ipfsUploadFullPayload ?? ipfsConsensusDetail.data,
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
               ) : (
                 <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
                   {JSON.stringify(ipfsConsensusDetail.data, null, 2)}
