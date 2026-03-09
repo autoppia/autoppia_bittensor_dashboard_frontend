@@ -350,7 +350,6 @@ function RoundHeaderInline({
       : undefined);
 
   // ✅ Usar status desde progressData
-  const progressValue = progressTyped?.progress ?? roundTyped?.progress ?? 0;
   const backendStatus = progressTyped?.status ?? roundTyped?.status;
 
   // Check if validator rounds have evaluation results (tasks evaluated)
@@ -371,37 +370,23 @@ function RoundHeaderInline({
   });
 
   // ✅ Status ya viene de progressData
-  let status: "active" | "completed" | "pending";
+  type RoundStatusDisplay = "active" | "completed" | "pending";
+  let status: RoundStatusDisplay;
   let statusLabel: string;
 
   if (backendStatus === "pending") {
     status = "pending";
     statusLabel = "Pending";
-  } else if (backendStatus === "finished") {
-    status = "completed";
-    statusLabel = "Finished";
-  } else if (backendStatus === "evaluating_finished") {
-    // Evaluating finished - waiting for consensus/weights
+  } else if (backendStatus === "evaluating_finished" || (backendStatus === "active" && hasEvaluationsComplete)) {
     status = "active";
     statusLabel = "Waiting for Consensus";
-  } else if (backendStatus === "active") {
-    // Active round - check if evaluations are done
-    if (hasEvaluationsComplete) {
-      status = "active";
-      statusLabel = "Waiting for Consensus";
-    } else {
-      status = "active";
-      statusLabel = "Running";
-    }
+  } else if (backendStatus === "active" || round?.current) {
+    status = "active";
+    statusLabel = "Running";
   } else {
-    // No backend status - fallback to round.current flag
-    if (round?.current) {
-      status = "active";
-      statusLabel = "Running";
-    } else {
-      status = "completed";
-      statusLabel = "Finished";
-    }
+    // finished, or no backend status and round not current
+    status = "completed";
+    statusLabel = "Finished";
   }
 
   const isActive = status === "active" || round?.current === true;
@@ -838,7 +823,7 @@ function RoundStatsInline({
   error,
   seasonParam,
   roundParam,
-}: {
+}: Readonly<{
   selectedValidator?: ValidatorPerformance | null;
   statistics?: any;
   topMiners?: any[];
@@ -847,14 +832,14 @@ function RoundStatsInline({
   error?: string;
   seasonParam?: string | number;
   roundParam?: number;
-}) {
+}>) {
   // Use post_consensus_json if available.
   const winner = postConsensusSummary?.winner;
   const winnerAverageReward = winner?.avg_reward ?? statistics?.winnerAverageReward ?? statistics?.averageReward ?? 0;
   const averageEvalTime = winner?.avg_eval_time ?? 0;
   const averageEvalCost = winner?.avg_eval_cost ?? null;
   const winnerUid = winner?.uid ?? statistics?.winnerMinerUid ?? null;
-  const [hotkeycopied, setHotkeyCopied] = React.useState(false);
+  const [hotkeyCopied, setHotkeyCopied] = React.useState(false);
 
   // Aggregated winner should NOT change when validator is selected
   // It always shows the overall round winner
@@ -942,7 +927,8 @@ function RoundStatsInline({
     const params = new URLSearchParams();
     if (seasonParam != null) params.set("season", String(seasonParam));
     const qs = params.toString();
-    return `${routes.agents}/${displayUid}${qs ? `?${qs}` : ""}`;
+    const query = qs ? `?${qs}` : "";
+    return `${routes.agents}/${displayUid}${query}`;
   })();
 
   const cardContent = (
@@ -1042,7 +1028,7 @@ function RoundStatsInline({
                   className="flex-shrink-0 flex items-center justify-center h-5 w-5 rounded-md border border-white/[0.08] bg-white/[0.03] text-white/25 hover:text-amber-300 hover:border-amber-400/20 hover:bg-amber-500/10 transition-all duration-150"
                   title="Copy hotkey"
                 >
-                  {hotkeycopied
+                  {hotkeyCopied
                     ? <PiCheckDuotone className="h-3 w-3 text-emerald-400" />
                     : <PiCopyDuotone className="h-3 w-3" />
                   }
@@ -1102,7 +1088,7 @@ function RoundStatsInline({
   ) : cardContent;
 }
 
-function MetricCard({ card }: { card: any }) {
+function MetricCard({ card }: Readonly<{ card: any }>) {
   const Icon = card.icon;
   const isWinner = card.key === "winner" && typeof card.uid === "number";
   const [copied, setCopied] = React.useState(false);
@@ -1332,7 +1318,7 @@ function MetricCard({ card }: { card: any }) {
   );
 }
 
-function LocalMetricCard({ card }: { card: any }) {
+function LocalMetricCard({ card }: Readonly<{ card: any }>) {
   const Icon = card.icon;
   const isWinner = card.key === "winner" && typeof card.uid === "number";
   const [copied, setCopied] = React.useState(false);
@@ -1475,7 +1461,7 @@ function RoundValidatorsInline({
   roundData,
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   onValidatorSelect?: (v: ValidatorPerformance) => void;
   selectedValidatorId?: string | null;
@@ -1483,7 +1469,7 @@ function RoundValidatorsInline({
   roundData?: any;
   loading?: boolean;
   error?: string | null;
-}) {
+}>) {
   const params = useParams();
   const seasonParam = params.season as string | undefined;
   const roundParam = params.round as string | undefined;
@@ -1632,7 +1618,8 @@ function RoundValidatorsInline({
               );
               const isActive = selectedValidatorId === validator.id;
               return (
-                <div
+                <button
+                  type="button"
                   key={`validator-${validator.id}`}
                   onClick={() => {
                     if (validator.id === selectedValidatorId) return;
@@ -1640,18 +1627,7 @@ function RoundValidatorsInline({
                     lastNotifiedValidator.current = validator.id;
                     onValidatorSelect?.(validator);
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      if (validator.id === selectedValidatorId) return;
-                      setSelectedValidatorId(validator.id);
-                      lastNotifiedValidator.current = validator.id;
-                      onValidatorSelect?.(validator);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  className="cursor-pointer"
+                  className="cursor-pointer border-0 bg-transparent p-0 w-full text-left"
                 >
                   <div
                     className={cn(
@@ -1705,7 +1681,7 @@ function RoundValidatorsInline({
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1753,7 +1729,7 @@ function RoundMinerScoresInline({
   roundData,
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundInfo?: any;
@@ -1761,7 +1737,7 @@ function RoundMinerScoresInline({
   roundData?: any;
   loading?: boolean;
   error?: string;
-}) {
+}>) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const roundStatus = (roundInfo?.status ??
@@ -2199,19 +2175,19 @@ function RoundTopMinersInline({
   roundNumber,
   roundInfo,
   minersData,
-  roundData, // ✅ Agregar roundData como prop
+  roundData,
   loading,
   error,
-}: {
+}: Readonly<{
   className?: string;
   selectedValidator?: ValidatorPerformance | null;
   roundNumber?: number;
   roundInfo?: any;
   minersData?: any;
-  roundData?: any; // ✅ Agregar roundData al tipo
+  roundData?: any;
   loading?: boolean;
   error?: string;
-}) {
+}>) {
   const { id } = useParams();
   const roundKey = extractRoundIdentifier(id);
   const roundStatus = (roundInfo?.status ??
@@ -2257,6 +2233,10 @@ function RoundTopMinersInline({
     return filtered.length > 0 ? filtered : [];
   }, [roundData, minersData, selectedValidator]);
 
+  const rewardsTitle = selectedValidator?.name
+    ? `Best Local Rewards - ${selectedValidator.name}`
+    : "Best Local Rewards";
+
   if (loading) {
     return (
       <WidgetCard
@@ -2291,7 +2271,7 @@ function RoundTopMinersInline({
   if (error) {
     return (
       <WidgetCard
-        title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={rewardsTitle}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2314,7 +2294,7 @@ function RoundTopMinersInline({
   if (!topMinersList.length) {
     return (
       <WidgetCard
-        title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+        title={rewardsTitle}
         className={cn(
           tallCardClass,
           accentClass,
@@ -2340,7 +2320,7 @@ function RoundTopMinersInline({
 
   return (
     <WidgetCard
-      title={`Best Local Rewards${selectedValidator?.name ? ` - ${selectedValidator.name}` : ""}`}
+      title={rewardsTitle}
       className={cn(
         tallCardClass,
         accentClass,
@@ -2426,7 +2406,7 @@ function RoundTopMinersInline({
                               : "text-white group-hover:scale-105"
                           )}
                         >
-                          {miner.name && miner.name.trim()
+                          {(miner?.name ?? "").trim()
                             ? miner.name
                             : `Miner ${miner.uid}`}
                         </RizzText>
@@ -2441,11 +2421,14 @@ function RoundTopMinersInline({
                           UID {miner.uid}
                         </span>
                       </div>
-                      {(miner.zero_reason ?? miner.zeroReason) && (Number(miner.reward ?? miner.local_avg_reward ?? 0) <= 0) && (
-                        <div className="mt-1.5 text-[11px] text-amber-200/90 font-medium">
-                          Reason: {(miner.zero_reason ?? miner.zeroReason).split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
-                        </div>
-                      )}
+                      {(() => {
+                        const zeroReason = miner?.zero_reason ?? miner?.zeroReason;
+                        return zeroReason && (Number(miner?.reward ?? miner?.local_avg_reward ?? 0) <= 0) ? (
+                          <div className="mt-1.5 text-[11px] text-amber-200/90 font-medium">
+                            Reason: {typeof zeroReason === "string" ? zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ") : String(zeroReason)}
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-end gap-1">
@@ -2518,6 +2501,20 @@ export default function Round() {
     data: unknown;
   } | null>(null);
   const [includeOwnDownloadedPayload, setIncludeOwnDownloadedPayload] = React.useState(false);
+  const ipfsDialogRef = React.useRef<HTMLDialogElement>(null);
+
+  React.useEffect(() => {
+    if (ipfsConsensusDetail && ipfsDialogRef.current) {
+      ipfsDialogRef.current.showModal();
+    }
+  }, [ipfsConsensusDetail]);
+
+  const closeIpfsDialog = React.useCallback(() => {
+    setIpfsConsensusDetail(null);
+    setIncludeOwnDownloadedPayload(false);
+    ipfsDialogRef.current?.close();
+  }, []);
+
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2586,7 +2583,6 @@ export default function Round() {
   }, [roundStatusData]);
 
   const roundNumberForLinks = roundStatusData?.round_in_season ?? roundFromKey;
-  const roundLabel = roundKey;
   const seasonSummary = seasonSummaryData?.summary ?? null;
   const validatorsDataPayload = validatorsViewData?.validators ?? [];
   const topMiners = React.useMemo(() => {
@@ -2613,10 +2609,7 @@ export default function Round() {
         seasonSummary.avg_eval_time && seasonSummary.avg_eval_time > 0
           ? seasonSummary.avg_eval_time
           : (fallbackTime ?? null);
-      const resolvedCost =
-        seasonSummary.avg_eval_cost != null
-          ? seasonSummary.avg_eval_cost
-          : fallbackCost;
+      const resolvedCost = seasonSummary.avg_eval_cost ?? fallbackCost;
       return [
         {
           uid: leaderUid,
@@ -3221,46 +3214,54 @@ export default function Round() {
       />
 
       {/* Selected validator metric cards */}
-      {roundDataLoading ? (
-        <>
-          <div className="flex items-center gap-3 mt-6 mb-4">
-            <Skeleton className="w-1.5 h-8 rounded-full bg-white/10" />
-            <Skeleton className="h-4 w-56 bg-white/10" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {Array.from({ length: 4 }, (_, index) => (
-              <div key={index} className={cn("h-36", skeletonCard)} />
-            ))}
-          </div>
-        </>
-      ) : selectedValidator ? (
-        <>
-          {/* Local metrics header */}
-          <div className="flex items-center gap-3 mt-6 mb-4">
-            <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
-            <div>
-              <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
-                Validator competition state
-              </span>
-              <span className="mx-2 text-white/30">·</span>
-              <span className="text-sm font-semibold text-sky-300">
-                {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
-              </span>
-              <p className="text-xs text-white/50 mt-0.5">
-                Best local rewards used by this validator for round competition
-              </p>
-            </div>
-          </div>
-          <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)]">
-            <LocalMetricCard card={selectedValidatorCards[0]} />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {selectedValidatorCards.slice(1).map((card) => (
-                <LocalMetricCard key={(card as any).key} card={card} />
-              ))}
-            </div>
-          </div>
-        </>
-      ) : null}
+      {(() => {
+        if (roundDataLoading) {
+          return (
+            <>
+              <div className="flex items-center gap-3 mt-6 mb-4">
+                <Skeleton className="w-1.5 h-8 rounded-full bg-white/10" />
+                <Skeleton className="h-4 w-56 bg-white/10" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div key={index} className={cn("h-36", skeletonCard)} />
+                ))}
+              </div>
+            </>
+          );
+        }
+        if (selectedValidator) {
+          return (
+            <>
+              {/* Local metrics header */}
+              <div className="flex items-center gap-3 mt-6 mb-4">
+                <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
+                <div>
+                  <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
+                    Validator competition state
+                  </span>
+                  <span className="mx-2 text-white/30">·</span>
+                  <span className="text-sm font-semibold text-sky-300">
+                    {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
+                  </span>
+                  <p className="text-xs text-white/50 mt-0.5">
+                    Best local rewards used by this validator for round competition
+                  </p>
+                </div>
+              </div>
+              <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)]">
+                <LocalMetricCard card={selectedValidatorCards[0]} />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {selectedValidatorCards.slice(1).map((card) => (
+                    <LocalMetricCard key={(card as any).key} card={card} />
+                  ))}
+                </div>
+              </div>
+            </>
+          );
+        }
+        return null;
+      })()}
 
       {/* IPFS & Consensus (validator detail) — always show section; cards clickable when data exists */}
       {selectedValidator && roundData?.validators && (() => {
@@ -3533,14 +3534,14 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() =>
-                    (setIncludeOwnDownloadedPayload(false),
+                  onClick={() => {
+                    setIncludeOwnDownloadedPayload(false);
                     setIpfsConsensusDetail({
                       type: "download",
                       title: "IPFS Downloaded — Payloads from other validators",
                       data: buildIpfsDownloadModalData(ipfsDown),
-                    }))
-                  }
+                    });
+                  }}
                 >
                   <div className={cn(cardTitleRowClass, "text-violet-400")}>
                     <PiCloudArrowDownDuotone className="h-5 w-5 flex-shrink-0" />
@@ -3572,28 +3573,24 @@ export default function Round() {
 
       {/* Modal: full IPFS / Consensus detail when user clicks a card */}
       {ipfsConsensusDetail && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => {
-            setIpfsConsensusDetail(null);
-            setIncludeOwnDownloadedPayload(false);
-          }}
-          role="dialog"
+        <dialog
+          ref={ipfsDialogRef}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 w-full max-w-none max-h-none border-0 bg-transparent open:flex open:items-center open:justify-center [&::backdrop]:bg-black/70 [&::backdrop]:backdrop-blur-sm"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
+          onClose={closeIpfsDialog}
+          onClick={(e) => {
+            if (e.target === ipfsDialogRef.current) closeIpfsDialog();
+          }}
         >
           <div
             className={cn("relative max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
-            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/20 px-6 py-4">
               <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
               <button
                 type="button"
-                onClick={() => {
-                  setIpfsConsensusDetail(null);
-                  setIncludeOwnDownloadedPayload(false);
-                }}
+                onClick={closeIpfsDialog}
                 className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Close"
               >
@@ -3625,10 +3622,12 @@ export default function Round() {
                   const data = (ipfsConsensusDetail.data ?? {}) as any;
                   const payloads = Array.isArray(data?.payloads) ? data.payloads : [];
                   const selfUid = Number(data?.self_validator_uid);
-                  const filteredPayloads =
-                    includeOwnDownloadedPayload || !Number.isFinite(selfUid)
-                      ? payloads
-                      : payloads.filter((entry: any) => Number(entry?.validator_uid) !== selfUid);
+                  let filteredPayloads: typeof payloads;
+                  if (includeOwnDownloadedPayload || !Number.isFinite(selfUid)) {
+                    filteredPayloads = payloads;
+                  } else {
+                    filteredPayloads = payloads.filter((entry: any) => Number(entry?.validator_uid) !== selfUid);
+                  }
                   const shownData = {
                     validators_participated: data?.validators_participated ?? payloads.length,
                     total_stake: data?.total_stake ?? null,
@@ -3661,7 +3660,7 @@ export default function Round() {
               )}
             </div>
           </div>
-        </div>
+        </dialog>
       )}
 
       {/* Charts */}
