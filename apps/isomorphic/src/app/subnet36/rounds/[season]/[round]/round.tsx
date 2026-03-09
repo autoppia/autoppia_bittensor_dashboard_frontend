@@ -55,6 +55,7 @@ import {
   useRoundStatusView,
   useRoundSeasonSummaryView,
   useRoundValidatorsView,
+  useAvailableRoundSeasons,
 } from "@/services/hooks/useRounds";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
@@ -293,6 +294,10 @@ function RoundHeaderInline({
   const roundParam = params.round as string | undefined;
   const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   const roundNumber = roundParam ? Number.parseInt(String(roundParam), 10) : undefined;
+  const {
+    data: availableSeasons,
+    loading: seasonsLoading,
+  } = useAvailableRoundSeasons();
 
   const isLoading = roundLoading || progressLoading;
 
@@ -331,6 +336,16 @@ function RoundHeaderInline({
     (targetKey?: string) => {
       if (!targetKey || targetKey === roundKey) return;
       // targetKey es "season/round" (ej. 83/19) - sin encodeURIComponent para mantener / como separador de ruta
+      router.push(`${routes.rounds}/${targetKey}`);
+    },
+    [router, roundKey]
+  );
+
+  const goToSeason = React.useCallback(
+    (targetSeason: number) => {
+      if (!Number.isFinite(targetSeason) || targetSeason <= 0) return;
+      const targetKey = `${targetSeason}/1`;
+      if (targetKey === roundKey) return;
       router.push(`${routes.rounds}/${targetKey}`);
     },
     [router, roundKey]
@@ -490,6 +505,21 @@ function RoundHeaderInline({
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
                   ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
                 </h1>
+                <div className="relative">
+                  <select
+                    value={String(round?.season ?? seasonParam ?? progressData?.season ?? "")}
+                    onChange={(event) => goToSeason(Number.parseInt(event.target.value, 10))}
+                    disabled={seasonsLoading || !availableSeasons?.length}
+                    className="appearance-none rounded-full border-2 border-cyan-400/70 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 px-4 py-2 pr-10 text-xs font-bold uppercase tracking-wider text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {(availableSeasons ?? []).map((season) => (
+                      <option key={season} value={season} className="bg-slate-900 text-white">
+                        Season {season}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretRightBold className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-90 text-white/80" />
+                </div>
                 <span
                   className={cn(
                     chipBase,
@@ -2702,9 +2732,9 @@ export default function Round() {
           hotkey: miner.hotkey ?? null,
           image: miner.image ?? null,
           local_rank: miner.competition_rank ?? null,
-          local_avg_reward: miner.best_local_reward ?? 0,
-          local_avg_eval_score: miner.best_local_eval_score ?? 0,
-          local_avg_eval_time: miner.best_local_eval_time ?? 0,
+          local_avg_reward: miner.local_avg_reward ?? null,
+          local_avg_eval_score: miner.local_avg_eval_score ?? null,
+          local_avg_eval_time: miner.local_avg_eval_time ?? null,
           best_local_reward: miner.best_local_reward ?? 0,
           best_local_eval_score: miner.best_local_eval_score ?? 0,
           best_local_eval_time: miner.best_local_eval_time ?? 0,
