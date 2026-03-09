@@ -895,6 +895,7 @@ function AgentValidators({
         return meta ? { ...run, __roundMeta: meta } : null;
       })
       .filter((run): run is AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } } => Boolean(run))
+      .filter((run) => selectedSeason == null || run.__roundMeta.season === selectedSeason)
       .sort((a, b) => {
         if (a.__roundMeta.season !== b.__roundMeta.season) {
           return b.__roundMeta.season - a.__roundMeta.season;
@@ -904,7 +905,7 @@ function AgentValidators({
         }
         return String(b.startTime ?? "").localeCompare(String(a.startTime ?? ""));
       });
-  }, [getRoundMeta, runs]);
+  }, [getRoundMeta, runs, selectedSeason]);
 
   const roundOptions = useMemo(() => {
     const options = [{ label: "All rounds", value: "all" }];
@@ -1179,21 +1180,23 @@ function AgentValidators({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
-                {postConsensus?.post_consensus_available ? (
+                {postConsensus ? (
                   <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
                     <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
                       <Text className="font-bold text-white text-base">Validator consensus</Text>
                       <Text className="text-xs text-white/60 tracking-wide">
-                        Final metrics after validator consensus
+                        {postConsensus.post_consensus_available
+                          ? "Final metrics after validator consensus"
+                          : "Consensus data for this round"}
                       </Text>
                     </div>
                     <div className="relative p-2 sm:p-5">
                       <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
                         {[
-                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                          { title: "Reward", metric: `${((postConsensus.post_consensus_avg_reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
                           { title: "Score", metric: `${((postConsensus.post_consensus_avg_eval_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
                           { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                          { title: "Tasks", metric: `${postConsensus.tasks_success ?? 0}/${postConsensus.tasks_received ?? 0}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
                           { title: "Websites", metric: String(postConsensus.websites_count ?? groupWebsitesCount ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
                           { title: "Avg Cost", metric: postConsensus.post_consensus_avg_eval_cost != null ? `$${Number(postConsensus.post_consensus_avg_eval_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                         ].map((stat) => {
@@ -1740,12 +1743,13 @@ export default function Page() {
     return seasons.length > 0 ? Math.max(...seasons) : undefined;
   }, [availableRounds]);
 
-  // Get miner historical data only when needed:
+  // Get miner historical data when needed:
   // - Historical tab
+  // - Runs tab (for validator consensus cards per round)
   // - Current tab in Effective mode (to resolve source best round)
   const shouldFetchHistorical =
     numericUidFromParam !== undefined &&
-    (viewMode === "historical" || websitePanelMode === "details");
+    (viewMode === "historical" || viewMode === "runs" || websitePanelMode === "details");
   // Always filter by season: use season from URL, or latest season as fallback
   const seasonForHistorical = seasonParam
     ? Number.parseInt(seasonParam, 10)
@@ -1799,6 +1803,15 @@ export default function Page() {
     }
     return undefined;
   }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
+  const shouldFetchBestRoundDetails =
+    viewMode === "current" &&
+    !selectedRoundFromQuery &&
+    !!bestRoundIdentifierFromAgentDetail &&
+    numericUidFromParam !== undefined;
+  const { data: bestRoundDetails } = useMinerRoundDetails(
+    shouldFetchBestRoundDetails ? bestRoundIdentifierFromAgentDetail : undefined,
+    numericUidFromParam
+  );
 
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -2192,7 +2205,7 @@ export default function Page() {
   ).toFixed(2);
   const sourceMetricsDetails = selectedRoundFromQuery
     ? minerRoundDetails ?? null
-    : {
+    : bestRoundDetails ?? {
         post_consensus_avg_reward:
           roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
         post_consensus_avg_eval_time:
@@ -2220,9 +2233,15 @@ export default function Page() {
   const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
   const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
   const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
-  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
-    ? effectivePerformanceByWebsite.length
-    : websitesSummary.unique;
+  const effectiveWebsitesCountRaw =
+    (sourceMetricsDetails as any)?.websites_count ??
+    (sourceMetricsDetails as any)?.websitesCount ??
+    (effectivePerformanceByWebsite.length > 0
+      ? effectivePerformanceByWebsite.length
+      : websitesSummary.unique);
+  const effectiveWebsitesCount = Number.isFinite(Number(effectiveWebsitesCountRaw))
+    ? Number(effectiveWebsitesCountRaw)
+    : 0;
   const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? agentDetail?.avg_cost_per_task ?? null;
   const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
   const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
@@ -2267,7 +2286,7 @@ export default function Page() {
     },
     {
       title: "Avg Reward",
-      metric: `${((displayedReward ?? 0) * 100).toFixed(1)}%`,
+      metric: `${((displayedReward ?? 0) * 100).toFixed(2)}%`,
       icon: LuTarget,
       ...METRIC_CARD_GRADIENTS.amber,
     },
