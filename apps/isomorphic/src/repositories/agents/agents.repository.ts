@@ -15,7 +15,6 @@ import {
   AgentPerformanceQueryParams,
   AgentData,
   AgentPerformanceMetrics,
-  AgentRunOverview,
   RewardRoundDataPoint,
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
