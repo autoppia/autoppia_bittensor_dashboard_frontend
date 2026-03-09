@@ -592,7 +592,7 @@ function RoundHeaderInline({
                   }
                   disabled={seasonsLoading || !seasonOptions.length}
                   className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
-                  selectClassName="!h-[42px] !rounded-xl !border-0 !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none"
+                  selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
                   dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
                 />
                 {/* Previous round (lower number) on the left */}
