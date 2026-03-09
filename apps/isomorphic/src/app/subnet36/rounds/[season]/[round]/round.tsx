@@ -56,10 +56,8 @@ import {
   useRoundSeasonSummaryView,
   useRoundValidatorsView,
 } from "@/services/hooks/useRounds";
-import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
   ValidatorPerformance,
-  MinerPerformance,
   BenchmarkPerformance,
   PostConsensusSummary,
 } from "@/repositories/rounds/rounds.types";
@@ -88,14 +86,15 @@ function extractRoundNumber(
   const identifier = extractRoundIdentifier(value);
   if (!identifier) return undefined;
   const normalized = identifier.toLowerCase();
-  const roundPatternMatch = normalized.match(/round[-_]?(\d+)/);
+  const roundPattern = /round[-_]?(\d+)/;
+  const roundPatternMatch = roundPattern.exec(normalized);
   if (roundPatternMatch?.[1]) {
     const parsed = Number.parseInt(roundPatternMatch[1], 10);
     if (Number.isFinite(parsed)) return parsed;
   }
   const digitMatches = normalized.match(/\d+/g);
   if (digitMatches && digitMatches.length > 0) {
-    const lastSegment = digitMatches[digitMatches.length - 1];
+    const lastSegment = digitMatches.at(-1) ?? "";
     const parsed = Number.parseInt(lastSegment, 10);
     if (Number.isFinite(parsed)) return parsed;
   }
@@ -158,8 +157,8 @@ const normalizeScore = (value?: number | null): number => {
 const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "");
 
 const BENCHMARK_COLORS: Record<string, string> = {
   openai: "#2563EB",
@@ -281,12 +280,14 @@ function RoundHeaderInline({
   roundLoading,
   progressData,
   progressLoading,
-}: {
-  round?: any;
+}: Readonly<{
+  round?: Record<string, unknown>;
   roundLoading?: boolean;
-  progressData?: any;
+  progressData?: Record<string, unknown> | null;
   progressLoading?: boolean;
-}) {
+}>) {
+  const progress = progressData as { previousRound?: string | number; nextRound?: string | number; season_number?: number } | null | undefined;
+  const roundObj = round as { season_number?: number } | undefined;
   const params = useParams();
   const router = useRouter();
   const seasonParam = params.season as string | undefined;
@@ -299,9 +300,9 @@ function RoundHeaderInline({
   // ✅ Obtener neighborRounds desde progressData (roundKey = season/round para coincidir con ruta [season]/[round])
   // El backend puede devolver previousRound/nextRound como "83/19" (string) o como 19 (número)
   const neighborRounds = React.useMemo(() => {
-    const previousRound = progressData?.previousRound;
-    const nextRound = progressData?.nextRound;
-    const season = seasonParam ?? round?.season_number;
+    const previousRound = progress?.previousRound;
+    const nextRound = progress?.nextRound;
+    const season = seasonParam ?? roundObj?.season_number;
     const buildKey = (r: number) => (season != null ? `${season}/${r}` : null);
     const toRoundKey = (val: string | number | null | undefined): string | null => {
       if (val == null) return null;
@@ -325,7 +326,7 @@ function RoundHeaderInline({
       previous: prevKey != null ? { roundNumber: extractRoundNum(previousRound), roundKey: prevKey } : null,
       next: nextKeyVal != null ? { roundNumber: extractRoundNum(nextRound), roundKey: nextKeyVal } : null,
     };
-  }, [progressData, seasonParam, round?.season_number]);
+  }, [progressData, progress, seasonParam, round, roundObj?.season_number]);
 
   const goToRound = React.useCallback(
     (targetKey?: string) => {
@@ -336,35 +337,36 @@ function RoundHeaderInline({
     [router, roundKey]
   );
 
-  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
-  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
+  const progressTyped = progressData as { startBlock?: number; endBlock?: number; currentBlock?: number; blocksRemaining?: number; progress?: number; status?: string } | null | undefined;
+  const roundTyped = round as { startBlock?: number; endBlock?: number; currentBlock?: number; validatorRounds?: unknown[]; progress?: number; status?: string; roundInSeason?: number; season?: number } | undefined;
+  const startBlock = progressTyped?.startBlock ?? roundTyped?.startBlock ?? 0;
+  const endBlock = progressTyped?.endBlock ?? roundTyped?.endBlock ?? 0;
   const currentBlock =
-    progressData?.currentBlock ?? round?.currentBlock ?? startBlock;
+    progressTyped?.currentBlock ?? roundTyped?.currentBlock ?? startBlock;
   const blocksRemaining =
-    progressData?.blocksRemaining ??
+    progressTyped?.blocksRemaining ??
     (typeof endBlock === "number" && typeof currentBlock === "number"
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
   // ✅ Usar status desde progressData
-  const progressValue = progressData?.progress ?? round?.progress ?? 0;
-  const backendStatus = progressData?.status ?? round?.status;
+  const progressValue = progressTyped?.progress ?? roundTyped?.progress ?? 0;
+  const backendStatus = progressTyped?.status ?? roundTyped?.status;
 
   // Check if validator rounds have evaluation results (tasks evaluated)
-  const validatorRounds = round?.validatorRounds ?? [];
-  const hasEvaluationsComplete = validatorRounds.some((vr: any) => {
+  const validatorRounds: unknown[] = Array.isArray(roundTyped?.validatorRounds) ? roundTyped.validatorRounds : [];
+  const hasEvaluationsComplete = validatorRounds.some((vr: unknown) => {
+    const v = vr as Record<string, unknown>;
     // Check if this validator has finished evaluating
-    if (vr.status === "evaluating_finished" || vr.status === "finished") {
+    if (v.status === "evaluating_finished" || v.status === "finished") {
       return true;
     }
     // Check if there are agent runs with evaluation results
-    const agentRuns = vr.agentEvaluationRuns ?? [];
-    return agentRuns.some((run: any) => {
-      const evalResults = run.evaluation_results ?? run.evaluationResults ?? [];
-      return (
-        evalResults.length > 0 &&
-        evalResults.length >= (run.total_tasks ?? run.totalTasks ?? 0)
-      );
+    const agentRuns = (v.agentEvaluationRuns ?? []) as Array<Record<string, unknown>>;
+    return agentRuns.some((run: Record<string, unknown>) => {
+      const evalResults = (run.evaluation_results ?? run.evaluationResults ?? []) as unknown[];
+      const total = Number(run.total_tasks ?? run.totalTasks ?? 0);
+      return evalResults.length > 0 && evalResults.length >= total;
     });
   });
 
@@ -488,7 +490,7 @@ function RoundHeaderInline({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
-                  ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
+                  ROUND {String(roundTyped?.roundInSeason ?? roundParam ?? (progressData as { roundInSeason?: number })?.roundInSeason ?? roundNumber ?? "—")}
                 </h1>
                 <span
                   className={cn(
@@ -497,7 +499,7 @@ function RoundHeaderInline({
                   )}
                 >
                   <span className="h-2.5 w-2.5 rounded-full bg-white shadow-lg" />
-                  Season {round?.season ?? seasonParam ?? progressData?.season ?? "—"}
+                  Season {String(roundTyped?.season ?? seasonParam ?? (progressData as { season?: number })?.season ?? "—")}
                 </span>
                 <span
                   className={cn(
@@ -2736,7 +2738,7 @@ export default function Round() {
     github_url?: string | null;
     avg_reward?: number;
     avg_eval_score?: number;
-    avg_eval_time?: number;
+    avg_eval_time?: number | null;
   } | null>(() => {
     if (!Array.isArray(topMiners) || topMiners.length === 0) return null;
     return topMiners[0] ?? null;
@@ -2753,7 +2755,7 @@ export default function Round() {
     github_url?: string | null;
     avg_reward?: number;
     avg_eval_score?: number;
-    avg_eval_time?: number;
+    avg_eval_time?: number | null;
   } | null>(() => {
     if (validatorsDataPayload && selectedValidator?.id) {
       const validatorUid = selectedValidator.id.replace("validator-", "");
@@ -2963,7 +2965,7 @@ export default function Round() {
               </p>
               <div className="mt-8 flex justify-center gap-4">
                 <Button
-                  onClick={() => window.location.reload()}
+                  onClick={() => globalThis.location.reload()}
                   className="!bg-gradient-to-r !from-blue-500 !to-cyan-500 !text-white !font-bold !px-6 !py-3 !rounded-xl !shadow-lg hover:!shadow-xl hover:!scale-105 !transition-all !duration-300"
                 >
                   Retry
