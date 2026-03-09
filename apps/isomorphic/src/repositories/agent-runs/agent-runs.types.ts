@@ -123,6 +123,8 @@ export interface AgentRunTaskAction {
 export interface AgentRunStats {
   runId?: string;
   overallReward?: number;
+  /** Reason for zero reward when applicable (e.g. over_cost_limit, deploy_failed) */
+  zeroReason?: string | null;
   totalTasks: number;
   websites: number;
   avg_reward: number;
