@@ -48,9 +48,10 @@ export const MenuTrigger = forwardRef<HTMLElement, MenuTargetProps>(
 
 		const onMouseLeave = (event: React.MouseEvent) => {
 			children.props.onMouseLeave?.(event);
-			if (ctx.trigger === "hover") {
-				ctx.closeDropdown();
-			} else if (ctx.trigger === "click-hover" && !ctx.openedViaClick) {
+			if (
+				ctx.trigger === "hover" ||
+				(ctx.trigger === "click-hover" && !ctx.openedViaClick)
+			) {
 				ctx.closeDropdown();
 			}
 		};

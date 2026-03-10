@@ -19,7 +19,7 @@ export default function AvatarCard({
   description,
   avatarProps,
   nameClassName,
-}: AvatarCardProps) {
+}: Readonly<AvatarCardProps>) {
   return (
     <figure className={cn("flex items-center gap-3", className)}>
       <Avatar name={name} src={src} {...avatarProps} />

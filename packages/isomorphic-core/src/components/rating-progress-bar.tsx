@@ -13,7 +13,7 @@ export default function RatingProgressBar({
   ratingCount,
   totalReviews,
   progressBarClassName = 'bg-primary',
-}: RatingProgressProps) {
+}: Readonly<RatingProgressProps>) {
   return (
     <div className="flex items-center text-sm">
       <div className="flex w-11 shrink-0 items-center space-x-1 font-semibold rtl:space-x-reverse">

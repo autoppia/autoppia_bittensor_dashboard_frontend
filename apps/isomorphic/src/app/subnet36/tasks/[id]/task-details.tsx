@@ -49,8 +49,8 @@ type QuickInfoItem = {
 const formatLabel = (value?: string) => {
   if (!value) return "Unknown";
   return value
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase()
     .split(" ")
@@ -74,8 +74,8 @@ const formatDuration = (value?: number) => {
   return `${seconds}s`;
 };
 
-const formatDateTime = (value?: string) => {
-  if (!value) return "—";
+const formatDateTime = (value?: string | null) => {
+  if (value == null || value === "") return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleString();
@@ -123,15 +123,30 @@ const formatTokens = (value?: number | null) => {
   return value.toLocaleString();
 };
 
+function formatEpochDisplay(roundInfo: { startEpoch?: number | null; endEpoch?: number | null; status?: string | null } | null | undefined): string {
+  if (roundInfo?.startEpoch != null) {
+    let endPart: string;
+    if (roundInfo?.endEpoch != null) {
+      endPart = String(roundInfo.endEpoch);
+    } else if (roundInfo?.status && String(roundInfo.status).toLowerCase() === "active") {
+      endPart = "Active";
+    } else {
+      endPart = "—";
+    }
+    return `${roundInfo.startEpoch} → ${endPart}`;
+  }
+  return "—";
+}
+
 function InfoRow({
   label,
   value,
   valueClassName,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   valueClassName?: string;
-}) {
+}>) {
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
       <span className="text-white/55">{label}</span>
@@ -154,7 +169,7 @@ function QuickInfoTile({
   accentBarClass,
   iconWrapperClass,
   iconColorClass,
-}: QuickInfoItem) {
+}: Readonly<QuickInfoItem>) {
   const baseClass = "mt-1 block text-sm font-semibold";
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#11162a]/95 p-4 text-slate-100 shadow-[0_14px_34px_rgba(5,8,20,0.65)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
@@ -203,7 +218,7 @@ type ContextCardProps = {
   children: ReactNode;
 };
 
-function ContextCard({ title, Icon, gradient, children }: ContextCardProps) {
+function ContextCard({ title, Icon, gradient, children }: Readonly<ContextCardProps>) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1424]/95 p-5 text-slate-100 shadow-[0_20px_44px_rgba(4,8,20,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
       <div
@@ -277,7 +292,7 @@ function StatCard({
   iconColorClass,
   description,
   valueClassName,
-}: StatCardConfig) {
+}: Readonly<StatCardConfig>) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2d3452]/70 bg-[#0f1423]/95 text-slate-100 shadow-[0_18px_44px_rgba(4,8,20,0.68)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#6b7cdf]/60">
       <div
@@ -311,6 +326,11 @@ function StatCard({
   );
 }
 
+const LOADING_INFO_KEYS = ["task-loading-info-0", "task-loading-info-1", "task-loading-info-2", "task-loading-info-3", "task-loading-info-4"] as const;
+const LOADING_PRIMARY_KEYS = ["task-loading-primary-0", "task-loading-primary-1", "task-loading-primary-2"] as const;
+const LOADING_META_KEYS = ["task-loading-meta-0", "task-loading-meta-1", "task-loading-meta-2"] as const;
+const LOADING_CONTEXT_KEYS = ["task-loading-context-0", "task-loading-context-1", "task-loading-context-2", "task-loading-context-3"] as const;
+
 export default function TaskDetails() {
   const { id } = useParams();
 
@@ -331,25 +351,25 @@ export default function TaskDetails() {
           <div className="space-y-4 lg:col-span-8">
             <div className="h-4 w-40 rounded-full bg-slate-800/70" />
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {LOADING_INFO_KEYS.map((key) => (
                 <div
-                  key={`task-loading-info-${index}`}
+                  key={key}
                   className="h-24 rounded-2xl border border-slate-800/70 bg-slate-900/60"
                 />
               ))}
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
+              {LOADING_PRIMARY_KEYS.map((key) => (
                 <div
-                  key={`task-loading-primary-${index}`}
+                  key={key}
                   className="h-32 rounded-2xl border border-slate-800/70 bg-slate-900/60"
                 />
               ))}
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
+              {LOADING_META_KEYS.map((key) => (
                 <div
-                  key={`task-loading-meta-${index}`}
+                  key={key}
                   className="h-28 rounded-2xl border border-slate-800/70 bg-slate-900/60"
                 />
               ))}
@@ -357,9 +377,9 @@ export default function TaskDetails() {
             <div className="h-32 rounded-2xl border border-slate-800/70 bg-slate-900/60" />
           </div>
           <div className="space-y-4 lg:col-span-4">
-            {Array.from({ length: 4 }).map((_, index) => (
+            {LOADING_CONTEXT_KEYS.map((key) => (
               <div
-                key={`task-loading-context-${index}`}
+                key={key}
                 className="h-36 rounded-2xl border border-slate-800/70 bg-slate-900/60"
               />
             ))}
@@ -427,23 +447,31 @@ export default function TaskDetails() {
   const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId ?? "";
   const statusLabel = formatLabel(taskData.status);
 
+  let roundDisplayValue: string;
+  if (roundInfo?.roundNumber != null) {
+    roundDisplayValue = `#${roundInfo.roundNumber}`;
+  } else if (roundInfo?.validatorRoundId) {
+    roundDisplayValue = truncateMiddle(roundInfo.validatorRoundId, 6);
+  } else {
+    roundDisplayValue = "—";
+  }
+  const roundHref = ((): string | undefined => {
+    const key =
+      roundInfo?.roundNumber == null
+        ? (roundInfo?.validatorRoundId ?? undefined)
+        : `round_${roundInfo.roundNumber}`;
+    if (key != null && key !== "") {
+      return `${routes.rounds}/${encodeURIComponent(String(key))}`;
+    }
+    return undefined;
+  })();
+
   const quickInfoItems: QuickInfoItem[] = [
     {
       label: "Round",
-      value:
-        roundInfo?.roundNumber != null
-          ? `#${roundInfo.roundNumber}`
-          : roundInfo?.validatorRoundId
-            ? truncateMiddle(roundInfo.validatorRoundId, 6)
-            : "—",
+      value: roundDisplayValue,
       subValue: roundInfo?.status ? formatLabel(roundInfo.status) : undefined,
-      href: ((): string | undefined => {
-        const key =
-          roundInfo?.roundNumber != null
-            ? `round_${roundInfo.roundNumber}`
-            : roundInfo?.validatorRoundId;
-        return key ? `${routes.rounds}/${encodeURIComponent(key)}` : undefined;
-      })(),
+      href: roundHref,
       Icon: PiClockCountdown,
       valueClassName: "font-mono text-base tracking-tight",
       accentBarClass:
@@ -706,18 +734,7 @@ export default function TaskDetails() {
 	                  />
                   <InfoRow
                     label="Epoch"
-                    value={
-                      roundInfo?.startEpoch !== undefined &&
-                      roundInfo?.startEpoch !== null
-                        ? `${roundInfo.startEpoch} → ${
-                            roundInfo?.endEpoch ??
-                            (roundInfo?.status &&
-                            String(roundInfo.status).toLowerCase() === "active"
-                              ? "Active"
-                              : "—")
-                          }`
-                        : "—"
-                    }
+                    value={formatEpochDisplay(roundInfo)}
                   />
                 </div>
               </ContextCard>

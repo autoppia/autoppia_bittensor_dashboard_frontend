@@ -16,7 +16,7 @@ interface ProductProps {
 export default function ProductClassicCard({
   product,
   className,
-}: ProductProps) {
+}: Readonly<ProductProps>) {
   const { name, description, price, image, salePrice, discount } = product;
 
   const { addItemToCart, isInCart } = useCart();
@@ -35,14 +35,14 @@ export default function ProductClassicCard({
             className="h-full w-full object-cover"
           />
         </div>
-        {discount ? (
+        {discount && (
           <Text
             as="span"
             className="absolute start-5 top-5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold dark:bg-gray-200 dark:text-gray-700"
           >
             {discount}% Discount
           </Text>
-        ) : null}
+        )}
       </div>
 
       <div className="pt-3">
@@ -55,7 +55,7 @@ export default function ProductClassicCard({
         </Text>
         <div className="mt-2 flex items-center font-semibold text-gray-900">
           {toCurrency(Number(salePrice))}
-          {price && (
+          {Boolean(price) && (
             <del className="ps-1.5 text-[13px] font-normal text-gray-500">
               {toCurrency(Number(price))}
             </del>
@@ -79,7 +79,7 @@ export default function ProductClassicCard({
   );
 }
 
-function QuantityControl({ item }: { item: CartItem }) {
+function QuantityControl({ item }: Readonly<{ item: CartItem }>) {
   const { addItemToCart, removeItemFromCart, getItemFromCart } = useCart();
   return (
     <div className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 px-1 duration-200 hover:border-gray-900">
@@ -94,7 +94,7 @@ function QuantityControl({ item }: { item: CartItem }) {
         {getItemFromCart(item.id).quantity}
       </span>
       <button
-        title="Decrement"
+        title="Increment"
         className="flex items-center justify-center rounded p-2 duration-200 hover:bg-gray-100 hover:text-gray-900"
         onClick={() => addItemToCart(item, 1)}
       >

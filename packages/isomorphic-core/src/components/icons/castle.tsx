@@ -1,6 +1,6 @@
 export default function CastleIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 496" {...props}>
       <path fill="#d3a06c" d="m248 64 64 72H184z" />

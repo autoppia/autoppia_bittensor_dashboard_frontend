@@ -55,6 +55,11 @@ const sotaAgents = [
 ];
 
 type LeaderboardSource = LeaderboardData & Record<string, unknown>;
+/** API may return snake_case; use this when reading raw payload or entry */
+type LeaderboardEntryWithSnake = LeaderboardData & {
+  winner_uid?: number | null;
+  winner_name?: string | null;
+};
 type NormalizedLeaderboardDatum = LeaderboardData & {
   roundLabel: string;
   winnerUid?: number | null;
@@ -69,7 +74,7 @@ const resolveRoundNumber = (value: unknown): number | undefined => {
     return undefined;
   }
   if (typeof value === "string") {
-    const match = value.match(/\d+/);
+    const match = /\d+/.exec(value);
     if (match) {
       const parsed = Number.parseInt(match[0] ?? "", 10);
       if (!Number.isNaN(parsed) && parsed > 0) {
@@ -97,7 +102,7 @@ export default function MinerChart({
   className,
   targetHeight,
   season,
-}: MinerChartProps) {
+}: Readonly<MinerChartProps>) {
   const [timeRange, setTimeRange] = useState<FilterOption>("7R"); // Default to 7R
   // Get leaderboard data from API
   const apiTimeRange = timeRange === "All" ? "all" : timeRange;
@@ -174,8 +179,8 @@ export default function MinerChart({
           ...entry,
           round: normalizedRound,
           roundLabel: deriveRoundLabel(labelSource, normalizedRound),
-          winnerUid: entry.winnerUid ?? (entry as any).winner_uid,
-          winnerName: entry.winnerName ?? (entry as any).winner_name,
+          winnerUid: entry.winnerUid ?? (entry as LeaderboardEntryWithSnake).winner_uid,
+          winnerName: entry.winnerName ?? (entry as LeaderboardEntryWithSnake).winner_name,
         });
         return acc;
       },
@@ -260,11 +265,11 @@ export default function MinerChart({
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     return effectiveChartSource.map((entry) => ({
       ...entry,
-      reward: scaleScoreValue(entry.reward ?? entry.post_consensus_reward ?? entry.subnet36) ?? 0,
-      subnet36: scaleScoreValue(entry.reward ?? entry.post_consensus_reward ?? entry.subnet36) ?? 0,
-      openai_cua: scaleScoreValue((entry as any).openai_cua),
-      anthropic_cua: scaleScoreValue((entry as any).anthropic_cua),
-      browser_use: scaleScoreValue((entry as any).browser_use),
+      reward: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      subnet36: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      openai_cua: scaleScoreValue((entry as Record<string, unknown>).openai_cua as number | null | undefined),
+      anthropic_cua: scaleScoreValue((entry as Record<string, unknown>).anthropic_cua as number | null | undefined),
+      browser_use: scaleScoreValue((entry as Record<string, unknown>).browser_use as number | null | undefined),
     }));
   }, [effectiveChartSource]);
 
@@ -340,37 +345,23 @@ export default function MinerChart({
     return chartData.slice(-totalRounds);
   }, [chartData, timeRange]);
 
-  // Generate X-axis ticks from the same visible slice shown in the chart.
   const xAxisTicks = useMemo<number[]>(() => {
-    if (!filteredData.length) {
-      return [];
-    }
+    if (!filteredData.length) return [];
     const rounds = filteredData.map((d) => d.round);
     const minRound = Math.min(...rounds);
     const maxRound = Math.max(...rounds);
-
     const ticks: number[] = [];
     const startTick = Math.ceil(minRound / 4) * 4;
-    for (let i = startTick; i <= maxRound; i += 4) {
-      ticks.push(i);
-    }
-
-    if (!ticks.includes(minRound)) {
-      ticks.unshift(minRound);
-    }
-    if (!ticks.includes(maxRound)) {
-      ticks.push(maxRound);
-    }
-
+    for (let i = startTick; i <= maxRound; i += 4) ticks.push(i);
+    if (!ticks.includes(minRound)) ticks.unshift(minRound);
+    if (!ticks.includes(maxRound)) ticks.push(maxRound);
     return ticks.sort((a, b) => a - b);
   }, [filteredData]);
 
   const roundLabelMap = useMemo(() => {
     const map = new Map<number, string>();
     chartData.forEach((entry) => {
-      if (typeof entry.round === "number") {
-        map.set(entry.round, entry.roundLabel);
-      }
+      if (typeof entry.round === "number") map.set(entry.round, entry.roundLabel);
     });
     return map;
   }, [chartData]);
@@ -433,30 +424,16 @@ export default function MinerChart({
     return "";
   }, []);
 
-  const tooltipLabelFormatter = useCallback(
-    (value: number | string) => {
-      const numeric = resolveRoundNumber(value);
-      if (numeric !== undefined) {
-        return roundLabelMap.get(numeric) ?? `Round ${numeric}`;
-      }
-      if (typeof value === "string" && value.trim().length > 0) {
-        return value.trim();
-      }
-      return "Round";
-    },
-    [roundLabelMap]
-  );
-
   // Custom tooltip to show winner info
   const CustomLeaderboardTooltip = useCallback(
     ({ active, payload, label }: any) => {
-      if (!active || !payload || !payload.length) return null;
+      if (!active || !payload?.length) return null;
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
       const roundNum = data.round;
-      const reward = data.reward ?? data.post_consensus_reward ?? data.subnet36;
-      const winnerName = data.winnerName || (data as any).winner_name;
-      const winnerUid = data.winnerUid ?? (data as any).winner_uid;
+      const reward = (data as Record<string, unknown>).reward ?? (data as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
+      const winnerName = data.winnerName ?? (data as LeaderboardEntryWithSnake).winner_name;
+      const winnerUid = data.winnerUid ?? (data as LeaderboardEntryWithSnake).winner_uid;
 
       return (
         <div
@@ -477,7 +454,7 @@ export default function MinerChart({
             </p>
 
             {/* Winner info */}
-            {winnerName && winnerUid !== null && winnerUid !== undefined && (
+            {winnerName && winnerUid != null && (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span style={{ color: "#9ca3af" }} className="text-xs">

@@ -35,6 +35,30 @@ interface MenuProps {
   offset?: number;
 }
 
+function findElement(element: HTMLElement, selector: string): HTMLElement | null {
+  let current: HTMLElement | null = element;
+  while (current !== null) {
+    current = current.parentElement;
+    if (current?.matches(selector)) {
+      return current;
+    }
+  }
+  return null;
+}
+
+function getItemIndex(node: HTMLButtonElement): number | null {
+  if (!node) {
+    return null;
+  }
+
+  const items = Array.from(
+    findElement(node, '[data-menu-dropdown]')?.querySelectorAll(
+      '[data-menu-item]'
+    ) ?? []
+  );
+  return items.indexOf(node);
+}
+
 export default function Menu({
   placement,
   offset,
@@ -58,7 +82,7 @@ export default function Menu({
   menuItemTabIndex = -1,
   className,
   ...props
-}: MenuProps) {
+}: Readonly<MenuProps>) {
   const [openedViaClick, setOpenedViaClick] = useState(false);
   const [hovered, { setHovered, resetHovered }] = useHovered();
 
@@ -90,27 +114,6 @@ export default function Menu({
     closeDelay,
     openDelay,
   });
-
-  function findElement(element: HTMLElement, selector: string) {
-    let isElement: HTMLElement | null = element;
-    while (
-      (isElement = isElement.parentElement) &&
-      !isElement.matches(selector)
-    );
-    return isElement;
-  }
-
-  function getItemIndex(node: HTMLButtonElement) {
-    if (!node) {
-      return null;
-    }
-
-    return Array.from(
-      findElement(node, '[data-menu-dropdown]')?.querySelectorAll(
-        '[data-menu-item]'
-      ) || []
-    ).findIndex((element) => element === node);
-  }
 
   useUpdate(() => {
     resetHovered();

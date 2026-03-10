@@ -5,7 +5,9 @@ import TrashIcon from "@core/components/icons/trash";
 import { PiDotsThreeVerticalBold, PiXBold } from "react-icons/pi";
 import { ActionIcon, Button, Popover } from "rizzui";
 
-export function ReviewTableMoreAction({ onDelete }: { onDelete?: () => void }) {
+export function ReviewTableMoreAction({
+  onDelete,
+}: Readonly<{ onDelete?: () => void }>) {
   return (
     <Popover placement="left">
       <Popover.Trigger>

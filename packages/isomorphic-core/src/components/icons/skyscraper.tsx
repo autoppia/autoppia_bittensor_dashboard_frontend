@@ -1,6 +1,6 @@
 export default function SkyscraperIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 0 511 512" {...props}>
       <path fill="#ffe6c0" d="M205.26 28.52 157.1 74.16h96.35zm0 0" />

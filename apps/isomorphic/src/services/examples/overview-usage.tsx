@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { useOverviewData, useOverviewMetrics, useValidators } from '../hooks/useOverview';
+import type { ValidatorData } from '@/repositories/overview/overview.types';
 
 // Example 1: Using the combined hook for overview page
 export function OverviewPageExample() {
@@ -37,7 +38,7 @@ export function OverviewPageExample() {
       {/* Validators */}
       <div>
         <h2>Validators</h2>
-        {data.validators?.validators.map((validator) => (
+        {(data.validators?.data?.validators ?? []).map((validator: ValidatorData) => (
           <div key={validator.id}>
             <h3>{validator.name ?? "—"}</h3>
             <p>Status: {validator.status}</p>
@@ -107,7 +108,7 @@ export function ValidatorsExample() {
     <div>
       <h2>Top Validators by Weight</h2>
       <div className="space-y-4">
-        {validators?.validators.map((validator) => (
+        {(validators?.data?.validators ?? []).map((validator: ValidatorData) => (
           <div key={validator.id} className="border p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div>

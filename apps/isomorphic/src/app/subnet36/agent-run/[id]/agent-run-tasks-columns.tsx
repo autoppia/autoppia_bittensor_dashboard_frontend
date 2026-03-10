@@ -66,8 +66,7 @@ export const agentRunTasksColumns = [
     header: "Score",
     cell: ({ row }) => {
       const score = row.original.score;
-      let scoreColor = "text-gray-600"; // Default color
-
+      let scoreColor: string;
       if (score >= 0.8) {
         scoreColor = "text-green-500"; // High performance - green
       } else if (score >= 0.6) {
@@ -77,7 +76,6 @@ export const agentRunTasksColumns = [
       } else {
         scoreColor = "text-red-500"; // Poor performance - red
       }
-
       return (
         <Text className={`font-medium ${scoreColor}`}>
           {score.toFixed(2)}
@@ -104,8 +102,8 @@ export const agentRunTasksColumns = [
         href={`${routes.tasks}/${row.original.id}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
-        <Button
-          variant="outline"
+        <Button 
+          variant="outline" 
           size="sm"
           className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >

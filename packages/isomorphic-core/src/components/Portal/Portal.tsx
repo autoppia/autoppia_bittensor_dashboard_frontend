@@ -5,7 +5,7 @@ import { assignRef } from '../../ui/carbon-menu/popover/use-merged-ref';
 
 function createPortalNode(props: React.ComponentPropsWithoutRef<'div'>) {
   const node = document.createElement('div');
-  node.setAttribute('data-portal', 'true');
+  node.dataset.portal = 'true';
   typeof props.className === 'string' &&
     node.classList.add(...props.className.split(' ').filter(Boolean));
   typeof props.style === 'object' && Object.assign(node.style, props.style);
@@ -28,11 +28,14 @@ export const Portal = forwardRef<HTMLDivElement, PortalProps>(
 
     useIsomorphicEffect(() => {
       setMounted(true);
-      nodeRef.current = !target
-        ? createPortalNode(props)
-        : typeof target === 'string'
-          ? document.querySelector(target)
-          : target;
+      let resolvedTarget: HTMLElement | null = null;
+      if (target) {
+        resolvedTarget =
+          typeof target === 'string'
+            ? document.querySelector<HTMLElement>(target)
+            : target;
+      }
+      nodeRef.current = resolvedTarget ?? createPortalNode(props);
 
       assignRef(ref, nodeRef.current);
 
@@ -42,7 +45,7 @@ export const Portal = forwardRef<HTMLDivElement, PortalProps>(
 
       return () => {
         if (!target && nodeRef.current) {
-          document.body.removeChild(nodeRef.current);
+          nodeRef.current.remove();
         }
       };
     }, [target]);

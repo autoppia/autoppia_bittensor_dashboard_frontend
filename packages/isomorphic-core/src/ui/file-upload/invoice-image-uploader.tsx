@@ -6,10 +6,11 @@ import cn from "../../utils/class-names";
 import UploadIcon from "../../components/shape/upload";
 import React, { ChangeEvent, useState } from "react";
 import { PiPencilBold, PiTrashBold } from "react-icons/pi";
+import type { FieldValues, UseFormSetValue } from "react-hook-form";
 
 interface InvoiceImageUploaderProps {
   name: string;
-  setValue: any;
+  setValue: UseFormSetValue<FieldValues>;
   className?: string;
   imageClassName?: string;
   dropZoneClassName?: string;
@@ -23,7 +24,7 @@ export default function InvoiceImageUploader({
   imageClassName,
   dropZoneClassName,
   uploaderText = <>Upload Logo Recommended size 100x100 </>,
-}: InvoiceImageUploaderProps) {
+}: Readonly<InvoiceImageUploaderProps>) {
   const inputRef = React.createRef<HTMLInputElement>();
   const [file, setFile] = useState<string | null>(null);
 
@@ -102,11 +103,11 @@ function ActionButton({
   onClick,
   children,
   className,
-}: {
+}: Readonly<{
   className?: string;
   onClick: () => void;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <button
       className={cn(

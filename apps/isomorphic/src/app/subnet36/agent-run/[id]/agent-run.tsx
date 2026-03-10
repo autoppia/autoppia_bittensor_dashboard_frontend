@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import PageHeader from "@/app/shared/page-header";
 import { CHIP_STYLES } from "@/config/theme-styles";
-import AgentRunPersonasDynamic from "./agent-run-personas-dynamic";
 import AgentRunStatsDynamic from "./agent-run-stats-dynamic";
 import AgentRunDetailDynamic from "./agent-run-detail-dynamic";
 import AgentRunSummaryDynamic from "./agent-run-summary-dynamic";
@@ -14,14 +13,20 @@ import { PiArrowLeftLight } from "react-icons/pi";
 import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import { routes } from "@/config/routes";
 
-const HIGHLIGHT_COLOR = "#FDF5E6";
+function getRoundLabel(info: { round?: { roundNumber?: unknown; validatorRoundId?: unknown } } | null): string {
+  const roundId = info?.round?.roundNumber ?? info?.round?.validatorRoundId ?? "";
+  if (typeof roundId === "number" || (typeof roundId === "string" && roundId !== "")) {
+    return String(roundId);
+  }
+  return "—";
+}
+
 export default function AgentRun() {
   const { id } = useParams();
   const runId = Array.isArray(id) ? id[0] : (id ?? "");
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
   const [period, setPeriod] = useState<string | null>(null);
 
-  // Use the complete endpoint for all data in one call
   const {
     isLoading,
     error,
@@ -31,36 +36,34 @@ export default function AgentRun() {
     info,
   } = useAgentRunComplete(runId);
 
+  const pageHeaderDescription = useMemo(
+    () => (
+      <span className="flex flex-wrap items-center gap-2">
+        <span>Validator Round ID:</span>
+        <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1 font-mono`}>
+          {getRoundLabel(info)}
+        </span>
+        <span className="ms-2">Agent Run ID:</span>
+        <span className={`${CHIP_STYLES.base} ${CHIP_STYLES.completed} !px-3 !py-1 font-mono`}>
+          {runId}
+        </span>
+      </span>
+    ),
+    [info, runId]
+  );
+
+  const summary = useMemo<Record<string, unknown> | null>(() => {
+    if (!info) return null;
+    const infoWithAgent = info as { miner?: { agentId?: string }; validator?: { agentId?: string } };
+    const agentId = infoWithAgent.miner?.agentId ?? infoWithAgent.validator?.agentId;
+    return agentId == null ? null : { agentId };
+  }, [info]);
+
   return (
     <div className="w-full max-w-[1280px] mx-auto">
       <PageHeader
         title="Agent Run Details"
-        description={(() => {
-          const roundId = (info?.round?.roundNumber ??
-            info?.round?.validatorRoundId ??
-            "") as any;
-          const roundLabel =
-            typeof roundId === "number" ||
-            (typeof roundId === "string" && roundId)
-              ? String(roundId)
-              : "—";
-          return (
-            <span className="flex flex-wrap items-center gap-2">
-              <span>Validator Round ID:</span>
-              <span
-                className={`${CHIP_STYLES.base} ${CHIP_STYLES.active} !px-3 !py-1 font-mono`}
-              >
-                {roundLabel}
-              </span>
-              <span className="ms-2">Agent Run ID:</span>
-              <span
-                className={`${CHIP_STYLES.base} ${CHIP_STYLES.completed} !px-3 !py-1 font-mono`}
-              >
-                {runId}
-              </span>
-            </span>
-          );
-        })()}
+        description={pageHeaderDescription}
         className="mt-4"
       >
         <Link
@@ -87,7 +90,7 @@ export default function AgentRun() {
 
 
       {/* Stats Section */}
-      <AgentRunStatsDynamic
+      <AgentRunStatsDynamic 
         statistics={statistics}
         isLoading={isLoading}
         error={error}
@@ -111,7 +114,7 @@ export default function AgentRun() {
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic
+          <AgentRunSummaryDynamic 
             selectedWebsite={selectedWebsite}
             summary={null}
             statistics={statistics}

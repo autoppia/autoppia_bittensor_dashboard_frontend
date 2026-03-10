@@ -31,13 +31,7 @@ export default function TablePagination({
         paginatorClassName
       )}
     >
-      {!setPageSize ? (
-        total && (
-          <div className="hidden text-gray-500 sm:inline-flex">
-            {props.current} of {Math.ceil(total / pageSize)} pages
-          </div>
-        )
-      ) : (
+      {setPageSize ? (
         <div className="hidden items-center sm:flex">
           Rows per page:{" "}
           <Select
@@ -53,6 +47,12 @@ export default function TablePagination({
             optionClassName="px-1"
           />
         </div>
+      ) : (
+        total && (
+          <div className="hidden text-gray-500 sm:inline-flex">
+            {props.current} of {Math.ceil(total / pageSize)} pages
+          </div>
+        )
       )}
       <Pagination
         total={total}

@@ -1,16 +1,14 @@
 'use client';
-import React, {
-  Dispatch,
-  MutableRefObject,
-  createContext,
-  useContext,
-} from 'react';
+import React, { Dispatch, createContext, useContext } from 'react';
 import type {
   ContentUiProps,
   InitialState,
   ItemRef,
   NavMenuDirection,
 } from './nav-menu-types';
+
+/** Ref type with mutable current (avoids deprecated MutableRefObject in Sonar) */
+type MutableRef<T> = { current: T };
 
 export const initialState: InitialState = {
   itemWrapperLeft: null,
@@ -26,10 +24,10 @@ export const initialState: InitialState = {
 };
 
 interface NavMenuContextProps extends InitialState {
-  set: Dispatch<any>;
-  contentRefs: MutableRefObject<(HTMLElement | null)[]>;
-  contentUiPropsRefs: MutableRefObject<(ContentUiProps | null)[]>;
-  items: React.MutableRefObject<(ItemRef | null)[]>;
+  set: Dispatch<InitialState>;
+  contentRefs: MutableRef<(HTMLElement | null)[]>;
+  contentUiPropsRefs: MutableRef<(ContentUiProps | null)[]>;
+  items: MutableRef<(ItemRef | null)[]>;
   dir: NavMenuDirection;
   handleMouseEnter: (index: number, el: HTMLElement) => void;
 }

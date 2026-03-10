@@ -1,6 +1,6 @@
 export default function RealEstateIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       version="1.1"

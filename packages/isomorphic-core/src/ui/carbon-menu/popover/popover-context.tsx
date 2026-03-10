@@ -24,9 +24,9 @@ interface PopoverContextProps {
   disabled: boolean | undefined;
   classNames: string | undefined;
   as: string;
-  closeOnEscape?: boolean | undefined;
-  returnFocus?: boolean | undefined;
-  keepMounted?: boolean | undefined;
+  closeOnEscape?: boolean;
+  returnFocus?: boolean;
+  keepMounted?: boolean;
 }
 
 export const [PopoverContextProvider, usePopoverContext] =

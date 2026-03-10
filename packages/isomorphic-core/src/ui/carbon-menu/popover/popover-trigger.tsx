@@ -15,7 +15,7 @@ export interface PopoverTargetProps {
   popupType?: string;
 }
 
-export function isElement(value: any): value is React.ReactElement {
+export function isElement(value: unknown): value is React.ReactElement {
   if (Array.isArray(value) || value === null) {
     return false;
   }
@@ -41,9 +41,12 @@ export const PopoverTrigger = React.forwardRef<
     );
   }
 
-  const forwardedProps: any = props;
   const ctx = usePopoverContext();
-  const targetRef = useMergedRef(ctx.reference, (children as any).ref, ref);
+  const targetRef = useMergedRef(
+    ctx.reference,
+    (children as React.ReactElement<{ ref?: React.Ref<HTMLElement> }>).ref,
+    ref
+  );
 
   const accessibleProps = ctx.withRoles
     ? {
@@ -55,16 +58,16 @@ export const PopoverTrigger = React.forwardRef<
     : {};
 
   return cloneElement(children, {
-    ...forwardedProps,
+    ...props,
     ...accessibleProps,
     ...ctx.targetProps,
     className: cn(
       ctx.targetProps.className,
-      forwardedProps.className,
+      props.className,
       children.props.className
     ),
-    [refProp!]: targetRef,
-    ...(!ctx.controlled ? { onClick: ctx.onToggle } : null),
+    [refProp]: targetRef,
+    ...(ctx.controlled ? null : { onClick: ctx.onToggle }),
   });
 });
 

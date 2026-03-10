@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, createContext, useContext } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { PieChart, Pie, Cell, ResponsiveContainer, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart } from "recharts";
-import { Select, Text } from "rizzui";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ComposedChart } from "recharts";
+import { Select } from "rizzui";
 import Image from "next/image";
 import { validatorsRepository } from "@/repositories/validators/validators.repository";
-import type { ValidatorDetailsData, WebStats, UseCaseStats, TaskStats } from "@/repositories/validators/validators.types";
+import type { ValidatorDetailsData, UseCaseStats, TaskStats } from "@/repositories/validators/validators.types";
 import PageHeader from "@/app/shared/page-header";
 import {
   ValidatorsSelectorPlaceholder,
@@ -16,12 +16,9 @@ import {
   SummaryPlaceholder,
 } from "@/components/placeholders/validator-placeholders";
 import {
-  PiShieldCheck,
   PiChartBar,
   PiCheckCircle,
   PiXCircle,
-  PiQuestion,
-  PiWarning,
   PiCaretDown,
   PiCaretUp,
   PiTrendUp,
@@ -30,7 +27,6 @@ import {
   PiTrophyDuotone,
   PiUsersThreeDuotone,
   PiListChecksDuotone,
-  PiCrownDuotone,
   PiChartLineUp,
   PiCurrencyDollar,
 } from "react-icons/pi";
@@ -48,15 +44,15 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
 
 // Custom Tooltip for Miner Scores Chart (matching Rounds style)
 function CustomMinerTooltip({ active, payload }: any) {
-  if (!active || !payload || !payload.length) return null;
+  if (!active || !payload?.length) return null;
 
   const minerData = payload[0].payload;
   const evalScore = minerData?.evalScore ?? 0;
   const evalTime = minerData?.evalTime ?? 0;
   const reward = minerData?.score ?? 0;
-  const name = minerData?.name || `Miner ${minerData?.uid}`;
+  const name = minerData?.name ?? `Miner ${minerData?.uid}`;
   const uid = minerData?.uid;
-
+  
   return (
     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
       <div className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
@@ -76,7 +72,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalScore.toFixed(2)}%
           </span>
         </div>
-
+        
         {/* Time (eval_time) */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -90,7 +86,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalTime.toFixed(2)}s
           </span>
         </div>
-
+        
         {/* Reward */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -113,9 +109,9 @@ function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
   // For very small values (like stake), show more decimal places
   if (value > 0 && value < 0.01) {
-    return value.toLocaleString("en-US", {
+    return value.toLocaleString("en-US", { 
       minimumFractionDigits: 2,
-      maximumFractionDigits: 8
+      maximumFractionDigits: 8 
     });
   }
   // For normal values, show up to 2 decimal places
@@ -128,7 +124,7 @@ function formatPercentage(value: number): string {
 
 // Capitalize first letter of web name
 function capitalizeWebName(name: string): string {
-  if (!name) return name;
+  if (!name?.length) return name;
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -154,14 +150,14 @@ const WEB_ORDER: Record<string, number> = {
 function getWebOrder(webId: string): number {
   // Try to extract the web name from web_id (e.g., 'web_1_autocinema' -> 'autocinema')
   const lowerWebId = webId.toLowerCase();
-
+  
   // Check if web_id contains any of the web names
   for (const [webName, order] of Object.entries(WEB_ORDER)) {
     if (lowerWebId.includes(webName)) {
       return order;
     }
   }
-
+  
   // If not found, try to extract from web_id pattern
   try {
     const parts = webId.split('_');
@@ -172,7 +168,7 @@ function getWebOrder(webId: string): number {
         return WEB_ORDER[webName];
       }
     }
-  } catch (e) {
+  } catch {
     // If extraction fails, return a large number to put it at the end
   }
   return 999;
@@ -288,11 +284,11 @@ function CenterLabel({
   value,
   total,
   viewBox,
-}: {
+}: Readonly<{
   value: string;
   total: string;
   viewBox: any;
-}) {
+}>) {
   const { cx, cy } = viewBox;
   return (
     <>
@@ -328,12 +324,12 @@ function CenterLabel({
 }
 
 // Card component for validator details
-function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
+function ValidatorDetailsCard({ data }: Readonly<{ data: ValidatorDetailsData }>) {
   const validator = data.validator;
   const validatorImageSrc = data.validatorImage
     ? resolveAssetUrl(data.validatorImage)
     : resolveAssetUrl("/validators/Other.png");
-
+  
   // Get validator name from validators list if available
   const { data: validatorsData } = useValidators({ limit: 100 });
   const validatorInfo = React.useMemo(() => {
@@ -342,9 +338,9 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
       (v: any) => v.validatorUid === validator.uid
     );
   }, [validatorsData, validator.uid]);
-
+  
   const validatorName = validatorInfo?.name || `Validator ${validator.uid}`;
-
+  
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
@@ -378,10 +374,10 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
             <div className="flex items-center gap-2">
               {(() => {
                 const lastRound = validator.lastRoundEvaluated;
-	                if (lastRound == null || String(lastRound) === "—") {
+                if (lastRound == null || String(lastRound) === "—") {
                   return <p className="text-xl font-bold text-white">—</p>;
                 }
-                // Parse "season/round" format
+                // Parse "season/round" format (string) or display number
                 const parts = String(lastRound).split("/");
                 if (parts.length === 2) {
                   return (
@@ -415,7 +411,7 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
             <div className="flex-1">
               <p className="text-xs uppercase tracking-wide text-white/60 mb-0.5">Stake</p>
               <p className="text-xl font-bold text-white">
-                {validator.stake !== null ? `${(validator.stake / 1000).toFixed(0)}K` : "—"}
+                {validator.stake == null ? "—" : `${(validator.stake / 1000).toFixed(0)}K`}
               </p>
             </div>
           </div>
@@ -425,38 +421,19 @@ function ValidatorDetailsCard({ data }: { data: ValidatorDetailsData }) {
   );
 }
 
-// Card component for last round winner
-function LastRoundWinnerCard({
-  data,
-  selectedSeason,
-  selectedRound
-}: {
-  data: ValidatorDetailsData;
-  selectedSeason: number | null;
-  selectedRound: number | null;
-}) {
-  const context = data.context;
-  const fallbackMinerImage = context.lastRoundWinner !== null
-    ? resolveAssetUrl(`/miners/${Math.abs(context.lastRoundWinner % 50)}.svg`)
-    : resolveAssetUrl("/miners/0.svg");
-  const minerImageSrc = context.lastRoundWinnerImage
-    ? resolveAssetUrl(context.lastRoundWinnerImage)
-    : fallbackMinerImage;
+// Helpers for LastRoundWinnerCard (reduce cognitive complexity)
+function getLastRoundMinerLink(winnerUid: number | null, roundNumber: string | number | null): string | null {
+  if (winnerUid == null) return null;
+  if (roundNumber != null) return `/subnet36/agents/${winnerUid}?round=${roundNumber}`;
+  return `/subnet36/agents/${winnerUid}`;
+}
 
-  // Determine the round to use for links (using "season/round" format or lastRoundEvaluated)
-  const roundNumber =
-    selectedSeason !== null && selectedRound !== null
-      ? `${selectedSeason}/${selectedRound}`
-      : data.validator.lastRoundEvaluated;
-  const roundKey = roundNumber ? `round_${roundNumber}` : null;
-  const roundLink = roundKey ? `/subnet36/rounds/${roundKey}` : null;
-  const minerLink = context.lastRoundWinner && roundNumber
-    ? `/subnet36/agents/${context.lastRoundWinner}?round=${roundNumber}`
-    : context.lastRoundWinner
-      ? `/subnet36/agents/${context.lastRoundWinner}`
-      : null;
-
-  const cardTitle = selectedRound !== null ? (
+function getLastRoundCardTitle(
+  selectedRound: number | null,
+  roundLink: string | null
+): string | React.ReactNode {
+  if (selectedRound == null) return "Last Round Winner";
+  return (
     <>
       {roundLink ? (
         <Link href={roundLink} className="hover:text-amber-300 transition-colors">
@@ -467,26 +444,73 @@ function LastRoundWinnerCard({
       )}{" "}
       Winner
     </>
-  ) : "Last Round Winner";
+  );
+}
+
+function LastRoundWinnerImage({
+  lastRoundWinner,
+  minerImageSrc,
+  winnerName,
+}: Readonly<{
+  lastRoundWinner: number | null;
+  minerImageSrc: string;
+  winnerName: string | null;
+}>) {
+  if (lastRoundWinner == null) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-500/30 to-orange-600/30">
+        <PiTrophy className="h-7 w-7 text-amber-300" />
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={minerImageSrc}
+      alt={winnerName ?? "Winner"}
+      width={56}
+      height={56}
+      className="object-cover"
+      unoptimized
+    />
+  );
+}
+
+// Card component for last round winner
+function LastRoundWinnerCard({ 
+  data, 
+  selectedSeason, 
+  selectedRound 
+}: Readonly<{ 
+  data: ValidatorDetailsData; 
+  selectedSeason: number | null;
+  selectedRound: number | null;
+}>) {
+  const context = data.context;
+  const fallbackMinerImage = context.lastRoundWinner == null
+    ? resolveAssetUrl("/miners/0.svg")
+    : resolveAssetUrl(`/miners/${Math.abs(context.lastRoundWinner % 50)}.svg`);
+  const minerImageSrc = context.lastRoundWinnerImage
+    ? resolveAssetUrl(context.lastRoundWinnerImage)
+    : fallbackMinerImage;
+
+  const roundNumber =
+    selectedSeason != null && selectedRound != null
+      ? `${selectedSeason}/${selectedRound}`
+      : data.validator.lastRoundEvaluated;
+  const roundKey = roundNumber !== null && roundNumber !== undefined ? `round_${roundNumber}` : null;
+  const roundLink = roundKey !== null && roundKey !== undefined ? `/subnet36/rounds/${roundKey}` : null;
+  const minerLink = getLastRoundMinerLink(context.lastRoundWinner, roundNumber);
+  const cardTitle = getLastRoundCardTitle(selectedRound, roundLink);
 
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
         <div className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white/30 bg-white/10 shadow-lg ring-2 ring-amber-400/20">
-          {context.lastRoundWinner !== null ? (
-            <Image
-              src={minerImageSrc}
-              alt={context.lastRoundWinnerName || "Winner"}
-              width={56}
-              height={56}
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-500/30 to-orange-600/30">
-              <PiTrophy className="h-7 w-7 text-amber-300" />
-            </div>
-          )}
+          <LastRoundWinnerImage
+            lastRoundWinner={context.lastRoundWinner}
+            minerImageSrc={minerImageSrc}
+            winnerName={context.lastRoundWinnerName}
+          />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-0.5">
@@ -505,11 +529,11 @@ function LastRoundWinnerCard({
             </Link>
           ) : (
             <p className="text-xl font-bold text-white truncate">
-              {context.lastRoundWinnerName || (context.lastRoundWinner !== null ? `Miner ${context.lastRoundWinner}` : "—")}
+              {context.lastRoundWinnerName || (context.lastRoundWinner == null ? "—" : `Miner ${context.lastRoundWinner}`)}
             </p>
           )}
         </div>
-        {context.lastRoundWinner !== null && (
+        {context.lastRoundWinner != null && (
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-white/10 p-3 border border-white/10">
               <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">UID</p>
@@ -518,9 +542,9 @@ function LastRoundWinnerCard({
             <div className="rounded-lg bg-white/10 p-3 border border-white/10">
               <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Weight</p>
               <p className="text-lg font-bold text-white">
-                {context.lastRoundWinnerWeight !== null
-                  ? formatNumber(context.lastRoundWinnerWeight)
-                  : "—"}
+                {context.lastRoundWinnerWeight == null
+                  ? "—"
+                  : formatNumber(context.lastRoundWinnerWeight)}
               </p>
             </div>
           </div>
@@ -528,9 +552,9 @@ function LastRoundWinnerCard({
         <div className="rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-600/20 p-3 border border-amber-400/30">
           <p className="text-xs uppercase tracking-wide text-white/60 mb-1.5">Reward</p>
           <p className="text-2xl font-bold text-amber-300">
-            {context.lastRoundWinnerReward !== null
-              ? formatPercentage(context.lastRoundWinnerReward * 100)
-              : "—"}
+            {context.lastRoundWinnerReward == null
+              ? "—"
+              : formatPercentage(context.lastRoundWinnerReward * 100)}
           </p>
         </div>
       </div>
@@ -539,22 +563,21 @@ function LastRoundWinnerCard({
 }
 
 // Card component for global stats
-function GlobalStatsCard({
-  data,
-  selectedSeason,
-  selectedRound
-}: {
-  data: ValidatorDetailsData;
+function GlobalStatsCard({ 
+  data, 
+  selectedSeason, 
+  selectedRound 
+}: Readonly<{ 
+  data: ValidatorDetailsData; 
   selectedSeason: number | null;
   selectedRound: number | null;
-}) {
+}>) {
   const stats = data.globalStats;
-  const roundLabel =
-    selectedSeason !== null && selectedRound !== null
-      ? `Season ${selectedSeason} - Round ${selectedRound}`
-      : selectedSeason !== null
-        ? `Season ${selectedSeason}`
-        : "All Rounds";
+  const roundLabel = (() => {
+    if (selectedSeason != null && selectedRound != null) return `Season ${selectedSeason} - Round ${selectedRound}`;
+    if (selectedSeason != null) return `Season ${selectedSeason}`;
+    return "All Rounds";
+  })();
 
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
@@ -606,7 +629,7 @@ function GlobalStatsCard({
 }
 
 // Task row component
-function TaskRow({ task }: { task: TaskStats }) {
+function TaskRow({ task }: Readonly<{ task: TaskStats }>) {
   return (
     <div className="rounded-md bg-white/3 p-3 border border-white/5 ml-4">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -636,9 +659,9 @@ function TaskRow({ task }: { task: TaskStats }) {
 }
 
 // Use case row
-function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
+function UseCaseRow({ useCase }: Readonly<{ useCase: UseCaseStats }>) {
   const [isTasksExpanded, setIsTasksExpanded] = useState(false);
-
+  
   const getBadgeStatus = () => {
     if (useCase.successPct < 10 || useCase.zeroPct > 80) {
       return { type: "danger", text: "Critical" };
@@ -652,9 +675,15 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
   const badge = getBadgeStatus();
   const hasTasks = useCase.tasks && useCase.tasks.length > 0;
   const performance = getPerformanceStatus(useCase.successPct);
-  const isHighPerformance = useCase.successPct >= 80;
-  const isMediumPerformance = useCase.successPct >= 60 && useCase.successPct < 80;
   const projectColors = getProjectColors(useCase.useCaseName || useCase.useCaseId);
+
+  const shortPerformanceLabel = (() => {
+    if (useCase.successPct >= 80) return "Top";
+    if (useCase.successPct >= 60) return "Good";
+    if (useCase.successPct >= 40) return "Fair";
+    if (useCase.successPct >= 20) return "Low";
+    return "Crit";
+  })();
 
   return (
     <div
@@ -683,7 +712,7 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
               )}
               <span className="hidden sm:inline">{performance.statusText}</span>
               <span className="sm:hidden">
-                {useCase.successPct >= 80 ? "Top" : useCase.successPct >= 60 ? "Good" : useCase.successPct >= 40 ? "Fair" : useCase.successPct >= 20 ? "Low" : "Crit"}
+                {shortPerformanceLabel}
               </span>
             </div>
             {badge && (
@@ -764,8 +793,8 @@ function UseCaseRow({ useCase }: { useCase: UseCaseStats }) {
           </button>
           {isTasksExpanded && (
             <div className="mt-2 space-y-2">
-              {useCase.tasks.map((task, idx) => (
-                <TaskRow key={idx} task={task} />
+              {useCase.tasks.map((task) => (
+                <TaskRow key={task.taskId} task={task} />
               ))}
             </div>
           )}
@@ -784,7 +813,7 @@ function PerformanceAnalytics({
   setSelectedSeason,
   selectedRound,
   setSelectedRound,
-}: {
+}: Readonly<{
   data: ValidatorDetailsData;
   selectedWeb: string | null;
   setSelectedWeb: (web: string | null) => void;
@@ -792,7 +821,7 @@ function PerformanceAnalytics({
   setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
-}) {
+}>) {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const websiteOptions = [
@@ -893,8 +922,6 @@ function PerformanceAnalytics({
             const colorClass = PROGRESS_COLORS[index % PROGRESS_COLORS.length];
             const projectColors = getProjectColors(item.name);
             const performance = getPerformanceStatus(item.successPct);
-            const isHighPerformance = item.successPct >= 80;
-            const isMediumPerformance = item.successPct >= 60 && item.successPct < 80;
 
             // If showing use cases, render UseCaseRow
             if (selectedWeb && selectedWeb !== "__all__") {
@@ -909,12 +936,14 @@ function PerformanceAnalytics({
 
             // Otherwise render web card
             // Find the web data to get webVersion
-            const webData = data.webs.find((w) =>
-              capitalizeWebName(w.webName || w.webId) === item.name || w.webId === (item as any).webId
+            const itemWebId = "webId" in item ? (item as { name: string; webId?: string }).webId : undefined;
+            const webData = data.webs.find((w) => 
+              capitalizeWebName(w.webName || w.webId) === item.name || (itemWebId != null && w.webId === itemWebId)
             );
+            const webCardKey = itemWebId ?? item.name;
             return (
               <div
-                key={`${item.name}-${index}`}
+                key={webCardKey}
                 className="group relative rounded-xl border p-3 sm:p-5 transition-all duration-300 hover:shadow-2xl"
                 style={{
                   boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
@@ -945,7 +974,13 @@ function PerformanceAnalytics({
                         )}
                         <span className="hidden sm:inline">{performance.statusText}</span>
                         <span className="sm:hidden">
-                          {item.successPct >= 80 ? "Top" : item.successPct >= 60 ? "Good" : item.successPct >= 40 ? "Fair" : item.successPct >= 20 ? "Low" : "Crit"}
+                          {(() => {
+                            if (item.successPct >= 80) return "Top";
+                            if (item.successPct >= 60) return "Good";
+                            if (item.successPct >= 40) return "Fair";
+                            if (item.successPct >= 20) return "Low";
+                            return "Crit";
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -1003,25 +1038,21 @@ function PerformanceAnalytics({
         </div>
       ) : (
         <div className="text-center py-12">
-          {selectedSeason !== null &&
-          selectedRound !== null &&
-          data.globalStats.totalEvaluations === 0 &&
-          (data.roundDetails?.minersParticipated || 0) > 0 ? (
-            <div className="space-y-1">
-              <p className="text-white/70">
-                No persisted evaluations for Season {selectedSeason} / Round {selectedRound}
-              </p>
-              <p className="text-xs text-white/50">
-                Miners participated, but this round only has run-level records (no evaluation rows).
-              </p>
-            </div>
-          ) : (
-            <p className="text-white/60">No data available</p>
-          )}
+          <p className="text-white/60">No data available</p>
         </div>
       )}
     </div>
   );
+}
+
+// Context for pie center label so Recharts Label can use a component reference (no inline render prop)
+const SummaryPieLabelContext = createContext<{ value: string; total: string } | null>(null);
+
+// Component passed to Recharts Label content= (defined at module level to satisfy Sonar)
+function PieCenterLabelContent(props: Readonly<{ viewBox?: unknown }>) {
+  const data = useContext(SummaryPieLabelContext);
+  if (!data) return null;
+  return <CenterLabel value={data.value} total={data.total} viewBox={props.viewBox} />;
 }
 
 // Summary section (right side) with pie chart
@@ -1029,11 +1060,11 @@ function SummarySection({
   data,
   selectedWeb,
   onWebClick,
-}: {
+}: Readonly<{
   data: ValidatorDetailsData;
   selectedWeb: string | null;
   onWebClick: (webId: string | null) => void;
-}) {
+}>) {
   const stats = selectedWeb && selectedWeb !== "__all__"
     ? (() => {
         const web = data.webs.find((w) => w.webId === selectedWeb);
@@ -1049,6 +1080,13 @@ function SummarySection({
     : data.globalStats;
 
   const pieData = preparePieChartData(stats);
+  const pieLabelContextValue = useMemo(
+    () => ({
+      value: formatPercentage(stats.successPct),
+      total: formatNumber(stats.totalEvaluations),
+    }),
+    [stats.successPct, stats.totalEvaluations]
+  );
   const displayData = selectedWeb && selectedWeb !== "__all__"
     ? (() => {
         const web = data.webs.find((w) => w.webId === selectedWeb);
@@ -1063,9 +1101,8 @@ function SummarySection({
           : [];
       })()
     : data.webs
-        .slice()
-        .sort((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
-        .map((web, idx) => ({
+        .toSorted((a, b) => getWebOrder(a.webId) - getWebOrder(b.webId))
+        .map((web) => ({
           label: capitalizeWebName(web.webName || web.webId),
           value: web.successPct,
           total: web.totalEvaluations,
@@ -1081,7 +1118,7 @@ function SummarySection({
         className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
         style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
-
+      
       {/* Header */}
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -1108,39 +1145,31 @@ function SummarySection({
       <div className="relative text-white/80">
         <div className="h-[240px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={pieData}
-                innerRadius={85}
-                outerRadius={100}
-                paddingAngle={5}
-                cornerRadius={30}
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-                onClick={(clickedData, index) => {
-                  // Handle click on pie chart segment
-                  if (selectedWeb && selectedWeb !== "__all__") {
-                    // If showing use cases, clicking on pie chart should reset to all websites
-                    onWebClick(null);
-                  }
-                  // If showing all websites, the pie chart shows global stats (Success/Zero)
-                  // so clicking on it doesn't select a specific web - use the list below instead
-                }}
-              >
-                <Label
-                  position="center"
-                  content={(props) => (
-                    <CenterLabel
-                      value={formatPercentage(stats.successPct)}
-                      total={formatNumber(stats.totalEvaluations)}
-                      viewBox={props.viewBox}
-                    />
-                  )}
-                />
-                {pieData.map((entry, idx) => (
+            <SummaryPieLabelContext.Provider value={pieLabelContextValue}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  innerRadius={85}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  cornerRadius={30}
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                  onClick={(clickedData, index) => {
+                    // Handle click on pie chart segment
+                    if (selectedWeb && selectedWeb !== "__all__") {
+                      // If showing use cases, clicking on pie chart should reset to all websites
+                      onWebClick(null);
+                    }
+                    // If showing all websites, the pie chart shows global stats (Success/Zero)
+                    // so clicking on it doesn't select a specific web - use the list below instead
+                  }}
+                >
+                  <Label position="center" content={PieCenterLabelContent} />
+                {pieData.map((entry) => (
                   <Cell
-                    key={`cell-${idx}`}
+                    key={entry.name ?? entry.fill}
                     fill={entry.fill}
                     stroke={entry.stroke}
                     strokeWidth={2}
@@ -1149,6 +1178,7 @@ function SummarySection({
                 ))}
               </Pie>
             </PieChart>
+            </SummaryPieLabelContext.Provider>
           </ResponsiveContainer>
         </div>
         {displayData.length > 0 ? (
@@ -1211,14 +1241,14 @@ function SummarySection({
 
 export default function ValidatorDetailsPage() {
   const { uid } = useParams();
-  const validatorUid = Array.isArray(uid) ? uid[0] : (uid as string);
+  const validatorUid = Array.isArray(uid) ? uid[0] : uid;
   const [data, setData] = useState<ValidatorDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeb, setSelectedWeb] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
-
+  
   // Get all validators for the selector
   const {
     data: validatorsData,
@@ -1244,8 +1274,8 @@ export default function ValidatorDetailsPage() {
       return;
     }
 
-    const uidNum = parseInt(validatorUid, 10);
-    if (isNaN(uidNum)) {
+    const uidNum = Number.parseInt(validatorUid, 10);
+    if (Number.isNaN(uidNum)) {
       setError("Invalid validator UID");
       setLoading(false);
       return;
@@ -1276,11 +1306,11 @@ export default function ValidatorDetailsPage() {
     return (
       <div className="w-full max-w-[1280px] mx-auto bg-transparent">
         <PageHeader title="Validator Details" />
-
+        
         <ValidatorsSelectorPlaceholder />
-
+        
         <ValidatorCardsPlaceholder />
-
+        
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
           <PerformanceAnalyticsPlaceholder />
           <SummaryPlaceholder />
@@ -1324,17 +1354,17 @@ export default function ValidatorDetailsPage() {
           <ValidatorDetailsCard data={data} />
         </div>
         <div className="h-full">
-          <GlobalStatsCard
-            data={data}
-            selectedSeason={selectedSeason}
-            selectedRound={selectedRound}
+          <GlobalStatsCard 
+            data={data} 
+            selectedSeason={selectedSeason} 
+            selectedRound={selectedRound} 
           />
         </div>
         <div className="h-full">
-          <LastRoundWinnerCard
-            data={data}
-            selectedSeason={selectedSeason}
-            selectedRound={selectedRound}
+          <LastRoundWinnerCard 
+            data={data} 
+            selectedSeason={selectedSeason} 
+            selectedRound={selectedRound} 
           />
         </div>
       </div>
@@ -1363,7 +1393,7 @@ function TabsSection({
   setSelectedSeason,
   selectedRound,
   setSelectedRound,
-}: {
+}: Readonly<{
   data: ValidatorDetailsData;
   selectedWeb: string | null;
   setSelectedWeb: (web: string | null) => void;
@@ -1371,7 +1401,7 @@ function TabsSection({
   setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
-}) {
+}>) {
   const [activeTab, setActiveTab] = useState<"performance" | "rounds">("performance");
 
   // Parse available rounds from "season/round" format
@@ -1382,14 +1412,14 @@ function TabsSection({
     (data.availableRounds || []).forEach((roundStr) => {
       const parts = String(roundStr).split("/");
       if (parts.length === 2) {
-        const season = parseInt(parts[0], 10);
-        const round = parseInt(parts[1], 10);
-        if (!isNaN(season) && !isNaN(round)) {
+        const season = Number.parseInt(parts[0], 10);
+        const round = Number.parseInt(parts[1], 10);
+        if (Number.isFinite(season) && Number.isFinite(round)) {
           seasons.add(season);
           if (!roundsBySeason.has(season)) {
             roundsBySeason.set(season, new Set());
           }
-          roundsBySeason.get(season)!.add(round);
+          roundsBySeason.get(season)?.add(round);
         }
       }
     });
@@ -1397,7 +1427,7 @@ function TabsSection({
     const seasonOpts = [
       { value: "__all__", label: "All Seasons" },
       ...Array.from(seasons)
-        .sort((a, b) => b - a)
+        .toSorted((a, b) => b - a)
         .map((s) => ({
           value: s.toString(),
           label: `Season ${s}`,
@@ -1406,13 +1436,13 @@ function TabsSection({
 
     // Get rounds for selected season, or all rounds if no season selected
     const availableRounds =
-      selectedSeason !== null && roundsBySeason.has(selectedSeason)
-        ? Array.from(roundsBySeason.get(selectedSeason)!)
-        : Array.from(new Set(Array.from(roundsBySeason.values()).flatMap((s) => Array.from(s))));
+      selectedSeason == null || !roundsBySeason.has(selectedSeason)
+        ? Array.from(new Set(Array.from(roundsBySeason.values()).flatMap((s) => Array.from(s))))
+        : Array.from(roundsBySeason.get(selectedSeason) ?? []);
 
     const roundOpts = [
       { value: "__all__", label: "All Rounds" },
-      ...availableRounds.sort((a, b) => b - a).map((r) => ({
+      ...availableRounds.toSorted((a, b) => b - a).map((r) => ({
         value: r.toString(),
         label: `Round ${r}`,
       })),
@@ -1422,7 +1452,7 @@ function TabsSection({
   }, [data.availableRounds, selectedSeason]);
 
   // Check if a specific season and round are selected
-  const hasSpecificRoundSelected = selectedSeason !== null && selectedRound !== null;
+  const hasSpecificRoundSelected = selectedSeason != null && selectedRound != null;
 
   return (
     <div className="mt-8">
@@ -1462,10 +1492,10 @@ function TabsSection({
           <Select
             options={seasonOptions}
             value={seasonOptions.find(
-              (opt) => opt.value === (selectedSeason !== null ? selectedSeason.toString() : "__all__")
+              (opt) => opt.value === (selectedSeason == null ? "__all__" : selectedSeason.toString())
             )}
             onChange={(option: { label: string; value: string }) => {
-              const newSeason = option.value === "__all__" ? null : parseInt(option.value, 10);
+              const newSeason = option.value === "__all__" ? null : Number.parseInt(option.value, 10);
               setSelectedSeason(newSeason);
               // Reset round when season changes
               if (newSeason === null) {
@@ -1477,10 +1507,10 @@ function TabsSection({
           <Select
             options={roundOptions}
             value={roundOptions.find(
-              (opt) => opt.value === (selectedRound !== null ? selectedRound.toString() : "__all__")
+              (opt) => opt.value === (selectedRound == null ? "__all__" : selectedRound.toString())
             )}
             onChange={(option: { label: string; value: string }) => {
-              const newRound = option.value === "__all__" ? null : parseInt(option.value, 10);
+              const newRound = option.value === "__all__" ? null : Number.parseInt(option.value, 10);
               setSelectedRound(newRound);
             }}
             className="w-[160px] text-sm rounded-lg border border-purple-500/40 bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-100 focus:border-purple-400/60 focus:ring-0 hover:border-purple-400/50"
@@ -1490,35 +1520,39 @@ function TabsSection({
 
       {/* Tab Content */}
       <div className="mt-6">
-        {activeTab === "performance" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
-            {/* Left: Performance Analytics */}
-            <PerformanceAnalytics
-              data={data}
-              selectedWeb={selectedWeb}
-              setSelectedWeb={setSelectedWeb}
-              selectedSeason={selectedSeason}
-              setSelectedSeason={setSelectedSeason}
-              selectedRound={selectedRound}
-              setSelectedRound={setSelectedRound}
-            />
-
-            {/* Right: Summary with Pie Chart */}
-            <SummarySection
-              data={data}
-              selectedWeb={selectedWeb}
-              onWebClick={setSelectedWeb}
-            />
-          </div>
-        ) : hasSpecificRoundSelected ? (
-          <RoundDetailsTab
-            data={data}
-            selectedSeason={selectedSeason}
-            setSelectedSeason={setSelectedSeason}
-            selectedRound={selectedRound}
-            setSelectedRound={setSelectedRound}
-          />
-        ) : (
+        {(() => {
+          if (activeTab === "performance") {
+            return (
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+                <PerformanceAnalytics
+                  data={data}
+                  selectedWeb={selectedWeb}
+                  setSelectedWeb={setSelectedWeb}
+                  selectedSeason={selectedSeason}
+                  setSelectedSeason={setSelectedSeason}
+                  selectedRound={selectedRound}
+                  setSelectedRound={setSelectedRound}
+                />
+                <SummarySection
+                  data={data}
+                  selectedWeb={selectedWeb}
+                  onWebClick={setSelectedWeb}
+                />
+              </div>
+            );
+          }
+          if (hasSpecificRoundSelected) {
+            return (
+              <RoundDetailsTab
+                data={data}
+                selectedSeason={selectedSeason}
+                setSelectedSeason={setSelectedSeason}
+                selectedRound={selectedRound}
+                setSelectedRound={setSelectedRound}
+              />
+            );
+          }
+          return (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center max-w-md">
               <div className="mb-6 relative">
@@ -1587,7 +1621,8 @@ function TabsSection({
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
@@ -1600,13 +1635,13 @@ function RoundDetailsTab({
   setSelectedSeason,
   selectedRound,
   setSelectedRound,
-}: {
+}: Readonly<{
   data: ValidatorDetailsData;
   selectedSeason: number | null;
   setSelectedSeason: (season: number | null) => void;
   selectedRound: number | null;
   setSelectedRound: (round: number | null) => void;
-}) {
+}>) {
   // Calculate metrics for the round details cards
   const topReward = useMemo(() => {
     // Use the highest success percentage from global stats or webs
@@ -1840,7 +1875,7 @@ function RoundDetailsTab({
 }
 
 // Round Detail Metric Card Component (simplified version of MetricCard from rounds)
-function RoundDetailMetricCard({ card }: { card: any }) {
+function RoundDetailMetricCard({ card }: Readonly<{ card: any }>) {
   const Icon = card.icon;
 
   return (

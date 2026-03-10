@@ -11,10 +11,7 @@ import {
   PiCamera,
   PiCheckCircle,
   PiXCircle,
-  PiWarning,
   PiPlay,
-  PiPause,
-  PiStop,
   PiArrowClockwise,
 } from "react-icons/pi";
 import { useTaskTimeline } from "@/services/hooks/useTask";
@@ -70,7 +67,7 @@ export default function TaskTimelineDynamic() {
           <Text className="text-white text-lg font-medium">Task Timeline</Text>
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-
+        
         <div className="space-y-4">
           {Array.from({ length: 6 }, (_, index) => (
             <div key={`timeline-loading-${index}`} className="flex items-start gap-4">
@@ -104,7 +101,7 @@ export default function TaskTimelineDynamic() {
             <Text className="text-red-700 font-medium">Failed to load timeline</Text>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             className="p-2 text-red-500 hover:text-red-700 transition-colors"
             title="Retry loading timeline"
           >
@@ -130,8 +127,9 @@ export default function TaskTimelineDynamic() {
   }
 
   const startTime = timeline[0]?.timestamp;
-  const totalDuration = timeline.length > 0
-    ? (new Date(timeline[timeline.length - 1].timestamp).getTime() - new Date(startTime).getTime()) / 1000
+  const lastEvent = timeline.at(-1);
+  const totalDuration = timeline.length > 0 && lastEvent
+    ? (new Date(lastEvent.timestamp).getTime() - new Date(startTime).getTime()) / 1000
     : 0;
 
   return (
@@ -144,7 +142,7 @@ export default function TaskTimelineDynamic() {
             {timeline.length} events
           </Text>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
             title="Refresh timeline"
           >
@@ -157,23 +155,23 @@ export default function TaskTimelineDynamic() {
       <div className="relative">
         {/* Timeline line */}
         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-
+        
         <div className="space-y-4">
-          {timeline.map((event, index) => {
-            const isLast = index === timeline.length - 1;
+          {timeline.map((event) => {
             const relativeTime = getRelativeTime(event.timestamp, startTime);
+            const eventKey = `timeline-event-${event.timestamp}-${event.action}-${event.duration}`;
 
             return (
-              <div key={`timeline-event-${index}`} className="relative flex items-start gap-4">
+              <div key={eventKey} className="relative flex items-start gap-4">
                 {/* Timeline dot */}
                 <div className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                  event.success
-                    ? 'bg-green-100 border-green-500'
+                  event.success 
+                    ? 'bg-green-100 border-green-500' 
                     : 'bg-red-100 border-red-500'
                 }`}>
                   {getActionIcon(event.action)}
                 </div>
-
+                
                 {/* Event content */}
                 <div className="flex-1 min-w-0">
                   <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
@@ -191,7 +189,7 @@ export default function TaskTimelineDynamic() {
                         <span>+{relativeTime}</span>
                       </div>
                     </div>
-
+                    
                     {/* Event details */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-4 text-sm">
@@ -203,15 +201,15 @@ export default function TaskTimelineDynamic() {
                         </div>
                         <div className="flex items-center gap-1">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            event.success
-                              ? 'bg-green-100 text-green-700'
+                            event.success 
+                              ? 'bg-green-100 text-green-700' 
                               : 'bg-red-100 text-red-700'
                           }`}>
                             {event.success ? 'Success' : 'Failed'}
                           </span>
                         </div>
                       </div>
-
+                      
                       {/* Metadata if available */}
                       {event.metadata && Object.keys(event.metadata).length > 0 && (
                         <div className="mt-3 pt-3 border-t border-gray-100">

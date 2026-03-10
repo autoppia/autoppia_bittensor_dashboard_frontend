@@ -66,7 +66,7 @@ export default function AgentRunSummary({
   data,
   summaryData,
   summaryTotals,
-}: AgentRunSummaryProps) {
+}: Readonly<AgentRunSummaryProps>) {
   const agentData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentData.websites.length > 0;
 
@@ -78,7 +78,6 @@ export default function AgentRunSummary({
   let successRate: number;
   let totalRequests: number;
   let totalSuccesses: number;
-  let avgSolutionTime: number;
 
   if (selectedWebsite) {
     const selectedWeb = agentData.websites.find(
@@ -88,12 +87,10 @@ export default function AgentRunSummary({
       successRate = selectedWeb.overall.successRate;
       totalRequests = selectedWeb.overall.total;
       totalSuccesses = selectedWeb.overall.successCount;
-      avgSolutionTime = selectedWeb.overall.avgSolutionTime;
     } else {
       successRate = 0;
       totalRequests = 0;
       totalSuccesses = 0;
-      avgSolutionTime = 0;
     }
   } else {
     const websiteAverages = agentData.websites;
@@ -115,13 +112,6 @@ export default function AgentRunSummary({
       totalRequests = summaryTotals?.totalRequests ?? 0;
       totalSuccesses = summaryTotals?.totalSuccesses ?? 0;
     }
-    avgSolutionTime =
-      websiteAverages.length > 0
-        ? websiteAverages.reduce(
-            (sum, w) => sum + w.overall.avgSolutionTime,
-            0
-          ) / websiteAverages.length
-        : 0;
   }
 
   let displayData: DisplayDataItem[] = [];
@@ -279,18 +269,15 @@ export default function AgentRunSummary({
               >
                 <Label
                   position="center"
-                  content={(props) => (
-                    <CenterLabel
-                      value={successRate.toFixed(0)}
-                      totalRequests={Math.round(totalRequests).toString()}
-                      totalSuccesses={Math.round(totalSuccesses).toString()}
-                      viewBox={props.viewBox}
-                    />
+                  content={makeCenterLabelContent(
+                    successRate.toFixed(0),
+                    Math.round(totalRequests).toString(),
+                    Math.round(totalSuccesses).toString()
                   )}
                 />
-                {donutData.map((entry, idx) => (
+                {donutData.map((entry) => (
                   <Cell
-                    key={`cell-${idx}`}
+                    key={`cell-${entry.label}`}
                     fill={entry.fill}
                     stroke={entry.stroke}
                     strokeWidth={2}
@@ -351,12 +338,29 @@ interface CenterLabelProps {
   viewBox: any;
 }
 
+function makeCenterLabelContent(
+  value: string,
+  totalRequests: string,
+  totalSuccesses: string
+) {
+  return function CenterLabelContent(props: { viewBox?: any }) {
+    return (
+      <CenterLabel
+        value={value}
+        totalRequests={totalRequests}
+        totalSuccesses={totalSuccesses}
+        viewBox={props.viewBox}
+      />
+    );
+  };
+}
+
 function CenterLabel({
   value,
   totalRequests,
   totalSuccesses,
   viewBox,
-}: CenterLabelProps) {
+}: Readonly<CenterLabelProps>) {
   const { cx, cy } = viewBox;
   return (
     <>

@@ -1,4 +1,4 @@
-export default function DarkMode({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function DarkMode({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 172 102"

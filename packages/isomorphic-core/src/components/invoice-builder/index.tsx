@@ -14,7 +14,9 @@ import SecondBlock from "./invoice-details/second-block";
 import TableBlock from "./invoice-details/table-block";
 import { InvoicePrint } from "./invoice-print";
 
-export default function InvoiceBuilder({ printRef }: { printRef: any }) {
+export default function InvoiceBuilder({
+  printRef,
+}: Readonly<{ printRef: any }>) {
   const methods = useForm<InvoiceType>({
     mode: "onChange",
     defaultValues: INVOICE_BUILDER_DEFAULT_VALUE,

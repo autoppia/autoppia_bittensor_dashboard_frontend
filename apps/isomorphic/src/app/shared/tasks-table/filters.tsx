@@ -1,17 +1,10 @@
 'use client';
 
-import DateFiled from '@core/components/controlled-table/date-field';
 import StatusField from '@core/components/controlled-table/status-field';
 import { FilterDrawerView } from '@core/components/controlled-table/table-filter';
-import ToggleColumns from '@core/components/table-utils/toggle-columns';
-import { getDateRangeStateValues } from '@core/utils/get-formatted-date';
 import { type Table as ReactTableType } from '@tanstack/react-table';
 import { useState } from 'react';
-import {
-  PiFunnel,
-  PiMagnifyingGlassBold,
-  PiTrashDuotone,
-} from 'react-icons/pi';
+import { PiMagnifyingGlassBold, PiTrashDuotone } from 'react-icons/pi';
 import { Title, Badge, Button, Flex, Input, Text } from 'rizzui';
 
 const statusOptions = [
@@ -39,7 +32,7 @@ interface TableToolbarProps<T extends Record<string, any>> {
 
 export default function Filters<TData extends Record<string, any>>({
   table,
-}: TableToolbarProps<TData>) {
+}: Readonly<TableToolbarProps<TData>>) {
   const [openDrawer, setOpenDrawer] = useState(false);
 
   return (
@@ -92,7 +85,7 @@ export default function Filters<TData extends Record<string, any>>({
 
 function FilterElements<T extends Record<string, any>>({
   table,
-}: TableToolbarProps<T>) {
+}: Readonly<TableToolbarProps<T>>) {
 
   const isFiltered =
     table.getState().globalFilter || table.getState().columnFilters.length > 0;

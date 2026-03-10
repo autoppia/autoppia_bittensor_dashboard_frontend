@@ -20,7 +20,7 @@ export default function ProductModernCard({
   product,
   className,
   routes,
-}: ProductProps) {
+}: Readonly<ProductProps>) {
   const {
     title,
     thumbnail,

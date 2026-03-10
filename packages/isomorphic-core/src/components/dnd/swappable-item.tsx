@@ -10,13 +10,13 @@ export default function SwapAbleItem({
   data,
   className,
   getNewIndex,
-}: {
+}: Readonly<{
   id: UniqueIdentifier;
   children: React.ReactNode;
   data?: any;
   className?: string;
   getNewIndex?: NewIndexGetter;
-}) {
+}>) {
   const { setNodeRef, transform, transition } = useSortable({
     id,
     data,

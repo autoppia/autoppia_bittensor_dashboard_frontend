@@ -8,20 +8,22 @@ import { useMergedRef } from './use-merged-ref';
 interface Options {
   active: boolean | undefined;
   onTrigger?: () => void;
-  onKeyDown?: (event: React.KeyboardEvent<any>) => void;
+  onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
 }
 
-const noop = () => { };
+const noop = () => {};
+
+const DEFAULT_CLOSE_ON_ESCAPE_OPTIONS: Options = { active: true };
 
 export function closeOnEscape(
-  callback?: (event: any) => void,
-  options: Options = { active: true }
-) {
+  callback?: React.KeyboardEventHandler<HTMLElement>,
+  options: Options = DEFAULT_CLOSE_ON_ESCAPE_OPTIONS
+): React.KeyboardEventHandler<HTMLElement> {
   if (typeof callback !== 'function' || !options.active) {
-    return options.onKeyDown || noop;
+    return options.onKeyDown ?? noop;
   }
 
-  return (event: React.KeyboardEvent<any>) => {
+  return (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
       callback(event);
       options.onTrigger?.();
@@ -57,12 +59,19 @@ export type Shadow = keyof typeof popoverStyle.shadow;
 export type Size = keyof typeof popoverStyle.size;
 export type Rounded = keyof typeof popoverStyle.rounded;
 
+function isSize(s: string): s is Size {
+  return s in popoverStyle.size;
+}
+function isRounded(r: string): r is Rounded {
+  return r in popoverStyle.rounded;
+}
+
 export interface PopoverTargetProps {
   children: React.ReactNode;
   className?: string;
   variant?: string;
   as?: React.ElementType;
-  onKeyDown?: React.KeyboardEventHandler<HTMLDivElement> | undefined;
+  onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
   shadow?: Shadow;
   size?: Size;
   rounded?: Rounded;
@@ -119,7 +128,7 @@ export const PopoverContent = React.forwardRef<
             onKeyDownCapture={closeOnEscape(ctx.onClose, {
               active: ctx.closeOnEscape,
               onTrigger: returnFocus,
-              onKeyDown: onKeyDown,
+              onKeyDown: onKeyDown as React.KeyboardEventHandler<HTMLElement> | undefined,
             })}
             data-position={ctx.placement}
             style={{
@@ -131,9 +140,8 @@ export const PopoverContent = React.forwardRef<
               className,
               popoverStyle.base,
               popoverStyle.shadow[shadow],
-              // @ts-ignore
-              popoverStyle.size[size],
-              popoverStyle.rounded[rounded]
+              popoverStyle.size[isSize(size) ? size : 'sm'],
+              popoverStyle.rounded[isRounded(rounded) ? rounded : 'md']
             )}
           >
             {children}

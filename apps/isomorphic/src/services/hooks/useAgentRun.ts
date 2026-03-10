@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { agentRunsRepository } from '@/repositories/agent-runs/agent-runs.repository';
 import type {
-  AgentRunData,
+  
   AgentRunStats,
   AgentRunSummary,
   AgentRunPersonas,
@@ -203,7 +203,7 @@ export function useAgentRun(
     fetchData();
   }, [fetchData]);
 
-  const isAnyLoading = Object.values(data.loading).some(loading => loading);
+  const isAnyLoading = Object.values(data.loading).some(Boolean);
   const hasAnyError = Object.keys(data.errors).length > 0;
 
   return {

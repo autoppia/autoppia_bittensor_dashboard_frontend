@@ -28,7 +28,7 @@ export default function QuillEditor({
   errorClassName,
   toolbarPosition = "top",
   ...props
-}: QuillEditorProps) {
+}: Readonly<QuillEditorProps>) {
   const quillModules = {
     toolbar: [
       // [{ header: [1, 2, 3, 4, 5, 6, false] }],

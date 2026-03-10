@@ -14,7 +14,7 @@ export function useUncontrolled<T>({
   onChange = () => {},
 }: UseUncontrolledInput<T>): [T, (value: T) => void, boolean] {
   const [uncontrolledValue, setUncontrolledValue] = useState(
-    defaultValue !== undefined ? defaultValue : finalValue
+    defaultValue ?? finalValue
   );
 
   const handleUncontrolledChange = (val: T) => {

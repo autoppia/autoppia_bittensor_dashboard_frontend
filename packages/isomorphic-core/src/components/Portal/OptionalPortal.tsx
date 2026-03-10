@@ -9,7 +9,7 @@ export function OptionalPortal({
   withinPortal = true,
   children,
   ...others
-}: OptionalPortalProps) {
+}: Readonly<OptionalPortalProps>) {
   if (withinPortal) {
     return <Portal {...others}>{children}</Portal>;
   }

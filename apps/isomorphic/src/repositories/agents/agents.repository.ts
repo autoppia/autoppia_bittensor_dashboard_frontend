@@ -15,7 +15,6 @@ import {
   AgentPerformanceQueryParams,
   AgentData,
   AgentPerformanceMetrics,
-  AgentRunOverview,
   RewardRoundDataPoint,
   AgentRoundMetrics,
   MinerRoundDetailsResponse,
@@ -230,7 +229,7 @@ export class AgentsRepository {
         validators: Array.isArray(roundMetrics.validators)
           ? roundMetrics.validators.map((v: any) => ({
               validator_uid: Number(v.uid ?? 0),
-              validator_name: v.name ?? (v.uid != null ? `Validator ${v.uid}` : "Validator"),
+              validator_name: v.name ?? (v.uid == null ? "Validator" : `Validator ${v.uid}`),
               validator_hotkey: v.hotkey ?? null,
               validator_image: null,
               local_rank: null,

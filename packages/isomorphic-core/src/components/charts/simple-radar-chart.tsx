@@ -36,7 +36,7 @@ export default function SimpleRadarChart({
   fill = '#818cf8',
   stroke = '#818cf8',
   className,
-}: SimpleRadarChartTypes) {
+}: Readonly<SimpleRadarChartTypes>) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RadarChart

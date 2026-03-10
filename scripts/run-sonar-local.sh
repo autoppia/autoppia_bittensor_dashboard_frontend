@@ -140,11 +140,19 @@ echo ""
 
 export SONAR_TOKEN
 
+# Use current branch so SonarCloud (and SonarLint in IDE) show issues for this branch (e.g. fix/sonar)
+SONAR_BRANCH="${SONAR_BRANCH:-$(git branch --show-current 2>/dev/null || echo '')}"
+BRANCH_ARGS=""
+if [ -n "$SONAR_BRANCH" ]; then
+  BRANCH_ARGS="-Dsonar.branch.name=$SONAR_BRANCH"
+fi
+
 $SONAR_SCANNER_CMD \
     -Dsonar.host.url=https://sonarcloud.io \
     -Dsonar.token="$SONAR_TOKEN" \
     -Dsonar.issuesReport.html.enable=true \
-    -Dsonar.issuesReport.console.enable=true
+    -Dsonar.issuesReport.console.enable=true \
+    $BRANCH_ARGS
 
 EXIT_CODE=$?
 

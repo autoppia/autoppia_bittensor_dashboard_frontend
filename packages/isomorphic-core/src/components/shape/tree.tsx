@@ -1,4 +1,6 @@
-export default function TreeShape({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function TreeShape({
+  ...props
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       viewBox="0 0 115 71"

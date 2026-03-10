@@ -14,7 +14,7 @@ import {
   PiArrowClockwise,
 } from "react-icons/pi";
 import { useTaskMetrics } from "@/services/hooks/useTask";
-import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
+import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 
 // Format duration in seconds to human readable format
 const formatDuration = (seconds: number) => {
@@ -87,7 +87,7 @@ export default function TaskMetricsDynamic() {
             <Text className="text-red-700 font-medium">Failed to load metrics</Text>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.window.location.reload()}
             className="p-2 text-red-500 hover:text-red-700 transition-colors"
             title="Retry loading metrics"
           >
@@ -212,12 +212,12 @@ export default function TaskMetricsDynamic() {
                 <Text className="text-gray-600 text-sm">Usage Over Time</Text>
                 <div className="h-20 bg-gray-100 rounded-lg p-2">
                   <div className="flex items-end justify-between h-full">
-                    {memoryUsage.slice(-10).map((usage: any, index: number) => {
+                    {memoryUsage.slice(-10).map((usage: any) => {
                       const maxUsage = Math.max(...memoryUsage.map((u: any) => u.value));
                       const height = (usage.value / maxUsage) * 100;
                       return (
                         <div
-                          key={index}
+                          key={usage.timestamp ?? String(usage.value)}
                           className="bg-blue-500 rounded-sm flex-1 mx-0.5"
                           style={{ height: `${height}%` }}
                           title={`${formatMemory(usage.value)} at ${new Date(usage.timestamp).toLocaleTimeString()}`}
@@ -254,11 +254,11 @@ export default function TaskMetricsDynamic() {
                 <Text className="text-gray-600 text-sm">Usage Over Time</Text>
                 <div className="h-20 bg-gray-100 rounded-lg p-2">
                   <div className="flex items-end justify-between h-full">
-                    {cpuUsage.slice(-10).map((usage: any, index: number) => {
+                    {cpuUsage.slice(-10).map((usage: any) => {
                       const height = usage.value;
                       return (
                         <div
-                          key={index}
+                          key={usage.timestamp ?? String(usage.value)}
                           className="bg-green-500 rounded-sm flex-1 mx-0.5"
                           style={{ height: `${height}%` }}
                           title={`${usage.value.toFixed(1)}% at ${new Date(usage.timestamp).toLocaleTimeString()}`}

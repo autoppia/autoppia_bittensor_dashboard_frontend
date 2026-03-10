@@ -41,12 +41,12 @@ export interface AgentRunData {
   reusedFromAgentRunId?: string | null;
   reusedFromRoundDisplay?: string | null;
   tasks?: AgentRunTaskData[];
+  /** Optional per-website stats (from run details API) */
   websites?: Array<{
     website?: string;
     successful?: number;
     tasks?: number;
   }>;
-  // websites removed - already in statistics
   // metadata removed - validator info already in info
 }
 
@@ -58,7 +58,7 @@ export interface AgentRunListItem {
   agentHotkey?: string | null;
   agentName?: string | null;
   agentImage?: string | null;
-  roundId: number;
+  roundId: number | string;
   validatorId: string;
   validatorName?: string;
   validatorImage?: string;
@@ -72,14 +72,6 @@ export interface AgentRunListItem {
   successRate?: number | null;
   ranking?: number;
   averageEvaluationTime?: number | null;
-  /** Reason for score 0 when applicable */
-  zeroReason?: string | null;
-  /** True when this run reuses results from a previous run (same code) */
-  isReused?: boolean;
-  /** Agent run id that was evaluated; this run reuses its results */
-  reusedFromAgentRunId?: string | null;
-  /** Human-readable "Season X, Round Y" where the source run was first used */
-  reusedFromRoundDisplay?: string | null;
 }
 
 // ===== AGENT RUN EVALUATION DATA =====
@@ -96,8 +88,6 @@ export interface AgentRunEvaluationData {
   startTime: string;
   endTime?: string;
   error?: string;
-  /** Reason for score 0 at evaluation level (e.g. task_timeout, tests_failed) */
-  zeroReason?: string | null;
   // actions, screenshots, logs removed - not needed in simplified response
 }
 
@@ -133,6 +123,8 @@ export interface AgentRunTaskAction {
 export interface AgentRunStats {
   runId?: string;
   overallReward?: number;
+  /** Reason for zero reward when applicable (e.g. over_cost_limit, deploy_failed) */
+  zeroReason?: string | null;
   totalTasks: number;
   websites: number;
   avg_reward: number;

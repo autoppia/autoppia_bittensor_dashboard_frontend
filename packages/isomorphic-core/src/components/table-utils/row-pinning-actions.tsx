@@ -8,12 +8,12 @@ export function PinningActions({
   onPinTop,
   onPinBottom,
   onUnpin,
-}: {
+}: Readonly<{
   isPinned: boolean;
   onPinTop: () => void;
   onPinBottom: () => void;
   onUnpin: () => void;
-}) {
+}>) {
   return (
     <>
       {isPinned ? (

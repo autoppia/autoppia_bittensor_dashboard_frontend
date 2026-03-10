@@ -171,6 +171,7 @@ export interface RoundsListResponse {
     total: number;
     page: number;
     limit: number;
+    currentRound?: RoundData;
   };
 }
 
@@ -296,7 +297,7 @@ export interface PostConsensusSummary {
     github_url?: string | null;
     avg_reward: number;
     avg_eval_score: number;
-    avg_eval_time: number;
+    avg_eval_time: number | null;
     avg_eval_cost?: number | null;
   } | null;
   miners_evaluated: number;

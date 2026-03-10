@@ -1,13 +1,12 @@
 # SonarCloud Local Analysis
 
-Script para ejecutar análisis de SonarCloud en local y obtener los mismos resultados que en producción.
+Scripts para ejecutar análisis de SonarCloud en local y ver incidencias en el IDE (rama `fix/sonar` o la que tengas activa).
 
 ## Requisitos
 
 - `pnpm` instalado
-- `wget` o `curl` para descargar SonarScanner
-- `unzip` para extraer SonarScanner
-- Token de SonarCloud (ya configurado en el script)
+- `wget` y `unzip` para descargar SonarScanner (si no está instalado)
+- **SONAR_TOKEN**: token de SonarCloud (obligatorio). Crear en [SonarCloud → Account → Security → Generate Tokens](https://sonarcloud.io/account/security). No hay valor por defecto por seguridad.
 
 ## Uso
 
@@ -58,18 +57,20 @@ cd autoppia_bittensor_dashboard_frontend
    - **Modo local**: Solo analiza y genera reportes locales
 7. 📊 Muestra los resultados (enlace web o archivos locales)
 
+## Ver errores en el IDE
+
+1. **SonarLint**: Con la extensión SonarLint instalada y el proyecto vinculado a SonarCloud (`.vscode/settings.json` → `sonarlint.connectedMode.project`), los issues se muestran en el editor y en la pestaña **Problems**. SonarLint usa la rama actual de git (p. ej. `fix/sonar`); asegúrate de que esa rama tenga al menos un análisis en SonarCloud (push o `npm run sonar`).
+2. **Solo consultar sin subir**: `npm run sonar:issues` (requiere `SONAR_TOKEN` y `jq` opcional). Lista métricas e incidencias por consola.
+
 ## Configuración del token
 
-El token está hardcodeado en el script. Si necesitas cambiarlo:
-
-1. Edita `scripts/run-sonar-local.sh`
-2. Cambia la línea: `SONAR_TOKEN="${SONAR_TOKEN:-77ebb52b5f3cfb99368c13f49e03791b53287bbb}"`
-
-O exporta la variable de entorno:
+El token es obligatorio y no tiene valor por defecto. Exporta la variable antes de ejecutar:
 
 ```bash
 export SONAR_TOKEN=tu-token-aqui
 ./scripts/run-sonar-local.sh
+# o para solo ver issues:
+npm run sonar:issues
 ```
 
 ## Ubicación de SonarScanner
@@ -104,8 +105,7 @@ Puedes revisar estos archivos para ver los problemas encontrados sin subir nada 
 - Si falla, verifica que `wget` y `unzip` estén instalados
 
 ### Error: "SONAR_TOKEN no está configurado"
-- El token está hardcodeado en el script
-- Si aparece este error, verifica que el script tenga el token correcto
+- Exporta el token: `export SONAR_TOKEN=tu_token` (crear en SonarCloud → Account → Security)
 
 ### Error: "sonar-project.properties no encontrado"
 - Asegúrate de ejecutar el script desde el directorio raíz del proyecto

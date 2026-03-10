@@ -6,6 +6,21 @@ import { useEffect, useState } from 'react';
 
 const queryAtom = atom('');
 
+function getParams(url: string | URL = globalThis.location.href): Record<string, string | string[]> {
+  const params: Record<string, string | string[]> = {};
+  new URL(url).searchParams.forEach((val: string, key: string) => {
+    if (params[key] === undefined) {
+      params[key] = val;
+    } else {
+      const existing = params[key];
+      params[key] = Array.isArray(existing)
+        ? [...existing, val]
+        : [existing, val];
+    }
+  });
+  return params;
+}
+
 export function createQueryString(queryObj: any) {
   let path = [];
   for (const [key, value] of Object.entries(queryObj)) {
@@ -40,22 +55,6 @@ export default function useQueryParams(pathname: string = '/') {
     }
     setQuery(queryString);
   };
-
-  function getParams(url = window.location) {
-    const params: any = {};
-    // @ts-ignore
-    new URL(url).searchParams.forEach(function (val: string, key: string) {
-      if (params[key] !== undefined) {
-        if (!Array.isArray(params[key])) {
-          params[key] = [params[key]];
-        }
-        params[key].push(val);
-      } else {
-        params[key] = val;
-      }
-    });
-    return params;
-  }
 
   const updateQueryParams = (key: string, value: string | number | boolean) => {
     if (!value) {

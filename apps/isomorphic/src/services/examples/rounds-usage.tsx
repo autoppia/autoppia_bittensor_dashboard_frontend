@@ -8,7 +8,7 @@ import React from 'react';
 import { useRoundData, useRoundsList, useRoundStatistics, useRoundMiners } from '../hooks/useRounds';
 
 // Example 1: Using the combined hook for round page
-export function RoundPageExample({ roundId }: { roundId: number }) {
+export function RoundPageExample({ roundId }: Readonly<{ roundId: number }>) {
   const { data, loading, error, refetch } = useRoundData(roundId);
 
   if (loading) return <div>Loading round data...</div>;
@@ -80,7 +80,7 @@ export function RoundPageExample({ roundId }: { roundId: number }) {
 }
 
 // Example 2: Using individual hooks for specific data
-export function RoundStatisticsExample({ roundId }: { roundId: number }) {
+export function RoundStatisticsExample({ roundId }: Readonly<{ roundId: number }>) {
   const { data: statistics, loading, error } = useRoundStatistics(roundId);
 
   if (loading) return <div>Loading statistics...</div>;
@@ -151,7 +151,7 @@ export function RoundsListExample() {
 }
 
 // Example 4: Using round miners with filtering
-export function RoundMinersExample({ roundId }: { roundId: number }) {
+export function RoundMinersExample({ roundId }: Readonly<{ roundId: number }>) {
   const { data: miners, loading, error } = useRoundMiners(roundId, {
     limit: 10,
     sortBy: 'score',
@@ -171,7 +171,7 @@ export function RoundMinersExample({ roundId }: { roundId: number }) {
               <div>
                 <h3 className="font-semibold">Miner {miner.uid}</h3>
                 <p className="text-sm text-gray-600">
-                  Hotkey: {miner.hotkey.slice(0, 8)}...{miner.hotkey.slice(-8)}
+                  Hotkey: {(miner.hotkey ?? "").slice(0, 8)}...{(miner.hotkey ?? "").slice(-8)}
                 </p>
               </div>
               <div className="text-right">
@@ -197,7 +197,7 @@ export function RoundMinersExample({ roundId }: { roundId: number }) {
 }
 
 // Example 5: Error handling and retry logic
-export function RoundErrorHandlingExample({ roundId }: { roundId: number }) {
+export function RoundErrorHandlingExample({ roundId }: Readonly<{ roundId: number }>) {
   const { data, loading, error, refetch } = useRoundStatistics(roundId);
 
   if (loading) {

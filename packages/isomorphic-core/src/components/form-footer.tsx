@@ -19,7 +19,7 @@ export default function FormFooter({
   submitBtnText = "Submit",
   className,
   handleAltBtn,
-}: FormFooterProps) {
+}: Readonly<FormFooterProps>) {
   return (
     <div
       className={cn(

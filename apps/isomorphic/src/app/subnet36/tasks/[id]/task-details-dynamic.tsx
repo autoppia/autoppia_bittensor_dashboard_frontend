@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
 import { Text } from "rizzui";
 import type { IconType } from "react-icons";
 import {
@@ -11,16 +10,13 @@ import {
   PiCopy,
   PiFileText,
   PiGauge,
-  PiIdentificationCard,
   PiLinkSimple,
-  PiPlay,
   PiShieldCheck,
   PiTimer,
   PiUserCircle,
 } from "react-icons/pi";
 import type { TaskDetails } from "@/repositories/tasks/tasks.types";
 import { resolveAssetUrl } from "@/services/utils/assets";
-import { routes } from "@/config/routes";
 
 type StatCardConfig = {
   label: string;
@@ -35,8 +31,8 @@ type StatCardConfig = {
 const formatLabel = (value?: string) => {
   if (!value) return "Unknown";
   return value
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase()
     .split(" ")
@@ -83,7 +79,7 @@ const formatNumber = (value?: number | null, digits: number = 2) => {
   return value.toFixed(digits);
 };
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -117,11 +113,11 @@ function InfoRow({
   label,
   value,
   valueClassName,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   valueClassName?: string;
-}) {
+}>) {
   return (
     <div className="flex items-start justify-between gap-3 text-xs">
       <span className="text-slate-500 font-medium">{label}</span>
@@ -138,11 +134,11 @@ function StatPill({
   label,
   value,
   className,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <span
       className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${
@@ -169,7 +165,7 @@ function ContextCard({
   gradient,
   children,
   header,
-}: ContextCardProps) {
+}: Readonly<ContextCardProps>) {
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 p-6 text-white shadow-2xl backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20">
       <div className="relative flex flex-col gap-4">
@@ -243,7 +239,7 @@ function StatCard({
   iconWrapper,
   description,
   valueClassName,
-}: StatCardConfig) {
+}: Readonly<StatCardConfig>) {
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-blue-400/40 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-white shadow-2xl backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20">
       <div className="relative flex flex-col gap-3 p-6">
@@ -276,19 +272,22 @@ type TaskDetailsDynamicProps = {
   error?: string | null;
 };
 
+const LOADING_PRIMARY_KEYS = ["task-loading-primary-0", "task-loading-primary-1", "task-loading-primary-2"] as const;
+const LOADING_SECONDARY_KEYS = ["task-loading-secondary-0", "task-loading-secondary-1", "task-loading-secondary-2", "task-loading-secondary-3", "task-loading-secondary-4", "task-loading-secondary-5"] as const;
+
 export default function TaskDetailsDynamic({
   details,
   isLoading = false,
   error,
-}: TaskDetailsDynamicProps) {
+}: Readonly<TaskDetailsDynamicProps>) {
   if (isLoading && !details) {
     return (
       <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-sm">
         <div className="relative space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {LOADING_PRIMARY_KEYS.map((key) => (
               <div
-                key={`task-loading-primary-${idx}`}
+                key={key}
                 className="animate-pulse rounded-xl border border-slate-700/50 bg-slate-800/40 p-5"
               >
                 <div className="space-y-3">
@@ -299,9 +298,9 @@ export default function TaskDetailsDynamic({
             ))}
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, idx) => (
+            {LOADING_SECONDARY_KEYS.map((key) => (
               <div
-                key={`task-loading-secondary-${idx}`}
+                key={key}
                 className="animate-pulse rounded-xl border border-slate-700/50 bg-slate-800/40 p-6"
               >
                 <div className="space-y-3">
@@ -337,9 +336,7 @@ export default function TaskDetailsDynamic({
   const roundInfo = relationships?.round;
   const validatorInfo = relationships?.validator;
   const minerInfo = relationships?.miner;
-  const agentRunInfo = relationships?.agentRun;
   const evaluationInfo = relationships?.evaluation;
-  const solutionInfo = relationships?.solution;
 
   const evaluationScore =
     typeof evaluationInfo?.finalScore === "number"
@@ -348,44 +345,21 @@ export default function TaskDetailsDynamic({
   const evaluationDuration = evaluationInfo
     ? formatDuration(evaluationInfo.evaluationTime)
     : formatDuration(taskData.duration);
-  const agentRunDuration = agentRunInfo?.duration
-    ? formatDuration(agentRunInfo.duration)
-    : formatDuration(taskData.duration);
-  const agentRunAverageScore =
-    typeof agentRunInfo?.averageScore === "number"
-      ? formatPercent(agentRunInfo.averageScore)
-      : "—";
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
-  const validatorImage =
-    validatorInfo?.image && validatorInfo.image.trim()
-      ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
-      : validatorDefaultImage;
+  const validatorImage = validatorInfo?.image?.trim()
+    ? resolveAssetUrl(validatorInfo.image, validatorDefaultImage)
+    : validatorDefaultImage;
 
   const minerDefaultImage = resolveAssetUrl(
     minerInfo?.isSota ? "/validators/Other.png" : "/miners/0.svg"
   );
-  const minerImage =
-    minerInfo?.image && minerInfo.image.trim()
-      ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
-      : minerDefaultImage;
+  const minerImage = minerInfo?.image?.trim()
+    ? resolveAssetUrl(minerInfo.image, minerDefaultImage)
+    : minerDefaultImage;
 
-  const artifactSummary = (() => {
-    const parts: string[] = [];
-    if (evaluationInfo?.hasRecording || solutionInfo?.hasRecording) {
-      parts.push("Recording");
-    }
-    if (evaluationInfo?.hasFeedback) {
-      parts.push("Feedback");
-    }
-    return parts.length ? parts.join(" • ") : "—";
-  })();
-  const solutionSummary = solutionInfo
-    ? `${truncateMiddle(solutionInfo.solutionId, 5)} · ${solutionInfo.actionsCount} actions`
-    : "—";
   const evaluationStatusLabel = formatLabel(
     evaluationInfo?.status ?? taskData.status
   );
-  const agentRunLinkId = agentRunInfo?.agentRunId ?? taskData.agentRunId;
   const evaluationStyles = getStatusStyles(
     evaluationInfo?.status ?? taskData.status
   );
@@ -463,12 +437,7 @@ export default function TaskDetailsDynamic({
                     />
                     <StatPill
                       label="Epoch"
-                      value={
-                        roundInfo?.startEpoch !== undefined &&
-                        roundInfo?.startEpoch !== null
-                          ? roundInfo.startEpoch
-                          : "—"
-                      }
+                      value={roundInfo?.startEpoch ?? "—"}
                       className="border-blue-400/40 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 backdrop-blur-sm"
                     />
                   </div>

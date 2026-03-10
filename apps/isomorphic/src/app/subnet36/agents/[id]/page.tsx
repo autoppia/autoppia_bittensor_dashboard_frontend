@@ -9,12 +9,10 @@ import { Button, Select, Text } from "rizzui";
 import {
   formatWebsiteName,
   getProjectColors,
-  getProjectMainColor,
 } from "@/utils/website-colors";
 import { useScrollableSlider } from "@core/hooks/use-scrollable-slider";
 import WidgetCard from "@core/components/cards/widget-card";
 import ButtonGroupAction from "@core/components/charts/button-group-action";
-import { CustomTooltip } from "@core/components/charts/custom-tooltip";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
 import {
   ComposedChart,
@@ -71,14 +69,13 @@ import {
   PiCaretUpDuotone,
 } from "react-icons/pi";
 import {
-  LuCircleCheckBig,
   LuTrophy,
   LuAward,
   LuTarget,
   LuStar,
   LuCrown,
 } from "react-icons/lu";
-import { GLASS_STYLES, METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
+import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
 // ============================================================================
 // Shared helpers within this page
@@ -91,8 +88,8 @@ const normalizeScore = (value?: number | null): number | null => {
 const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "");
 
 const formatBestRoundBadge = (value: number | string | null | undefined) => {
   if (value == null) return null;
@@ -121,12 +118,12 @@ function AgentStats({
   roundMetrics,
   mode = "current",
   preAvg,
-}: {
+}: Readonly<{
   agent?: AgentData | null;
   roundMetrics?: AgentRoundMetrics | null;
   mode?: "current" | "historical";
-  preAvg?: any;
-}) {
+  preAvg?: { avgResp?: string | number; avgTasks?: string | number };
+}>) {
   const {
     sliderEl,
     sliderPrevBtn,
@@ -139,12 +136,11 @@ function AgentStats({
     return <AgentStatsPlaceholder />;
   }
 
-  const currentRankValue =
-    roundMetrics?.rank && roundMetrics.rank > 0
-      ? `#${roundMetrics.rank}`
-      : agent.currentRank && agent.currentRank > 0
-        ? `#${agent.currentRank}`
-        : "N/A";
+  const currentRankValue = (() => {
+    if (roundMetrics?.rank != null && roundMetrics.rank > 0) return `#${roundMetrics.rank}`;
+    if (agent.currentRank != null && agent.currentRank > 0) return `#${agent.currentRank}`;
+    return "N/A";
+  })();
 
   const bestRankEver =
     agent.bestRankEver && agent.bestRankEver > 0
@@ -260,8 +256,8 @@ function AgentStats({
           ref={sliderEl}
           className="custom-scrollbar grid grid-flow-col gap-3 overflow-x-auto overflow-y-visible scroll-smooth 2xl:gap-4 3xl:gap-5 px-2 py-2 [&::-webkit-scrollbar]:h-0"
         >
-          {displayStats.map((stat) => {
-            const Icon = stat.icon as any;
+          {displayStats.map((stat: AgentStatCardItem) => {
+            const Icon = stat.icon;
             return (
               <div
                 key={stat.title}
@@ -286,7 +282,7 @@ function AgentStats({
                   style={{
                     maskImage: "radial-gradient(white, transparent)",
                     WebkitMaskImage: "radial-gradient(white, transparent)",
-                    background: `radial-gradient(circle, ${stat.glowColor}, transparent 70%)`,
+                    background: `radial-gradient(circle, ${stat.glowColor ?? "transparent"}, transparent 70%)`,
                   }}
                 />
 
@@ -321,9 +317,9 @@ function AgentStats({
                       <Text className="font-black text-3xl leading-none text-white transition-transform duration-300 group-hover:scale-105">
                         {stat.metric}
                       </Text>
-                      {(stat as any).badge ? (
+                      {stat.badge ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-white/15 text-white/90 border border-white/25 shadow-sm flex-shrink-0">
-                          {(stat as any).badge}
+                          {stat.badge}
                         </span>
                       ) : null}
                     </div>
@@ -375,13 +371,13 @@ function AgentScoreChart({
   loading = false,
   error,
   title = "Reward Over Time",
-}: {
+}: Readonly<{
   className?: string;
   rewardRoundData?: RewardRoundDataPoint[];
   loading?: boolean;
   error?: string | null;
   title?: string;
-}) {
+}>) {
   const [timeRange, setTimeRange] = useState<"7r" | "15r" | "30r" | "all">(
     "all"
   );
@@ -391,7 +387,7 @@ function AgentScoreChart({
 
     const rows = rewardRoundData
       .map((point) => {
-        const row: Record<string, number | string | null> = {
+        const row: ChartRow = {
           round: point.round ?? point.round_id, // Use numeric round field if available (historical), otherwise round_id
           roundLabel: point.round_id, // Keep string format for display (e.g., "1/1")
           reward: normalizeScore(point.reward) ?? 0,
@@ -433,7 +429,7 @@ function AgentScoreChart({
         (entry) =>
           typeof entry.round === "number" &&
           Number.isFinite(entry.round) &&
-          (entry.round as number) > 0
+          entry.round > 0
       )
       .sort((a, b) => Number(a.round) - Number(b.round));
 
@@ -1112,13 +1108,15 @@ function AgentValidators({
 }
 
 // Enhanced custom tooltip for bar chart
-const WebsitePerformanceTooltip = ({ active, payload }: any) => {
-  if (!active || !payload || !payload.length) return null;
+type WebsiteTooltipPayload = { website?: string; successRate?: number; successful?: number; total?: number };
+const WebsitePerformanceTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: WebsiteTooltipPayload }> }) => {
+  if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload;
-  const successRate = Math.round(data.successRate);
-  const successful = data.successful;
-  const total = data.total;
+  const data = payload[0]?.payload;
+  if (!data) return null;
+  const successRate = Math.round(Number(data.successRate) || 0);
+  const successful = Number(data.successful) || 0;
+  const total = Number(data.total) || 0;
   const failed = total - successful;
 
   return (
@@ -1126,7 +1124,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
       {/* Website name header */}
       <div className="mb-3 pb-3 border-b border-white/20">
         <div className="text-base font-bold text-white mb-1">
-          {data.website}
+          {String(data.website ?? "")}
         </div>
         <div className="text-xs text-white/60 font-medium">
           Performance Metrics
@@ -1158,7 +1156,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             />
             <span className="text-xs font-medium text-white/90">All Tasks</span>
           </div>
-          <span className="text-sm font-bold text-blue-300">{total}</span>
+          <span className="text-sm font-bold text-blue-300">{String(total)}</span>
         </div>
 
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
@@ -1170,7 +1168,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             <span className="text-xs font-medium text-white/90">Success</span>
           </div>
           <span className="text-sm font-bold text-emerald-300">
-            {successful}
+            {String(successful)}
           </span>
         </div>
 
@@ -1182,7 +1180,7 @@ const WebsitePerformanceTooltip = ({ active, payload }: any) => {
             />
             <span className="text-xs font-medium text-white/90">Failed</span>
           </div>
-          <span className="text-sm font-bold text-rose-300">{failed}</span>
+          <span className="text-sm font-bold text-rose-300">{String(failed)}</span>
         </div>
       </div>
     </div>
@@ -1195,7 +1193,7 @@ function RoundWebsitesChart({
   selectedRound,
   runs,
   onSummaryChange,
-}: {
+}: Readonly<{
   agentId: string;
   selectedRound?: number | null;
   runs: AgentRunOverview[];
@@ -1203,7 +1201,7 @@ function RoundWebsitesChart({
     uniqueWebsites: number;
     totalTasks: number;
   }) => void;
-}) {
+}>) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chartRows, setChartRows] = useState<
@@ -1248,6 +1246,7 @@ function RoundWebsitesChart({
             try {
               return await agentsRepository.getAgentRun(agentId, run.runId);
             } catch (e) {
+              console.error("getAgentRun failed for run", run.runId, e);
               return null;
             }
           })
@@ -1261,10 +1260,10 @@ function RoundWebsitesChart({
           run.websites.forEach((w) => {
             const key = (w.website || "unknown").toString();
             const entry = bySite.get(key) || { successful: 0, total: 0 };
-            const succ = Number.isFinite(w.successful as any)
+            const succ = Number.isFinite(Number(w.successful))
               ? Math.max(0, Number(w.successful))
               : 0;
-            const tasks = Number.isFinite(w.tasks as any)
+            const tasks = Number.isFinite(Number(w.tasks))
               ? Math.max(0, Number(w.tasks))
               : 0;
             entry.successful += succ;
@@ -1633,7 +1632,7 @@ export default function Page() {
         githubUrl: agentDetail?.agent?.githubUrl ?? undefined,
         taostatsUrl: undefined,
       }
-    : minerRoundDetails && minerRoundDetails.miner
+    : minerRoundDetails?.miner
       ? {
           id: minerRoundDetails.miner.uid.toString(),
           uid: minerRoundDetails.miner.uid,
@@ -2364,7 +2363,7 @@ export default function Page() {
                         "group-hover:shadow-lg"
                       )}
                       style={{
-                        boxShadow: `0 0 12px ${stat.glowColor}33`,
+                        boxShadow: `0 0 12px ${stat.glowColor ?? "transparent"}33`,
                       }}
                     />
 

@@ -30,7 +30,7 @@ export function ValidatorImage({
   priority = false,
   fallbackIcon,
   showErrorState = true,
-}: ValidatorImageProps) {
+}: Readonly<ValidatorImageProps>) {
   const [imageError, setImageError] = useState(false);
   const resolvedSrc = resolveAssetUrl(src, "/validators/Other.png");
 
@@ -47,7 +47,7 @@ export function ValidatorImage({
           fill ? "w-full h-full" : "",
           className
         )}
-        style={!fill ? { width, height } : {}}
+        style={fill ? {} : { width, height }}
       >
         {fallbackIcon || (
           <div className="flex flex-col items-center justify-center text-gray-400">
@@ -98,7 +98,7 @@ export function ValidatorAvatar({
   size = 48,
   className = "",
   showErrorState = false,
-}: ValidatorAvatarProps) {
+}: Readonly<ValidatorAvatarProps>) {
   return (
     <ValidatorImage
       src={src}
@@ -128,7 +128,7 @@ export function ValidatorImageFill({
   sizes,
   priority = false,
   showErrorState = false,
-}: ValidatorImageFillProps) {
+}: Readonly<ValidatorImageFillProps>) {
   return (
     <ValidatorImage
       src={src}

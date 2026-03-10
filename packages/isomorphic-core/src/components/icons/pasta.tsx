@@ -1,4 +1,4 @@
-export default function PastaIcon({ ...props }: React.SVGProps<SVGSVGElement>) {
+export default function PastaIcon({ ...props }: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" {...props}>
       <path

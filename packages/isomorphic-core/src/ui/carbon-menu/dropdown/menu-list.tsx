@@ -48,14 +48,14 @@ export const MenuList = forwardRef<
       }
     };
 
-    const handleMouseEnter = (event?: any) => {
+    const handleMouseEnter = (event?: React.MouseEvent<HTMLDivElement>) => {
       onMouseEnter?.(event);
       if (trigger === 'hover' || trigger === 'click-hover') {
         openDropdown();
       }
     };
 
-    const handleMouseLeave = (event?: any) => {
+    const handleMouseLeave = (event?: React.MouseEvent<HTMLDivElement>) => {
       onMouseLeave?.(event);
       if (trigger === 'hover' || trigger === 'click-hover') {
         closeDropdown();

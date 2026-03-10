@@ -7,13 +7,12 @@ import {
   PiClock,
   PiCopyDuotone,
   PiGithubLogoDuotone,
-  PiHash,
   PiKey,
   PiTarget,
 } from "react-icons/pi";
 import { useTaskPersonas } from "@/services/hooks/useTask";
 import { useAgent } from "@/services/hooks/useAgents";
-import Placeholder, { StatsCardPlaceholder } from "@/app/shared/placeholder";
+import { StatsCardPlaceholder } from "@/app/shared/placeholder";
 import { CardLoadingSkeleton } from "@/app/shared/loading-screen";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
@@ -29,20 +28,22 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
 
 function formatStatus(value: string) {
   if (!value) return "Unknown";
-  return value.replace(/_/g, " ").replace(/^\w/, (char) => char.toUpperCase());
+  return value.replaceAll("_", " ").replace(/^\w/, (char) => char.toUpperCase());
 }
 
 function formatUseCase(value?: string | null) {
   if (!value) return "Unknown use case";
   return value
     .toString()
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+const PERSONAS_ERROR_PLACEHOLDER_KEYS = ["personas-error-a", "personas-error-b", "personas-error-c", "personas-error-d"] as const;
 
 export default function TaskPersonasDynamic() {
   const { id } = useParams();
@@ -52,9 +53,7 @@ export default function TaskPersonasDynamic() {
   // Fetch full agent data to get UID and hotkey (when available)
   const { data: agentDetail } = useAgent(personas?.agent.id);
   const agentData = agentDetail?.agent;
-  const canCopyHotkey =
-    typeof navigator !== "undefined" &&
-    typeof navigator.clipboard !== "undefined";
+  const canCopyHotkey = Boolean(globalThis.navigator?.clipboard);
 
   if (isLoading) {
     return <CardLoadingSkeleton count={4} className="mb-6" />;
@@ -63,8 +62,8 @@ export default function TaskPersonasDynamic() {
   if (error || !personas) {
     return (
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 mb-6">
-        {Array.from({ length: 4 }, (_, index) => (
-          <StatsCardPlaceholder key={index} />
+        {PERSONAS_ERROR_PLACEHOLDER_KEYS.map((key) => (
+          <StatsCardPlaceholder key={key} />
         ))}
       </div>
     );
@@ -73,16 +72,16 @@ export default function TaskPersonasDynamic() {
   const roundStatusLabel = formatStatus(personas.round.status);
   const validatorDefaultImage = resolveAssetUrl("/validators/Other.png");
   const validatorImage =
-    personas.validator.image && personas.validator.image.trim()
+    personas.validator.image?.trim()
       ? resolveAssetUrl(personas.validator.image, validatorDefaultImage)
       : validatorDefaultImage;
   const agentDefaultImage = resolveAssetUrl("/miners/0.svg");
   const agentImage =
-    personas.agent.image && personas.agent.image.trim()
+    personas.agent.image?.trim()
       ? resolveAssetUrl(personas.agent.image, agentDefaultImage)
       : agentDefaultImage;
   const agentUid =
-    agentData?.uid != null ? `UID ${agentData.uid}` : "UID unavailable";
+    agentData?.uid == null ? "UID unavailable" : `UID ${agentData.uid}`;
   const agentHotkey = agentData?.hotkey;
   const taskUseCase = formatUseCase(personas.task.useCase);
 

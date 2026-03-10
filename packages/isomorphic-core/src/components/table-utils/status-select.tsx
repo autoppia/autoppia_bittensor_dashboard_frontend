@@ -7,10 +7,10 @@ import { Select, SelectOption, Text } from "rizzui";
 export function StatusSelect({
   selectItem,
   options,
-}: {
+}: Readonly<{
   selectItem?: string;
   options: SelectOption[];
-}) {
+}>) {
   const selectItemValue = options.find((option) => option.label === selectItem);
   const [value, setValue] = useState(selectItemValue);
   return (
@@ -21,8 +21,8 @@ export function StatusSelect({
       options={options}
       value={value}
       onChange={setValue}
-      displayValue={(option: { value: any }) =>
-        renderOptionDisplayValue(option.value as string)
+      displayValue={(option: SelectOption) =>
+        renderOptionDisplayValue(String(option.value))
       }
     />
   );
@@ -58,14 +58,6 @@ function renderOptionDisplayValue(value: string) {
         </div>
       );
     case "Waiting":
-      return (
-        <div className="flex items-center">
-          <PiCheckCircleBold className="shrink-0 fill-orange text-base" />
-          <Text className="ms-1.5 text-sm font-medium capitalize text-gray-700">
-            {value}
-          </Text>
-        </div>
-      );
     default:
       return (
         <div className="flex items-center">

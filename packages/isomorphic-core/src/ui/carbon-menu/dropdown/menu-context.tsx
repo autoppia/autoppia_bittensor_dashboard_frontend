@@ -14,7 +14,7 @@ interface MenuContext {
   menuItemTabIndex: -1 | 0 | undefined;
   openedViaClick: boolean;
   setOpenedViaClick: (value: boolean) => void;
-  loop?: boolean | undefined;
+  loop?: boolean;
 }
 
 export const [MenuContextProvider, useMenuContext] =

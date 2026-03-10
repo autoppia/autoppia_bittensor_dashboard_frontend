@@ -5,5 +5,5 @@ export function calculatePercentage(value: number, total: number): number {
   }
 
   const percentage = ((total - value) / total) * 100;
-  return parseFloat(percentage.toFixed(2));
+  return Number.parseFloat(percentage.toFixed(2));
 }

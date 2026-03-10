@@ -26,14 +26,12 @@ export default function ImageViewer() {
       >
         <TransformComponent wrapperClass="!w-full !h-full cursor-grab border border-muted">
           {mounted ? (
-            <>
-              <Image
-                width={1200}
-                height={900}
-                src={image.url}
-                alt="view image"
-              />
-            </>
+            <Image
+              width={1200}
+              height={900}
+              src={image.url}
+              alt="view image"
+            />
           ) : null}
         </TransformComponent>
       </TransformWrapper>

@@ -1,5 +1,5 @@
 'use client';
-import React, { Fragment } from 'react';
+import React from 'react';
 import { useNavMenu } from './nav-menu-context';
 import cn from '@core/utils/class-names';
 import { useClientWidth } from '@core/hooks/use-client-width';
@@ -10,7 +10,7 @@ import type {
   NavMenuContentProps,
 } from './nav-menu-types';
 
-export function NavMenuContent({ children }: NavMenuContentProps) {
+export function NavMenuContent({ children }: Readonly<NavMenuContentProps>) {
   return <>{children}</>;
 }
 
@@ -46,7 +46,7 @@ export function NavMenuContentWrapper({
   menuContentClassName,
   fullscreen = false,
   floatingOffset,
-}: NavMenuContentWrapperProps) {
+}: Readonly<NavMenuContentWrapperProps>) {
   const clientWidth = useClientWidth();
 
   const {
@@ -61,61 +61,64 @@ export function NavMenuContentWrapper({
     dir,
   } = useNavMenu();
 
-  const roundedKey = (contentUiPropsRefs.current[hovering!]?.rounded ||
-    'md') as ContentWrapperRounded;
-  const shadowKey = (contentUiPropsRefs.current[hovering!]?.shadow ||
-    'md') as ContentWrapperShadow;
+  const roundedKey: ContentWrapperRounded =
+    contentUiPropsRefs.current[hovering ?? -1]?.rounded ?? 'md';
+  const shadowKey: ContentWrapperShadow =
+    contentUiPropsRefs.current[hovering ?? -1]?.shadow ?? 'md';
 
+  const hoveringX = hoveringElRect?.x ?? 0;
+  const popoverW = popoverWidth ?? 0;
   const negativeXLtrValue =
-    clientWidth - hoveringElRect?.x! - floatingOffset < popoverWidth!
-      ? popoverWidth! -
-        (clientWidth - hoveringElRect?.x! - floatingOffset)! +
-        floatingOffset
+    clientWidth - hoveringX - floatingOffset < popoverW
+      ? popoverW - (clientWidth - hoveringX - floatingOffset) + floatingOffset
       : 0;
 
+  const hoveringW = hoveringWidth ?? 0;
+  const popoverL = popoverLeft ?? 0;
   const leftRtl =
-    popoverWidth! > hoveringElRect?.x! + hoveringWidth! - floatingOffset
-      ? popoverLeft! +
-        hoveringWidth! -
-        hoveringWidth! -
-        hoveringElRect?.x! +
-        floatingOffset
-      : popoverLeft! + hoveringWidth! - popoverWidth!;
+    popoverW > hoveringX + hoveringW - floatingOffset
+      ? popoverL + hoveringW - hoveringW - hoveringX + floatingOffset
+      : popoverL + hoveringW - popoverW;
+
+  const positionStyle = fullscreen
+    ? {
+        width: 'var(--client-width)',
+        position: 'fixed' as const,
+        insetInlineStart: 0,
+      }
+    : {
+        left: dir === 'ltr' ? popoverL - Math.abs(negativeXLtrValue) : leftRtl,
+        width: popoverW || 0,
+        position: 'absolute' as const,
+      };
+
+  const itemKeys = React.useMemo(
+    () => items.map((_, i) => `nav-menu-item-${i}`),
+    [items.length]
+  );
+
+  const baseStyle: React.CSSProperties & { '--client-width'?: string } = {
+    ['--client-width']: `${clientWidth}px`,
+    transformOrigin: 'top',
+    height: popoverHeight ?? 0,
+    ...positionStyle,
+  };
 
   return (
-    <>
-      <div
-        style={{
-          ...{ '--client-width': `${clientWidth}px` },
-          ...(!fullscreen
-            ? {
-                left:
-                  dir === 'ltr'
-                    ? popoverLeft! - Math.abs(negativeXLtrValue)
-                    : leftRtl!,
-                width: popoverWidth || 0,
-                position: 'absolute',
-              }
-            : {
-                width: 'var(--client-width)',
-                position: 'fixed',
-                insetInlineStart: 0,
-              }),
-          transformOrigin: 'top',
-          height: popoverHeight || 0,
-        }}
-        className={cn(
-          menuContentClassNames.base,
-          menuContentClassNames.rounded[roundedKey],
-          menuContentClassNames.shadow[shadowKey],
-          menuContentClassName,
-          hovering !== null
-            ? 'visible scale-y-100 opacity-100 transition-all'
-            : 'invisible scale-y-95 opacity-0',
-          !items[hovering!]?.component && 'border-none opacity-0 shadow-none'
-        )}
-      >
-        {items.map((item, index) => {
+    <div
+      style={baseStyle}
+      className={cn(
+        menuContentClassNames.base,
+        menuContentClassNames.rounded[roundedKey],
+        menuContentClassNames.shadow[shadowKey],
+        menuContentClassName,
+        hovering === null
+          ? 'invisible scale-y-95 opacity-0'
+          : 'visible scale-y-100 opacity-100 transition-all',
+        hovering !== null && !items[hovering]?.component && 'border-none opacity-0 shadow-none'
+      )}
+    >
+      {items.map((item, index) => {
           const uiProps = {
             // @ts-ignore
             rounded: item?.component?.props?.rounded || null,
@@ -123,12 +126,11 @@ export function NavMenuContentWrapper({
             shadow: item?.component?.props?.shadow || null,
           };
           return (
-            <Fragment key={index}>
-              <Wrapper
-                fullscreen={fullscreen}
-                hovering={hovering}
-                index={index}
-              >
+            <Wrapper
+              key={itemKeys[index]}
+              hovering={hovering}
+              index={index}
+            >
                 <div
                   ref={(element) => {
                     contentUiPropsRefs.current[index] = uiProps;
@@ -144,12 +146,10 @@ export function NavMenuContentWrapper({
                   {/* @ts-ignore */}
                   {item?.component?.props?.children?.props?.children}
                 </div>
-              </Wrapper>
-            </Fragment>
+            </Wrapper>
           );
         })}
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -157,26 +157,29 @@ type WrapperProps = {
   children: React.ReactNode;
   hovering: number | null;
   index: number;
-  fullscreen: boolean;
 };
 
-function Wrapper(props: WrapperProps) {
+function getWrapperTransformClass(hovering: number | null, index: number): string {
+  if (hovering === index) return 'transform-none';
+  if (hovering === null) return 'translate-x-0 opacity-0';
+  return hovering > index ? '-translate-x-1/4' : 'translate-x-1/4';
+}
+
+function Wrapper(props: Readonly<WrapperProps>) {
+  const { hovering, index, children } = props;
+  const opacityClass =
+    hovering === index ? 'opacity-100' : 'pointer-events-none translate-x-0 opacity-0';
+  const transformClass = getWrapperTransformClass(hovering, index);
   return (
     <div
       className={cn(
         'absolute start-0 top-0 w-full overflow-hidden transition-all duration-300 ease-in-out',
-        props.hovering === props.index
-          ? 'opacity-100'
-          : 'pointer-events-none translate-x-0 opacity-0',
-        props.hovering === props.index
-          ? 'transform-none'
-          : props.hovering! > props.index
-            ? '-translate-x-1/4'
-            : 'translate-x-1/4',
-        props.hovering === null && 'translate-x-0 opacity-0'
+        opacityClass,
+        transformClass,
+        hovering === null && 'translate-x-0 opacity-0'
       )}
     >
-      {props.children}
+      {children}
     </div>
   );
 }

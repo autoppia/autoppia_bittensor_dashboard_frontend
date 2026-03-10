@@ -12,7 +12,7 @@ function getRating(rating: number[]) {
     (partialSum, value) => partialSum + value,
     0
   );
-  const review = totalRating / rating?.length;
+  const review = totalRating / rating.length;
 
   return {
     review,
@@ -20,16 +20,29 @@ function getRating(rating: number[]) {
   };
 }
 
-export default function Rating({ rating, disableText = false, className }: RatingProps) {
+const STAR_POSITIONS = [0, 1, 2, 3, 4] as const;
+
+export default function Rating({
+  rating,
+  disableText = false,
+  className,
+}: Readonly<RatingProps>) {
   const { review, totalRating } = getRating(rating);
+  const filledCount = Math.round(review);
   return (
     <div className={cn("flex flex-col items-end", className)}>
       <div className="flex items-center">
-        {[...new Array(5)].map((_, index) => {
-          return index < Math.round(review) ? (
-            <PiStarFill className="w-4 fill-orange text-orange" key={index} />
+        {STAR_POSITIONS.map((position) => {
+          return position < filledCount ? (
+            <PiStarFill
+              className="w-4 fill-orange text-orange"
+              key={position}
+            />
           ) : (
-            <PiStar className="w-4 fill-gray-300 text-gray-500" key={index} />
+            <PiStar
+              className="w-4 fill-gray-300 text-gray-500"
+              key={position}
+            />
           );
         })}{' '}
       </div>
