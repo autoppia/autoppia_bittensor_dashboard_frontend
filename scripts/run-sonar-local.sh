@@ -43,7 +43,7 @@ if [[ ! $REPLY =~ ^[Ss]$ ]]; then
 fi
 
 # Verificar que el token esté configurado
-SONAR_TOKEN="${SONAR_TOKEN:-77ebb52b5f3cfb99368c13f49e03791b53287bbb}"
+SONAR_TOKEN="${SONAR_TOKEN:-REMOVED_SONAR_TOKEN}"
 
 if [ -z "$SONAR_TOKEN" ]; then
     echo -e "${RED}❌ Error: SONAR_TOKEN no está configurado${NC}"
