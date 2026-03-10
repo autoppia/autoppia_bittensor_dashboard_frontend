@@ -12,14 +12,25 @@ import type {
 } from "./overview/overview.types";
 
 export const mockOverviewMetrics: OverviewMetrics = {
-  topReward: 0.95,
-  topMinerUid: 80,
-  topMinerName: "Achilles",
-  totalWebsites: 13,
-  totalValidators: 6,
+  leader: {
+    minerUid: 80,
+    minerHotkey: "5MockHotkey",
+    minerImage: "/miners/80.svg",
+    minerGithubUrl: "https://github.com/example/achilles",
+    minerName: "Achilles",
+    reward: 0.95,
+    cost: 0.031,
+    score: 0.89,
+    time: 83.2,
+    validators: 6,
+    totalWebsitesEvaluated: 13,
+    tasksReceived: 10,
+    tasksSuccess: 9,
+  },
+  season: 4,
+  round: 42,
   totalMiners: 156,
-  currentRound: 42,
-  metricsRound: 41,
+  tasksPerValidator: 10,
   subnetVersion: "7.0.0",
   lastUpdated: new Date().toISOString(),
 };
