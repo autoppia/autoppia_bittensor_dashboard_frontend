@@ -580,21 +580,25 @@ function RoundHeaderInline({
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
-                <Select
-                  options={seasonOptions}
-                  value={seasonOptions.find(
-                    (option) =>
-                      option.value ===
-                      String(round?.season ?? seasonParam ?? progressData?.season ?? "")
-                  )}
-                  onChange={(option: { label: string; value: string }) =>
-                    goToSeason(Number.parseInt(option.value, 10))
-                  }
-                  disabled={seasonsLoading || !seasonOptions.length}
-                  className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
-                  selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
-                  dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
-                />
+                {/* Wrapper overrides --muted so the focused option gets a violet
+                    highlight instead of the default gray (bg-muted/70) */}
+                <div style={{ "--muted": "139 92 246" } as React.CSSProperties}>
+                  <Select
+                    options={seasonOptions}
+                    value={seasonOptions.find(
+                      (option) =>
+                        option.value ===
+                        String(round?.season ?? seasonParam ?? progressData?.season ?? "")
+                    )}
+                    onChange={(option: { label: string; value: string }) =>
+                      goToSeason(Number.parseInt(option.value, 10))
+                    }
+                    disabled={seasonsLoading || !seasonOptions.length}
+                    className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
+                    selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
+                    dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
+                  />
+                </div>
                 {/* Previous round (lower number) on the left */}
                 <button
                   type="button"
