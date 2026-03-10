@@ -3152,8 +3152,8 @@ export default function Round() {
                       </div>
                     )}
 
-                    {/* vs */}
-                    {lr.challenger_uid != null && chalPct && (
+                    {/* vs — only show when there is an actual reigning leader to compare against */}
+                    {lr.reigning_uid != null && lr.challenger_uid != null && chalPct && (
                       <div className="hidden sm:flex items-center justify-center w-7 flex-shrink-0">
                         <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">vs</span>
                       </div>
