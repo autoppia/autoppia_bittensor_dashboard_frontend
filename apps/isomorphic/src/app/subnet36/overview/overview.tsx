@@ -21,10 +21,10 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
-  const metricsRound = metrics?.metricsRoundInSeason ?? metrics?.metricsRound ?? null;
-  const metricsSeason = metrics?.metricsSeason ?? null;
-  const currentSeason = metrics?.currentSeason ?? null;
-  const currentRoundInSeason = metrics?.currentRoundInSeason ?? null;
+  const metricsRound = metrics?.round ?? null;
+  const metricsSeason = metrics?.season ?? null;
+  const currentSeason = metrics?.season ?? null;
+  const currentRoundInSeason = metrics?.round ?? null;
   const metricsRoundLabel =
     metricsSeason !== null && metricsSeason !== undefined && metricsRound !== null && metricsRound !== undefined
       ? `Season ${metricsSeason} - Round ${metricsRound}`
@@ -136,7 +136,7 @@ export default function Overview() {
         </div>
       </div>
       <OverviewValidators
-        currentRound={currentRoundInSeason ?? metrics?.currentRound}
+        currentRound={currentRoundInSeason}
         currentSeason={currentSeason}
       />
     </>

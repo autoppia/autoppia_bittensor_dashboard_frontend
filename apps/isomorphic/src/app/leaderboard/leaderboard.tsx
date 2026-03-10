@@ -698,9 +698,7 @@ export default function App() {
     repo
       .getMetrics()
       .then((metrics) => {
-        setSeasonToDownload(
-          metrics.currentSeason ?? metrics.metricsSeason ?? null
-        );
+        setSeasonToDownload(metrics.season ?? null);
       })
       .catch(() => {
         setSeasonToDownload(null);
