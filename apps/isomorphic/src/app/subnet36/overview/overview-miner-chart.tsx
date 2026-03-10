@@ -631,11 +631,11 @@ export default function MinerChart({
         className="flex min-h-0 w-full flex-1 pt-2"
         style={chartContainerStyle}
       >
-        {filteredData.length < 2 ? (
+        {filteredData.length === 0 ? (
           <div className="h-full w-full flex items-center justify-center text-gray-500">
             <div className="text-center">
               <p className="text-sm">Insufficient data for chart</p>
-              <p className="text-xs mt-1">Need at least 2 data points</p>
+              <p className="text-xs mt-1">Need at least 1 data point</p>
               <p className="text-xs">Current: {filteredData.length} points</p>
             </div>
           </div>
