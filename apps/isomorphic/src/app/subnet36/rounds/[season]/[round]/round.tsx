@@ -465,7 +465,7 @@ function RoundHeaderInline({
   if (isLoading) {
     return (
       <section className="mb-10">
-        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl p-8 text-white">
+        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl px-4 py-6 sm:p-8 text-white">
           <div className="relative space-y-8">
             <header className="flex flex-wrap items-start justify-between gap-6">
               <div className="space-y-4">
@@ -511,7 +511,7 @@ function RoundHeaderInline({
       <div
         className={cn(
           roundGlassBackgroundClass,
-          "rounded-3xl p-8 text-white shadow-2xl relative",
+          "rounded-3xl px-4 py-6 sm:p-8 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
             : status === "completed"
@@ -523,8 +523,8 @@ function RoundHeaderInline({
       >
         <div className="relative space-y-8">
           <header className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
+            <div className="space-y-4 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
                   ROUND {round?.roundInSeason ?? roundParam ?? progressData?.roundInSeason ?? roundNumber ?? "—"}
                 </h1>
@@ -651,12 +651,12 @@ function RoundHeaderInline({
           </header>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex flex-1 flex-col gap-5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-bold text-white/80 uppercase tracking-wider">
+            <div className="flex flex-1 flex-col gap-5 min-w-0">
+              <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                <span className="font-bold text-white/80 uppercase tracking-wider truncate">
                   Round Progress
                 </span>
-                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent shrink-0">
                   {progressPercentage}%
                 </span>
               </div>
@@ -686,42 +686,42 @@ function RoundHeaderInline({
                   style={{ left: `calc(${progressPercentage}% - 10px)` }}
                 />
               </div>
-              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3">
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40">
+              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3 min-w-0">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40 shrink-0">
                     <PiClockDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
                       Start Block
                     </span>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-white mt-0.5 break-all">
                       {startBlock.toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40 shrink-0">
                     <PiPulseDuotone className="h-7 w-7 text-amber-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-amber-200/80 font-bold">
                       Current Block
                     </span>
-                    <div className="text-lg font-black text-amber-100 mt-0.5">
+                    <div className="text-lg font-black text-amber-100 mt-0.5 break-all">
                       {currentBlock.toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30 shrink-0">
                     <PiFlagCheckeredDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
                       End Block
                     </span>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-white mt-0.5 break-all">
                       {endBlock.toLocaleString()}
                     </div>
                   </div>
