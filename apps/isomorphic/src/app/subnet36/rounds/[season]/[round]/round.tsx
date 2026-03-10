@@ -370,6 +370,20 @@ function RoundHeaderInline({
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
 
+  // Convert blocks → human-readable time (1 block ≈ 12 s on Bittensor)
+  const timeRemainingStr = React.useMemo(() => {
+    if (typeof blocksRemaining !== "number" || Number.isNaN(blocksRemaining)) {
+      return null;
+    }
+    if (blocksRemaining <= 0) return null;
+    const totalSec = blocksRemaining * 12;
+    if (totalSec < 60) return `~${Math.round(totalSec)}s`;
+    if (totalSec < 3600) return `~${Math.round(totalSec / 60)}m`;
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.round((totalSec % 3600) / 60);
+    return m > 0 ? `~${h}h ${m}m` : `~${h}h`;
+  }, [blocksRemaining]);
+
   // ✅ Usar status desde progressData
   const progressValue = progressData?.progress ?? round?.progress ?? 0;
   const backendStatus = progressData?.status ?? round?.status;
@@ -562,17 +576,20 @@ function RoundHeaderInline({
                 <div className="flex items-center gap-2">
                   <PiClockDuotone className="h-5 w-5 text-emerald-300" />
                   <span>
-                    {isActive
-                      ? "Waiting for updated timing"
-                      : "No remaining time"}
+                    {timeRemainingStr
+                      ? `${timeRemainingStr} remaining`
+                      : isActive
+                        ? "Waiting for updated timing"
+                        : "Round finished"}
                   </span>
                 </div>
                 {typeof blocksRemaining === "number" &&
-                  !Number.isNaN(blocksRemaining) && (
+                  !Number.isNaN(blocksRemaining) &&
+                  blocksRemaining > 0 && (
                     <div className="flex items-center gap-2">
                       <PiPulseDuotone className="h-5 w-5 text-sky-300" />
                       <span>
-                        {blocksRemaining.toLocaleString()} blocks remaining
+                        {blocksRemaining.toLocaleString()} blocks
                       </span>
                     </div>
                   )}
