@@ -3816,7 +3816,7 @@ export default function Round() {
               )}
             </div>
           </div>
-        </dialog>
+        </div>
       )}
 
       {/* Charts */}
