@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import Link from "next/link";
+import { useState, useEffect, useMemo, useRef } from "react";
 import NavLink from "@core/components/nav-link";
 import Image from "next/image";
 import {
@@ -28,10 +27,43 @@ import type {
   MinimalAgentData,
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
-import { GLASS_STYLES } from "@/config/theme-styles";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-export default function AgentsSidebar({ className }: { className?: string }) {
+function getMinerCardContainerClass(isActive: boolean, highlightTop: boolean): string {
+  if (isActive) return "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]";
+  if (highlightTop) return "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]";
+  return "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]";
+}
+
+function getMinerAvatarRingClass(isActive: boolean, highlightTop: boolean): string {
+  if (isActive) return "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50";
+  if (highlightTop) return "ring-2 ring-amber-400/50";
+  return "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30";
+}
+
+function getMinerNameClass(isActive: boolean, highlightTop: boolean): string {
+  if (isActive) return "text-white drop-shadow-sm";
+  if (highlightTop) return "text-amber-200 font-extrabold";
+  return "text-white/90 group-hover:text-white";
+}
+
+function getMinerSotaBadgeClass(isActive: boolean): string {
+  return isActive ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50" : "bg-purple-500/30 text-purple-100 border-purple-400/60";
+}
+
+function getRankBadgeRingClass(isActive: boolean, highlightTop: boolean, displayRank: number | undefined): string {
+  if (isActive && displayRank != null) return "ring-2 ring-white/40 shadow-md";
+  if (highlightTop && displayRank != null) return "ring-1 ring-amber-400/50 shadow-sm";
+  return "";
+}
+
+function getMinerMetaClass(isActive: boolean, highlightTop: boolean): string {
+  if (isActive) return "text-emerald-200";
+  if (highlightTop) return "text-amber-300";
+  return "text-white/70 group-hover:text-white/90";
+}
+
+export default function AgentsSidebar({ className }: Readonly<{ className?: string }>) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -41,21 +73,17 @@ export default function AgentsSidebar({ className }: { className?: string }) {
   const [includeSota, setIncludeSota] = useState<boolean>(false);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
-  const SOTA_ALLOWED_NAMES = ["openai cua", "anthropic cua", "browser use"];
+  const SOTA_ALLOWED_NAMES = new Set(["openai cua", "anthropic cua", "browser use"]);
 
-  const applySotaFilter = useCallback(
-    (miners: MinimalAgentData[], includeSota: boolean) => {
-      if (includeSota) {
-        return miners.filter((m) =>
-          SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
-        );
-      }
-      return miners.filter(
-        (m) => !SOTA_ALLOWED_NAMES.includes(m.name.toLowerCase())
-      );
-    },
-    []
-  );
+  const applySotaFilter = (
+    miners: MinimalAgentData[],
+    includeSota: boolean
+  ) => {
+    if (includeSota) {
+      return miners.filter((m) => SOTA_ALLOWED_NAMES.has(m.name.toLowerCase()));
+    }
+    return miners.filter((m) => !SOTA_ALLOWED_NAMES.has(m.name.toLowerCase()));
+  };
 
   const prioritizeReigningLeader = useCallback((miners: MinimalAgentData[]) => {
     const ordered = [...miners];
@@ -186,7 +214,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
 
   const minerScoreMetaByUid = useMemo(() => {
     const byUid = new Map<number, { effective: number; best: number }>();
-    minersFromApi.forEach((miner: any) => {
+    minersFromApi.forEach((miner: Record<string, unknown>) => {
       const uid = Number(miner?.uid);
       if (!Number.isFinite(uid)) return;
       const best = Number(
@@ -467,11 +495,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                     <div
                       className={cn(
                         "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
-                        isActive
-                          ? "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50"
-                          : highlightTop
-                          ? "ring-2 ring-amber-400/50"
-                          : "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30"
+                        getMinerAvatarRingClass(isActive, highlightTop)
                       )}
                     >
                       <Image
@@ -493,11 +517,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                         <span
                           className={cn(
                             "text-sm font-bold truncate transition-all duration-300",
-                            isActive
-                              ? "text-white drop-shadow-sm"
-                              : highlightTop
-                              ? "text-amber-200 font-extrabold"
-                              : "text-white/90 group-hover:text-white"
+                            getMinerNameClass(isActive, highlightTop)
                           )}
                         >
                           {miner.name}
@@ -507,9 +527,7 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                           <span
                             className={cn(
                               "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
-                              isActive
-                                ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
-                                : "bg-purple-500/30 text-purple-100 border-purple-400/60"
+                              getMinerSotaBadgeClass(isActive)
                             )}
                           >
                             SOTA
@@ -520,12 +538,11 @@ export default function AgentsSidebar({ className }: { className?: string }) {
                       <div className="flex items-center gap-2 mt-1 flex-nowrap min-w-0 overflow-x-auto overflow-y-hidden scrollbar-none">
                         <span
                           className={cn(
-                            "text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 transition-all duration-300 shrink-0",
-                            "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400 text-black shadow-sm",
-                            isActive ? "ring-2 ring-white/40 shadow-md" : ""
+                            "text-[11px] font-mono font-medium transition-all duration-300",
+                            getMinerMetaClass(isActive, highlightTop)
                           )}
                         >
-                          UID {miner.uid}
+                          UID: {miner.uid}
                         </span>
                         <span
                           className={cn(

@@ -30,11 +30,11 @@ export default function TablePagination<TData extends Record<string, any>>({
   table,
   showSelectedCount = false,
   className,
-}: {
+}: Readonly<{
   table: ReactTableType<TData>;
   showSelectedCount?: boolean;
   className?: string;
-}) {
+}>) {
   return (
     <Flex
       gap="6"

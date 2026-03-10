@@ -10,10 +10,23 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-export interface ApiError {
+export interface ApiErrorShape {
   message: string;
   status: number;
   code?: string;
+}
+
+/** Error class for API failures (status, code); use for throw so stack traces work. */
+export class ApiError extends Error implements ApiErrorShape {
+  readonly status: number;
+  readonly code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
 }
 
 const normalizeBaseUrl = (value: string | undefined) => {
@@ -47,7 +60,7 @@ const resolveBaseUrl = () => {
 };
 
 export class ApiClient {
-  private baseUrl: string;
+  private readonly baseUrl: string;
   private defaultHeaders: Record<string, string>;
 
   constructor(baseUrl: string = resolveBaseUrl()) {
@@ -60,13 +73,12 @@ export class ApiClient {
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw {
-        message:
-          errorData.message ||
+      throw new ApiError(
+        errorData.message ||
           `HTTP ${response.status}: ${response.statusText}`,
-        status: response.status,
-        code: errorData.code,
-      } as ApiError;
+        response.status,
+        errorData.code
+      );
     }
 
     const data = await response.json();
@@ -75,20 +87,19 @@ export class ApiClient {
     if (data && typeof data === "object" && data.success === false) {
       // Handle specific error cases
       if (data.code === "AGENT_RUN_NOT_FOUND") {
-        throw {
-          message:
-            data.error ||
+        throw new ApiError(
+          data.error ||
             `Agent run with ID '${this.extractRunIdFromUrl(response.url)}' not found`,
-          status: 404,
-          code: "AGENT_RUN_NOT_FOUND",
-        } as ApiError;
+          404,
+          "AGENT_RUN_NOT_FOUND"
+        );
       }
 
-      throw {
-        message: data.error || data.message || "API request failed",
-        status: response.status,
-        code: data.code || "API_ERROR",
-      } as ApiError;
+      throw new ApiError(
+        data.error || data.message || "API request failed",
+        response.status,
+        data.code || "API_ERROR"
+      );
     }
 
     return {
@@ -98,7 +109,7 @@ export class ApiClient {
   }
 
   private extractRunIdFromUrl(url: string): string {
-    const match = url.match(/\/agent-runs\/([^\/\?]+)/);
+    const match = /\/agent-runs\/([^/?]+)/.exec(url);
     return match ? match[1] : "unknown";
   }
 
@@ -110,11 +121,11 @@ export class ApiClient {
       `Backend not available for ${endpoint}, will show loading state`
     );
 
-    throw {
-      message: `Backend service unavailable for ${endpoint}`,
-      status: 503,
-      code: "SERVICE_UNAVAILABLE",
-    } as ApiError;
+    throw new ApiError(
+      `Backend service unavailable for ${endpoint}`,
+      503,
+      "SERVICE_UNAVAILABLE"
+    );
   }
 
   private async handleAgentRunNotFound<T>(
@@ -124,11 +135,11 @@ export class ApiClient {
     // Handle specific case where agent run is not found
     console.warn(`Agent run ${runId} not found for ${endpoint}`);
 
-    throw {
-      message: `Agent run '${runId}' not found. Please check the URL or try a different run ID.`,
-      status: 404,
-      code: "AGENT_RUN_NOT_FOUND",
-    } as ApiError;
+    throw new ApiError(
+      `Agent run '${runId}' not found. Please check the URL or try a different run ID.`,
+      404,
+      "AGENT_RUN_NOT_FOUND"
+    );
   }
 
   async get<T>(
@@ -174,11 +185,11 @@ export class ApiClient {
         // Handle abort (timeout)
         if (fetchError?.name === 'AbortError') {
           console.error('[ApiClient] Request was aborted (timeout)');
-          throw {
-            message: 'Request timeout: The server did not respond in time',
-            status: 408,
-            code: 'TIMEOUT',
-          } as ApiError;
+          throw new ApiError(
+            'Request timeout: The server did not respond in time',
+            408,
+            'TIMEOUT'
+          );
         }
 
         // Handle network errors (connection refused, etc.)
@@ -187,11 +198,11 @@ export class ApiClient {
             fetchError?.message?.includes('ERR_CONNECTION_REFUSED') ||
             fetchError?.cause?.code === 'ECONNREFUSED') {
           console.error('[ApiClient] Connection refused');
-          throw {
-            message: 'Connection refused: Unable to connect to the server. Please ensure the backend is running.',
-            status: 503,
-            code: 'CONNECTION_REFUSED',
-          } as ApiError;
+          throw new ApiError(
+            'Connection refused: Unable to connect to the server. Please ensure the backend is running.',
+            503,
+            'CONNECTION_REFUSED'
+          );
         }
 
         // Re-throw all other errors

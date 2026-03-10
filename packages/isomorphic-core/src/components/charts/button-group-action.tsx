@@ -22,13 +22,13 @@ export default function ButtonGroupAction({
   btnClassName,
   defaultActive,
   activeClassName,
-}: ButtonGroupActionProps) {
+}: Readonly<ButtonGroupActionProps>) {
   const [state, setState] = useState(
-    defaultActive ? defaultActive : options[options.length - 1]
+    defaultActive ?? options.at(-1)
   );
   function handleOnChange(value: string) {
-    setState(() => value);
-    onChange && onChange(value);
+    setState(value);
+    onChange?.(value);
   }
 
   return (

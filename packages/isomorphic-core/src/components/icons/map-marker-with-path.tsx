@@ -1,6 +1,6 @@
 export default function MapMarkerWithPathIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/currentColor/svg"

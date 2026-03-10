@@ -1,56 +1,60 @@
 import { notFound, redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
+import type { RoundData } from "@/repositories/rounds/rounds.types";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
-  async function resolveCurrentRoundIdentifier() {
-    try {
-      const current = await roundsRepository.getCurrentRound();
+/** API may return season/roundInSeason; RoundData type does not declare them */
+type RoundWithSeason = RoundData & { season?: number; roundInSeason?: number };
+
+async function resolveCurrentRoundIdentifier(): Promise<string | null> {
+  try {
+    const current = (await roundsRepository.getCurrentRound()) as RoundWithSeason;
+
+    // Prefer season/round format if available
+    if (current?.season != null && current?.roundInSeason != null) {
+      return `${current.season}/${current.roundInSeason}`;
+    }
+
+    // Fallback to old format
+    if (current?.roundKey) {
+      return current.roundKey;
+    }
+    if (current?.id) {
+      return String(current.id);
+    }
+  } catch (error) {
+    console.warn("Failed to fetch current round for redirect:", error);
+  }
+
+  try {
+    const roundsList = await roundsRepository.getRounds({ limit: 1, sortBy: "id", sortOrder: "desc" });
+    const rounds = roundsList?.data?.rounds ?? (roundsList as { rounds?: RoundData[] })?.rounds ?? [];
+    if (rounds.length > 0) {
+      const round = rounds[0] as RoundWithSeason;
 
       // Prefer season/round format if available
-      if (current?.season && current?.roundInSeason) {
-        return `${current.season}/${current.roundInSeason}`;
+      if (round?.season != null && round?.roundInSeason != null) {
+        return `${round.season}/${round.roundInSeason}`;
       }
 
       // Fallback to old format
-      if (current?.roundKey) {
-        return current.roundKey;
-      }
-      if (current?.id) {
-        return String(current.id);
-      }
-    } catch (error) {
-      console.warn("Failed to fetch current round for redirect:", error);
+      return round.roundKey ?? String(round.id);
     }
-
-    try {
-      const roundsList = await roundsRepository.getRounds({ limit: 1, sortBy: "id", sortOrder: "desc" });
-      const rounds = roundsList?.data?.rounds ?? [];
-      if (Array.isArray(rounds) && rounds.length > 0) {
-        const round = rounds[0];
-
-        // Prefer season/round format if available
-        if (round?.season && round?.roundInSeason) {
-          return `${round.season}/${round.roundInSeason}`;
-        }
-
-        // Fallback to old format
-        return round.roundKey ?? String(round.id);
-      }
-    } catch (error) {
-      console.warn("Failed to fetch recent rounds for redirect:", error);
-    }
-
-    return null;
+  } catch (error) {
+    console.warn("Failed to fetch recent rounds for redirect:", error);
   }
 
+  return null;
+}
+
+export default async function Page() {
   const currentRoundId = await resolveCurrentRoundIdentifier();
 
   if (currentRoundId) {
     // Don't encode if it's season/round format (contains /)
-    const redirectPath = currentRoundId.includes('/')
+    const redirectPath = currentRoundId.includes('/') 
       ? `${routes.rounds}/${currentRoundId}`
       : `${routes.rounds}/${encodeURIComponent(currentRoundId)}`;
     redirect(redirectPath);

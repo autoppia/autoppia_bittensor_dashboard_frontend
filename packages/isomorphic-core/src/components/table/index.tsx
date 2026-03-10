@@ -16,7 +16,7 @@ import {
 } from "./table-types";
 import { pinningStyles } from "./table-pinning.style";
 
-export default function MainTable<TData extends Record<string, any>>({
+export default function MainTable<TData extends Record<string, unknown>>({
   table,
   dataIds,
   variant = "classic",
@@ -26,7 +26,7 @@ export default function MainTable<TData extends Record<string, any>>({
   showLoadingText = false,
   components,
   stickyHeader = false,
-}: MainTableProps<TData>) {
+}: Readonly<MainTableProps<TData>>) {
   const { containerRef, tableRef, isLeftScrollable, isRightScrollable } =
     useScrollPosition();
 
@@ -215,12 +215,12 @@ export default function MainTable<TData extends Record<string, any>>({
 }
 
 // Basic Header component
-export function TableHeadBasic<TData extends Record<string, any>>({
+export function TableHeadBasic<TData extends Record<string, unknown>>({
   headerGroup,
   isLeftScrollable,
   isRightScrollable,
   className,
-}: CustomHeaderCellProps<TData>) {
+}: Readonly<CustomHeaderCellProps<TData>>) {
   if (!headerGroup) return null;
 
   return (
@@ -293,12 +293,12 @@ export function TableHeadBasic<TData extends Record<string, any>>({
 }
 
 // Basic Cell component
-export function TableCellBasic<TData extends Record<string, any>>({
+export function TableCellBasic<TData extends Record<string, unknown>>({
   cell,
   isLeftScrollable,
   isRightScrollable,
   className,
-}: CustomBodyCellProps<TData>) {
+}: Readonly<CustomBodyCellProps<TData>>) {
   if (!cell) return null;
 
   const { canResize, canPin, isPinned, isLeftPinned, isRightPinned } =
@@ -307,7 +307,7 @@ export function TableCellBasic<TData extends Record<string, any>>({
   return (
     <Table.Cell
       style={{
-        left: isLeftPinned ? cell!.column.getStart("left") : undefined,
+        left: isLeftPinned ? cell.column.getStart("left") : undefined,
         right: isRightPinned ? cell.column.getAfter("right") : undefined,
         width: cell.column.getSize(),
       }}
@@ -325,14 +325,14 @@ export function TableCellBasic<TData extends Record<string, any>>({
 }
 
 // Pinned Row Component
-export function PinnedRow<TData extends Record<string, any>>({
+export function PinnedRow<TData extends Record<string, unknown>>({
   row,
   table,
   isLeftScrollable,
   isRightScrollable,
   className,
   tableCellClassName,
-}: PinnedRowProps<TData>) {
+}: Readonly<PinnedRowProps<TData>>) {
   const isTopPinned = row.getIsPinned() === "top";
   const isBottomPinned = row.getIsPinned() === "bottom";
   return (

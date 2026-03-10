@@ -26,9 +26,9 @@ export function ValidatorsSelectorPlaceholder() {
       <div className="relative flex w-auto items-center overflow-hidden">
         <div className="w-full overflow-hidden">
           <div className="grid grid-flow-col gap-8 overflow-x-auto scroll-smooth px-4 py-6">
-            {Array.from({ length: 4 }).map((_, index) => (
+            {(["validator-placeholder-1", "validator-placeholder-2", "validator-placeholder-3", "validator-placeholder-4"] as const).map((key) => (
               <div
-                key={index}
+                key={key}
                 className={cn(
                   "relative w-full min-w-[200px] px-5 py-5 rounded-2xl",
                   PLACEHOLDER_PANEL
@@ -52,9 +52,9 @@ export function ValidatorsSelectorPlaceholder() {
 export function ValidatorCardsPlaceholder() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      {Array.from({ length: 3 }).map((_, index) => (
+      {(["validator-card-placeholder-1", "validator-card-placeholder-2", "validator-card-placeholder-3"] as const).map((key) => (
         <div
-          key={index}
+          key={key}
           className={cn(
             "rounded-2xl border border-white/15 p-6 shadow-xl backdrop-blur-sm",
             PLACEHOLDER_PANEL
@@ -108,9 +108,9 @@ export function PerformanceAnalyticsPlaceholder() {
       </div>
 
       <div className="space-y-6">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {(["validator-list-item-placeholder-1", "validator-list-item-placeholder-2", "validator-list-item-placeholder-3", "validator-list-item-placeholder-4", "validator-list-item-placeholder-5"] as const).map((key) => (
           <div
-            key={index}
+            key={key}
             className={cn(
               "rounded-xl border p-5",
               PLACEHOLDER_SURFACE
@@ -157,9 +157,9 @@ export function SummaryPlaceholder() {
       </div>
 
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, index) => (
+        {(["validator-compact-item-placeholder-1", "validator-compact-item-placeholder-2", "validator-compact-item-placeholder-3", "validator-compact-item-placeholder-4"] as const).map((key) => (
           <div
-            key={index}
+            key={key}
             className={cn(
               "rounded-lg p-3 border",
               PLACEHOLDER_SURFACE

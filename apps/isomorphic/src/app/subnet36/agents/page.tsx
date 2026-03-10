@@ -97,7 +97,7 @@ function AgentsLanding() {
       sortedMiners.find((miner) => miner.uid !== undefined && miner.uid >= 0) ??
       sortedMiners[0];
 
-    if (!topMiner || topMiner.uid === undefined || topMiner.uid < 0) {
+    if (topMiner?.uid == null || topMiner.uid < 0) {
       return;
     }
 
@@ -108,7 +108,7 @@ function AgentsLanding() {
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
 
-    window.location.href = targetUrl;
+    globalThis.location.href = targetUrl;
   }, [
     needsRedirect,
     effectiveSeason,
@@ -127,7 +127,7 @@ function AgentsLanding() {
   // Below this point, we're not on the landing page anymore
   // (we have an agent param in the URL)
 
-    if (seasonRankError) {
+  if (seasonRankError) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
         <div

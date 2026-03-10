@@ -29,12 +29,12 @@ function useDebouncedValue<T>(value: T, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    const handler = window.setTimeout(() => {
+    const handler = globalThis.setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
 
     return () => {
-      window.clearTimeout(handler);
+      globalThis.clearTimeout(handler);
     };
   }, [value, delay]);
 
@@ -87,7 +87,7 @@ function formatValidatorLabel(
   }
 
   const normalized = validatorId.replace(/^validator[_-]/i, "");
-  const numericSuffix = normalized.replace(/^[^0-9]*/, "");
+  const numericSuffix = normalized.replace(/^\D*/, "");
   if (numericSuffix) {
     return `Validator ${numericSuffix}`;
   }
@@ -110,7 +110,7 @@ function extractUidNumber(value: unknown): number | null {
     return Math.abs(value);
   }
   if (typeof value === "string") {
-    const match = value.match(/\d+/);
+    const match = /\d+/.exec(value);
     if (match) {
       const parsed = Number.parseInt(match[0], 10);
       if (!Number.isNaN(parsed)) {
@@ -119,52 +119,6 @@ function extractUidNumber(value: unknown): number | null {
     }
   }
   return null;
-}
-
-function parseSeasonRound(
-  value: string | number | null | undefined
-): { season: number; round: number } | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (typeof value === "string" && value.includes("/")) {
-    const [seasonRaw, roundRaw] = value.split("/");
-    const season = Number.parseInt(seasonRaw, 10);
-    const round = Number.parseInt(roundRaw, 10);
-    if (Number.isFinite(season) && Number.isFinite(round)) {
-      return { season, round };
-    }
-    return null;
-  }
-
-  const compact =
-    typeof value === "number"
-      ? value
-      : Number.parseInt(String(value).trim(), 10);
-
-  if (!Number.isFinite(compact) || compact <= 0) {
-    return null;
-  }
-
-  const season = Math.floor(compact / 10000);
-  const round = compact % 10000;
-  if (season > 0 && round > 0) {
-    return { season, round };
-  }
-  return null;
-}
-
-function sanitizeRanking(value: number | null | undefined): number | undefined {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return undefined;
-  }
-  const ranking = Math.trunc(value);
-  // 9999 is used as sentinel/non-ranked in some payloads.
-  if (ranking <= 0 || ranking === 9999) {
-    return undefined;
-  }
-  return ranking;
 }
 
 function resolveMinerImage(run: AgentRunListItem): string {
@@ -194,16 +148,8 @@ function resolveMinerImage(run: AgentRunListItem): string {
 const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
   const totalTasks = run.totalTasks ?? 0;
   const completed = run.successfulTasks ?? run.completedTasks ?? 0;
-  const successRate =
-    run.successRate != null
-      ? normalizePercentage(run.successRate)
-      : totalTasks > 0
-        ? Math.round((completed / totalTasks) * 100 * 10) / 10
-        : 0;
-  const raw = run as AgentRunListItem & { is_reused?: boolean; reused_from_agent_run_id?: string | null; reused_from_round_display?: string | null };
-  const isReused = run.isReused ?? raw.is_reused ?? false;
-  const reusedFromAgentRunId = run.reusedFromAgentRunId ?? raw.reused_from_agent_run_id ?? null;
-  const reusedFromRoundDisplay = run.reusedFromRoundDisplay ?? raw.reused_from_round_display ?? null;
+  const computedRate = totalTasks > 0 ? Math.round((completed / totalTasks) * 100 * 10) / 10 : 0;
+  const successRate = run.successRate == null ? computedRate : normalizePercentage(run.successRate);
 
   return {
     ...run,
@@ -211,18 +157,14 @@ const normalizeListItemValues = (run: AgentRunListItem): AgentRunListItem => {
     successRate,
     successfulTasks: run.successfulTasks ?? completed,
     completedTasks: run.completedTasks ?? completed,
-    isReused,
-    reusedFromAgentRunId,
-    reusedFromRoundDisplay,
-    ranking: sanitizeRanking(run.ranking),
   };
 };
 
 export default function AgentRunSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSeason, setSelectedSeason] = useState<number | undefined>(undefined);
-  const [selectedRound, setSelectedRound] = useState<number | undefined>(undefined);
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedRound, setSelectedRound] = useState<number | undefined>();
   const [selectedValidator, setSelectedValidator] = useState<string>("");
   const [agentInput, setAgentInput] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -241,43 +183,29 @@ export default function AgentRunSearch() {
   const roundDropdownRef = useRef<HTMLDivElement>(null);
 
   // Get available rounds
-  const { data: roundsData, loading: roundsLoading } = useRoundsData(undefined);
+  const { data: roundsData, loading: roundsLoading } = useRoundsData();
 
-  // Parse available rounds to extract seasons and rounds
-  const { seasonOptions, latestSeason, latestRoundInSeason } = useMemo(() => {
+  // Parse available rounds to extract seasons
+  const seasonOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
-    if (rounds.length === 0) {
-      return { seasonOptions: [], latestSeason: undefined, latestRoundInSeason: undefined };
-    }
-
-    // Parse "season/round" format
+    if (rounds.length === 0) return [];
     const parsed = rounds
-      .map((r) => parseSeasonRound(r))
+      .map((r) => {
+        if (typeof r !== "string" || !r.includes("/")) return null;
+        const parts = r.split("/");
+        const season = Number.parseInt(parts[0], 10);
+        const round = Number.parseInt(parts[1], 10);
+        return Number.isFinite(season) && Number.isFinite(round) ? { season, round } : null;
+      })
       .filter((r): r is { season: number; round: number } => r !== null);
-
-    // Get unique seasons
-    const seasons = Array.from(new Set(parsed.map((r) => r!.season))).sort((a, b) => b - a);
-
-    // Find latest round
-    const latest = parsed.reduce((max, curr) => {
-      if (!max) return curr;
-      if (curr!.season > max.season) return curr;
-      if (curr!.season === max.season && curr!.round > max.round) return curr;
-      return max;
-    }, parsed[0]);
-
-    return {
-      seasonOptions: seasons,
-      latestSeason: latest?.season,
-      latestRoundInSeason: latest?.round,
-    };
+    return Array.from(new Set(parsed.map((r) => r.season))).sort((a, b) => b - a);
   }, [roundsData?.rounds]);
 
   // Get round options for selected season
   const roundOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason;
-
+    
     if (!currentSeason) {
       return [];
     }
@@ -473,7 +401,7 @@ export default function AgentRunSearch() {
 
   const displayedRuns = useMemo(() => {
     const getTime = (value: string | null | undefined) => {
-      const parsed = value ? new Date(value).getTime() : NaN;
+      const parsed = value ? new Date(value).getTime() : Number.NaN;
       return Number.isNaN(parsed) ? 0 : parsed;
     };
 
@@ -486,19 +414,17 @@ export default function AgentRunSearch() {
     ? 1
     : Math.max(1, Math.ceil((total || 0) / resolvedLimit));
 
-  const startIndex =
-    displayedRuns.length === 0
-      ? 0
-      : isManualSearchActive
-        ? 1
-        : (resolvedPage - 1) * resolvedLimit + 1;
+  const startIndex = (() => {
+    if (displayedRuns.length === 0) return 0;
+    if (isManualSearchActive) return 1;
+    return (resolvedPage - 1) * resolvedLimit + 1;
+  })();
 
-  const endIndex =
-    displayedRuns.length === 0
-      ? 0
-      : isManualSearchActive
-        ? displayedRuns.length
-        : startIndex + displayedRuns.length - 1;
+  const endIndex = (() => {
+    if (displayedRuns.length === 0) return 0;
+    if (isManualSearchActive) return displayedRuns.length;
+    return startIndex + displayedRuns.length - 1;
+  })();
 
   const canGoPrev = !isManualSearchActive && resolvedPage > 1;
   const canGoNext = !isManualSearchActive && resolvedPage < totalPages;
@@ -516,8 +442,8 @@ export default function AgentRunSearch() {
     : total || displayedRuns.length;
 
   const effectiveLoading =
-    manualLoading || (!isManualSearchActive && isLoading);
-  const effectiveError = manualError || (!isManualSearchActive ? error : null);
+    manualLoading || (isManualSearchActive === false && isLoading);
+  const effectiveError = manualError || (isManualSearchActive ? null : error);
   const effectiveNotFound =
     manualResults !== null && manualResults.length === 0 && !manualError;
 
@@ -577,7 +503,7 @@ export default function AgentRunSearch() {
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     // Construct roundId from season and round (format: "season/round")
-    const normalizedRound =
+    const normalizedRound = 
       debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
         ? `${debouncedFilters.season}/${debouncedFilters.round}`
         : undefined;
@@ -639,7 +565,7 @@ export default function AgentRunSearch() {
   }, [hasSearched, isLoading, runs, error]);
 
   const mapRunDetailToListItem = (run: AgentRunData): AgentRunListItem => {
-    const totalTasks = run.totalTasks ?? run.tasks?.length ?? 0;
+    const totalTasks = run.totalTasks ?? 0;
     const completedTasks = run.completedTasks ?? run.successfulTasks ?? 0;
     const successfulTasks = run.successfulTasks ?? completedTasks;
     const baseReward = normalizePercentage(
@@ -670,9 +596,9 @@ export default function AgentRunSearch() {
       successRate,
       overallReward: baseReward,
       ranking: sanitizeRanking(run.ranking),
-      isReused: run.isReused ?? (run as any).is_reused ?? false,
-      reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as any).reusedFromAgentRunId ?? (run as any).reused_from_agent_run_id ?? null,
-      reusedFromRoundDisplay: run.reusedFromRoundDisplay ?? (run as any).reusedFromRoundDisplay ?? (run as any).reused_from_round_display ?? null,
+      isReused: run.isReused ?? (run as Record<string, unknown>).is_reused ?? false,
+      reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as Record<string, unknown>).reusedFromAgentRunId ?? (run as Record<string, unknown>).reused_from_agent_run_id ?? null,
+      reusedFromRoundDisplay: run.reusedFromRoundDisplay ?? (run as Record<string, unknown>).reusedFromRoundDisplay ?? (run as Record<string, unknown>).reused_from_round_display ?? null,
     };
   };
 
@@ -728,7 +654,7 @@ export default function AgentRunSearch() {
       limit: queryParams.limit ?? DEFAULT_LIMIT,
     };
 
-    if (Number.isFinite(roundIdParam)) {
+    if (roundIdParam !== undefined) {
       nextQuery.roundId = roundIdParam;
     }
     if (validatorIdParam) {
@@ -860,23 +786,23 @@ export default function AgentRunSearch() {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
                 {/* Season Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-emerald-300">
+                  <label id="filter-season-label" htmlFor="filter-season-btn" className="text-sm font-medium text-emerald-300">
                     SEASON
                   </label>
                   <div className="relative" ref={seasonDropdownRef}>
                     <button
+                      id="filter-season-btn"
                       type="button"
+                      aria-labelledby="filter-season-label"
                       onClick={() => {
                         setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
                       }}
                       className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                     >
                       <span>
-                        {roundsLoading && seasonOptions.length === 0
-                          ? "Loading seasons..."
-                          : selectedSeason === undefined
-                            ? "All Seasons"
-                            : `Season ${selectedSeason}`}
+                        {roundsLoading && seasonOptions.length === 0 && "Loading seasons..."}
+                        {!roundsLoading && selectedSeason === undefined && "All Seasons"}
+                        {!roundsLoading && selectedSeason !== undefined && `Season ${selectedSeason}`}
                       </span>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${
@@ -932,12 +858,14 @@ export default function AgentRunSearch() {
 
                 {/* Round Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-purple-300">
+                  <label id="filter-round-label" htmlFor="filter-round-btn" className="text-sm font-medium text-purple-300">
                     ROUND
                   </label>
                   <div className="relative" ref={roundDropdownRef}>
                     <button
+                      id="filter-round-btn"
                       type="button"
+                      aria-labelledby="filter-round-label"
                       onClick={() => {
                         if (selectedSeason === undefined) {
                           return; // Don't open if no season selected
@@ -952,13 +880,10 @@ export default function AgentRunSearch() {
                       }`}
                     >
                       <span>
-                        {selectedSeason === undefined
-                          ? "Select season first"
-                          : roundOptions.length === 0
-                            ? "No rounds"
-                            : selectedRound === undefined
-                              ? "All Rounds"
-                              : `Round ${selectedRound}`}
+                        {selectedSeason === undefined && "Select season first"}
+                        {selectedSeason !== undefined && roundOptions.length === 0 && "No rounds"}
+                        {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound === undefined && "All Rounds"}
+                        {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound !== undefined && `Round ${selectedRound}`}
                       </span>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${
@@ -990,11 +915,7 @@ export default function AgentRunSearch() {
                                   setSelectedRound(round);
                                   setIsRoundDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${
-                                  isActive
-                                    ? "bg-purple-500/30 text-purple-100"
-                                    : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"
-                                }`}
+                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${isActive ? "bg-purple-500/30 text-purple-100" : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"}`}
                               >
                                 Round {round}
                               </button>
@@ -1007,24 +928,23 @@ export default function AgentRunSearch() {
 
                 {/* Validator Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-300">
+                  <label id="filter-validator-label" htmlFor="filter-validator-btn" className="text-sm font-medium text-blue-300">
                     VALIDATOR
                   </label>
                   <div className="relative" ref={validatorDropdownRef}>
                     <button
+                      id="filter-validator-btn"
                       type="button"
+                      aria-labelledby="filter-validator-label"
                       onClick={() => {
                         setIsValidatorDropdownOpen(!isValidatorDropdownOpen);
                       }}
                       className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                     >
                       <span>
-                        {validatorLoading && validatorOptions.length === 0
-                          ? "Loading validators..."
-                          : selectedValidator === ""
-                            ? "All Validators"
-                            : (selectedValidatorLabel ??
-                              formatValidatorLabel(selectedValidator))}
+                        {validatorLoading && validatorOptions.length === 0 && "Loading validators..."}
+                        {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator === "" && "All Validators"}
+                        {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator !== "" && (selectedValidatorLabel ?? formatValidatorLabel(selectedValidator))}
                       </span>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${
@@ -1073,7 +993,7 @@ export default function AgentRunSearch() {
                           })}
                         {!validatorLoading && validatorOptions.length === 0 && (
                           <div className="px-3 py-2 text-blue-300 text-sm">
-                            No validators available
+                            {validatorError ?? "No validators available"}
                           </div>
                         )}
                       </div>
@@ -1083,11 +1003,12 @@ export default function AgentRunSearch() {
 
                 {/* Agent Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-purple-300">
+                  <label id="filter-agent-label" htmlFor="filter-agent-input" className="text-sm font-medium text-purple-300">
                     AGENT
                   </label>
                   <div className="relative">
                     <input
+                      id="filter-agent-input"
                       type="text"
                       value={agentInput}
                       onChange={(e) => setAgentInput(e.target.value)}
@@ -1102,11 +1023,12 @@ export default function AgentRunSearch() {
 
                 {/* Results Limit */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-cyan-300">
+                  <label id="filter-limit-label" htmlFor="filter-limit-select" className="text-sm font-medium text-cyan-300">
                     RESULTS PER PAGE
                   </label>
                   <div className="relative">
                     <select
+                      id="filter-limit-select"
                       value={limitValue}
                       onChange={(event) =>
                         handleLimitChange(Number(event.target.value))
@@ -1253,28 +1175,20 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
-              const rewardOutOf100 = Math.max(
+              const scoreOutOf100 = Math.max(
                 0,
                 Math.min(100, Math.round(run.overallReward ?? 0))
               );
               const minerImageSrc = resolveMinerImage(run);
 
               return (
-                <div
+                <button
+                  type="button"
                   key={run.runId}
                   onClick={() =>
                     router.push(`${routes.agent_run}/${run.runId}`)
                   }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      router.push(`${routes.agent_run}/${run.runId}`);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"
-                  style={{ cursor: "pointer" }}
+                  className="group relative w-full rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20 text-left"
                 >
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
@@ -1286,19 +1200,16 @@ export default function AgentRunSearch() {
                       <div className="flex items-center gap-2">
                         {(() => {
                           const roundId = run.roundId;
-                          const parsedRound = parseSeasonRound(
-                            typeof roundId === "string" || typeof roundId === "number"
-                              ? roundId
-                              : null
-                          );
-                          if (parsedRound) {
+                          // Parse "season/round" format
+                          if (typeof roundId === "string" && roundId.includes("/")) {
+                            const [season, round] = roundId.split("/");
                             return (
                               <>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
-                                  Season {parsedRound.season}
+                                  Season {season}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
-                                  Round {parsedRound.round}
+                                  Round {round}
                                 </span>
                               </>
                             );
@@ -1363,44 +1274,14 @@ export default function AgentRunSearch() {
                       </div>
                     </div>
 
-                    {/* Run ID (left) + Reused from round (right) when reused; single Run ID otherwise */}
-                    <div className={run.isReused || run.reusedFromAgentRunId ? "grid grid-cols-2 gap-3" : ""}>
-                      <div className="rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
-                          Run ID
-                        </div>
-                        <div className="text-xs font-mono font-bold text-orange-50 truncate">
-                          {run.runId}
-                        </div>
+                    {/* Run ID */}
+                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
+                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
+                        Run ID
                       </div>
-                      {(run.isReused || run.reusedFromAgentRunId) && (
-                        <div className="rounded-xl border border-amber-400/50 bg-gradient-to-br from-amber-500/20 to-amber-600/10 p-3 shadow-md">
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-amber-400/30 text-amber-200 text-[10px] font-bold">↻</span>
-                            <span className="text-[10px] uppercase tracking-wider text-amber-300/90 font-semibold">
-                              Reused from round {(() => {
-                              const d = run.reusedFromRoundDisplay ?? "";
-                              const m = d.match(/Round\s+(\d+)/i) ?? d.match(/\/?(\d+)$/);
-                              return m ? m[1] : "—";
-                            })()}
-                            </span>
-                          </div>
-                          {run.reusedFromAgentRunId ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(`${routes.agent_run}/${run.reusedFromAgentRunId!}`);
-                              }}
-                              className="text-xs font-mono text-amber-200 underline underline-offset-1 hover:text-amber-100 truncate max-w-full block text-left"
-                            >
-                              {run.reusedFromAgentRunId}
-                            </button>
-                          ) : (
-                            <span className="text-xs font-mono text-amber-200/70 truncate block">—</span>
-                          )}
-                        </div>
-                      )}
+                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
+                        {run.runId}
+                      </div>
                     </div>
 
                     {/* Footer Stats */}
@@ -1408,10 +1289,10 @@ export default function AgentRunSearch() {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
-                            Reward
+                            Score
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {rewardOutOf100}%
+                            {scoreOutOf100}%
                           </div>
                         </div>
                         <div className="text-center">
@@ -1452,7 +1333,7 @@ export default function AgentRunSearch() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

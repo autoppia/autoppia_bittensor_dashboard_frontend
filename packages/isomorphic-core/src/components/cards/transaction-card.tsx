@@ -22,7 +22,7 @@ export type TransactionCardProps = {
 export default function TransactionCard({
   className,
   transaction,
-}: TransactionCardProps) {
+}: Readonly<TransactionCardProps>) {
   const { icon, title, amount, increased, percentage, iconWrapperFill } =
     transaction;
   const Icon = icon;

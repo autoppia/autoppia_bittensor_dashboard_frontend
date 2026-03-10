@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox, CheckboxGroup, Collapse } from "rizzui";
 import cn from "../utils/class-names";
 import { PiCaretDownBold, PiPlusBold } from "react-icons/pi";
@@ -18,6 +18,33 @@ type FilterWithSearchProps = {
 
 const MAX_OPTION_COUNT = 6;
 
+type FilterGroupHeaderContextValue = {
+  title: string;
+  hasValues: boolean;
+  onReset: () => void;
+  toggleBtnRef: React.RefObject<HTMLButtonElement | null>;
+};
+
+const FilterGroupHeaderContext = createContext<FilterGroupHeaderContextValue | null>(null);
+
+function FilterGroupHeaderFromContext({
+  open,
+  toggle,
+}: Readonly<{ open?: boolean; toggle: () => void }>) {
+  const ctx = useContext(FilterGroupHeaderContext);
+  if (!ctx) return null;
+  return (
+    <FilterGroupHeader
+      open={open ?? false}
+      toggle={toggle}
+      title={ctx.title}
+      hasValues={ctx.hasValues}
+      onReset={ctx.onReset}
+      toggleBtnRef={ctx.toggleBtnRef}
+    />
+  );
+}
+
 function pickOPtions(
   arr: LayoverAirPortOptionType[],
   count: number
@@ -26,7 +53,7 @@ function pickOPtions(
 
   const options: LayoverAirPortOptionType[] = [];
 
-  arr.map((item) => {
+  arr.forEach((item) => {
     if (len < count) {
       options.push(item);
       !item.isGroupTitle && len++;
@@ -38,7 +65,7 @@ function pickOPtions(
 
 function getOptionsLength(arr: LayoverAirPortOptionType[]) {
   let len = 0;
-  arr.map((el) => {
+  arr.forEach((el) => {
     if (!el.isGroupTitle) len++;
   });
   return len;
@@ -51,7 +78,7 @@ export default function FilterWithGroup({
   state,
   clearFilter,
   applyFilter,
-}: FilterWithSearchProps) {
+}: Readonly<FilterWithSearchProps>) {
   const [filteredOptions, setFilteredOptions] = useState<
     LayoverAirPortOptionType[]
   >([]);
@@ -60,17 +87,16 @@ export default function FilterWithGroup({
   );
 
   const [event, setEvent] = useState(false);
-  const clearBtnRef = useRef<HTMLSpanElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
   function handleOnChange(e: React.ChangeEvent<any>) {
-    setEvent(() => e.target.checked);
+    setEvent(e.target.checked);
   }
 
   // apply & clear filter
   useEffect(() => {
     if (values.length) applyFilter(name, values);
-    if (values.length == 0 && event !== true) {
-      clearFilter && clearFilter([name]);
+    if (values.length === 0 && event !== true) {
+      clearFilter?.([name]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values]);
@@ -84,43 +110,24 @@ export default function FilterWithGroup({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleReset() {
+  const handleReset = useCallback(() => {
     setValues([]);
-    clearFilter && clearFilter([name]);
-  }
+    clearFilter?.([name]);
+  }, [name, clearFilter]);
+
+  const headerContextValue = useMemo<FilterGroupHeaderContextValue>(
+    () => ({
+      title,
+      hasValues: values.length > 0,
+      onReset: handleReset,
+      toggleBtnRef,
+    }),
+    [title, values.length, handleReset, toggleBtnRef]
+  );
 
   return (
-    <>
-      <Collapse
-        className="py-5"
-        header={({ open, toggle }) => (
-          <div className="relative">
-            <button
-              ref={toggleBtnRef}
-              type="button"
-              onClick={toggle}
-              className="flex w-full cursor-pointer items-center justify-between text-base font-semibold text-gray-900"
-            >
-              {title}
-              <PiCaretDownBold
-                strokeWidth={3}
-                className={cn(
-                  "h-3.5 w-3.5 -rotate-90 text-gray-500 transition-transform duration-200 rtl:rotate-90",
-                  open && "rotate-0 rtl:rotate-0"
-                )}
-              />
-            </button>
-            {!!values.length && (
-              <span
-                className="absolute right-9 top-0.5 cursor-pointer text-sm font-medium hover:underline"
-                onClick={handleReset}
-              >
-                Reset
-              </span>
-            )}
-          </div>
-        )}
-      >
+    <FilterGroupHeaderContext.Provider value={headerContextValue}>
+      <Collapse className="py-5" header={FilterGroupHeaderFromContext}>
         <div className="flex flex-col pt-5">
           <CheckboxGroup
             values={state[name]?.length ? state[name].split(",") : []}
@@ -162,11 +169,58 @@ export default function FilterWithGroup({
             </button>
           )}
 
-          {!data.length ? (
+          {data.length === 0 ? (
             <div className="text-gray-500">No result found</div>
           ) : null}
         </div>
       </Collapse>
-    </>
+    </FilterGroupHeaderContext.Provider>
+  );
+}
+
+type FilterGroupHeaderProps = Readonly<{
+  open: boolean;
+  toggle: () => void;
+  title: string;
+  hasValues: boolean;
+  onReset: () => void;
+  toggleBtnRef: React.RefObject<HTMLButtonElement | null>;
+}>;
+
+function FilterGroupHeader({
+  open,
+  toggle,
+  title,
+  hasValues,
+  onReset,
+  toggleBtnRef,
+}: FilterGroupHeaderProps) {
+  return (
+    <div className="relative">
+      <button
+        ref={toggleBtnRef}
+        type="button"
+        onClick={toggle}
+        className="flex w-full cursor-pointer items-center justify-between text-base font-semibold text-gray-900"
+      >
+        {title}
+        <PiCaretDownBold
+          strokeWidth={3}
+          className={cn(
+            "h-3.5 w-3.5 -rotate-90 text-gray-500 transition-transform duration-200 rtl:rotate-90",
+            open && "rotate-0 rtl:rotate-0"
+          )}
+        />
+      </button>
+      {hasValues && (
+        <button
+          type="button"
+          className="absolute right-9 top-0.5 cursor-pointer text-sm font-medium hover:underline"
+          onClick={onReset}
+        >
+          Reset
+        </button>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 export default function ApartmentIcon({
   ...props
-}: React.SVGProps<SVGSVGElement>) {
+}: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480.07 480" {...props}>
       <path fill="#fd882f" d="M72.03 8.04h336v464h-336zm0 0" />

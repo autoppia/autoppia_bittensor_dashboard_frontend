@@ -13,7 +13,7 @@ export function getDateRangeStateValues(state: string | null) {
 }
 
 export default function getFormattedDateRangeString(dates: Date[]) {
-  const [start, end] = Array.isArray(dates) ? dates : [];
+  const [start, end] = dates;
   if (start && end) {
     return `${getFormattedDateString(start)};${getFormattedDateString(end)}`;
   }

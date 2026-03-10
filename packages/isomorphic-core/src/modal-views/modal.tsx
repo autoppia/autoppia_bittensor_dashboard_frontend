@@ -90,7 +90,7 @@ export function Modal({
           )}
           {...((customSize || customSize === 0) && {
             style: {
-              maxWidth: `${customSize}px` || "inherit",
+              maxWidth: `${customSize}px`,
             },
           })}
         >

@@ -10,8 +10,8 @@ export interface MenuItemProps {
   closeMenuOnClick?: boolean;
   disabled?: boolean;
   className?: string;
-  loop?: boolean | undefined;
-  compound?: boolean | undefined;
+  loop?: boolean;
+  compound?: boolean;
 }
 
 export const MenuItem = forwardRef<
@@ -35,20 +35,19 @@ export const MenuItem = forwardRef<
     const ctx = useMenuContext();
     const itemRef = useRef<HTMLButtonElement | null>(null);
     const itemIndex = ctx.getItemIndex(itemRef.current!);
-    const isProps: any = props;
 
-    const handleMouseEnter = (event: any) => {
-      isProps.onMouseEnter?.(event);
+    const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+      props.onMouseEnter?.(event);
       ctx.setHovered(ctx.getItemIndex(itemRef.current!));
     };
 
-    const handleMouseLeave = (event: any) => {
-      isProps.onMouseLeave?.(event);
+    const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
+      props.onMouseLeave?.(event);
       ctx.setHovered(-1);
     };
 
     const handleClick = (event?: Event) => {
-      isProps.onClick?.(event);
+      props.onClick?.(event);
       if (typeof closeMenuOnClick === 'boolean') {
         closeMenuOnClick && ctx.closeDropdownImmediately();
       } else {
@@ -57,7 +56,7 @@ export const MenuItem = forwardRef<
     };
 
     const handleFocus = (event?: Event) => {
-      isProps.onFocus?.(event);
+      props.onFocus?.(event);
       ctx.setHovered(ctx.getItemIndex(itemRef.current!));
     };
 
@@ -75,7 +74,7 @@ export const MenuItem = forwardRef<
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        onMouseDown={(e: any) => e.stopPropagation()}
+        onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
         className={cn(
           'flex w-full items-center rounded-[4px] px-3 py-1.5 focus-visible:bg-gray-100 focus-visible:outline-0 data-[hover=true]:bg-gray-100',
           className,
@@ -87,10 +86,10 @@ export const MenuItem = forwardRef<
           activateOnFocus: false,
           loop: ctx.loop,
           orientation: 'vertical',
-          onKeyDown: isProps.onKeydown,
+          onKeyDown: props.onKeyDown,
         })}
       >
-        {children && children}
+        {children}
       </Component>
     );
   }

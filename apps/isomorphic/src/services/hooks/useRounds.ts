@@ -6,18 +6,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { roundsRepository } from "@/repositories/rounds/rounds.repository";
 import type {
-  RoundData,
-  RoundStatistics,
-  MinerPerformance,
-  ValidatorPerformance,
-  RoundActivity,
-  RoundProgress,
   RoundsListQueryParams,
   RoundMinersQueryParams,
   RoundActivityQueryParams,
 } from "@/repositories/rounds/rounds.types";
 
-type SerializableParams = Record<string, any> | undefined;
+// SerializableParams accepts any object that can be serialized to JSON
+type SerializableParams = Record<string, unknown> | undefined;
 
 function useStableParams<T extends SerializableParams>(params: T) {
   const paramsKey = useMemo(() => JSON.stringify(params ?? null), [params]);
@@ -123,7 +118,7 @@ export function useRoundIds(params?: {
 
 // Hook for rounds list
 export function useRounds(params?: RoundsListQueryParams) {
-  const { paramsKey, stableParams } = useStableParams(params);
+  const { paramsKey, stableParams } = useStableParams(params as SerializableParams);
   const request = useCallback(
     () => roundsRepository.getRounds(stableParams),
     [stableParams]
@@ -178,7 +173,7 @@ export function useRoundMiners(
   params?: RoundMinersQueryParams
 ) {
   const enabled = isValidRoundIdentifier(roundId);
-  const { paramsKey, stableParams } = useStableParams(params);
+  const { paramsKey, stableParams } = useStableParams(params as SerializableParams);
   const request = useCallback(
     () =>
       roundsRepository.getRoundMiners(roundId as RoundIdentifier, stableParams),
@@ -203,7 +198,7 @@ export function useRoundActivity(
   params?: RoundActivityQueryParams
 ) {
   const enabled = isValidRoundIdentifier(roundId);
-  const { paramsKey, stableParams } = useStableParams(params);
+  const { paramsKey, stableParams } = useStableParams(params as SerializableParams);
   const request = useCallback(
     () =>
       roundsRepository.getRoundActivity(roundId as RoundIdentifier, stableParams),
@@ -405,15 +400,23 @@ export function useRoundsList() {
 }
 
 // Hook for getting round with validators data (local and post-consensus)
-export function useRoundWithValidators(roundNumber: number | undefined) {
+export function useRoundWithValidators(
+  season: number | undefined,
+  roundInSeason: number | undefined
+) {
+  const enabled = season !== undefined && roundInSeason !== undefined;
   const request = useCallback(
     () => {
-      if (!roundNumber) {
+      if (!enabled || season === undefined || roundInSeason === undefined) {
         return Promise.resolve(null);
       }
-      return Promise.resolve(null);
+      return roundsRepository.getRoundWithValidators(season, roundInSeason);
     },
-    [roundNumber]
+    [season, roundInSeason, enabled]
   );
-  return useApiCall(request, `round-with-validators:${roundNumber ?? 'none'}`, roundNumber !== undefined);
+  return useApiCall(
+    request,
+    `round-with-validators:${season ?? 'none'}/${roundInSeason ?? 'none'}`,
+    enabled
+  );
 }

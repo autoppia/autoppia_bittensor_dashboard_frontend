@@ -23,7 +23,6 @@ import {
   PiCaretDownDuotone,
   PiGlobeDuotone,
   PiCodeDuotone,
-  PiCopySimpleDuotone,
 } from "react-icons/pi";
 
 const DEFAULT_LIMIT = 50;
@@ -67,12 +66,12 @@ function useDebouncedValue<T>(value: T, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    const handler = window.setTimeout(() => {
+    const handler = globalThis.window.setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
 
     return () => {
-      window.clearTimeout(handler);
+      globalThis.window.clearTimeout(handler);
     };
   }, [value, delay]);
 
@@ -81,8 +80,8 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 const formatLabel = (value: string) =>
   value
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll("_", " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase()
     .split(" ")
@@ -102,13 +101,14 @@ function formatCost(value?: number | null): string {
 
 function extractRoundNumber(value?: string | null): number | null {
   if (!value) return null;
-  const match = value.match(/round[-_\s]?(\d+)/i);
+  const roundRegex = /round[-_\s]?(\d+)/i;
+  const match = roundRegex.exec(value);
   if (!match) return null;
   const parsed = Number(match[1]);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -217,20 +217,39 @@ export default function TaskSearch() {
 
   const headerCount = total || results.length;
 
+  const applyFacetsToAvailability = (
+    facets: { websites: { name: string }[]; useCases: { name: string }[] }
+  ) => {
+    setAvailableWebsites((prev) =>
+      mergeAndSortUnique([
+        prev,
+        BASE_WEBSITE_SLUGS,
+        facets.websites.map((item) => item.name),
+      ])
+    );
+    setAvailableUseCases((prev) =>
+      mergeAndSortUnique([
+        prev,
+        selectedWebsite
+          ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
+          : BASE_USE_CASES,
+        facets.useCases.map((item) => item.name),
+      ])
+    );
+  };
+
   // Auto-search when filters or search term changes
   useEffect(() => {
     let ignore = false;
 
     const performSearch = async () => {
       // If there's a search term, use text-based search instead of ID lookup
-      // This allows searching by prompt text, not just task ID
       if (debouncedSearchTerm !== "") {
         setHasSearched(true);
         setIsSearching(true);
         setSearchError(null);
 
         try {
-          // Use searchTasks with query parameter for text search
           const response = await tasksRepository.searchTasks({
             query: debouncedSearchTerm,
             agentRunId: debouncedFilters.agentRun || undefined,
@@ -250,22 +269,7 @@ export default function TaskSearch() {
           setTotal(response.data?.total ?? tasks.length);
 
           if (facets && !ignore) {
-            setAvailableWebsites((prev) =>
-              mergeAndSortUnique([
-                prev,
-                BASE_WEBSITE_SLUGS,
-                facets.websites.map((item) => item.name),
-              ])
-            );
-            setAvailableUseCases((prev) =>
-              mergeAndSortUnique([
-                prev,
-                selectedWebsite
-                  ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
-                  : BASE_USE_CASES,
-                facets.useCases.map((item) => item.name),
-              ])
-            );
+            applyFacetsToAvailability(facets);
           }
         } catch (err: any) {
           if (!ignore) {
@@ -284,13 +288,6 @@ export default function TaskSearch() {
         return;
       }
 
-      // When search term is empty, use filter-based search or load all
-      const hasFilters =
-        debouncedFilters.agentRun ||
-        debouncedFilters.website ||
-        debouncedFilters.useCase;
-
-      // Always load tasks (either filtered or all)
       setHasSearched(true);
       setIsSearching(true);
       setSearchError(null);
@@ -302,7 +299,7 @@ export default function TaskSearch() {
           useCase: debouncedFilters.useCase || undefined,
           page: currentPage,
           limit: currentLimit,
-          includeDetails: false, // Omit actions/screenshots/logs for fast loading
+          includeDetails: false,
         });
 
         if (ignore) return;
@@ -311,23 +308,8 @@ export default function TaskSearch() {
         setResults(data?.tasks ?? []);
         setTotal(data?.total ?? 0);
 
-        if (data?.facets) {
-          setAvailableWebsites((prev) =>
-            mergeAndSortUnique([
-              prev,
-              BASE_WEBSITE_SLUGS,
-              data.facets.websites.map((item) => item.name),
-            ])
-          );
-          setAvailableUseCases((prev) =>
-            mergeAndSortUnique([
-              prev,
-              selectedWebsite
-                ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
-                : BASE_USE_CASES,
-              data.facets.useCases.map((item) => item.name),
-            ])
-          );
+        if (data?.facets && !ignore) {
+          applyFacetsToAvailability(data.facets);
         }
       } catch (error) {
         if (!ignore) {
@@ -497,11 +479,12 @@ export default function TaskSearch() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-emerald-300">
+                <label htmlFor="task-search-agent-run" className="text-sm font-medium text-emerald-300">
                   AGENT RUN
                 </label>
                 <div className="relative">
                   <input
+                    id="task-search-agent-run"
                     type="text"
                     value={agentRunInput}
                     onChange={(e) => setAgentRunInput(e.target.value)}
@@ -515,11 +498,12 @@ export default function TaskSearch() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-blue-300">
+                <label className="text-sm font-medium text-blue-300 block" htmlFor="task-search-website-button">
                   WEBSITE
                 </label>
                 <div className="relative" ref={websiteDropdownRef}>
                   <button
+                    id="task-search-website-button"
                     type="button"
                     onClick={() =>
                       setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
@@ -567,11 +551,12 @@ export default function TaskSearch() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-300">
+                <label className="text-sm font-medium text-purple-300 block" htmlFor="task-search-use-case-button">
                   USE CASE
                 </label>
                 <div className="relative" ref={useCaseDropdownRef}>
                   <button
+                    id="task-search-use-case-button"
                     type="button"
                     onClick={() =>
                       setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
@@ -620,11 +605,12 @@ export default function TaskSearch() {
 
               {/* Results Per Page */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-cyan-300">
+                <label htmlFor="task-search-results-per-page" className="text-sm font-medium text-cyan-300">
                   RESULTS PER PAGE
                 </label>
                 <div className="relative">
                   <select
+                    id="task-search-results-per-page"
                     value={currentLimit}
                     onChange={(event) =>
                       handleLimitChange(Number(event.target.value))
@@ -704,7 +690,8 @@ export default function TaskSearch() {
 
               // Extract port from URL to determine web project
               const getWebProject = (url: string) => {
-                const portMatch = url.match(/:(\d+)/);
+                const portRegex = /:(\d+)/;
+                const portMatch = portRegex.exec(url);
                 if (portMatch) {
                   const port = portMatch[1];
                   const website = websitesData.find(
@@ -738,8 +725,8 @@ export default function TaskSearch() {
                 }
               })();
 
-              const validatorIdMatch =
-                task.agentRunId.match(/validator-(\d+)/i);
+              const validatorIdRegex = /validator-(\d+)/i;
+              const validatorIdMatch = validatorIdRegex.exec(task.agentRunId);
               const fallbackValidator = validatorIdMatch
                 ? `Validator ${validatorIdMatch[1]}`
                 : "Validator";
@@ -749,11 +736,6 @@ export default function TaskSearch() {
                 (task as any).validatorName || fallbackValidator;
 
               const minerName = (task as any).minerName || "Miner";
-
-              const durationLabel =
-                typeof task.duration === "number" && task.duration >= 0
-                  ? `${Math.round(task.duration)}s`
-                  : "—";
 
               const validatorImageSrc = resolveAssetUrl(
                 (task as any).validatorImage,
@@ -770,40 +752,30 @@ export default function TaskSearch() {
               const roundNumber = (task as any).roundNumber;
               const hasSeason = typeof season === "number" && Number.isFinite(season);
               const hasRound = typeof roundNumber === "number" && Number.isFinite(roundNumber);
-              const seasonRoundDisplay =
-                hasSeason && hasRound
-                  ? `${season}/${roundNumber}`
-                  : hasRound
-                    ? `—/${roundNumber}`
-                    : hasSeason
-                      ? `${season}/—`
-                      : "—";
+              let seasonRoundDisplay: string;
+              if (hasSeason && hasRound) {
+                seasonRoundDisplay = `${season}/${roundNumber}`;
+              } else if (hasRound) {
+                seasonRoundDisplay = `—/${roundNumber}`;
+              } else if (hasSeason) {
+                seasonRoundDisplay = `${season}/—`;
+              } else {
+                seasonRoundDisplay = "—";
+              }
 
               // Evaluation cost in USD (from backend llmCost; support both camelCase and snake_case)
               const evaluationCost = (task as any).llmCost ?? (task as any).llm_cost;
 
+              const taskDetailUrl = task.evaluationId
+                ? `${routes.evaluations}/${task.evaluationId}`
+                : `${routes.evaluations}/${task.taskId}`;
+
               return (
-                <div
+                <button
+                  type="button"
                   key={task.evaluationId || task.taskId}
-                  onClick={() => {
-                    const url = task.evaluationId
-                      ? `${routes.evaluations}/${task.evaluationId}`
-                      : `${routes.evaluations}/${task.taskId}`;
-                    router.push(url);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      const url = task.evaluationId
-                        ? `${routes.evaluations}/${task.evaluationId}`
-                        : `${routes.evaluations}/${task.taskId}`;
-                      router.push(url);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  className="group relative rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20"
-                  style={{ cursor: "pointer" }}
+                  onClick={() => router.push(taskDetailUrl)}
+                  className="group relative w-full rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20 text-left"
                 >
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
@@ -980,7 +952,7 @@ export default function TaskSearch() {
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1049,9 +1021,9 @@ export default function TaskSearch() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
+            {["task-skeleton-a", "task-skeleton-b", "task-skeleton-c", "task-skeleton-d", "task-skeleton-e", "task-skeleton-f"].map((key) => (
               <div
-                key={`task-skeleton-${index}`}
+                key={key}
                 className="bg-gradient-to-br from-sky-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-sky-500/20 rounded-xl p-4 shadow-lg backdrop-blur-md animate-pulse"
               >
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">

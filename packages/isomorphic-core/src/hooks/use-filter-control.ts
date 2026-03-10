@@ -24,10 +24,10 @@ export function useFilterControls<StateType, ActionType>(
   const createQueryString = useCallback(
     (name: string | string[], value: string | string[]) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (!Array.isArray(name)) {
-        params.set(name, value.toString());
-      } else {
+      if (Array.isArray(name)) {
         name.forEach((n, idx) => params.set(n, value[idx]));
+      } else {
+        params.set(name, value.toString());
       }
       return params.toString();
     },

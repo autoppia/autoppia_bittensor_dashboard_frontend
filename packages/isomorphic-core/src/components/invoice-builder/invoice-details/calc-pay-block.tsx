@@ -6,10 +6,10 @@ import { InvoiceInput } from './invoice-forms/invoice-input';
 export default function CalcPayBlock({
   subTotal,
   totalTax,
-}: {
+}: Readonly<{
   subTotal: number;
   totalTax: number;
-}) {
+}>) {
   const { register } = useFormContext();
   let total = subTotal + totalTax;
   return (

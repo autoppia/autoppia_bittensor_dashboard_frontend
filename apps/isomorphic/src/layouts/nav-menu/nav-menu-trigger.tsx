@@ -51,16 +51,22 @@ type NavMenuTriggerWrapperProps = {
 export function NavMenuTriggerWrapper({
   items,
   menuClassName,
-}: NavMenuTriggerWrapperProps) {
-  const wrapperRef = React.useRef<any>(null);
+}: Readonly<NavMenuTriggerWrapperProps>) {
+  const wrapperRef = React.useRef<HTMLMenuElement | null>(null);
   const { set } = useNavMenu();
 
+  const triggerKeys = React.useMemo(
+    () => items.map((_, i) => `nav-trigger-${i}`),
+    [items.length]
+  );
+
   React.useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     set({
-      itemWrapperLeft:
-        wrapperRef.current.getBoundingClientRect().left + window.scrollX,
-      itemWrapperRight:
-        wrapperRef.current.getBoundingClientRect().right + window.scrollX,
+      itemWrapperLeft: rect.left + window.scrollX,
+      itemWrapperRight: rect.right + window.scrollX,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -70,9 +76,8 @@ export function NavMenuTriggerWrapper({
       className={cn('nav-menu-trigger-wrapper flex gap-3', menuClassName)}
       ref={wrapperRef}
     >
-      {items.map((item, index: number) => {
-        return (
-          <Fragment key={index}>
+      {items.map((item, index) => (
+          <Fragment key={triggerKeys[index]}>
             {React.Children.map(item?.component, (child) => {
               if (React.isValidElement(child)) {
                 return React.cloneElement(child, {
@@ -87,8 +92,7 @@ export function NavMenuTriggerWrapper({
               return null;
             })}
           </Fragment>
-        );
-      })}
+        ))}
     </menu>
   );
 }

@@ -10,7 +10,7 @@ import Filters from "./filters";
 export type TasksDataType = (typeof tasksData)[number];
 
 export default function TasksTable() {
-  const { table, setData } = useTanStackTable<TasksDataType>({
+  const { table } = useTanStackTable<TasksDataType>({
     tableData: tasksData,
     columnConfig: taskColumns,
     options: {

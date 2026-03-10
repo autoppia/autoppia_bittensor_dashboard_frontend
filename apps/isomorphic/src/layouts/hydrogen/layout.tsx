@@ -3,9 +3,9 @@ import Header from "./header";
 
 export default function HydrogenLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <main className="flex min-h-screen flex-grow overflow-x-hidden">
       <div className="fixed w-full h-full" style={{ zIndex: -1 }}>

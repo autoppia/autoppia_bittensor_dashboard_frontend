@@ -14,14 +14,14 @@ export default function TableRowActionGroup({
   deletePopoverTitle = "Delete the appointment",
   deletePopoverDescription = "Are you sure you want to delete this item?",
   className,
-}: {
+}: Readonly<{
   onDelete?: () => void;
   editUrl?: string;
   viewUrl?: string;
   deletePopoverTitle?: string;
   deletePopoverDescription?: string;
   className?: string;
-}) {
+}>) {
   return (
     <Flex
       align="center"

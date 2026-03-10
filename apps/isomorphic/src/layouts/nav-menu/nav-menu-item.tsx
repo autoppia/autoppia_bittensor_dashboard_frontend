@@ -12,7 +12,7 @@ type NavMenuItemProps = {
   children: React.ReactNode;
 };
 
-export function NavMenuItem({ children }: NavMenuItemProps) {
+export function NavMenuItem({ children }: Readonly<NavMenuItemProps>) {
   return (
     <>
       {React.Children.map(children, (child) => {
@@ -39,7 +39,7 @@ type NavMenuItemWrapperProps = {
   floatingOffset: number;
 };
 
-export function NavMenuItemWrapper(props: NavMenuItemWrapperProps) {
+export function NavMenuItemWrapper(props: Readonly<NavMenuItemWrapperProps>) {
   const {
     className,
     menuClassName,
@@ -57,13 +57,11 @@ export function NavMenuItemWrapper(props: NavMenuItemWrapperProps) {
       content: { component: null, props: null },
     };
 
-    if (
-      React.isValidElement(child) &&
-      child.props &&
-      child.props.children &&
-      child.props.children.length
-    ) {
-      child?.props?.children?.map((item: React.ReactNode) => {
+    const propsChildren = child.props?.children;
+    const hasChildrenArray =
+      Array.isArray(propsChildren) && (propsChildren?.length ?? 0) > 0;
+    if (React.isValidElement(child) && hasChildrenArray) {
+      (propsChildren as React.ReactNode[]).forEach((item: React.ReactNode) => {
         if (React.isValidElement(item)) {
           if (item.type === NavMenuTrigger) {
             itemObj.trigger.component = item;
@@ -75,14 +73,8 @@ export function NavMenuItemWrapper(props: NavMenuItemWrapperProps) {
         }
       });
       items.current[idx] = itemObj;
-    } else if (
-      React.isValidElement(child) &&
-      child.props &&
-      // @ts-ignore
-      child.props.children
-    ) {
-      // @ts-ignore
-      const item = child.props.children;
+    } else if (React.isValidElement(child) && propsChildren && !Array.isArray(propsChildren)) {
+      const item = propsChildren as React.ReactElement;
       if (item.type === NavMenuTrigger) {
         itemObj.trigger.component = item;
         itemObj.trigger.props = item.props;

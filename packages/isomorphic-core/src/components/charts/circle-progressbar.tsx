@@ -49,7 +49,7 @@ export default function CircleProgressBar({
   gradientColor,
   label,
   startAngle = 90,
-}: CircleProgressBarProps) {
+}: Readonly<CircleProgressBarProps>) {
   const cx = size / 2;
   const cy = size / 2;
   const radius = (size - strokeWidth) / 2;

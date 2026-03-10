@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type Active, type DragEndEvent, type UniqueIdentifier } from "@dnd-kit/core";
+import type { ReactNode } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type UniqueIdentifier } from "@dnd-kit/core";
 import {
   rectSortingStrategy,
   SortableContext,
@@ -27,9 +27,7 @@ export function SortableList<T extends BaseItem>({
   renderItem,
   children,
   strategy = rectSortingStrategy,
-}: Props<T>) {
-  const [active, setActive] = useState<Active | null>(null);
-  const activeItem = useMemo(() => items.find((item) => item.id === active?.id), [active, items]);
+}: Readonly<Props<T>>) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -40,15 +38,8 @@ export function SortableList<T extends BaseItem>({
   return (
     <DndContext
       sensors={sensors}
-      onDragStart={({ active }) => {
-        setActive(active);
-      }}
       onDragEnd={(event) => {
         onChange(event);
-        setActive(null);
-      }}
-      onDragCancel={() => {
-        setActive(null);
       }}
     >
       <SortableContext

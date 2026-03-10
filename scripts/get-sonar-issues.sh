@@ -6,7 +6,7 @@ set -euo pipefail
 
 PROJECT_KEY="autoppia_autoppia_bittensor_dashboard_frontend"
 HOST_URL="https://sonarcloud.io"
-TOKEN="${SONAR_TOKEN:-77ebb52b5f3cfb99368c13f49e03791b53287bbb}"
+TOKEN="${SONAR_TOKEN:?Set SONAR_TOKEN to fetch issues from SonarCloud (e.g. export SONAR_TOKEN=your_token)}"
 
 # Colores
 RED='\033[0;31m'

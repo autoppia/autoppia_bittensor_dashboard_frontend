@@ -1,5 +1,6 @@
 import cn from '../utils/class-names';
 import { formatDate } from '../utils/format-date';
+import type { ReactElement } from 'react';
 
 interface DateCellProps {
   date: Date;
@@ -17,7 +18,7 @@ export default function DateCell({
   dateClassName,
   dateFormat = 'MMMM D, YYYY',
   timeFormat = 'h:mm A',
-}: DateCellProps) {
+}: Readonly<DateCellProps>): ReactElement {
   return (
     <div className={cn('grid gap-1', className)}>
       <time

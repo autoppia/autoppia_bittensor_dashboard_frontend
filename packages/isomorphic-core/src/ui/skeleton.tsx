@@ -35,11 +35,11 @@ export function LineGroup({
   columns = 1,
   className,
   skeletonClassName,
-}: {
+}: Readonly<{
   columns: number;
   className?: string;
   skeletonClassName?: string;
-}) {
+}>) {
   return (
     <div className={cn('grid', className)}>
       {rangeMap(columns, (i) => (

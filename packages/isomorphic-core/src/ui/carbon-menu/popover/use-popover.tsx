@@ -28,7 +28,7 @@ export interface PopoverMiddlewares {
 interface UsePopoverOptions {
   offset: number | FloatingAxesOffsets;
   position: FloatingPosition;
-  positionDependencies: any[] | undefined;
+  positionDependencies: unknown[] | undefined;
   onPositionChange?: (position: FloatingPosition) => void;
   opened: boolean | undefined;
   defaultOpened: boolean | undefined;

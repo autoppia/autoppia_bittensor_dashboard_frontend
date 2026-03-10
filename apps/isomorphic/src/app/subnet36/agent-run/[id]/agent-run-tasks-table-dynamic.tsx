@@ -1,8 +1,14 @@
 "use client";
 
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
-import { createColumnHelper, flexRender } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
+import {
+  createColumnHelper,
+  flexRender,
+  type Cell,
+  type Row,
+  type Table as TanStackTableType,
+} from "@tanstack/react-table";
 import BannerText from "@/app/shared/banner-text";
 import { PiEyeBold, PiMagnifyingGlassBold } from "react-icons/pi";
 import { Button, Text, Input, Table as RTable } from "rizzui";
@@ -11,10 +17,45 @@ import Table from "@core/components/table";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 import Placeholder, { TableRowPlaceholder } from "@/app/shared/placeholder";
-import { AgentRunTaskData } from "@/repositories/agent-runs/agent-runs.types";
+import type { AgentRunEvaluationData } from "@/repositories/agent-runs/agent-runs.types";
 import { routes } from "@/config/routes";
 
-const columnHelper = createColumnHelper<AgentRunTaskData>();
+const columnHelper = createColumnHelper<AgentRunEvaluationData>();
+
+interface TasksTableBodyRowProps {
+  table?: TanStackTableType<AgentRunEvaluationData> | null;
+}
+
+function TasksTableBodyRow({ table }: Readonly<TasksTableBodyRowProps>) {
+  const router = useRouter();
+  if (!table) return null;
+  const rows = table.getRowModel().rows;
+  return (
+    <>
+      {rows.map((row: Row<AgentRunEvaluationData>) => {
+        const taskId = row.original.taskId;
+        const href = `${routes.tasks}/${taskId}`;
+        return (
+          <RTable.Row
+            key={row.id}
+            className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
+            onClick={() => router.push(href)}
+          >
+            {row.getVisibleCells().map((cell: Cell<AgentRunEvaluationData, unknown>) => (
+              <RTable.Cell
+                key={cell.id}
+                style={{ width: cell.column.getSize() }}
+                className="text-slate-200"
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </RTable.Cell>
+            ))}
+          </RTable.Row>
+        );
+      })}
+    </>
+  );
+}
 
 const agentRunTasksColumns = [
   columnHelper.display({
@@ -68,7 +109,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
       const scoreColor = eval_score >= 1 ? "text-green-500" : "text-red-500";
-
+      
       return (
         <Text className={`font-medium ${scoreColor}`}>
           {eval_score === 1 ? "✓" : "✗"}
@@ -95,8 +136,8 @@ const agentRunTasksColumns = [
         href={`${routes.tasks}/${row.original.taskId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
-        <Button
-          variant="outline"
+        <Button 
+          variant="outline" 
           size="sm"
           className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >
@@ -109,7 +150,7 @@ const agentRunTasksColumns = [
 ];
 
 interface AgentRunTasksTableDynamicProps {
-  tasks?: AgentRunTaskData[];
+  tasks?: AgentRunEvaluationData[];
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
@@ -120,14 +161,13 @@ export default function AgentRunTasksTableDynamic({
   isLoading = false,
   error,
   refetch,
-}: AgentRunTasksTableDynamicProps) {
-  const router = useRouter();
+}: Readonly<AgentRunTasksTableDynamicProps>) {
   const tasks = providedTasks;
   const total = tasks.length;
   const page = 1;
   const limit = 10;
 
-  const { table, setData } = useTanStackTable<AgentRunTaskData>({
+  const { table, setData } = useTanStackTable<AgentRunEvaluationData>({
     tableData: tasks || [],
     columnConfig: agentRunTasksColumns,
     options: {
@@ -207,6 +247,7 @@ export default function AgentRunTasksTableDynamic({
           </div>
           <div className="mb-4 text-sm text-red-300">{error}</div>
           <button
+            type="button"
             onClick={() => refetch?.()}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
@@ -261,32 +302,8 @@ export default function AgentRunTasksTableDynamic({
               rowClassName:
                 "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_8px_22px_rgba(56,189,248,0.15)]",
             }}
-	            components={{
-	              bodyRow: ({ table }) => (
-	                <>
-	                  {(table?.getRowModel().rows ?? []).map((row) => {
-	                    const taskId = (row as any).original?.taskId;
-	                    const href = `${routes.tasks}/${taskId}`;
-	                    return (
-                      <RTable.Row
-                        key={row.id}
-                        className="cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40"
-                        onClick={() => router.push(href)}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <RTable.Cell
-                            key={cell.id}
-                            style={{ width: cell.column.getSize() }}
-                            className="text-slate-200"
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </RTable.Cell>
-                        ))}
-                      </RTable.Row>
-                    );
-                  })}
-                </>
-              ),
+            components={{
+              bodyRow: TasksTableBodyRow,
             }}
           />
         ) : (
@@ -301,7 +318,7 @@ export default function AgentRunTasksTableDynamic({
         )}
       </div>
 
-      {table && tasks.length > 0 && (
+      {tasks && tasks.length > 0 && (
         <TablePagination
           table={table}
           className="relative py-4 text-slate-300"

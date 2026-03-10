@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { SidebarMenu } from "./sidebar-menu";
 
-export default function Sidebar({ className }: { className?: string }) {
+export default function Sidebar({ className }: Readonly<{ className?: string }>) {
   return (
     <aside
       className={cn(

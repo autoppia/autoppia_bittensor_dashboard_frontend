@@ -7,7 +7,7 @@ interface PerformanceMonitorProps {
   startTime?: number;
 }
 
-export default function PerformanceMonitor({ label, startTime }: PerformanceMonitorProps) {
+export default function PerformanceMonitor({ label, startTime }: Readonly<PerformanceMonitorProps>) {
   const [loadTime, setLoadTime] = useState<number | null>(null);
 
   useEffect(() => {

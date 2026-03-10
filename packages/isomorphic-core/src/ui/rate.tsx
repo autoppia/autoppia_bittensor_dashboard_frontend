@@ -1,11 +1,21 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { createContext, forwardRef, useMemo, useContext } from 'react';
 import RcRate from 'rc-rate';
 import type { RateProps as RcRateProps } from 'rc-rate/lib/Rate';
 import type { StarProps as RcStarProps } from 'rc-rate/lib/Star';
 import { FieldError, FieldHelperText, Tooltip } from 'rizzui';
 import cn from '../utils/class-names';
+
+type RateCharacterContextValue = {
+  size: keyof typeof rateClasses.size;
+  character: React.ReactNode | Array<React.ReactNode>;
+  characterClassName?: string;
+};
+
+const RateCharacterContext = createContext<RateCharacterContextValue | null>(
+  null
+);
 
 const labelClasses = {
   size: {
@@ -78,6 +88,26 @@ function Star() {
   );
 }
 
+function RateCharacterStar(starProps: Readonly<RcStarProps>) {
+  const ctx = useContext(RateCharacterContext);
+  if (!ctx) return null;
+  const { index } = starProps;
+  const characterNode = Array.isArray(ctx.character)
+    ? ctx.character[Number(index)]
+    : ctx.character;
+  return (
+    <div
+      className={cn(
+        '[&>svg]:fill-current',
+        rateClasses.size[ctx.size],
+        ctx.characterClassName
+      )}
+    >
+      {characterNode}
+    </div>
+  );
+}
+
 /** A basic input based rate component for getting user feedback. Here is the API documentation of the Rate component */
 /** We are using `rc-rate` package to build Rate component. See their [documentation](https://www.npmjs.com/package/rc-rate) for any query. */
 const Rate = forwardRef<any, RateProps>(
@@ -113,9 +143,14 @@ const Rate = forwardRef<any, RateProps>(
         </Tooltip>
       );
     };
+    const contextValue = useMemo(
+      () => ({ size, character, characterClassName }),
+      [size, character, characterClassName]
+    );
     return (
-      <div className={cn('aegon-rate', className)}>
-        {label && (
+      <RateCharacterContext.Provider value={contextValue}>
+        <div className={cn('aegon-rate', className)}>
+          {label && (
           <div className={cn('block', labelClasses.size[size], labelClassName)}>
             {label}
           </div>
@@ -124,19 +159,7 @@ const Rate = forwardRef<any, RateProps>(
           ref={ref}
           disabled={disabled}
           characterRender={characterRender}
-          character={({ index }: RcStarProps) => (
-            <div
-              className={cn(
-                '[&>svg]:fill-current',
-                rateClasses.size[size],
-                characterClassName
-              )}
-            >
-              {Array.isArray(character)
-                ? (character[index as number] as React.ReactNode)
-                : character}
-            </div>
-          )}
+          character={RateCharacterStar}
           className={cn(
             rateClasses.base,
             rateClasses.firstStar,
@@ -154,7 +177,8 @@ const Rate = forwardRef<any, RateProps>(
         {error && (
           <FieldError size={size} error={error} className={errorClassName} />
         )}
-      </div>
+        </div>
+      </RateCharacterContext.Provider>
     );
   }
 );

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Disclosure } from "@headlessui/react";
-import { Checkbox, CheckboxGroup, Collapse, Tooltip, Button } from "rizzui";
+import { createContext, useContext, useEffect, useState } from "react";
+import { Disclosure, DisclosurePanel, DisclosureButton } from "@headlessui/react";
+import { Checkbox, CheckboxGroup, Collapse, Tooltip, Button, Input } from "rizzui";
 import cn from "../utils/class-names";
 import { PiCaretDownBold, PiPlusBold } from "react-icons/pi";
 import { generateSlug } from "../utils/generate-slug";
@@ -26,6 +26,18 @@ type FilterWithSearchProps = {
   applyFilter: (query: string, value: any) => void;
 };
 
+const AccordionTitleContext = createContext<string>("");
+
+function AccordionHeaderFromContext({
+  open,
+  toggle,
+}: Readonly<{ open?: boolean; toggle: () => void }>) {
+  const title = useContext(AccordionTitleContext);
+  return (
+    <AccordionHeader open={open ?? false} toggle={toggle} title={title} />
+  );
+}
+
 export default function FilterWithAccordion({
   title,
   name,
@@ -34,7 +46,7 @@ export default function FilterWithAccordion({
   state,
   clearFilter,
   applyFilter,
-}: FilterWithSearchProps) {
+}: Readonly<FilterWithSearchProps>) {
   const [searchTerm, setSearchTerm] = useState("");
   const [values, setValues] = useState<string[]>(
     state[name]?.length ? state[name].split(",") : []
@@ -48,8 +60,8 @@ export default function FilterWithAccordion({
   // apply & clear filter
   useEffect(() => {
     if (values.length) applyFilter(name, values);
-    if (values.length == 0 && event !== true) {
-      clearFilter && clearFilter([name]);
+    if (values.length === 0 && event !== true) {
+      clearFilter?.([name]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values]);
@@ -63,27 +75,17 @@ export default function FilterWithAccordion({
   });
 
   return (
-    <>
-      <Collapse
-        className="py-5"
-        header={({ open, toggle }) => (
-          <button
-            type="button"
-            onClick={toggle}
-            className="flex w-full cursor-pointer items-center justify-between text-base font-semibold text-gray-900"
-          >
-            {title}
-            <PiCaretDownBold
-              strokeWidth={3}
-              className={cn(
-                "h-3.5 w-3.5 -rotate-90 text-gray-500 transition-transform duration-200 rtl:rotate-90",
-                open && "rotate-0 rtl:rotate-0"
-              )}
-            />
-          </button>
-        )}
-      >
+    <AccordionTitleContext.Provider value={title}>
+      <Collapse className="py-5" header={AccordionHeaderFromContext}>
         <div className="flex flex-col pt-5">
+          <Input
+            type="search"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="mb-3.5"
+            clearable
+          />
           <CheckboxGroup
             values={state[name]?.length ? state[name].split(",") : []}
             setValues={setValues}
@@ -111,7 +113,7 @@ export default function FilterWithAccordion({
             ))}
           </CheckboxGroup>
 
-          {filteredData!.length > 5 ? (
+          {filteredData.length > 5 ? (
             <CollapsibleFilterOptions data={filteredData}>
               <CheckboxGroup
                 values={state[name]?.length ? state[name].split(",") : []}
@@ -143,12 +145,35 @@ export default function FilterWithAccordion({
             </CollapsibleFilterOptions>
           ) : null}
 
-          {!filteredData.length ? (
+          {filteredData.length === 0 ? (
             <div className="text-gray-500">No result found</div>
           ) : null}
         </div>
       </Collapse>
-    </>
+    </AccordionTitleContext.Provider>
+  );
+}
+
+function AccordionHeader({
+  open,
+  toggle,
+  title,
+}: Readonly<{ open: boolean; toggle: () => void; title: string }>) {
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="flex w-full cursor-pointer items-center justify-between text-base font-semibold text-gray-900"
+    >
+      {title}
+      <PiCaretDownBold
+        strokeWidth={3}
+        className={cn(
+          "h-3.5 w-3.5 -rotate-90 text-gray-500 transition-transform duration-200 rtl:rotate-90",
+          open && "rotate-0 rtl:rotate-0"
+        )}
+      />
+    </button>
   );
 }
 
@@ -158,7 +183,7 @@ function FilterOption({
   color,
   isPrice,
   tooltipText,
-}: FilterOptions) {
+}: Readonly<FilterOptions>) {
   return (
     <div className="flex items-center justify-between">
       <div className="relative flex shrink-0 items-center">
@@ -196,23 +221,23 @@ function FilterOption({
 function CollapsibleFilterOptions({
   data,
   children,
-}: React.PropsWithChildren<{ data: FilterOptions[] }>) {
+}: Readonly<React.PropsWithChildren<{ data: FilterOptions[] }>>) {
   return (
     <div className="w-full">
       <Disclosure>
         {({ open }) => (
           <>
-            <Disclosure.Panel className="space-y-3.5">
+            <DisclosurePanel className="space-y-3.5">
               {children}
-            </Disclosure.Panel>
+            </DisclosurePanel>
 
             {!open && (
-              <Disclosure.Button className="mt-3.5 w-full px-6 text-start font-medium text-primary focus:outline-none">
+              <DisclosureButton className="mt-3.5 w-full px-6 text-start font-medium text-primary focus:outline-none">
                 <span className="flex items-center">
                   <PiPlusBold className="me-1 h-3 w-3" />
                   {data.length - 5} more
                 </span>
-              </Disclosure.Button>
+              </DisclosureButton>
             )}
           </>
         )}

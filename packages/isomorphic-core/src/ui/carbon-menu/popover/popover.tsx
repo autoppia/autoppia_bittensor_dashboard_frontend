@@ -33,7 +33,7 @@ interface PopoverProps {
   position?: FloatingPosition;
   offset?: number;
   onPositionChange?: (position: FloatingPosition) => void;
-  positionDependencies?: any[];
+  positionDependencies?: unknown[];
   onClose?: () => void;
   onOpen?: () => void;
   middlewares?: PopoverMiddlewares;
@@ -50,7 +50,7 @@ interface PopoverProps {
   trapFocus?: boolean;
   id?: string;
   withRoles?: boolean;
-  clickOutsideEvents?: string[];
+  clickOutsideEvents?: (keyof DocumentEventMap)[];
   width?: PopoverWidth;
   returnFocus?: boolean;
   closeOnEscape?: boolean;
@@ -60,6 +60,30 @@ interface PopoverProps {
  * Popover component to display content in a floating box.
  * @param {PopoverProps} props - Popover component props.
  */
+/**
+ * Get the floating position based on the text direction.
+ */
+function getFloatingPosition(
+  dir: 'rtl' | 'ltr',
+  position: FloatingPosition
+): FloatingPosition {
+  if (
+    dir === 'rtl' &&
+    (position.includes('right') || position.includes('left'))
+  ) {
+    const [side, placement] = position.split('-') as [
+      FloatingSide,
+      FloatingPlacement,
+    ];
+    const flippedPosition = side === 'right' ? 'left' : 'right';
+    return placement === undefined
+      ? flippedPosition
+      : `${flippedPosition}-${placement}`;
+  }
+
+  return position;
+}
+
 export default function Popover({
   classNames,
   variant,
@@ -93,48 +117,20 @@ export default function Popover({
   onChange,
   id,
   ...props
-}: PopoverProps) {
+}: Readonly<PopoverProps>) {
   const [referenceNode, setReferenceNode] = useState<HTMLElement | null>(null);
   const [floatingNode, setFloatingNode] = useState<HTMLElement | null>(null);
   const { direction } = useDirection();
   const uid = useId();
 
-  /**
-   * Get the floating position based on the text direction.
-   * @param {string} dir - Text direction ('rtl' or 'ltr').
-   * @param {FloatingPosition} position - Original floating position.
-   * @returns {FloatingPosition} - Adjusted floating position.
-   */
-  function getFloatingPosition(
-    dir: 'rtl' | 'ltr',
-    position: FloatingPosition
-  ): FloatingPosition {
-    if (
-      dir === 'rtl' &&
-      (position.includes('right') || position.includes('left'))
-    ) {
-      const [side, placement] = position.split('-') as [
-        FloatingSide,
-        FloatingPlacement,
-      ];
-      const flippedPosition = side === 'right' ? 'left' : 'right';
-      return placement === undefined
-        ? flippedPosition
-        : `${flippedPosition}-${placement}`;
-    }
-
-    return position;
-  }
-
   const popover = usePopover({
     middlewares,
     width,
     position: getFloatingPosition(
-      // @ts-ignore
-      direction,
-      position!
+      direction as 'rtl' | 'ltr',
+      position
     ),
-    offset: offset!,
+    offset,
     onPositionChange,
     positionDependencies,
     opened,
@@ -196,7 +192,7 @@ export default function Popover({
         getDropdownId: () => `rizzui${uid}-dropdown`,
         withRoles,
         targetProps: props,
-        as: as!,
+        as,
         classNames,
         keepMounted,
       }}

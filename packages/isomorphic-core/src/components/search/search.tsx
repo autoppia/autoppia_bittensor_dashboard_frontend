@@ -10,11 +10,11 @@ export default function SearchWidget({
   className,
   placeholderClassName,
   icon,
-}: {
+}: Readonly<{
   className?: string;
   icon?: React.ReactNode;
   placeholderClassName?: string;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export default function SearchWidget({
         setOpen(!open);
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    globalThis.addEventListener("keydown", onKeyDown);
+    return () => globalThis.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   const pathname = usePathname();

@@ -20,7 +20,7 @@ export function useHorizontalScrollAvailability({
           container.scrollWidth - container.offsetWidth - scrollLeft;
 
         setIsLeft(scrollableToLeft);
-        setIsRight(!(scrollableSpaceToRight < 5));
+        setIsRight(scrollableSpaceToRight >= 5);
       };
 
       container.addEventListener('scroll', handleScroll);

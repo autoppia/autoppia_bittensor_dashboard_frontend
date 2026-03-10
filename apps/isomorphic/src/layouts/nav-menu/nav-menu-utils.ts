@@ -1,5 +1,8 @@
-import { Dispatch, MutableRefObject } from 'react';
+import { Dispatch } from 'react';
 import { InitialState } from './nav-menu-types';
+
+/** Ref type with mutable current (avoids deprecated MutableRefObject in Sonar) */
+type MutableRef<T> = { current: T };
 
 export function navMenuReducer(prev: InitialState, next: InitialState) {
   return { ...prev, ...next };
@@ -10,12 +13,12 @@ export function handleMouseEnter({
   el,
   set,
   contentRefs,
-}: {
+}: Readonly<{
   index: number;
   el: HTMLElement;
-  set: Dispatch<any>;
-  contentRefs: MutableRefObject<(HTMLElement | null)[]>;
-}) {
+  set: Dispatch<unknown>;
+  contentRefs: MutableRef<(HTMLElement | null)[]>;
+}>) {
   set({
     hovering: index,
     popoverLeft: el.offsetLeft,

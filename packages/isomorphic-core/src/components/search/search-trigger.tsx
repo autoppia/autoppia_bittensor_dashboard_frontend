@@ -23,7 +23,7 @@ export default function SearchTrigger({
       )}
       {...props}
     >
-      {icon ? icon : <PiMagnifyingGlassBold className="magnifying-glass me-2 h-[18px] w-[18px]" />}
+      {icon ?? <PiMagnifyingGlassBold className="magnifying-glass me-2 h-[18px] w-[18px]" />}
       <span
         className={cn(
           "placeholder-text hidden text-sm text-gray-600 group-hover:text-gray-900 xl:inline-flex",

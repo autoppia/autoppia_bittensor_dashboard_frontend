@@ -62,7 +62,7 @@ export default function BasicTableWidget({
   scroll = { x: 1300 },
   className,
   searchPlaceholder = 'Search...',
-}: BasicTableWidgetProps) {
+}: Readonly<BasicTableWidgetProps>) {
   const onHeaderCellClick = (value: string) => ({
     onClick: () => {
       handleSort(value);

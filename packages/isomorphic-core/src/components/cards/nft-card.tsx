@@ -18,7 +18,7 @@ interface NFTProps {
   className?: string;
 }
 
-export function NftCard({ nft, className }: NFTProps) {
+export function NftCard({ nft, className }: Readonly<NFTProps>) {
   return (
     <div
       className={cn(

@@ -17,10 +17,20 @@ import {
   ValidatorData,
   ValidatorFilterItem,
   OverviewRoundData,
-  LeaderboardData,
   OverviewMetrics,
   SubnetStatistics,
 } from './overview.types';
+
+/** Network status value from API */
+type NetworkStatus = 'healthy' | 'degraded' | 'down';
+
+/** Activity type in recent activity feed */
+type RecentActivityType =
+  | 'task_completed'
+  | 'validator_joined'
+  | 'round_started'
+  | 'round_ended'
+  | 'miner_registered';
 
 export class OverviewRepository {
   private readonly baseEndpoint = '/api/v1/overview';
@@ -31,7 +41,11 @@ export class OverviewRepository {
    */
   async getMetrics(): Promise<OverviewMetrics> {
     try {
-      const response = await apiClient.get<OverviewMetricsResponse>(
+      type MetricsPayload = OverviewMetricsResponse & {
+        data?: { metrics?: OverviewMetrics };
+        metrics?: OverviewMetrics;
+      };
+      const response = await apiClient.get<MetricsPayload>(
         `${this.baseEndpoint}/metrics`
       );
 
@@ -41,17 +55,16 @@ export class OverviewRepository {
       }
 
       // Handle both nested and flat response structures
-      const payload = response.data as any;
-      if (payload?.data?.metrics) {
-        return payload.data.metrics as OverviewMetrics;
-      } else if (payload?.metrics) {
-        return payload.metrics as OverviewMetrics;
-      } else {
-        return payload as OverviewMetrics;
+      const payload = response.data as Record<string, unknown> | undefined;
+      if (payload && typeof payload === "object") {
+        const data = payload.data as { metrics?: OverviewMetrics } | undefined;
+        if (data?.metrics) return data.metrics;
+        if (payload.metrics) return payload.metrics as OverviewMetrics;
       }
-    } catch (error: any) {
-      // If there's an error, throw it with a more descriptive message
-      throw new Error(`Failed to fetch overview metrics: ${error.message}`);
+      return response.data as unknown as OverviewMetrics;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to fetch overview metrics: ${message}`);
     }
   }
 
@@ -73,13 +86,11 @@ export class OverviewRepository {
       // Handle both nested and flat response structures
       if (response.data?.data) {
         return response.data;
-      } else {
-        // If response.data is already the expected structure
-        return response.data as ValidatorsResponse;
       }
-    } catch (error: any) {
-      // If there's an error, throw it with a more descriptive message
-      throw new Error(`Failed to fetch validators: ${error.message}`);
+      return response.data;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to fetch validators: ${message}`);
     }
   }
 
@@ -121,15 +132,16 @@ export class OverviewRepository {
       }
 
       return { validators: [] };
-    } catch (error: any) {
-      if (error?.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number; message?: string };
+      if (err?.status === 404) {
         // Endpoint not available yet – fall back to empty list
         return { validators: [] };
       }
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error(error?.message || 'Failed to fetch validator filter options');
+      throw new Error(err?.message ?? 'Failed to fetch validator filter options');
     }
   }
 
@@ -137,17 +149,19 @@ export class OverviewRepository {
    * Get current round information
    */
   async getCurrentRound(): Promise<OverviewRoundData> {
-    const response = await apiClient.get<{ data: { round: OverviewRoundData } }>(
+    type RoundPayload =
+      | { data: { round: OverviewRoundData }; round?: OverviewRoundData }
+      | { data?: { round?: OverviewRoundData }; round?: OverviewRoundData };
+    const response = await apiClient.get<RoundPayload>(
       `${this.baseEndpoint}/rounds/current`
     );
-    // Handle both nested and flat response structures
     if (response.data?.data?.round) {
       return response.data.data.round;
-    } else if ((response.data as any)?.round) {
-      return (response.data as any).round as OverviewRoundData;
-    } else {
-      return response.data as unknown as OverviewRoundData;
     }
+    if (response.data?.round) {
+      return response.data.round;
+    }
+    return response.data as unknown as OverviewRoundData;
   }
 
   /**
@@ -189,13 +203,11 @@ export class OverviewRepository {
       // Handle both nested and flat response structures
       if (response.data?.data) {
         return response.data;
-      } else {
-        // If response.data is already the expected structure
-        return response.data as LeaderboardResponse;
       }
-    } catch (error: any) {
-      // If there's an error, throw it with a more descriptive message
-      throw new Error(`Failed to fetch leaderboard: ${error.message}`);
+      return response.data;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to fetch leaderboard: ${message}`);
     }
   }
 
@@ -219,34 +231,39 @@ export class OverviewRepository {
    * Get real-time network status
    */
   async getNetworkStatus(): Promise<{
-    status: 'healthy' | 'degraded' | 'down';
+    status: NetworkStatus;
     message: string;
     lastChecked: string;
     activeValidators: number;
     networkLatency: number;
   }> {
-    const response = await apiClient.get<{
-      data: {
-        status: 'healthy' | 'degraded' | 'down';
+    type NetworkStatusPayload = {
+      data?: {
+        status: NetworkStatus;
         message: string;
         lastChecked: string;
         activeValidators: number;
         networkLatency: number;
       };
-    }>(`${this.baseEndpoint}/network-status`);
-    // Handle both nested and flat response structures
+      status?: NetworkStatus;
+      message?: string;
+      lastChecked?: string;
+      activeValidators?: number;
+      networkLatency?: number;
+    };
+    const response = await apiClient.get<NetworkStatusPayload>(
+      `${this.baseEndpoint}/network-status`
+    );
     if (response.data?.data) {
       return response.data.data;
-    } else {
-      // Fallback to direct data structure
-      return response.data as unknown as {
-        status: 'healthy' | 'degraded' | 'down';
-        message: string;
-        lastChecked: string;
-        activeValidators: number;
-        networkLatency: number;
-      };
     }
+    return response.data as unknown as {
+      status: NetworkStatus;
+      message: string;
+      lastChecked: string;
+      activeValidators: number;
+      networkLatency: number;
+    };
   }
 
   /**
@@ -255,32 +272,24 @@ export class OverviewRepository {
   async getRecentActivity(limit: number = 10): Promise<{
     activities: Array<{
       id: string;
-      type: 'task_completed' | 'validator_joined' | 'round_started' | 'round_ended' | 'miner_registered';
+      type: RecentActivityType;
       message: string;
       timestamp: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>;
     total: number;
   }> {
+    type ActivityItem = {
+      id: string;
+      type: RecentActivityType;
+      message: string;
+      timestamp: string;
+      metadata?: Record<string, unknown>;
+    };
     const response = await apiClient.get<{
       success?: boolean;
-      data?: {
-        activities: Array<{
-          id: string;
-          type: 'task_completed' | 'validator_joined' | 'round_started' | 'round_ended' | 'miner_registered';
-          message: string;
-          timestamp: string;
-          metadata?: Record<string, any>;
-        }>;
-        total: number;
-      };
-      activities?: Array<{
-        id: string;
-        type: 'task_completed' | 'validator_joined' | 'round_started' | 'round_ended' | 'miner_registered';
-        message: string;
-        timestamp: string;
-        metadata?: Record<string, any>;
-      }>;
+      data?: { activities: ActivityItem[]; total: number };
+      activities?: ActivityItem[];
       total?: number;
     }>(`${this.baseEndpoint}/recent-activity`, { limit });
 

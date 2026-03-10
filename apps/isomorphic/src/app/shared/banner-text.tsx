@@ -17,7 +17,7 @@ export default function BannerText({
     className,
     textClassName,
     textColor,
-}: BannerTextProps) {
+}: Readonly<BannerTextProps>) {
     return (
         <div className={cn("flex items-center", className)}>
             <Badge

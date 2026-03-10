@@ -16,7 +16,7 @@ export default function LoadingScreen({
   size = 'md',
   variant = 'default',
   className = ""
-}: LoadingScreenProps) {
+}: Readonly<LoadingScreenProps>) {
   const sizeClasses = {
     sm: 'w-12 h-12',
     md: 'w-20 h-20',
@@ -28,6 +28,13 @@ export default function LoadingScreen({
     md: 'text-2xl',
     lg: 'text-4xl'
   };
+
+  const fullscreenInnerCircleClasses = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-20 h-20' };
+  const fullscreenInnerDotClasses = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-10 h-10' };
+  const fullscreenProgressBarWidth = { sm: 'w-48', md: 'w-64', lg: 'w-80' };
+  const defaultOuterClasses = { sm: 'w-6 h-6', md: 'w-8 h-8', lg: 'w-12 h-12' };
+  const defaultInnerClasses = { sm: 'w-3 h-3', md: 'w-4 h-4', lg: 'w-6 h-6' };
+  const defaultTitleClasses = { sm: 'text-lg', md: 'text-xl', lg: 'text-2xl' };
 
   if (variant === 'minimal') {
     return (
@@ -45,8 +52,8 @@ export default function LoadingScreen({
           {/* Animated Logo/Icon */}
           <div className="relative">
             <div className={`${sizeClasses[size]} mx-auto bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse`}>
-              <div className={`${size === 'sm' ? 'w-8 h-8' : size === 'md' ? 'w-12 h-12' : 'w-20 h-20'} bg-white rounded-full flex items-center justify-center`}>
-                <div className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-6 h-6' : 'w-10 h-10'} bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-spin`}></div>
+              <div className={`${fullscreenInnerCircleClasses[size]} bg-white rounded-full flex items-center justify-center`}>
+                <div className={`${fullscreenInnerDotClasses[size]} bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-spin`}></div>
               </div>
             </div>
             {/* Pulsing rings */}
@@ -63,7 +70,7 @@ export default function LoadingScreen({
           </div>
 
           {/* Progress Bar */}
-          <div className={`${size === 'sm' ? 'w-48' : size === 'md' ? 'w-64' : 'w-80'} mx-auto`}>
+          <div className={`${fullscreenProgressBarWidth[size]} mx-auto`}>
             <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full animate-pulse"></div>
             </div>
@@ -87,15 +94,15 @@ export default function LoadingScreen({
         {/* Animated Icon */}
         <div className="relative">
           <div className={`${sizeClasses[size]} mx-auto bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse`}>
-            <div className={`${size === 'sm' ? 'w-6 h-6' : size === 'md' ? 'w-8 h-8' : 'w-12 h-12'} bg-white rounded-full flex items-center justify-center`}>
-              <div className={`${size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-6 h-6'} bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-spin`}></div>
+            <div className={`${defaultOuterClasses[size]} bg-white rounded-full flex items-center justify-center`}>
+              <div className={`${defaultInnerClasses[size]} bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-spin`}></div>
             </div>
           </div>
         </div>
 
         {/* Loading Text */}
         <div className="space-y-1">
-          <h3 className={`${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-xl' : 'text-2xl'} font-semibold text-gray-800`}>
+          <h3 className={`${defaultTitleClasses[size]} font-semibold text-gray-800`}>
             {title}
           </h3>
           <p className="text-gray-600 text-sm">{subtitle}</p>
@@ -113,7 +120,7 @@ export default function LoadingScreen({
 }
 
 // Specialized loading components
-export function CardLoadingSkeleton({ count = 4, className = "" }: { count?: number; className?: string }) {
+export function CardLoadingSkeleton({ count = 4, className = "" }: Readonly<{ count?: number; className?: string }>) {
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ${className}`}>
       {Array.from({ length: count }, (_, index) => {
@@ -180,7 +187,7 @@ export function CardLoadingSkeleton({ count = 4, className = "" }: { count?: num
   );
 }
 
-export function ProgressBarLoading({ className = "" }: { className?: string }) {
+export function ProgressBarLoading({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <div className={`w-full ${className}`}>
       <div className="flex items-center justify-between mb-4">

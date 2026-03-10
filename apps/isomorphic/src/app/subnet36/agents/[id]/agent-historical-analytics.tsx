@@ -13,41 +13,60 @@ import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 import cn from "@core/utils/class-names";
 import { formatWebsiteName, getProjectColors } from "@/utils/website-colors";
-import { agentRunsRepository } from "@/repositories/agent-runs/agent-runs.repository";
-import { tasksRepository } from "@/repositories/tasks/tasks.repository";
 import type { AgentRunStats } from "@/repositories/agent-runs/agent-runs.types";
 import type { TaskData } from "@/repositories/tasks/tasks.types";
+import type { MinerHistoricalResponse } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
-import Placeholder from "@/app/shared/placeholder";
+
+/** Extended use-case shape when API returns taskDetails (not in MinerHistoricalResponse type). */
+type UseCaseWithTaskDetails = MinerHistoricalResponse["data"]["performanceByWebsite"][number]["useCases"][number] & {
+  taskDetails?: Array<Record<string, unknown>>;
+};
+type PerformanceByWebsiteWithTaskDetails = Omit<
+  MinerHistoricalResponse["data"]["performanceByWebsite"][number],
+  "useCases"
+> & { useCases?: UseCaseWithTaskDetails[] };
+
+/** TaskData with optional evaluationId (set when mapping from historical taskDetails). */
+type TaskDataWithEval = TaskData & { evaluationId?: string };
 
 // Helper function to normalize evaluation ID for URL
 // Keeps the full evaluation ID format: "evaluation_<round>_<uuid>_<hash>"
 // Or if it's just a UUID, prepends "evaluation_" to maintain consistency
 function normalizeEvaluationId(evaluationId: string): string {
   if (!evaluationId) return evaluationId;
-
+  
   // If it already starts with "evaluation_", use it as-is (full format)
   if (evaluationId.startsWith("evaluation_")) {
     return evaluationId;
   }
-
+  
   // If it's just a UUID, prepend "evaluation_" to maintain the format
   // Pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(evaluationId);
   if (isUUID) {
     return `evaluation_${evaluationId}`;
   }
-
+  
   // Otherwise return as-is
   return evaluationId;
+}
+
+/** Converts a value to string without using Object's default '[object Object]' for objects. */
+function safeString(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
 }
 
 interface AgentHistoricalAnalyticsProps {
   agentId: string | number;
   className?: string;
-  minerHistorical?: any; // MinerHistoricalResponse['data']
+  minerHistorical?: MinerHistoricalResponse["data"] | null;
   loading?: boolean;
-  selectedSeason?: number;
+  /** When set, filter rounds/task details to this season only (e.g. from parent page). */
+  selectedSeason?: number | null;
 }
 
 interface WebsiteStats {
@@ -70,6 +89,14 @@ interface UseCaseStats {
   avgTime: number;
 }
 
+interface DonutItem {
+  name: string;
+  value: number;
+  fill: string;
+  stroke: string;
+  percentage: number;
+}
+
 // Helper function to get color based on percentage
 function getPercentageColor(percentage: number): string {
   if (percentage >= 75) return "#22C55E"; // green-500
@@ -78,15 +105,346 @@ function getPercentageColor(percentage: number): string {
   return "#EF4444"; // red-500
 }
 
+function getScoreBadgeClass(score: number): string {
+  const base = "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold";
+  if (score >= 0.8) return `${base} bg-emerald-500/20 text-emerald-300`;
+  if (score >= 0.5) return `${base} bg-yellow-500/20 text-yellow-300`;
+  return `${base} bg-red-500/20 text-red-300`;
+}
+
+function roundMatchesSeason(roundStr: string, season: number | null): boolean {
+  if (season == null) return true;
+  const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
+  return Number.isFinite(seasonPart) && seasonPart === season;
+}
+
+function collectRoundsWithTaskDetails(
+  performanceByWebsite: MinerHistoricalResponse["data"]["performanceByWebsite"] | undefined,
+  season: number | null
+): Set<string> {
+  const set = new Set<string>();
+  const websites = performanceByWebsite ?? [];
+  for (const ws of websites as Array<Record<string, unknown>>) {
+    const useCases = (ws?.useCases ?? []) as Array<Record<string, unknown>>;
+    for (const uc of useCases) {
+      const taskDetails = (uc?.taskDetails ?? []) as Array<Record<string, unknown>>;
+      for (const detail of taskDetails) {
+        const round = detail?.round;
+        if (round == null) continue;
+        const roundStr = safeString(round);
+        if (!roundMatchesSeason(roundStr, season)) continue;
+        set.add(roundStr);
+      }
+    }
+  }
+  return set;
+}
+
+type UseCaseTaskTableContentProps = Readonly<{
+  taskData: { tasks: TaskDataWithEval[]; page: number; total: number };
+  onPrevPage: () => void;
+  onNextPage: () => void;
+  projectColors: { mainColor: string };
+  tasksPerPage: number;
+  onInspectTask: (task: TaskDataWithEval) => void;
+}>;
+
+type UseCaseTaskSectionProps = Readonly<{
+  loading: boolean;
+  taskData: { tasks: TaskDataWithEval[]; page: number; total: number } | null | undefined;
+  uc: UseCaseStats;
+  handlePageChange: (website: string, useCase: string, page: number) => void;
+  onInspectTask: (task: TaskDataWithEval) => void;
+  projectColors: { mainColor: string };
+  tasksPerPage: number;
+}>;
+
+function UseCaseTaskSection({
+  loading,
+  taskData,
+  uc,
+  handlePageChange,
+  onInspectTask,
+  projectColors,
+  tasksPerPage,
+}: UseCaseTaskSectionProps) {
+  if (loading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">Evaluation ID</th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">Prompt</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">Score</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">Duration</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <tr key={`skeleton-row-${i}`} className="border-t border-white/5 animate-pulse">
+                <td className="p-2 sm:p-3"><div className="h-4 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></td>
+                <td className="p-2 sm:p-3"><div className="space-y-2"><div className="h-3 rounded w-3/4" style={{ backgroundColor: `${projectColors.mainColor}20` }} /><div className="h-3 rounded w-1/2" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-12 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-4 w-10 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-16 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  const hasTasks = taskData != null && (taskData.tasks?.length ?? 0) > 0;
+  if (!hasTasks || taskData == null) {
+    return (
+      <div className="p-4 text-center text-white/60 text-sm">
+        No tasks found for this use case
+      </div>
+    );
+  }
+  const onPrevPage = () => handlePageChange(uc.website, uc.useCase, taskData.page - 1);
+  const onNextPage = () => handlePageChange(uc.website, uc.useCase, taskData.page + 1);
+  return (
+    <UseCaseTaskTableContent
+      taskData={taskData}
+      onPrevPage={onPrevPage}
+      onNextPage={onNextPage}
+      projectColors={projectColors}
+      tasksPerPage={tasksPerPage}
+      onInspectTask={onInspectTask}
+    />
+  );
+}
+
+function TaskTableRow({ task, onInspect }: Readonly<{ task: TaskDataWithEval; onInspect: (task: TaskDataWithEval) => void }>) {
+  return (
+    <tr className="border-t border-white/5 hover:bg-white/5 transition-colors">
+      <td className="p-2 sm:p-3">
+        <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
+          {task.evaluationId ?? task.taskId}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3">
+        <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
+          {task.prompt || "—"}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <span className={getScoreBadgeClass(task.score ?? 0)}>
+          {Math.round((task.score || 0) * 100)}%
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <span className="text-[10px] sm:text-xs text-white/70">
+          {task.duration !== undefined && task.duration !== null
+            ? `${task.duration.toFixed(1)} s`
+            : "—"}
+        </span>
+      </td>
+      <td className="p-2 sm:p-3 text-center">
+        <Button
+          size="sm"
+          variant="text"
+          onClick={() => onInspect(task)}
+          className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+        >
+          <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Inspect</span>
+          <span className="sm:hidden">View</span>
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
+function UseCaseTaskTableContent({
+  taskData,
+  onPrevPage,
+  onNextPage,
+  projectColors,
+  tasksPerPage,
+  onInspectTask,
+}: UseCaseTaskTableContentProps) {
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
+                Evaluation ID
+              </th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
+                Prompt
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
+                Score
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
+                Duration
+              </th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[80px] sm:w-[110px]">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {taskData.tasks.map((task) => (
+              <TaskTableRow key={task.taskId} task={task} onInspect={onInspectTask} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {taskData.total > tasksPerPage && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
+          <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
+            Showing{" "}
+            {(taskData.page - 1) * tasksPerPage + 1} to{" "}
+            {Math.min(taskData.page * tasksPerPage, taskData.total)} of {taskData.total} tasks
+          </Text>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPrevPage}
+              disabled={taskData.page === 1}
+              className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+            >
+              Previous
+            </Button>
+            <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
+              Page {taskData.page} of {Math.ceil(taskData.total / tasksPerPage)}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onNextPage}
+              disabled={taskData.page >= Math.ceil(taskData.total / tasksPerPage)}
+              className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+type UseCaseTaskTableInlineProps = Readonly<{
+  taskData: {
+    allTasks: TaskDataWithEval[];
+    tasks: TaskDataWithEval[];
+    loading: boolean;
+    total: number;
+    page: number;
+  } | undefined;
+  uc: UseCaseStats;
+  projectColors: { mainColor: string };
+  handlePageChange: (website: string, useCase: string, page: number) => void;
+  tasksPerPage: number;
+}>;
+
+function UseCaseTaskTableInline({
+  taskData,
+  uc,
+  projectColors,
+  handlePageChange,
+  tasksPerPage,
+}: UseCaseTaskTableInlineProps) {
+  const { push } = useRouter();
+  const isLoading = !taskData || taskData.loading;
+  if (isLoading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">Evaluation ID</th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">Prompt</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">Score</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">Duration</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">Evaluation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <tr key={i} className="border-t border-white/5 animate-pulse">
+                <td className="p-2 sm:p-3"><div className="h-4 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></td>
+                <td className="p-2 sm:p-3"><div className="space-y-2"><div className="h-3 rounded w-3/4" style={{ backgroundColor: `${projectColors.mainColor}20` }} /><div className="h-3 rounded w-1/2" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-12 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-4 w-10 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+                <td className="p-2 sm:p-3"><div className="flex justify-center"><div className="h-6 w-16 rounded" style={{ backgroundColor: `${projectColors.mainColor}20` }} /></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  if ((taskData.tasks?.length ?? 0) === 0) {
+    return (
+      <div className="p-4 text-center text-white/60 text-sm">No tasks found for this use case</div>
+    );
+  }
+  const data = taskData;
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">Evaluation ID</th>
+              <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">Prompt</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">Score</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">Duration</th>
+              <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">Evaluation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.tasks.map((task) => (
+                <tr key={task.taskId} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-2 sm:p-3"><span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">{task.evaluationId ?? task.taskId}</span></td>
+                  <td className="p-2 sm:p-3"><span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">{task.prompt || "—"}</span></td>
+                  <td className="p-2 sm:p-3 text-center"><span className={getScoreBadgeClass(task.score ?? 0)}>{Math.round((task.score || 0) * 100)}%</span></td>
+                  <td className="p-2 sm:p-3 text-center"><span className="text-[10px] sm:text-xs text-white/70">{task.duration?.toFixed(1) || "—"} s</span></td>
+                  <td className="p-2 sm:p-3 text-center">
+                    <Button size="sm" variant="text" onClick={() => { const evaluationId = task.evaluationId ?? task.taskId; push(`${routes.evaluations}/${normalizeEvaluationId(evaluationId)}`); }} className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs">
+                      <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" /><span className="hidden sm:inline">Open evaluation</span><span className="sm:hidden">Open</span>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {data.total > tasksPerPage && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
+            <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
+              Showing {(data.page - 1) * tasksPerPage + 1} to {Math.min(data.page * tasksPerPage, data.total)} of {data.total} tasks
+            </Text>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(uc.website, uc.useCase, data.page - 1)} disabled={data.page === 1} className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3">Previous</Button>
+              <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">Page {data.page} of {Math.ceil(data.total / tasksPerPage)}</span>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(uc.website, uc.useCase, data.page + 1)} disabled={data.page >= Math.ceil(data.total / tasksPerPage)} className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3">Next</Button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+}
+
 export default function AgentHistoricalAnalytics({
   agentId,
   className,
   minerHistorical,
   loading: externalLoading,
-  selectedSeason,
-}: AgentHistoricalAnalyticsProps) {
-  const router = useRouter();
+  selectedSeason: selectedSeasonProp,
+}: Readonly<AgentHistoricalAnalyticsProps>) {
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
+  const selectedSeason = selectedSeasonProp ?? null;
   const [aggregatedData, setAggregatedData] = useState<{
     stats: AgentRunStats[];
     runIds: string[];
@@ -96,13 +454,12 @@ export default function AgentHistoricalAnalytics({
 
   // Expandable state
   const [expandedWebsite, setExpandedWebsite] = useState<string | null>(null);
-  const [expandedUseCase, setExpandedUseCase] = useState<string | null>(null);
 
-  // Task data state
+  // Task data state (tasks may include evaluationId when from historical taskDetails)
   const [useCaseTasks, setUseCaseTasks] = useState<{
     [key: string]: {
-      allTasks: TaskData[]; // All fetched tasks
-      tasks: TaskData[]; // Current page tasks
+      allTasks: TaskDataWithEval[];
+      tasks: TaskDataWithEval[];
       loading: boolean;
       total: number;
       page: number;
@@ -111,25 +468,11 @@ export default function AgentHistoricalAnalytics({
 
   const TASKS_PER_PAGE = 10;
   const hasInitializedRef = useRef(false);
-  const roundsWithTaskDetails = useMemo(() => {
-    const set = new Set<string>();
-    const websites = minerHistorical?.performanceByWebsite ?? [];
-    websites.forEach((ws: any) => {
-      (ws?.useCases ?? []).forEach((uc: any) => {
-        (uc?.taskDetails ?? []).forEach((detail: any) => {
-          const round = detail?.round;
-          if (!round) return;
-          const roundStr = String(round);
-          if (selectedSeason != null) {
-            const seasonPart = Number.parseInt(roundStr.split("/")[0] ?? "", 10);
-            if (!Number.isFinite(seasonPart) || seasonPart !== selectedSeason) return;
-          }
-          set.add(roundStr);
-        });
-      });
-    });
-    return set;
-  }, [minerHistorical?.performanceByWebsite, selectedSeason]);
+
+  const roundsWithTaskDetails = useMemo(
+    () => collectRoundsWithTaskDetails(minerHistorical?.performanceByWebsite ?? undefined, selectedSeason),
+    [minerHistorical?.performanceByWebsite, selectedSeason]
+  );
   const sourceRound = useMemo(() => {
     const bestRewardRound = minerHistorical?.summary?.bestRewardRound;
     if (bestRewardRound) {
@@ -147,8 +490,6 @@ export default function AgentHistoricalAnalytics({
         return bestRankRoundStr;
       }
     }
-
-    // Fallback 1: latest round in this season that actually has task details.
     if (roundsWithTaskDetails.size > 0) {
       const entries = Array.from(roundsWithTaskDetails);
       entries.sort((a, b) => {
@@ -159,8 +500,6 @@ export default function AgentHistoricalAnalytics({
       });
       return entries[0];
     }
-
-    // Fallback 2: latest round from roundsHistory (if no task details available at all).
     const latest = minerHistorical?.roundsHistory?.[0]?.round;
     if (!latest) return null;
     const latestStr = String(latest);
@@ -190,7 +529,7 @@ export default function AgentHistoricalAnalytics({
     // Prevent double execution in React Strict Mode
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
-
+    
     // Always use minerHistorical if available - never fetch from agent-runs
     setLoading(false);
     setError(null);
@@ -199,28 +538,44 @@ export default function AgentHistoricalAnalytics({
   }, [minerHistorical]);
 
   // Aggregate data by website and use case - use minerHistorical if available
-  const { websiteStats, useCaseStats } = useMemo(() => {
-    // If we have minerHistorical data, use only source round details (best round fallbacks)
-    const websiteSource =
-      (minerHistorical as any)?.performanceByWebsiteBestRound ??
-      minerHistorical?.performanceByWebsite;
-    if (websiteSource) {
+  const { websiteStats, useCaseStats } = useMemo((): {
+    websiteStats: WebsiteStats[];
+    useCaseStats: UseCaseStats[];
+  } => {
+    // If we have minerHistorical data, use it directly
+    if (minerHistorical?.performanceByWebsite) {
       const websiteMap = new Map<string, WebsiteStats>();
       const useCaseMap = new Map<string, UseCaseStats>();
+      const perfList = minerHistorical.performanceByWebsite as PerformanceByWebsiteWithTaskDetails[];
 
-      websiteSource.forEach((ws: any) => {
+      for (const ws of perfList) {
         const website = ws.website;
-        if (!website) return;
-        let websiteTasks = 0;
-        let websiteSuccess = 0;
-        let websiteTotalTime = 0;
-        let websiteTimeCount = 0;
+        if (!website) continue;
+
+        const existing = websiteMap.get(website) ?? {
+          website,
+          displayName: formatWebsiteName(website),
+          totalTasks: 0,
+          completedTasks: 0,
+          successRate: 0,
+          avgScore: 0,
+          avgTime: 0,
+        };
+
+        existing.totalTasks = ws.tasks ?? 0;
+        existing.completedTasks = ws.successful ?? 0;
+        existing.successRate = existing.totalTasks > 0
+          ? (existing.completedTasks / existing.totalTasks) * 100
+          : 0;
+        existing.avgTime = ws.averageDuration ?? 0;
+
+        websiteMap.set(website, existing);
 
         // Process use cases
         if (ws.useCases) {
-          ws.useCases.forEach((uc: any) => {
+          for (const uc of ws.useCases) {
             const useCase = uc.useCase;
-            if (!useCase) return;
+            if (!useCase) continue;
 
             const key = `${website}:${useCase}`;
             const existingUC = useCaseMap.get(key) || {
@@ -233,72 +588,17 @@ export default function AgentHistoricalAnalytics({
               avgTime: 0,
             };
 
-            const details = Array.isArray(uc.taskDetails) ? uc.taskDetails : [];
-            const filteredDetails = sourceRound
-              ? details.filter((detail: any) => String(detail?.round) === sourceRound)
-              : details;
-
-            if (filteredDetails.length > 0) {
-              existingUC.totalTasks = filteredDetails.length;
-              existingUC.completedTasks = filteredDetails.filter(
-                (detail: any) =>
-                  detail?.status === "successful" ||
-                  (typeof detail?.score === "number" && Number(detail.score) >= 0.5)
-              ).length;
-              const totalTime = filteredDetails.reduce(
-                (sum: number, detail: any) =>
-                  sum + (typeof detail?.evaluationTime === "number" ? detail.evaluationTime : 0),
-                0
-              );
-              existingUC.avgTime = existingUC.totalTasks > 0 ? totalTime / existingUC.totalTasks : 0;
-            } else {
-              // Fallback when taskDetails are absent: use provided aggregate (less precise).
-              existingUC.totalTasks = uc.tasks || 0;
-              existingUC.completedTasks = uc.successful || 0;
-              existingUC.avgTime = uc.averageDuration || 0;
-            }
+            existingUC.totalTasks = uc.tasks || 0;
+            existingUC.completedTasks = uc.successful || 0;
             existingUC.successRate = existingUC.totalTasks > 0
               ? (existingUC.completedTasks / existingUC.totalTasks) * 100
               : 0;
-
-            websiteTasks += existingUC.totalTasks;
-            websiteSuccess += existingUC.completedTasks;
-            if (existingUC.totalTasks > 0) {
-              websiteTotalTime += existingUC.avgTime * existingUC.totalTasks;
-              websiteTimeCount += existingUC.totalTasks;
-            }
+            existingUC.avgTime = uc.averageDuration ?? 0;
 
             useCaseMap.set(key, existingUC);
-          });
+          }
         }
-
-        if (websiteTasks === 0 && (!ws.useCases || ws.useCases.length === 0)) {
-          // Last resort fallback if backend does not provide use case details.
-          websiteTasks = ws.tasks || 0;
-          websiteSuccess = ws.successful || 0;
-          websiteTotalTime = (ws.averageDuration || 0) * websiteTasks;
-          websiteTimeCount = websiteTasks;
-        }
-
-        const existing = websiteMap.get(website) || {
-          website,
-          displayName: formatWebsiteName(website),
-          totalTasks: 0,
-          completedTasks: 0,
-          successRate: 0,
-          avgScore: 0,
-          avgTime: 0,
-        };
-
-        existing.totalTasks = websiteTasks;
-        existing.completedTasks = websiteSuccess;
-        existing.successRate = existing.totalTasks > 0
-          ? (existing.completedTasks / existing.totalTasks) * 100
-          : 0;
-        existing.avgTime = websiteTimeCount > 0 ? websiteTotalTime / websiteTimeCount : 0;
-
-        websiteMap.set(website, existing);
-      });
+      }
 
       return {
         websiteStats: Array.from(websiteMap.values()).sort(
@@ -317,19 +617,17 @@ export default function AgentHistoricalAnalytics({
 
     const websiteMap = new Map<string, WebsiteStats>();
     const useCaseMap = new Map<string, UseCaseStats>();
+    type WsWithUseCases = { useCases?: Array<{ useCase?: string; tasks?: number; successful?: number; averageScore?: number; averageDuration?: number }> };
 
-    // Process each run's stats
-    aggregatedData.stats.forEach((stats) => {
+    for (const stats of aggregatedData.stats) {
       const performanceByWebsite = stats.performanceByWebsite || [];
-
-      // Process website-level stats
-      performanceByWebsite.forEach((ws) => {
-        const website = ws.website;
-        if (!website) return;
+      for (const ws of performanceByWebsite) {
+        const website = (ws as { website?: string }).website;
+        if (!website) continue;
 
         const existing = websiteMap.get(website) || {
-          website, // Original lowercase name for API calls
-          displayName: formatWebsiteName(website), // Formatted name for display
+          website,
+          displayName: formatWebsiteName(website),
           totalTasks: 0,
           completedTasks: 0,
           successRate: 0,
@@ -337,37 +635,31 @@ export default function AgentHistoricalAnalytics({
           avgTime: 0,
         };
 
-        const tasks = ws.tasks || 0;
-        const completed = ws.successful || 0;
-        const score = ws.averageScore || 0; // Already a percentage from backend
-        const time = ws.averageDuration || 0;
+        const tasks = (ws as { tasks?: number }).tasks || 0;
+        const completed = (ws as { successful?: number }).successful || 0;
+        const score = (ws as { averageScore?: number }).averageScore || 0;
+        const time = (ws as { averageDuration?: number }).averageDuration || 0;
 
         const prevTotal = existing.totalTasks;
         existing.totalTasks += tasks;
         existing.completedTasks += completed;
 
-        // Weighted average for score and time
         if (existing.totalTasks > 0) {
-          existing.avgScore =
-            (existing.avgScore * prevTotal + score * tasks) /
-            existing.totalTasks;
-          existing.avgTime =
-            (existing.avgTime * prevTotal + time * tasks) / existing.totalTasks;
-          existing.successRate =
-            (existing.completedTasks / existing.totalTasks) * 100;
+          existing.avgScore = (existing.avgScore * prevTotal + score * tasks) / existing.totalTasks;
+          existing.avgTime = (existing.avgTime * prevTotal + time * tasks) / existing.totalTasks;
+          existing.successRate = (existing.completedTasks / existing.totalTasks) * 100;
         }
 
         websiteMap.set(website, existing);
 
-        // Process use case stats
-        const useCases = (ws as any).useCases || [];
-        useCases.forEach((uc: any) => {
-          const useCase = uc.useCase;
-          if (!useCase) return;
+        const useCases = (ws as WsWithUseCases).useCases ?? [];
+        for (const uc of useCases) {
+          const useCaseName = uc.useCase;
+          if (!useCaseName) continue;
 
-          const key = `${website}:${useCase}`;
+          const key = `${website}:${useCaseName}`;
           const existingUC = useCaseMap.get(key) || {
-            useCase,
+            useCase: useCaseName,
             website,
             totalTasks: 0,
             completedTasks: 0,
@@ -376,31 +668,25 @@ export default function AgentHistoricalAnalytics({
             avgTime: 0,
           };
 
-          const ucTasks = uc.tasks || 0;
-          const ucCompleted = uc.successful || 0;
-          const ucScore = uc.averageScore || 0; // Already a percentage from backend
-          const ucTime = uc.averageDuration || 0;
+          const ucTasks = uc.tasks ?? 0;
+          const ucCompleted = uc.successful ?? 0;
+          const ucScore = uc.averageScore ?? 0;
+          const ucTime = uc.averageDuration ?? 0;
 
           const prevUCTotal = existingUC.totalTasks;
           existingUC.totalTasks += ucTasks;
           existingUC.completedTasks += ucCompleted;
 
-          // Weighted average for score and time
           if (existingUC.totalTasks > 0) {
-            existingUC.avgScore =
-              (existingUC.avgScore * prevUCTotal + ucScore * ucTasks) /
-              existingUC.totalTasks;
-            existingUC.avgTime =
-              (existingUC.avgTime * prevUCTotal + ucTime * ucTasks) /
-              existingUC.totalTasks;
-            existingUC.successRate =
-              (existingUC.completedTasks / existingUC.totalTasks) * 100;
+            existingUC.avgScore = (existingUC.avgScore * prevUCTotal + ucScore * ucTasks) / existingUC.totalTasks;
+            existingUC.avgTime = (existingUC.avgTime * prevUCTotal + ucTime * ucTasks) / existingUC.totalTasks;
+            existingUC.successRate = (existingUC.completedTasks / existingUC.totalTasks) * 100;
           }
 
           useCaseMap.set(key, existingUC);
-        });
-      });
-    });
+        }
+      }
+    }
 
     return {
       websiteStats: Array.from(websiteMap.values()).sort(
@@ -410,7 +696,7 @@ export default function AgentHistoricalAnalytics({
         (a, b) => b.totalTasks - a.totalTasks
       ),
     };
-  }, [aggregatedData, minerHistorical, sourceRound]);
+  }, [aggregatedData, minerHistorical]);
 
   // Filter use cases by selected website
   const filteredUseCases = useMemo(() => {
@@ -425,66 +711,49 @@ export default function AgentHistoricalAnalytics({
   }, [websiteStats, selectedWebsite]);
 
   // Website options for dropdown
-  const websiteOptions = useMemo(() => {
-    const options = [{ label: "All Websites", value: "__all__" }];
-    websiteStats.forEach((ws) => {
-      options.push({
+  const websiteOptions = useMemo(
+    () => [
+      { label: "All Websites", value: "__all__" },
+      ...websiteStats.map((ws) => ({
         label: formatWebsiteName(ws.website),
         value: ws.website,
-      });
-    });
-    return options;
-  }, [websiteStats]);
+      })),
+    ],
+    [websiteStats]
+  );
 
   // Fetch tasks for a specific use case
   const fetchUseCaseTasks = useCallback(
     async (website: string, useCase: string, page: number = 1) => {
       const key = `${website}:${useCase}`;
 
-      // 1) If tenemos datos históricos, usarlos siempre (independiente de aggregatedData)
+      // 1) If we have historical data, use it (independent of aggregatedData)
       if (minerHistorical) {
-        const websiteData = minerHistorical.performanceByWebsite?.find(
-          (ws: any) => ws.website === website
-        );
-        const useCaseData = websiteData?.useCases?.find(
-          (uc: any) => uc.useCase === useCase
-        );
+        const perfList = minerHistorical.performanceByWebsite as PerformanceByWebsiteWithTaskDetails[] | undefined;
+        const websiteData = perfList?.find((ws: PerformanceByWebsiteWithTaskDetails) => ws.website === website);
+        const useCaseData = websiteData?.useCases?.find((uc: UseCaseWithTaskDetails) => uc.useCase === useCase);
 
         const taskDetails = useCaseData?.taskDetails ?? [];
-        const mappedTasks: TaskData[] = taskDetails.map((detail: any) => {
-          const status =
-            detail.status === "successful"
-              ? "completed"
-              : detail.status === "failed"
-                ? "failed"
-                : "completed";
-
-          const timestamp = detail.createdAt || new Date().toISOString();
-
-          const evaluationId = detail.evaluationId || detail.taskId;
+        const mapDetailStatus = (s: string) => {
+          if (s === "successful") return "completed";
+          if (s === "failed") return "failed";
+          return "completed";
+        };
+        const mappedTasks: TaskDataWithEval[] = taskDetails.map((detail: Record<string, unknown>) => {
+          const status = mapDetailStatus(safeString(detail.status));
+          const timestamp = detail.createdAt == null ? new Date().toISOString() : safeString(detail.createdAt);
+          const evaluationId = detail.evaluationId ?? detail.taskId;
           return {
-            taskId:
-              detail.taskId ||
-              detail.evaluationId ||
-              detail.agentRunId ||
-              `${useCase}-${website}`,
-            evaluationId: evaluationId, // Store original evaluationId for URL generation
-            agentRunId:
-              detail.agentRunId ||
-              detail.evaluationId ||
-              detail.taskId ||
-              "",
+            taskId: safeString(detail.taskId ?? detail.evaluationId ?? detail.agentRunId ?? `${useCase}-${website}`),
+            evaluationId: safeString(evaluationId),
+            agentRunId: safeString(detail.agentRunId ?? detail.evaluationId ?? detail.taskId),
             website,
-            useCase: detail.useCase || useCase,
-            prompt: detail.prompt || "",
+            useCase: safeString(detail.useCase ?? useCase),
+            prompt: safeString(detail.prompt),
             status,
             score: typeof detail.score === "number" ? detail.score : 0,
-            successRate:
-              typeof detail.score === "number" ? detail.score : 0,
-            duration:
-              typeof detail.evaluationTime === "number"
-                ? detail.evaluationTime
-                : 0,
+            successRate: typeof detail.score === "number" ? detail.score : 0,
+            duration: typeof detail.evaluationTime === "number" ? detail.evaluationTime : 0,
             startTime: timestamp,
             createdAt: timestamp,
             updatedAt: timestamp,
@@ -586,7 +855,7 @@ export default function AgentHistoricalAnalytics({
           },
         }));
         return;
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch tasks:", err);
         setUseCaseTasks((prev) => ({
           ...prev,
@@ -600,25 +869,7 @@ export default function AgentHistoricalAnalytics({
         }));
       }
     },
-    [aggregatedData?.runIds, minerHistorical, TASKS_PER_PAGE]
-  );
-
-  // Toggle use case expansion
-  const toggleUseCase = useCallback(
-    (website: string, useCase: string) => {
-      const key = `${website}:${useCase}`;
-
-      if (expandedUseCase === key) {
-        setExpandedUseCase(null);
-      } else {
-        setExpandedUseCase(key);
-        // Fetch tasks if not already loaded
-        if (!useCaseTasks[key]) {
-          fetchUseCaseTasks(website, useCase, 1);
-        }
-      }
-    },
-    [expandedUseCase, useCaseTasks, fetchUseCaseTasks]
+    [aggregatedData?.runIds, minerHistorical]
   );
 
   // Handle page change
@@ -652,8 +903,8 @@ export default function AgentHistoricalAnalytics({
   }, [selectedWebsite, filteredUseCases, fetchUseCaseTasks, useCaseTasks]);
 
   // Use external loading state if provided
-  const isLoading = externalLoading !== undefined ? externalLoading : loading;
-
+  const isLoading = externalLoading ?? loading;
+  
   if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>
@@ -690,7 +941,7 @@ export default function AgentHistoricalAnalytics({
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
               <div
-                key={i}
+                key={`skeleton-legend-${i}`}
                 className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
               >
                 <div className="w-3 h-3 rounded-full bg-white/10 flex-shrink-0" />
@@ -707,7 +958,7 @@ export default function AgentHistoricalAnalytics({
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div
-              key={i}
+              key={`skeleton-card-${i}`}
               className="relative rounded-xl border p-3 sm:p-5 animate-pulse"
               style={{
                 borderColor: "rgba(100, 116, 139, 0.6)",
@@ -749,7 +1000,7 @@ export default function AgentHistoricalAnalytics({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                   {[1, 2, 3, 4].map((j) => (
                     <div
-                      key={j}
+                      key={`skeleton-usecase-${j}`}
                       className="rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10"
                     >
                       <div className="flex items-center justify-between">
@@ -789,7 +1040,7 @@ export default function AgentHistoricalAnalytics({
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                Best-Round Performance Analytics
+                Historical Performance Analytics
               </h2>
               <p className="text-xs sm:text-sm text-emerald-200/70">{strongestRoundLabel}</p>
             </div>
@@ -857,11 +1108,11 @@ export default function AgentHistoricalAnalytics({
         {(() => {
           // Calculate overall stats for pie chart
           const totalTasks = displayedWebsites.reduce(
-            (sum, ws) => sum + ws.totalTasks,
+            (sum: number, ws: WebsiteStats) => sum + ws.totalTasks,
             0
           );
           const totalCompleted = displayedWebsites.reduce(
-            (sum, ws) => sum + ws.completedTasks,
+            (sum: number, ws: WebsiteStats) => sum + ws.completedTasks,
             0
           );
           const overallSuccessRate =
@@ -874,9 +1125,9 @@ export default function AgentHistoricalAnalytics({
           ) => {
             // Convert hex to RGB
             const hex = baseColor.replace("#", "");
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
+            const r = Number.parseInt(hex.substring(0, 2), 16);
+            const g = Number.parseInt(hex.substring(2, 4), 16);
+            const b = Number.parseInt(hex.substring(4, 6), 16);
 
             const colors: string[] = [];
             for (let i = 0; i < count; i++) {
@@ -906,7 +1157,7 @@ export default function AgentHistoricalAnalytics({
                   filteredUseCases.length
                 );
 
-                return filteredUseCases.map((uc, idx) => ({
+                return filteredUseCases.map((uc: UseCaseStats, idx: number) => ({
                   name: uc.useCase,
                   value: uc.completedTasks,
                   completed: uc.completedTasks,
@@ -918,7 +1169,7 @@ export default function AgentHistoricalAnalytics({
                 }));
               })()
             : // Show websites with their specific colors
-              displayedWebsites.map((ws) => {
+              displayedWebsites.map((ws: WebsiteStats) => {
                 const projectColors = getProjectColors(ws.website);
                 return {
                   name: ws.displayName,
@@ -933,8 +1184,7 @@ export default function AgentHistoricalAnalytics({
               });
 
           // If no data or all values are 0, show a neutral empty state
-          const hasData =
-            donutData.length > 0 && donutData.some((d) => d.value > 0);
+          const hasData = donutData.some((d: DonutItem) => d.value > 0);
           const displayData = hasData
             ? donutData
             : [
@@ -968,13 +1218,13 @@ export default function AgentHistoricalAnalytics({
                             value={overallSuccessRate.toFixed(0)}
                             totalRequests={totalTasks.toString()}
                             totalSuccesses={totalCompleted.toString()}
-                            viewBox={props.viewBox}
+                            viewBox={props.viewBox ? { cx: (props.viewBox as { cx?: number }).cx, cy: (props.viewBox as { cy?: number }).cy } : undefined}
                           />
                         )}
                       />
-                      {displayData.map((entry, idx) => (
+                      {displayData.map((entry: DonutItem) => (
                         <Cell
-                          key={`cell-${idx}`}
+                          key={`cell-${entry.name}`}
                           fill={entry.fill}
                           stroke={entry.stroke}
                           strokeWidth={2}
@@ -988,9 +1238,9 @@ export default function AgentHistoricalAnalytics({
               {/* Legend */}
               {hasData && (
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {displayData.map((item, idx) => (
+                  {displayData.map((item: DonutItem) => (
                     <div
-                      key={idx}
+                      key={item.name}
                       className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10"
                     >
                       <div
@@ -1019,15 +1269,12 @@ export default function AgentHistoricalAnalytics({
 
       {/* Website Performance Cards */}
       <div className="relative space-y-6">
-        {displayedWebsites.map((ws, index) => {
+        {displayedWebsites.map((ws: WebsiteStats) => {
           const projectColors = getProjectColors(ws.website);
-          const isHighPerformance = ws.successRate >= 80;
-          const isMediumPerformance =
-            ws.successRate >= 60 && ws.successRate < 80;
 
           return (
             <div
-              key={`${ws.website}-${index}`}
+              key={ws.website}
               className="group relative rounded-xl border p-3 sm:p-5 transition-all duration-300 hover:shadow-2xl"
               style={{
                 boxShadow: "0 20px 45px rgba(35, 43, 72, 0.25)",
@@ -1080,8 +1327,7 @@ export default function AgentHistoricalAnalytics({
               </div>
 
               {/* Use Cases Breakdown */}
-              {filteredUseCases.filter((uc) => uc.website === ws.website)
-                .length > 0 && (
+              {filteredUseCases.some((uc: UseCaseStats) => uc.website === ws.website) && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Text className="text-xs font-semibold text-white/70 uppercase tracking-wider">
@@ -1098,8 +1344,8 @@ export default function AgentHistoricalAnalytics({
                         // Auto-load tasks for all use cases when expanding
                         if (newState === ws.website) {
                           filteredUseCases
-                            .filter((uc) => uc.website === ws.website)
-                            .forEach((uc) => {
+                            .filter((uc: UseCaseStats) => uc.website === ws.website)
+                            .forEach((uc: UseCaseStats) => {
                               const key = `${uc.website}:${uc.useCase}`;
                               // Only fetch if not already loaded
                               if (!useCaseTasks[key]) {
@@ -1127,8 +1373,8 @@ export default function AgentHistoricalAnalytics({
                   {expandedWebsite === ws.website ? (
                     <div className="space-y-2">
                       {filteredUseCases
-                        .filter((uc) => uc.website === ws.website)
-                        .map((uc, ucIndex) => {
+                        .filter((uc: UseCaseStats) => uc.website === ws.website)
+                        .map((uc: UseCaseStats, ucIndex: number) => {
                           const key = `${uc.website}:${uc.useCase}`;
                           const taskData = useCaseTasks[key];
 
@@ -1163,253 +1409,13 @@ export default function AgentHistoricalAnalytics({
 
                               {/* Task Table - Always show when website is expanded */}
                               <div className="border-t border-white/10 bg-black/20">
-                                {taskData?.loading ? (
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-sm table-fixed min-w-[700px]">
-                                      <thead className="bg-white/5">
-                                        <tr>
-                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                            Evaluation ID
-                                          </th>
-                                          <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                            Prompt
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
-                                            Score
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
-                                            Duration
-                                          </th>
-                                          <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
-                                            Evaluation
-                                          </th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {[1, 2, 3, 4, 5].map((i) => (
-                                          <tr
-                                            key={i}
-                                            className="border-t border-white/5 animate-pulse"
-                                          >
-                                            <td className="p-2 sm:p-3">
-                                              <div
-                                                className="h-4 rounded"
-                                                style={{
-                                                  backgroundColor: `${projectColors.mainColor}20`,
-                                                }}
-                                              />
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="space-y-2">
-                                                <div
-                                                  className="h-3 rounded w-3/4"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                                <div
-                                                  className="h-3 rounded w-1/2"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-6 w-12 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-4 w-10 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                            <td className="p-2 sm:p-3">
-                                              <div className="flex justify-center">
-                                                <div
-                                                  className="h-6 w-16 rounded"
-                                                  style={{
-                                                    backgroundColor: `${projectColors.mainColor}20`,
-                                                  }}
-                                                />
-                                              </div>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                ) : taskData?.tasks?.length > 0 ? (
-                                  <>
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-sm table-fixed min-w-[700px]">
-                                        <thead className="bg-white/5">
-                                          <tr>
-                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[240px]">
-                                              Evaluation ID
-                                            </th>
-                                            <th className="text-left p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                              Prompt
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[60px] sm:w-[80px]">
-                                              Score
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[70px] sm:w-[90px]">
-                                              Duration
-                                            </th>
-                                            <th className="text-center p-2 sm:p-3 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider w-[110px] sm:w-[140px]">
-                                              Evaluation
-                                            </th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {taskData.tasks.map((task) => (
-                                            <tr
-                                              key={task.taskId}
-                                              className="border-t border-white/5 hover:bg-white/5 transition-colors"
-                                            >
-                                              <td className="p-2 sm:p-3">
-                                                <span className="font-mono text-[10px] sm:text-xs text-white/90 break-all">
-                                                  {(task as any).evaluationId || task.taskId}
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3">
-                                                <span className="text-[10px] sm:text-xs text-white/80 line-clamp-2">
-                                                  {task.prompt || "—"}
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <span
-                                                  className={cn(
-                                                    "inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold",
-                                                    (task.score || 0) >= 0.8
-                                                      ? "bg-emerald-500/20 text-emerald-300"
-                                                      : (task.score || 0) >= 0.5
-                                                        ? "bg-yellow-500/20 text-yellow-300"
-                                                        : "bg-red-500/20 text-red-300"
-                                                  )}
-                                                >
-                                                  {Math.round(
-                                                    (task.score || 0) * 100
-                                                  )}
-                                                  %
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <span className="text-[10px] sm:text-xs text-white/70">
-                                                  {task.duration?.toFixed(1) ||
-                                                    "—"}
-                                                  s
-                                                </span>
-                                              </td>
-                                              <td className="p-2 sm:p-3 text-center">
-                                                <Button
-                                                  size="sm"
-                                                  variant="text"
-                                                  onClick={() => {
-                                                    // Use evaluationId if available, otherwise use taskId
-                                                    // Keep the full evaluation ID format (evaluation_xxx_xxx_xxx)
-                                                    const evaluationId = (task as any).evaluationId || task.taskId;
-                                                    // Ensure it has the "evaluation_" prefix if it's just a UUID
-                                                    const normalizedId = normalizeEvaluationId(evaluationId);
-                                                    router.push(
-                                                      `${routes.evaluations}/${normalizedId}`
-                                                    );
-                                                  }}
-                                                  className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
-                                                >
-                                                  <PiEyeDuotone className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                  <span className="hidden sm:inline">
-                                                    Open evaluation
-                                                  </span>
-                                                  <span className="sm:hidden">
-                                                    Open
-                                                  </span>
-                                                </Button>
-                                              </td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-
-                                    {/* Pagination */}
-                                    {taskData.total > TASKS_PER_PAGE && (
-                                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-white/10">
-                                        <Text className="text-[10px] sm:text-xs text-white/60 text-center sm:text-left">
-                                          Showing{" "}
-                                          {(taskData.page - 1) *
-                                            TASKS_PER_PAGE +
-                                            1}{" "}
-                                          to{" "}
-                                          {Math.min(
-                                            taskData.page * TASKS_PER_PAGE,
-                                            taskData.total
-                                          )}{" "}
-                                          of {taskData.total} tasks
-                                        </Text>
-                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                              handlePageChange(
-                                                uc.website,
-                                                uc.useCase,
-                                                taskData.page - 1
-                                              )
-                                            }
-                                            disabled={taskData.page === 1}
-                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
-                                          >
-                                            Previous
-                                          </Button>
-                                          <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
-                                            Page {taskData.page} of{" "}
-                                            {Math.ceil(
-                                              taskData.total / TASKS_PER_PAGE
-                                            )}
-                                          </span>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                              handlePageChange(
-                                                uc.website,
-                                                uc.useCase,
-                                                taskData.page + 1
-                                              )
-                                            }
-                                            disabled={
-                                              taskData.page >=
-                                              Math.ceil(
-                                                taskData.total / TASKS_PER_PAGE
-                                              )
-                                            }
-                                            className="text-white/70 hover:text-white border-white/20 text-[10px] sm:text-xs px-2 sm:px-3"
-                                          >
-                                            Next
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </>
-                                ) : (
-                                  <div className="p-4 text-center text-white/60 text-sm">
-                                    No tasks found for this use case
-                                  </div>
-                                )}
+                                <UseCaseTaskTableInline
+                                  taskData={taskData}
+                                  uc={uc}
+                                  projectColors={projectColors}
+                                  handlePageChange={handlePageChange}
+                                  tasksPerPage={TASKS_PER_PAGE}
+                                />
                               </div>
                             </div>
                           );
@@ -1418,8 +1424,8 @@ export default function AgentHistoricalAnalytics({
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                       {filteredUseCases
-                        .filter((uc) => uc.website === ws.website)
-                        .map((uc, ucIndex) => (
+                        .filter((uc: UseCaseStats) => uc.website === ws.website)
+                        .map((uc: UseCaseStats, ucIndex: number) => (
                           <div
                             key={`${uc.useCase}-${ucIndex}`}
                             className="relative rounded-lg p-2 sm:p-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
@@ -1458,24 +1464,6 @@ export default function AgentHistoricalAnalytics({
 
 // Constants for pie chart
 const HIGHLIGHT_COLOR = "#FDF5E6";
-const PROGRESS_COLORS = [
-  "#EF4444", // red-500
-  "#F97316", // orange-500
-  "#EAB308", // yellow-500
-  "#84CC16", // lime-500
-  "#22C55E", // green-500
-  "#10B981", // emerald-500
-  "#14B8A6", // teal-500
-  "#06B6D4", // cyan-500
-  "#0EA5E9", // sky-500
-  "#3B82F6", // blue-500
-  "#6366F1", // indigo-500
-  "#8B5CF6", // violet-500
-  "#A855F7", // purple-500
-  "#D946EF", // fuchsia-500
-  "#EC4899", // pink-500
-  "#F43F5E", // rose-500
-];
 
 // Center label component for pie chart
 function CenterLabel({
@@ -1483,13 +1471,14 @@ function CenterLabel({
   totalRequests,
   totalSuccesses,
   viewBox,
-}: {
+}: Readonly<{
   value: string;
   totalRequests: string;
   totalSuccesses: string;
-  viewBox: any;
-}) {
-  const { cx, cy } = viewBox;
+  viewBox?: { cx?: number; cy?: number };
+}>) {
+  const cx = viewBox?.cx ?? 0;
+  const cy = viewBox?.cy ?? 0;
   return (
     <>
       <text

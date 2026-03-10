@@ -12,10 +12,8 @@ import {
   useAgent,
   useAgentPerformance,
   useAgentRuns,
-  useAgentActivity,
   useAgentStatistics,
   useTopAgents,
-  useAgentSummary,
   useAgentRealtime,
 } from '../hooks/useAgents';
 
@@ -40,7 +38,7 @@ export function AgentsListExample() {
   return (
     <div>
       <h2>Agents List</h2>
-
+      
       {/* Search and Filters */}
       <div style={{ marginBottom: '20px' }}>
         <input
@@ -76,14 +74,14 @@ export function AgentsListExample() {
 
       {/* Pagination */}
       <div>
-        <button
-          disabled={page === 1}
+        <button 
+          disabled={page === 1} 
           onClick={() => setPage(page - 1)}
         >
           Previous
         </button>
         <span>Page {page} of {Math.ceil((data?.data.total || 0) / 10)}</span>
-        <button
+        <button 
           disabled={!data?.data.agents.length || data.data.agents.length < 10}
           onClick={() => setPage(page + 1)}
         >
@@ -95,7 +93,9 @@ export function AgentsListExample() {
 }
 
 // Example 2: Agent Details Component
-export function AgentDetailsExample({ agentId }: { agentId: string }) {
+export function AgentDetailsExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
   const { data: agent, loading, error } = useAgent(agentId);
   const { data: performance } = useAgentPerformance(agentId, { timeRange: '7d' });
   const { data: recentRuns } = useAgentRuns(agentId, { limit: 5 });
@@ -107,7 +107,7 @@ export function AgentDetailsExample({ agentId }: { agentId: string }) {
   return (
     <div>
       <h2>{agent.name}</h2>
-
+      
       {/* Agent Info */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
         <Image
@@ -172,8 +172,10 @@ export function AgentDetailsExample({ agentId }: { agentId: string }) {
 }
 
 // Example 3: Agent Performance Chart Component
-export function AgentPerformanceChartExample({ agentId }: { agentId: string }) {
-  const { data: performance, loading } = useAgentPerformance(agentId, {
+export function AgentPerformanceChartExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
+  const { data: performance, loading } = useAgentPerformance(agentId, { 
     timeRange: '30d',
     granularity: 'day'
   });
@@ -205,7 +207,7 @@ export function AgentStatisticsExample() {
   return (
     <div>
       <h2>Agent Statistics</h2>
-
+      
       {/* Overall Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
         <div style={{ border: '1px solid #ccc', padding: '15px', textAlign: 'center' }}>
@@ -266,7 +268,9 @@ export function AgentStatisticsExample() {
 }
 
 // Example 5: Real-time Agent Monitor
-export function RealTimeAgentMonitorExample({ agentId }: { agentId: string }) {
+export function RealTimeAgentMonitorExample({
+  agentId,
+}: Readonly<{ agentId: string }>) {
   const { data, loading, error } = useAgentRealtime(agentId, 10000); // Update every 10 seconds
 
   if (loading) return <div>Loading real-time data...</div>;
@@ -276,7 +280,7 @@ export function RealTimeAgentMonitorExample({ agentId }: { agentId: string }) {
   return (
     <div>
       <h2>Real-time Agent Monitor: {data.agent?.name}</h2>
-
+      
       {/* Current Status */}
       <div style={{ marginBottom: '20px' }}>
         <h3>Current Status</h3>
@@ -315,8 +319,8 @@ export function AgentComparisonExample() {
   });
 
   const handleAgentToggle = (agentId: string) => {
-    setSelectedAgents(prev =>
-      prev.includes(agentId)
+    setSelectedAgents(prev => 
+      prev.includes(agentId) 
         ? prev.filter(id => id !== agentId)
         : [...prev, agentId]
     );
@@ -325,7 +329,7 @@ export function AgentComparisonExample() {
   return (
     <div>
       <h2>Agent Comparison</h2>
-
+      
       {/* Agent Selection */}
       <div style={{ marginBottom: '20px' }}>
         <h3>Select Agents to Compare</h3>
@@ -346,7 +350,7 @@ export function AgentComparisonExample() {
       {/* Time Range Selection */}
       <div style={{ marginBottom: '20px' }}>
         <label>
-          Time Range:
+          Time Range:{' '}
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value as any)}>
             <option value="7d">Last 7 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -360,7 +364,7 @@ export function AgentComparisonExample() {
       {comparison && (
         <div>
           <h3>Comparison Results</h3>
-
+          
           {/* Comparison Metrics */}
           <div style={{ marginBottom: '20px' }}>
             <h4>Best Performers</h4>
@@ -445,7 +449,7 @@ export function DirectApiUsageExample() {
   return (
     <div>
       <h2>Direct API Service Usage</h2>
-
+      
       <div style={{ marginBottom: '20px' }}>
         <button onClick={handleGetAgents} disabled={loading}>
           Get Agents
@@ -459,7 +463,7 @@ export function DirectApiUsageExample() {
       </div>
 
       {loading && <div>Loading...</div>}
-
+      
       {result && (
         <div>
           <h3>Result:</h3>
@@ -472,16 +476,27 @@ export function DirectApiUsageExample() {
   );
 }
 
+// Wrapper components for examples that require fixed props (defined at module level to satisfy Sonar)
+function DetailsExampleContent() {
+  return <AgentDetailsExample agentId="autoppia-bittensor" />;
+}
+function PerformanceExampleContent() {
+  return <AgentPerformanceChartExample agentId="autoppia-bittensor" />;
+}
+function RealtimeExampleContent() {
+  return <RealTimeAgentMonitorExample agentId="autoppia-bittensor" />;
+}
+
 // Main Example Component
 export function AgentsApiExamples() {
   const [selectedExample, setSelectedExample] = useState('list');
 
   const examples = {
     list: AgentsListExample,
-    details: () => <AgentDetailsExample agentId="autoppia-bittensor" />,
-    performance: () => <AgentPerformanceChartExample agentId="autoppia-bittensor" />,
+    details: DetailsExampleContent,
+    performance: PerformanceExampleContent,
     statistics: AgentStatisticsExample,
-    realtime: () => <RealTimeAgentMonitorExample agentId="autoppia-bittensor" />,
+    realtime: RealtimeExampleContent,
     comparison: AgentComparisonExample,
     direct: DirectApiUsageExample,
   };
@@ -491,11 +506,11 @@ export function AgentsApiExamples() {
   return (
     <div>
       <h1>Agents API Examples</h1>
-
+      
       {/* Example Selector */}
       <div style={{ marginBottom: '20px' }}>
         <label>
-          Select Example:
+          Select Example:{' '}
           <select value={selectedExample} onChange={(e) => setSelectedExample(e.target.value)}>
             <option value="list">Agents List</option>
             <option value="details">Agent Details</option>

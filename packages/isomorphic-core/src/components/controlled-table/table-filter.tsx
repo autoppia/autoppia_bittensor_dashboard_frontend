@@ -1,28 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import dynamic from "next/dynamic";
 import { PiMagnifyingGlassBold, PiFunnel, PiXBold } from "react-icons/pi";
 import { Button, ActionIcon, Input, Title, Drawer } from "rizzui";
 import cn from "@core/utils/class-names";
 import { useMedia } from "@core/hooks/use-media";
 import { ToggleColumns } from "@core/components/legacy-table";
 
-// const Drawer = dynamic(() => import('rizzui').then((module) => module.Drawer), {
-//   ssr: false,
-// });
-
 export function FilterDrawerView({
   isOpen,
   drawerTitle,
   setOpenDrawer,
   children,
-}: React.PropsWithChildren<{
-  drawerTitle?: string;
-  hasSearched?: boolean;
-  setOpenDrawer: React.Dispatch<React.SetStateAction<boolean>>;
-  isOpen?: boolean;
-}>) {
+}: Readonly<
+  React.PropsWithChildren<{
+    drawerTitle?: string;
+    setOpenDrawer: React.Dispatch<React.SetStateAction<boolean>>;
+    isOpen?: boolean;
+  }>
+>) {
   return (
     <Drawer
       size="sm"
@@ -92,15 +88,20 @@ export default function TableFilter({
   showSearchOnTheRight = false,
   menu,
   children,
-}: TableFilterProps) {
+}: Readonly<TableFilterProps>) {
   const isMediumScreen = useMedia("(max-width: 1860px)", false);
   const [showFilters, setShowFilters] = useState(true);
   const [openDrawer, setOpenDrawer] = useState(false);
 
+  const useDrawer = isMediumScreen || enableDrawerFilter;
+  const filterButtonProps = useDrawer
+    ? { onClick: () => setOpenDrawer((prev) => !prev) }
+    : { onClick: () => setShowFilters((prev) => !prev) };
+
   return (
     <div className="table-filter mb-4 flex items-center justify-between">
       <div className="flex flex-wrap items-center gap-4">
-        {!showSearchOnTheRight ? (
+        {showSearchOnTheRight ? null : (
           <Input
             type="search"
             placeholder="Search by anything..."
@@ -111,20 +112,17 @@ export default function TableFilter({
             clearable={true}
             prefix={<PiMagnifyingGlassBold className="h-4 w-4" />}
           />
-        ) : null}
+        )}
 
-        {showSearchOnTheRight && enableDrawerFilter ? (
-          <>{menu ? menu : null}</>
-        ) : null}
+        {showSearchOnTheRight && enableDrawerFilter ? <>{menu}</> : null}
 
         {children && (
           <>
-            {isMediumScreen || enableDrawerFilter ? (
+            {useDrawer ? (
               <FilterDrawerView
                 isOpen={openDrawer}
                 setOpenDrawer={setOpenDrawer}
                 drawerTitle={drawerTitle}
-                hasSearched={hasSearched}
               >
                 {children}
               </FilterDrawerView>
@@ -152,25 +150,15 @@ export default function TableFilter({
 
         {children ? (
           <Button
-            {...(isMediumScreen || enableDrawerFilter
-              ? {
-                  onClick: () => {
-                    setOpenDrawer(() => !openDrawer);
-                  },
-                }
-              : { onClick: () => setShowFilters(() => !showFilters) })}
+            {...filterButtonProps}
             variant={"outline"}
             className={cn(
               "me-2.5 h-9 pe-3 ps-2.5",
-              !(isMediumScreen || enableDrawerFilter) &&
-                showFilters &&
-                "border-dashed border-gray-700"
+              !useDrawer && showFilters && "border-dashed border-gray-700"
             )}
           >
             <PiFunnel className="me-1.5 h-[18px] w-[18px]" strokeWidth={1.7} />
-            {!(isMediumScreen || enableDrawerFilter) && showFilters
-              ? "Hide Filters"
-              : "Filters"}
+            {!useDrawer && showFilters ? "Hide Filters" : "Filters"}
           </Button>
         ) : null}
 

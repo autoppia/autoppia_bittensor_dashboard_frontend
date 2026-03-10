@@ -6,17 +6,23 @@ type RatingProgressProps = {
   ratingCount: number;
 };
 
-export default function RatingBar({ ratingCount }: RatingProgressProps) {
+const BAR_POSITIONS = [0, 1, 2, 3, 4] as const;
+
+export default function RatingBar({
+  ratingCount,
+}: Readonly<RatingProgressProps>) {
   const { text, color } = getRatingStyles(ratingCount);
   return (
     <Box className="space-y-2">
       <Text>{text}</Text>
       <Flex gap="1">
-        {[...new Array(5)].map((_, i) => (
+        {BAR_POSITIONS.map((position) => (
           <Box
-            key={i}
+            key={position}
             className="h-2 w-8 rounded-full bg-gray-100"
-            style={{ backgroundColor: ratingCount <= i ? "" : color }}
+            style={{
+              backgroundColor: ratingCount <= position ? "" : color,
+            }}
           />
         ))}
       </Flex>

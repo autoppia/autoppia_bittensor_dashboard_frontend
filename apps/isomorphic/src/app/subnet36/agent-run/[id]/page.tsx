@@ -7,7 +7,6 @@ import { routes } from "@/config/routes";
 import {
   formatWebsiteName,
   getProjectColors,
-  getProjectMainColor,
 } from "@/utils/website-colors";
 
 import PageHeader from "@/app/shared/page-header";
@@ -18,7 +17,7 @@ import Table from "@core/components/table";
 import { useTanStackTable } from "@core/components/table/custom/use-TanStack-Table";
 import TablePagination from "@core/components/table/pagination";
 
-import { Select, Button, Text, Input } from "rizzui";
+import { Select, Button, Input } from "rizzui";
 import Image from "next/image";
 
 import {
@@ -36,16 +35,14 @@ import {
   PiArrowSquareOutDuotone,
   PiGithubLogoDuotone,
   PiCopySimple,
-  PiInfoDuotone,
 } from "react-icons/pi";
 
 import { useAgentRunComplete } from "@/services/hooks/useAgentRun";
 import type {
   AgentRunStats as AgentRunStatsData,
-  AgentRunTaskData,
   AgentRunEvaluationData,
 } from "@/repositories/agent-runs/agent-runs.types";
-import { createColumnHelper } from "@tanstack/react-table";
+import { createColumnHelper, type Table as TanStackTableType } from "@tanstack/react-table";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
 // Local types for consolidated view models
@@ -107,19 +104,20 @@ function truncateMiddle(value?: string | null, visible: number = 6) {
   return `${value.slice(0, visible)}…${value.slice(-visible)}`;
 }
 
-/** Truncate long evaluation ID to short start + … + middle + … + end (compact table display). */
-function truncateEvaluationId(
-  id: string,
-  startLen = 8,
-  midLen = 3,
-  endLen = 6
-): string {
-  if (!id || id.length <= startLen + midLen + endLen + 4) return id;
-  const midStart = Math.floor(id.length / 2) - Math.floor(midLen / 2);
-  return id.slice(0, startLen) + "…" + id.slice(midStart, midStart + midLen) + "…" + id.slice(-endLen);
+function extractUidNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value))
+    return Math.max(0, Math.abs(value));
+  if (typeof value === "string") {
+    const match = /\d+/.exec(value);
+    if (match) {
+      const parsed = Number.parseInt(match[0], 10);
+      if (!Number.isNaN(parsed)) return Math.max(0, parsed);
+    }
+  }
+  return null;
 }
 
-function IDCopyButton({ text }: { text: string }) {
+function IDCopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -158,7 +156,6 @@ function formatUseCaseName(name?: string | null): string {
     .join(" ");
 }
 
-/** Humanize zero_reason from backend (e.g. over_cost_limit → Over cost limit) */
 function humanizeZeroReason(reason: string): string {
   if (!reason || typeof reason !== "string") return reason || "—";
   return reason
@@ -179,20 +176,17 @@ function normalizeRoundInSeason(
     }
     return null;
   };
-
   const roundNum = parseNumber(roundValue);
   const seasonNum = parseNumber(seasonValue);
   if (roundNum === null) return null;
-
   if (roundNum >= 10000) {
-    if (seasonNum && roundNum >= seasonNum * 10000) {
+    if (seasonNum !== null && roundNum >= seasonNum * 10000) {
       const decoded = roundNum - seasonNum * 10000;
       if (decoded > 0) return decoded;
     }
     const mod = roundNum % 10000;
     if (mod > 0) return mod;
   }
-
   return roundNum > 0 ? roundNum : null;
 }
 
@@ -210,51 +204,19 @@ function normalizePositiveInt(value: unknown): number | null {
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
   stats?: AgentRunStatsData | null,
-  evaluations?: AgentRunEvaluationData[] | null
+  _evaluations?: AgentRunEvaluationData[] | null
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
-  const rawStats = stats as Record<string, any>;
-  const evals = evaluations || [];
 
-  const readNumber = (keys: string[], fallback = 0): number => {
-    for (const key of keys) {
-      const value = rawStats[key];
-      if (typeof value === "number" && !Number.isNaN(value)) return value;
-      if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (!Number.isNaN(parsed)) return parsed;
-      }
-    }
-    return fallback;
-  };
-
-  const totalTasks = readNumber(["totalTasks", "total_tasks", "total"], evals.length);
-  const successfulTasks = readNumber(
-    ["successfulTasks", "successful_tasks", "successes"],
-    0
-  );
-  const avgTime = readNumber(
-    ["avg_time", "averageTaskDuration", "average_task_duration", "avg_duration"],
-    0
-  );
-  const avgRewardRaw = readNumber(
-    ["avg_reward", "overallReward", "average_reward", "avg_score", "overallScore", "average_score", "successRate", "success_rate"],
-    0
-  );
-  const avgReward = avgRewardRaw > 1 ? avgRewardRaw / 100 : avgRewardRaw;
-  const fallbackSuccessRate =
-    avgReward > 0 ? avgReward : totalTasks > 0 ? successfulTasks / totalTasks : 0;
-
-  let websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
+  const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      // Build useCases and results from statsByUsecase if available
-      const statsByUsecase = (w as any).statsByUsecase || [];
-
+      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number }> }).statsByUsecase ?? [];
+      
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
       }));
-
+      
       const websiteResults: AgentRunResult[] = statsByUsecase.map((uc: any, idx: number) => ({
         useCaseId: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
@@ -281,50 +243,16 @@ function buildDetailDataFromStats(
     }
   );
 
-  // Reused runs may return aggregate totals but no per-website breakdown.
-  // Build a fallback block so charts/summary still render meaningful values.
-  if (websites.length === 0 && (totalTasks > 0 || evals.length > 0)) {
-    const avgFromEvals =
-      evals.length > 0
-        ? evals.reduce((acc, ev) => acc + (Number(ev.eval_time) || 0), 0) /
-          evals.length
-        : avgTime;
-
-    websites = [
-      {
-        name: "All Websites",
-        useCases: [{ id: "all", name: "All Use Cases" }],
-        results: [
-          {
-            useCaseId: "all",
-            name: "All Use Cases",
-            successRate: fallbackSuccessRate,
-            total: totalTasks,
-            successCount: successfulTasks,
-            avgSolutionTime: avgFromEvals,
-          },
-        ],
-        overall: {
-          successRate: fallbackSuccessRate,
-          total: totalTasks,
-          successCount: successfulTasks,
-          avgSolutionTime: avgFromEvals,
-        },
-      },
-    ];
-  }
-
   return { websites };
 }
 
 export default function Page() {
   const { id } = useParams();
-  const runId = Array.isArray(id) ? id[0] : (id as string) || "";
+  const runId = Array.isArray(id) ? id[0] : (id ?? "") || "";
 
   const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
 
   const {
-    data: agentRunData,
     isLoading,
     error,
     refetch,
@@ -345,31 +273,30 @@ export default function Page() {
     (!stats ||
       (stats.totalTasks === 0 && stats.overallReward === 0));
 
-  const reusedRoundInSeason = normalizeRoundInSeason(
-    info?.reusedFrom?.roundNumber,
-    info?.reusedFrom?.seasonNumber
-  );
+  const roundInfo = info?.round as Record<string, unknown> | undefined;
   const currentSeasonNumber =
-    normalizePositiveInt((info?.round as any)?.season_number) ??
-    normalizePositiveInt((info?.round as any)?.season) ??
-    null;
+    normalizePositiveInt(roundInfo?.season_number ?? roundInfo?.season) ?? null;
   const currentRoundInSeason =
     normalizeRoundInSeason(
-      (info?.round as any)?.round_number_in_season ??
-        (info?.round as any)?.roundNumber ??
-        (info?.round as any)?.round,
+      roundInfo?.round_number_in_season ??
+        roundInfo?.roundNumber ??
+        roundInfo?.round,
       currentSeasonNumber
     ) ?? null;
   const roundDisplayLabel =
     currentSeasonNumber !== null && currentRoundInSeason !== null
       ? `Season ${currentSeasonNumber}, Round ${currentRoundInSeason}`
-      : ((info?.round as any)?.roundId as string | undefined) ??
-        ((info?.round as any)?.validatorRoundId as string | undefined) ??
+      : (roundInfo?.roundId as string | undefined) ??
+        (roundInfo?.validatorRoundId as string | undefined) ??
         "—";
   const roundLinkHref =
     currentSeasonNumber !== null && currentRoundInSeason !== null
       ? `${routes.rounds}/${currentSeasonNumber}/${currentRoundInSeason}`
       : "#";
+  const reusedRoundInSeason = normalizeRoundInSeason(
+    (info?.reusedFrom as Record<string, unknown> | undefined)?.roundNumber,
+    (info?.reusedFrom as Record<string, unknown> | undefined)?.seasonNumber
+  );
 
   return (
     <div className="w-full max-w-[1280px] mx-auto bg-transparent">
@@ -404,7 +331,16 @@ export default function Page() {
           ) : (
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
               <Link
-                href={roundLinkHref}
+                href={((): string => {
+                  const roundKey =
+                    typeof info?.round?.roundNumber === "number" &&
+                    Number.isFinite(info.round.roundNumber)
+                      ? `round_${info.round.roundNumber}`
+                      : (info?.round?.validatorRoundId ?? "");
+                  return roundKey
+                    ? `${routes.rounds}/${encodeURIComponent(roundKey)}`
+                    : "#";
+                })()}
                 className="inline-flex w-full sm:w-auto sm:max-w-full items-center gap-2 rounded-full border border-slate-700/60 bg-transparent px-3 py-1.5 shadow-sm hover:border-amber-400/60 hover:bg-amber-500/10"
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -412,11 +348,11 @@ export default function Page() {
                 </span>
                 <div className="h-3.5 w-px bg-slate-600/70" />
                 <span className="font-mono text-sm font-semibold text-white/90 truncate max-w-[42vw] md:max-w-[420px]">
-                  {roundDisplayLabel}
+                  {truncateMiddle(info?.round?.validatorRoundId ?? "—", 8)}
                 </span>
-                {(info?.round as any)?.roundId && (
+                {info?.round?.validatorRoundId && (
                   <span className="ml-auto">
-                    <IDCopyButton text={(info?.round as any).roundId} />
+                    <IDCopyButton text={info.round.validatorRoundId} />
                   </span>
                 )}
               </Link>
@@ -468,41 +404,12 @@ export default function Page() {
         </div>
       )}
 
+
       {/* Personas cards (Round, Validator, Miner) */}
       {isLoading ? (
         <AgentRunPersonasPlaceholder />
       ) : (
         <AgentRunPersonasFromInfo info={info} />
-      )}
-
-      {!isLoading && info?.isReused && (
-        <div className="mb-4 rounded-xl border border-sky-300/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
-          <div className="flex items-start gap-2">
-            <PiInfoDuotone className="mt-0.5 h-4 w-4 shrink-0 text-sky-200" />
-            <div>
-              <span className="font-semibold">Reused run:</span>{" "}
-              This run is a reused copy from
-              {" "}
-              {typeof info?.reusedFrom?.seasonNumber === "number" &&
-              reusedRoundInSeason !== null
-                ? `Season ${info.reusedFrom.seasonNumber}, Round ${
-                    reusedRoundInSeason
-                  }`
-                : "a previous round in this season"}
-              .
-              {" "}
-              {info?.reusedFromAgentRunId ? (
-                <Link
-                  href={`${routes.agent_run}/${encodeURIComponent(info.reusedFromAgentRunId)}`}
-                  className="font-semibold underline underline-offset-4 hover:text-white"
-                >
-                  Open original run
-                </Link>
-              ) : null}
-              .
-            </div>
-          </div>
-        </div>
       )}
 
       {isLoading ? (
@@ -512,12 +419,16 @@ export default function Page() {
       )}
 
       {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
-      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (info?.zeroReason ?? (stats as any)?.zeroReason) && (
-        <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
-          <span className="font-semibold">Reason for zero reward:</span>{" "}
-          {humanizeZeroReason((info?.zeroReason ?? (stats as any)?.zeroReason) as string)}
-        </div>
-      )}
+      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (() => {
+        const raw = info?.zeroReason ?? stats.zeroReason;
+        const reason = typeof raw === "string" ? raw : "";
+        return reason ? (
+          <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+            <span className="font-semibold">Reason for zero reward:</span>{" "}
+            {humanizeZeroReason(reason)}
+          </div>
+        ) : null;
+      })()}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
         <div className="xl:col-span-8">
@@ -543,10 +454,10 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection
-          evaluations={evaluations}
-          isLoading={isLoading}
-          error={error}
+        <AgentRunTasksSection 
+          evaluations={evaluations} 
+          isLoading={isLoading} 
+          error={error} 
           refetch={refetch}
           selectedWebsite={selectedWebsite}
         />
@@ -563,38 +474,15 @@ export default function Page() {
 }
 
 // Personas card group - adapted to use info object
-function AgentRunPersonasFromInfo({
-  info,
-}: {
+type AgentRunPersonasFromInfoProps = Readonly<{
   info: {
     agentRunId: string;
     round: any;
     validator: any;
     miner: any;
-    zeroReason?: string | null;
-    isReused?: boolean;
-    reusedFromAgentRunId?: string | null;
-    reusedFrom?: {
-      agentRunId?: string | null;
-      validatorRoundId?: string | null;
-      roundNumber?: number | null;
-      seasonNumber?: number | null;
-    } | null;
   } | null;
-}) {
-  function extractUidNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value))
-      return Math.max(0, Math.abs(value));
-    if (typeof value === "string") {
-      const match = value.match(/\d+/);
-      if (match) {
-        const parsed = Number.parseInt(match[0], 10);
-        if (!Number.isNaN(parsed)) return Math.max(0, parsed);
-      }
-    }
-    return null;
-  }
-
+}>;
+function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
   if (!info) {
     return <AgentRunPersonasPlaceholder />;
   }
@@ -657,36 +545,36 @@ function AgentRunPersonasFromInfo({
   const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-
+  
   // Parse round number/ID - support "season/round" format
   // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
   const parseRoundInfo = () => {
     // First, try roundId as string in "season/round" format
-    if (roundData.roundId && typeof roundData.roundId === "string" && roundData.roundId.includes("/")) {
+    if (typeof roundData.roundId === "string" && roundData.roundId.includes("/")) {
       const parts = roundData.roundId.split("/");
       const season = parts[0]?.trim();
       const round = parts[1]?.trim();
-      if (season && round && !isNaN(Number(season)) && !isNaN(Number(round))) {
+      if (season && round && !Number.isNaN(Number(season)) && !Number.isNaN(Number(round))) {
         return { season, round };
       }
     }
-
+    
     // Second, try to get from roundData directly (season_number, round_number_in_season)
     if (roundData.season_number !== undefined && roundData.round_number_in_season !== undefined) {
-      return {
-        season: String(roundData.season_number),
+      return { 
+        season: String(roundData.season_number), 
         round: String(roundData.round_number_in_season)
       };
     }
-
+    
     // Third, try season and round fields
     if (roundData.season !== undefined && roundData.round !== undefined) {
-      return {
-        season: String(roundData.season),
+      return { 
+        season: String(roundData.season), 
         round: String(roundData.round)
       };
     }
-
+    
     // If we have roundNumber that looks like legacy format (10001, 20003, etc), try to extract
     if (roundData.roundNumber && typeof roundData.roundNumber === "number") {
       const num = roundData.roundNumber;
@@ -699,7 +587,7 @@ function AgentRunPersonasFromInfo({
         }
       }
     }
-
+    
     // No valid data found
     return null;
   };
@@ -717,7 +605,7 @@ function AgentRunPersonasFromInfo({
               <PiClock className="h-6 w-6" />
             </div>
             <div className="flex items-center gap-4">
-              {roundInfo && roundInfo.season && roundInfo.round ? (
+              {roundInfo?.season && roundInfo?.round ? (
                 <>
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/60">
@@ -907,14 +795,14 @@ function AgentRunPersonasFromInfo({
   );
 }
 
-
 // Personas placeholder
+const PERSONA_PLACEHOLDER_KEYS = ["round", "validator", "miner"] as const;
 function AgentRunPersonasPlaceholder() {
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, idx) => (
+      {PERSONA_PLACEHOLDER_KEYS.map((key) => (
         <section
-          key={`persona-placeholder-${idx}`}
+          key={`persona-placeholder-${key}`}
           className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-transparent p-5 shadow-lg"
         >
           <header className="flex items-center justify-between gap-3">
@@ -970,7 +858,7 @@ function AgentRunPersonasPlaceholder() {
 }
 
 // Stats cards
-function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
+function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>) {
   const numberFormatter = new Intl.NumberFormat("en-US");
   const percentageFormatter = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 1,
@@ -996,19 +884,15 @@ function AgentRunStats({ stats }: { stats: AgentRunStatsData | null }) {
   const totalTasks = clampNonNegative(stats?.totalTasks);
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
-    stats?.failedTasks != null
-      ? clampNonNegative(stats.failedTasks)
-      : Math.max(totalTasks - successfulTasks, 0);
+    stats?.failedTasks == null
+      ? Math.max(totalTasks - successfulTasks, 0)
+      : clampNonNegative(stats.failedTasks);
   const websitesCount = clampNonNegative(
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
-  );
-  const successRate = clampPercentage(
-    totalTasks ? (successfulTasks / totalTasks) * 100 : 0
   );
   const averageDuration = stats?.avg_time ?? 0;
 
   const displayOverallReward = formatPercentage(overallReward);
-  const displaySuccessRate = formatPercentage(successRate);
   const displayAverageDuration = formatDuration(averageDuration);
 
   const cards = [
@@ -1153,9 +1037,9 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          {Array.from({ length: 4 }).map((_, idx) => (
+          {(["tasks", "websites", "success", "failed"] as const).map((k) => (
             <div
-              key={`stats-mobile-placeholder-${idx}`}
+              key={`stats-mobile-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1182,9 +1066,9 @@ function AgentRunStatsPlaceholder() {
       {/* Desktop layout */}
       <div className="hidden md:flex items-center justify-between relative">
         <div className="grid grid-cols-2 gap-6">
-          {Array.from({ length: 2 }).map((_, idx) => (
+          {(["left1", "left2"] as const).map((k) => (
             <div
-              key={`stats-left-placeholder-${idx}`}
+              key={`stats-left-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1224,9 +1108,9 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {Array.from({ length: 2 }).map((_, idx) => (
+          {(["right1", "right2"] as const).map((k) => (
             <div
-              key={`stats-right-placeholder-${idx}`}
+              key={`stats-right-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
             >
               <Placeholder
@@ -1259,12 +1143,12 @@ function AgentRunDetail({
   selectedWebsite,
   setSelectedWebsite,
   data,
-}: {
+}: Readonly<{
   className?: string;
   selectedWebsite?: string | null;
   setSelectedWebsite: (value: string | null) => void;
   data?: AgentRunDetailData | null;
-}) {
+}>) {
   const agentDetailsData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentDetailsData.websites.length > 0;
 
@@ -1507,7 +1391,7 @@ function AgentRunDetail({
   );
 }
 
-function AgentRunDetailPlaceholder({ className }: { className?: string }) {
+function AgentRunDetailPlaceholder({ className }: Readonly<{ className?: string }>) {
   const progressWidths = ["68%", "52%", "78%"];
   return (
     <div
@@ -1563,9 +1447,9 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
       </div>
 
       <div className="relative space-y-6">
-        {progressWidths.map((w, i) => (
+        {progressWidths.map((w) => (
           <div
-            key={`placeholder-card-${i}`}
+            key={`placeholder-card-${w}`}
             className="relative rounded-xl border border-white/15 bg-transparent p-5"
           >
             <div className="mb-4 flex items-center justify-between">
@@ -1648,48 +1532,54 @@ function AgentRunDetailPlaceholder({ className }: { className?: string }) {
 // Summary donut + list
 import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 
+function DonutCenterLabelContent(
+  props: Readonly<{
+    viewBox?: { cx?: number; cy?: number };
+    successRate: number;
+    totalRequests: number;
+    totalSuccesses: number;
+  }>
+) {
+  const viewBox = props.viewBox;
+  const cx = viewBox && "cx" in viewBox ? viewBox.cx ?? 0 : 0;
+  const cy = viewBox && "cy" in viewBox ? viewBox.cy ?? 0 : 0;
+  return (
+    <CenterLabel
+      value={(props.successRate * 100).toFixed(0)}
+      totalRequests={Math.round(props.totalRequests).toString()}
+      totalSuccesses={Math.round(props.totalSuccesses).toString()}
+      viewBox={{ cx, cy }}
+    />
+  );
+}
+
 function AgentRunSummary({
   className,
   selectedWebsite,
   data,
-}: {
+}: Readonly<{
   className?: string;
   selectedWebsite?: string | null;
   data?: AgentRunDetailData | null;
-}) {
+}>) {
   const agentData: AgentRunDetailData = data ?? { websites: [] };
   const hasWebsites = agentData.websites.length > 0;
 
   // Compute display metrics
-  let successRate = 0;
-  let totalRequests = 0;
-  let totalSuccesses = 0;
-  let avgSolutionTime = 0;
-
-  if (selectedWebsite) {
-    const selectedWeb = agentData.websites.find(
-      (w) => w.name === selectedWebsite
-    );
-    if (selectedWeb) {
-      successRate = selectedWeb.overall.successRate;
-      totalRequests = selectedWeb.overall.total;
-      totalSuccesses = selectedWeb.overall.successCount;
-      avgSolutionTime = selectedWeb.overall.avgSolutionTime;
-    }
-  } else {
-    const websites = agentData.websites;
-    successRate = websites.length
-      ? websites.reduce((s, w) => s + w.overall.successRate, 0) /
-        websites.length
-      : 0;
-    totalRequests = websites.reduce((s, w) => s + w.overall.total, 0);
-    totalSuccesses = websites.reduce((s, w) => s + w.overall.successCount, 0);
-    avgSolutionTime = websites.length
-      ? websites.reduce((s, w) => s + w.overall.avgSolutionTime, 0) /
-        websites.length
-      : 0;
-  }
-
+  const selectedWeb = selectedWebsite
+    ? agentData.websites.find((w) => w.name === selectedWebsite)
+    : null;
+  const websites = agentData.websites;
+  const n = websites.length;
+  const avgSuccessRate =
+    n > 0 ? websites.reduce((s, w) => s + w.overall.successRate, 0) / n : 0;
+  const successRate = selectedWeb ? selectedWeb.overall.successRate : avgSuccessRate;
+  const totalRequests = selectedWeb
+    ? selectedWeb.overall.total
+    : websites.reduce((s, w) => s + w.overall.total, 0);
+  const totalSuccesses = selectedWeb
+    ? selectedWeb.overall.successCount
+    : websites.reduce((s, w) => s + w.overall.successCount, 0);
   const displayData = (() => {
     if (selectedWebsite) {
       console.log("🎯 Summary: Filtering by website:", selectedWebsite);
@@ -1738,7 +1628,7 @@ function AgentRunSummary({
         const selectedWeb = agentData.websites.find(
           (w) => w.name === selectedWebsite
         );
-        if (!selectedWeb) return [] as any[];
+        if (!selectedWeb) return [] as { label: string; value: number; average: number; total: number; successCount: number; avgSolutionTime: number; fill: string; stroke: string }[];
         const sortedResults = [...selectedWeb.results]
           .map((result) => {
             const useCase = selectedWeb.useCases.find(
@@ -1790,24 +1680,23 @@ function AgentRunSummary({
       });
 
   // Ensure donutData has valid values for rendering
-  const finalDonutData =
-    donutData.length > 0 && donutData.some((d) => d.value > 0)
-      ? donutData
-      : hasWebsites
-        ? displayData.map((item, idx) => {
-            const projectColors = getProjectColors(item.label);
-            return {
-              label: item.label,
-              value: 100, // Show equal segments when no data
-              average: 0,
-              total: item.total,
-              successCount: 0,
-              avgSolutionTime: 0,
-              fill: projectColors.dotColor,
-              stroke: projectColors.dotColor,
-            };
-          })
-        : [];
+  const hasValidDonut = donutData.some((d) => d.value > 0);
+  const fallbackDonut = hasWebsites
+    ? displayData.map((item) => {
+        const projectColors = getProjectColors(item.label);
+        return {
+          label: item.label,
+          value: 100, // Show equal segments when no data
+          average: 0,
+          total: item.total,
+          successCount: 0,
+          avgSolutionTime: 0,
+          fill: projectColors.dotColor,
+          stroke: projectColors.dotColor,
+        };
+      })
+    : [];
+  const finalDonutData = hasValidDonut ? donutData : fallbackDonut;
 
   return (
     <div
@@ -1851,18 +1740,17 @@ function AgentRunSummary({
               >
                 <Label
                   position="center"
-                  content={(props) => (
-                    <CenterLabel
-                      value={(successRate * 100).toFixed(0)}
-                      totalRequests={Math.round(totalRequests).toString()}
-                      totalSuccesses={Math.round(totalSuccesses).toString()}
-                      viewBox={(props as any).viewBox}
+                  content={
+                    <DonutCenterLabelContent
+                      successRate={successRate}
+                      totalRequests={totalRequests}
+                      totalSuccesses={totalSuccesses}
                     />
-                  )}
+                  }
                 />
-                {finalDonutData.map((entry: any, idx: number) => (
+                {finalDonutData.map((entry: { label: string; fill?: string; stroke?: string }, idx: number) => (
                   <Cell
-                    key={`cell-${idx}`}
+                    key={`cell-${entry.label}-${idx}`}
                     fill={entry.fill}
                     stroke={entry.stroke || entry.fill}
                     strokeWidth={2}
@@ -1923,12 +1811,12 @@ function CenterLabel({
   totalRequests,
   totalSuccesses,
   viewBox,
-}: {
+}: Readonly<{
   value: string;
   totalRequests: string;
   totalSuccesses: string;
-  viewBox: any;
-}) {
+  viewBox: { cx: number; cy: number };
+}>) {
   const { cx, cy } = viewBox;
   return (
     <>
@@ -1975,7 +1863,7 @@ function CenterLabel({
   );
 }
 
-function AgentRunSummaryPlaceholder({ className }: { className?: string }) {
+function AgentRunSummaryPlaceholder({ className }: Readonly<{ className?: string }>) {
   const donutInner = (
     <div className="relative flex items-center justify-center py-4">
       <div className="relative flex items-center justify-center">
@@ -2082,29 +1970,22 @@ const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 const agentRunTasksColumns = [
   columnHelper.display({
     id: "evaluationId",
-    size: 55,
+    size: 80,
     header: "Evaluation Id",
-    cell: ({ row }) => {
-      const id = row.original.evaluationId;
-      const displayId = truncateEvaluationId(id);
-      return (
-        <div className="flex items-center gap-1.5 min-w-0 ms-2">
-          <Link
-            href={`${routes.evaluations}/${id}`}
-            className="font-mono text-xs sm:text-sm text-white truncate min-w-0"
-            title={id}
-          >
-            #{displayId}
-          </Link>
-          <IDCopyButton text={id} />
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="ms-2 font-mono text-xs sm:text-sm text-white"
+        title="View evaluation details"
+      >
+        #{row.original.evaluationId}
+      </Link>
+    ),
   }),
   columnHelper.accessor("prompt", {
     id: "prompt",
     header: "Prompt",
-    size: 420,
+    size: 400,
     enableSorting: false,
     cell: ({ row }) => (
       <Link
@@ -2143,11 +2024,9 @@ const agentRunTasksColumns = [
         title="View evaluation details"
       >
         {row.original.useCase
-          ? row.original.useCase
-              .split("_")
-              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(" ")
-          : "Unknown"}
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ")}
       </Link>
     ),
   }),
@@ -2160,23 +2039,13 @@ const agentRunTasksColumns = [
       const isPassed = eval_score >= 1;
       const scoreColor = isPassed ? "text-green-400" : "text-red-400";
       const scoreValue = isPassed ? "100%" : "0%";
-      const zeroReason = row.original.zeroReason;
-      const title =
-        zeroReason && !isPassed
-          ? `Reason: ${zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}`
-          : "View evaluation details";
       return (
         <Link
           href={`${routes.evaluations}/${row.original.evaluationId}`}
-          className={`text-xs sm:text-sm font-medium ${scoreColor} block`}
-          title={title}
+          className={`text-xs sm:text-sm font-medium ${scoreColor}`}
+          title="View evaluation details"
         >
           {scoreValue}
-          {!isPassed && zeroReason && (
-            <span className="block text-[10px] text-amber-400/90 font-normal mt-0.5" title={title}>
-              {zeroReason.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}
-            </span>
-          )}
         </Link>
       );
     },
@@ -2224,13 +2093,13 @@ function AgentRunTasksSection({
   error,
   refetch,
   selectedWebsite,
-}: {
-  evaluations?: any[];
+}: Readonly<{
+  evaluations?: AgentRunEvaluationData[];
   isLoading?: boolean;
   error?: string | null;
   refetch?: () => void;
   selectedWebsite?: string | null;
-}) {
+}>) {
   // Filter evaluations by selected website
   const filteredEvaluations = useMemo(() => {
     if (!selectedWebsite || selectedWebsite === "__all__") {
@@ -2274,16 +2143,16 @@ function AgentRunTasksSection({
             <table className="w-full text-xs sm:text-sm">
               <thead className="bg-transparent">
                 <tr>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <th key={i} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
+                  {(["c0", "c1", "c2", "c3", "c4", "c5"] as const).map((col) => (
+                    <th key={`tasks-thead-${col}`} className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                       <Placeholder height="0.875rem" width="3rem" />
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <TableRowPlaceholder key={i} columns={6} />
+                {(["r0", "r1", "r2", "r3", "r4"] as const).map((row) => (
+                  <TableRowPlaceholder key={`tasks-row-${row}`} columns={6} />
                 ))}
               </tbody>
             </table>
@@ -2372,7 +2241,7 @@ function AgentRunTasksSection({
       <div className="relative mb-2">
         {evaluations && evaluations.length > 0 ? (
           <Table
-            table={table}
+            table={table as unknown as TanStackTableType<Record<string, unknown>>}
             variant="modern"
             classNames={{
               container:
@@ -2397,7 +2266,7 @@ function AgentRunTasksSection({
 
       {evaluations && evaluations.length > 0 && (
         <TablePagination
-          table={table}
+          table={table as unknown as TanStackTableType<Record<string, unknown>>}
           className="relative py-3 sm:py-4 text-slate-300 text-xs sm:text-sm"
         />
       )}

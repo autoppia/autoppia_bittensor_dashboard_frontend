@@ -3,7 +3,9 @@
 import React from "react";
 import { Loader } from "rizzui";
 
-export default function SVGLoader({ fileName }: { fileName: string }) {
+export default function SVGLoader({
+  fileName,
+}: Readonly<{ fileName: string }>) {
   const SvgComponent = React.lazy(() => import(`./icons/${fileName}`));
 
   return (
