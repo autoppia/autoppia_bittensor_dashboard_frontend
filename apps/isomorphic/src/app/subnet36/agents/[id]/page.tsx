@@ -1031,7 +1031,7 @@ function AgentValidators({
                     <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
                       <Text className="font-bold text-white text-base">Validator consensus</Text>
                       <Text className="text-xs text-white/60 tracking-wide">
-                        Final metrics after validator consensus weighted by stake
+                        Results Averaged Across All Validators After Consensus
                       </Text>
                     </div>
                     <div className="relative p-2 sm:p-5">
@@ -1983,7 +1983,13 @@ export default function Page() {
   })();
 
   const currentStats = [
-    // Primera fila: Round, Rank, Avg Score, Avg Response Time
+    // Col1 naranja (amber), Col2 azul (indigo), Col3 verde (green), Col4 morado (violet)
+    {
+      title: "Season Rank",
+      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
+      icon: LuAward,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
     {
       title: "Best Round",
       metric:
@@ -1995,35 +2001,15 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Season Rank",
-      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
-      icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
       title: "Avg Reward",
       metric: `${((displayedReward ?? 0) * 100).toFixed(2)}%`,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "Success Rate",
       metric: roundSuccessRate,
       icon: PiCheckDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-
-    // Segunda fila: Validators, Websites, Avg Cost Per Task, Avg Response Time
-    {
-      title: "Validators",
-      metric: effectiveValidatorsCount.toString(),
-      icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Websites",
-      metric: effectiveWebsitesCount.toString(),
-      icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
@@ -2044,7 +2030,19 @@ export default function Page() {
       badge: isAvgResponseTimeout ? `Timeout >= ${Math.round(timeoutThresholdSeconds)}s` : null,
       badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
       icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.indigo,
+    },
+    {
+      title: "Validators",
+      metric: effectiveValidatorsCount.toString(),
+      icon: PiTrophyDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    {
+      title: "Websites",
+      metric: effectiveWebsitesCount.toString(),
+      icon: PiChartBarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
