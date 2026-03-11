@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import NavLink from "@core/components/nav-link";
 import Image from "next/image";
 import {
@@ -131,6 +131,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
     loading,
     error,
   } = useSeasonRank(seasonRef);
+  const hasSeasonRankData = seasonRankData !== null && seasonRankData !== undefined;
 
   const { seasonOptions, latestSeason, effectiveSeason } = useMemo(() => {
     const seasons = seasonRankData?.availableSeasons ?? [];
@@ -309,7 +310,11 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   };
 
   // Show loading placeholder
-  if (loading || (selectedSeason === undefined && seasonOptions.length === 0)) {
+  if (
+    loading ||
+    !hasSeasonRankData ||
+    (selectedSeason === undefined && seasonOptions.length === 0)
+  ) {
     return <AgentSidebarPlaceholder />;
   }
 
