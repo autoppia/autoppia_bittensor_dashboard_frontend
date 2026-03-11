@@ -52,7 +52,8 @@
       "tmp": ">=0.2.4",
       "@eslint/plugin-kit": ">=0.3.4",
       "@eslint/eslintrc": "3.3.5",
-      "dompurify": ">=3.3.2"
+      "dompurify": ">=3.3.2",
+      "quill": "npm:@lufrai/quill@2.0.4"
     }
   }
 }
