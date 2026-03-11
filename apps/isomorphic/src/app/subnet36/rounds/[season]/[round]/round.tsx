@@ -3634,7 +3634,6 @@ export default function Round() {
           role="dialog"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
-          onClose={closeIpfsDialog}
         >
           <button
             type="button"
