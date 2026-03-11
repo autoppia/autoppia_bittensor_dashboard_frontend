@@ -188,6 +188,16 @@ export interface SubnetStatisticsResponse {
   };
 }
 
+export interface NetworkStatusData {
+  status: "healthy" | "degraded" | "down" | string;
+  message: string;
+  lastChecked: string;
+  activeValidators: number;
+  networkLatency: number;
+  season?: number | null;
+  round?: number | null;
+}
+
 // ===== QUERY PARAMETERS =====
 export interface ValidatorsQueryParams {
   page?: number;

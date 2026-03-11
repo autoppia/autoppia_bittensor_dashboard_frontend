@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useSeasonRank } from "@/services/hooks/useAgents";
 import { routes } from "@/config/routes";
 import {
@@ -29,6 +29,7 @@ function AgentsPageFallback() {
 function AgentsLanding() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
 
   const seasonParam = searchParams.get("season");
   const selectedSeason = useMemo(() => {
@@ -110,22 +111,17 @@ function AgentsLanding() {
     const targetPath = `${routes.agents}/${topMiner.uid}`;
     const targetUrl = `${targetPath}?${params.toString()}`;
 
-    globalThis.location.href = targetUrl;
+    router.replace(targetUrl);
   }, [
     needsRedirect,
     effectiveSeason,
     hasMiners,
     miners,
+    router,
     seasonRankError,
     hasSeasonRankData,
     seasonRankLoading,
   ]);
-
-  // If we need redirect (on landing page), just show skeleton
-  // Don't show "no miners" or other messages while waiting for redirect
-  if (needsRedirect) {
-    return <AgentsPageFallback />;
-  }
 
   if (!hasSeasonRankData || seasonRankLoading) {
     return <AgentsPageFallback />;
@@ -178,6 +174,10 @@ function AgentsLanding() {
         </div>
       </div>
     );
+  }
+
+  if (needsRedirect) {
+    return <AgentsPageFallback />;
   }
 
   return <AgentsPageFallback />;
