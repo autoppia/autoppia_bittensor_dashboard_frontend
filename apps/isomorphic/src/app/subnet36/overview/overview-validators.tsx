@@ -42,9 +42,11 @@ function formatStakeValue(stake: number | null | undefined): string {
   if (value <= 0) {
     return "0";
   }
+  if (value >= 1_000) {
+    return `${Math.round(value / 1_000)}K`;
+  }
   return new Intl.NumberFormat("en", {
-    notation: "compact",
-    maximumFractionDigits: value >= 1_000_000 ? 2 : 1,
+    maximumFractionDigits: value >= 100 ? 0 : 2,
   }).format(value);
 }
 
