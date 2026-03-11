@@ -276,6 +276,28 @@ function CustomTooltip({ label, active, payload, className }: any) {
   );
 }
 
+const VALIDATOR_IMAGE_MAP: Record<string, string> = {
+  autoppia: "/validators/Autoppia.png",
+  roundtable: "/validators/roundtable.jpg",
+  rt21: "/validators/roundtable.jpg",
+  kraken: "/validators/Kraken.png",
+  yuma: "/validators/Yuma.png",
+  tao5: "/validators/tao5.png",
+  rizzo: "/validators/rizzo.png",
+};
+
+function resolveValidatorImage(name?: string | null, providedImage?: string | null): string {
+  const defaultImage = "/validators/Other.png";
+  if (!name) return resolveAssetUrl(providedImage, defaultImage);
+  const key = name.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+  for (const [pattern, img] of Object.entries(VALIDATOR_IMAGE_MAP)) {
+    if (key.includes(pattern)) {
+      return resolveAssetUrl(providedImage, img);
+    }
+  }
+  return resolveAssetUrl(providedImage, defaultImage);
+}
+
 function RoundHeaderInline({
   round,
   roundLoading,
@@ -289,6 +311,8 @@ function RoundHeaderInline({
 }>) {
   const progress = progressData as { previousRound?: string | number; nextRound?: string | number; season_number?: number } | null | undefined;
   const roundObj = round as { season_number?: number } | undefined;
+  const progressTyped = progressData as { currentBlock?: number; blocksRemaining?: number; status?: string } | null | undefined;
+  const roundTyped = round as { currentBlock?: number; status?: string; validatorRounds?: unknown[]; roundInSeason?: number; season?: number } | undefined;
   const params = useParams();
   const router = useRouter();
   const seasonParam = params.season as string | undefined;
@@ -1538,17 +1562,18 @@ function RoundValidatorsInline({
   // ✅ Validators ahora vienen de roundData (useGetRound)
   const validatorsData = React.useMemo(() => {
     if (!roundData?.validators) return [];
-    // Convertir roundData.validators al formato esperado
-    return roundData.validators.map((v: any) => ({
-      id: `validator-${v.validator_uid}`,
-      uid: v.validator_uid,
-      name: v.validator_name || `Validator ${v.validator_uid}`,
-      icon: v.validator_image || `/validators/Other.png`,
-      topReward: v.topReward || 0,
-      topMiner: v.winner,
-      hotkey: v.validator_hotkey || null,
-      // Agregar otros campos necesarios
-    })) as ValidatorPerformance[];
+    return (roundData.validators as any[])
+      .map((v: any) => ({
+        id: `validator-${v.validator_uid}`,
+        uid: v.validator_uid,
+        name: v.validator_name || `Validator ${v.validator_uid}`,
+        icon: resolveValidatorImage(v.validator_name, v.validator_image),
+        topReward: v.topReward || 0,
+        topMiner: v.winner,
+        hotkey: v.validator_hotkey || null,
+        stake: v.stake ?? 0,
+      }))
+      .sort((a: any, b: any) => (b.stake ?? 0) - (a.stake ?? 0)) as ValidatorPerformance[];
   }, [roundData]);
   const [selectedValidatorId, setSelectedValidatorId] = React.useState<
     string | null
@@ -1673,10 +1698,7 @@ function RoundValidatorsInline({
             className="custom-scrollbar grid grid-flow-col gap-8 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0 px-4 py-6"
           >
             {validatorsData?.map((validator) => {
-              const iconSrc = resolveAssetUrl(
-                validator.icon,
-                resolveAssetUrl("/validators/Other.png")
-              );
+              const iconSrc = resolveValidatorImage(validator.name, validator.icon);
               const isActive = selectedValidatorId === validator.id;
               return (
                 <button
@@ -2726,7 +2748,8 @@ export default function Round() {
         validator_uid: validator.validator_uid,
         validator_name: validator.validator_name,
         validator_hotkey: validator.validator_hotkey,
-        validator_image: validator.validator_image,
+        validator_image: resolveValidatorImage(validator.validator_name, validator.validator_image),
+        stake: validator.stake ?? 0,
         winner: validator.competition_state?.winner
           ? {
               ...validator.competition_state.winner,
@@ -3518,13 +3541,13 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Final metrics after validator consensus weighted by stake", data: evaluationPost })}
+                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Results Averaged Across All Validators After Consensus", data: evaluationPost })}
                 >
                   <div className={cn(cardTitleRowClass, "text-orange-400")}>
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/80 text-sm">Final metrics after validator consensus weighted by stake.</p>
+                  <p className="text-white/80 text-sm">Results Averaged Across All Validators After Consensus.</p>
                   <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
                   <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
                 </button>
@@ -3534,7 +3557,7 @@ export default function Round() {
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/60 text-sm">Final metrics after validator consensus weighted by stake.</p>
+                  <p className="text-white/60 text-sm">Results Averaged Across All Validators After Consensus.</p>
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}

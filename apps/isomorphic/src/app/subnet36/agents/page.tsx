@@ -47,6 +47,8 @@ function AgentsLanding() {
     loading: seasonRankLoading,
     error: seasonRankError,
   } = useSeasonRank(seasonRef);
+  const hasSeasonRankData =
+    seasonRankData !== null && seasonRankData !== undefined;
   const latestSeason = seasonRankData?.latestSeason ?? undefined;
   const effectiveSeason = selectedSeason ?? latestSeason;
 
@@ -77,7 +79,7 @@ function AgentsLanding() {
     if (!effectiveSeason) {
       return;
     }
-    if (seasonRankLoading || seasonRankError) {
+    if (seasonRankLoading || seasonRankError || !hasSeasonRankData) {
       return;
     }
     if (!hasMiners) {
@@ -115,12 +117,17 @@ function AgentsLanding() {
     hasMiners,
     miners,
     seasonRankError,
+    hasSeasonRankData,
     seasonRankLoading,
   ]);
 
   // If we need redirect (on landing page), just show skeleton
   // Don't show "no miners" or other messages while waiting for redirect
   if (needsRedirect) {
+    return <AgentsPageFallback />;
+  }
+
+  if (!hasSeasonRankData || seasonRankLoading) {
     return <AgentsPageFallback />;
   }
 
@@ -149,6 +156,7 @@ function AgentsLanding() {
   }
 
   if (
+    hasSeasonRankData &&
     !seasonRankLoading &&
     !seasonRankError &&
     effectiveSeason &&
