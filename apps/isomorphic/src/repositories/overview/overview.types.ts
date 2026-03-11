@@ -211,6 +211,7 @@ export interface LeaderboardQueryParams {
   timeRange?: "7R" | "15R" | "30R" | "all";
   limit?: number;
   offset?: number;
+  season?: number | null;
 }
 
 export interface RoundsQueryParams {
