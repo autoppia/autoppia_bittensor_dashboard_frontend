@@ -205,7 +205,7 @@ export default function AgentRunSearch() {
   const roundOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason;
-    
+
     if (!currentSeason) {
       return [];
     }
@@ -503,7 +503,7 @@ export default function AgentRunSearch() {
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     // Construct roundId from season and round (format: "season/round")
-    const normalizedRound = 
+    const normalizedRound =
       debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
         ? `${debouncedFilters.season}/${debouncedFilters.round}`
         : undefined;

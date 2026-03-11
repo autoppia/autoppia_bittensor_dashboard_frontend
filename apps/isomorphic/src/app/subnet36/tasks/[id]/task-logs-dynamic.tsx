@@ -54,10 +54,10 @@ export default function TaskLogsDynamic() {
   const [limit, setLimit] = useState(50);
 
   // Fetch task logs
-  const { 
-    logs, 
-    total: logsTotal, 
-    isLoading, 
+  const {
+    logs,
+    total: logsTotal,
+    isLoading,
     error
   } = useTaskLogs(id as string, {
     level: selectedLevel === 'all' ? undefined : selectedLevel as any,

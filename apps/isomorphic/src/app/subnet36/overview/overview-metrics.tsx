@@ -90,7 +90,7 @@ export default function OverviewMetrics({
       // The parent component handles it
       return;
     }
-    
+
     const interval = setInterval(() => {
       refetch();
     }, 30000); // 30 seconds

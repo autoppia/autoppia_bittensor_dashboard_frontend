@@ -90,7 +90,7 @@ export default function AgentRun() {
 
 
       {/* Stats Section */}
-      <AgentRunStatsDynamic 
+      <AgentRunStatsDynamic
         statistics={statistics}
         isLoading={isLoading}
         error={error}
@@ -114,7 +114,7 @@ export default function AgentRun() {
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic 
+          <AgentRunSummaryDynamic
             selectedWebsite={selectedWebsite}
             summary={null}
             statistics={statistics}

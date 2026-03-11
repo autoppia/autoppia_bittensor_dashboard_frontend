@@ -211,12 +211,12 @@ function buildDetailDataFromStats(
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
       const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number }> }).statsByUsecase ?? [];
-      
+
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
       }));
-      
+
       const websiteResults: AgentRunResult[] = statsByUsecase.map((uc: any, idx: number) => ({
         useCaseId: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
@@ -454,10 +454,10 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection 
-          evaluations={evaluations} 
-          isLoading={isLoading} 
-          error={error} 
+        <AgentRunTasksSection
+          evaluations={evaluations}
+          isLoading={isLoading}
+          error={error}
           refetch={refetch}
           selectedWebsite={selectedWebsite}
         />
@@ -545,7 +545,7 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
   const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-  
+
   // Parse round number/ID - support "season/round" format
   // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
   const parseRoundInfo = () => {
@@ -558,23 +558,23 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
         return { season, round };
       }
     }
-    
+
     // Second, try to get from roundData directly (season_number, round_number_in_season)
     if (roundData.season_number !== undefined && roundData.round_number_in_season !== undefined) {
-      return { 
-        season: String(roundData.season_number), 
+      return {
+        season: String(roundData.season_number),
         round: String(roundData.round_number_in_season)
       };
     }
-    
+
     // Third, try season and round fields
     if (roundData.season !== undefined && roundData.round !== undefined) {
-      return { 
-        season: String(roundData.season), 
+      return {
+        season: String(roundData.season),
         round: String(roundData.round)
       };
     }
-    
+
     // If we have roundNumber that looks like legacy format (10001, 20003, etc), try to extract
     if (roundData.roundNumber && typeof roundData.roundNumber === "number") {
       const num = roundData.roundNumber;
@@ -587,7 +587,7 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
         }
       }
     }
-    
+
     // No valid data found
     return null;
   };
