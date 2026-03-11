@@ -31,6 +31,19 @@ const config = [
         ...globals.browser,
         ...globals.node,
         React: "readonly",
+        JSX: "readonly",
+        google: "readonly",
+        WindowEventMap: "readonly",
+        DocumentEventMap: "readonly",
+        HTMLElementEventMap: "readonly",
+        MediaQueryListEventMap: "readonly",
+        AddEventListenerOptions: "readonly",
+        RowData: "readonly",
+        Row: "readonly",
+        TableMeta: "readonly",
+        ColumnMeta: "readonly",
+        TData: "readonly",
+        TValue: "readonly",
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },
@@ -73,6 +86,15 @@ const config = [
       ),
       "no-duplicate-imports": "warn",
       "react/no-unknown-property": "error",
+      "no-unused-vars": [
+        "error",
+        {
+          "args": "none",
+          "varsIgnorePattern": "^(_|[A-Z][a-zA-Z0-9_]*)$",
+          "caughtErrors": "none",
+        },
+      ],
+      "no-redeclare": "warn",
     },
   },
   {
@@ -82,6 +104,12 @@ const config = [
       parserOptions: {
         sourceType: "module",
       },
+    },
+  },
+  {
+    files: ["**/*.d.ts", "**/config/enums.ts"],
+    rules: {
+      "no-unused-vars": "off",
     },
   },
 ];
