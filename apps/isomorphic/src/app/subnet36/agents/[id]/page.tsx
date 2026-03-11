@@ -77,6 +77,31 @@ import {
 } from "react-icons/lu";
 import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
+type AgentStatCardItem = {
+  title: string;
+  metric: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  borderColor: string;
+  bgGradient: string;
+  gradient?: string;
+  iconGradient?: string;
+  glowColor?: string;
+  badge?: string | null;
+};
+
+interface ChartRow {
+  round?: number | string;
+  roundLabel?: string | number;
+  reward: number;
+  rank?: number | null;
+  eval_score?: number | null;
+  eval_time?: number | null;
+  avg_cost?: number | null;
+  timestamp?: string | null;
+  topBenchmarkScore?: number;
+  [key: string]: number | string | null | undefined;
+}
+
 // ============================================================================
 // Shared helpers within this page
 const normalizeScore = (value?: number | null): number | null => {

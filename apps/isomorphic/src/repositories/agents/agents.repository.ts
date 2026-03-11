@@ -310,7 +310,11 @@ export class AgentsRepository {
           params
         );
         if (response.data?.data) {
-          return response.data.data;
+          const data = response.data.data as typeof response.data.data & { rewardRoundData?: RewardRoundDataPoint[] };
+          return {
+            ...data,
+            rewardRoundData: Array.isArray(data.rewardRoundData) ? data.rewardRoundData : [],
+          };
         }
       } catch (error: any) {
         if (error?.status && error.status !== 404) {
