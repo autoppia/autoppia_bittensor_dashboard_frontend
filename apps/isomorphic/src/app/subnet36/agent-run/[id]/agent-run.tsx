@@ -105,7 +105,7 @@ export default function AgentRun() {
             setSelectedWebsite={setSelectedWebsite}
             period={period}
             setPeriod={setPeriod}
-            statistics={statistics}
+            statistics={statistics as Record<string, unknown> | null}
             summary={null}
             isLoading={isLoading}
             error={error}
@@ -117,7 +117,7 @@ export default function AgentRun() {
           <AgentRunSummaryDynamic
             selectedWebsite={selectedWebsite}
             summary={null}
-            statistics={statistics}
+            statistics={statistics as Record<string, unknown> | null}
             tasks={evaluations}
             isLoading={isLoading}
             error={error}

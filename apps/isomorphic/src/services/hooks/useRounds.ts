@@ -410,7 +410,7 @@ export function useRoundWithValidators(
       if (!enabled || season === undefined || roundInSeason === undefined) {
         return Promise.resolve(null);
       }
-      return roundsRepository.getRoundWithValidators(season, roundInSeason);
+      return roundsRepository.getRoundValidators(`${season}/${roundInSeason}`);
     },
     [season, roundInSeason, enabled]
   );

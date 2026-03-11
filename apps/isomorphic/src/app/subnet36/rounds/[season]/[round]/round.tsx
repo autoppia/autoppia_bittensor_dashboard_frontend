@@ -289,6 +289,8 @@ function RoundHeaderInline({
 }>) {
   const progress = progressData as { previousRound?: string | number; nextRound?: string | number; season_number?: number } | null | undefined;
   const roundObj = round as { season_number?: number } | undefined;
+  const progressTyped = progressData;
+  const roundTyped = round;
   const params = useParams();
   const router = useRouter();
   const seasonParam = params.season as string | undefined;
@@ -3639,7 +3641,11 @@ export default function Round() {
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close dialog"
-            onClick={closeIpfsDialog}
+            onClick={() => {
+            setIpfsConsensusDetail(null);
+            setIncludeOwnDownloadedPayload(false);
+            setIpfsUploadFullPayload(null);
+          }}
           />
           <div
             className={cn("relative z-10 max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}

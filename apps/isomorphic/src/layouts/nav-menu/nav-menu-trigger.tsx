@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Fragment } from 'react';
-import { useNavMenu } from './nav-menu-context';
+import { useNavMenu, initialState as navMenuInitialState } from './nav-menu-context';
 import cn from '@core/utils/class-names';
 import { ItemTriggerRef, NavMenuTriggerProps } from './nav-menu-types';
 
@@ -65,6 +65,7 @@ export function NavMenuTriggerWrapper({
     if (!el) return;
     const rect = el.getBoundingClientRect();
     set({
+      ...navMenuInitialState,
       itemWrapperLeft: rect.left + window.scrollX,
       itemWrapperRight: rect.right + window.scrollX,
     });

@@ -4,7 +4,7 @@
  */
 
 export { apiClient, ApiClient, ApiError } from "./client";
-export type { ApiResponse, ApiError } from "./client";
+export type { ApiResponse } from "./client";
 
 export * from "./agents/agents.repository";
 export * from "./agents/agents.types";
