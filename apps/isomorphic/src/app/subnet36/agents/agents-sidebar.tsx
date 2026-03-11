@@ -131,6 +131,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
     loading,
     error,
   } = useSeasonRank(seasonRef);
+  const hasSeasonRankData = seasonRankData !== null && seasonRankData !== undefined;
 
   const { seasonOptions, latestSeason, effectiveSeason } = useMemo(() => {
     const seasons = seasonRankData?.availableSeasons ?? [];
@@ -309,7 +310,11 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   };
 
   // Show loading placeholder
-  if (loading || (selectedSeason === undefined && seasonOptions.length === 0)) {
+  if (
+    loading ||
+    !hasSeasonRankData ||
+    (selectedSeason === undefined && seasonOptions.length === 0)
+  ) {
     return <AgentSidebarPlaceholder />;
   }
 
