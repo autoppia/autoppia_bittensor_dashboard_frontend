@@ -193,7 +193,7 @@ export interface ValidatorsQueryParams {
   page?: number;
   limit?: number;
   status?: string;
-  sortBy?: "weight" | "trust" | "totalTasks" | "name";
+  sortBy?: "weight" | "trust" | "totalTasks" | "name" | "stake";
   sortOrder?: "asc" | "desc";
 }
 
