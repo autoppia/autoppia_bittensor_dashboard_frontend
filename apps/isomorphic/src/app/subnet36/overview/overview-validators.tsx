@@ -42,13 +42,10 @@ function formatStakeValue(stake: number | null | undefined): string {
   if (value <= 0) {
     return "0";
   }
-  if (value >= 1_000) {
-    return `${Math.round(value / 1_000)}K`;
-  }
-  if (value < 1) {
-    return value.toFixed(4);
-  }
-  return value.toFixed(2);
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: value >= 1_000_000 ? 2 : 1,
+  }).format(value);
 }
 
 export default function OverviewValidators({
@@ -60,7 +57,7 @@ export default function OverviewValidators({
     loading: validatorsLoading,
     error: validatorsError,
     refetch,
-  } = useValidators({ limit: 6 });
+  } = useValidators({ limit: 6, sortBy: "stake", sortOrder: "desc" });
 
   // Auto-refresh validators every 20 seconds to show live updates
   useEffect(() => {
