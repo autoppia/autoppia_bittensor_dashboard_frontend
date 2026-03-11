@@ -9,7 +9,7 @@ on:
 
 jobs:
   pre-commit:
-    name: Pre-commit (push)
+    name: Pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
         run: pre-commit run --all-files
 
   lint-and-typecheck:
-    name: Lint & typecheck (push)
+    name: Lint & typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
         run: pnpm type:check
 
   dependency-audit:
-    name: Dependency audit (push)
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

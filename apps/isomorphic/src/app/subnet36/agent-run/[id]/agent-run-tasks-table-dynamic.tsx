@@ -109,7 +109,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
       const scoreColor = eval_score >= 1 ? "text-green-500" : "text-red-500";
-      
+
       return (
         <Text className={`font-medium ${scoreColor}`}>
           {eval_score === 1 ? "✓" : "✗"}
@@ -136,8 +136,8 @@ const agentRunTasksColumns = [
         href={`${routes.tasks}/${row.original.taskId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >

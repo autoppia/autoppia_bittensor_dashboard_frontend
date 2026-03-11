@@ -84,7 +84,7 @@ export function getProjectColors(projectName: string): ProjectColors {
 
   // Normalizar el nombre del proyecto (trim y lowercase)
   const normalizedName = projectName.trim().toLowerCase();
-  
+
   // Primero, intentar buscar directamente por nombre o slug
   let website = websitesData.find(
     (w) => {

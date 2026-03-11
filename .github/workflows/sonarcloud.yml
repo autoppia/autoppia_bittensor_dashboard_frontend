@@ -12,7 +12,7 @@ on:
 
 jobs:
   sonarcloud:
-    name: SonarCloud Analysis (push)
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
     permissions:
       contents: read
