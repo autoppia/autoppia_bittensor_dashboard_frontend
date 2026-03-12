@@ -15,7 +15,7 @@ import {
   useEvaluationComplete,
 } from "@/services/hooks/useTask";
 import { resolveAssetUrl } from "@/services/utils/assets";
-import { websitesData } from "@/data/websites-data";
+import { getProjectInfoByPort } from "@/utils/website-colors";
 import type { IconType } from "react-icons";
 import {
   PiArrowLeftLight,
@@ -479,7 +479,7 @@ function TaskDetailsDynamic({
     return trimmedValue.length > 0 ? trimmedValue : null;
   })();
 
-  // Extract project name from website URL using existing websitesData configuration
+  // Extract project name from website URL using centralized website mapping
   const getProjectName = (url: string): string => {
     if (!url) return "—";
 
@@ -529,16 +529,13 @@ function TaskDetailsDynamic({
         }
       }
 
-      // Map localhost ports to project names using existing websitesData
+      // Map localhost ports to project names using centralized port mapping
       if (cleanHostname === "localhost") {
         // Extract port from URL object (not hostname)
         const port = urlObj.port;
 
         if (port) {
-          // Find project by port in websitesData
-          const project = websitesData.find(
-            (site) => site.portValidator === port
-          );
+          const project = getProjectInfoByPort(port);
 
           if (project) {
             return project.name;
