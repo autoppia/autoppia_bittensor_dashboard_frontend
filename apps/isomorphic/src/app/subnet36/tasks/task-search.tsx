@@ -167,6 +167,7 @@ export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [agentRunInput, setAgentRunInput] = useState<string>("");
+  const [minerUidInput, setMinerUidInput] = useState<string>("");
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
@@ -191,10 +192,11 @@ export default function TaskSearch() {
     useMemo(
       () => ({
         agentRun: agentRunInput.trim(),
+        minerUid: minerUidInput.trim(),
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
       }),
-      [agentRunInput, selectedWebsite, selectedUseCase]
+      [agentRunInput, minerUidInput, selectedWebsite, selectedUseCase]
     ),
     400
   );
@@ -254,6 +256,10 @@ export default function TaskSearch() {
           const response = await tasksRepository.searchTasks({
             query: debouncedSearchTerm,
             agentRunId: debouncedFilters.agentRun || undefined,
+            minerUid:
+              debouncedFilters.minerUid === ""
+                ? undefined
+                : Number(debouncedFilters.minerUid),
             website: debouncedFilters.website || undefined,
             useCase: debouncedFilters.useCase || undefined,
             page: currentPage,
@@ -296,6 +302,10 @@ export default function TaskSearch() {
       try {
         const response = await tasksRepository.searchTasks({
           agentRunId: debouncedFilters.agentRun || undefined,
+          minerUid:
+            debouncedFilters.minerUid === ""
+              ? undefined
+              : Number(debouncedFilters.minerUid),
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,
           page: currentPage,
@@ -398,6 +408,7 @@ export default function TaskSearch() {
   const clearFilters = () => {
     setSearchTerm("");
     setAgentRunInput("");
+    setMinerUidInput("");
     setSelectedWebsite("");
     setSelectedUseCase("");
     setIsWebsiteDropdownOpen(false);
@@ -415,6 +426,7 @@ export default function TaskSearch() {
   const hasActiveFilters =
     searchTerm !== "" ||
     agentRunInput !== "" ||
+    minerUidInput !== "" ||
     selectedWebsite !== "" ||
     selectedUseCase !== "";
 
@@ -453,7 +465,7 @@ export default function TaskSearch() {
               </h2>
             </div>
             <p className="text-cyan-300 text-sm">
-              Search by Evaluation ID or filter by Agent Run, Website, and Use Case
+              Search by Evaluation ID or filter by Agent Run, Miner UID, Website, and Use Case
             </p>
           </div>
 
@@ -494,6 +506,28 @@ export default function TaskSearch() {
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="task-search-miner-uid" className="text-sm font-medium text-teal-300">
+                  MINER UID
+                </label>
+                <div className="relative">
+                  <input
+                    id="task-search-miner-uid"
+                    type="text"
+                    inputMode="numeric"
+                    value={minerUidInput}
+                    onChange={(e) =>
+                      setMinerUidInput(e.target.value.replace(/[^\d]/g, ""))
+                    }
+                    placeholder="Enter Miner UID"
+                    className="w-full px-3 py-2 bg-teal-500/20 border-2 border-teal-500/20 rounded-xl text-teal-300 text-sm placeholder-gray-400 focus:border-teal-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <PiHashDuotone className="w-4 h-4 text-teal-400" />
                   </div>
                 </div>
               </div>
@@ -601,34 +635,6 @@ export default function TaskSearch() {
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Results Per Page */}
-              <div className="space-y-2">
-                <label htmlFor="task-search-results-per-page" className="text-sm font-medium text-cyan-300">
-                  RESULTS PER PAGE
-                </label>
-                <div className="relative">
-                  <select
-                    id="task-search-results-per-page"
-                    value={currentLimit}
-                    onChange={(event) =>
-                      handleLimitChange(Number(event.target.value))
-                    }
-                    className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
-                  >
-                    {limitOptions.map((option) => (
-                      <option
-                        key={option}
-                        value={option}
-                        style={{ color: "#000" }}
-                      >
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
                 </div>
               </div>
             </div>
@@ -956,36 +962,73 @@ export default function TaskSearch() {
             })}
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && results.length > 0 && (
-            <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={!canGoPrev}
-                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                  canGoPrev
-                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                Previous
-              </button>
-              <span className="text-sky-100">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!canGoNext}
-                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                  canGoNext
-                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                Next
-              </button>
+          {results.length > 0 && (
+            <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-sky-200 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="task-search-results-per-page-bottom"
+                  className="text-xs font-semibold uppercase tracking-wide text-cyan-300"
+                >
+                  Results per page
+                </label>
+                <div className="relative">
+                  <select
+                    id="task-search-results-per-page-bottom"
+                    value={currentLimit}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="appearance-none rounded-xl border-2 border-cyan-500/20 bg-cyan-500/20 px-3 py-2 pr-9 text-sm text-white outline-none transition-all duration-300 focus:border-cyan-400 focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-300" />
+                </div>
+              </div>
+
+              {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={!canGoPrev}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoPrev
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sky-100">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={!canGoNext}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoNext
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-300">
+                  Page 1 of 1
+                </div>
+              )}
             </div>
           )}
         </div>

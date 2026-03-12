@@ -16,6 +16,7 @@ import {
   PiHashDuotone,
   PiRobotDuotone,
   PiCaretDownDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
 import { overviewRepository } from "@/repositories/overview/overview.repository";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -226,6 +227,8 @@ export default function AgentRunSearch() {
 
     return parsed;
   }, [roundsData?.rounds, selectedSeason]);
+  const isRoundInProgress =
+    selectedSeason !== undefined && !roundsLoading && roundOptions.length === 0;
 
   const debouncedFilters = useDebouncedValue(
     useMemo(
@@ -875,21 +878,21 @@ export default function AgentRunSearch() {
                       type="button"
                       aria-labelledby="filter-round-label"
                       onClick={() => {
-                        if (selectedSeason === undefined) {
+                        if (selectedSeason === undefined || isRoundInProgress) {
                           return; // Don't open if no season selected
                         }
                         setIsRoundDropdownOpen(!isRoundDropdownOpen);
                       }}
-                      disabled={selectedSeason === undefined}
+                      disabled={selectedSeason === undefined || isRoundInProgress}
                       className={`w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0 ${
-                        selectedSeason === undefined
+                        selectedSeason === undefined || isRoundInProgress
                           ? "opacity-50 cursor-not-allowed"
                           : ""
                       }`}
                     >
                       <span>
                         {selectedSeason === undefined && "Select season first"}
-                        {selectedSeason !== undefined && roundOptions.length === 0 && "No rounds"}
+                        {selectedSeason !== undefined && roundOptions.length === 0 && "Round in progress"}
                         {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound === undefined && "All Rounds"}
                         {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound !== undefined && `Round ${selectedRound}`}
                       </span>
@@ -1135,17 +1138,41 @@ export default function AgentRunSearch() {
           (!effectiveError || effectiveNotFound) &&
           displayedRuns.length === 0 && (
             <div className="mt-6 text-center relative z-0">
-              <div className="relative bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-2 border-purple-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"></div>
+              <div className={`relative rounded-2xl p-6 shadow-lg backdrop-blur-md border-2 ${
+                isRoundInProgress
+                  ? "bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 border-amber-400/40"
+                  : "bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-purple-500/30"
+              }`}>
+                <div className={`absolute inset-0 ${
+                  isRoundInProgress
+                    ? "bg-gradient-to-br from-amber-900/10 via-transparent to-orange-900/10"
+                    : "bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"
+                }`}></div>
                 <div className="relative">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-500 rounded-xl shadow-lg mx-auto mb-4">
-                    <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl shadow-lg mx-auto mb-4 ${
+                    isRoundInProgress
+                      ? "bg-gradient-to-br from-amber-400 to-orange-500"
+                      : "bg-gradient-to-br from-purple-400 to-violet-500"
+                  }`}>
+                    {isRoundInProgress ? (
+                      <PiInfoDuotone className="w-8 h-8 text-white" />
+                    ) : (
+                      <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                    )}
                   </div>
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-                    NO RESULTS FOUND
+                  <h3 className={`text-lg font-bold bg-clip-text text-transparent mb-2 ${
+                    isRoundInProgress
+                      ? "bg-gradient-to-r from-amber-300 to-orange-400"
+                      : "bg-gradient-to-r from-purple-400 to-violet-500"
+                  }`}>
+                    {isRoundInProgress ? "ROUND IN PROGRESS" : "NO RESULTS FOUND"}
                   </h3>
-                  <p className="text-purple-200 text-sm">
-                    Try a different run ID or adjust your filters.
+                  <p className={`text-sm ${
+                    isRoundInProgress ? "text-amber-100/90" : "text-purple-200"
+                  }`}>
+                    {isRoundInProgress
+                      ? "This round is in progress. Runs and rankings will be available once evaluations are complete."
+                      : "Try a different run ID or adjust your filters."}
                   </p>
                 </div>
               </div>

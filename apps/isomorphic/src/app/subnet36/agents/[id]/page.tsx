@@ -820,8 +820,21 @@ function AgentValidators({
   if (!visibleRounds.length) {
     return (
       <div className="mt-6">
-        <div className="text-center py-12 text-white/70">
-          No validator runs found for this agent in the selected season.
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-6 sm:p-8 shadow-lg backdrop-blur">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
+          <div className="relative flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-xl border-2 border-amber-300/60 bg-white/10 flex items-center justify-center shadow-inner">
+              <PiInfoDuotone className="h-8 w-8 text-amber-200" />
+            </div>
+            <div className="flex-1">
+              <p className="text-lg sm:text-xl font-bold text-amber-100 uppercase tracking-wide mb-2">
+                Round in progress
+              </p>
+              <p className="text-sm sm:text-base text-white/80 font-medium max-w-2xl">
+                This round is in progress. Results and rankings will be available once evaluations are complete.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

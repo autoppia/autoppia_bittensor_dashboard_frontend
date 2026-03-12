@@ -362,6 +362,7 @@ export interface TasksListQueryParams {
   page?: number;
   limit?: number;
   agentRunId?: string;
+  minerUid?: number;
   website?: string;
   useCase?: string;
   status?: "pending" | "running" | "completed" | "failed";
@@ -398,6 +399,7 @@ export interface TaskSearchParams {
   useCase?: string;
   status?: string;
   agentRunId?: string;
+  minerUid?: number;
   minScore?: number;
   maxScore?: number;
   startDate?: string;
