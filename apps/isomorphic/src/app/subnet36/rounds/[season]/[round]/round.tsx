@@ -2587,6 +2587,11 @@ export default function Round() {
   const [ipfsUploadFullPayload, setIpfsUploadFullPayload] = React.useState<Record<string, unknown> | null>(null);
   const [ipfsUploadLoading, setIpfsUploadLoading] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const closeIpfsDialog = React.useCallback(() => {
+    setIpfsConsensusDetail(null);
+    setIncludeOwnDownloadedPayload(false);
+    setIpfsUploadFullPayload(null);
+  }, []);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -3649,15 +3654,10 @@ export default function Round() {
       {ipfsConsensusDetail && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => {
-            setIpfsConsensusDetail(null);
-            setIncludeOwnDownloadedPayload(false);
-            setIpfsUploadFullPayload(null);
-          }}
+          onClick={closeIpfsDialog}
           role="dialog"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
-          onClose={closeIpfsDialog}
         >
           <button
             type="button"
