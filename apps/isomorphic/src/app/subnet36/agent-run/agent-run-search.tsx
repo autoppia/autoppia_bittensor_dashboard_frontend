@@ -1032,33 +1032,6 @@ export default function AgentRunSearch() {
                   </div>
                 </div>
 
-                {/* Results Limit */}
-                <div className="space-y-2">
-                  <label id="filter-limit-label" htmlFor="filter-limit-select" className="text-sm font-medium text-cyan-300">
-                    RESULTS PER PAGE
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-limit-select"
-                      value={limitValue}
-                      onChange={(event) =>
-                        handleLimitChange(Number(event.target.value))
-                      }
-                      className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
-                    >
-                      {limitOptions.map((option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          style={{ color: "#000" }}
-                        >
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -1085,11 +1058,32 @@ export default function AgentRunSearch() {
               </button>
             </div>
           </div>
-        </div>
+      </div>
 
-        {/* Error State */}
-        {hasSearched && effectiveError && !effectiveNotFound && (
-          <div className="mt-6 relative z-0">
+      {!hasSearched && seasonOptions.length > 0 && (
+        <div className="w-full max-w-[1024px] mx-auto">
+          <div className="mt-6 text-center relative z-0">
+            <div className="relative rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 p-6 shadow-lg backdrop-blur-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-orange-900/10"></div>
+              <div className="relative">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
+                  <PiInfoDuotone className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent mb-2">
+                  ROUND IN PROGRESS
+                </h3>
+                <p className="text-amber-100/90 text-sm">
+                  This round is in progress. Runs and rankings will be available once evaluations are complete.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {hasSearched && effectiveError && !effectiveNotFound && (
+        <div className="mt-6 relative z-0">
             <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
               <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
               <div className="relative text-center">
@@ -1384,39 +1378,75 @@ export default function AgentRunSearch() {
             })}
           </div>
 
-          {!isManualSearchActive &&
-            totalPages > 1 &&
-            displayedRuns.length > 0 && (
-              <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(resolvedPage - 1)}
-                  disabled={!canGoPrev}
-                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    canGoPrev
-                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                  }`}
+          {!isManualSearchActive && displayedRuns.length > 0 && (
+            <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-sky-200 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="agent-run-results-per-page-bottom"
+                  className="text-xs font-semibold uppercase tracking-wide text-cyan-300"
                 >
-                  Previous
-                </button>
-                <span className="text-sky-100">
-                  Page {resolvedPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(resolvedPage + 1)}
-                  disabled={!canGoNext}
-                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    canGoNext
-                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                  }`}
-                >
-                  Next
-                </button>
+                  Results per page
+                </label>
+                <div className="relative">
+                  <select
+                    id="agent-run-results-per-page-bottom"
+                    value={limitValue}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="appearance-none rounded-xl border-2 border-cyan-500/20 bg-cyan-500/20 px-3 py-2 pr-9 text-sm text-white outline-none transition-all duration-300 focus:border-cyan-400 focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-300" />
+                </div>
               </div>
-            )}
+
+              {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(resolvedPage - 1)}
+                    disabled={!canGoPrev}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoPrev
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sky-100">
+                    Page {resolvedPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(resolvedPage + 1)}
+                    disabled={!canGoNext}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoNext
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-300">
+                  Page 1 of 1
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
