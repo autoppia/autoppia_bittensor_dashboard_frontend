@@ -36,6 +36,7 @@ import {
   PiGlobe,
   PiTarget,
   PiHash,
+  PiGithubLogoDuotone,
   PiDownloadSimple,
   PiArrowSquareOutDuotone,
   PiInfoDuotone,
@@ -470,6 +471,13 @@ function TaskDetailsDynamic({
   const displayMinerHotkey = minerInfo?.hotkey
     ? truncateMiddle(minerInfo.hotkey, 6)
     : "—";
+  const minerGithubUrl = (() => {
+    const rawValue =
+      minerInfo?.github ?? minerInfo?.github_url ?? minerInfo?.githubUrl;
+    if (typeof rawValue !== "string") return null;
+    const trimmedValue = rawValue.trim();
+    return trimmedValue.length > 0 ? trimmedValue : null;
+  })();
 
   // Extract project name from website URL using existing websitesData configuration
   const getProjectName = (url: string): string => {
@@ -781,7 +789,18 @@ function TaskDetailsDynamic({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap justify-end">
+                {minerGithubUrl && (
+                  <a
+                    href={minerGithubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400/35 bg-emerald-500/10 text-emerald-200 transition-colors duration-200 hover:border-emerald-300/60 hover:text-emerald-100"
+                    title={minerGithubUrl}
+                  >
+                    <PiGithubLogoDuotone className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                )}
                 {displayMinerUid !== "—" && (
                   <span
                     className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"

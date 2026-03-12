@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
-import { FaGithub } from "react-icons/fa";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
 
 const metricsData = [
@@ -275,22 +274,8 @@ export default function OverviewMetrics({
                 >
                   {metric.title}
                 </h3>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={cn("truncate", metric.metricClassName)}>
-                    {metric.value}
-                  </div>
-                  {"githubUrl" in metric && metric.githubUrl && (
-                    <a
-                      href={metric.githubUrl as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-shrink-0 text-amber-400/70 hover:text-amber-300 transition-colors duration-200"
-                      title="View on GitHub"
-                    >
-                      <FaGithub className="w-4 h-4" />
-                    </a>
-                  )}
+                <div className={cn("truncate", metric.metricClassName)}>
+                  {metric.value}
                 </div>
               </div>
             </div>
