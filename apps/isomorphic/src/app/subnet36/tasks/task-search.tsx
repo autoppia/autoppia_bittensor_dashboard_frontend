@@ -14,6 +14,7 @@ import type { TaskData } from "@/repositories/tasks/tasks.types";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { getProjectInfoByPort } from "@/utils/website-colors";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -694,9 +695,7 @@ export default function TaskSearch() {
                 const portMatch = portRegex.exec(url);
                 if (portMatch) {
                   const port = portMatch[1];
-                  const website = websitesData.find(
-                    (w) => w.portValidator === port
-                  );
+                  const website = getProjectInfoByPort(port);
                   return website
                     ? {
                         name: website.name,
