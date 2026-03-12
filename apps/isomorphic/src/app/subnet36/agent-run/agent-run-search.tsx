@@ -56,6 +56,14 @@ function formatPercentage(value: number | null | undefined) {
   return `${value.toFixed(1)}%`;
 }
 
+function formatRewardPercentage(value: number | null | undefined) {
+  const normalized = normalizePercentage(value);
+  return `${new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(normalized)}%`;
+}
+
 function formatDate(value: string | null | undefined) {
   if (!value) {
     return "Unknown start";
@@ -1175,10 +1183,7 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
-              const scoreOutOf100 = Math.max(
-                0,
-                Math.min(100, Math.round(run.overallReward ?? 0))
-              );
+              const rewardPercent = formatRewardPercentage(run.overallReward);
               const minerImageSrc = resolveMinerImage(run);
 
               return (
@@ -1303,10 +1308,10 @@ export default function AgentRunSearch() {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
-                            Score
+                            Reward
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {scoreOutOf100}%
+                            {rewardPercent}
                           </div>
                         </div>
                         <div className="text-center">
