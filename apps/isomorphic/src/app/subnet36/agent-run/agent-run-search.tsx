@@ -205,7 +205,7 @@ export default function AgentRunSearch() {
   const roundOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason;
-    
+
     if (!currentSeason) {
       return [];
     }
@@ -503,7 +503,7 @@ export default function AgentRunSearch() {
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     // Construct roundId from season and round (format: "season/round")
-    const normalizedRound = 
+    const normalizedRound =
       debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
         ? `${debouncedFilters.season}/${debouncedFilters.round}`
         : undefined;
@@ -1214,7 +1214,21 @@ export default function AgentRunSearch() {
                               </>
                             );
                           }
-                          // Fallback for legacy format
+                          // Decode numeric format: season * 10000 + round_in_season
+                          if (typeof roundId === "number" && roundId > 0) {
+                            const season = Math.floor(roundId / 10000);
+                            const round = roundId % 10000;
+                            return (
+                              <>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
+                                  Season {season}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
+                                  Round {round}
+                                </span>
+                              </>
+                            );
+                          }
                           return (
                             <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
                               Round {roundId ?? "?"}
