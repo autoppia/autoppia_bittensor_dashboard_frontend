@@ -11,6 +11,7 @@ import {
   AgentStatsPlaceholder,
   AgentValidatorsPlaceholder,
 } from "@/components/placeholders/agent-placeholders";
+import { PiInfoDuotone } from "react-icons/pi";
 
 function AgentsPageFallback() {
   return (
@@ -22,6 +23,29 @@ function AgentsPageFallback() {
         <AgentScoreAnalyticsPlaceholder className="w-full xl:w-[320px]" />
       </div>
       <AgentValidatorsPlaceholder />
+    </div>
+  );
+}
+
+function RoundInProgressState() {
+  return (
+    <div className="flex h-full min-h-[360px] w-full items-center justify-center">
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-6 sm:p-8 shadow-lg backdrop-blur">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
+        <div className="relative flex flex-col items-center gap-4 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-amber-300/60 bg-white/10 shadow-inner">
+            <PiInfoDuotone className="h-8 w-8 text-amber-200" />
+          </div>
+          <div>
+            <p className="mb-2 text-lg font-bold uppercase tracking-wide text-amber-100 sm:text-xl">
+              Round in progress
+            </p>
+            <p className="mx-auto max-w-2xl text-sm font-medium text-white/80 sm:text-base">
+              This round is in progress. Results and rankings will be available once evaluations are complete.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -155,25 +179,20 @@ function AgentsLanding() {
     hasSeasonRankData &&
     !seasonRankLoading &&
     !seasonRankError &&
+    !hasMiners &&
+    !effectiveSeason
+  ) {
+    return <RoundInProgressState />;
+  }
+
+  if (
+    hasSeasonRankData &&
+    !seasonRankLoading &&
+    !seasonRankError &&
     effectiveSeason &&
     !hasMiners
   ) {
-    return (
-      <div className="flex h-full min-h-[360px] w-full items-center justify-center">
-        <div
-          className="rounded-2xl border-2 border-gray-200 bg-white/95 px-8 py-10 text-center shadow-lg backdrop-blur-xl"
-          style={{
-            boxShadow: `0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)`,
-          }}
-        >
-          <h2 className="text-xl font-bold text-gray-900">No agents found</h2>
-          <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            This season did not return any miners. Try selecting a different
-            season or refreshing once new data is available.
-          </p>
-        </div>
-      </div>
-    );
+    return <RoundInProgressState />;
   }
 
   if (needsRedirect) {
