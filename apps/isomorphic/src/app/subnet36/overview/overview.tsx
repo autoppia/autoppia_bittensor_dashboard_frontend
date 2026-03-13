@@ -22,14 +22,20 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
+  // Last FINISHED round — drives the metric cards and "Latest round" label
   const metricsRound = metrics?.round ?? null;
   const metricsSeason = metrics?.season ?? null;
-  const currentSeason = metrics?.season ?? null;
-  const currentRoundInSeason = metrics?.round ?? null;
+  // Currently active round — drives the title badge and validator list
+  const currentSeason = metrics?.currentSeason ?? metrics?.season ?? null;
+  const currentRoundInSeason = metrics?.currentRound ?? metrics?.round ?? null;
   const metricsRoundLabel =
     metricsSeason !== null && metricsSeason !== undefined && metricsRound !== null && metricsRound !== undefined
-      ? `Season ${metricsSeason} - Round ${metricsRound}`
+      ? `Season ${metricsSeason} · Round ${metricsRound}`
       : metricsRound ?? "—";
+  const currentRoundLabel =
+    currentSeason !== null && currentSeason !== undefined && currentRoundInSeason !== null && currentRoundInSeason !== undefined
+      ? `Season ${currentSeason} · Round ${currentRoundInSeason}`
+      : "—";
   const leaderGithubUrl = metrics?.leader?.minerGithubUrl?.trim() || null;
 
   // Auto-refresh metrics every 30 seconds
@@ -76,9 +82,9 @@ export default function Overview() {
               className="flex items-center gap-3 text-[14px] lg:text-3xl 4xl:text-[26px] font-bold min-w-0"
             >
               Subnet 36 - Web Agents
-              {metricsSeason !== null && metricsSeason !== undefined && (
+              {currentSeason !== null && currentSeason !== undefined && (
                 <span className="inline-flex items-center rounded-md border border-emerald-400/60 bg-emerald-500/15 px-3 py-1 text-xs lg:text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100">
-                  Season {metricsSeason}
+                  Season {currentSeason}
                 </span>
               )}
               <Link
@@ -102,13 +108,22 @@ export default function Overview() {
           ref={metricsColumnRef}
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
-              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-              <span>Latest round:</span>
-              <span className="font-bold text-white">
-                {metricsRoundLabel}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
+                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
+                <span>Latest round:</span>
+                <span className="font-bold text-white">
+                  {metricsRoundLabel}
+                </span>
               </span>
-            </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-900/30 px-3 py-1 text-xs font-semibold text-amber-200 shadow-sm">
+                <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-amber-400" aria-hidden />
+                <span>Current round:</span>
+                <span className="font-bold text-white">
+                  {currentRoundLabel}
+                </span>
+              </span>
+            </div>
             <div className="flex items-center justify-end gap-2 min-w-0">
               {/* <button
                 onClick={handleOpenTimeline}

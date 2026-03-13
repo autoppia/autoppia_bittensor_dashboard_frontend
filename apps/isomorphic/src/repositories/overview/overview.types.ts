@@ -27,8 +27,14 @@ export interface OverviewLeader {
 
 export interface OverviewMetrics {
   leader?: OverviewLeader | null;
+  /** Last FINISHED round's season number — used for metric cards and label */
   season?: number | null;
+  /** Last FINISHED round's round number — used for metric cards and label */
   round?: number | null;
+  /** Currently active round's season number */
+  currentSeason?: number | null;
+  /** Currently active round's round number */
+  currentRound?: number | null;
   totalMiners: number;
   tasksPerValidator?: number | null;
   minerList?: MinerSummary[] | null;
