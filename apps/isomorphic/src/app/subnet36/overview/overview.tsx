@@ -108,22 +108,13 @@ export default function Overview() {
           ref={metricsColumnRef}
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
-                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-                <span>Latest round:</span>
-                <span className="font-bold text-white">
-                  {metricsRoundLabel}
-                </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
+              <span>Latest round:</span>
+              <span className="font-bold text-white">
+                {metricsRoundLabel}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-900/30 px-3 py-1 text-xs font-semibold text-amber-200 shadow-sm">
-                <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-amber-400" aria-hidden />
-                <span>Current round:</span>
-                <span className="font-bold text-white">
-                  {currentRoundLabel}
-                </span>
-              </span>
-            </div>
+            </span>
             <div className="flex items-center justify-end gap-2 min-w-0">
               {/* <button
                 onClick={handleOpenTimeline}
