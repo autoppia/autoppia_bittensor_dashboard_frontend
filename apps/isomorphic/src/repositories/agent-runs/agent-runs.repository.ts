@@ -152,7 +152,9 @@ export class AgentRunsRepository {
       params
     );
     return {
-      runs: response.data.data.runs,
+      runs: (response.data.data.runs ?? []).map((run) =>
+        this.normalizeListItem(run as Record<string, any>)
+      ),
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,
@@ -180,7 +182,9 @@ export class AgentRunsRepository {
       { ...params, agentId }
     );
     return {
-      runs: response.data.data.runs,
+      runs: (response.data.data.runs ?? []).map((run) =>
+        this.normalizeListItem(run as Record<string, any>)
+      ),
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,
@@ -525,6 +529,59 @@ export class AgentRunsRepository {
       }
     }
     return defaultValue;
+  }
+
+  private normalizeListItem(rawItem: Record<string, any>): AgentRunListItem {
+    const totalTasks = this.getNumberWithFallback(
+      rawItem,
+      ["totalTasks", "total_tasks", "total"],
+      0
+    );
+    const successfulTasks = this.getNumberWithFallback(
+      rawItem,
+      ["successfulTasks", "successful_tasks", "completedTasks", "completed_tasks", "successes"],
+      0
+    );
+    const completedTasks = this.getNumberWithFallback(
+      rawItem,
+      ["completedTasks", "completed_tasks", "successfulTasks", "successful_tasks", "successes"],
+      successfulTasks
+    );
+
+    return {
+      runId: rawItem.runId ?? rawItem.run_id ?? "",
+      agentId: rawItem.agentId ?? rawItem.agent_id ?? "",
+      agentUid: rawItem.agentUid ?? rawItem.agent_uid ?? null,
+      agentHotkey: rawItem.agentHotkey ?? rawItem.agent_hotkey ?? null,
+      agentName: rawItem.agentName ?? rawItem.agent_name ?? null,
+      agentImage: rawItem.agentImage ?? rawItem.agent_image ?? null,
+      roundId: rawItem.roundId ?? rawItem.round_id ?? 0,
+      validatorId: rawItem.validatorId ?? rawItem.validator_id ?? "",
+      validatorName: rawItem.validatorName ?? rawItem.validator_name ?? undefined,
+      validatorImage: rawItem.validatorImage ?? rawItem.validator_image ?? undefined,
+      status: rawItem.status ?? "failed",
+      startTime: rawItem.startTime ?? rawItem.start_time ?? "",
+      endTime: rawItem.endTime ?? rawItem.end_time ?? null,
+      totalTasks,
+      completedTasks,
+      successfulTasks,
+      overallReward: this.normalizePercentage(
+        this.getNumberWithFallback(
+          rawItem,
+          ["overallReward", "overall_reward", "averageReward", "average_reward", "reward", "score"],
+          0
+        )
+      ),
+      successRate: this.normalizePercentage(
+        this.getNumberWithFallback(rawItem, ["successRate", "success_rate"], totalTasks > 0 ? successfulTasks / totalTasks : 0)
+      ),
+      ranking: (typeof rawItem.ranking === "number" ? rawItem.ranking : typeof rawItem.rank === "number" ? rawItem.rank : undefined),
+      averageEvaluationTime: this.getNumberWithFallback(
+        rawItem,
+        ["averageEvaluationTime", "average_evaluation_time", "averageExecutionTime", "average_execution_time"],
+        0
+      ),
+    };
   }
 
   private normalizeStats(
