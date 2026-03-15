@@ -56,6 +56,7 @@ export interface ValidatorData {
     | "Sending Tasks"
     | "Evaluating"
     | "Waiting"
+    | "Inactive"
     | "Offline"
     | "Finished"
     | "Starting"

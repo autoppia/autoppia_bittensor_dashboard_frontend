@@ -84,6 +84,7 @@ export default function OverviewValidators({
     "Sending Tasks": "bg-blue-500/20 text-blue-500",
     Evaluating: "bg-amber-500/20 text-amber-400",
     Waiting: "bg-purple-500/20 text-purple-500",
+    Inactive: "bg-slate-500/20 text-slate-300",
     Finished: "bg-emerald-600/15 text-emerald-600",
     "Not Started": "bg-slate-500/20 text-slate-200",
     Starting: "bg-cyan-500/20 text-cyan-500",
@@ -349,12 +350,16 @@ export default function OverviewValidators({
                       {validator.status === "Waiting" && (
                         <PiHourglassMediumFill className="w-3.5 h-3.5 animate-pulse" />
                       )}
+                      {validator.status === "Inactive" && (
+                        <PiClockDuotone className="w-3.5 h-3.5" />
+                      )}
                       {validator.status === "Finished" && (
                         <PiCheckCircleFill className="w-3.5 h-3.5" />
                       )}
                       {validator.status !== "Sending Tasks" &&
                         validator.status !== "Evaluating" &&
                         validator.status !== "Waiting" &&
+                        validator.status !== "Inactive" &&
                         validator.status !== "Finished" &&
                         validator.status !== "Not Started" && (
                           <PiSpinnerGapBold className="w-3.5 h-3.5 animate-spin" />
