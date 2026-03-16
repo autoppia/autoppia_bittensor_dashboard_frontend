@@ -1002,7 +1002,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       labelClass: "text-white/80",
       labelTextClass:
         attemptedTasks !== null && attemptedTasks < totalTasks
-          ? "whitespace-nowrap text-[11px] tracking-[0.08em]"
+          ? "whitespace-nowrap text-xs tracking-[0.14em]"
           : "",
     },
     {
@@ -1014,7 +1014,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "",
+      labelTextClass: "whitespace-nowrap text-[11px] tracking-[0.1em]",
     },
     {
       key: "success",
