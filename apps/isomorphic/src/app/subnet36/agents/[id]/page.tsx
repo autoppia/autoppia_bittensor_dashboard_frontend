@@ -137,6 +137,13 @@ const formatBestRoundBadge = (value: number | string | null | undefined) => {
   return null;
 };
 
+const extractCommitHashFromGithubUrl = (value?: string | null) => {
+  if (!value) return null;
+  const match = value.match(/\/commit\/([0-9a-f]{7,40})(?:\/)?$/i);
+  if (!match) return null;
+  return match[1];
+};
+
 
 // Agent stats band
 function AgentStats({
@@ -1140,7 +1147,9 @@ function AgentValidators({
                                 className="mt-1 inline-flex max-w-full items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-100 transition-colors duration-200 hover:border-sky-300/60 hover:bg-sky-500/20"
                               >
                                 <PiGithubLogoDuotone className="h-3.5 w-3.5 shrink-0" />
-                                <span className="truncate">GitHub commit</span>
+                                <span className="truncate font-mono">
+                                  {extractCommitHashFromGithubUrl(v.github_url) ?? "GitHub commit"}
+                                </span>
                               </a>
                             ) : null}
                             {v.run_early_stop_message ? (
