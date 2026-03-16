@@ -85,9 +85,154 @@ export class TasksRepository {
           miner: any;
           zeroReason?: string | null;
         };
+      } | {
+        evaluation: any;
       };
     }>(endpoint);
-    return response.data.data;
+    const payload = response.data.data as any;
+    if (payload?.evaluation && !payload?.task_details) {
+      const evaluation = payload.evaluation;
+      const task = evaluation?.task ?? {};
+      const taskSolution = evaluation?.taskSolution ?? {};
+      const task_details: TaskDetails = {
+        taskId: task.id ?? evaluation?.taskId ?? evaluationId,
+        agentRunId: evaluation?.runId ?? taskSolution?.agent_run_id ?? "",
+        website: task.url ?? evaluation?.taskUrl ?? "",
+        seed: null,
+        webVersion: null,
+        useCase: task.useCase ?? "Unknown",
+        prompt: task.prompt ?? "",
+        status: evaluation?.status ?? "pending",
+        score: evaluation?.score ?? 0,
+        successRate: evaluation?.score ?? 0,
+        duration: evaluation?.responseTime ?? 0,
+        startTime: evaluation?.createdAt ?? "",
+        endTime: evaluation?.updatedAt ?? undefined,
+        createdAt: evaluation?.createdAt ?? "",
+        updatedAt: evaluation?.updatedAt ?? "",
+        error: undefined,
+        actions: [],
+        screenshots: [],
+        logs: [],
+        relationships: {
+          round: {
+            validatorRoundId: taskSolution?.validator_round_id ?? evaluation?.roundId ?? "",
+            roundNumber: typeof evaluation?.roundId === "number" ? evaluation.roundId : null,
+            status: evaluation?.status ?? "pending",
+            startedAt: evaluation?.createdAt ?? "",
+            endedAt: evaluation?.updatedAt ?? null,
+          },
+          validator: {
+            uid: taskSolution?.validator_uid ?? 0,
+            hotkey: taskSolution?.validator_hotkey ?? "",
+            name: evaluation?.validatorId ?? `Validator ${taskSolution?.validator_uid ?? ""}`,
+            image: null,
+            stake: 0,
+            vtrust: 0,
+          },
+          miner: {
+            uid: taskSolution?.miner_uid ?? null,
+            hotkey: taskSolution?.miner_hotkey ?? null,
+            name: evaluation?.agentId ?? `Miner ${taskSolution?.miner_uid ?? ""}`,
+            github: null,
+            provider: null,
+            image: null,
+            isSota: false,
+          },
+          agentRun: {
+            agentRunId: evaluation?.runId ?? taskSolution?.agent_run_id ?? "",
+            validatorUid: taskSolution?.validator_uid ?? 0,
+            minerUid: taskSolution?.miner_uid ?? null,
+            isSota: false,
+            startedAt: evaluation?.createdAt ?? null,
+            endedAt: evaluation?.updatedAt ?? null,
+            duration: evaluation?.responseTime ?? null,
+          },
+          evaluation: {
+            evaluationId: evaluation?.evaluationId ?? evaluationId,
+            finalScore: evaluation?.score ?? 0,
+            rawScore: evaluation?.score ?? 0,
+            evaluationTime: evaluation?.responseTime ?? 0,
+            status: evaluation?.status ?? "pending",
+            validatorUid: taskSolution?.validator_uid ?? 0,
+            minerUid: taskSolution?.miner_uid ?? null,
+            webAgentId: null,
+            hasFeedback: false,
+            hasRecording: Array.isArray(evaluation?.screenshots) && evaluation.screenshots.length > 0,
+            reward: evaluation?.reward ?? 0,
+            llmModel: null,
+          },
+          solution: {
+            solutionId: taskSolution?.solution_id ?? "",
+            agentRunId: taskSolution?.agent_run_id ?? evaluation?.runId ?? "",
+            minerUid: taskSolution?.miner_uid ?? null,
+            validatorUid: taskSolution?.validator_uid ?? 0,
+            actionsCount: Array.isArray(evaluation?.actions) ? evaluation.actions.length : 0,
+            webAgentId: null,
+            hasRecording: Array.isArray(evaluation?.screenshots) && evaluation.screenshots.length > 0,
+          },
+        },
+        performance: {
+          totalActions: Array.isArray(evaluation?.actions) ? evaluation.actions.length : 0,
+          successfulActions: Array.isArray(evaluation?.actions)
+            ? evaluation.actions.filter((action: any) => action?.success).length
+            : 0,
+          failedActions: Array.isArray(evaluation?.actions)
+            ? evaluation.actions.filter((action: any) => !action?.success || action?.error).length
+            : 0,
+          averageActionDuration: 0,
+          totalWaitTime: 0,
+          totalNavigationTime: 0,
+        },
+        metadata: {
+          environment: "production",
+          browser: "unknown",
+          viewport: {
+            width: 0,
+            height: 0,
+          },
+          userAgent: "",
+          resources: {
+            cpu: 0,
+            memory: 0,
+            network: 0,
+          },
+        },
+      };
+
+      return {
+        actions: Array.isArray(evaluation?.actions) ? evaluation.actions : [],
+        screenshots: Array.isArray(evaluation?.screenshots) ? evaluation.screenshots : [],
+        task_details,
+        result: {
+          status: evaluation?.status ?? "pending",
+          eval_score: evaluation?.score ?? 0,
+          eval_time: evaluation?.responseTime ?? 0,
+          zero_reason: evaluation?.zeroReason ?? null,
+        },
+        info: {
+          evaluationId: evaluation?.evaluationId ?? evaluationId,
+          taskId: task.id ?? evaluation?.taskId ?? "",
+          miner_run_id: evaluation?.runId ?? taskSolution?.agent_run_id ?? "",
+          round: {
+            roundId: evaluation?.roundId ?? taskSolution?.validator_round_id ?? "",
+            season: evaluation?.season ?? null,
+          },
+          validator: {
+            uid: taskSolution?.validator_uid ?? 0,
+            hotkey: taskSolution?.validator_hotkey ?? "",
+            name: evaluation?.validatorId ?? `Validator ${taskSolution?.validator_uid ?? ""}`,
+          },
+          miner: {
+            uid: taskSolution?.miner_uid ?? null,
+            hotkey: taskSolution?.miner_hotkey ?? null,
+            name: evaluation?.agentId ?? `Miner ${taskSolution?.miner_uid ?? ""}`,
+          },
+          zeroReason: evaluation?.zeroReason ?? null,
+        },
+      };
+    }
+    return payload;
   }
 
   /**
