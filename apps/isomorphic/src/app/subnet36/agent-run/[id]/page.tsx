@@ -955,6 +955,35 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   const displayAverageCost =
     averageCost !== null ? `$${averageCost.toFixed(4)}` : "—";
 
+  const rewardBreakdownItems = [
+    {
+      key: "score",
+      label: "Score",
+      value: displayAverageScore,
+      icon: PiTarget,
+      accentClass:
+        "border-fuchsia-400/35 bg-fuchsia-500/10 text-fuchsia-100",
+      iconClass: "text-fuchsia-300",
+    },
+    {
+      key: "time",
+      label: "Time",
+      value: displayAverageDuration,
+      icon: PiClock,
+      accentClass: "border-sky-400/35 bg-sky-500/10 text-sky-100",
+      iconClass: "text-sky-300",
+    },
+    {
+      key: "cost",
+      label: "Cost",
+      value: displayAverageCost,
+      icon: PiChartBar,
+      accentClass:
+        "border-amber-400/35 bg-amber-500/10 text-amber-100",
+      iconClass: "text-amber-300",
+    },
+  ] as const;
+
   const cards = [
     {
       key: "tasks",
@@ -1054,8 +1083,23 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
           <div className="mt-2 text-sm font-medium text-white/70">
             Overall reward
           </div>
-          <div className="mt-1 text-xs text-white/60">
-            Score {displayAverageScore} • Time {displayAverageDuration} • Cost {displayAverageCost}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {rewardBreakdownItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm",
+                    item.accentClass
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5", item.iconClass)} />
+                  <span className="text-white/70">{item.label}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -1077,8 +1121,23 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
           <div className="mt-2 text-sm font-medium text-white/70">
             Overall reward
           </div>
-          <div className="mt-1 text-xs text-white/60">
-            Score {displayAverageScore} • Time {displayAverageDuration} • Cost {displayAverageCost}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {rewardBreakdownItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm",
+                    item.accentClass
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5", item.iconClass)} />
+                  <span className="text-white/70">{item.label}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="grid grid-cols-3 gap-6">
@@ -1086,12 +1145,66 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-sky-400/25 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-200/80">
-          How Reward Is Calculated
+      <div className="mt-6 rounded-3xl border border-sky-400/20 bg-[linear-gradient(135deg,rgba(8,47,73,0.68),rgba(15,23,42,0.72),rgba(30,41,59,0.66))] p-4 md:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-200/80">
+              How Reward Is Calculated
+            </div>
+            <div className="mt-1 text-sm text-white/70">
+              Reward is the weighted combination of task completion, speed, and cost efficiency.
+            </div>
+          </div>
+          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/70">
+            Higher score, faster time, lower cost
+          </div>
         </div>
-        <div className="mt-2 break-words font-mono text-xs leading-6 text-sky-100/95 md:text-sm">
-          {REWARD_FORMULA}
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 p-4">
+            <div className="flex items-center gap-2 text-fuchsia-200">
+              <PiTarget className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Score Term
+              </span>
+            </div>
+            <div className="mt-2 font-mono text-sm text-white">
+              EVAL_SCORE_WEIGHT × 1.0
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-sky-400/25 bg-sky-500/10 p-4">
+            <div className="flex items-center gap-2 text-sky-200">
+              <PiClock className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Time Term
+              </span>
+            </div>
+            <div className="mt-2 font-mono text-sm text-white">
+              TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4">
+            <div className="flex items-center gap-2 text-amber-200">
+              <PiChartBar className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Cost Term
+              </span>
+            </div>
+            <div className="mt-2 font-mono text-sm text-white">
+              COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR)
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">
+            Full Formula
+          </div>
+          <div className="mt-2 break-words font-mono text-xs leading-6 text-white/90 md:text-sm">
+            {REWARD_FORMULA}
+          </div>
         </div>
       </div>
     </div>
