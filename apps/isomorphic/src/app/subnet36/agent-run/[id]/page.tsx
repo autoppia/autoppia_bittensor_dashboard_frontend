@@ -58,6 +58,8 @@ interface AgentRunResult {
   total: number;
   successCount: number;
   avgSolutionTime: number; // seconds
+  avgReward: number;
+  avgCost: number;
 }
 
 interface AgentRunWebsite {
@@ -69,6 +71,8 @@ interface AgentRunWebsite {
     total: number;
     successCount: number;
     avgSolutionTime: number;
+    avgReward: number;
+    avgCost: number;
   };
 }
 
@@ -210,13 +214,13 @@ function buildDetailDataFromStats(
 
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number }> }).statsByUsecase ?? [];
-      
+      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number; avgReward?: number; avgCost?: number }> }).statsByUsecase ?? [];
+
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
       }));
-      
+
       const websiteResults: AgentRunResult[] = statsByUsecase.map((uc: any, idx: number) => ({
         useCaseId: idx,
         name: uc.useCase || `Use Case ${idx + 1}`,
@@ -225,6 +229,8 @@ function buildDetailDataFromStats(
         total: uc.total || 0,
         successCount: uc.successful || 0,
         avgSolutionTime: typeof uc.avgTime === "number" ? uc.avgTime : 0,
+        avgReward: typeof uc.avgReward === "number" ? uc.avgReward : 0,
+        avgCost: typeof uc.avgCost === "number" ? uc.avgCost : 0,
       }));
 
       return {
@@ -238,6 +244,8 @@ function buildDetailDataFromStats(
           successCount: w.successful || 0,
           avgSolutionTime:
             typeof w.averageDuration === "number" ? w.averageDuration : 0,
+          avgReward: typeof (w as { averageReward?: number }).averageReward === "number" ? (w as { averageReward?: number }).averageReward ?? 0 : 0,
+          avgCost: typeof (w as { averageCost?: number }).averageCost === "number" ? (w as { averageCost?: number }).averageCost ?? 0 : 0,
         },
       };
     }
@@ -418,16 +426,43 @@ export default function Page() {
         <AgentRunStats stats={stats || null} />
       )}
 
-      {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
-      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (() => {
-        const raw = info?.zeroReason ?? stats.zeroReason;
-        const reason = typeof raw === "string" ? raw : "";
-        return reason ? (
-          <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
-            <span className="font-semibold">Reason for zero reward:</span>{" "}
-            {humanizeZeroReason(reason)}
-          </div>
-        ) : null;
+      {!isLoading && (() => {
+        const zeroReasonRaw = info?.zeroReason ?? stats?.zeroReason;
+        const zeroReason = typeof zeroReasonRaw === "string" ? zeroReasonRaw : "";
+        const earlyStopReason =
+          typeof info?.earlyStopReason === "string"
+            ? info.earlyStopReason
+            : typeof stats?.earlyStopReason === "string"
+              ? stats.earlyStopReason
+              : "";
+        const earlyStopMessage =
+          typeof info?.earlyStopMessage === "string"
+            ? info.earlyStopMessage
+            : typeof stats?.earlyStopMessage === "string"
+              ? stats.earlyStopMessage
+              : "";
+        const hasZeroReward =
+          !!stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0));
+
+        if (hasZeroReward && zeroReason) {
+          return (
+            <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+              <span className="font-semibold">Reason for zero reward:</span>{" "}
+              {humanizeZeroReason(zeroReason)}
+            </div>
+          );
+        }
+
+        if (earlyStopReason || earlyStopMessage) {
+          return (
+            <div className="mb-4 rounded-xl border border-rose-400/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-50">
+              <span className="font-semibold">Reason for early stop:</span>{" "}
+              {earlyStopMessage || humanizeZeroReason(earlyStopReason)}
+            </div>
+          );
+        }
+
+        return null;
       })()}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
@@ -454,10 +489,10 @@ export default function Page() {
       </div>
 
       <div className="mb-6">
-        <AgentRunTasksSection 
-          evaluations={evaluations} 
-          isLoading={isLoading} 
-          error={error} 
+        <AgentRunTasksSection
+          evaluations={evaluations}
+          isLoading={isLoading}
+          error={error}
           refetch={refetch}
           selectedWebsite={selectedWebsite}
         />
@@ -480,6 +515,10 @@ type AgentRunPersonasFromInfoProps = Readonly<{
     round: any;
     validator: any;
     miner: any;
+    zeroReason?: string | null;
+    earlyStopReason?: string | null;
+    earlyStopMessage?: string | null;
+    tasksAttempted?: number | null;
   } | null;
 }>;
 function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
@@ -545,7 +584,7 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
   const epochEnd = roundData.endEpoch ?? null;
   const formatEpoch = (value: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? String(value) : "—";
-  
+
   // Parse round number/ID - support "season/round" format
   // Priority: roundId (string "season/round") > roundData.season/round > roundNumber (legacy)
   const parseRoundInfo = () => {
@@ -558,23 +597,23 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
         return { season, round };
       }
     }
-    
+
     // Second, try to get from roundData directly (season_number, round_number_in_season)
     if (roundData.season_number !== undefined && roundData.round_number_in_season !== undefined) {
-      return { 
-        season: String(roundData.season_number), 
+      return {
+        season: String(roundData.season_number),
         round: String(roundData.round_number_in_season)
       };
     }
-    
+
     // Third, try season and round fields
     if (roundData.season !== undefined && roundData.round !== undefined) {
-      return { 
-        season: String(roundData.season), 
+      return {
+        season: String(roundData.season),
         round: String(roundData.round)
       };
     }
-    
+
     // If we have roundNumber that looks like legacy format (10001, 20003, etc), try to extract
     if (roundData.roundNumber && typeof roundData.roundNumber === "number") {
       const num = roundData.roundNumber;
@@ -587,7 +626,7 @@ function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
         }
       }
     }
-    
+
     // No valid data found
     return null;
   };
@@ -882,24 +921,48 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   // Reward/time use the post-run reward metrics; website rows keep eval_score separately.
   const overallReward = clampPercentage((stats?.avg_reward ?? 0) * 100);
   const totalTasks = clampNonNegative(stats?.totalTasks);
+  const attemptedTasksRaw = stats?.tasksAttempted;
+  const attemptedTasks =
+    typeof attemptedTasksRaw === "number" && !Number.isNaN(attemptedTasksRaw)
+      ? clampNonNegative(attemptedTasksRaw)
+      : null;
+  const effectiveAttemptedTasks = attemptedTasks ?? totalTasks;
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
-    stats?.failedTasks == null
-      ? Math.max(totalTasks - successfulTasks, 0)
-      : clampNonNegative(stats.failedTasks);
+    attemptedTasks !== null
+      ? Math.max(effectiveAttemptedTasks - successfulTasks, 0)
+      : stats?.failedTasks == null
+        ? Math.max(totalTasks - successfulTasks, 0)
+        : clampNonNegative(stats.failedTasks);
+  const nonEvaluatedTasks =
+    attemptedTasks !== null ? Math.max(totalTasks - effectiveAttemptedTasks, 0) : 0;
   const websitesCount = clampNonNegative(
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
   );
   const averageDuration = stats?.avg_time ?? 0;
+  const averageScore = clampPercentage(stats?.avg_score ?? 0);
+  const averageCost =
+    typeof stats?.avg_cost === "number" && !Number.isNaN(stats.avg_cost)
+      ? Math.max(0, stats.avg_cost)
+      : null;
 
   const displayOverallReward = formatPercentage(overallReward);
   const displayAverageDuration = formatDuration(averageDuration);
+  const displayAverageScore = formatPercentage(averageScore);
+  const displayAverageCost =
+    averageCost !== null ? `$${averageCost.toFixed(4)}` : "—";
 
   const cards = [
     {
       key: "tasks",
-      label: "Total Tasks",
-      value: formatCount(totalTasks),
+      label:
+        attemptedTasks !== null && attemptedTasks < totalTasks
+          ? "Attempted / Expected"
+          : "Total Tasks",
+      value:
+        attemptedTasks !== null && attemptedTasks < totalTasks
+          ? `${formatCount(attemptedTasks)}/${formatCount(totalTasks)}`
+          : formatCount(totalTasks),
       icon: PiClock,
       wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
       iconClass: "text-white",
@@ -932,6 +995,16 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       value: formatCount(failedTasks),
       icon: PiXCircle,
       wrapperClass: "border-rose-400/40 bg-rose-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+    },
+    {
+      key: "non-evaluated",
+      label: "Non Evaluated",
+      value: formatCount(nonEvaluatedTasks),
+      icon: PiClock,
+      wrapperClass: "border-slate-400/35 bg-slate-500/15 text-white",
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
@@ -979,7 +1052,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Reward {displayOverallReward} • Time {displayAverageDuration}
+            Score {displayAverageScore} • Time {displayAverageDuration} • Cost {displayAverageCost}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -1002,10 +1075,10 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
             Overall reward
           </div>
           <div className="mt-1 text-xs text-white/60">
-            Reward {displayOverallReward} • Time {displayAverageDuration}
+            Score {displayAverageScore} • Time {displayAverageDuration} • Cost {displayAverageCost}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {cards.slice(2).map((c) => renderCard(c))}
         </div>
       </div>
@@ -1037,7 +1110,7 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          {(["tasks", "websites", "success", "failed"] as const).map((k) => (
+          {(["tasks", "websites", "success", "failed", "non-evaluated"] as const).map((k) => (
             <div
               key={`stats-mobile-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
@@ -1108,7 +1181,7 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {(["right1", "right2"] as const).map((k) => (
+          {(["right1", "right2", "right3"] as const).map((k) => (
             <div
               key={`stats-right-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
@@ -1187,6 +1260,8 @@ function AgentRunDetail({
               total: result.total,
               successCount: result.successCount,
               avgSolutionTime: result.avgSolutionTime,
+              avgReward: result.avgReward,
+              avgCost: result.avgCost,
               colorIndex: idx,
             })) || []
           );
@@ -1198,6 +1273,8 @@ function AgentRunDetail({
           total: web.overall.total ?? 0,
           successCount: web.overall.successCount ?? 0,
           avgSolutionTime: web.overall.avgSolutionTime ?? 0,
+          avgReward: web.overall.avgReward ?? 0,
+          avgCost: web.overall.avgCost ?? 0,
           colorIndex: idx,
         }));
 
@@ -1346,7 +1423,16 @@ function AgentRunDetail({
                   </div>
                 )}
 
-                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiChartBar className="w-4 h-4 sm:w-6 sm:h-6 text-amber-300 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
+                      Reward
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold text-white">
+                      {(item.avgReward * 100).toFixed(1)}%
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 sm:gap-3">
                     <PiTarget className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400 flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
@@ -1367,6 +1453,15 @@ function AgentRunDetail({
                     </span>
                     <span className="text-lg sm:text-xl font-bold text-white">
                       {item.avgSolutionTime.toFixed(2)}s
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiGlobe className="w-4 h-4 sm:w-6 sm:h-6 text-fuchsia-300 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
+                      Cost
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold text-white">
+                      ${item.avgCost.toFixed(4)}
                     </span>
                   </div>
                 </div>

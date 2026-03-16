@@ -27,6 +27,7 @@ export interface AgentRunData {
   endTime?: string;
   status: "running" | "completed" | "failed" | "timeout";
   totalTasks: number;
+  tasksAttempted?: number | null;
   completedTasks: number;
   successfulTasks: number;
   failedTasks: number;
@@ -37,6 +38,8 @@ export interface AgentRunData {
   averageEvaluationTime?: number | null;
   /** Reason for score 0 when applicable (e.g. over_cost_limit, deploy_failed, all_tasks_failed) */
   zeroReason?: string | null;
+  earlyStopReason?: string | null;
+  earlyStopMessage?: string | null;
   isReused?: boolean;
   reusedFromAgentRunId?: string | null;
   reusedFromRoundDisplay?: string | null;
@@ -66,12 +69,19 @@ export interface AgentRunListItem {
   startTime: string;
   endTime?: string | null;
   totalTasks: number;
+  tasksAttempted?: number | null;
   completedTasks?: number;
   successfulTasks?: number;
   overallReward: number;
   successRate?: number | null;
   ranking?: number;
   averageEvaluationTime?: number | null;
+  zeroReason?: string | null;
+  earlyStopReason?: string | null;
+  earlyStopMessage?: string | null;
+  isReused?: boolean;
+  reusedFromAgentRunId?: string | null;
+  reusedFromRoundDisplay?: string | null;
 }
 
 // ===== AGENT RUN EVALUATION DATA =====
@@ -126,12 +136,17 @@ export interface AgentRunStats {
   /** Reason for zero reward when applicable (e.g. over_cost_limit, deploy_failed) */
   zeroReason?: string | null;
   totalTasks: number;
+  tasksAttempted?: number | null;
   websites: number;
   avg_reward: number;
+  avg_score?: number;
   avg_time: number;
+  avg_cost?: number | null;
   successfulTasks: number;
   failedTasks: number;
   successRate?: number;
+  earlyStopReason?: string | null;
+  earlyStopMessage?: string | null;
   averageTaskDuration?: number;
   scoreDistribution?: {
     excellent: number;
@@ -179,6 +194,7 @@ export interface AgentRunSummary {
   status: string;
   overallReward: number;
   totalTasks: number;
+  tasksAttempted?: number | null;
   successfulTasks: number;
   failedTasks: number;
   duration: number;

@@ -264,6 +264,9 @@ export class AgentRunsRepository {
       miner: any;
       /** Reason for score 0 when applicable */
       zeroReason?: string | null;
+      earlyStopReason?: string | null;
+      earlyStopMessage?: string | null;
+      tasksAttempted?: number | null;
       isReused?: boolean;
       reusedFromAgentRunId?: string | null;
       reusedFrom?: {
@@ -286,6 +289,9 @@ export class AgentRunsRepository {
             validator: any;
             miner: any;
             zeroReason?: string | null;
+            earlyStopReason?: string | null;
+            earlyStopMessage?: string | null;
+            tasksAttempted?: number | null;
             isReused?: boolean;
             reusedFromAgentRunId?: string | null;
             reusedFrom?: {
@@ -547,6 +553,11 @@ export class AgentRunsRepository {
       ["completedTasks", "completed_tasks", "successfulTasks", "successful_tasks", "successes"],
       successfulTasks
     );
+    const tasksAttempted = this.getNumberWithFallback(
+      rawItem,
+      ["tasksAttempted", "tasks_attempted"],
+      Number.NaN
+    );
 
     return {
       runId: rawItem.runId ?? rawItem.run_id ?? "",
@@ -563,6 +574,7 @@ export class AgentRunsRepository {
       startTime: rawItem.startTime ?? rawItem.start_time ?? "",
       endTime: rawItem.endTime ?? rawItem.end_time ?? null,
       totalTasks,
+      tasksAttempted: Number.isNaN(tasksAttempted) ? null : tasksAttempted,
       completedTasks,
       successfulTasks,
       overallReward: this.normalizePercentage(
@@ -581,6 +593,8 @@ export class AgentRunsRepository {
         ["averageEvaluationTime", "average_evaluation_time", "averageExecutionTime", "average_execution_time"],
         0
       ),
+      earlyStopReason: rawItem.earlyStopReason ?? rawItem.early_stop_reason ?? null,
+      earlyStopMessage: rawItem.earlyStopMessage ?? rawItem.early_stop_message ?? null,
     };
   }
 
@@ -588,6 +602,16 @@ export class AgentRunsRepository {
     stats: AgentRunStats | Record<string, any>
   ): AgentRunStats {
     const raw = stats as Record<string, any>;
+    const tasksAttempted = this.getNumberWithFallback(
+      raw,
+      ["tasksAttempted", "tasks_attempted"],
+      Number.NaN
+    );
+    const avgCost = this.getNumberWithFallback(
+      raw,
+      ["avg_cost", "averageCost", "average_cost"],
+      Number.NaN
+    );
     const rawScoreDistribution =
       raw.scoreDistribution ?? raw.score_distribution ?? {};
 
@@ -764,6 +788,7 @@ export class AgentRunsRepository {
         ["totalTasks", "total_tasks", "total"],
         0
       ),
+      tasksAttempted: Number.isNaN(tasksAttempted) ? null : tasksAttempted,
       successfulTasks: this.getNumberWithFallback(
         raw,
         ["successfulTasks", "successful_tasks", "successes"],
@@ -783,10 +808,14 @@ export class AgentRunsRepository {
       avg_reward: this.normalizePercentage(
         this.getNumberWithFallback(raw, ["avg_reward", "averageReward", "average_reward"], 0)
       ),
+      avg_score: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ["avg_score", "averageScore", "average_score"], 0)
+      ),
       avg_time: this.roundTo(
         this.getNumberWithFallback(raw, ["avg_time", "averageTime", "average_time"], 0),
         1
       ),
+      avg_cost: Number.isNaN(avgCost) ? null : this.roundTo(avgCost, 4),
       averageTaskDuration: this.roundTo(
         this.getNumberWithFallback(
           raw,
@@ -798,6 +827,8 @@ export class AgentRunsRepository {
       successRate: this.normalizePercentage(
         this.getNumberWithFallback(raw, ["successRate", "success_rate"], 0)
       ),
+      earlyStopReason: raw.earlyStopReason ?? raw.early_stop_reason ?? null,
+      earlyStopMessage: raw.earlyStopMessage ?? raw.early_stop_message ?? null,
       scoreDistribution: normalizedScoreDistribution,
       performanceByWebsite: normalizedWebsites,
       performanceByUseCase: normalizedUseCases,
