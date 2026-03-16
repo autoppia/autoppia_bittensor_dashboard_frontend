@@ -2720,19 +2720,29 @@ export default function Round() {
 
   const roundData = React.useMemo(() => {
     const leadershipRule = seasonSummary
-      ? {
+      ? (() => {
+          const reigningUid = seasonSummary.leader_before?.uid ?? null;
+          const challengerUidRaw = seasonSummary.candidate?.uid ?? null;
+          const challengerIsSameAsReigning =
+            reigningUid != null &&
+            challengerUidRaw != null &&
+            reigningUid === challengerUidRaw;
+          const challengerUid = challengerIsSameAsReigning ? null : challengerUidRaw;
+
+          return {
           required_improvement_pct: seasonSummary.required_improvement_pct,
-          reigning_uid: seasonSummary.leader_before?.uid ?? null,
+          reigning_uid: reigningUid,
           reigning_name: seasonSummary.leader_before?.name ?? null,
           reigning_reward: seasonSummary.leader_before?.reward ?? null,
           reigning_score: seasonSummary.leader_before?.reward ?? null,
-          challenger_uid: seasonSummary.candidate?.uid ?? null,
-          challenger_name: seasonSummary.candidate?.name ?? null,
-          challenger_reward: seasonSummary.candidate?.reward ?? null,
-          challenger_score: seasonSummary.candidate?.reward ?? null,
+          challenger_uid: challengerUid,
+          challenger_name: challengerUid != null ? seasonSummary.candidate?.name ?? null : null,
+          challenger_reward: challengerUid != null ? seasonSummary.candidate?.reward ?? null : null,
+          challenger_score: challengerUid != null ? seasonSummary.candidate?.reward ?? null : null,
           dethroned: seasonSummary.dethroned,
           season_leader_uid: seasonSummary.leader_after?.uid ?? null,
-        }
+        };
+        })()
       : null;
 
     return {
