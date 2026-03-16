@@ -2346,6 +2346,20 @@ const agentRunTasksColumns = [
       </Link>
     ),
   }),
+  columnHelper.accessor("reward", {
+    id: "reward",
+    size: 90,
+    header: "Reward",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-amber-300"
+        title="View evaluation details"
+      >
+        {(100 * (row.original.reward ?? 0)).toFixed(1)}%
+      </Link>
+    ),
+  }),
   columnHelper.accessor("eval_score", {
     id: "eval_score",
     size: 90,
@@ -2376,20 +2390,6 @@ const agentRunTasksColumns = [
         title="View evaluation details"
       >
         {row.original.eval_time?.toFixed(2) ?? 0}s
-      </Link>
-    ),
-  }),
-  columnHelper.accessor("reward", {
-    id: "reward",
-    size: 90,
-    header: "Reward",
-    cell: ({ row }) => (
-      <Link
-        href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="text-xs sm:text-sm font-medium text-amber-300"
-        title="View evaluation details"
-      >
-        {(100 * (row.original.reward ?? 0)).toFixed(1)}%
       </Link>
     ),
   }),
