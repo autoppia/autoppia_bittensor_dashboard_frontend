@@ -1051,7 +1051,8 @@ function AgentValidators({
       <div className="space-y-8">
         {visibleRounds.map((roundEntry) => {
           const consensus = roundEntry.consensus;
-          const hasConsensus = roundEntry.post_consensus_available;
+          const hasConsensus =
+            roundEntry.post_consensus_available && String(roundEntry.round_status ?? "").toLowerCase() === "finished";
           const validatorsWithRuns = roundEntry.validators.filter((validator) =>
             Boolean(validator.run_id)
           );
@@ -1059,9 +1060,16 @@ function AgentValidators({
           return (
             <div key={roundEntry.round_key} className="space-y-4">
               <div className="flex items-center justify-between gap-4">
-                <Text className="text-lg sm:text-xl font-bold text-white">
-                  {roundEntry.round_label}
-                </Text>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Text className="text-lg sm:text-xl font-bold text-white">
+                    {roundEntry.round_label}
+                  </Text>
+                  {String(roundEntry.round_status ?? "").toLowerCase() !== "finished" && (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-amber-500/15 text-amber-100 border border-amber-300/30">
+                      In progress
+                    </span>
+                  )}
+                </div>
                 <Text className="text-xs sm:text-sm text-white/60">
                   {validatorsWithRuns.length} validator run{validatorsWithRuns.length === 1 ? "" : "s"}
                 </Text>
@@ -1111,11 +1119,20 @@ function AgentValidators({
                     typeof v.run_tasks_attempted === "number" && !Number.isNaN(v.run_tasks_attempted)
                       ? v.run_tasks_attempted
                       : null;
+                  const derivedAttemptedTasks =
+                    attemptedTasks && attemptedTasks > 0
+                      ? attemptedTasks
+                      : Math.max(Number(v.run_success_tasks ?? 0) + Number(v.run_failed_tasks ?? 0), 0);
                   const stats = [
                     { title: "Reward", metric: `${((v.run_reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
                     { title: "Score", metric: `${((v.run_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
                     { title: "Time", metric: `${Number(v.run_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                    { title: "Tasks", metric: `${v.run_success_tasks ?? 0}/${attemptedTasks !== null && attemptedTasks < (v.run_total_tasks ?? 0) ? attemptedTasks : (v.run_total_tasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                    {
+                      title: "Tasks",
+                      metric: `${v.run_success_tasks ?? 0}/${derivedAttemptedTasks > 0 ? derivedAttemptedTasks : (v.run_total_tasks ?? 0)}`,
+                      icon: PiListChecksDuotone,
+                      iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
+                    },
                     { title: "Websites", metric: String(v.run_websites_count ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
                     { title: "Avg Cost", metric: v.run_avg_cost != null ? `$${Number(v.run_avg_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                   ];
