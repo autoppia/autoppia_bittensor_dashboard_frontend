@@ -934,7 +934,7 @@ function TaskDetailsDynamic({
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-transparent p-5 text-white">
             {/* Mobile */}
             <div className="flex flex-col space-y-6 md:hidden">
-              <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5">
                 <div
                   className="text-4xl font-extrabold bg-gradient-to-r from-emerald-300 via-emerald-200 to-green-300 bg-clip-text text-transparent"
                   style={{
@@ -946,8 +946,25 @@ function TaskDetailsDynamic({
                 <div className="mt-2 text-sm font-medium text-white/70">
                   Reward
                 </div>
-                <div className="mt-2 text-center text-xs font-medium text-white/65">
-                  Score {evaluationScore} • Time {evaluationDuration} • Cost {evaluationCost}
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <EvalMetricBadge
+                    label="Score"
+                    value={evaluationScore}
+                    color="purple"
+                    Icon={PiTarget}
+                  />
+                  <EvalMetricBadge
+                    label="Time"
+                    value={evaluationDuration}
+                    color="blue"
+                    Icon={PiClock}
+                  />
+                  <EvalMetricBadge
+                    label="Cost"
+                    value={evaluationCost}
+                    color="amber"
+                    Icon={PiChartBar}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -994,7 +1011,7 @@ function TaskDetailsDynamic({
                   Icon={PiPlay}
                 />
               </div>
-              <div className="flex flex-col items-center justify-center mx-4">
+              <div className="mx-4 flex min-w-[260px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
                 <div
                   className="bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-400 bg-clip-text text-5xl font-extrabold text-transparent"
                   style={{
@@ -1006,8 +1023,25 @@ function TaskDetailsDynamic({
                 <div className="mt-1 text-xs font-medium text-white/70">
                   Reward
                 </div>
-                <div className="mt-2 text-center text-xs font-medium text-white/65">
-                  Score {evaluationScore} • Time {evaluationDuration} • Cost {evaluationCost}
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <EvalMetricBadge
+                    label="Score"
+                    value={evaluationScore}
+                    color="purple"
+                    Icon={PiTarget}
+                  />
+                  <EvalMetricBadge
+                    label="Time"
+                    value={evaluationDuration}
+                    color="blue"
+                    Icon={PiClock}
+                  />
+                  <EvalMetricBadge
+                    label="Cost"
+                    value={evaluationCost}
+                    color="amber"
+                    Icon={PiChartBar}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 justify-end">
@@ -1945,23 +1979,52 @@ function RunStatCard({
   const c = colorMap[color] ?? colorMap.blue;
   return (
     <div
-      className={`group relative min-h-[104px] overflow-hidden rounded-xl border ${c.border} ${c.bg} px-4 py-3 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl`}
+      className={`group relative min-h-[118px] overflow-hidden rounded-2xl border ${c.border} ${c.bg} px-4 py-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl`}
     >
-      <div className="flex items-center gap-3">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-70" />
+      <div className="relative flex h-full flex-col items-center justify-center gap-3 text-center">
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-lg ${c.iconBg} text-white shadow-inner`}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} text-white shadow-inner ring-1 ring-white/15`}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4.5 w-4.5" />
         </div>
-        <div className="min-w-0">
-          <div className="text-2xl font-extrabold text-white leading-tight truncate">
+        <div className="min-w-0 space-y-1">
+          <div className="text-[2rem] font-extrabold leading-none text-white tracking-tight truncate">
             {value}
           </div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-white/85">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
             {label}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EvalMetricBadge({
+  label,
+  value,
+  color,
+  Icon,
+}: Readonly<{
+  label: string;
+  value: string;
+  color: "purple" | "blue" | "amber";
+  Icon: IconType;
+}>) {
+  const styles = {
+    purple: "border-fuchsia-400/35 bg-fuchsia-500/10 text-fuchsia-100",
+    blue: "border-sky-400/35 bg-sky-500/10 text-sky-100",
+    amber: "border-amber-400/35 bg-amber-500/10 text-amber-100",
+  } as const;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-[0_10px_24px_rgba(0,0,0,0.25)] backdrop-blur-md ${styles[color]}`}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="text-white/75">{label}</span>
+      <span className="font-semibold text-white">{value}</span>
     </div>
   );
 }
