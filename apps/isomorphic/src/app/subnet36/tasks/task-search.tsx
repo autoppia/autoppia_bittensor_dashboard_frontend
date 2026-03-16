@@ -535,7 +535,7 @@ export default function TaskSearch() {
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 xl:gap-5 overflow-visible items-end">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300 block" htmlFor="task-search-agent-button">
                   MINER
@@ -545,7 +545,7 @@ export default function TaskSearch() {
                     id="task-search-agent-button"
                     type="button"
                     onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
-                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span className="truncate">
                       {selectedAgentUid != null && selectedAgentName
@@ -557,8 +557,8 @@ export default function TaskSearch() {
                     />
                   </button>
                   {isAgentDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-emerald-500/30 rounded-xl overflow-hidden shadow-xl z-50 max-h-72 flex flex-col">
-                      <div className="p-2 border-b border-emerald-500/20 sticky top-0 bg-gray-900">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
+                      <div className="p-2 border-b border-emerald-400/15 sticky top-0 bg-slate-950/95">
                         <div className="relative">
                           <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                           <input
@@ -566,7 +566,7 @@ export default function TaskSearch() {
                             value={agentSearchQuery}
                             onChange={(e) => setAgentSearchQuery(e.target.value)}
                             placeholder="Search agents..."
-                            className="w-full pl-8 pr-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-200 text-sm placeholder-emerald-400/60 focus:border-emerald-500 outline-none"
+                            className="w-full pl-8 pr-3 py-2 bg-slate-900/90 border border-emerald-400/20 rounded-lg text-emerald-100 text-sm placeholder-emerald-300/45 focus:border-emerald-400 outline-none"
                           />
                         </div>
                       </div>
@@ -579,12 +579,12 @@ export default function TaskSearch() {
                             setIsAgentDropdownOpen(false);
                             setAgentSearchQuery("");
                           }}
-                          className="w-full px-3 py-2 text-left text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors duration-200 border-b border-emerald-500/20"
+                          className="w-full px-3 py-2.5 text-left text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100 transition-colors duration-200 border-b border-emerald-400/10"
                         >
                           All Miners
                         </button>
                         {filteredAgentsForDropdown.length === 0 ? (
-                          <div className="px-3 py-4 text-emerald-400/70 text-sm text-center">
+                          <div className="px-3 py-4 text-emerald-300/55 text-sm text-center">
                             No miners match your search
                           </div>
                         ) : (
@@ -598,14 +598,14 @@ export default function TaskSearch() {
                                 setIsAgentDropdownOpen(false);
                                 setAgentSearchQuery("");
                               }}
-                              className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                              className={`w-full px-3 py-2.5 text-left transition-colors duration-200 border-b border-emerald-400/10 last:border-b-0 ${
                                 selectedAgentUid === agent.uid
-                                  ? "bg-emerald-500/30 text-emerald-100"
-                                  : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                                  ? "bg-emerald-500/18 text-emerald-50"
+                                  : "text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100"
                               }`}
                             >
                               <span className="font-medium">{agent.name}</span>
-                              <span className="text-emerald-400/80 text-xs ml-1">(UID {agent.uid})</span>
+                              <span className="text-emerald-300/60 text-xs ml-1">(UID {agent.uid})</span>
                             </button>
                           ))
                         )}
@@ -626,7 +626,7 @@ export default function TaskSearch() {
                     value={agentRunInput}
                     onChange={(e) => setAgentRunInput(e.target.value)}
                     placeholder="Run UID (optional)"
-                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
@@ -645,7 +645,7 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
                     }
-                    className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {selectedWebsite === ""
@@ -658,14 +658,14 @@ export default function TaskSearch() {
                   </button>
 
                   {isWebsiteDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-blue-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedWebsite("");
                           setIsWebsiteDropdownOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20"
+                        className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10"
                       >
                         All Websites
                       </button>
@@ -677,7 +677,7 @@ export default function TaskSearch() {
                             setSelectedWebsite(website.value);
                             setIsWebsiteDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
+                          className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10 last:border-b-0"
                         >
                           {website.label}
                         </button>
@@ -698,7 +698,7 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
                     }
-                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {selectedUseCase === ""
@@ -711,14 +711,14 @@ export default function TaskSearch() {
                   </button>
 
                   {isUseCaseDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-purple-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedUseCase("");
                           setIsUseCaseDropdownOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                        className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10"
                       >
                         All Use Cases
                       </button>
@@ -730,7 +730,7 @@ export default function TaskSearch() {
                             setSelectedUseCase(useCase.value);
                             setIsUseCaseDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20 last:border-b-0"
+                          className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10 last:border-b-0"
                         >
                           {useCase.label}
                         </button>
@@ -740,7 +740,7 @@ export default function TaskSearch() {
                 </div>
               </div>
 
-              <div className="space-y-2 flex flex-col justify-end">
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-button">
                   SUCCESS
                 </label>
@@ -749,7 +749,7 @@ export default function TaskSearch() {
                     id="task-search-success-button"
                     type="button"
                     onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
-                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {successMode === "all" && "All Tasks"}
@@ -761,7 +761,7 @@ export default function TaskSearch() {
                     />
                   </button>
                   {isSuccessDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-emerald-500/20 rounded-xl overflow-hidden shadow-xl z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 backdrop-blur-xl">
                       {[
                         { value: "all", label: "All Tasks" },
                         { value: "successful", label: "Successful Tasks" },
@@ -776,10 +776,10 @@ export default function TaskSearch() {
                             );
                             setIsSuccessDropdownOpen(false);
                           }}
-                          className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                          className={`w-full px-3 py-2.5 text-left transition-colors duration-200 border-b border-emerald-400/10 last:border-b-0 ${
                             successMode === option.value
-                              ? "bg-emerald-500/30 text-emerald-100"
-                              : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                              ? "bg-emerald-500/18 text-emerald-50"
+                              : "text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100"
                           }`}
                         >
                           {option.label}
