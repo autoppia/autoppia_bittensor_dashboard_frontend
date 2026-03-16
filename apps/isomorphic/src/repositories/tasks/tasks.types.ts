@@ -404,6 +404,7 @@ export interface TaskSearchParams {
   maxScore?: number;
   /** When true, filter to tasks with reward > 0 (success) */
   successOnly?: boolean;
+  successMode?: "all" | "successful" | "non_successful";
   startDate?: string;
   endDate?: string;
   page?: number;

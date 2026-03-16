@@ -1043,18 +1043,6 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
 
   const cards = [
     {
-      key: "tasks",
-      label: "Total Tasks",
-      value: formatCount(totalTasks),
-      icon: PiClock,
-      wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
-      iconClass: "text-white",
-      valueClass: "text-white",
-      labelClass: "text-white/80",
-      labelTextClass: "",
-      cardClass: "w-[120px] lg:w-[132px]",
-    },
-    {
       key: "websites",
       label: "Websites",
       value: formatCount(websitesCount),
@@ -1064,7 +1052,19 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       valueClass: "text-white",
       labelClass: "text-white/80",
       labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
-      cardClass: "w-[120px] lg:w-[132px]",
+      cardClass: "w-[128px] lg:w-[138px]",
+    },
+    {
+      key: "tasks",
+      label: "Total Tasks",
+      value: formatCount(totalTasks),
+      icon: PiClock,
+      wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
     },
     {
       key: "success",
@@ -1075,8 +1075,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "",
-      cardClass: "w-[120px] lg:w-[132px]",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
     },
     {
       key: "failed",
@@ -1087,8 +1087,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "",
-      cardClass: "w-[120px] lg:w-[132px]",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
     },
     {
       key: "non-evaluated",
@@ -1099,8 +1099,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "whitespace-nowrap text-[9px] tracking-[0.04em] lg:text-[10px]",
-      cardClass: "w-[128px] lg:w-[142px]",
+      labelTextClass: "whitespace-nowrap text-[8px] tracking-[0.03em] lg:text-[9px]",
+      cardClass: "w-[132px] lg:w-[150px]",
     },
   ] as const;
 
@@ -1122,7 +1122,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
         <div
           className={cn(
-            "text-sm font-medium uppercase tracking-wide",
+            "whitespace-nowrap text-sm font-medium uppercase tracking-wide",
             card.labelClass,
             card.labelTextClass
           )}
@@ -1170,11 +1170,11 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
       </div>
 
-      <div className="hidden md:flex items-center justify-between relative">
-        <div className="grid grid-cols-2 gap-5 lg:gap-6">
-          {cards.slice(0, 2).map((c) => renderCard(c))}
+      <div className="hidden md:flex items-center justify-between gap-6 relative">
+        <div className="grid grid-cols-5 gap-4 lg:gap-5">
+          {cards.map((c) => renderCard(c))}
         </div>
-        <div className="flex min-w-[240px] flex-col items-center justify-center px-6 lg:px-8">
+        <div className="flex min-w-[250px] shrink-0 flex-col items-center justify-center px-2 lg:px-4">
           <div
             className="bg-gradient-to-r from-amber-300 via-yellow-200 to-yellow-400 bg-clip-text text-6xl font-extrabold text-transparent drop-shadow-[0_18px_38px_rgba(244,197,94,0.5)]"
             style={{ WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)" }}
@@ -1202,9 +1202,6 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
               );
             })}
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-5 lg:gap-6">
-          {cards.slice(2).map((c) => renderCard(c))}
         </div>
       </div>
 
