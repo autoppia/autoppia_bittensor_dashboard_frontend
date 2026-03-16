@@ -1045,6 +1045,9 @@ function AgentValidators({
         {visibleRounds.map((roundEntry) => {
           const consensus = roundEntry.consensus;
           const hasConsensus = roundEntry.post_consensus_available;
+          const validatorsWithRuns = roundEntry.validators.filter((validator) =>
+            Boolean(validator.run_id)
+          );
 
           return (
             <div key={roundEntry.round_key} className="space-y-4">
@@ -1053,7 +1056,7 @@ function AgentValidators({
                   {roundEntry.round_label}
                 </Text>
                 <Text className="text-xs sm:text-sm text-white/60">
-                  {roundEntry.validators.length} validator run{roundEntry.validators.length === 1 ? "" : "s"}
+                  {validatorsWithRuns.length} validator run{validatorsWithRuns.length === 1 ? "" : "s"}
                 </Text>
               </div>
 
@@ -1096,7 +1099,7 @@ function AgentValidators({
                 )}
 
                 {/* Per-validator cards — show the actual run metrics for this validator */}
-                {roundEntry.validators.map((v) => {
+                {validatorsWithRuns.map((v) => {
                   const attemptedTasks =
                     typeof v.run_tasks_attempted === "number" && !Number.isNaN(v.run_tasks_attempted)
                       ? v.run_tasks_attempted
