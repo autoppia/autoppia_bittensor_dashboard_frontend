@@ -987,23 +987,14 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   const cards = [
     {
       key: "tasks",
-      label:
-        attemptedTasks !== null && attemptedTasks < totalTasks
-          ? "Attempted/Expected"
-          : "Total Tasks",
-      value:
-        attemptedTasks !== null && attemptedTasks < totalTasks
-          ? `${formatCount(attemptedTasks)}/${formatCount(totalTasks)}`
-          : formatCount(totalTasks),
+      label: "Total Tasks",
+      value: formatCount(totalTasks),
       icon: PiClock,
       wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass:
-        attemptedTasks !== null && attemptedTasks < totalTasks
-          ? "whitespace-nowrap text-xs tracking-[0.14em]"
-          : "",
+      labelTextClass: "",
     },
     {
       key: "websites",
@@ -1014,7 +1005,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "whitespace-nowrap text-[11px] tracking-[0.1em]",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
     },
     {
       key: "success",
