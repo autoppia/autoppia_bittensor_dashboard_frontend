@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { agentRunsRepository } from '@/repositories/agent-runs/agent-runs.repository';
 import type {
-  
+
   AgentRunStats,
   AgentRunSummary,
   AgentRunPersonas,
@@ -87,6 +87,9 @@ export function useAgentRunComplete(runId: string) {
       validator: any;
       miner: any;
       zeroReason?: string | null;
+      earlyStopReason?: string | null;
+      earlyStopMessage?: string | null;
+      tasksAttempted?: number | null;
       isReused?: boolean;
       reusedFromAgentRunId?: string | null;
       reusedFrom?: {

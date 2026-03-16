@@ -293,6 +293,7 @@ export interface AgentRunOverview {
   startTime: string | null;
   endTime?: string | null;
   totalTasks: number;
+  tasksAttempted?: number | null;
   completedTasks: number;
   successfulTasks: number;
   failedTasks: number;
@@ -304,6 +305,8 @@ export interface AgentRunOverview {
   websitesCount?: number;
   totalWebsites?: number;
   zeroReason?: string | null;
+  earlyStopReason?: string | null;
+  earlyStopMessage?: string | null;
   /** @deprecated use averageReward */
   reward?: number;
   /** @deprecated use averageReward */
@@ -527,6 +530,7 @@ export interface AgentRunsByRoundValidatorEntry {
   run_score: number | null;
   run_time: number | null;
   run_total_tasks: number;
+  run_tasks_attempted?: number | null;
   run_success_tasks: number;
   run_failed_tasks: number;
   run_elapsed_sec: number | null;
@@ -534,6 +538,9 @@ export interface AgentRunsByRoundValidatorEntry {
   run_websites_count: number;
   run_started_at: string | null;
   run_ended_at: string | null;
+  run_zero_reason?: string | null;
+  run_early_stop_reason?: string | null;
+  run_early_stop_message?: string | null;
 }
 
 export interface AgentRunsByRoundEntry {

@@ -402,6 +402,8 @@ export interface TaskSearchParams {
   minerUid?: number;
   minScore?: number;
   maxScore?: number;
+  /** When true, filter to tasks with reward > 0 (success) */
+  successOnly?: boolean;
   startDate?: string;
   endDate?: string;
   page?: number;

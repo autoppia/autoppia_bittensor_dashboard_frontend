@@ -170,6 +170,7 @@ export default function TaskSearch() {
   const [minerUidInput, setMinerUidInput] = useState<string>("");
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
+  const [successOnly, setSuccessOnly] = useState(false);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
   const [availableWebsites, setAvailableWebsites] =
@@ -195,8 +196,9 @@ export default function TaskSearch() {
         minerUid: minerUidInput.trim(),
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
+        successOnly,
       }),
-      [agentRunInput, minerUidInput, selectedWebsite, selectedUseCase]
+      [agentRunInput, minerUidInput, selectedWebsite, selectedUseCase, successOnly]
     ),
     400
   );
@@ -262,6 +264,7 @@ export default function TaskSearch() {
                 : Number(debouncedFilters.minerUid),
             website: debouncedFilters.website || undefined,
             useCase: debouncedFilters.useCase || undefined,
+            successOnly: debouncedFilters.successOnly || undefined,
             page: currentPage,
             limit: currentLimit,
             includeDetails: false,
@@ -308,6 +311,7 @@ export default function TaskSearch() {
               : Number(debouncedFilters.minerUid),
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,
+          successOnly: debouncedFilters.successOnly || undefined,
           page: currentPage,
           limit: currentLimit,
           includeDetails: false,
@@ -411,6 +415,7 @@ export default function TaskSearch() {
     setMinerUidInput("");
     setSelectedWebsite("");
     setSelectedUseCase("");
+    setSuccessOnly(false);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
     setHasSearched(false);
@@ -428,7 +433,8 @@ export default function TaskSearch() {
     agentRunInput !== "" ||
     minerUidInput !== "" ||
     selectedWebsite !== "" ||
-    selectedUseCase !== "";
+    selectedUseCase !== "" ||
+    successOnly;
 
   const formattedWebsites = useMemo(
     () =>
@@ -636,6 +642,26 @@ export default function TaskSearch() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2 flex flex-col justify-end">
+                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-only">
+                  SUCCESS
+                </label>
+                <label
+                  id="task-search-success-only"
+                  htmlFor="task-search-success-checkbox"
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 cursor-pointer hover:border-emerald-500/40 transition-all duration-300 backdrop-blur-md"
+                >
+                  <input
+                    id="task-search-success-checkbox"
+                    type="checkbox"
+                    checked={successOnly}
+                    onChange={(e) => setSuccessOnly(e.target.checked)}
+                    className="w-4 h-4 rounded border-emerald-400 bg-emerald-500/30 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm">Reward &gt; 0</span>
+                </label>
               </div>
             </div>
           </div>
