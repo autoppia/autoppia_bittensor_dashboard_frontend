@@ -1051,8 +1051,10 @@ function AgentValidators({
       <div className="space-y-8">
         {visibleRounds.map((roundEntry) => {
           const consensus = roundEntry.consensus;
+          const isRoundFinished =
+            String(roundEntry.round_status ?? "").toLowerCase() === "finished";
           const hasConsensus =
-            roundEntry.post_consensus_available && String(roundEntry.round_status ?? "").toLowerCase() === "finished";
+            roundEntry.post_consensus_available && isRoundFinished;
           const validatorsWithRuns = roundEntry.validators.filter((validator) =>
             Boolean(validator.run_id)
           );
@@ -1075,6 +1077,22 @@ function AgentValidators({
                 </Text>
               </div>
 
+              {!isRoundFinished ? (
+                <div className="rounded-2xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-8 sm:p-10">
+                  <div className="mx-auto flex max-w-2xl flex-col items-center justify-center text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-amber-300/30 bg-amber-500/15 shadow-lg shadow-amber-500/10">
+                      <PiPulseDuotone className="h-8 w-8 text-amber-200" />
+                    </div>
+                    <Text className="text-2xl font-black text-white">
+                      Round in progress
+                    </Text>
+                    <Text className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
+                      This round is still running. Local and consensus metrics stay hidden until the round finishes,
+                      so this view does not show partial results that could be misleading.
+                    </Text>
+                  </div>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
                 {/* Consensus card */}
                 {hasConsensus && (
@@ -1207,6 +1225,7 @@ function AgentValidators({
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })}
