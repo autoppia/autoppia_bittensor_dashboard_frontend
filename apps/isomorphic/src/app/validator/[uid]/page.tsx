@@ -52,7 +52,7 @@ function CustomMinerTooltip({ active, payload }: any) {
   const reward = minerData?.score ?? 0;
   const name = minerData?.name ?? `Miner ${minerData?.uid}`;
   const uid = minerData?.uid;
-  
+
   return (
     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
       <div className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
@@ -72,7 +72,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalScore.toFixed(2)}%
           </span>
         </div>
-        
+
         {/* Time (eval_time) */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -86,7 +86,7 @@ function CustomMinerTooltip({ active, payload }: any) {
             {evalTime.toFixed(2)}s
           </span>
         </div>
-        
+
         {/* Reward */}
         <div className="chart-tooltip-item flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -109,9 +109,9 @@ function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
   // For very small values (like stake), show more decimal places
   if (value > 0 && value < 0.01) {
-    return value.toLocaleString("en-US", { 
+    return value.toLocaleString("en-US", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 8 
+      maximumFractionDigits: 8
     });
   }
   // For normal values, show up to 2 decimal places
@@ -150,14 +150,14 @@ const WEB_ORDER: Record<string, number> = {
 function getWebOrder(webId: string): number {
   // Try to extract the web name from web_id (e.g., 'web_1_autocinema' -> 'autocinema')
   const lowerWebId = webId.toLowerCase();
-  
+
   // Check if web_id contains any of the web names
   for (const [webName, order] of Object.entries(WEB_ORDER)) {
     if (lowerWebId.includes(webName)) {
       return order;
     }
   }
-  
+
   // If not found, try to extract from web_id pattern
   try {
     const parts = webId.split('_');
@@ -248,20 +248,57 @@ const PROGRESS_COLORS = [
 
 const HIGHLIGHT_COLOR = "#FDF5E6";
 
-// Prepare data for pie chart from stats (only success and zero)
-function preparePieChartData(stats: { successCount: number; zeroCount: number; totalEvaluations: number }) {
+function getSummaryBreakdown(stats: {
+  successCount: number;
+  zeroCount: number;
+  nullCount?: number;
+  failedCount?: number;
+  totalEvaluations: number;
+}) {
+  const total = Math.max(0, stats.totalEvaluations ?? 0);
+  const successCount = Math.max(0, stats.successCount ?? 0);
+  const nonEvaluatedCount = Math.max(0, stats.nullCount ?? 0);
+  const rawFailCount = Math.max(stats.failedCount ?? 0, stats.zeroCount ?? 0);
+  const failCount = Math.min(Math.max(0, rawFailCount), Math.max(0, total - successCount - nonEvaluatedCount));
+
+  return {
+    total,
+    successCount,
+    failCount,
+    nonEvaluatedCount,
+    successPct: total > 0 ? (successCount / total) * 100 : 0,
+    failPct: total > 0 ? (failCount / total) * 100 : 0,
+    nonEvaluatedPct: total > 0 ? (nonEvaluatedCount / total) * 100 : 0,
+  };
+}
+
+// Prepare data for pie chart from stats
+function preparePieChartData(stats: {
+  successCount: number;
+  zeroCount: number;
+  nullCount?: number;
+  failedCount?: number;
+  totalEvaluations: number;
+}) {
+  const breakdown = getSummaryBreakdown(stats);
   const data = [
     {
       name: "Success",
-      value: stats.successCount,
+      value: breakdown.successCount,
       fill: CHART_COLORS.success,
       stroke: CHART_COLORS.success,
     },
     {
-      name: "Zero",
-      value: stats.zeroCount,
-      fill: CHART_COLORS.zero,
-      stroke: CHART_COLORS.zero,
+      name: "Fail",
+      value: breakdown.failCount,
+      fill: CHART_COLORS.failed,
+      stroke: CHART_COLORS.failed,
+    },
+    {
+      name: "Non Evaluated",
+      value: breakdown.nonEvaluatedCount,
+      fill: CHART_COLORS.null,
+      stroke: CHART_COLORS.null,
     },
   ].filter((item) => item.value > 0);
 
@@ -329,7 +366,7 @@ function ValidatorDetailsCard({ data }: Readonly<{ data: ValidatorDetailsData }>
   const validatorImageSrc = data.validatorImage
     ? resolveAssetUrl(data.validatorImage)
     : resolveAssetUrl("/validators/Other.png");
-  
+
   // Get validator name from validators list if available
   const { data: validatorsData } = useValidators({ limit: 100 });
   const validatorInfo = React.useMemo(() => {
@@ -338,9 +375,9 @@ function ValidatorDetailsCard({ data }: Readonly<{ data: ValidatorDetailsData }>
       (v: any) => v.validatorUid === validator.uid
     );
   }, [validatorsData, validator.uid]);
-  
+
   const validatorName = validatorInfo?.name || `Validator ${validator.uid}`;
-  
+
   return (
     <div className="h-full flex flex-col rounded-2xl border border-white/15 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-sm text-white">
       <div className="flex items-center gap-3 mb-5">
@@ -476,12 +513,12 @@ function LastRoundWinnerImage({
 }
 
 // Card component for last round winner
-function LastRoundWinnerCard({ 
-  data, 
-  selectedSeason, 
-  selectedRound 
-}: Readonly<{ 
-  data: ValidatorDetailsData; 
+function LastRoundWinnerCard({
+  data,
+  selectedSeason,
+  selectedRound
+}: Readonly<{
+  data: ValidatorDetailsData;
   selectedSeason: number | null;
   selectedRound: number | null;
 }>) {
@@ -563,16 +600,17 @@ function LastRoundWinnerCard({
 }
 
 // Card component for global stats
-function GlobalStatsCard({ 
-  data, 
-  selectedSeason, 
-  selectedRound 
-}: Readonly<{ 
-  data: ValidatorDetailsData; 
+function GlobalStatsCard({
+  data,
+  selectedSeason,
+  selectedRound
+}: Readonly<{
+  data: ValidatorDetailsData;
   selectedSeason: number | null;
   selectedRound: number | null;
 }>) {
   const stats = data.globalStats;
+  const breakdown = getSummaryBreakdown(stats);
   const roundLabel = (() => {
     if (selectedSeason != null && selectedRound != null) return `Season ${selectedSeason} - Round ${selectedRound}`;
     if (selectedSeason != null) return `Season ${selectedSeason}`;
@@ -597,17 +635,17 @@ function GlobalStatsCard({
           <p className="text-xs uppercase tracking-wide text-white/60 mb-2">Total Evaluations</p>
           <p className="text-3xl font-bold text-white">{formatNumber(stats.totalEvaluations)}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 flex-1">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 flex-1">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-4 border border-emerald-400/30 flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <PiCheckCircle className="h-5 w-5 text-emerald-300" />
               <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Success</p>
             </div>
             <p className="text-xl font-bold text-emerald-300 text-center mb-1">
-              {formatNumber(stats.successCount)}
+              {formatNumber(breakdown.successCount)}
             </p>
             <p className="text-xs text-emerald-200/80 font-semibold">
-              {formatPercentage(stats.successPct)}
+              {formatPercentage(breakdown.successPct)}
             </p>
           </div>
           <div className="rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 p-4 border border-red-400/30 flex flex-col items-center justify-center">
@@ -616,10 +654,22 @@ function GlobalStatsCard({
               <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Fail</p>
             </div>
             <p className="text-xl font-bold text-red-300 text-center mb-1">
-              {formatNumber(stats.zeroCount)}
+              {formatNumber(breakdown.failCount)}
             </p>
             <p className="text-xs text-red-200/80 font-semibold">
-              {formatPercentage(stats.zeroPct)}
+              {formatPercentage(breakdown.failPct)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-gradient-to-br from-slate-500/20 to-white/10 p-4 border border-slate-300/20 flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <PiClock className="h-5 w-5 text-slate-200" />
+              <p className="text-[11px] uppercase tracking-wide text-white/70 font-semibold">Non Evaluated</p>
+            </div>
+            <p className="text-xl font-bold text-slate-100 text-center mb-1">
+              {formatNumber(breakdown.nonEvaluatedCount)}
+            </p>
+            <p className="text-xs text-slate-200/80 font-semibold">
+              {formatPercentage(breakdown.nonEvaluatedPct)}
             </p>
           </div>
         </div>
@@ -661,7 +711,7 @@ function TaskRow({ task }: Readonly<{ task: TaskStats }>) {
 // Use case row
 function UseCaseRow({ useCase }: Readonly<{ useCase: UseCaseStats }>) {
   const [isTasksExpanded, setIsTasksExpanded] = useState(false);
-  
+
   const getBadgeStatus = () => {
     if (useCase.successPct < 10 || useCase.zeroPct > 80) {
       return { type: "danger", text: "Critical" };
@@ -937,7 +987,7 @@ function PerformanceAnalytics({
             // Otherwise render web card
             // Find the web data to get webVersion
             const itemWebId = "webId" in item ? (item as { name: string; webId?: string }).webId : undefined;
-            const webData = data.webs.find((w) => 
+            const webData = data.webs.find((w) =>
               capitalizeWebName(w.webName || w.webId) === item.name || (itemWebId != null && w.webId === itemWebId)
             );
             const webCardKey = itemWebId ?? item.name;
@@ -1072,6 +1122,8 @@ function SummarySection({
           ? {
               successCount: web.successCount,
               zeroCount: web.zeroCount,
+              nullCount: web.nullCount,
+              failedCount: web.failedCount,
               totalEvaluations: web.totalEvaluations,
               successPct: web.successPct,
             }
@@ -1080,12 +1132,13 @@ function SummarySection({
     : data.globalStats;
 
   const pieData = preparePieChartData(stats);
+  const breakdown = getSummaryBreakdown(stats);
   const pieLabelContextValue = useMemo(
     () => ({
-      value: formatPercentage(stats.successPct),
-      total: formatNumber(stats.totalEvaluations),
+      value: formatPercentage(breakdown.successPct),
+      total: formatNumber(breakdown.total),
     }),
-    [stats.successPct, stats.totalEvaluations]
+    [breakdown.successPct, breakdown.total]
   );
   const displayData = selectedWeb && selectedWeb !== "__all__"
     ? (() => {
@@ -1118,7 +1171,7 @@ function SummarySection({
         className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full blur-3xl"
         style={{ backgroundColor: "rgba(253, 245, 230, 0.18)" }}
       />
-      
+
       {/* Header */}
       <div className="relative mb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -1143,19 +1196,19 @@ function SummarySection({
 
       {/* Content */}
       <div className="relative text-white/80">
-        <div className="h-[240px] w-full @sm:py-3">
+        <div className="h-[260px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
             <SummaryPieLabelContext.Provider value={pieLabelContextValue}>
               <PieChart>
                 <Pie
                   data={pieData}
-                  innerRadius={85}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  cornerRadius={30}
+                  innerRadius={72}
+                  outerRadius={102}
+                  paddingAngle={4}
+                  cornerRadius={18}
                   dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
+                  stroke="rgba(15,23,42,0.45)"
+                  strokeWidth={3}
                   onClick={(clickedData, index) => {
                     // Handle click on pie chart segment
                     if (selectedWeb && selectedWeb !== "__all__") {
@@ -1177,9 +1230,57 @@ function SummarySection({
                   />
                 ))}
               </Pie>
-            </PieChart>
+              </PieChart>
             </SummaryPieLabelContext.Provider>
           </ResponsiveContainer>
+        </div>
+        <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[
+            {
+              label: "Success",
+              value: breakdown.successCount,
+              pct: breakdown.successPct,
+              color: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+              dot: CHART_COLORS.success,
+            },
+            {
+              label: "Fail",
+              value: breakdown.failCount,
+              pct: breakdown.failPct,
+              color: "border-orange-400/30 bg-orange-500/10 text-orange-100",
+              dot: CHART_COLORS.failed,
+            },
+            {
+              label: "Non Evaluated",
+              value: breakdown.nonEvaluatedCount,
+              pct: breakdown.nonEvaluatedPct,
+              color: "border-slate-300/20 bg-slate-500/10 text-slate-100",
+              dot: CHART_COLORS.null,
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className={`rounded-2xl border px-4 py-3 backdrop-blur-sm ${item.color}`}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: item.dot }}
+                />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
+                  {item.label}
+                </span>
+              </div>
+              <div className="mt-2 flex items-end justify-between gap-3">
+                <span className="text-2xl font-bold text-white">
+                  {formatNumber(item.value)}
+                </span>
+                <span className="text-xs font-semibold text-white/70">
+                  {formatPercentage(item.pct)}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
         {displayData.length > 0 ? (
           <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm">
@@ -1248,7 +1349,7 @@ export default function ValidatorDetailsPage() {
   const [selectedWeb, setSelectedWeb] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
-  
+
   // Get all validators for the selector
   const {
     data: validatorsData,
@@ -1306,11 +1407,11 @@ export default function ValidatorDetailsPage() {
     return (
       <div className="w-full max-w-[1280px] mx-auto bg-transparent">
         <PageHeader title="Validator Details" />
-        
+
         <ValidatorsSelectorPlaceholder />
-        
+
         <ValidatorCardsPlaceholder />
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
           <PerformanceAnalyticsPlaceholder />
           <SummaryPlaceholder />
@@ -1354,17 +1455,17 @@ export default function ValidatorDetailsPage() {
           <ValidatorDetailsCard data={data} />
         </div>
         <div className="h-full">
-          <GlobalStatsCard 
-            data={data} 
-            selectedSeason={selectedSeason} 
-            selectedRound={selectedRound} 
+          <GlobalStatsCard
+            data={data}
+            selectedSeason={selectedSeason}
+            selectedRound={selectedRound}
           />
         </div>
         <div className="h-full">
-          <LastRoundWinnerCard 
-            data={data} 
-            selectedSeason={selectedSeason} 
-            selectedRound={selectedRound} 
+          <LastRoundWinnerCard
+            data={data}
+            selectedSeason={selectedSeason}
+            selectedRound={selectedRound}
           />
         </div>
       </div>
