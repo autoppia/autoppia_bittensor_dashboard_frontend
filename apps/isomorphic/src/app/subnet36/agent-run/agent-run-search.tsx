@@ -18,10 +18,11 @@ import {
   PiCaretDownDuotone,
   PiInfoDuotone,
 } from "react-icons/pi";
+import { LuSearch } from "react-icons/lu";
 import { overviewRepository } from "@/repositories/overview/overview.repository";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
-import { useRoundsData } from "@/services/hooks/useAgents";
+import { useRoundsData, useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -175,11 +176,14 @@ export default function AgentRunSearch() {
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedRound, setSelectedRound] = useState<number | undefined>();
   const [selectedValidator, setSelectedValidator] = useState<string>("");
-  const [agentInput, setAgentInput] = useState<string>("");
+  const [selectedMinerUid, setSelectedMinerUid] = useState<number | null>(null);
+  const [selectedMinerName, setSelectedMinerName] = useState<string>("");
+  const [minerSearchQuery, setMinerSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
   const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
   const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
+  const [isMinerDropdownOpen, setIsMinerDropdownOpen] = useState(false);
   const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(
     null
   );
@@ -190,9 +194,24 @@ export default function AgentRunSearch() {
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
   const seasonDropdownRef = useRef<HTMLDivElement>(null);
   const roundDropdownRef = useRef<HTMLDivElement>(null);
+  const minerDropdownRef = useRef<HTMLDivElement>(null);
 
   // Get available rounds
   const { data: roundsData, loading: roundsLoading } = useRoundsData();
+  const { data: seasonRankData } = useSeasonRank("latest");
+  const minerOptions = useMemo(() => {
+    const miners = seasonRankData?.miners ?? [];
+    return miners.map((miner) => ({ uid: miner.uid, name: miner.name }));
+  }, [seasonRankData?.miners]);
+  const filteredMinerOptions = useMemo(() => {
+    const query = minerSearchQuery.trim().toLowerCase();
+    if (!query) return minerOptions;
+    return minerOptions.filter(
+      (miner) =>
+        miner.name.toLowerCase().includes(query) ||
+        miner.uid.toString().includes(query)
+    );
+  }, [minerOptions, minerSearchQuery]);
 
   // Parse available rounds to extract seasons
   const seasonOptions = useMemo(() => {
@@ -236,9 +255,9 @@ export default function AgentRunSearch() {
         season: selectedSeason,
         round: selectedRound,
         validator: selectedValidator.trim(),
-        agent: agentInput.trim(),
+        agent: selectedMinerUid != null ? `agent-${selectedMinerUid}` : "",
       }),
-      [selectedSeason, selectedRound, selectedValidator, agentInput]
+      [selectedSeason, selectedRound, selectedValidator, selectedMinerUid]
     ),
     400
   );
@@ -292,16 +311,32 @@ export default function AgentRunSearch() {
       ) {
         setIsRoundDropdownOpen(false);
       }
+      if (
+        minerDropdownRef.current &&
+        !minerDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsMinerDropdownOpen(false);
+      }
     };
 
-    if (isValidatorDropdownOpen || isSeasonDropdownOpen || isRoundDropdownOpen) {
+    if (
+      isValidatorDropdownOpen ||
+      isSeasonDropdownOpen ||
+      isRoundDropdownOpen ||
+      isMinerDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isValidatorDropdownOpen, isSeasonDropdownOpen, isRoundDropdownOpen]);
+  }, [
+    isValidatorDropdownOpen,
+    isSeasonDropdownOpen,
+    isRoundDropdownOpen,
+    isMinerDropdownOpen,
+  ]);
 
   useEffect(() => {
     let isActive = true;
@@ -621,7 +656,8 @@ export default function AgentRunSearch() {
         ? `${selectedSeason}/${selectedRound}`
         : undefined;
     const validatorIdParam = selectedValidator || undefined;
-    const agentIdParam = agentInput.trim() || undefined;
+    const agentIdParam =
+      selectedMinerUid != null ? `agent-${selectedMinerUid}` : undefined;
 
     if (hasRunId) {
       setHasSearched(true);
@@ -683,10 +719,13 @@ export default function AgentRunSearch() {
     setSelectedSeason(undefined);
     setSelectedRound(undefined);
     setSelectedValidator("");
-    setAgentInput("");
+    setSelectedMinerUid(null);
+    setSelectedMinerName("");
+    setMinerSearchQuery("");
     setIsValidatorDropdownOpen(false);
     setIsSeasonDropdownOpen(false);
     setIsRoundDropdownOpen(false);
+    setIsMinerDropdownOpen(false);
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
@@ -702,7 +741,7 @@ export default function AgentRunSearch() {
     selectedSeason !== undefined ||
     selectedRound !== undefined ||
     selectedValidator !== "" ||
-    agentInput !== "";
+    selectedMinerUid !== null;
 
   const handlePageChange = (nextPage: number) => {
     if (
@@ -1012,23 +1051,85 @@ export default function AgentRunSearch() {
                   </div>
                 </div>
 
-                {/* Agent Filter */}
+                {/* Miner Filter */}
                 <div className="space-y-2">
-                  <label id="filter-agent-label" htmlFor="filter-agent-input" className="text-sm font-medium text-purple-300">
-                    AGENT
+                  <label id="filter-agent-label" htmlFor="filter-agent-button" className="text-sm font-medium text-purple-300">
+                    MINER
                   </label>
-                  <div className="relative">
-                    <input
-                      id="filter-agent-input"
-                      type="text"
-                      value={agentInput}
-                      onChange={(e) => setAgentInput(e.target.value)}
-                      placeholder="Enter Agent UID or Run UID"
-                      className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm placeholder-gray-400 focus:border-purple-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <PiRobotDuotone className="w-4 h-4 text-purple-400" />
-                    </div>
+                  <div className="relative" ref={minerDropdownRef}>
+                    <button
+                      id="filter-agent-button"
+                      type="button"
+                      onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
+                      className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    >
+                      <span className="truncate">
+                        {selectedMinerUid != null && selectedMinerName
+                          ? `${selectedMinerName} (UID ${selectedMinerUid})`
+                          : "All Miners"}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`w-4 h-4 text-purple-400 shrink-0 ml-2 transition-transform duration-200 ${isMinerDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isMinerDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-purple-500/30 rounded-xl overflow-hidden shadow-xl z-50 max-h-72 flex flex-col">
+                        <div className="p-2 border-b border-purple-500/20 sticky top-0 bg-gray-900">
+                          <div className="relative">
+                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                            <input
+                              type="text"
+                              value={minerSearchQuery}
+                              onChange={(e) => setMinerSearchQuery(e.target.value)}
+                              placeholder="Search miners..."
+                              className="w-full pl-8 pr-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-200 text-sm placeholder-purple-400/60 focus:border-purple-500 outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedMinerUid(null);
+                              setSelectedMinerName("");
+                              setMinerSearchQuery("");
+                              setIsMinerDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                          >
+                            All Miners
+                          </button>
+                          {filteredMinerOptions.length === 0 ? (
+                            <div className="px-3 py-4 text-purple-400/70 text-sm text-center">
+                              No miners match your search
+                            </div>
+                          ) : (
+                            filteredMinerOptions.map((miner) => (
+                              <button
+                                key={miner.uid}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMinerUid(miner.uid);
+                                  setSelectedMinerName(miner.name);
+                                  setMinerSearchQuery("");
+                                  setIsMinerDropdownOpen(false);
+                                }}
+                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${
+                                  selectedMinerUid === miner.uid
+                                    ? "bg-purple-500/30 text-purple-100"
+                                    : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"
+                                }`}
+                              >
+                                <span className="font-medium">{miner.name}</span>
+                                <span className="text-purple-400/80 text-xs ml-1">
+                                  (UID {miner.uid})
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

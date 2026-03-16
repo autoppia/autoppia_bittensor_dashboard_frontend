@@ -25,6 +25,8 @@ import {
   PiGlobeDuotone,
   PiCodeDuotone,
 } from "react-icons/pi";
+import { LuSearch } from "react-icons/lu";
+import { useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -167,10 +169,16 @@ export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [agentRunInput, setAgentRunInput] = useState<string>("");
-  const [minerUidInput, setMinerUidInput] = useState<string>("");
+  const [selectedAgentUid, setSelectedAgentUid] = useState<number | null>(null);
+  const [selectedAgentName, setSelectedAgentName] = useState<string>("");
+  const [agentSearchQuery, setAgentSearchQuery] = useState("");
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
-  const [successOnly, setSuccessOnly] = useState(false);
+  const [successMode, setSuccessMode] = useState<
+    "all" | "successful" | "non_successful"
+  >("all");
+  const [isSuccessDropdownOpen, setIsSuccessDropdownOpen] = useState(false);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
   const [availableWebsites, setAvailableWebsites] =
@@ -187,18 +195,34 @@ export default function TaskSearch() {
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
+  const agentDropdownRef = useRef<HTMLDivElement>(null);
+  const successDropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: seasonRankData } = useSeasonRank("latest");
+  const agentsList = useMemo(() => {
+    const miners = seasonRankData?.miners ?? [];
+    return miners.map((m) => ({ uid: m.uid, name: m.name }));
+  }, [seasonRankData?.miners]);
+  const filteredAgentsForDropdown = useMemo(() => {
+    const q = agentSearchQuery.trim().toLowerCase();
+    if (!q) return agentsList;
+    return agentsList.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) || a.uid.toString().includes(q)
+    );
+  }, [agentsList, agentSearchQuery]);
 
   const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
   const debouncedFilters = useDebouncedValue(
     useMemo(
       () => ({
         agentRun: agentRunInput.trim(),
-        minerUid: minerUidInput.trim(),
+        selectedAgentUid,
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
-        successOnly,
+        successMode,
       }),
-      [agentRunInput, minerUidInput, selectedWebsite, selectedUseCase, successOnly]
+      [agentRunInput, selectedAgentUid, selectedWebsite, selectedUseCase, successMode]
     ),
     400
   );
@@ -258,13 +282,10 @@ export default function TaskSearch() {
           const response = await tasksRepository.searchTasks({
             query: debouncedSearchTerm,
             agentRunId: debouncedFilters.agentRun || undefined,
-            minerUid:
-              debouncedFilters.minerUid === ""
-                ? undefined
-                : Number(debouncedFilters.minerUid),
+            minerUid: debouncedFilters.selectedAgentUid ?? undefined,
             website: debouncedFilters.website || undefined,
             useCase: debouncedFilters.useCase || undefined,
-            successOnly: debouncedFilters.successOnly || undefined,
+            successMode: debouncedFilters.successMode,
             page: currentPage,
             limit: currentLimit,
             includeDetails: false,
@@ -305,13 +326,10 @@ export default function TaskSearch() {
       try {
         const response = await tasksRepository.searchTasks({
           agentRunId: debouncedFilters.agentRun || undefined,
-          minerUid:
-            debouncedFilters.minerUid === ""
-              ? undefined
-              : Number(debouncedFilters.minerUid),
+          minerUid: debouncedFilters.selectedAgentUid ?? undefined,
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,
-          successOnly: debouncedFilters.successOnly || undefined,
+          successMode: debouncedFilters.successMode,
           page: currentPage,
           limit: currentLimit,
           includeDetails: false,
@@ -362,16 +380,33 @@ export default function TaskSearch() {
       ) {
         setIsUseCaseDropdownOpen(false);
       }
+      if (
+        agentDropdownRef.current &&
+        !agentDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsAgentDropdownOpen(false);
+      }
+      if (
+        successDropdownRef.current &&
+        !successDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSuccessDropdownOpen(false);
+      }
     };
 
-    if (isWebsiteDropdownOpen || isUseCaseDropdownOpen) {
+    if (
+      isWebsiteDropdownOpen ||
+      isUseCaseDropdownOpen ||
+      isAgentDropdownOpen ||
+      isSuccessDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
+  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen, isAgentDropdownOpen, isSuccessDropdownOpen]);
 
   useEffect(() => {
     const baseUseCases = selectedWebsite
@@ -412,10 +447,14 @@ export default function TaskSearch() {
   const clearFilters = () => {
     setSearchTerm("");
     setAgentRunInput("");
-    setMinerUidInput("");
+    setSelectedAgentUid(null);
+    setSelectedAgentName("");
+    setAgentSearchQuery("");
+    setIsAgentDropdownOpen(false);
     setSelectedWebsite("");
     setSelectedUseCase("");
-    setSuccessOnly(false);
+    setSuccessMode("all");
+    setIsSuccessDropdownOpen(false);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
     setHasSearched(false);
@@ -431,10 +470,10 @@ export default function TaskSearch() {
   const hasActiveFilters =
     searchTerm !== "" ||
     agentRunInput !== "" ||
-    minerUidInput !== "" ||
+    selectedAgentUid != null ||
     selectedWebsite !== "" ||
     selectedUseCase !== "" ||
-    successOnly;
+    successMode !== "all";
 
   const formattedWebsites = useMemo(
     () =>
@@ -471,7 +510,7 @@ export default function TaskSearch() {
               </h2>
             </div>
             <p className="text-cyan-300 text-sm">
-              Search by Evaluation ID or filter by Agent Run, Miner UID, Website, and Use Case
+              Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
             </p>
           </div>
 
@@ -498,6 +537,85 @@ export default function TaskSearch() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
               <div className="space-y-2">
+                <label className="text-sm font-medium text-emerald-300 block" htmlFor="task-search-agent-button">
+                  MINER
+                </label>
+                <div className="relative" ref={agentDropdownRef}>
+                  <button
+                    id="task-search-agent-button"
+                    type="button"
+                    onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                  >
+                    <span className="truncate">
+                      {selectedAgentUid != null && selectedAgentName
+                        ? `${selectedAgentName} (${selectedAgentUid})`
+                        : "All Miners"}
+                    </span>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-emerald-400 shrink-0 ml-2 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isAgentDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-emerald-500/30 rounded-xl overflow-hidden shadow-xl z-50 max-h-72 flex flex-col">
+                      <div className="p-2 border-b border-emerald-500/20 sticky top-0 bg-gray-900">
+                        <div className="relative">
+                          <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <input
+                            type="text"
+                            value={agentSearchQuery}
+                            onChange={(e) => setAgentSearchQuery(e.target.value)}
+                            placeholder="Search agents..."
+                            className="w-full pl-8 pr-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-200 text-sm placeholder-emerald-400/60 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgentUid(null);
+                            setSelectedAgentName("");
+                            setIsAgentDropdownOpen(false);
+                            setAgentSearchQuery("");
+                          }}
+                          className="w-full px-3 py-2 text-left text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors duration-200 border-b border-emerald-500/20"
+                        >
+                          All Miners
+                        </button>
+                        {filteredAgentsForDropdown.length === 0 ? (
+                          <div className="px-3 py-4 text-emerald-400/70 text-sm text-center">
+                            No miners match your search
+                          </div>
+                        ) : (
+                          filteredAgentsForDropdown.map((agent) => (
+                            <button
+                              key={agent.uid}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAgentUid(agent.uid);
+                                setSelectedAgentName(agent.name);
+                                setIsAgentDropdownOpen(false);
+                                setAgentSearchQuery("");
+                              }}
+                              className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                                selectedAgentUid === agent.uid
+                                  ? "bg-emerald-500/30 text-emerald-100"
+                                  : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                              }`}
+                            >
+                              <span className="font-medium">{agent.name}</span>
+                              <span className="text-emerald-400/80 text-xs ml-1">(UID {agent.uid})</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <label htmlFor="task-search-agent-run" className="text-sm font-medium text-emerald-300">
                   AGENT RUN
                 </label>
@@ -507,33 +625,11 @@ export default function TaskSearch() {
                     type="text"
                     value={agentRunInput}
                     onChange={(e) => setAgentRunInput(e.target.value)}
-                    placeholder="Enter Agent Run UID"
+                    placeholder="Run UID (optional)"
                     className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="task-search-miner-uid" className="text-sm font-medium text-teal-300">
-                  MINER UID
-                </label>
-                <div className="relative">
-                  <input
-                    id="task-search-miner-uid"
-                    type="text"
-                    inputMode="numeric"
-                    value={minerUidInput}
-                    onChange={(e) =>
-                      setMinerUidInput(e.target.value.replace(/[^\d]/g, ""))
-                    }
-                    placeholder="Enter Miner UID"
-                    className="w-full px-3 py-2 bg-teal-500/20 border-2 border-teal-500/20 rounded-xl text-teal-300 text-sm placeholder-gray-400 focus:border-teal-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <PiHashDuotone className="w-4 h-4 text-teal-400" />
                   </div>
                 </div>
               </div>
@@ -645,23 +741,53 @@ export default function TaskSearch() {
               </div>
 
               <div className="space-y-2 flex flex-col justify-end">
-                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-only">
+                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-button">
                   SUCCESS
                 </label>
-                <label
-                  id="task-search-success-only"
-                  htmlFor="task-search-success-checkbox"
-                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 cursor-pointer hover:border-emerald-500/40 transition-all duration-300 backdrop-blur-md"
-                >
-                  <input
-                    id="task-search-success-checkbox"
-                    type="checkbox"
-                    checked={successOnly}
-                    onChange={(e) => setSuccessOnly(e.target.checked)}
-                    className="w-4 h-4 rounded border-emerald-400 bg-emerald-500/30 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span className="text-sm">Reward &gt; 0</span>
-                </label>
+                <div className="relative" ref={successDropdownRef}>
+                  <button
+                    id="task-search-success-button"
+                    type="button"
+                    onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
+                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                  >
+                    <span>
+                      {successMode === "all" && "All Tasks"}
+                      {successMode === "successful" && "Successful Tasks"}
+                      {successMode === "non_successful" && "Non Successful Tasks"}
+                    </span>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isSuccessDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-emerald-500/20 rounded-xl overflow-hidden shadow-xl z-50">
+                      {[
+                        { value: "all", label: "All Tasks" },
+                        { value: "successful", label: "Successful Tasks" },
+                        { value: "non_successful", label: "Non Successful Tasks" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setSuccessMode(
+                              option.value as "all" | "successful" | "non_successful"
+                            );
+                            setIsSuccessDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                            successMode === option.value
+                              ? "bg-emerald-500/30 text-emerald-100"
+                              : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
