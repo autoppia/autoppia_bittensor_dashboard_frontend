@@ -1055,9 +1055,9 @@ function AgentValidators({
             String(roundEntry.round_status ?? "").toLowerCase() === "finished";
           const hasConsensus =
             roundEntry.post_consensus_available && isRoundFinished;
-          const validatorsWithRuns = roundEntry.validators.filter((validator) =>
-            Boolean(validator.run_id)
-          );
+          const validatorsWithRuns = isRoundFinished
+            ? roundEntry.validators.filter((validator) => Boolean(validator.run_id))
+            : [];
 
           return (
             <div key={roundEntry.round_key} className="space-y-4">
@@ -1073,7 +1073,9 @@ function AgentValidators({
                   )}
                 </div>
                 <Text className="text-xs sm:text-sm text-white/60">
-                  {validatorsWithRuns.length} validator run{validatorsWithRuns.length === 1 ? "" : "s"}
+                  {isRoundFinished
+                    ? `${validatorsWithRuns.length} validator run${validatorsWithRuns.length === 1 ? "" : "s"}`
+                    : "Results hidden until round finishes"}
                 </Text>
               </div>
 
