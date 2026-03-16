@@ -118,6 +118,7 @@ const chipBase =
   "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
 const chipActive =
   "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
+const BURN_UID = 5;
 const chipCompleted =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
@@ -2293,7 +2294,9 @@ function RoundTopMinersInline({
         (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
       );
       if (validator?.miners && Array.isArray(validator.miners)) {
-        return validator.miners.map((miner: any) => ({
+        return validator.miners
+          .filter((miner: any) => Number(miner?.uid) !== BURN_UID)
+          .map((miner: any) => ({
           uid: miner.uid,
           name: miner.name,
           imageUrl: miner.image,
@@ -2301,13 +2304,13 @@ function RoundTopMinersInline({
           reward: miner.best_local_reward ?? miner.local_avg_reward,
           ranking: miner.local_rank,
           validatorId: selectedValidator.id,
-        }));
+          }));
       }
     }
     // Fallback al endpoint antiguo
     const miners =
       minersData?.data?.miners && Array.isArray(minersData.data.miners)
-        ? minersData.data.miners
+        ? minersData.data.miners.filter((miner: any) => Number(miner?.uid) !== BURN_UID)
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
