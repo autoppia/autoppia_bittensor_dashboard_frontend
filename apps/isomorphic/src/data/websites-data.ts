@@ -4060,6 +4060,171 @@ export const websitesData: WebsiteDataType[] = [
     isComingSoon: true,
     comingSoonNote: "Travel booking platform with flights, hotels, and reservations coming soon.",
   },
+  {
+    name: "AutoDiscord",
+    slug: "autodiscord",
+    portValidator: "8016",
+    href: "#",
+    origin: "Discord",
+    totalTasks: [0, 0, 0],
+    image: "/images/web_16.png",
+    color: "#5865F2",
+    description: "Community and messaging platform with servers, channels, and voice.",
+    avgDifficulty: 6.5,
+    completionRate: 0,
+    useCases: [
+      {
+        name: "Channel Management",
+        examplePrompt: [
+          "Create a new text channel in the general category",
+          "Set up a voice channel for the team meeting",
+        ],
+      },
+      {
+        name: "Message & DM",
+        examplePrompt: [
+          "Send a message to the announcements channel",
+          "DM the user list from the members panel",
+        ],
+      },
+      {
+        name: "Server Settings",
+        examplePrompt: [
+          "Change server name and icon",
+          "Update role permissions for moderators",
+        ],
+      },
+    ],
+    isComingSoon: true,
+    comingSoonNote: "Discord-like community and messaging platform coming soon.",
+  },
+  {
+    name: "AutoChess",
+    slug: "autochess",
+    portValidator: "8017",
+    href: "#",
+    origin: "Chess Platform",
+    totalTasks: [0, 0, 0],
+    image: "/images/web_17.png",
+    color: "#1E293B",
+    description: "Chess platform for playing games, puzzles, and analyzing positions.",
+    avgDifficulty: 9.75,
+    completionRate: 0,
+    useCases: [
+      {
+        name: "SEARCH_TOURNAMENT",
+        examplePrompt: [
+          "Search for tournaments where name contains 'Blitz'",
+          "Search tournaments where status equals 'open' and format equals 'rapid'",
+          "Search for upcoming tournaments in my region",
+          "Search tournaments where start_date greater than '2025-03-01'",
+          "Find tournaments where rating_min less than 1600",
+        ],
+      },
+      {
+        name: "FILTER_TOURNAMENT",
+        examplePrompt: [
+          "Filter tournaments by time control where format equals 'blitz'",
+          "Filter tournaments where status equals 'registration_open'",
+          "Filter by rating range where rating_min greater than 1800",
+          "Filter tournaments by date where start_date equals '2025-03-15'",
+          "Show only online tournaments",
+        ],
+      },
+      {
+        name: "VIEW_TOURNAMENT",
+        examplePrompt: [
+          "View tournament details where tournament_name equals 'Spring Championship 2025'",
+          "View tournament where tournament_id equals 'T-001'",
+          "Show me the standings and pairings for the current round",
+          "View tournament schedule and prizes",
+          "Open tournament page for 'Weekly Blitz March'",
+        ],
+      },
+      {
+        name: "SEARCH_PLAYER",
+        examplePrompt: [
+          "Search for player where username contains 'magnus'",
+          "Search players where rating greater than 2400",
+          "Find player by username equals 'chessmaster99'",
+          "Search players where country equals 'Norway'",
+          "Search for player where username equals 'alice_chess'",
+        ],
+      },
+      {
+        name: "VIEW_PLAYER",
+        examplePrompt: [
+          "View player profile where username equals 'chessmaster99'",
+          "View player stats and recent games",
+          "Open profile for player where username contains 'magnus'",
+          "View player rating history and achievements",
+          "Show player profile and game history",
+        ],
+      },
+      {
+        name: "SOLVE_PUZZLE",
+        examplePrompt: [
+          "Solve the current puzzle and show the solution",
+          "Load puzzle where theme equals 'mate in 2'",
+          "Solve puzzle where rating equals 1500",
+          "Show the best move for this puzzle position",
+          "Complete the puzzle and submit the solution",
+        ],
+      },
+      {
+        name: "ANALYZE_GAME",
+        examplePrompt: [
+          "Analyze the current game and show engine evaluation",
+          "Run engine analysis on the last 10 moves",
+          "Analyze game where game_id equals 'G-12345'",
+          "Show best moves and blunders in this game",
+          "Export the game as PGN and run analysis",
+        ],
+      },
+      {
+        name: "LOGIN",
+        examplePrompt: [
+          "Log in with username equals 'player1' and password",
+          "Sign in to my account",
+          "Login where email equals 'user@example.com'",
+          "Log in with my credentials",
+          "Access my account",
+        ],
+      },
+      {
+        name: "LOGOUT",
+        examplePrompt: [
+          "Log out from my account",
+          "Sign out",
+          "End my session",
+          "Logout and return to home",
+          "Disconnect my account",
+        ],
+      },
+      {
+        name: "REGISTRATION",
+        examplePrompt: [
+          "Register a new account with username and email",
+          "Create account where email equals 'newuser@example.com'",
+          "Sign up for the platform",
+          "Complete registration form with my details",
+          "Register as a new player",
+        ],
+      },
+      {
+        name: "FORGOT_PASSWORD",
+        examplePrompt: [
+          "Reset password where email equals 'user@example.com'",
+          "Forgot password - send reset link",
+          "Request password recovery",
+          "Recover my account password",
+          "Send password reset email to my address",
+        ],
+      },
+    ],
+    isComingSoon: true,
+    comingSoonNote: "Chess platform with games, puzzles, and analysis coming soon.",
+  },
 ];
 
 export const websitesDataMap = websitesData.reduce(

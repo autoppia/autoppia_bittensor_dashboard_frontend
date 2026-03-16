@@ -72,6 +72,9 @@ export interface AgentRunListItem {
   successRate?: number | null;
   ranking?: number;
   averageEvaluationTime?: number | null;
+  isReused?: boolean;
+  reusedFromAgentRunId?: string | null;
+  reusedFromRoundDisplay?: string | null;
 }
 
 // ===== AGENT RUN EVALUATION DATA =====

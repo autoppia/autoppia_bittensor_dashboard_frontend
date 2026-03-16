@@ -223,6 +223,13 @@ export interface RoundProgressResponse {
   };
 }
 
+export interface RoundSeasonsResponse {
+  success: boolean;
+  data: {
+    seasons: number[];
+  };
+}
+
 // ===== QUERY PARAMETERS =====
 export interface RoundsListQueryParams {
   page?: number;

@@ -281,6 +281,7 @@ type TaskDetailsDynamicProps = {
     validator?: any;
     miner?: any;
   } | null;
+  evaluationZeroReason?: string | undefined;
 };
 function TaskDetailsDynamic({
   details,
@@ -291,6 +292,7 @@ function TaskDetailsDynamic({
   successCount,
   failCount,
   info,
+  evaluationZeroReason,
 }: Readonly<TaskDetailsDynamicProps>) {
   if (isLoading && !details) {
     return (

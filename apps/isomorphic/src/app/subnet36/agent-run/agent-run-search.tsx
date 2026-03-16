@@ -41,6 +41,19 @@ function useDebouncedValue<T>(value: T, delay: number) {
   return debouncedValue;
 }
 
+function parseSeasonRound(r: unknown): { season: number; round: number } | null {
+  if (typeof r !== "string" || !r.includes("/")) return null;
+  const parts = r.split("/");
+  const season = Number.parseInt(parts[0], 10);
+  const round = Number.parseInt(parts[1], 10);
+  return Number.isFinite(season) && Number.isFinite(round) ? { season, round } : null;
+}
+
+function sanitizeRanking(value: number | undefined | null): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return undefined;
+}
+
 function normalizePercentage(value: number | null | undefined) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return 0;
@@ -205,7 +218,7 @@ export default function AgentRunSearch() {
   const roundOptions = useMemo(() => {
     const rounds = roundsData?.rounds ?? [];
     const currentSeason = selectedSeason;
-    
+
     if (!currentSeason) {
       return [];
     }
@@ -503,7 +516,7 @@ export default function AgentRunSearch() {
     // When search term is empty, use filter-based search
     const resolvedLimit = queryParams.limit ?? DEFAULT_LIMIT;
     // Construct roundId from season and round (format: "season/round")
-    const normalizedRound = 
+    const normalizedRound =
       debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
         ? `${debouncedFilters.season}/${debouncedFilters.round}`
         : undefined;
@@ -596,9 +609,9 @@ export default function AgentRunSearch() {
       successRate,
       overallReward: baseReward,
       ranking: sanitizeRanking(run.ranking),
-      isReused: run.isReused ?? (run as Record<string, unknown>).is_reused ?? false,
-      reusedFromAgentRunId: run.reusedFromAgentRunId ?? (run as Record<string, unknown>).reusedFromAgentRunId ?? (run as Record<string, unknown>).reused_from_agent_run_id ?? null,
-      reusedFromRoundDisplay: run.reusedFromRoundDisplay ?? (run as Record<string, unknown>).reusedFromRoundDisplay ?? (run as Record<string, unknown>).reused_from_round_display ?? null,
+      isReused: Boolean(run.isReused ?? (run as unknown as Record<string, unknown>).is_reused ?? false),
+      reusedFromAgentRunId: (run.reusedFromAgentRunId ?? (run as unknown as Record<string, unknown>).reusedFromAgentRunId ?? (run as unknown as Record<string, unknown>).reused_from_agent_run_id ?? null) as string | null,
+      reusedFromRoundDisplay: (run.reusedFromRoundDisplay ?? (run as unknown as Record<string, unknown>).reusedFromRoundDisplay ?? (run as unknown as Record<string, unknown>).reused_from_round_display ?? null) as string | null,
     };
   };
 

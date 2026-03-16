@@ -28,7 +28,7 @@ try {
 const allowedHosts = new Set<string>(
   [
     ...DEFAULT_ALLOWED_IMAGE_HOSTS,
-    
+
     ...parseHosts(process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS),
     defaultAssetHost,
   ].filter(Boolean)

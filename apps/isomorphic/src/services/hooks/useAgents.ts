@@ -7,8 +7,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { agentsRepository } from '@/repositories/agents/agents.repository';
 import type {
   AgentData,
-  AgentRoundMetrics,
-  RewardRoundDataPoint,
+  AgentPerformanceMetrics,
+  AgentRunOverview,
   AgentsListQueryParams,
   AgentRunsQueryParams,
   AgentPerformanceQueryParams,
@@ -201,21 +201,24 @@ export function useAgents(params?: AgentsListQueryParams) {
 // Hook for specific agent details
 type AgentDetailPayload = {
   agent: AgentData | null;
-  rewardRoundData: RewardRoundDataPoint[];
-  availableRounds?: Array<number | string>;
-  roundMetrics?: AgentRoundMetrics | null;
-  performanceByWebsite?: Array<{
-    website: string;
+  bestRound?: {
+    round: number;
+    post_consensus_avg_reward: number;
+    post_consensus_avg_eval_time: number;
     tasks_received: number;
     tasks_success: number;
-    success_rate: number;
-  }>;
-  avg_cost_per_task?: number | null;
-  is_reused?: boolean;
-  reused_from_agent_run_id?: string | null;
-  reused_from_round?: string | null;
+    validators_count: number;
+    post_consensus_avg_cost?: number | null;
+    performanceByWebsite?: Array<{
+      website: string;
+      tasks_received: number;
+      tasks_success: number;
+      success_rate: number;
+    }>;
+    websites_count?: number;
+    season_leadership?: any;
+  } | null;
   zero_reason?: string | null;
-  season_leadership?: any;
 };
 
 export function useAgent(id?: string | null, params?: { round?: number; season?: number }) {
@@ -225,7 +228,7 @@ export function useAgent(id?: string | null, params?: { round?: number; season?:
 
   const request = useCallback<() => Promise<AgentDetailPayload>>(() => {
     if (!id) {
-      return Promise.resolve({ agent: null, rewardRoundData: [] });
+      return Promise.resolve({ agent: null });
     }
     return agentsRepository.getAgent(id, stableParams);
   }, [id, stableParams]);

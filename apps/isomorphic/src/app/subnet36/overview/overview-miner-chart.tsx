@@ -187,7 +187,20 @@ export default function MinerChart({
       []
     );
 
-    return normalized.sort((a, b) => a.round - b.round);
+    return normalized.sort((a, b) => {
+      const seasonA =
+        typeof a.season === "number" && Number.isFinite(a.season)
+          ? a.season
+          : 0;
+      const seasonB =
+        typeof b.season === "number" && Number.isFinite(b.season)
+          ? b.season
+          : 0;
+      if (seasonA !== seasonB) {
+        return seasonA - seasonB;
+      }
+      return a.round - b.round;
+    });
   }, [leaderboardData?.data?.leaderboard]);
 
   const filteredBySeason = useMemo<NormalizedLeaderboardDatum[]>(() => {
@@ -197,14 +210,48 @@ export default function MinerChart({
     return rawChartData.filter((entry) => entry.season === season);
   }, [rawChartData, season]);
 
-  // When season filter leaves < 2 points, use all data so the chart can render (and show a note)
-  const effectiveChartSource = useMemo<NormalizedLeaderboardDatum[]>(() => {
-    if (filteredBySeason.length >= 2) return filteredBySeason;
-    return rawChartData;
-  }, [filteredBySeason, rawChartData]);
+  const seasonPointCounts = useMemo(() => {
+    const counts = new Map<number, number>();
+    rawChartData.forEach((entry) => {
+      if (typeof entry.season === "number" && Number.isFinite(entry.season)) {
+        counts.set(entry.season, (counts.get(entry.season) ?? 0) + 1);
+      }
+    });
+    return counts;
+  }, [rawChartData]);
 
-  const showAllSeasonsFallback = Boolean(
-    season != null && season !== undefined && filteredBySeason.length < 2 && rawChartData.length >= 2
+  const fallbackSeason = useMemo<number | null>(() => {
+    if (season === null || season === undefined || filteredBySeason.length > 0) {
+      return null;
+    }
+
+    const previousSeasons = Array.from(seasonPointCounts.entries())
+      .filter(([seasonNumber, count]) => seasonNumber < season && count > 0)
+      .map(([seasonNumber]) => seasonNumber)
+      .sort((a, b) => b - a);
+
+    return previousSeasons[0] ?? null;
+  }, [filteredBySeason.length, season, seasonPointCounts]);
+
+  const effectiveSeason = useMemo<number | null>(() => {
+    if (season === null || season === undefined) {
+      return null;
+    }
+    return fallbackSeason ?? season;
+  }, [fallbackSeason, season]);
+
+  const effectiveChartSource = useMemo<NormalizedLeaderboardDatum[]>(() => {
+    if (effectiveSeason === null || effectiveSeason === undefined) {
+      return rawChartData;
+    }
+    return rawChartData.filter((entry) => entry.season === effectiveSeason);
+  }, [effectiveSeason, rawChartData]);
+
+  const showPreviousSeasonFallback = Boolean(
+    season != null &&
+      season !== undefined &&
+      fallbackSeason != null &&
+      filteredBySeason.length === 0
   );
 
   const scaleScoreValue = (value?: number | null) => {
@@ -218,11 +265,11 @@ export default function MinerChart({
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     return effectiveChartSource.map((entry) => ({
       ...entry,
-      reward: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
-      subnet36: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
-      openai_cua: scaleScoreValue((entry as Record<string, unknown>).openai_cua as number | null | undefined),
-      anthropic_cua: scaleScoreValue((entry as Record<string, unknown>).anthropic_cua as number | null | undefined),
-      browser_use: scaleScoreValue((entry as Record<string, unknown>).browser_use as number | null | undefined),
+      reward: scaleScoreValue(entry.reward ?? (entry as unknown as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      subnet36: scaleScoreValue(entry.reward ?? (entry as unknown as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      openai_cua: scaleScoreValue((entry as unknown as Record<string, unknown>).openai_cua as number | null | undefined),
+      anthropic_cua: scaleScoreValue((entry as unknown as Record<string, unknown>).anthropic_cua as number | null | undefined),
+      browser_use: scaleScoreValue((entry as unknown as Record<string, unknown>).browser_use as number | null | undefined),
     }));
   }, [effectiveChartSource]);
 
@@ -384,7 +431,7 @@ export default function MinerChart({
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
       const roundNum = data.round;
-      const reward = (data as Record<string, unknown>).reward ?? (data as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
+      const reward = (data as unknown as Record<string, unknown>).reward ?? (data as unknown as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
       const winnerName = data.winnerName ?? (data as LeaderboardEntryWithSnake).winner_name;
       const winnerUid = data.winnerUid ?? (data as LeaderboardEntryWithSnake).winner_uid;
 
@@ -443,7 +490,7 @@ export default function MinerChart({
                 Reward:
               </span>
               <span style={{ color: "#10b981" }} className="text-lg font-bold">
-                {reward.toFixed(1)}%
+                {typeof reward === "number" && Number.isFinite(reward) ? reward.toFixed(1) : "0"}%
               </span>
             </div>
           </div>
@@ -537,8 +584,8 @@ export default function MinerChart({
   const chartCard = (
     <WidgetCard
       title={
-        season !== null && season !== undefined
-          ? `Top Miner Reward - Season ${season}`
+        effectiveSeason !== null && effectiveSeason !== undefined
+          ? `Top Miner Reward - Season ${effectiveSeason}`
           : "Top Miner Reward"
       }
       action={
@@ -552,20 +599,20 @@ export default function MinerChart({
       rounded="lg"
       className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
     >
-      {showAllSeasonsFallback && (
+      {showPreviousSeasonFallback && (
         <p className="text-xs text-amber-200/90 mb-1">
-          No data for Season {season}; showing all seasons.
+          No data for Season {season}; showing Season {fallbackSeason}.
         </p>
       )}
       <div
         className="flex min-h-0 w-full flex-1 pt-2"
         style={chartContainerStyle}
       >
-        {filteredData.length < 2 ? (
+        {filteredData.length === 0 ? (
           <div className="h-full w-full flex items-center justify-center text-gray-500">
             <div className="text-center">
               <p className="text-sm">Insufficient data for chart</p>
-              <p className="text-xs mt-1">Need at least 2 data points</p>
+              <p className="text-xs mt-1">Need at least 1 data point</p>
               <p className="text-xs">Current: {filteredData.length} points</p>
             </div>
           </div>
@@ -619,6 +666,11 @@ export default function MinerChart({
                 strokeLinejoin="round"
                 fillOpacity={1}
                 fill="url(#subnet36Area)"
+                dot={
+                  filteredData.length === 1
+                    ? { r: 4, fill: "#10b981", stroke: "#10b981", strokeWidth: 1 }
+                    : false
+                }
               />
               {sotaAgents.map((agent) => {
                 return (
