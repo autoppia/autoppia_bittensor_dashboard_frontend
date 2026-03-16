@@ -67,6 +67,7 @@ export interface RewardRoundDataPoint {
   topReward?: number; // Highest benchmark/miner reward for the round
   eval_score?: number; // Post-consensus average eval score
   eval_time?: number; // Post-consensus average eval time
+  avg_cost?: number | null; // Post-consensus average cost per task
   benchmarks?: {
     name: string;
     reward: number;
@@ -282,6 +283,9 @@ export interface AgentRunOverview {
   runId: string;
   agentId: string;
   roundId: number;
+  season?: number;
+  round?: number;
+  roundKey?: string;
   validatorId: string;
   validatorName: string;
   validatorImage: string;
@@ -294,17 +298,20 @@ export interface AgentRunOverview {
   failedTasks: number;
   averageReward: number;
   averageScore?: number;
-  reward: number;
-  successRate: number;
-  overallReward: number;
-  overallRewardRaw?: number;
-  duration: number;
+  averageCost?: number | null;
+  duration?: number;
   averageEvaluationTime?: number | null;
-  avgCostPerTask?: number | null;
-  // Optional: number of unique websites involved in this run
   websitesCount?: number;
-  // Optional legacy field present in some backends
   totalWebsites?: number;
+  zeroReason?: string | null;
+  /** @deprecated use averageReward */
+  reward?: number;
+  /** @deprecated use averageReward */
+  overallReward?: number;
+  /** @deprecated derive from successfulTasks/totalTasks */
+  successRate?: number;
+  /** @deprecated use averageCost */
+  avgCostPerTask?: number | null;
 }
 
 // ===== AGENT COMPARISON =====
@@ -401,21 +408,24 @@ export interface AgentDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
-    rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
-    roundMetrics?: AgentRoundMetrics | null;
-    performanceByWebsite?: Array<{
-      website: string;
+    bestRound?: {
+      round: number;
+      post_consensus_avg_reward: number;
+      post_consensus_avg_eval_time: number;
       tasks_received: number;
       tasks_success: number;
-      success_rate: number;
-    }>;
-    avg_cost_per_task?: number | null;
-    is_reused?: boolean;
-    reused_from_agent_run_id?: string | null;
-    reused_from_round?: string | null;
+      validators_count: number;
+      post_consensus_avg_cost?: number | null;
+      performanceByWebsite?: Array<{
+        website: string;
+        tasks_received: number;
+        tasks_success: number;
+        success_rate: number;
+      }>;
+      websites_count?: number;
+      season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
+    } | null;
     zero_reason?: string | null;
-    season_leadership?: MinerRoundDetailsResponse["data"]["season_leadership"];
   };
 }
 
@@ -423,9 +433,6 @@ export interface MinerDetailsResponse {
   success: boolean;
   data: {
     agent: AgentData;
-    rewardRoundData: RewardRoundDataPoint[];
-    availableRounds?: Array<number | string>;
-    roundMetrics?: AgentRoundMetrics | null;
     performanceByWebsite?: Array<{
       website: string;
       tasks_received: number;
@@ -496,6 +503,66 @@ export interface AgentRunsResponse {
       miners_evaluated: number;
       tasks_evaluated: number;
     };
+  };
+}
+
+// ===== RUNS BY ROUND =====
+
+export interface AgentRunsByRoundValidatorEntry {
+  validator_uid: number;
+  validator_name: string;
+  validator_hotkey: string | null;
+  validator_image: string | null;
+  stake: number;
+  weight: number;
+  post_consensus_rank: number | null;
+  post_consensus_reward: number | null;
+  post_consensus_score: number | null;
+  post_consensus_time: number | null;
+  post_consensus_tasks_received: number;
+  post_consensus_tasks_success: number;
+  run_id: string | null;
+  run_status: string | null;
+  run_reward: number | null;
+  run_score: number | null;
+  run_time: number | null;
+  run_total_tasks: number;
+  run_success_tasks: number;
+  run_failed_tasks: number;
+  run_elapsed_sec: number | null;
+  run_avg_cost: number | null;
+  run_websites_count: number;
+  run_started_at: string | null;
+  run_ended_at: string | null;
+}
+
+export interface AgentRunsByRoundEntry {
+  round_id: number;
+  round_key: string;
+  round_label: string;
+  season: number;
+  round_in_season: number;
+  validators_count: number;
+  websites_count: number;
+  post_consensus_available: boolean;
+  consensus: {
+    rank: number | null;
+    reward: number | null;
+    score: number | null;
+    time: number | null;
+    tasks_received: number;
+    tasks_success: number;
+    avg_cost: number | null;
+  };
+  validators: AgentRunsByRoundValidatorEntry[];
+}
+
+export interface AgentRunsByRoundResponse {
+  success: boolean;
+  data: {
+    agent_uid: number;
+    season: number | null;
+    rounds: AgentRunsByRoundEntry[];
   };
 }
 

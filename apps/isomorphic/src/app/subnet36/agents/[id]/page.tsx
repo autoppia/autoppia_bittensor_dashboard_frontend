@@ -41,7 +41,7 @@ import type {
   AgentData,
   AgentRoundMetrics,
   AgentRunOverview,
-  AgentRunsResponse,
+  AgentRunsByRoundEntry,
 } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
@@ -77,6 +77,31 @@ import {
 } from "react-icons/lu";
 import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
+type AgentStatCardItem = {
+  title: string;
+  metric: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  borderColor: string;
+  bgGradient: string;
+  gradient?: string;
+  iconGradient?: string;
+  glowColor?: string;
+  badge?: string | null;
+};
+
+interface ChartRow {
+  round?: number | string;
+  roundLabel?: string | number;
+  reward: number;
+  rank?: number | null;
+  eval_score?: number | null;
+  eval_time?: number | null;
+  avg_cost?: number | null;
+  timestamp?: string | null;
+  topBenchmarkScore?: number;
+  [key: string]: number | string | null | undefined;
+}
+
 // ============================================================================
 // Shared helpers within this page
 const normalizeScore = (value?: number | null): number | null => {
@@ -111,77 +136,6 @@ const formatBestRoundBadge = (value: number | string | null | undefined) => {
   return null;
 };
 
-/** Shape of each metric card in AgentStats slider */
-type AgentStatCardItem = {
-  title: string;
-  metric: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  badge?: React.ReactNode;
-  borderColor?: string;
-  bgGradient?: string;
-  gradient?: string;
-  iconGradient?: string;
-  iconClassName?: string;
-  glowColor?: string;
-};
-
-/** Processed chart row for reward-over-time chart */
-type ChartRow = Record<string, number | string | null>;
-
-const RUNS_PAGE_SIZE = 100;
-
-async function fetchAllAgentRuns(
-  agentId: string,
-  params: { roundId?: number; validatorId?: string } = {},
-  signal?: AbortSignal
-): Promise<{
-  runs: AgentRunOverview[];
-  total: number;
-  validators?: AgentRunsResponse['data']['validators'];
-  post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
-}> {
-  let page = 1;
-  const aggregated: AgentRunOverview[] = [];
-  let total = 0;
-  let validators: AgentRunsResponse['data']['validators'] | undefined;
-  let post_consensus_summary: AgentRunsResponse['data']['post_consensus_summary'] | undefined;
-
-  while (true) {
-    // Check if cancelled before making the request
-    if (signal?.aborted) {
-      throw new Error('Request cancelled');
-    }
-
-    const response = await agentsRepository.getAgentRuns(agentId, {
-      ...params,
-      page,
-      limit: RUNS_PAGE_SIZE,
-      sortBy: "startTime",
-      sortOrder: "desc",
-    });
-
-    // Check again after the request (in case it was cancelled during the request)
-    if (signal?.aborted) {
-      throw new Error('Request cancelled');
-    }
-
-    const payload = response?.data;
-    const batch = payload?.runs ?? [];
-    if (page === 1) {
-      total = payload?.total ?? batch.length;
-      // Get validators and post_consensus_summary from first page response
-      validators = payload?.validators;
-      post_consensus_summary = payload?.post_consensus_summary;
-    }
-    aggregated.push(...batch);
-    if (aggregated.length >= total || batch.length < RUNS_PAGE_SIZE) {
-      break;
-    }
-    page += 1;
-  }
-
-  return { runs: aggregated, total, validators, post_consensus_summary };
-}
 
 // Agent stats band
 function AgentStats({
@@ -465,6 +419,7 @@ function AgentScoreChart({
           rank: point.rank ?? null,
           eval_score: point.eval_score ?? null,
           eval_time: point.eval_time ?? null,
+          avg_cost: point.avg_cost ?? null,
           timestamp: point.timestamp,
         };
 
@@ -697,10 +652,13 @@ function AgentScoreChart({
                   if (!active || !payload?.length) return null;
                   const data = payload[0]?.payload;
 
-                  // Get post-consensus data from the payload
+                  // Get post-consensus data from the payload.
+                  // reward is already scaled * 100 in displayData, so show directly as %.
+                  // eval_score is NOT pre-scaled, so multiply * 100 here.
                   const reward = data?.reward ?? 0;
                   const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
                   const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
+                  const avgCost = data?.avg_cost != null && typeof data.avg_cost === 'number' ? data.avg_cost : null;
 
                   return (
                     <div className="rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] px-4 py-3">
@@ -708,7 +666,7 @@ function AgentScoreChart({
                         Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
                       </div>
                       <div className="space-y-2 text-sm">
-                        {/* Reward */}
+                        {/* Reward — already * 100 from displayData */}
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2.5">
                             <span
@@ -718,12 +676,12 @@ function AgentScoreChart({
                             <span className="text-white/90 font-semibold">Reward:</span>
                           </div>
                           <span className="font-black text-white text-base">
-                            {(reward * 100).toFixed(2)}%
+                            {reward.toFixed(2)}%
                           </span>
                         </div>
 
-                        {/* Score (eval_score) */}
-                        {evalScore != null && !Number.isNaN(Number(evalScore)) && (
+                        {/* Score (eval_score) — raw 0-1 value, multiply here */}
+                        {evalScore != null && !isNaN(evalScore) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
                               <span
@@ -738,8 +696,8 @@ function AgentScoreChart({
                           </div>
                         )}
 
-                        {/* Avg Time (eval_time) */}
-                        {evalTime != null && !Number.isNaN(Number(evalTime)) && (
+                        {/* Avg Time */}
+                        {evalTime != null && !isNaN(evalTime) && (
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2.5">
                               <span
@@ -750,6 +708,22 @@ function AgentScoreChart({
                             </div>
                             <span className="font-black text-white text-base">
                               {Number(evalTime).toFixed(2)}s
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Avg Cost */}
+                        {avgCost != null && !isNaN(avgCost) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#A78BFA" }}
+                              />
+                              <span className="text-white/90 font-semibold">Avg Cost:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              ${Number(avgCost).toFixed(4)}
                             </span>
                           </div>
                         )}
@@ -818,167 +792,43 @@ function AgentScoreChart({
   );
 }
 
-// Validators/runs list
+// Validators/runs list — driven by the new runs-by-round endpoint
 function AgentValidators({
-  selectedRound,
   selectedSeason,
-  selectedRoundInSeason,
-  runs,
+  rounds,
   loading,
   error,
-  numericUidFromParam,
-  validators,
-  post_consensus_summary,
-  minerRoundDetailsValidators,
-  roundAvgCostPerTask,
-  postConsensusRounds,
-}: Readonly<{
-  selectedRound?: number | string | null;
+}: {
   selectedSeason?: number | null;
-  selectedRoundInSeason?: number | null;
-  runs: AgentRunOverview[];
+  rounds: AgentRunsByRoundEntry[];
   loading: boolean;
   error?: string | null;
-  numericUidFromParam?: number;
-  validators?: AgentRunsResponse['data']['validators'];
-  post_consensus_summary?: AgentRunsResponse['data']['post_consensus_summary'];
-  minerRoundDetailsValidators?: Array<{
-    validator_uid: number;
-    validator_name: string;
-    validator_hotkey: string | null;
-    validator_image: string | null;
-    local_rank: number | null;
-    local_avg_reward: number;
-    local_avg_eval_score: number;
-    local_avg_eval_time: number;
-    local_tasks_received: number;
-    local_tasks_success: number;
-    local_miners_evaluated: number;
-    agent_run_id?: string;
-  }>;
-  roundAvgCostPerTask?: number | null;
-  postConsensusRounds?: Array<{
-    round: string | number;
-    post_consensus_rank: number | null;
-    post_consensus_avg_reward: number;
-    post_consensus_avg_eval_score?: number | null;
-    post_consensus_avg_eval_time: number;
-    post_consensus_avg_eval_cost?: number | null;
-    tasks_received: number;
-    tasks_success: number;
-    validators_count: number;
-    websites_count?: number;
-    post_consensus_available?: boolean;
-    weight?: number;
-  }>;
-}>) {
+}) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
   const [selectedRunsRoundKey, setSelectedRunsRoundKey] = useState<string>("all");
 
-  const getRoundMeta = useCallback((value: number | string | null | undefined) => {
-    if (value == null) return null;
-    if (typeof value === "string" && value.includes("/")) {
-      const [seasonRaw, roundRaw] = value.split("/");
-      const season = Number.parseInt(seasonRaw, 10);
-      const round = Number.parseInt(roundRaw, 10);
-      if (!Number.isFinite(season) || !Number.isFinite(round)) return null;
-      return {
-        key: `${season}/${round}`,
-        season,
-        round,
-        label: `Season ${season} · Round ${round}`,
-      };
-    }
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return null;
-    const season = parsed >= 10000 ? Math.floor(parsed / 10000) : selectedSeason ?? 0;
-    const round = parsed >= 10000 ? parsed % 10000 : parsed;
-    return {
-      key: `${season}/${round}`,
-      season,
-      round,
-      label: season > 0 ? `Season ${season} · Round ${round}` : `Round ${round}`,
-    };
-  }, [selectedSeason]);
-
-  const normalizedRuns = useMemo(() => {
-    return [...runs]
-      .map((run) => {
-        const meta = getRoundMeta(run.roundId);
-        return meta ? { ...run, __roundMeta: meta } : null;
-      })
-      .filter((run): run is AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } } => Boolean(run))
-      .sort((a, b) => {
-        if (a.__roundMeta.season !== b.__roundMeta.season) {
-          return b.__roundMeta.season - a.__roundMeta.season;
-        }
-        if (a.__roundMeta.round !== b.__roundMeta.round) {
-          return b.__roundMeta.round - a.__roundMeta.round;
-        }
-        return String(b.startTime ?? "").localeCompare(String(a.startTime ?? ""));
-      });
-  }, [getRoundMeta, runs]);
-
   const roundOptions = useMemo(() => {
     const options = [{ label: "All rounds", value: "all" }];
-    const seen = new Set<string>();
-    normalizedRuns.forEach((run) => {
-      if (seen.has(run.__roundMeta.key)) return;
-      seen.add(run.__roundMeta.key);
-      options.push({ label: run.__roundMeta.label, value: run.__roundMeta.key });
+    rounds.forEach((r) => {
+      options.push({ label: r.round_label, value: r.round_key });
     });
     return options;
-  }, [normalizedRuns]);
+  }, [rounds]);
 
   useEffect(() => {
     if (selectedRunsRoundKey === "all") return;
-    if (!roundOptions.some((option) => option.value === selectedRunsRoundKey)) {
+    if (!roundOptions.some((o) => o.value === selectedRunsRoundKey)) {
       setSelectedRunsRoundKey("all");
     }
   }, [roundOptions, selectedRunsRoundKey]);
 
-  const groupedRuns = useMemo(() => {
-    const groups = new Map<
-      string,
-      {
-        key: string;
-        season: number;
-        round: number;
-        label: string;
-        runs: Array<AgentRunOverview & { __roundMeta: { key: string; season: number; round: number; label: string } }>;
-      }
-    >();
-
-    normalizedRuns.forEach((run) => {
-      if (selectedRunsRoundKey !== "all" && run.__roundMeta.key !== selectedRunsRoundKey) {
-        return;
-      }
-      const existing = groups.get(run.__roundMeta.key);
-      if (existing) {
-        existing.runs.push(run);
-        return;
-      }
-      groups.set(run.__roundMeta.key, {
-        key: run.__roundMeta.key,
-        season: run.__roundMeta.season,
-        round: run.__roundMeta.round,
-        label: run.__roundMeta.label,
-        runs: [run],
-      });
-    });
-
-    return Array.from(groups.values());
-  }, [normalizedRuns, selectedRunsRoundKey]);
-
-  const postConsensusByRound = useMemo(() => {
-    const byRound = new Map<string, NonNullable<typeof postConsensusRounds>[number]>();
-    (postConsensusRounds ?? []).forEach((entry) => {
-      const meta = getRoundMeta(entry.round);
-      if (!meta) return;
-      byRound.set(meta.key, entry);
-    });
-    return byRound;
-  }, [getRoundMeta, postConsensusRounds]);
+  const visibleRounds = useMemo(
+    () =>
+      selectedRunsRoundKey === "all"
+        ? rounds
+        : rounds.filter((r) => r.round_key === selectedRunsRoundKey),
+    [rounds, selectedRunsRoundKey]
+  );
 
   if (loading) {
     return <AgentValidatorsPlaceholder />;
@@ -992,7 +842,7 @@ function AgentValidators({
     );
   }
 
-  if (!groupedRuns.length) {
+  if (!visibleRounds.length) {
     return (
       <div className="mt-6">
         <div className="text-center py-12 text-white/70">
@@ -1159,56 +1009,40 @@ function AgentValidators({
       )}
 
       <div className="space-y-8">
-        {groupedRuns.map((group) => {
-          const runsByValidator = group.runs.reduce(
-            (acc, run) => {
-              if (!acc[run.validatorId]) acc[run.validatorId] = [];
-              acc[run.validatorId].push(run);
-              return acc;
-            },
-            {} as Record<string, typeof group.runs>
-          );
-          const postConsensus = postConsensusByRound.get(group.key);
-          const groupWebsitesCount = Object.values(runsByValidator).reduce((maxCount, validatorRuns) => {
-            const latestRun = validatorRuns[0];
-            const count =
-              typeof latestRun.websitesCount === "number"
-                ? latestRun.websitesCount
-                : typeof latestRun.totalWebsites === "number"
-                  ? latestRun.totalWebsites
-                  : 0;
-            return Math.max(maxCount, count);
-          }, 0);
+        {visibleRounds.map((roundEntry) => {
+          const consensus = roundEntry.consensus;
+          const hasConsensus = roundEntry.post_consensus_available;
 
           return (
-            <div key={group.key} className="space-y-4">
+            <div key={roundEntry.round_key} className="space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <Text className="text-lg sm:text-xl font-bold text-white">
-                  {group.label}
+                  {roundEntry.round_label}
                 </Text>
                 <Text className="text-xs sm:text-sm text-white/60">
-                  {Object.keys(runsByValidator).length} validator run{Object.keys(runsByValidator).length === 1 ? "" : "s"}
+                  {roundEntry.validators.length} validator run{roundEntry.validators.length === 1 ? "" : "s"}
                 </Text>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
-                {postConsensus?.post_consensus_available ? (
+                {/* Consensus card */}
+                {hasConsensus && (
                   <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
                     <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
                       <Text className="font-bold text-white text-base">Validator consensus</Text>
                       <Text className="text-xs text-white/60 tracking-wide">
-                        Final metrics after validator consensus
+                        Results Averaged Across All Validators After Consensus
                       </Text>
                     </div>
                     <div className="relative p-2 sm:p-5">
                       <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
                         {[
-                          { title: "Reward", metric: `${(postConsensus.post_consensus_avg_reward * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
-                          { title: "Score", metric: `${((postConsensus.post_consensus_avg_eval_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
-                          { title: "Time", metric: `${Number(postConsensus.post_consensus_avg_eval_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                          { title: "Tasks", metric: `${postConsensus.tasks_success}/${postConsensus.tasks_received}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
-                          { title: "Websites", metric: String(postConsensus.websites_count ?? groupWebsitesCount ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
-                          { title: "Avg Cost", metric: postConsensus.post_consensus_avg_eval_cost != null ? `$${Number(postConsensus.post_consensus_avg_eval_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                          { title: "Reward", metric: `${((consensus.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                          { title: "Score", metric: `${((consensus.score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                          { title: "Time", metric: `${Number(consensus.time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                          { title: "Tasks", metric: `${consensus.tasks_success ?? 0}/${consensus.tasks_received ?? 0}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                          { title: "Websites", metric: String(roundEntry.websites_count ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                          { title: "Avg Cost", metric: consensus.avg_cost != null ? `$${Number(consensus.avg_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                         ].map((stat) => {
                           const Icon = stat.icon as any;
                           return (
@@ -1226,75 +1060,67 @@ function AgentValidators({
                       </div>
                     </div>
                   </div>
-                ) : null}
-                {Object.entries(runsByValidator).map(([validatorId, validatorRuns]) => {
-                  const latestRun = validatorRuns[0];
-                  const responseTimeSeconds =
-                    typeof latestRun.averageEvaluationTime === "number" && Number.isFinite(latestRun.averageEvaluationTime)
-                      ? latestRun.averageEvaluationTime
-                      : latestRun.duration ?? 0;
-                  const websitesCount = (() => {
-                    const anyRun: any = latestRun as any;
-                    if (typeof anyRun.websitesCount === "number") return anyRun.websitesCount;
-                    if (typeof anyRun.totalWebsites === "number") return anyRun.totalWebsites;
-                    return 0;
-                  })();
+                )}
 
+                {/* Per-validator cards — show the actual run metrics for this validator */}
+                {roundEntry.validators.map((v) => {
                   const stats = [
-                    { title: "Reward", metric: `${((latestRun.overallReward ?? latestRun.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
-                    { title: "Score", metric: `${((latestRun.averageScore ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
-                    { title: "Time", metric: `${Number(responseTimeSeconds).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                    { title: "Tasks", metric: `${Math.max(0, latestRun.successfulTasks ?? latestRun.completedTasks ?? 0)}/${Math.max(0, latestRun.totalTasks ?? 0)}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
-                    { title: "Websites", metric: websitesCount, icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
-                    { title: "Avg Cost", metric: latestRun.avgCostPerTask != null ? `$${Number(latestRun.avgCostPerTask).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
+                    { title: "Reward", metric: `${((v.run_reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
+                    { title: "Score", metric: `${((v.run_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
+                    { title: "Time", metric: `${Number(v.run_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+                    { title: "Tasks", metric: `${v.run_success_tasks ?? 0}/${v.run_total_tasks ?? 0}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                    { title: "Websites", metric: String(v.run_websites_count ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
+                    { title: "Avg Cost", metric: v.run_avg_cost != null ? `$${Number(v.run_avg_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                   ];
 
-                  return (
-                    <Link key={`agent-run-${group.key}-${validatorId}`} href={`${routes.agent_run}/${latestRun.runId}`}>
-                      <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40">
-                        <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30">
-                                <Image
-                                  src={resolveAssetUrl(latestRun.validatorImage || "/validators/default.png")}
-                                  alt={latestRun.validatorName || validatorId}
-                                  fill
-                                  sizes="48px"
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <Text className="font-bold text-white text-base">
-                                  {latestRun.validatorName || validatorId}
-                                </Text>
-                                <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
-                                  {validatorId}
-                                </Text>
-                              </div>
-                            </div>
+                  const card = (
+                    <div className="group transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02] rounded-2xl cursor-pointer z-10 hover:z-40 border-2 border-white/20 hover:border-white/40">
+                      <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30">
+                            <Image
+                              src={resolveAssetUrl(v.validator_image || "/validators/default.png")}
+                              alt={v.validator_name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
                           </div>
-                        </div>
-                        <div className="relative p-2 sm:p-5 space-y-3">
-                          <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
-                            {stats.map((stat) => {
-                              const Icon = stat.icon as any;
-                              return (
-                                <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
-                                  <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
-                                    <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
-                                    <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="flex-1 min-w-0">
+                            <Text className="font-bold text-white text-base">{v.validator_name}</Text>
+                            <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
+                              validator-{v.validator_uid}
+                            </Text>
                           </div>
                         </div>
                       </div>
+                      <div className="relative p-2 sm:p-5">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
+                          {stats.map((stat) => {
+                            const Icon = stat.icon as any;
+                            return (
+                              <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
+                                <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
+                                  <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
+                                  <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+
+                  return v.run_id ? (
+                    <Link key={`v-${roundEntry.round_key}-${v.validator_uid}`} href={`${routes.agent_run}/${v.run_id}`}>
+                      {card}
                     </Link>
+                  ) : (
+                    <div key={`v-${roundEntry.round_key}-${v.validator_uid}`}>{card}</div>
                   );
                 })}
               </div>
@@ -1721,8 +1547,6 @@ export default function Page() {
   } = useAgent(agentIdForQuery, selectedSeasonNumber ? { season: selectedSeasonNumber } : undefined);
 
   const agent = agentDetail?.agent ?? null;
-  const roundMetrics: AgentRoundMetrics | null = agentDetail?.roundMetrics ?? null;
-  const availableRounds: Array<string | number> = agentDetail?.availableRounds ?? [];
   // Get miner round details when round and miner UID are available
   // In historical mode, we still need round-details if a round is selected
   // But we don't need it if we're just viewing historical summary
@@ -1735,29 +1559,15 @@ export default function Page() {
     numericUidFromParam
   );
 
-  // Extract latest season from agent detail available rounds
+  // Resolve latest season from the selected season only; best-round payload is season-scoped.
   const latestSeason = useMemo(() => {
-    const rounds = availableRounds ?? [];
-    if (rounds.length === 0) {
-      return undefined;
-    }
+    return selectedSeasonNumber && Number.isFinite(selectedSeasonNumber)
+      ? selectedSeasonNumber
+      : undefined;
+  }, [selectedSeasonNumber]);
 
-    // Parse rounds in format "season/round" and get highest season
-    const seasons = rounds
-      .map((r) => {
-        if (typeof r === "string" && r.includes("/")) {
-          const parts = r.split("/");
-          return Number.parseInt(parts[0], 10);
-        }
-        return null;
-      })
-      .filter((s) => s !== null && Number.isFinite(s)) as number[];
-
-    return seasons.length > 0 ? Math.max(...seasons) : undefined;
-  }, [availableRounds]);
-
-  // Get miner historical data only when needed:
-  // - Historical tab
+  // Get miner historical data when needed:
+  // - Historical tab only
   // - Current tab in Effective mode (to resolve source best round)
   const shouldFetchHistorical =
     numericUidFromParam !== undefined &&
@@ -1804,17 +1614,14 @@ export default function Page() {
     numericUidFromParam
   );
   const bestRoundIdentifierFromAgentDetail = useMemo(() => {
-    const bestRoundId = agentDetail?.agent?.bestRoundId;
-    if (bestRoundId == null) return undefined;
-    if (typeof bestRoundId === "string" && bestRoundId.includes("/")) {
-      return bestRoundId;
-    }
-    const bestRoundNumber = Number(bestRoundId);
+    const bestRoundNumber = Number(
+      agentDetail?.bestRound?.round ?? agentDetail?.agent?.bestRoundId
+    );
     if (Number.isFinite(bestRoundNumber) && selectedSeasonNumber) {
       return `${selectedSeasonNumber}/${bestRoundNumber}`;
     }
     return undefined;
-  }, [agentDetail?.agent?.bestRoundId, selectedSeasonNumber]);
+  }, [agentDetail?.agent?.bestRoundId, agentDetail?.bestRound?.round, selectedSeasonNumber]);
 
   // Use minerHistorical data if available in historical mode
   // In other modes, try to construct from minerRoundDetails if available
@@ -1920,93 +1727,31 @@ export default function Page() {
 
   const currentRound =
     selectedRoundFromQuery ??
-    roundMetrics?.roundId ??
-    (availableRounds.length > 0 ? availableRounds[0] : undefined);
+    bestRoundIdentifierFromAgentDetail;
 
-  // Build rewardRoundData from historical data if in historical mode, otherwise from agentDetail
+  // The reward chart lives in Historical mode; source it only from historical data.
   const rewardRoundData: RewardRoundDataPoint[] = useMemo(() => {
-    if (viewMode === "historical" && minerHistorical?.roundsHistory) {
-      // Use historical data - sort by round descending (format: "season/round")
-      return [...minerHistorical.roundsHistory]
-        .sort((a, b) => {
-          // Parse "season/round" format for sorting
-          const [aSeason, aRound] = String(a.round).split('/').map(Number);
-          const [bSeason, bRound] = String(b.round).split('/').map(Number);
-          // Sort by season first, then by round (descending)
-          if (bSeason !== aSeason) return bSeason - aSeason;
-          return bRound - aRound;
-        })
-        .map((round, index) => ({
-          round_id: round.round, // Keep as string "season/round"
-          round: index + 1, // Sequential number for chart x-axis
-          rank: round.post_consensus_rank,
-          reward: round.post_consensus_avg_reward ?? 0,
-          eval_score: round.post_consensus_avg_eval_score ?? undefined,
-          eval_time: round.post_consensus_avg_eval_time ?? undefined,
-          timestamp: "", // Historical data doesn't have timestamp
-          topReward: undefined,
-          benchmarks: undefined,
-        }));
-    }
-
-    // Use agentDetail data for current/runs mode
-    const source: RewardRoundDataPoint[] =
-      agentDetail?.rewardRoundData ??
-      (((minerRoundDetails as any)?.rewardRoundData as
-        | RewardRoundDataPoint[]
-        | undefined) ?? []);
-    if (!source.length) {
-      const fallbackReward = Number((minerRoundDetails as any)?.post_consensus_avg_reward ?? 0);
-      const fallbackRank = Number((minerRoundDetails as any)?.post_consensus_rank ?? 0);
-      const fallbackRoundId = selectedRoundFromQuery ?? Number((minerRoundDetails as any)?.round ?? 0);
-      if (fallbackRoundId) {
-        return [
-          {
-            round_id: fallbackRoundId as any,
-            rank: Number.isFinite(fallbackRank) && fallbackRank > 0 ? fallbackRank : null,
-            reward: fallbackReward,
-            eval_score: (minerRoundDetails as any)?.post_consensus_avg_eval_score ?? undefined,
-            eval_time: (minerRoundDetails as any)?.post_consensus_avg_eval_time ?? undefined,
-            timestamp: "",
-            topReward: undefined,
-            benchmarks: undefined,
-          },
-        ];
-      }
-      return [];
-    }
-    return source.map((point: any) => {
-      const roundId =
-        point.round_id ??
-        point.validator_round_id ??
-        point.roundId ??
-        point.validatorRoundId ??
-        point.round ??
-        0;
-      return {
-        round_id: Number(roundId),
-        rank: point.rank ?? point.position ?? null,
-        reward: point.reward ?? 0,
-        eval_score: point.eval_score ?? point.post_consensus_avg_eval_score ?? point.avg_eval_score ?? undefined,
-        eval_time: point.eval_time ?? point.post_consensus_avg_eval_time ?? point.avg_eval_time ?? undefined,
-        timestamp:
-          typeof point.timestamp === "string"
-            ? point.timestamp
-            : (point.timestamp?.toString() ?? ""),
-        topReward:
-          normalizeScore(
-            point.topReward ?? point.top_reward ?? point.topScore ?? point.top_score ?? point.bestReward ?? point.bestScore
-          ) ?? undefined,
-        benchmarks: Array.isArray(point.benchmarks)
-          ? point.benchmarks.map((benchmark: any) => ({
-              name: benchmark.name ?? benchmark.provider ?? "Benchmark",
-              provider: benchmark.provider,
-              reward: normalizeScore(benchmark.reward) ?? 0,
-            }))
-          : undefined,
-      };
-    });
-  }, [viewMode, minerHistorical?.roundsHistory, agentDetail?.rewardRoundData, minerRoundDetails, selectedRoundFromQuery]);
+    if (!minerHistorical?.roundsHistory) return [];
+    return [...minerHistorical.roundsHistory]
+      .sort((a, b) => {
+        const [aSeason, aRound] = String(a.round).split("/").map(Number);
+        const [bSeason, bRound] = String(b.round).split("/").map(Number);
+        if (bSeason !== aSeason) return bSeason - aSeason;
+        return bRound - aRound;
+      })
+      .map((round, index) => ({
+        round_id: round.round,
+        round: index + 1,
+        rank: round.post_consensus_rank,
+        reward: round.post_consensus_avg_reward ?? 0,
+        eval_score: round.post_consensus_avg_eval_score ?? undefined,
+        eval_time: round.post_consensus_avg_eval_time ?? undefined,
+        avg_cost: round.post_consensus_avg_eval_cost ?? undefined,
+        timestamp: "",
+        topReward: undefined,
+        benchmarks: undefined,
+      }));
+  }, [minerHistorical?.roundsHistory]);
 
   const selectedRoundEncoded = useMemo(() => {
     if (typeof selectedRoundFromQuery === "string" && selectedRoundFromQuery.includes("/")) {
@@ -2024,48 +1769,35 @@ export default function Page() {
     return undefined;
   }, [selectedRoundFromQuery]);
 
-  const [runsState, setRunsState] = useState<{
+  const [runsByRoundState, setRunsByRoundState] = useState<{
     loading: boolean;
-    runs: AgentRunOverview[];
+    rounds: AgentRunsByRoundEntry[];
     error: string | null;
-    validators?: AgentRunsResponse["data"]["validators"];
-    post_consensus_summary?: AgentRunsResponse["data"]["post_consensus_summary"];
   }>({
     loading: false,
-    runs: [],
+    rounds: [],
     error: null,
-    validators: undefined,
-    post_consensus_summary: undefined,
   });
+
+  const seasonForRuns = seasonParam ? Number.parseInt(seasonParam, 10) : selectedSeasonNumber ?? undefined;
 
   useEffect(() => {
     if (viewMode !== "runs" || !agentIdForQuery) {
       return;
     }
 
-    const controller = new AbortController();
     let isActive = true;
+    setRunsByRoundState((prev) => ({ ...prev, loading: true, error: null }));
 
-    setRunsState((prev) => ({ ...prev, loading: true, error: null }));
-
-    fetchAllAgentRuns(
-      agentIdForQuery,
-      selectedRoundEncoded != null ? { roundId: selectedRoundEncoded } : {},
-      controller.signal
-    )
-      .then((result) => {
+    agentsRepository
+      .getAgentRunsByRound(agentIdForQuery, seasonForRuns)
+      .then((data) => {
         if (!isActive) return;
-        setRunsState({
-          loading: false,
-          runs: result.runs ?? [],
-          error: null,
-          validators: result.validators,
-          post_consensus_summary: result.post_consensus_summary,
-        });
+        setRunsByRoundState({ loading: false, rounds: data.rounds ?? [], error: null });
       })
       .catch((err) => {
-        if (!isActive || controller.signal.aborted) return;
-        setRunsState((prev) => ({
+        if (!isActive) return;
+        setRunsByRoundState((prev) => ({
           ...prev,
           loading: false,
           error: err instanceof Error ? err.message : String(err),
@@ -2074,9 +1806,8 @@ export default function Page() {
 
     return () => {
       isActive = false;
-      controller.abort();
     };
-  }, [viewMode, agentIdForQuery, selectedRoundEncoded]);
+  }, [viewMode, agentIdForQuery, seasonForRuns]);
 
   // Calculate preAvg from minerRoundDetails instead of runs
   const preAvg = useMemo(() => {
@@ -2177,16 +1908,6 @@ export default function Page() {
     );
   }
 
-  // Current mode stats for header - showing only the 5 key metrics
-  const currentRankValue =
-    roundMetrics?.rank && roundMetrics.rank > 0
-      ? `#${roundMetrics.rank}`
-      : effectiveAgent?.currentRank && (effectiveAgent.currentRank ?? 0) > 0
-        ? `#${effectiveAgent.currentRank}`
-        : "N/A";
-
-  const currentRewardPercentage = `${((roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0) * 100).toFixed(1)}%`;
-
   // Historical metrics
   const bestRankEver =
     effectiveAgent?.bestRankEver && (effectiveAgent.bestRankEver ?? 0) > 0
@@ -2208,21 +1929,9 @@ export default function Page() {
   ).toFixed(2);
   const sourceMetricsDetails = selectedRoundFromQuery
     ? minerRoundDetails ?? null
-    : {
-        post_consensus_avg_reward:
-          roundMetrics?.reward ?? effectiveAgent?.currentReward ?? 0,
-        post_consensus_avg_eval_time:
-          roundMetrics?.averageResponseTime ?? effectiveAgent?.averageResponseTime ?? null,
-        tasks_received: roundMetrics?.totalTasks ?? effectiveAgent?.totalTasks ?? 0,
-        tasks_success: roundMetrics?.completedTasks ?? effectiveAgent?.completedTasks ?? 0,
-        validators_count: roundMetrics?.totalValidators ?? 0,
-        avg_cost_per_task: agentDetail?.avg_cost_per_task ?? null,
-        performanceByWebsite:
-          agentDetail?.performanceByWebsite ?? [],
-      };
+    : agentDetail?.bestRound ?? null;
   const roundReward = Number(
     sourceMetricsDetails?.post_consensus_avg_reward ??
-      roundMetrics?.reward ??
       effectiveAgent?.currentReward ??
       0
   );
@@ -2232,14 +1941,24 @@ export default function Page() {
     null;
   const displayedReward = roundReward;
   const effectiveEvalTime = sourceMetricsDetails?.post_consensus_avg_eval_time ?? null;
-  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? roundMetrics?.totalTasks ?? 0;
-  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? roundMetrics?.completedTasks ?? 0;
-  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? roundMetrics?.totalValidators ?? 0;
-  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? agentDetail?.performanceByWebsite ?? [];
-  const effectiveWebsitesCount = effectivePerformanceByWebsite.length > 0
-    ? effectivePerformanceByWebsite.length
-    : websitesSummary.unique;
-  const effectiveAvgCostPerTaskRaw = (sourceMetricsDetails as any)?.avg_cost_per_task ?? (sourceMetricsDetails as any)?.avgCostPerTask ?? agentDetail?.avg_cost_per_task ?? null;
+  const effectiveTasksReceived = sourceMetricsDetails?.tasks_received ?? 0;
+  const effectiveTasksSuccess = sourceMetricsDetails?.tasks_success ?? 0;
+  const effectiveValidatorsCount = sourceMetricsDetails?.validators_count ?? 0;
+  const effectivePerformanceByWebsite = sourceMetricsDetails?.performanceByWebsite ?? [];
+  const effectiveWebsitesCountRaw =
+    (sourceMetricsDetails as any)?.websites_count ??
+    (sourceMetricsDetails as any)?.websitesCount ??
+    (effectivePerformanceByWebsite.length > 0
+      ? effectivePerformanceByWebsite.length
+      : websitesSummary.unique);
+  const effectiveWebsitesCount = Number.isFinite(Number(effectiveWebsitesCountRaw))
+    ? Number(effectiveWebsitesCountRaw)
+    : 0;
+  const effectiveAvgCostPerTaskRaw =
+    (sourceMetricsDetails as any)?.post_consensus_avg_cost ??
+    (sourceMetricsDetails as any)?.avg_cost_per_task ??
+    (sourceMetricsDetails as any)?.avgCostPerTask ??
+    null;
   const effectiveAvgCostPerTask = effectiveAvgCostPerTaskRaw != null ? Number(effectiveAvgCostPerTaskRaw) : null;
   const timeoutThresholdSeconds = Number((sourceMetricsDetails as any)?.task_timeout_seconds ?? 180);
   const maxTaskCostUsd = Number((sourceMetricsDetails as any)?.max_task_cost_usd ?? 0.05);
@@ -2264,7 +1983,13 @@ export default function Page() {
   })();
 
   const currentStats = [
-    // Primera fila: Round, Rank, Avg Score, Avg Response Time
+    // Col1 naranja (amber), Col2 azul (indigo), Col3 verde (green), Col4 morado (violet)
+    {
+      title: "Season Rank",
+      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
+      icon: LuAward,
+      ...METRIC_CARD_GRADIENTS.amber,
+    },
     {
       title: "Best Round",
       metric:
@@ -2276,35 +2001,15 @@ export default function Page() {
       ...METRIC_CARD_GRADIENTS.indigo,
     },
     {
-      title: "Season Rank",
-      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
-      icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
       title: "Avg Reward",
-      metric: `${((displayedReward ?? 0) * 100).toFixed(1)}%`,
+      metric: `${((displayedReward ?? 0) * 100).toFixed(2)}%`,
       icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...METRIC_CARD_GRADIENTS.green,
     },
     {
       title: "Success Rate",
       metric: roundSuccessRate,
       icon: PiCheckDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-
-    // Segunda fila: Validators, Websites, Avg Cost Per Task, Avg Response Time
-    {
-      title: "Validators",
-      metric: effectiveValidatorsCount.toString(),
-      icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Websites",
-      metric: effectiveWebsitesCount.toString(),
-      icon: PiChartBarDuotone,
       ...METRIC_CARD_GRADIENTS.violet,
     },
     {
@@ -2325,7 +2030,19 @@ export default function Page() {
       badge: isAvgResponseTimeout ? `Timeout >= ${Math.round(timeoutThresholdSeconds)}s` : null,
       badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
       icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.emerald,
+      ...METRIC_CARD_GRADIENTS.indigo,
+    },
+    {
+      title: "Validators",
+      metric: effectiveValidatorsCount.toString(),
+      icon: PiTrophyDuotone,
+      ...METRIC_CARD_GRADIENTS.green,
+    },
+    {
+      title: "Websites",
+      metric: effectiveWebsitesCount.toString(),
+      icon: PiChartBarDuotone,
+      ...METRIC_CARD_GRADIENTS.violet,
     },
   ];
 
@@ -2717,18 +2434,10 @@ export default function Page() {
           <div className="relative z-10">
             {viewMode === "runs" ? (
               <AgentValidators
-                selectedRound={currentRound ?? null}
                 selectedSeason={seasonParam ? Number.parseInt(seasonParam, 10) : null}
-                selectedRoundInSeason={roundParam ? Number.parseInt(roundParam, 10) : null}
-                runs={runsState.runs}
-                loading={runsState.loading}
-                error={runsState.error ?? undefined}
-                numericUidFromParam={numericUidFromParam}
-                validators={runsState.validators}
-                post_consensus_summary={runsState.post_consensus_summary}
-                minerRoundDetailsValidators={minerRoundDetails?.validators}
-                roundAvgCostPerTask={(minerRoundDetails as any)?.avg_cost_per_task ?? (minerRoundDetails as any)?.avgCostPerTask ?? null}
-                postConsensusRounds={minerHistorical?.roundsHistory}
+                rounds={runsByRoundState.rounds}
+                loading={runsByRoundState.loading}
+                error={runsByRoundState.error ?? undefined}
               />
             ) : (
               <>
@@ -2881,7 +2590,7 @@ export default function Page() {
                           <RoundWebsitesChart
                             agentId={agentIdForQuery ?? trimmedId}
                             selectedRound={typeof currentRound === "number" ? currentRound : null}
-                            runs={runsState.runs}
+                            runs={[]}
                             onSummaryChange={handleSummaryChange}
                           />
                         )

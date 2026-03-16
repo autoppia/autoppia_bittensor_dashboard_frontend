@@ -90,7 +90,7 @@ export default function AgentRun() {
 
 
       {/* Stats Section */}
-      <AgentRunStatsDynamic 
+      <AgentRunStatsDynamic
         statistics={statistics}
         isLoading={isLoading}
         error={error}
@@ -105,7 +105,7 @@ export default function AgentRun() {
             setSelectedWebsite={setSelectedWebsite}
             period={period}
             setPeriod={setPeriod}
-            statistics={statistics}
+            statistics={statistics as Record<string, unknown> | null}
             summary={null}
             isLoading={isLoading}
             error={error}
@@ -114,10 +114,10 @@ export default function AgentRun() {
 
         {/* Agent Run Summary - Right Column */}
         <div className="xl:col-span-4">
-          <AgentRunSummaryDynamic 
+          <AgentRunSummaryDynamic
             selectedWebsite={selectedWebsite}
             summary={null}
-            statistics={statistics}
+            statistics={statistics as Record<string, unknown> | null}
             tasks={evaluations}
             isLoading={isLoading}
             error={error}

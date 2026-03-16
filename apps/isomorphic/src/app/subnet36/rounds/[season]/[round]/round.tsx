@@ -13,7 +13,7 @@ import {
 
 // UI & Utils
 import PageHeader from "@/app/shared/page-header";
-import { Button, Text } from "rizzui";
+import { Button, Select, Text } from "rizzui";
 import { Text as RizzText } from "rizzui/typography";
 import { Skeleton } from "@core/ui/skeleton";
 import WidgetCard from "@core/components/cards/widget-card";
@@ -55,6 +55,7 @@ import {
   useRoundStatusView,
   useRoundSeasonSummaryView,
   useRoundValidatorsView,
+  useAvailableRoundSeasons,
 } from "@/services/hooks/useRounds";
 import type {
   ValidatorPerformance,
@@ -275,6 +276,28 @@ function CustomTooltip({ label, active, payload, className }: any) {
   );
 }
 
+const VALIDATOR_IMAGE_MAP: Record<string, string> = {
+  autoppia: "/validators/Autoppia.png",
+  roundtable: "/validators/roundtable.jpg",
+  rt21: "/validators/roundtable.jpg",
+  kraken: "/validators/Kraken.png",
+  yuma: "/validators/Yuma.png",
+  tao5: "/validators/tao5.png",
+  rizzo: "/validators/rizzo.png",
+};
+
+function resolveValidatorImage(name?: string | null, providedImage?: string | null): string {
+  const defaultImage = "/validators/Other.png";
+  if (!name) return resolveAssetUrl(providedImage, defaultImage);
+  const key = name.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+  for (const [pattern, img] of Object.entries(VALIDATOR_IMAGE_MAP)) {
+    if (key.includes(pattern)) {
+      return resolveAssetUrl(providedImage, img);
+    }
+  }
+  return resolveAssetUrl(providedImage, defaultImage);
+}
+
 function RoundHeaderInline({
   round,
   roundLoading,
@@ -288,12 +311,18 @@ function RoundHeaderInline({
 }>) {
   const progress = progressData as { previousRound?: string | number; nextRound?: string | number; season_number?: number } | null | undefined;
   const roundObj = round as { season_number?: number } | undefined;
+  const progressTyped = progressData as { currentBlock?: number; blocksRemaining?: number; status?: string } | null | undefined;
+  const roundTyped = round as { currentBlock?: number; status?: string; validatorRounds?: unknown[]; roundInSeason?: number; season?: number } | undefined;
   const params = useParams();
   const router = useRouter();
   const seasonParam = params.season as string | undefined;
   const roundParam = params.round as string | undefined;
   const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   const roundNumber = roundParam ? Number.parseInt(String(roundParam), 10) : undefined;
+  const {
+    data: availableSeasons,
+    loading: seasonsLoading,
+  } = useAvailableRoundSeasons();
 
   const isLoading = roundLoading || progressLoading;
 
@@ -337,10 +366,27 @@ function RoundHeaderInline({
     [router, roundKey]
   );
 
-  const progressTyped = progressData as { startBlock?: number; endBlock?: number; currentBlock?: number; blocksRemaining?: number; progress?: number; status?: string } | null | undefined;
-  const roundTyped = round as { startBlock?: number; endBlock?: number; currentBlock?: number; validatorRounds?: unknown[]; progress?: number; status?: string; roundInSeason?: number; season?: number } | undefined;
-  const startBlock = progressTyped?.startBlock ?? roundTyped?.startBlock ?? 0;
-  const endBlock = progressTyped?.endBlock ?? roundTyped?.endBlock ?? 0;
+  const goToSeason = React.useCallback(
+    (targetSeason: number) => {
+      if (!Number.isFinite(targetSeason) || targetSeason <= 0) return;
+      const targetKey = `${targetSeason}/1`;
+      if (targetKey === roundKey) return;
+      router.push(`${routes.rounds}/${targetKey}`);
+    },
+    [router, roundKey]
+  );
+
+  const seasonOptions = React.useMemo(
+    () =>
+      (availableSeasons ?? []).map((season) => ({
+        label: `Season ${season}`,
+        value: String(season),
+      })),
+    [availableSeasons]
+  );
+
+  const startBlock = progressData?.startBlock ?? round?.startBlock ?? 0;
+  const endBlock = progressData?.endBlock ?? round?.endBlock ?? 0;
   const currentBlock =
     progressTyped?.currentBlock ?? roundTyped?.currentBlock ?? startBlock;
   const blocksRemaining =
@@ -348,6 +394,20 @@ function RoundHeaderInline({
     (typeof endBlock === "number" && typeof currentBlock === "number"
       ? Math.max(endBlock - currentBlock, 0)
       : undefined);
+
+  // Convert blocks → human-readable time (1 block ≈ 12 s on Bittensor)
+  const timeRemainingStr = React.useMemo(() => {
+    if (typeof blocksRemaining !== "number" || Number.isNaN(blocksRemaining)) {
+      return null;
+    }
+    if (blocksRemaining <= 0) return null;
+    const totalSec = blocksRemaining * 12;
+    if (totalSec < 60) return `~${Math.round(totalSec)}s`;
+    if (totalSec < 3600) return `~${Math.round(totalSec / 60)}m`;
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.round((totalSec % 3600) / 60);
+    return m > 0 ? `~${h}h ${m}m` : `~${h}h`;
+  }, [blocksRemaining]);
 
   // ✅ Usar status desde progressData
   const backendStatus = progressTyped?.status ?? roundTyped?.status;
@@ -414,7 +474,7 @@ function RoundHeaderInline({
   if (isLoading) {
     return (
       <section className="mb-10">
-        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl p-8 text-white">
+        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl px-4 py-6 sm:p-8 text-white">
           <div className="relative space-y-8">
             <header className="flex flex-wrap items-start justify-between gap-6">
               <div className="space-y-4">
@@ -460,7 +520,7 @@ function RoundHeaderInline({
       <div
         className={cn(
           roundGlassBackgroundClass,
-          "rounded-3xl p-8 text-white shadow-2xl relative",
+          "rounded-3xl px-4 py-6 sm:p-8 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
             : status === "completed"
@@ -472,8 +532,8 @@ function RoundHeaderInline({
       >
         <div className="relative space-y-8">
           <header className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
+            <div className="space-y-4 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-4">
                 <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
                   ROUND {String(roundTyped?.roundInSeason ?? roundParam ?? (progressData as { roundInSeason?: number })?.roundInSeason ?? roundNumber ?? "—")}
                 </h1>
@@ -525,17 +585,20 @@ function RoundHeaderInline({
                 <div className="flex items-center gap-2">
                   <PiClockDuotone className="h-5 w-5 text-emerald-300" />
                   <span>
-                    {isActive
-                      ? "Waiting for updated timing"
-                      : "No remaining time"}
+                    {timeRemainingStr
+                      ? `${timeRemainingStr} remaining`
+                      : isActive
+                        ? "Waiting for updated timing"
+                        : "Round finished"}
                   </span>
                 </div>
                 {typeof blocksRemaining === "number" &&
-                  !Number.isNaN(blocksRemaining) && (
+                  !Number.isNaN(blocksRemaining) &&
+                  blocksRemaining > 0 && (
                     <div className="flex items-center gap-2">
                       <PiPulseDuotone className="h-5 w-5 text-sky-300" />
                       <span>
-                        {blocksRemaining.toLocaleString()} blocks remaining
+                        {blocksRemaining.toLocaleString()} blocks
                       </span>
                     </div>
                   )}
@@ -543,27 +606,44 @@ function RoundHeaderInline({
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
+                {/* Wrapper overrides --muted so the focused option gets a violet
+                    highlight instead of the default gray (bg-muted/70) */}
+                <div style={{ "--muted": "139 92 246" } as React.CSSProperties}>
+                  <Select
+                    options={seasonOptions}
+                    value={seasonOptions.find(
+                      (option) =>
+                        option.value ===
+                        String(round?.season ?? seasonParam ?? progressData?.season ?? "")
+                    )}
+                    onChange={(option: { label: string; value: string }) =>
+                      goToSeason(Number.parseInt(option.value, 10))
+                    }
+                    disabled={seasonsLoading || !seasonOptions.length}
+                    className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
+                    selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
+                    dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
+                  />
+                </div>
                 {/* Previous round (lower number) on the left */}
                 <button
                   type="button"
                   onClick={() => goToRound(previousKey)}
                   disabled={!previousKey}
-                  className={cn(roundNavButton)}
+                  className={cn(roundNavButton, "h-[42px] whitespace-nowrap")}
                 >
-                  <PiCaretLeftBold className="h-4 w-4" />
-                  <span>
-                    {previousNumber ? `Round ${previousNumber}` : "Prev"}
-                  </span>
+                  <PiCaretLeftBold className="h-4 w-4 shrink-0" />
+                  <span>{previousNumber ? `Round ${previousNumber}` : "Prev"}</span>
                 </button>
                 {/* Next round (higher number) on the right */}
                 {nextKey && (
                   <button
                     type="button"
                     onClick={() => goToRound(nextKey)}
-                    className={cn(roundNavButton)}
+                    className={cn(roundNavButton, "h-[42px] whitespace-nowrap")}
                   >
                     <span>{nextNumber ? `Round ${nextNumber}` : "Next"}</span>
-                    <PiCaretRightBold className="h-4 w-4" />
+                    <PiCaretRightBold className="h-4 w-4 shrink-0" />
                   </button>
                 )}
               </div>
@@ -580,12 +660,12 @@ function RoundHeaderInline({
           </header>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex flex-1 flex-col gap-5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-bold text-white/80 uppercase tracking-wider">
+            <div className="flex flex-1 flex-col gap-5 min-w-0">
+              <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                <span className="font-bold text-white/80 uppercase tracking-wider truncate">
                   Round Progress
                 </span>
-                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent shrink-0">
                   {progressPercentage}%
                 </span>
               </div>
@@ -615,42 +695,42 @@ function RoundHeaderInline({
                   style={{ left: `calc(${progressPercentage}% - 10px)` }}
                 />
               </div>
-              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3">
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40">
+              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3 min-w-0">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40 shrink-0">
                     <PiClockDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
                       Start Block
                     </span>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-white mt-0.5 break-all">
                       {startBlock.toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40 shrink-0">
                     <PiPulseDuotone className="h-7 w-7 text-amber-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-amber-200/80 font-bold">
                       Current Block
                     </span>
-                    <div className="text-lg font-black text-amber-100 mt-0.5">
+                    <div className="text-lg font-black text-amber-100 mt-0.5 break-all">
                       {currentBlock.toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30">
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300 min-w-0">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30 shrink-0">
                     <PiFlagCheckeredDuotone className="h-7 w-7 text-indigo-200" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
                       End Block
                     </span>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-white mt-0.5 break-all">
                       {endBlock.toLocaleString()}
                     </div>
                   </div>
@@ -814,6 +894,11 @@ const truncateDecimal = (value: number, decimals: number = 4): number => {
   return Math.floor(value * multiplier) / multiplier;
 };
 
+const formatRewardPercent = (value?: number | null): string => {
+  if (value === undefined || value === null || Number.isNaN(value)) return "—";
+  return `${(Number(value) * 100).toFixed(2)}%`;
+};
+
 function RoundStatsInline({
   selectedValidator,
   statistics,
@@ -917,7 +1002,7 @@ function RoundStatsInline({
   const fallbackAvatarIndex = displayUid != null ? Math.abs(displayUid % 50) : 0;
   const fallbackAvatar = resolveAssetUrl(`/miners/${fallbackAvatarIndex}.svg`);
   const winnerAvatar = resolveAssetUrl(displayImage, fallbackAvatar);
-  const rewardPct = `${formatNumber(truncateDecimal(winnerAverageReward, 4) * 100, 2)}%`;
+  const rewardPct = formatRewardPercent(winnerAverageReward);
   const costStr = averageEvalCost != null
     ? `$${Number(averageEvalCost).toFixed(4)}`
     : "—";
@@ -1477,17 +1562,18 @@ function RoundValidatorsInline({
   // ✅ Validators ahora vienen de roundData (useGetRound)
   const validatorsData = React.useMemo(() => {
     if (!roundData?.validators) return [];
-    // Convertir roundData.validators al formato esperado
-    return roundData.validators.map((v: any) => ({
-      id: `validator-${v.validator_uid}`,
-      uid: v.validator_uid,
-      name: v.validator_name || `Validator ${v.validator_uid}`,
-      icon: v.validator_image || `/validators/Other.png`,
-      topReward: v.topReward || 0,
-      topMiner: v.winner,
-      hotkey: v.validator_hotkey || null,
-      // Agregar otros campos necesarios
-    })) as ValidatorPerformance[];
+    return (roundData.validators as any[])
+      .map((v: any) => ({
+        id: `validator-${v.validator_uid}`,
+        uid: v.validator_uid,
+        name: v.validator_name || `Validator ${v.validator_uid}`,
+        icon: resolveValidatorImage(v.validator_name, v.validator_image),
+        topReward: v.topReward || 0,
+        topMiner: v.winner,
+        hotkey: v.validator_hotkey || null,
+        stake: v.stake ?? 0,
+      }))
+      .sort((a: any, b: any) => (b.stake ?? 0) - (a.stake ?? 0)) as ValidatorPerformance[];
   }, [roundData]);
   const [selectedValidatorId, setSelectedValidatorId] = React.useState<
     string | null
@@ -1612,10 +1698,7 @@ function RoundValidatorsInline({
             className="custom-scrollbar grid grid-flow-col gap-8 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0 px-4 py-6"
           >
             {validatorsData?.map((validator) => {
-              const iconSrc = resolveAssetUrl(
-                validator.icon,
-                resolveAssetUrl("/validators/Other.png")
-              );
+              const iconSrc = resolveValidatorImage(validator.name, validator.icon);
               const isActive = selectedValidatorId === validator.id;
               return (
                 <button
@@ -2215,7 +2298,7 @@ function RoundTopMinersInline({
           name: miner.name,
           imageUrl: miner.image,
           hotkey: miner.hotkey,
-          reward: miner.local_avg_reward,
+          reward: miner.best_local_reward ?? miner.local_avg_reward,
           ranking: miner.local_rank,
           validatorId: selectedValidator.id,
         }));
@@ -2501,20 +2584,9 @@ export default function Round() {
     data: unknown;
   } | null>(null);
   const [includeOwnDownloadedPayload, setIncludeOwnDownloadedPayload] = React.useState(false);
-  const ipfsDialogRef = React.useRef<HTMLDialogElement>(null);
-
-  React.useEffect(() => {
-    if (ipfsConsensusDetail && ipfsDialogRef.current) {
-      ipfsDialogRef.current.showModal();
-    }
-  }, [ipfsConsensusDetail]);
-
-  const closeIpfsDialog = React.useCallback(() => {
-    setIpfsConsensusDetail(null);
-    setIncludeOwnDownloadedPayload(false);
-    ipfsDialogRef.current?.close();
-  }, []);
-
+  const [ipfsUploadFullPayload, setIpfsUploadFullPayload] = React.useState<Record<string, unknown> | null>(null);
+  const [ipfsUploadLoading, setIpfsUploadLoading] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2676,7 +2748,8 @@ export default function Round() {
         validator_uid: validator.validator_uid,
         validator_name: validator.validator_name,
         validator_hotkey: validator.validator_hotkey,
-        validator_image: validator.validator_image,
+        validator_image: resolveValidatorImage(validator.validator_name, validator.validator_image),
+        stake: validator.stake ?? 0,
         winner: validator.competition_state?.winner
           ? {
               ...validator.competition_state.winner,
@@ -2697,9 +2770,9 @@ export default function Round() {
           hotkey: miner.hotkey ?? null,
           image: miner.image ?? null,
           local_rank: miner.competition_rank ?? null,
-          local_avg_reward: miner.best_local_reward ?? 0,
-          local_avg_eval_score: miner.best_local_eval_score ?? 0,
-          local_avg_eval_time: miner.best_local_eval_time ?? 0,
+          local_avg_reward: miner.local_avg_reward ?? null,
+          local_avg_eval_score: miner.local_avg_eval_score ?? null,
+          local_avg_eval_time: miner.local_avg_eval_time ?? null,
           best_local_reward: miner.best_local_reward ?? 0,
           best_local_eval_score: miner.best_local_eval_score ?? 0,
           best_local_eval_time: miner.best_local_eval_time ?? 0,
@@ -3048,8 +3121,8 @@ export default function Round() {
               const det = lr.dethroned;
               const reigningReward = lr.reigning_reward ?? lr.reigning_score;
               const challengerReward = lr.challenger_reward ?? lr.challenger_score;
-              const reignPct = reigningReward != null ? `${(reigningReward * 100).toFixed(2)}%` : "—";
-              const chalPct = challengerReward != null ? `${(challengerReward * 100).toFixed(2)}%` : null;
+              const reignPct = formatRewardPercent(reigningReward);
+              const chalPct = challengerReward != null ? formatRewardPercent(challengerReward) : null;
               const thresholdPct = `+${(lr.required_improvement_pct * 100).toFixed(1)}%`;
               const needed = reigningReward != null && challengerReward != null
                 ? `${((reigningReward * (1 + lr.required_improvement_pct) - challengerReward) * 100).toFixed(3)}%`
@@ -3102,8 +3175,8 @@ export default function Round() {
                       </div>
                     )}
 
-                    {/* vs */}
-                    {lr.challenger_uid != null && chalPct && (
+                    {/* vs — only show when there is an actual reigning leader to compare against */}
+                    {lr.reigning_uid != null && lr.challenger_uid != null && chalPct && (
                       <div className="hidden sm:flex items-center justify-center w-7 flex-shrink-0">
                         <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">vs</span>
                       </div>
@@ -3468,13 +3541,13 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Final metrics after validator consensus", data: evaluationPost })}
+                  onClick={() => setIpfsConsensusDetail({ type: "post_consensus", title: "Validator consensus — Results Averaged Across All Validators After Consensus", data: evaluationPost })}
                 >
                   <div className={cn(cardTitleRowClass, "text-orange-400")}>
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/80 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/80 text-sm">Results Averaged Across All Validators After Consensus.</p>
                   <p className="text-white/60 text-xs mt-1">{countMinersExcludingBurned(evaluationPost)} miners</p>
                   <p className="text-orange-400/80 text-xs mt-2">Click to view full payload →</p>
                 </button>
@@ -3484,7 +3557,7 @@ export default function Round() {
                     <PiChartLineDownDuotone className="h-5 w-5 flex-shrink-0" />
                     <span className="font-semibold text-sm uppercase tracking-wider">Validator consensus</span>
                   </div>
-                  <p className="text-white/60 text-sm">Final metrics after validator consensus.</p>
+                  <p className="text-white/60 text-sm">Results Averaged Across All Validators After Consensus.</p>
                   <p className="text-white/40 text-xs mt-6">No data for this round yet.</p>
                 </div>
               )}
@@ -3493,13 +3566,14 @@ export default function Round() {
                 <button
                   type="button"
                   className={cardClass}
-                  onClick={() =>
+                  onClick={() => {
+                    setIpfsUploadFullPayload(null);
                     setIpfsConsensusDetail({
                       type: "upload",
                       title: "IPFS Uploaded — What this validator published",
                       data: buildIpfsUploadModalData(ipfsUp, ipfsDown),
-                    })
-                  }
+                    });
+                  }}
                 >
                   <div className={cn(cardTitleRowClass, "text-teal-400")}>
                     <PiCloudArrowUpDuotone className="h-5 w-5 flex-shrink-0" />
@@ -3573,32 +3647,96 @@ export default function Round() {
 
       {/* Modal: full IPFS / Consensus detail when user clicks a card */}
       {ipfsConsensusDetail && (
-        <dialog
-          ref={ipfsDialogRef}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 w-full max-w-none max-h-none border-0 bg-transparent open:flex open:items-center open:justify-center [&::backdrop]:bg-black/70 [&::backdrop]:backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => {
+            setIpfsConsensusDetail(null);
+            setIncludeOwnDownloadedPayload(false);
+            setIpfsUploadFullPayload(null);
+          }}
+          role="dialog"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"
-          onClose={closeIpfsDialog}
         >
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close dialog"
-            onClick={closeIpfsDialog}
+            onClick={() => {
+            setIpfsConsensusDetail(null);
+            setIncludeOwnDownloadedPayload(false);
+            setIpfsUploadFullPayload(null);
+          }}
           />
           <div
             className={cn("relative z-10 max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}
           >
-            <div className="flex items-center justify-between border-b border-white/20 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">{ipfsConsensusDetail.title}</h3>
-              <button
-                type="button"
-                onClick={closeIpfsDialog}
-                className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Close"
-              >
-                <PiXBold className="h-6 w-6" />
-              </button>
+            <div className="flex items-center justify-between border-b border-white/20 px-6 py-4 gap-3">
+              <h3 className="text-lg font-bold text-white truncate min-w-0">{ipfsConsensusDetail.title}</h3>
+              <div className="flex items-center gap-1 shrink-0">
+                {ipfsConsensusDetail.type !== "how_consensus" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const data = ipfsConsensusDetail.data as Record<string, unknown> | undefined;
+                      if (ipfsConsensusDetail.type === "download") {
+                        const payloads = Array.isArray(data?.payloads) ? data.payloads : [];
+                        const selfUid = Number(data?.self_validator_uid);
+                        const filtered =
+                          includeOwnDownloadedPayload || !Number.isFinite(selfUid)
+                            ? payloads
+                            : payloads.filter((e: { validator_uid?: unknown }) => Number(e?.validator_uid) !== selfUid);
+                        const str = JSON.stringify(
+                          {
+                            validators_participated: data?.validators_participated ?? payloads.length,
+                            total_stake: data?.total_stake ?? null,
+                            payloads: filtered,
+                          },
+                          null,
+                          2
+                        );
+                        void navigator.clipboard.writeText(str).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        });
+                      } else {
+                        const toCopy =
+                          ipfsConsensusDetail.type === "upload" && ipfsUploadFullPayload
+                            ? ipfsUploadFullPayload
+                            : data ?? {};
+                        void navigator.clipboard
+                          .writeText(JSON.stringify(toCopy, null, 2))
+                          .then(() => {
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          });
+                      }
+                    }}
+                    className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors inline-flex items-center gap-1.5"
+                    aria-label="Copy payload"
+                    title="Copy payload"
+                  >
+                    {copied ? (
+                      <PiCheckDuotone className="h-5 w-5 text-emerald-400" />
+                    ) : (
+                      <PiCopyDuotone className="h-5 w-5" />
+                    )}
+                    <span className="text-xs font-medium">{copied ? "Copied!" : "Copy"}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIpfsConsensusDetail(null);
+                    setIncludeOwnDownloadedPayload(false);
+                    setIpfsUploadFullPayload(null);
+                  }}
+                  className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Close"
+                >
+                  <PiXBold className="h-6 w-6" />
+                </button>
+              </div>
             </div>
             <div className="overflow-auto max-h-[calc(90vh-80px)] p-6">
               {ipfsConsensusDetail.type === "how_consensus" ? (
@@ -3656,6 +3794,47 @@ export default function Round() {
                     </div>
                   );
                 })()
+              ) : ipfsConsensusDetail.type === "upload" &&
+                (ipfsConsensusDetail.data as { cid?: string } | undefined)?.cid ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://ipfs.io/ipfs/${(ipfsConsensusDetail.data as { cid?: string }).cid}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/50 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors"
+                    >
+                      <PiArrowSquareOutDuotone className="h-4 w-4" />
+                      Open in IPFS
+                    </a>
+                    <button
+                      type="button"
+                      disabled={ipfsUploadLoading}
+                      onClick={() => {
+                        const cid = (ipfsConsensusDetail.data as { cid?: string }).cid;
+                        if (!cid) return;
+                        setIpfsUploadLoading(true);
+                        fetch(`https://ipfs.io/ipfs/${cid}`)
+                          .then((r) => r.json())
+                          .then((body) => {
+                            setIpfsUploadFullPayload(body ?? null);
+                          })
+                          .catch(() => setIpfsUploadFullPayload(null))
+                          .finally(() => setIpfsUploadLoading(false));
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg border border-violet-400/50 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                    >
+                      {ipfsUploadLoading ? "Loading…" : "Load full payload from IPFS"}
+                    </button>
+                  </div>
+                  <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
+                    {JSON.stringify(
+                      ipfsUploadFullPayload ?? ipfsConsensusDetail.data,
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
               ) : (
                 <pre className="text-sm text-cyan-100/90 font-mono whitespace-pre-wrap break-words bg-black/30 rounded-xl p-4">
                   {JSON.stringify(ipfsConsensusDetail.data, null, 2)}
@@ -3663,7 +3842,7 @@ export default function Round() {
               )}
             </div>
           </div>
-        </dialog>
+        </div>
       )}
 
       {/* Charts */}

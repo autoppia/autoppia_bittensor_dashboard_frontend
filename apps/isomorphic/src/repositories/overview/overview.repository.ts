@@ -19,6 +19,7 @@ import {
   OverviewRoundData,
   OverviewMetrics,
   SubnetStatistics,
+  NetworkStatusData,
 } from './overview.types';
 
 /** Network status value from API */
@@ -55,7 +56,7 @@ export class OverviewRepository {
       }
 
       // Handle both nested and flat response structures
-      const payload = response.data as Record<string, unknown> | undefined;
+      const payload = response.data as unknown as Record<string, unknown> | undefined;
       if (payload && typeof payload === "object") {
         const data = payload.data as { metrics?: OverviewMetrics } | undefined;
         if (data?.metrics) return data.metrics;
@@ -230,26 +231,16 @@ export class OverviewRepository {
   /**
    * Get real-time network status
    */
-  async getNetworkStatus(): Promise<{
-    status: NetworkStatus;
-    message: string;
-    lastChecked: string;
-    activeValidators: number;
-    networkLatency: number;
-  }> {
+  async getNetworkStatus(): Promise<NetworkStatusData> {
     type NetworkStatusPayload = {
-      data?: {
-        status: NetworkStatus;
-        message: string;
-        lastChecked: string;
-        activeValidators: number;
-        networkLatency: number;
-      };
+      data?: NetworkStatusData;
       status?: NetworkStatus;
       message?: string;
       lastChecked?: string;
       activeValidators?: number;
       networkLatency?: number;
+      season?: number | null;
+      round?: number | null;
     };
     const response = await apiClient.get<NetworkStatusPayload>(
       `${this.baseEndpoint}/network-status`
@@ -257,13 +248,7 @@ export class OverviewRepository {
     if (response.data?.data) {
       return response.data.data;
     }
-    return response.data as unknown as {
-      status: NetworkStatus;
-      message: string;
-      lastChecked: string;
-      activeValidators: number;
-      networkLatency: number;
-    };
+    return response.data as unknown as NetworkStatusData;
   }
 
   /**

@@ -9,21 +9,29 @@ export interface MinerSummary {
   name?: string | null;
 }
 
+export interface OverviewLeader {
+  minerUid?: number | null;
+  minerHotkey?: string | null;
+  minerImage?: string | null;
+  minerGithubUrl?: string | null;
+  minerName?: string | null;
+  reward: number;
+  cost?: number | null;
+  score?: number | null;
+  time?: number | null;
+  validators: number;
+  totalWebsitesEvaluated: number;
+  tasksReceived: number;
+  tasksSuccess: number;
+}
+
 export interface OverviewMetrics {
-  topReward: number; // post_consensus_avg_reward of the top miner
-  topMinerUid?: number | null;
-  topMinerName?: string | null;
-  totalWebsites: number;
-  totalValidators: number;
+  leader?: OverviewLeader | null;
+  season?: number | null;
+  round?: number | null;
   totalMiners: number;
   tasksPerValidator?: number | null;
   minerList?: MinerSummary[] | null;
-  currentRound: number;
-  currentSeason?: number | null;
-  currentRoundInSeason?: number | null;
-  metricsRound: number;
-  metricsSeason?: number | null;
-  metricsRoundInSeason?: number | null;
   subnetVersion: string;
   lastUpdated: string;
 }
@@ -180,12 +188,22 @@ export interface SubnetStatisticsResponse {
   };
 }
 
+export interface NetworkStatusData {
+  status: "healthy" | "degraded" | "down" | string;
+  message: string;
+  lastChecked: string;
+  activeValidators: number;
+  networkLatency: number;
+  season?: number | null;
+  round?: number | null;
+}
+
 // ===== QUERY PARAMETERS =====
 export interface ValidatorsQueryParams {
   page?: number;
   limit?: number;
   status?: string;
-  sortBy?: "weight" | "trust" | "totalTasks" | "name";
+  sortBy?: "weight" | "trust" | "totalTasks" | "name" | "stake";
   sortOrder?: "asc" | "desc";
 }
 
