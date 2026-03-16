@@ -1128,6 +1128,18 @@ function AgentValidators({
                             <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
                               validator-{v.validator_uid}
                             </Text>
+                            {typeof v.github_url === "string" && v.github_url.trim().length > 0 ? (
+                              <a
+                                href={v.github_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                                className="mt-1 inline-flex max-w-full items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-100 transition-colors duration-200 hover:border-sky-300/60 hover:bg-sky-500/20"
+                              >
+                                <PiGithubLogoDuotone className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">GitHub commit</span>
+                              </a>
+                            ) : null}
                             {v.run_early_stop_message ? (
                               <Text className="mt-1 line-clamp-2 text-[11px] text-rose-200/90">
                                 {v.run_early_stop_message}
@@ -1897,6 +1909,7 @@ export default function Page() {
             averageEvaluationTime: validator.run_time ?? null,
             websitesCount: validator.run_websites_count,
             totalWebsites: validator.run_websites_count,
+            githubUrl: validator.github_url ?? null,
             zeroReason: validator.run_zero_reason ?? null,
             earlyStopReason: validator.run_early_stop_reason ?? null,
             earlyStopMessage: validator.run_early_stop_message ?? null,

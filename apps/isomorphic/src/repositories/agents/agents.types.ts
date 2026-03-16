@@ -282,6 +282,7 @@ export interface AgentPerformanceMetrics {
 export interface AgentRunOverview {
   runId: string;
   agentId: string;
+  githubUrl?: string | null;
   roundId: number;
   season?: number;
   round?: number;
@@ -541,6 +542,7 @@ export interface AgentRunsByRoundValidatorEntry {
   run_zero_reason?: string | null;
   run_early_stop_reason?: string | null;
   run_early_stop_message?: string | null;
+  github_url?: string | null;
 }
 
 export interface AgentRunsByRoundEntry {
