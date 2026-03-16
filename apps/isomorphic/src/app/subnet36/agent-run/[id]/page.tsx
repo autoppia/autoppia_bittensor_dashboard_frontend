@@ -102,7 +102,7 @@ const PROGRESS_COLORS = [
 ];
 
 const REWARD_FORMULA =
-  "Reward = (EVAL_SCORE_WEIGHT × 1.0) + (TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)) + (COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR))";
+  "Reward = (Score Weight × 1.0) + (Time Weight × (1 − time / Task Timeout)) + (Cost Weight × (1 − cost / Cost Normalizer))";
 
 // Utilities
 function truncateMiddle(value?: string | null, visible: number = 6) {
@@ -943,7 +943,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
   );
   const averageDuration = stats?.avg_time ?? 0;
-  const averageScore = clampPercentage(stats?.avg_score ?? 0);
+  const averageScore = clampPercentage((stats?.avg_score ?? 0) * 100);
   const averageCost =
     typeof stats?.avg_cost === "number" && !Number.isNaN(stats.avg_cost)
       ? Math.max(0, stats.avg_cost)
@@ -989,7 +989,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       key: "tasks",
       label:
         attemptedTasks !== null && attemptedTasks < totalTasks
-          ? "Attempted / Expected"
+          ? "Attempted/Expected"
           : "Total Tasks",
       value:
         attemptedTasks !== null && attemptedTasks < totalTasks
@@ -1000,6 +1000,10 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass:
+        attemptedTasks !== null && attemptedTasks < totalTasks
+          ? "whitespace-nowrap text-[11px] tracking-[0.08em]"
+          : "",
     },
     {
       key: "websites",
@@ -1010,6 +1014,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "",
     },
     {
       key: "success",
@@ -1020,6 +1025,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "",
     },
     {
       key: "failed",
@@ -1030,6 +1036,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "",
     },
     {
       key: "non-evaluated",
@@ -1040,6 +1047,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "",
     },
   ] as const;
 
@@ -1061,7 +1069,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         <div
           className={cn(
             "text-sm font-medium uppercase tracking-wide",
-            card.labelClass
+            card.labelClass,
+            card.labelTextClass
           )}
         >
           {card.label}
@@ -1160,7 +1169,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 p-4">
             <div className="flex items-center gap-2 text-fuchsia-200">
               <PiTarget className="h-4 w-4" />
@@ -1168,8 +1177,11 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
                 Score Term
               </span>
             </div>
-            <div className="mt-2 font-mono text-sm text-white">
-              EVAL_SCORE_WEIGHT × 1.0
+            <div className="mt-2 text-sm font-semibold text-white">
+              Score Weight × 1.0
+            </div>
+            <div className="mt-1 text-xs text-fuchsia-100/70">
+              Full reward credit when the task is completed.
             </div>
           </div>
 
@@ -1180,8 +1192,11 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
                 Time Term
               </span>
             </div>
-            <div className="mt-2 font-mono text-sm text-white">
-              TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)
+            <div className="mt-2 text-sm font-semibold text-white">
+              Time Weight × (1 − time / Task Timeout)
+            </div>
+            <div className="mt-1 text-xs text-sky-100/70">
+              Faster solutions keep more of the time component.
             </div>
           </div>
 
@@ -1192,8 +1207,11 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
                 Cost Term
               </span>
             </div>
-            <div className="mt-2 font-mono text-sm text-white">
-              COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR)
+            <div className="mt-2 text-sm font-semibold text-white">
+              Cost Weight × (1 − cost / Cost Normalizer)
+            </div>
+            <div className="mt-1 text-xs text-amber-100/70">
+              Lower LLM spend preserves more of the cost component.
             </div>
           </div>
         </div>
