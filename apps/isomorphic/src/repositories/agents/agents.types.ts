@@ -551,6 +551,8 @@ export interface AgentRunsByRoundEntry {
   round_label: string;
   season: number;
   round_in_season: number;
+  round_status?: string | null;
+  round_consensus_status?: string | null;
   validators_count: number;
   websites_count: number;
   post_consensus_available: boolean;
