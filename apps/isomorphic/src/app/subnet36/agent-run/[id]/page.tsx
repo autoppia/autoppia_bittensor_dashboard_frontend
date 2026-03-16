@@ -105,6 +105,7 @@ const PROGRESS_COLORS = [
 
 const REWARD_FORMULA =
   "Reward = (Score Weight × 1.0) + (Time Weight × (1 − time / Task Timeout)) + (Cost Weight × (1 − cost / Cost Normalizer))";
+const OVER_COST_LIMIT = 0.05;
 
 // Utilities
 function truncateMiddle(value?: string | null, visible: number = 6) {
@@ -173,7 +174,13 @@ function humanizeZeroReason(reason: string): string {
     .join(" ");
 }
 
-function summarizeFailureReason(reason?: string | null): string | null {
+function summarizeFailureReason(
+  reason?: string | null,
+  cost?: number | null
+): string | null {
+  if (typeof cost === "number" && !Number.isNaN(cost) && cost > OVER_COST_LIMIT) {
+    return "Over Cost Limit";
+  }
   if (!reason) return null;
   const normalized = reason.trim().toLowerCase();
   if (!normalized) return null;
@@ -238,7 +245,7 @@ function buildDetailDataFromStats(
 
   for (const evaluation of evaluations ?? []) {
     const rawReason = evaluation.zeroReason ?? null;
-    const summarized = summarizeFailureReason(rawReason);
+    const summarized = summarizeFailureReason(rawReason, evaluation.cost ?? null);
     if (!summarized) continue;
 
     const websiteKey = String(evaluation.website || "unknown");
@@ -1045,6 +1052,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       valueClass: "text-white",
       labelClass: "text-white/80",
       labelTextClass: "",
+      cardClass: "w-[120px] lg:w-[132px]",
     },
     {
       key: "websites",
@@ -1056,6 +1064,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       valueClass: "text-white",
       labelClass: "text-white/80",
       labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[120px] lg:w-[132px]",
     },
     {
       key: "success",
@@ -1067,6 +1076,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       valueClass: "text-white",
       labelClass: "text-white/80",
       labelTextClass: "",
+      cardClass: "w-[120px] lg:w-[132px]",
     },
     {
       key: "failed",
@@ -1078,6 +1088,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       valueClass: "text-white",
       labelClass: "text-white/80",
       labelTextClass: "",
+      cardClass: "w-[120px] lg:w-[132px]",
     },
     {
       key: "non-evaluated",
@@ -1088,7 +1099,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
-      labelTextClass: "",
+      labelTextClass: "whitespace-nowrap text-[9px] tracking-[0.04em] lg:text-[10px]",
+      cardClass: "w-[128px] lg:w-[142px]",
     },
   ] as const;
 
@@ -1100,6 +1112,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         className={cn(
           "rounded-2xl border px-4 py-4 text-center backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl",
           card.wrapperClass,
+          card.cardClass,
           isMobile ? "sm:px-5 sm:py-5" : "p-4"
         )}
       >
@@ -1158,10 +1171,10 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       </div>
 
       <div className="hidden md:flex items-center justify-between relative">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-5 lg:gap-6">
           {cards.slice(0, 2).map((c) => renderCard(c))}
         </div>
-        <div className="flex flex-col items-center justify-center mx-8">
+        <div className="flex min-w-[240px] flex-col items-center justify-center px-6 lg:px-8">
           <div
             className="bg-gradient-to-r from-amber-300 via-yellow-200 to-yellow-400 bg-clip-text text-6xl font-extrabold text-transparent drop-shadow-[0_18px_38px_rgba(244,197,94,0.5)]"
             style={{ WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)" }}
@@ -1190,7 +1203,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
             })}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-5 lg:gap-6">
           {cards.slice(2).map((c) => renderCard(c))}
         </div>
       </div>
@@ -1562,10 +1575,16 @@ function AgentRunDetail({
                       </div>
                     )}
                     {item.avgReward <= 0 &&
-                      !!(selectedWebsite ? item.dominantZeroReason : item.dominantZeroReason) && (
+                      !!(
+                        item.dominantZeroReason ??
+                        (item.avgCost > OVER_COST_LIMIT ? "Over Cost Limit" : null)
+                      ) && (
                         <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-amber-100 rounded-full text-[10px] sm:text-xs font-medium border border-amber-400/40 bg-amber-500/10">
                           <span>
-                            {item.dominantZeroReason}
+                            {item.dominantZeroReason ??
+                              (item.avgCost > OVER_COST_LIMIT
+                                ? "Over Cost Limit"
+                                : null)}
                           </span>
                         </div>
                       )}
@@ -1659,9 +1678,12 @@ function AgentRunDetail({
                     </span>
                   </div>
                 </div>
-                {item.avgReward <= 0 && item.dominantZeroReason && (
+                {item.avgReward <= 0 &&
+                  (item.dominantZeroReason || item.avgCost > OVER_COST_LIMIT) && (
                   <div className="mt-3 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
-                    Reason: {item.dominantZeroReason}
+                    Reason:{" "}
+                    {item.dominantZeroReason ??
+                      (item.avgCost > OVER_COST_LIMIT ? "Over Cost Limit" : "Task Failed")}
                   </div>
                 )}
               </div>
@@ -2395,7 +2417,7 @@ const agentRunTasksColumns = [
         className="text-xs sm:text-sm font-medium text-amber-100/90"
         title="View evaluation details"
       >
-        {summarizeFailureReason(row.original.zeroReason) ?? "—"}
+        {summarizeFailureReason(row.original.zeroReason, row.original.cost ?? null) ?? "—"}
       </Link>
     ),
   }),
