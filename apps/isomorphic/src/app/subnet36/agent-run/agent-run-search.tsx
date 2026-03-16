@@ -1073,16 +1073,16 @@ export default function AgentRunSearch() {
                       />
                     </button>
                     {isMinerDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-purple-500/30 rounded-xl overflow-hidden shadow-xl z-50 max-h-72 flex flex-col">
-                        <div className="p-2 border-b border-purple-500/20 sticky top-0 bg-gray-900">
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl flex flex-col">
+                        <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950/98 p-2">
                           <div className="relative">
-                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
                             <input
                               type="text"
                               value={minerSearchQuery}
                               onChange={(e) => setMinerSearchQuery(e.target.value)}
                               placeholder="Search miners..."
-                              className="w-full pl-8 pr-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-200 text-sm placeholder-purple-400/60 focus:border-purple-500 outline-none"
+                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900/95 py-2 pl-8 pr-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1095,12 +1095,12 @@ export default function AgentRunSearch() {
                               setMinerSearchQuery("");
                               setIsMinerDropdownOpen(false);
                             }}
-                            className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                            className="w-full border-b border-slate-800/80 bg-transparent px-3 py-2 text-left text-slate-200 transition-colors duration-200 hover:bg-purple-500/14 hover:text-white"
                           >
                             All Miners
                           </button>
                           {filteredMinerOptions.length === 0 ? (
-                            <div className="px-3 py-4 text-purple-400/70 text-sm text-center">
+                            <div className="px-3 py-4 text-center text-sm text-slate-400">
                               No miners match your search
                             </div>
                           ) : (
@@ -1114,14 +1114,14 @@ export default function AgentRunSearch() {
                                   setMinerSearchQuery("");
                                   setIsMinerDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${
+                                className={`w-full border-b border-slate-800/80 px-3 py-2 text-left transition-colors duration-200 last:border-b-0 ${
                                   selectedMinerUid === miner.uid
-                                    ? "bg-purple-500/30 text-purple-100"
-                                    : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"
+                                    ? "bg-purple-500/22 text-white"
+                                    : "bg-transparent text-slate-200 hover:bg-purple-500/14 hover:text-white"
                                 }`}
                               >
                                 <span className="font-medium">{miner.name}</span>
-                                <span className="text-purple-400/80 text-xs ml-1">
+                                <span className="ml-1 text-xs text-slate-400">
                                   (UID {miner.uid})
                                 </span>
                               </button>

@@ -557,16 +557,16 @@ export default function TaskSearch() {
                     />
                   </button>
                   {isAgentDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
-                      <div className="p-2 border-b border-emerald-400/15 sticky top-0 bg-slate-950/95">
+                    <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
+                      <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950/98 p-2">
                         <div className="relative">
-                          <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300" />
                           <input
                             type="text"
                             value={agentSearchQuery}
                             onChange={(e) => setAgentSearchQuery(e.target.value)}
                             placeholder="Search agents..."
-                            className="w-full pl-8 pr-3 py-2 bg-slate-900/90 border border-emerald-400/20 rounded-lg text-emerald-100 text-sm placeholder-emerald-300/45 focus:border-emerald-400 outline-none"
+                            className="w-full rounded-lg border border-slate-700/80 bg-slate-900/95 py-2 pl-8 pr-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-emerald-400/70 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -579,12 +579,12 @@ export default function TaskSearch() {
                             setIsAgentDropdownOpen(false);
                             setAgentSearchQuery("");
                           }}
-                          className="w-full px-3 py-2.5 text-left text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100 transition-colors duration-200 border-b border-emerald-400/10"
+                          className="w-full border-b border-slate-800/80 bg-transparent px-3 py-2.5 text-left text-slate-200 transition-colors duration-200 hover:bg-emerald-500/14 hover:text-white"
                         >
                           All Miners
                         </button>
                         {filteredAgentsForDropdown.length === 0 ? (
-                          <div className="px-3 py-4 text-emerald-300/55 text-sm text-center">
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
                             No miners match your search
                           </div>
                         ) : (
@@ -598,14 +598,14 @@ export default function TaskSearch() {
                                 setIsAgentDropdownOpen(false);
                                 setAgentSearchQuery("");
                               }}
-                              className={`w-full px-3 py-2.5 text-left transition-colors duration-200 border-b border-emerald-400/10 last:border-b-0 ${
+                              className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
                                 selectedAgentUid === agent.uid
-                                  ? "bg-emerald-500/18 text-emerald-50"
-                                  : "text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100"
+                                  ? "bg-emerald-500/22 text-white"
+                                  : "bg-transparent text-slate-200 hover:bg-emerald-500/14 hover:text-white"
                               }`}
                             >
                               <span className="font-medium">{agent.name}</span>
-                              <span className="text-emerald-300/60 text-xs ml-1">(UID {agent.uid})</span>
+                              <span className="ml-1 text-xs text-slate-400">(UID {agent.uid})</span>
                             </button>
                           ))
                         )}
