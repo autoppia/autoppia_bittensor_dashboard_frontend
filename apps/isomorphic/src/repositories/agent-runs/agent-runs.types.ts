@@ -95,6 +95,8 @@ export interface AgentRunEvaluationData {
   eval_score: number; // 0 or 1 (passed or failed)
   eval_time: number; // Evaluation time in seconds
   reward: number; // Combined reward (eval_score + time_score)
+  cost?: number;
+  zeroReason?: string | null;
   startTime: string;
   endTime?: string;
   error?: string;

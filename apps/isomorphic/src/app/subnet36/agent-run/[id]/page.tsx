@@ -60,6 +60,7 @@ interface AgentRunResult {
   avgSolutionTime: number; // seconds
   avgReward: number;
   avgCost: number;
+  dominantZeroReason?: string | null;
 }
 
 interface AgentRunWebsite {
@@ -73,6 +74,7 @@ interface AgentRunWebsite {
     avgSolutionTime: number;
     avgReward: number;
     avgCost: number;
+    dominantZeroReason?: string | null;
   };
 }
 
@@ -171,6 +173,22 @@ function humanizeZeroReason(reason: string): string {
     .join(" ");
 }
 
+function summarizeFailureReason(reason?: string | null): string | null {
+  if (!reason) return null;
+  const normalized = reason.trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === "task_timeout" || normalized === "timeout") return "Timeout";
+  if (normalized === "over_cost_limit") return "Over Cost Limit";
+  if (
+    normalized === "task_failed" ||
+    normalized === "tests_failed" ||
+    normalized === "ref_not_found"
+  ) {
+    return "Task Failed";
+  }
+  return humanizeZeroReason(normalized);
+}
+
 function normalizeRoundInSeason(
   roundValue: unknown,
   seasonValue?: unknown
@@ -211,9 +229,35 @@ function normalizePositiveInt(value: unknown): number | null {
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
   stats?: AgentRunStatsData | null,
-  _evaluations?: AgentRunEvaluationData[] | null
+  evaluations?: AgentRunEvaluationData[] | null
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
+
+  const reasonsByWebsite = new Map<string, Map<string, number>>();
+  const reasonsByWebsiteUseCase = new Map<string, Map<string, number>>();
+
+  for (const evaluation of evaluations ?? []) {
+    const rawReason = evaluation.zeroReason ?? null;
+    const summarized = summarizeFailureReason(rawReason);
+    if (!summarized) continue;
+
+    const websiteKey = String(evaluation.website || "unknown");
+    const useCaseKey = `${websiteKey}::${String(evaluation.useCase || "UNKNOWN")}`;
+
+    const siteMap = reasonsByWebsite.get(websiteKey) ?? new Map<string, number>();
+    siteMap.set(summarized, (siteMap.get(summarized) ?? 0) + 1);
+    reasonsByWebsite.set(websiteKey, siteMap);
+
+    const useCaseMap = reasonsByWebsiteUseCase.get(useCaseKey) ?? new Map<string, number>();
+    useCaseMap.set(summarized, (useCaseMap.get(summarized) ?? 0) + 1);
+    reasonsByWebsiteUseCase.set(useCaseKey, useCaseMap);
+  }
+
+  const pickDominantReason = (counter?: Map<string, number>): string | null => {
+    if (!counter || counter.size === 0) return null;
+    const [reason] = Array.from(counter.entries()).sort((a, b) => b[1] - a[1])[0];
+    return reason;
+  };
 
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
@@ -234,6 +278,9 @@ function buildDetailDataFromStats(
         avgSolutionTime: typeof uc.avgTime === "number" ? uc.avgTime : 0,
         avgReward: typeof uc.avgReward === "number" ? uc.avgReward : 0,
         avgCost: typeof uc.avgCost === "number" ? uc.avgCost : 0,
+        dominantZeroReason: pickDominantReason(
+          reasonsByWebsiteUseCase.get(`${String(w.website || `Website ${i + 1}`)}::${String(uc.useCase || `Use Case ${idx + 1}`)}`)
+        ),
       }));
 
       return {
@@ -249,6 +296,9 @@ function buildDetailDataFromStats(
             typeof w.averageDuration === "number" ? w.averageDuration : 0,
           avgReward: typeof (w as { averageReward?: number }).averageReward === "number" ? (w as { averageReward?: number }).averageReward ?? 0 : 0,
           avgCost: typeof (w as { averageCost?: number }).averageCost === "number" ? (w as { averageCost?: number }).averageCost ?? 0 : 0,
+          dominantZeroReason: pickDominantReason(
+            reasonsByWebsite.get(String(w.website || `Website ${i + 1}`))
+          ),
         },
       };
     }
@@ -1396,6 +1446,7 @@ function AgentRunDetail({
               avgSolutionTime: result.avgSolutionTime,
               avgReward: result.avgReward,
               avgCost: result.avgCost,
+              dominantZeroReason: result.dominantZeroReason ?? null,
               colorIndex: idx,
             })) || []
           );
@@ -1409,6 +1460,7 @@ function AgentRunDetail({
           avgSolutionTime: web.overall.avgSolutionTime ?? 0,
           avgReward: web.overall.avgReward ?? 0,
           avgCost: web.overall.avgCost ?? 0,
+          dominantZeroReason: web.overall.dominantZeroReason ?? null,
           colorIndex: idx,
         }));
 
@@ -1509,6 +1561,14 @@ function AgentRunDetail({
                         <span className="sm:hidden">Low</span>
                       </div>
                     )}
+                    {item.avgReward <= 0 &&
+                      !!(selectedWebsite ? item.dominantZeroReason : item.dominantZeroReason) && (
+                        <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-amber-100 rounded-full text-[10px] sm:text-xs font-medium border border-amber-400/40 bg-amber-500/10">
+                          <span>
+                            {item.dominantZeroReason}
+                          </span>
+                        </div>
+                      )}
                   </div>
                   <div className="text-left sm:text-right">
                     <div className="text-xl sm:text-2xl font-bold text-white">
@@ -1599,6 +1659,11 @@ function AgentRunDetail({
                     </span>
                   </div>
                 </div>
+                {item.avgReward <= 0 && item.dominantZeroReason && (
+                  <div className="mt-3 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+                    Reason: {item.dominantZeroReason}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2199,27 +2264,27 @@ const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 const agentRunTasksColumns = [
   columnHelper.display({
     id: "evaluationId",
-    size: 80,
+    size: 110,
     header: "Evaluation Id",
     cell: ({ row }) => (
       <Link
         href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="ms-2 font-mono text-xs sm:text-sm text-white"
+        className="ms-2 font-mono text-xs sm:text-sm text-white/90"
         title="View evaluation details"
       >
-        #{row.original.evaluationId}
+        #{truncateMiddle(row.original.evaluationId, 6)}
       </Link>
     ),
   }),
   columnHelper.accessor("prompt", {
     id: "prompt",
     header: "Prompt",
-    size: 400,
+    size: 560,
     enableSorting: false,
     cell: ({ row }) => (
       <Link
         href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="block max-w-[200px] sm:max-w-[320px] break-words whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-200"
+        className="block max-w-[260px] sm:max-w-[520px] break-words whitespace-pre-wrap text-sm sm:text-base font-medium leading-6 text-slate-100"
         title="View evaluation details"
       >
         {row.original.prompt}
@@ -2261,13 +2326,12 @@ const agentRunTasksColumns = [
   }),
   columnHelper.accessor("eval_score", {
     id: "eval_score",
-    size: 100,
+    size: 90,
     header: "Score",
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
-      const isPassed = eval_score >= 1;
-      const scoreColor = isPassed ? "text-green-400" : "text-red-400";
-      const scoreValue = isPassed ? "100%" : "0%";
+      const scoreColor = eval_score > 0 ? "text-green-400" : "text-red-400";
+      const scoreValue = `${(eval_score * 100).toFixed(1)}%`;
       return (
         <Link
           href={`${routes.evaluations}/${row.original.evaluationId}`}
@@ -2281,7 +2345,7 @@ const agentRunTasksColumns = [
   }),
   columnHelper.accessor("eval_time", {
     id: "eval_time",
-    size: 100,
+    size: 90,
     header: "Time",
     cell: ({ row }) => (
       <Link
@@ -2290,6 +2354,48 @@ const agentRunTasksColumns = [
         title="View evaluation details"
       >
         {row.original.eval_time?.toFixed(2) ?? 0}s
+      </Link>
+    ),
+  }),
+  columnHelper.accessor("reward", {
+    id: "reward",
+    size: 90,
+    header: "Reward",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-amber-300"
+        title="View evaluation details"
+      >
+        {(100 * (row.original.reward ?? 0)).toFixed(1)}%
+      </Link>
+    ),
+  }),
+  columnHelper.display({
+    id: "cost",
+    size: 90,
+    header: "Cost",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-slate-300"
+        title="View evaluation details"
+      >
+        {typeof row.original.cost === "number" ? `$${row.original.cost.toFixed(4)}` : "—"}
+      </Link>
+    ),
+  }),
+  columnHelper.display({
+    id: "reason",
+    size: 140,
+    header: "Reason",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-amber-100/90"
+        title="View evaluation details"
+      >
+        {summarizeFailureReason(row.original.zeroReason) ?? "—"}
       </Link>
     ),
   }),
