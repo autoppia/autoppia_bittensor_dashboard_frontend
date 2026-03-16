@@ -101,6 +101,9 @@ const PROGRESS_COLORS = [
   "#F43F5E",
 ];
 
+const REWARD_FORMULA =
+  "Reward = (EVAL_SCORE_WEIGHT × 1.0) + (TIME_WEIGHT × (1 − time / TASK_TIMEOUT_SECONDS)) + (COST_WEIGHT × (1 − cost / REWARD_TASK_DOLLAR_COST_NORMALIZATOR))";
+
 // Utilities
 function truncateMiddle(value?: string | null, visible: number = 6) {
   if (!value) return "—";
@@ -1080,6 +1083,15 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
         <div className="grid grid-cols-3 gap-6">
           {cards.slice(2).map((c) => renderCard(c))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-sky-400/25 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-200/80">
+          How Reward Is Calculated
+        </div>
+        <div className="mt-2 break-words font-mono text-xs leading-6 text-sky-100/95 md:text-sm">
+          {REWARD_FORMULA}
         </div>
       </div>
     </div>
