@@ -1061,7 +1061,7 @@ export default function AgentRunSearch() {
                       id="filter-agent-button"
                       type="button"
                       onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
-                      className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                      className="flex w-full items-center justify-between rounded-xl border-2 border-purple-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-400/70 focus:ring-0"
                     >
                       <span className="truncate">
                         {selectedMinerUid != null && selectedMinerName
@@ -1074,7 +1074,7 @@ export default function AgentRunSearch() {
                     </button>
                     {isMinerDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl flex flex-col">
-                        <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950/98 p-2">
+                        <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
                           <div className="relative">
                             <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
                             <input
@@ -1082,7 +1082,7 @@ export default function AgentRunSearch() {
                               value={minerSearchQuery}
                               onChange={(e) => setMinerSearchQuery(e.target.value)}
                               placeholder="Search miners..."
-                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900/95 py-2 pl-8 pr-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1095,7 +1095,7 @@ export default function AgentRunSearch() {
                               setMinerSearchQuery("");
                               setIsMinerDropdownOpen(false);
                             }}
-                            className="w-full border-b border-slate-800/80 bg-transparent px-3 py-2 text-left text-slate-200 transition-colors duration-200 hover:bg-purple-500/14 hover:text-white"
+                            className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2 text-left text-slate-100 transition-colors duration-200 hover:bg-purple-500/16 hover:text-white"
                           >
                             All Miners
                           </button>
@@ -1116,8 +1116,8 @@ export default function AgentRunSearch() {
                                 }}
                                 className={`w-full border-b border-slate-800/80 px-3 py-2 text-left transition-colors duration-200 last:border-b-0 ${
                                   selectedMinerUid === miner.uid
-                                    ? "bg-purple-500/22 text-white"
-                                    : "bg-transparent text-slate-200 hover:bg-purple-500/14 hover:text-white"
+                                    ? "bg-gradient-to-r from-purple-500/35 to-fuchsia-500/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-purple-500/16 hover:text-white"
                                 }`}
                               >
                                 <span className="font-medium">{miner.name}</span>
