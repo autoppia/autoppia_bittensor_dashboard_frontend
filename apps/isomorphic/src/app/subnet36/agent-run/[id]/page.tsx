@@ -58,6 +58,9 @@ interface AgentRunResult {
   total: number;
   successCount: number;
   avgSolutionTime: number; // seconds
+  avgReward: number;
+  avgCost: number;
+  dominantZeroReason?: string | null;
 }
 
 interface AgentRunWebsite {
@@ -69,6 +72,9 @@ interface AgentRunWebsite {
     total: number;
     successCount: number;
     avgSolutionTime: number;
+    avgReward: number;
+    avgCost: number;
+    dominantZeroReason?: string | null;
   };
 }
 
@@ -96,6 +102,10 @@ const PROGRESS_COLORS = [
   "#D946EF",
   "#F43F5E",
 ];
+
+const REWARD_FORMULA =
+  "Reward = (Score Weight × 1.0) + (Time Weight × (1 − time / Task Timeout)) + (Cost Weight × (1 − cost / Cost Normalizer))";
+const OVER_COST_LIMIT = 0.05;
 
 // Utilities
 function truncateMiddle(value?: string | null, visible: number = 6) {
@@ -164,6 +174,28 @@ function humanizeZeroReason(reason: string): string {
     .join(" ");
 }
 
+function summarizeFailureReason(
+  reason?: string | null,
+  cost?: number | null
+): string | null {
+  if (typeof cost === "number" && !Number.isNaN(cost) && cost > OVER_COST_LIMIT) {
+    return "Over Cost Limit";
+  }
+  if (!reason) return null;
+  const normalized = reason.trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === "task_timeout" || normalized === "timeout") return "Timeout";
+  if (normalized === "over_cost_limit") return "Over Cost Limit";
+  if (
+    normalized === "task_failed" ||
+    normalized === "tests_failed" ||
+    normalized === "ref_not_found"
+  ) {
+    return "Task Failed";
+  }
+  return humanizeZeroReason(normalized);
+}
+
 function normalizeRoundInSeason(
   roundValue: unknown,
   seasonValue?: unknown
@@ -204,13 +236,39 @@ function normalizePositiveInt(value: unknown): number | null {
 // Transform stats to local detail model (no external utils)
 function buildDetailDataFromStats(
   stats?: AgentRunStatsData | null,
-  _evaluations?: AgentRunEvaluationData[] | null
+  evaluations?: AgentRunEvaluationData[] | null
 ): AgentRunDetailData {
   if (!stats) return { websites: [] };
 
+  const reasonsByWebsite = new Map<string, Map<string, number>>();
+  const reasonsByWebsiteUseCase = new Map<string, Map<string, number>>();
+
+  for (const evaluation of evaluations ?? []) {
+    const rawReason = evaluation.zeroReason ?? null;
+    const summarized = summarizeFailureReason(rawReason, evaluation.cost ?? null);
+    if (!summarized) continue;
+
+    const websiteKey = String(evaluation.website || "unknown");
+    const useCaseKey = `${websiteKey}::${String(evaluation.useCase || "UNKNOWN")}`;
+
+    const siteMap = reasonsByWebsite.get(websiteKey) ?? new Map<string, number>();
+    siteMap.set(summarized, (siteMap.get(summarized) ?? 0) + 1);
+    reasonsByWebsite.set(websiteKey, siteMap);
+
+    const useCaseMap = reasonsByWebsiteUseCase.get(useCaseKey) ?? new Map<string, number>();
+    useCaseMap.set(summarized, (useCaseMap.get(summarized) ?? 0) + 1);
+    reasonsByWebsiteUseCase.set(useCaseKey, useCaseMap);
+  }
+
+  const pickDominantReason = (counter?: Map<string, number>): string | null => {
+    if (!counter || counter.size === 0) return null;
+    const [reason] = Array.from(counter.entries()).sort((a, b) => b[1] - a[1])[0];
+    return reason;
+  };
+
   const websites: AgentRunWebsite[] = (stats.performanceByWebsite || []).map(
     (w, i) => {
-      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number }> }).statsByUsecase ?? [];
+      const statsByUsecase = (w as { statsByUsecase?: Array<{ useCase?: string; avgScore?: number; total?: number; successful?: number; avgTime?: number; avgReward?: number; avgCost?: number }> }).statsByUsecase ?? [];
 
       const websiteUseCases: AgentRunUseCase[] = statsByUsecase.map((uc: any, idx: number) => ({
         id: idx,
@@ -225,6 +283,11 @@ function buildDetailDataFromStats(
         total: uc.total || 0,
         successCount: uc.successful || 0,
         avgSolutionTime: typeof uc.avgTime === "number" ? uc.avgTime : 0,
+        avgReward: typeof uc.avgReward === "number" ? uc.avgReward : 0,
+        avgCost: typeof uc.avgCost === "number" ? uc.avgCost : 0,
+        dominantZeroReason: pickDominantReason(
+          reasonsByWebsiteUseCase.get(`${String(w.website || `Website ${i + 1}`)}::${String(uc.useCase || `Use Case ${idx + 1}`)}`)
+        ),
       }));
 
       return {
@@ -238,6 +301,11 @@ function buildDetailDataFromStats(
           successCount: w.successful || 0,
           avgSolutionTime:
             typeof w.averageDuration === "number" ? w.averageDuration : 0,
+          avgReward: typeof (w as { averageReward?: number }).averageReward === "number" ? (w as { averageReward?: number }).averageReward ?? 0 : 0,
+          avgCost: typeof (w as { averageCost?: number }).averageCost === "number" ? (w as { averageCost?: number }).averageCost ?? 0 : 0,
+          dominantZeroReason: pickDominantReason(
+            reasonsByWebsite.get(String(w.website || `Website ${i + 1}`))
+          ),
         },
       };
     }
@@ -418,16 +486,43 @@ export default function Page() {
         <AgentRunStats stats={stats || null} />
       )}
 
-      {/* Zero reward reason: show when overall reward is 0 and we have a reason (below stats card) */}
-      {!isLoading && stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0)) && (() => {
-        const raw = info?.zeroReason ?? stats.zeroReason;
-        const reason = typeof raw === "string" ? raw : "";
-        return reason ? (
-          <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
-            <span className="font-semibold">Reason for zero reward:</span>{" "}
-            {humanizeZeroReason(reason)}
-          </div>
-        ) : null;
+      {!isLoading && (() => {
+        const zeroReasonRaw = info?.zeroReason ?? stats?.zeroReason;
+        const zeroReason = typeof zeroReasonRaw === "string" ? zeroReasonRaw : "";
+        const earlyStopReason =
+          typeof info?.earlyStopReason === "string"
+            ? info.earlyStopReason
+            : typeof stats?.earlyStopReason === "string"
+              ? stats.earlyStopReason
+              : "";
+        const earlyStopMessage =
+          typeof info?.earlyStopMessage === "string"
+            ? info.earlyStopMessage
+            : typeof stats?.earlyStopMessage === "string"
+              ? stats.earlyStopMessage
+              : "";
+        const hasZeroReward =
+          !!stats && (stats.overallReward === 0 || (stats.avg_reward !== undefined && stats.avg_reward <= 0));
+
+        if (hasZeroReward && zeroReason) {
+          return (
+            <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+              <span className="font-semibold">Reason for zero reward:</span>{" "}
+              {humanizeZeroReason(zeroReason)}
+            </div>
+          );
+        }
+
+        if (earlyStopReason || earlyStopMessage) {
+          return (
+            <div className="mb-4 rounded-xl border border-rose-400/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-50">
+              <span className="font-semibold">Reason for early stop:</span>{" "}
+              {earlyStopMessage || humanizeZeroReason(earlyStopReason)}
+            </div>
+          );
+        }
+
+        return null;
       })()}
 
       <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-6 mb-6">
@@ -480,6 +575,10 @@ type AgentRunPersonasFromInfoProps = Readonly<{
     round: any;
     validator: any;
     miner: any;
+    zeroReason?: string | null;
+    earlyStopReason?: string | null;
+    earlyStopMessage?: string | null;
+    tasksAttempted?: number | null;
   } | null;
 }>;
 function AgentRunPersonasFromInfo({ info }: AgentRunPersonasFromInfoProps) {
@@ -882,30 +981,67 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
   // Reward/time use the post-run reward metrics; website rows keep eval_score separately.
   const overallReward = clampPercentage((stats?.avg_reward ?? 0) * 100);
   const totalTasks = clampNonNegative(stats?.totalTasks);
+  const attemptedTasksRaw = stats?.tasksAttempted;
+  const attemptedTasks =
+    typeof attemptedTasksRaw === "number" && !Number.isNaN(attemptedTasksRaw)
+      ? clampNonNegative(attemptedTasksRaw)
+      : null;
+  const effectiveAttemptedTasks = attemptedTasks ?? totalTasks;
   const successfulTasks = clampNonNegative(stats?.successfulTasks);
   const failedTasks =
-    stats?.failedTasks == null
-      ? Math.max(totalTasks - successfulTasks, 0)
-      : clampNonNegative(stats.failedTasks);
+    attemptedTasks !== null
+      ? Math.max(effectiveAttemptedTasks - successfulTasks, 0)
+      : stats?.failedTasks == null
+        ? Math.max(totalTasks - successfulTasks, 0)
+        : clampNonNegative(stats.failedTasks);
+  const nonEvaluatedTasks =
+    attemptedTasks !== null ? Math.max(totalTasks - effectiveAttemptedTasks, 0) : 0;
   const websitesCount = clampNonNegative(
     stats?.websites ?? stats?.performanceByWebsite?.length ?? 0
   );
   const averageDuration = stats?.avg_time ?? 0;
+  const averageScore = clampPercentage((stats?.avg_score ?? 0) * 100);
+  const averageCost =
+    typeof stats?.avg_cost === "number" && !Number.isNaN(stats.avg_cost)
+      ? Math.max(0, stats.avg_cost)
+      : null;
 
   const displayOverallReward = formatPercentage(overallReward);
   const displayAverageDuration = formatDuration(averageDuration);
+  const displayAverageScore = formatPercentage(averageScore);
+  const displayAverageCost =
+    averageCost !== null ? `$${averageCost.toFixed(4)}` : "—";
+
+  const rewardBreakdownItems = [
+    {
+      key: "score",
+      label: "Score",
+      value: displayAverageScore,
+      icon: PiTarget,
+      accentClass:
+        "border-fuchsia-400/35 bg-fuchsia-500/10 text-fuchsia-100",
+      iconClass: "text-fuchsia-300",
+    },
+    {
+      key: "time",
+      label: "Time",
+      value: displayAverageDuration,
+      icon: PiClock,
+      accentClass: "border-sky-400/35 bg-sky-500/10 text-sky-100",
+      iconClass: "text-sky-300",
+    },
+    {
+      key: "cost",
+      label: "Cost",
+      value: displayAverageCost,
+      icon: PiChartBar,
+      accentClass:
+        "border-amber-400/35 bg-amber-500/10 text-amber-100",
+      iconClass: "text-amber-300",
+    },
+  ] as const;
 
   const cards = [
-    {
-      key: "tasks",
-      label: "Total Tasks",
-      value: formatCount(totalTasks),
-      icon: PiClock,
-      wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
-      iconClass: "text-white",
-      valueClass: "text-white",
-      labelClass: "text-white/80",
-    },
     {
       key: "websites",
       label: "Websites",
@@ -915,6 +1051,20 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
+    },
+    {
+      key: "tasks",
+      label: "Total Tasks",
+      value: formatCount(totalTasks),
+      icon: PiClock,
+      wrapperClass: "border-blue-400/40 bg-blue-500/20 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
     },
     {
       key: "success",
@@ -925,6 +1075,8 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
     },
     {
       key: "failed",
@@ -935,6 +1087,20 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
       iconClass: "text-white",
       valueClass: "text-white",
       labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[10px] tracking-[0.06em]",
+      cardClass: "w-[128px] lg:w-[138px]",
+    },
+    {
+      key: "non-evaluated",
+      label: "Non Evaluated",
+      value: formatCount(nonEvaluatedTasks),
+      icon: PiClock,
+      wrapperClass: "border-slate-400/35 bg-slate-500/15 text-white",
+      iconClass: "text-white",
+      valueClass: "text-white",
+      labelClass: "text-white/80",
+      labelTextClass: "whitespace-nowrap text-[8px] tracking-[0.03em] lg:text-[9px]",
+      cardClass: "w-[132px] lg:w-[150px]",
     },
   ] as const;
 
@@ -946,6 +1112,7 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         className={cn(
           "rounded-2xl border px-4 py-4 text-center backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl",
           card.wrapperClass,
+          card.cardClass,
           isMobile ? "sm:px-5 sm:py-5" : "p-4"
         )}
       >
@@ -955,8 +1122,9 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
         <div
           className={cn(
-            "text-sm font-medium uppercase tracking-wide",
-            card.labelClass
+            "whitespace-nowrap text-sm font-medium uppercase tracking-wide",
+            card.labelClass,
+            card.labelTextClass
           )}
         >
           {card.label}
@@ -978,8 +1146,23 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
           <div className="mt-2 text-sm font-medium text-white/70">
             Overall reward
           </div>
-          <div className="mt-1 text-xs text-white/60">
-            Reward {displayOverallReward} • Time {displayAverageDuration}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {rewardBreakdownItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm",
+                    item.accentClass
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5", item.iconClass)} />
+                  <span className="text-white/70">{item.label}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -987,11 +1170,11 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
         </div>
       </div>
 
-      <div className="hidden md:flex items-center justify-between relative">
-        <div className="grid grid-cols-2 gap-6">
-          {cards.slice(0, 2).map((c) => renderCard(c))}
+      <div className="hidden md:flex items-center justify-between gap-6 relative">
+        <div className="grid grid-cols-5 gap-4 lg:gap-5">
+          {cards.map((c) => renderCard(c))}
         </div>
-        <div className="flex flex-col items-center justify-center mx-8">
+        <div className="flex min-w-[250px] shrink-0 flex-col items-center justify-center px-2 lg:px-4">
           <div
             className="bg-gradient-to-r from-amber-300 via-yellow-200 to-yellow-400 bg-clip-text text-6xl font-extrabold text-transparent drop-shadow-[0_18px_38px_rgba(244,197,94,0.5)]"
             style={{ WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)" }}
@@ -1001,12 +1184,96 @@ function AgentRunStats({ stats }: Readonly<{ stats: AgentRunStatsData | null }>)
           <div className="mt-2 text-sm font-medium text-white/70">
             Overall reward
           </div>
-          <div className="mt-1 text-xs text-white/60">
-            Reward {displayOverallReward} • Time {displayAverageDuration}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {rewardBreakdownItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm",
+                    item.accentClass
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5", item.iconClass)} />
+                  <span className="text-white/70">{item.label}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
-          {cards.slice(2).map((c) => renderCard(c))}
+      </div>
+
+      <div className="mt-6 rounded-3xl border border-sky-400/20 bg-[linear-gradient(135deg,rgba(8,47,73,0.68),rgba(15,23,42,0.72),rgba(30,41,59,0.66))] p-4 md:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-200/80">
+              How Reward Is Calculated
+            </div>
+            <div className="mt-1 text-sm text-white/70">
+              Reward is the weighted combination of task completion, speed, and cost efficiency.
+            </div>
+          </div>
+          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/70">
+            Higher score, faster time, lower cost
+          </div>
+        </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 p-4">
+            <div className="flex items-center gap-2 text-fuchsia-200">
+              <PiTarget className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Score Term
+              </span>
+            </div>
+            <div className="mt-2 text-sm font-semibold text-white">
+              Score Weight × 1.0
+            </div>
+            <div className="mt-1 text-xs text-fuchsia-100/70">
+              Full reward credit when the task is completed.
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-sky-400/25 bg-sky-500/10 p-4">
+            <div className="flex items-center gap-2 text-sky-200">
+              <PiClock className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Time Term
+              </span>
+            </div>
+            <div className="mt-2 text-sm font-semibold text-white">
+              Time Weight × (1 − time / Task Timeout)
+            </div>
+            <div className="mt-1 text-xs text-sky-100/70">
+              Faster solutions keep more of the time component.
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4">
+            <div className="flex items-center gap-2 text-amber-200">
+              <PiChartBar className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]">
+                Cost Term
+              </span>
+            </div>
+            <div className="mt-2 text-sm font-semibold text-white">
+              Cost Weight × (1 − cost / Cost Normalizer)
+            </div>
+            <div className="mt-1 text-xs text-amber-100/70">
+              Lower LLM spend preserves more of the cost component.
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">
+            Full Formula
+          </div>
+          <div className="mt-2 break-words font-mono text-xs leading-6 text-white/90 md:text-sm">
+            {REWARD_FORMULA}
+          </div>
         </div>
       </div>
     </div>
@@ -1037,7 +1304,7 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          {(["tasks", "websites", "success", "failed"] as const).map((k) => (
+          {(["tasks", "websites", "success", "failed", "non-evaluated"] as const).map((k) => (
             <div
               key={`stats-mobile-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 sm:px-5 sm:py-5 text-center backdrop-blur-sm"
@@ -1108,7 +1375,7 @@ function AgentRunStatsPlaceholder() {
           />
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {(["right1", "right2"] as const).map((k) => (
+          {(["right1", "right2", "right3"] as const).map((k) => (
             <div
               key={`stats-right-placeholder-${k}`}
               className="rounded-2xl border border-white/20 bg-transparent p-4 text-center backdrop-blur-sm"
@@ -1187,6 +1454,9 @@ function AgentRunDetail({
               total: result.total,
               successCount: result.successCount,
               avgSolutionTime: result.avgSolutionTime,
+              avgReward: result.avgReward,
+              avgCost: result.avgCost,
+              dominantZeroReason: result.dominantZeroReason ?? null,
               colorIndex: idx,
             })) || []
           );
@@ -1198,6 +1468,9 @@ function AgentRunDetail({
           total: web.overall.total ?? 0,
           successCount: web.overall.successCount ?? 0,
           avgSolutionTime: web.overall.avgSolutionTime ?? 0,
+          avgReward: web.overall.avgReward ?? 0,
+          avgCost: web.overall.avgCost ?? 0,
+          dominantZeroReason: web.overall.dominantZeroReason ?? null,
           colorIndex: idx,
         }));
 
@@ -1298,6 +1571,20 @@ function AgentRunDetail({
                         <span className="sm:hidden">Low</span>
                       </div>
                     )}
+                    {item.avgReward <= 0 &&
+                      !!(
+                        item.dominantZeroReason ??
+                        (item.avgCost > OVER_COST_LIMIT ? "Over Cost Limit" : null)
+                      ) && (
+                        <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-amber-100 rounded-full text-[10px] sm:text-xs font-medium border border-amber-400/40 bg-amber-500/10">
+                          <span>
+                            {item.dominantZeroReason ??
+                              (item.avgCost > OVER_COST_LIMIT
+                                ? "Over Cost Limit"
+                                : null)}
+                          </span>
+                        </div>
+                      )}
                   </div>
                   <div className="text-left sm:text-right">
                     <div className="text-xl sm:text-2xl font-bold text-white">
@@ -1346,7 +1633,16 @@ function AgentRunDetail({
                   </div>
                 )}
 
-                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiChartBar className="w-4 h-4 sm:w-6 sm:h-6 text-amber-300 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
+                      Reward
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold text-white">
+                      {(item.avgReward * 100).toFixed(1)}%
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 sm:gap-3">
                     <PiTarget className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400 flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
@@ -1369,7 +1665,24 @@ function AgentRunDetail({
                       {item.avgSolutionTime.toFixed(2)}s
                     </span>
                   </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <PiGlobe className="w-4 h-4 sm:w-6 sm:h-6 text-fuchsia-300 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-white/70 uppercase tracking-wide">
+                      Cost
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold text-white">
+                      ${item.avgCost.toFixed(4)}
+                    </span>
+                  </div>
                 </div>
+                {item.avgReward <= 0 &&
+                  (item.dominantZeroReason || item.avgCost > OVER_COST_LIMIT) && (
+                  <div className="mt-3 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+                    Reason:{" "}
+                    {item.dominantZeroReason ??
+                      (item.avgCost > OVER_COST_LIMIT ? "Over Cost Limit" : "Task Failed")}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1970,27 +2283,27 @@ const columnHelper = createColumnHelper<AgentRunEvaluationData>();
 const agentRunTasksColumns = [
   columnHelper.display({
     id: "evaluationId",
-    size: 80,
+    size: 110,
     header: "Evaluation Id",
     cell: ({ row }) => (
       <Link
         href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="ms-2 font-mono text-xs sm:text-sm text-white"
+        className="ms-2 font-mono text-xs sm:text-sm text-white/90"
         title="View evaluation details"
       >
-        #{row.original.evaluationId}
+        #{truncateMiddle(row.original.evaluationId, 6)}
       </Link>
     ),
   }),
   columnHelper.accessor("prompt", {
     id: "prompt",
     header: "Prompt",
-    size: 400,
+    size: 560,
     enableSorting: false,
     cell: ({ row }) => (
       <Link
         href={`${routes.evaluations}/${row.original.evaluationId}`}
-        className="block max-w-[200px] sm:max-w-[320px] break-words whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-200"
+        className="block max-w-[260px] sm:max-w-[520px] break-words whitespace-pre-wrap text-sm sm:text-base font-medium leading-6 text-slate-100"
         title="View evaluation details"
       >
         {row.original.prompt}
@@ -2030,15 +2343,28 @@ const agentRunTasksColumns = [
       </Link>
     ),
   }),
+  columnHelper.accessor("reward", {
+    id: "reward",
+    size: 90,
+    header: "Reward",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-amber-300"
+        title="View evaluation details"
+      >
+        {(100 * (row.original.reward ?? 0)).toFixed(1)}%
+      </Link>
+    ),
+  }),
   columnHelper.accessor("eval_score", {
     id: "eval_score",
-    size: 100,
+    size: 90,
     header: "Score",
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
-      const isPassed = eval_score >= 1;
-      const scoreColor = isPassed ? "text-green-400" : "text-red-400";
-      const scoreValue = isPassed ? "100%" : "0%";
+      const scoreColor = eval_score > 0 ? "text-green-400" : "text-red-400";
+      const scoreValue = `${(eval_score * 100).toFixed(1)}%`;
       return (
         <Link
           href={`${routes.evaluations}/${row.original.evaluationId}`}
@@ -2052,7 +2378,7 @@ const agentRunTasksColumns = [
   }),
   columnHelper.accessor("eval_time", {
     id: "eval_time",
-    size: 100,
+    size: 90,
     header: "Time",
     cell: ({ row }) => (
       <Link
@@ -2061,6 +2387,34 @@ const agentRunTasksColumns = [
         title="View evaluation details"
       >
         {row.original.eval_time?.toFixed(2) ?? 0}s
+      </Link>
+    ),
+  }),
+  columnHelper.display({
+    id: "cost",
+    size: 90,
+    header: "Cost",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-slate-300"
+        title="View evaluation details"
+      >
+        {typeof row.original.cost === "number" ? `$${row.original.cost.toFixed(4)}` : "—"}
+      </Link>
+    ),
+  }),
+  columnHelper.display({
+    id: "reason",
+    size: 140,
+    header: "Reason",
+    cell: ({ row }) => (
+      <Link
+        href={`${routes.evaluations}/${row.original.evaluationId}`}
+        className="text-xs sm:text-sm font-medium text-amber-100/90"
+        title="View evaluation details"
+      >
+        {summarizeFailureReason(row.original.zeroReason, row.original.cost ?? null) ?? "—"}
       </Link>
     ),
   }),

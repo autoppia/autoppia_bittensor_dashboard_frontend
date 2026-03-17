@@ -111,7 +111,7 @@ export default function MinerChart({
     loading,
     error,
     refetch,
-  } = useLeaderboard({ timeRange: apiTimeRange });
+  } = useLeaderboard({ timeRange: apiTimeRange, season });
 
   // Auto-refresh leaderboard every 2 minutes (reduced from 30s for performance)
   useEffect(() => {

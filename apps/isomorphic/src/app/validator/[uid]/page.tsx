@@ -248,20 +248,57 @@ const PROGRESS_COLORS = [
 
 const HIGHLIGHT_COLOR = "#FDF5E6";
 
-// Prepare data for pie chart from stats (only success and zero)
-function preparePieChartData(stats: { successCount: number; zeroCount: number; totalEvaluations: number }) {
+function getSummaryBreakdown(stats: {
+  successCount: number;
+  zeroCount: number;
+  nullCount?: number;
+  failedCount?: number;
+  totalEvaluations: number;
+}) {
+  const total = Math.max(0, stats.totalEvaluations ?? 0);
+  const successCount = Math.max(0, stats.successCount ?? 0);
+  const nonEvaluatedCount = Math.max(0, stats.nullCount ?? 0);
+  const rawFailCount = Math.max(stats.failedCount ?? 0, stats.zeroCount ?? 0);
+  const failCount = Math.min(Math.max(0, rawFailCount), Math.max(0, total - successCount - nonEvaluatedCount));
+
+  return {
+    total,
+    successCount,
+    failCount,
+    nonEvaluatedCount,
+    successPct: total > 0 ? (successCount / total) * 100 : 0,
+    failPct: total > 0 ? (failCount / total) * 100 : 0,
+    nonEvaluatedPct: total > 0 ? (nonEvaluatedCount / total) * 100 : 0,
+  };
+}
+
+// Prepare data for pie chart from stats
+function preparePieChartData(stats: {
+  successCount: number;
+  zeroCount: number;
+  nullCount?: number;
+  failedCount?: number;
+  totalEvaluations: number;
+}) {
+  const breakdown = getSummaryBreakdown(stats);
   const data = [
     {
       name: "Success",
-      value: stats.successCount,
+      value: breakdown.successCount,
       fill: CHART_COLORS.success,
       stroke: CHART_COLORS.success,
     },
     {
-      name: "Zero",
-      value: stats.zeroCount,
-      fill: CHART_COLORS.zero,
-      stroke: CHART_COLORS.zero,
+      name: "Fail",
+      value: breakdown.failCount,
+      fill: CHART_COLORS.failed,
+      stroke: CHART_COLORS.failed,
+    },
+    {
+      name: "Non Evaluated",
+      value: breakdown.nonEvaluatedCount,
+      fill: CHART_COLORS.null,
+      stroke: CHART_COLORS.null,
     },
   ].filter((item) => item.value > 0);
 
@@ -573,6 +610,7 @@ function GlobalStatsCard({
   selectedRound: number | null;
 }>) {
   const stats = data.globalStats;
+  const breakdown = getSummaryBreakdown(stats);
   const roundLabel = (() => {
     if (selectedSeason != null && selectedRound != null) return `Season ${selectedSeason} - Round ${selectedRound}`;
     if (selectedSeason != null) return `Season ${selectedSeason}`;
@@ -597,17 +635,17 @@ function GlobalStatsCard({
           <p className="text-xs uppercase tracking-wide text-white/60 mb-2">Total Evaluations</p>
           <p className="text-3xl font-bold text-white">{formatNumber(stats.totalEvaluations)}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 flex-1">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 flex-1">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-4 border border-emerald-400/30 flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <PiCheckCircle className="h-5 w-5 text-emerald-300" />
               <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Success</p>
             </div>
             <p className="text-xl font-bold text-emerald-300 text-center mb-1">
-              {formatNumber(stats.successCount)}
+              {formatNumber(breakdown.successCount)}
             </p>
             <p className="text-xs text-emerald-200/80 font-semibold">
-              {formatPercentage(stats.successPct)}
+              {formatPercentage(breakdown.successPct)}
             </p>
           </div>
           <div className="rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 p-4 border border-red-400/30 flex flex-col items-center justify-center">
@@ -616,10 +654,22 @@ function GlobalStatsCard({
               <p className="text-xs uppercase tracking-wide text-white/70 font-semibold">Fail</p>
             </div>
             <p className="text-xl font-bold text-red-300 text-center mb-1">
-              {formatNumber(stats.zeroCount)}
+              {formatNumber(breakdown.failCount)}
             </p>
             <p className="text-xs text-red-200/80 font-semibold">
-              {formatPercentage(stats.zeroPct)}
+              {formatPercentage(breakdown.failPct)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-gradient-to-br from-slate-500/20 to-white/10 p-4 border border-slate-300/20 flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <PiClock className="h-5 w-5 text-slate-200" />
+              <p className="text-[11px] uppercase tracking-wide text-white/70 font-semibold">Non Evaluated</p>
+            </div>
+            <p className="text-xl font-bold text-slate-100 text-center mb-1">
+              {formatNumber(breakdown.nonEvaluatedCount)}
+            </p>
+            <p className="text-xs text-slate-200/80 font-semibold">
+              {formatPercentage(breakdown.nonEvaluatedPct)}
             </p>
           </div>
         </div>
@@ -1072,6 +1122,8 @@ function SummarySection({
           ? {
               successCount: web.successCount,
               zeroCount: web.zeroCount,
+              nullCount: web.nullCount,
+              failedCount: web.failedCount,
               totalEvaluations: web.totalEvaluations,
               successPct: web.successPct,
             }
@@ -1080,12 +1132,13 @@ function SummarySection({
     : data.globalStats;
 
   const pieData = preparePieChartData(stats);
+  const breakdown = getSummaryBreakdown(stats);
   const pieLabelContextValue = useMemo(
     () => ({
-      value: formatPercentage(stats.successPct),
-      total: formatNumber(stats.totalEvaluations),
+      value: formatPercentage(breakdown.successPct),
+      total: formatNumber(breakdown.total),
     }),
-    [stats.successPct, stats.totalEvaluations]
+    [breakdown.successPct, breakdown.total]
   );
   const displayData = selectedWeb && selectedWeb !== "__all__"
     ? (() => {
@@ -1143,19 +1196,19 @@ function SummarySection({
 
       {/* Content */}
       <div className="relative text-white/80">
-        <div className="h-[240px] w-full @sm:py-3">
+        <div className="h-[260px] w-full @sm:py-3">
           <ResponsiveContainer width="100%" height="100%">
             <SummaryPieLabelContext.Provider value={pieLabelContextValue}>
               <PieChart>
                 <Pie
                   data={pieData}
-                  innerRadius={85}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  cornerRadius={30}
+                  innerRadius={72}
+                  outerRadius={102}
+                  paddingAngle={4}
+                  cornerRadius={18}
                   dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
+                  stroke="rgba(15,23,42,0.45)"
+                  strokeWidth={3}
                   onClick={(clickedData, index) => {
                     // Handle click on pie chart segment
                     if (selectedWeb && selectedWeb !== "__all__") {
@@ -1177,9 +1230,57 @@ function SummarySection({
                   />
                 ))}
               </Pie>
-            </PieChart>
+              </PieChart>
             </SummaryPieLabelContext.Provider>
           </ResponsiveContainer>
+        </div>
+        <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[
+            {
+              label: "Success",
+              value: breakdown.successCount,
+              pct: breakdown.successPct,
+              color: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+              dot: CHART_COLORS.success,
+            },
+            {
+              label: "Fail",
+              value: breakdown.failCount,
+              pct: breakdown.failPct,
+              color: "border-orange-400/30 bg-orange-500/10 text-orange-100",
+              dot: CHART_COLORS.failed,
+            },
+            {
+              label: "Non Evaluated",
+              value: breakdown.nonEvaluatedCount,
+              pct: breakdown.nonEvaluatedPct,
+              color: "border-slate-300/20 bg-slate-500/10 text-slate-100",
+              dot: CHART_COLORS.null,
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className={`rounded-2xl border px-4 py-3 backdrop-blur-sm ${item.color}`}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: item.dot }}
+                />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
+                  {item.label}
+                </span>
+              </div>
+              <div className="mt-2 flex items-end justify-between gap-3">
+                <span className="text-2xl font-bold text-white">
+                  {formatNumber(item.value)}
+                </span>
+                <span className="text-xs font-semibold text-white/70">
+                  {formatPercentage(item.pct)}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
         {displayData.length > 0 ? (
           <div className="flex flex-col divide-y divide-white/5 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm">

@@ -118,6 +118,7 @@ const chipBase =
   "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
 const chipActive =
   "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
+const BURN_UID = 5;
 const chipCompleted =
   "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
 const chipPending =
@@ -2293,7 +2294,9 @@ function RoundTopMinersInline({
         (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
       );
       if (validator?.miners && Array.isArray(validator.miners)) {
-        return validator.miners.map((miner: any) => ({
+        return validator.miners
+          .filter((miner: any) => Number(miner?.uid) !== BURN_UID)
+          .map((miner: any) => ({
           uid: miner.uid,
           name: miner.name,
           imageUrl: miner.image,
@@ -2301,13 +2304,13 @@ function RoundTopMinersInline({
           reward: miner.best_local_reward ?? miner.local_avg_reward,
           ranking: miner.local_rank,
           validatorId: selectedValidator.id,
-        }));
+          }));
       }
     }
     // Fallback al endpoint antiguo
     const miners =
       minersData?.data?.miners && Array.isArray(minersData.data.miners)
-        ? minersData.data.miners
+        ? minersData.data.miners.filter((miner: any) => Number(miner?.uid) !== BURN_UID)
         : [];
     if (!selectedValidator?.id) return miners.slice(0, 10);
     const filtered = miners.filter(
@@ -2587,6 +2590,11 @@ export default function Round() {
   const [ipfsUploadFullPayload, setIpfsUploadFullPayload] = React.useState<Record<string, unknown> | null>(null);
   const [ipfsUploadLoading, setIpfsUploadLoading] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const closeIpfsDialog = React.useCallback(() => {
+    setIpfsConsensusDetail(null);
+    setIncludeOwnDownloadedPayload(false);
+    setIpfsUploadFullPayload(null);
+  }, []);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2715,19 +2723,29 @@ export default function Round() {
 
   const roundData = React.useMemo(() => {
     const leadershipRule = seasonSummary
-      ? {
+      ? (() => {
+          const reigningUid = seasonSummary.leader_before?.uid ?? null;
+          const challengerUidRaw = seasonSummary.candidate?.uid ?? null;
+          const challengerIsSameAsReigning =
+            reigningUid != null &&
+            challengerUidRaw != null &&
+            reigningUid === challengerUidRaw;
+          const challengerUid = challengerIsSameAsReigning ? null : challengerUidRaw;
+
+          return {
           required_improvement_pct: seasonSummary.required_improvement_pct,
-          reigning_uid: seasonSummary.leader_before?.uid ?? null,
+          reigning_uid: reigningUid,
           reigning_name: seasonSummary.leader_before?.name ?? null,
           reigning_reward: seasonSummary.leader_before?.reward ?? null,
           reigning_score: seasonSummary.leader_before?.reward ?? null,
-          challenger_uid: seasonSummary.candidate?.uid ?? null,
-          challenger_name: seasonSummary.candidate?.name ?? null,
-          challenger_reward: seasonSummary.candidate?.reward ?? null,
-          challenger_score: seasonSummary.candidate?.reward ?? null,
+          challenger_uid: challengerUid,
+          challenger_name: challengerUid != null ? seasonSummary.candidate?.name ?? null : null,
+          challenger_reward: challengerUid != null ? seasonSummary.candidate?.reward ?? null : null,
+          challenger_score: challengerUid != null ? seasonSummary.candidate?.reward ?? null : null,
           dethroned: seasonSummary.dethroned,
           season_leader_uid: seasonSummary.leader_after?.uid ?? null,
-        }
+        };
+        })()
       : null;
 
     return {
@@ -3649,11 +3667,7 @@ export default function Round() {
       {ipfsConsensusDetail && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => {
-            setIpfsConsensusDetail(null);
-            setIncludeOwnDownloadedPayload(false);
-            setIpfsUploadFullPayload(null);
-          }}
+          onClick={closeIpfsDialog}
           role="dialog"
           aria-modal="true"
           aria-label="IPFS & Consensus detail"

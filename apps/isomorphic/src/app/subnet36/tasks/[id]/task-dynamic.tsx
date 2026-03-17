@@ -11,11 +11,12 @@ import Placeholder, {
   ListItemPlaceholder,
 } from "@/app/shared/placeholder";
 import { routes } from "@/config/routes";
+import { websitesData } from "@/data/websites-data";
 import {
   useEvaluationComplete,
 } from "@/services/hooks/useTask";
 import { resolveAssetUrl } from "@/services/utils/assets";
-import { websitesData } from "@/data/websites-data";
+import { getProjectInfoByPort } from "@/utils/website-colors";
 import type { IconType } from "react-icons";
 import {
   PiArrowLeftLight,
@@ -36,6 +37,7 @@ import {
   PiGlobe,
   PiTarget,
   PiHash,
+  PiGithubLogoDuotone,
   PiDownloadSimple,
   PiArrowSquareOutDuotone,
   PiInfoDuotone,
@@ -88,6 +90,7 @@ type StatCardConfig = {
   iconBgClass?: string;
   description?: ReactNode;
   valueClassName?: string;
+  href?: string;
 };
 
 type QuickInfoItem = {
@@ -228,9 +231,10 @@ function StatCard({
   iconBgClass,
   description,
   valueClassName,
+  href,
 }: Readonly<StatCardConfig>) {
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/20 bg-slate-900/80 text-slate-100 shadow-[0_20px_48px_rgba(0,0,0,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.8)] hover:border-white/30">
+  const cardContent = (
+    <>
       <div
         className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-60 group-hover:opacity-75 transition-opacity duration-300`}
       />
@@ -258,8 +262,18 @@ function StatCard({
           ) : null}
         </div>
       </div>
-    </div>
+    </>
   );
+  const className =
+    "group relative overflow-hidden rounded-2xl border border-white/20 bg-slate-900/80 text-slate-100 shadow-[0_20px_48px_rgba(0,0,0,0.7)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.8)] hover:border-white/30";
+  if (href) {
+    return (
+      <Link href={href} className={className} title="Ver website con esta seed">
+        {cardContent}
+      </Link>
+    );
+  }
+  return <div className={className}>{cardContent}</div>;
 }
 
 const TASK_LOADING_PRIMARY_KEYS = ["task-loading-primary-a", "task-loading-primary-b", "task-loading-primary-c"] as const;
@@ -281,7 +295,7 @@ type TaskDetailsDynamicProps = {
     validator?: any;
     miner?: any;
   } | null;
-  evaluationZeroReason?: string | undefined;
+  evaluationZeroReason?: string;
 };
 function TaskDetailsDynamic({
   details,
@@ -423,6 +437,20 @@ function TaskDetailsDynamic({
     return "0%";
   })();
 
+  const evaluationReward = (() => {
+    const rawReward =
+      evaluationInfo?.reward ??
+      (taskData as any)?.reward ??
+      (taskData as any)?.final_reward;
+    if (typeof rawReward === "number" && !Number.isNaN(rawReward)) {
+      return formatPercent(rawReward);
+    }
+    if (typeof evaluationInfo?.finalScore === "number") {
+      return formatPercent(evaluationInfo.finalScore);
+    }
+    return "0%";
+  })();
+
   // Calculate evaluationDuration from evaluationInfo, taskData.duration, or details.duration
   const evaluationDuration = (() => {
     if (evaluationInfo?.evaluationTime != null) {
@@ -435,6 +463,56 @@ function TaskDetailsDynamic({
       return formatDuration((taskData as any).eval_time);
     }
     return "—";
+  })();
+
+  const evaluationCost = (() => {
+    const rawCost =
+      evaluationInfo?.llmCost ??
+      (taskData as any)?.cost ??
+      (taskData as any)?.llm_cost;
+    if (typeof rawCost === "number" && !Number.isNaN(rawCost)) {
+      return formatCost(rawCost);
+    }
+    return "—";
+  })();
+
+  const humanizedReason = (() => {
+    const reason =
+      evaluationZeroReason ??
+      (taskData as any).zeroReason ??
+      (taskData as any).zero_reason ??
+      (taskData as any)?.error_reason ??
+      null;
+    if (!reason) return null;
+    const normalized = String(reason).trim().toLowerCase();
+    if (!normalized) return null;
+
+    if (normalized === "task_failed" || normalized === "tests_failed" || normalized === "ref_not_found") {
+      return {
+        title: "Reason: Task Failed",
+        description: "After executing all actions, the task was not completed successfully.",
+        color: "amber" as const,
+      };
+    }
+    if (normalized === "task_timeout" || normalized === "timeout") {
+      return {
+        title: "Reason: Timeout",
+        description: "The evaluation exceeded the allowed time limit before the task could be completed.",
+        color: "rose" as const,
+      };
+    }
+    if (normalized === "over_cost_limit") {
+      return {
+        title: "Reason: Over Cost Limit",
+        description: "The per-task cost limit is $0.05 and this evaluation exceeded that limit, so the task reward was zeroed.",
+        color: "amber" as const,
+      };
+    }
+    return {
+      title: `Reason: ${formatLabel(normalized)}`,
+      description: "This evaluation ended with a non-successful outcome according to the validator result.",
+      color: "amber" as const,
+    };
   })();
   // Visual constants and image helpers
   const HIGHLIGHT_COLOR = "#FDF5E6";
@@ -472,8 +550,15 @@ function TaskDetailsDynamic({
   const displayMinerHotkey = minerInfo?.hotkey
     ? truncateMiddle(minerInfo.hotkey, 6)
     : "—";
+  const minerGithubUrl = (() => {
+    const rawValue =
+      minerInfo?.github ?? minerInfo?.github_url ?? minerInfo?.githubUrl;
+    if (typeof rawValue !== "string") return null;
+    const trimmedValue = rawValue.trim();
+    return trimmedValue.length > 0 ? trimmedValue : null;
+  })();
 
-  // Extract project name from website URL using existing websitesData configuration
+  // Extract project name from website URL using centralized website mapping
   const getProjectName = (url: string): string => {
     if (!url) return "—";
 
@@ -523,16 +608,13 @@ function TaskDetailsDynamic({
         }
       }
 
-      // Map localhost ports to project names using existing websitesData
+      // Map localhost ports to project names using centralized port mapping
       if (cleanHostname === "localhost") {
         // Extract port from URL object (not hostname)
         const port = urlObj.port;
 
         if (port) {
-          // Find project by port in websitesData
-          const project = websitesData.find(
-            (site) => site.portValidator === port
-          );
+          const project = getProjectInfoByPort(port);
 
           if (project) {
             return project.name;
@@ -595,16 +677,33 @@ function TaskDetailsDynamic({
     }
   }
 
+  const projectName = getProjectName(websiteUrl);
+  const normalizedProject = projectName.toLowerCase().replaceAll(/\s+/g, "-");
+  const websiteSlug =
+    websitesData.find(
+      (w) => w.name === projectName || w.slug === normalizedProject
+    )?.slug ?? normalizedProject;
+  const seedParam = derivedSeed ?? (taskData as any).seed;
+  let websiteHref: string | undefined;
+  if (websiteSlug) {
+    websiteHref = seedParam
+      ? `${routes.websites}/${websiteSlug}?seed=${encodeURIComponent(String(seedParam))}`
+      : `${routes.websites}/${websiteSlug}`;
+  } else {
+    websiteHref = undefined;
+  }
+
   const metaCards: StatCardConfig[] = [
     {
       label: "Project",
-      value: getProjectName(websiteUrl),
+      value: projectName,
       Icon: PiGlobe,
       gradient: "from-cyan-400/30 via-blue-500/25 to-indigo-600/20",
       iconWrapper: "border-cyan-300/60 shadow-lg shadow-cyan-500/25",
       iconBgClass: "bg-gradient-to-br from-cyan-400/40 to-blue-500/30",
       iconColorClass: "text-cyan-100",
       valueClassName: "text-lg font-bold text-cyan-100 drop-shadow-sm",
+      href: websiteHref,
     },
     {
       label: "Use Case",
@@ -783,7 +882,18 @@ function TaskDetailsDynamic({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap justify-end">
+                {minerGithubUrl && (
+                  <a
+                    href={minerGithubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400/35 bg-emerald-500/10 text-emerald-200 transition-colors duration-200 hover:border-emerald-300/60 hover:text-emerald-100"
+                    title={minerGithubUrl}
+                  >
+                    <PiGithubLogoDuotone className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                )}
                 {displayMinerUid !== "—" && (
                   <span
                     className="rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
@@ -824,20 +934,40 @@ function TaskDetailsDynamic({
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-transparent p-5 text-white">
             {/* Mobile */}
             <div className="flex flex-col space-y-6 md:hidden">
-              <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5">
                 <div
                   className="text-4xl font-extrabold bg-gradient-to-r from-emerald-300 via-emerald-200 to-green-300 bg-clip-text text-transparent"
                   style={{
                     WebkitTextStroke: "0.4px rgba(249, 250, 251, 0.15)",
                   }}
                 >
-                  {evaluationScore}
+                  {evaluationReward}
                 </div>
                 <div className="mt-2 text-sm font-medium text-white/70">
-                  Task Score
+                  Reward
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <EvalMetricBadge
+                    label="Score"
+                    value={evaluationScore}
+                    color="purple"
+                    Icon={PiTarget}
+                  />
+                  <EvalMetricBadge
+                    label="Time"
+                    value={evaluationDuration}
+                    color="blue"
+                    Icon={PiClock}
+                  />
+                  <EvalMetricBadge
+                    label="Cost"
+                    value={evaluationCost}
+                    color="amber"
+                    Icon={PiChartBar}
+                  />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <RunStatCard
                   label="Duration"
                   value={String(evaluationDuration)}
@@ -851,13 +981,13 @@ function TaskDetailsDynamic({
                   Icon={PiPlay}
                 />
                 <RunStatCard
-                  label="Successful"
+                  label="Actions Successful"
                   value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
-                  label="Failed"
+                  label="Actions Failed"
                   value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
@@ -881,32 +1011,80 @@ function TaskDetailsDynamic({
                   Icon={PiPlay}
                 />
               </div>
-              <div className="flex flex-col items-center justify-center mx-4">
+              <div className="mx-4 flex min-w-[260px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
                 <div
                   className="bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-400 bg-clip-text text-5xl font-extrabold text-transparent"
                   style={{
                     WebkitTextStroke: "0.6px rgba(249, 250, 251, 0.18)",
                   }}
                 >
-                  {evaluationScore}
+                  {evaluationReward}
                 </div>
                 <div className="mt-1 text-xs font-medium text-white/70">
-                  Task Score
+                  Reward
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <EvalMetricBadge
+                    label="Score"
+                    value={evaluationScore}
+                    color="purple"
+                    Icon={PiTarget}
+                  />
+                  <EvalMetricBadge
+                    label="Time"
+                    value={evaluationDuration}
+                    color="blue"
+                    Icon={PiClock}
+                  />
+                  <EvalMetricBadge
+                    label="Cost"
+                    value={evaluationCost}
+                    color="amber"
+                    Icon={PiChartBar}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 justify-end">
                 <RunStatCard
-                  label="Successful"
+                  label="Actions Successful"
                   value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
-                  label="Failed"
+                  label="Actions Failed"
                   value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
                 />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {humanizedReason ? (
+          <div
+            className={`relative overflow-hidden rounded-2xl border px-5 py-4 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-sm ${
+              humanizedReason.color === "rose"
+                ? "border-rose-400/35 bg-rose-500/10"
+                : "border-amber-400/35 bg-amber-500/10"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                  humanizedReason.color === "rose" ? "bg-rose-500/20 text-rose-200" : "bg-amber-500/20 text-amber-200"
+                }`}
+              >
+                <PiWarning className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-white/85">
+                  {humanizedReason.title}
+                </div>
+                <div className="mt-1 text-sm text-white/75">
+                  {humanizedReason.description}
+                </div>
               </div>
             </div>
           </div>
@@ -932,22 +1110,6 @@ function TaskDetailsDynamic({
             </div>
             {usageRows.length > 0 ? (
               <div className="relative mt-5 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <InfoRow
-                      label="Total Tokens"
-                      value={formatTokens(usageTotals.tokens)}
-                      valueClassName="font-semibold text-amber-200"
-                    />
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <InfoRow
-                      label="Total Cost"
-                      value={formatCost(usageTotals.cost)}
-                      valueClassName="font-semibold text-emerald-200"
-                    />
-                  </div>
-                </div>
                 {usageRows.map((row, idx) => (
                   <div
                     key={`${row.provider ?? "provider"}-${row.model ?? "model"}-${idx}`}
@@ -983,6 +1145,22 @@ function TaskDetailsDynamic({
                     </div>
                   </div>
                 ))}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Tokens"
+                      value={formatTokens(usageTotals.tokens)}
+                      valueClassName="font-semibold text-amber-200"
+                    />
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <InfoRow
+                      label="Total Cost"
+                      value={formatCost(usageTotals.cost)}
+                      valueClassName="font-semibold text-emerald-200"
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1801,23 +1979,52 @@ function RunStatCard({
   const c = colorMap[color] ?? colorMap.blue;
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border ${c.border} ${c.bg} p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl`}
+      className={`group relative min-h-[118px] overflow-hidden rounded-2xl border ${c.border} ${c.bg} px-4 py-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl`}
     >
-      <div className="flex items-center gap-3">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-70" />
+      <div className="relative flex h-full flex-col items-center justify-center gap-3 text-center">
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-xl ${c.iconBg} text-white shadow-inner`}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} text-white shadow-inner ring-1 ring-white/15`}
         >
-          <Icon className="h-6 w-6" />
+          <Icon className="h-4.5 w-4.5" />
         </div>
-        <div className="min-w-0">
-          <div className="text-2xl font-extrabold text-white leading-tight truncate">
+        <div className="min-w-0 space-y-1">
+          <div className="text-[2rem] font-extrabold leading-none text-white tracking-tight truncate">
             {value}
           </div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-white/85">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
             {label}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EvalMetricBadge({
+  label,
+  value,
+  color,
+  Icon,
+}: Readonly<{
+  label: string;
+  value: string;
+  color: "purple" | "blue" | "amber";
+  Icon: IconType;
+}>) {
+  const styles = {
+    purple: "border-fuchsia-400/35 bg-fuchsia-500/10 text-fuchsia-100",
+    blue: "border-sky-400/35 bg-sky-500/10 text-sky-100",
+    amber: "border-amber-400/35 bg-amber-500/10 text-amber-100",
+  } as const;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-[0_10px_24px_rgba(0,0,0,0.25)] backdrop-blur-md ${styles[color]}`}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="text-white/75">{label}</span>
+      <span className="font-semibold text-white">{value}</span>
     </div>
   );
 }

@@ -63,6 +63,29 @@ function getMinerMetaClass(isActive: boolean, highlightTop: boolean): string {
   return "text-white/70 group-hover:text-white/90";
 }
 
+function SidebarRoundInProgress({ className }: Readonly<{ className?: string }>) {
+  return (
+    <aside
+      className={cn(
+        "fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
+        className
+      )}
+    >
+      <div className="flex h-full flex-col items-center justify-center px-5 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-300/40 bg-amber-500/10">
+          <BiInfoCircle className="h-6 w-6 text-amber-200" />
+        </div>
+        <p className="text-sm font-bold uppercase tracking-wide text-amber-100">
+          Round in progress
+        </p>
+        <p className="mt-2 text-xs leading-5 text-white/75">
+          The current round is still running. Agents and rankings will appear once evaluations are complete.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
 export default function AgentsSidebar({ className }: Readonly<{ className?: string }>) {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -312,8 +335,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   // Show loading placeholder
   if (
     loading ||
-    !hasSeasonRankData ||
-    (selectedSeason === undefined && seasonOptions.length === 0)
+    !hasSeasonRankData
   ) {
     return <AgentSidebarPlaceholder />;
   }
@@ -335,6 +357,10 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
         </div>
       </aside>
     );
+  }
+
+  if (!seasonOptions.length && minersData.miners.length === 0) {
+    return <SidebarRoundInProgress className={className} />;
   }
 
   // Check if this is in a drawer (mobile) vs fixed sidebar (desktop)

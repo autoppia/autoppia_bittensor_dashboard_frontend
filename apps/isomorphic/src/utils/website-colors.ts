@@ -158,5 +158,21 @@ export function getProjectInfo(projectName: string) {
  * Obtiene información completa del proyecto por puerto
  */
 export function getProjectInfoByPort(port: string) {
-  return websitesData.find((w) => w.portValidator === port);
+  const directMatch = websitesData.find((w) => w.portValidator === port);
+  if (directMatch) {
+    return directMatch;
+  }
+
+  const mappedName = LOCALHOST_PORT_MAPPING[port];
+  if (!mappedName) {
+    return undefined;
+  }
+
+  const normalizedMappedName = mappedName.toLowerCase();
+  return websitesData.find((website) => {
+    return (
+      website.name.toLowerCase() === normalizedMappedName ||
+      website.slug?.toLowerCase() === normalizedMappedName
+    );
+  });
 }
