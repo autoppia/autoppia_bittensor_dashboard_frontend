@@ -1,0 +1,84 @@
+name: Frontend Quality
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  group: frontend-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    name: Discover frontend apps
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app_paths: ${{ steps.discover-apps.outputs.app_paths }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Discover apps in apps/*
+        id: discover-apps
+        run: |
+          apps=()
+          for pkg in apps/*/package.json; do
+            dir=$(dirname "$pkg")
+            apps+=("\"$dir\"")
+          done
+
+          matrix="[${apps[*]}]"
+          echo "Detected apps matrix: $matrix"
+          echo "app_paths=$matrix" >> "$GITHUB_OUTPUT"
+
+  quality:
+    name: Frontend quality checks
+    needs: discover
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.app_paths) }}
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint
+        run: |
+          if pnpm run | grep -q "lint"; then
+            pnpm run lint
+          fi
+
+      - name: Run build
+        run: |
+          if pnpm run | grep -q "build"; then
+            pnpm run build
+          fi
+
