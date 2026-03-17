@@ -67,6 +67,7 @@ import {
   PiTimerDuotone,
   PiCaretDownDuotone,
   PiCaretUpDuotone,
+  PiPulseDuotone,
 } from "react-icons/pi";
 import {
   LuTrophy,

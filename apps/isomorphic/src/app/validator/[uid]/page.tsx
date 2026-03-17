@@ -29,6 +29,7 @@ import {
   PiListChecksDuotone,
   PiChartLineUp,
   PiCurrencyDollar,
+  PiClock,
 } from "react-icons/pi";
 import cn from "@core/utils/class-names";
 import { getProjectColors } from "@/utils/website-colors";
