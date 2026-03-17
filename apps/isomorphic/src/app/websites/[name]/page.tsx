@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { websitesData, type UseCase } from "@/data/websites-data";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,8 +44,15 @@ const getGitHubUrl = (websiteName: string): string => {
 export default function WebsiteDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const websiteSlug = params?.name as string;
   const website = websitesData.find((w) => w.slug === websiteSlug);
+
+  const seedFromUrl = searchParams.get("seed");
+  const initialSeed =
+    seedFromUrl != null && seedFromUrl !== ""
+      ? Math.min(300, Math.max(1, Number.parseInt(seedFromUrl, 10) || 1))
+      : 1;
 
   // ✅ Initialize use cases with random prompts
   const [useCases, setUseCases] = useState(() => {
@@ -56,7 +63,15 @@ export default function WebsiteDetailPage() {
     }));
   });
   const [loading, setLoading] = useState(false);
-  const [seed, setSeed] = useState(1);
+  const [seed, setSeed] = useState(initialSeed);
+
+  useEffect(() => {
+    const urlSeed = searchParams.get("seed");
+    if (urlSeed != null && urlSeed !== "") {
+      const parsed = Math.min(300, Math.max(1, Number.parseInt(urlSeed, 10) || 1));
+      setSeed(parsed);
+    }
+  }, [searchParams]);
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);

@@ -77,28 +77,29 @@ import {
 } from "react-icons/lu";
 import { METRIC_CARD_GRADIENTS } from "@/config/theme-styles";
 
-type AgentStatCardItem = {
+interface AgentStatCardItem {
   title: string;
   metric: string | number;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string | null;
+  badgeClassName?: string;
   borderColor: string;
   bgGradient: string;
-  gradient?: string;
-  iconGradient?: string;
+  gradient: string;
   glowColor?: string;
-  badge?: string | null;
-};
+  iconGradient: string;
+}
 
 interface ChartRow {
-  round?: number | string;
-  roundLabel?: string | number;
-  reward: number;
-  rank?: number | null;
-  eval_score?: number | null;
-  eval_time?: number | null;
-  avg_cost?: number | null;
-  timestamp?: string | null;
-  topBenchmarkScore?: number;
+  round: number | string;
+  roundLabel?: number | string;
+  reward: number | null;
+  rank: number | null;
+  eval_score: number | null;
+  eval_time: number | null;
+  avg_cost: number | null;
+  timestamp: string;
+  topBenchmarkScore?: number | null;
   [key: string]: number | string | null | undefined;
 }
 
@@ -134,6 +135,13 @@ const formatBestRoundBadge = (value: number | string | null | undefined) => {
     return `Round ${value}`;
   }
   return null;
+};
+
+const extractCommitHashFromGithubUrl = (value?: string | null) => {
+  if (!value) return null;
+  const match = value.match(/\/commit\/([0-9a-f]{7,40})(?:\/)?$/i);
+  if (!match) return null;
+  return match[1];
 };
 
 
@@ -561,9 +569,9 @@ function AgentScoreChart({
 
   const yAxisDomain = computeDomain();
   const legendItems = [
-    { label: "Miner reward", color: "#10B981" },
+    { label: "Local Round Reward", color: "#10B981" },
     ...(hasTopBenchmark
-      ? [{ label: "Top miner reward", color: "#FACC15" }]
+      ? [{ label: "Best Local Reward", color: "#FACC15" }]
       : []),
     ...benchmarkSeries.map((series) => ({
       label: series.label,
@@ -656,6 +664,11 @@ function AgentScoreChart({
                   // reward is already scaled * 100 in displayData, so show directly as %.
                   // eval_score is NOT pre-scaled, so multiply * 100 here.
                   const reward = data?.reward ?? 0;
+                  const bestLocalReward =
+                    data?.topBenchmarkScore != null &&
+                    typeof data.topBenchmarkScore === "number"
+                      ? data.topBenchmarkScore
+                      : null;
                   const evalScore = data?.eval_score != null && typeof data.eval_score === 'number' ? data.eval_score : null;
                   const evalTime = data?.eval_time != null && typeof data.eval_time === 'number' ? data.eval_time : null;
                   const avgCost = data?.avg_cost != null && typeof data.avg_cost === 'number' ? data.avg_cost : null;
@@ -666,19 +679,33 @@ function AgentScoreChart({
                         Round {label}{data?.rank ? ` (Rank #${data.rank})` : ""}
                       </div>
                       <div className="space-y-2 text-sm">
-                        {/* Reward — already * 100 from displayData */}
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2.5">
                             <span
                               className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
                               style={{ backgroundColor: "#F59E0B" }}
                             />
-                            <span className="text-white/90 font-semibold">Reward:</span>
+                            <span className="text-white/90 font-semibold">Local Round Reward:</span>
                           </div>
                           <span className="font-black text-white text-base">
                             {reward.toFixed(2)}%
                           </span>
                         </div>
+
+                        {bestLocalReward != null && !isNaN(bestLocalReward) && (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="h-3 w-3 rounded-full shadow-lg ring-2 ring-white/20"
+                                style={{ backgroundColor: "#10B981" }}
+                              />
+                              <span className="text-white/90 font-semibold">Best Local Reward:</span>
+                            </div>
+                            <span className="font-black text-white text-base">
+                              {bestLocalReward.toFixed(2)}%
+                            </span>
+                          </div>
+                        )}
 
                         {/* Score (eval_score) — raw 0-1 value, multiply here */}
                         {evalScore != null && !isNaN(evalScore) && (
@@ -739,7 +766,7 @@ function AgentScoreChart({
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#rewardArea)"
-                name="Miner reward"
+                name="Local Round Reward"
               />
               {hasTopBenchmark && (
                 <Line
@@ -749,7 +776,7 @@ function AgentScoreChart({
                   strokeWidth={2}
                   dot={false}
                   strokeDasharray="6 4"
-                  name="Top miner reward"
+                  name="Best Local Reward"
                 />
               )}
               {benchmarkSeries.map((series) => (
@@ -845,8 +872,21 @@ function AgentValidators({
   if (!visibleRounds.length) {
     return (
       <div className="mt-6">
-        <div className="text-center py-12 text-white/70">
-          No validator runs found for this agent in the selected season.
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-6 sm:p-8 shadow-lg backdrop-blur">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
+          <div className="relative flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-xl border-2 border-amber-300/60 bg-white/10 flex items-center justify-center shadow-inner">
+              <PiInfoDuotone className="h-8 w-8 text-amber-200" />
+            </div>
+            <div className="flex-1">
+              <p className="text-lg sm:text-xl font-bold text-amber-100 uppercase tracking-wide mb-2">
+                Round in progress
+              </p>
+              <p className="text-sm sm:text-base text-white/80 font-medium max-w-2xl">
+                This round is in progress. Results and rankings will be available once evaluations are complete.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1011,19 +1051,50 @@ function AgentValidators({
       <div className="space-y-8">
         {visibleRounds.map((roundEntry) => {
           const consensus = roundEntry.consensus;
-          const hasConsensus = roundEntry.post_consensus_available;
+          const isRoundFinished =
+            String(roundEntry.round_status ?? "").toLowerCase() === "finished";
+          const hasConsensus =
+            roundEntry.post_consensus_available && isRoundFinished;
+          const validatorsWithRuns = isRoundFinished
+            ? roundEntry.validators.filter((validator) => Boolean(validator.run_id))
+            : [];
 
           return (
             <div key={roundEntry.round_key} className="space-y-4">
               <div className="flex items-center justify-between gap-4">
-                <Text className="text-lg sm:text-xl font-bold text-white">
-                  {roundEntry.round_label}
-                </Text>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Text className="text-lg sm:text-xl font-bold text-white">
+                    {roundEntry.round_label}
+                  </Text>
+                  {String(roundEntry.round_status ?? "").toLowerCase() !== "finished" && (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-amber-500/15 text-amber-100 border border-amber-300/30">
+                      In progress
+                    </span>
+                  )}
+                </div>
                 <Text className="text-xs sm:text-sm text-white/60">
-                  {roundEntry.validators.length} validator run{roundEntry.validators.length === 1 ? "" : "s"}
+                  {isRoundFinished
+                    ? `${validatorsWithRuns.length} validator run${validatorsWithRuns.length === 1 ? "" : "s"}`
+                    : "Results hidden until round finishes"}
                 </Text>
               </div>
 
+              {!isRoundFinished ? (
+                <div className="rounded-2xl border-2 border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-8 sm:p-10">
+                  <div className="mx-auto flex max-w-2xl flex-col items-center justify-center text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-amber-300/30 bg-amber-500/15 shadow-lg shadow-amber-500/10">
+                      <PiPulseDuotone className="h-8 w-8 text-amber-200" />
+                    </div>
+                    <Text className="text-2xl font-black text-white">
+                      Round in progress
+                    </Text>
+                    <Text className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
+                      This round is still running. Local and consensus metrics stay hidden until the round finishes,
+                      so this view does not show partial results that could be misleading.
+                    </Text>
+                  </div>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
                 {/* Consensus card */}
                 {hasConsensus && (
@@ -1063,12 +1134,25 @@ function AgentValidators({
                 )}
 
                 {/* Per-validator cards — show the actual run metrics for this validator */}
-                {roundEntry.validators.map((v) => {
+                {validatorsWithRuns.map((v) => {
+                  const attemptedTasks =
+                    typeof v.run_tasks_attempted === "number" && !Number.isNaN(v.run_tasks_attempted)
+                      ? v.run_tasks_attempted
+                      : null;
+                  const derivedAttemptedTasks =
+                    attemptedTasks && attemptedTasks > 0
+                      ? attemptedTasks
+                      : Math.max(Number(v.run_success_tasks ?? 0) + Number(v.run_failed_tasks ?? 0), 0);
                   const stats = [
                     { title: "Reward", metric: `${((v.run_reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
                     { title: "Score", metric: `${((v.run_score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
                     { title: "Time", metric: `${Number(v.run_time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                    { title: "Tasks", metric: `${v.run_success_tasks ?? 0}/${v.run_total_tasks ?? 0}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
+                    {
+                      title: "Tasks",
+                      metric: `${v.run_success_tasks ?? 0}/${derivedAttemptedTasks > 0 ? derivedAttemptedTasks : (v.run_total_tasks ?? 0)}`,
+                      icon: PiListChecksDuotone,
+                      iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600",
+                    },
                     { title: "Websites", metric: String(v.run_websites_count ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
                     { title: "Avg Cost", metric: v.run_avg_cost != null ? `$${Number(v.run_avg_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
                   ];
@@ -1091,6 +1175,25 @@ function AgentValidators({
                             <Text className="text-xs text-white/60 tracking-wide font-mono truncate">
                               validator-{v.validator_uid}
                             </Text>
+                            {typeof v.github_url === "string" && v.github_url.trim().length > 0 ? (
+                              <a
+                                href={v.github_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                                className="mt-1 inline-flex max-w-full items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-100 transition-colors duration-200 hover:border-sky-300/60 hover:bg-sky-500/20"
+                              >
+                                <PiGithubLogoDuotone className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate font-mono">
+                                  {extractCommitHashFromGithubUrl(v.github_url) ?? "GitHub commit"}
+                                </span>
+                              </a>
+                            ) : null}
+                            {v.run_early_stop_message ? (
+                              <Text className="mt-1 line-clamp-2 text-[11px] text-rose-200/90">
+                                {v.run_early_stop_message}
+                              </Text>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -1124,6 +1227,7 @@ function AgentValidators({
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })}
@@ -1769,6 +1873,22 @@ export default function Page() {
     return undefined;
   }, [selectedRoundFromQuery]);
 
+  const currentRoundEncoded = useMemo(() => {
+    if (typeof currentRound === "string" && currentRound.includes("/")) {
+      const [seasonRaw, roundRaw] = currentRound.split("/");
+      const season = Number.parseInt(seasonRaw, 10);
+      const round = Number.parseInt(roundRaw, 10);
+      if (Number.isFinite(season) && Number.isFinite(round)) {
+        return season * 10000 + round;
+      }
+      return undefined;
+    }
+    if (typeof currentRound === "number" && Number.isFinite(currentRound)) {
+      return currentRound;
+    }
+    return undefined;
+  }, [currentRound]);
+
   const [runsByRoundState, setRunsByRoundState] = useState<{
     loading: boolean;
     rounds: AgentRunsByRoundEntry[];
@@ -1782,7 +1902,7 @@ export default function Page() {
   const seasonForRuns = seasonParam ? Number.parseInt(seasonParam, 10) : selectedSeasonNumber ?? undefined;
 
   useEffect(() => {
-    if (viewMode !== "runs" || !agentIdForQuery) {
+    if ((viewMode !== "runs" && viewMode !== "current") || !agentIdForQuery) {
       return;
     }
 
@@ -1808,6 +1928,45 @@ export default function Page() {
       isActive = false;
     };
   }, [viewMode, agentIdForQuery, seasonForRuns]);
+
+  const currentViewRunFallbacks = useMemo(() => {
+    return runsByRoundState.rounds.flatMap((roundEntry) =>
+      roundEntry.validators
+        .filter((validator) => Boolean(validator.run_id))
+        .map(
+          (validator): AgentRunOverview => ({
+            runId: validator.run_id ?? "",
+            agentId: agentIdForQuery ?? trimmedId,
+            roundId: roundEntry.round_id,
+            season: roundEntry.season,
+            round: roundEntry.round_in_season,
+            roundKey: roundEntry.round_key,
+            validatorId: String(validator.validator_uid),
+            validatorName: validator.validator_name,
+            validatorImage: validator.validator_image ?? "",
+            status: validator.run_status ?? "unknown",
+            startTime: validator.run_started_at,
+            endTime: validator.run_ended_at,
+            totalTasks: validator.run_total_tasks,
+            tasksAttempted: validator.run_tasks_attempted ?? null,
+            completedTasks: validator.run_success_tasks,
+            successfulTasks: validator.run_success_tasks,
+            failedTasks: validator.run_failed_tasks,
+            averageReward: validator.run_reward ?? 0,
+            averageScore: validator.run_score ?? undefined,
+            averageCost: validator.run_avg_cost ?? null,
+            duration: validator.run_elapsed_sec ?? undefined,
+            averageEvaluationTime: validator.run_time ?? null,
+            websitesCount: validator.run_websites_count,
+            totalWebsites: validator.run_websites_count,
+            githubUrl: validator.github_url ?? null,
+            zeroReason: validator.run_zero_reason ?? null,
+            earlyStopReason: validator.run_early_stop_reason ?? null,
+            earlyStopMessage: validator.run_early_stop_message ?? null,
+          })
+        )
+    );
+  }, [agentIdForQuery, runsByRoundState.rounds, trimmedId]);
 
   // Calculate preAvg from minerRoundDetails instead of runs
   const preAvg = useMemo(() => {
@@ -2589,8 +2748,8 @@ export default function Page() {
                         ) : (
                           <RoundWebsitesChart
                             agentId={agentIdForQuery ?? trimmedId}
-                            selectedRound={typeof currentRound === "number" ? currentRound : null}
-                            runs={[]}
+                            selectedRound={currentRoundEncoded ?? null}
+                            runs={currentViewRunFallbacks}
                             onSummaryChange={handleSummaryChange}
                           />
                         )

@@ -152,7 +152,9 @@ export class AgentRunsRepository {
       params
     );
     return {
-      runs: response.data.data.runs,
+      runs: (response.data.data.runs ?? []).map((run) =>
+        this.normalizeListItem(run as Record<string, any>)
+      ),
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,
@@ -180,7 +182,9 @@ export class AgentRunsRepository {
       { ...params, agentId }
     );
     return {
-      runs: response.data.data.runs,
+      runs: (response.data.data.runs ?? []).map((run) =>
+        this.normalizeListItem(run as Record<string, any>)
+      ),
       total: response.data.data.total,
       page: response.data.data.page,
       limit: response.data.data.limit,
@@ -260,6 +264,9 @@ export class AgentRunsRepository {
       miner: any;
       /** Reason for score 0 when applicable */
       zeroReason?: string | null;
+      earlyStopReason?: string | null;
+      earlyStopMessage?: string | null;
+      tasksAttempted?: number | null;
       isReused?: boolean;
       reusedFromAgentRunId?: string | null;
       reusedFrom?: {
@@ -282,6 +289,9 @@ export class AgentRunsRepository {
             validator: any;
             miner: any;
             zeroReason?: string | null;
+            earlyStopReason?: string | null;
+            earlyStopMessage?: string | null;
+            tasksAttempted?: number | null;
             isReused?: boolean;
             reusedFromAgentRunId?: string | null;
             reusedFrom?: {
@@ -527,10 +537,81 @@ export class AgentRunsRepository {
     return defaultValue;
   }
 
+  private normalizeListItem(rawItem: Record<string, any>): AgentRunListItem {
+    const totalTasks = this.getNumberWithFallback(
+      rawItem,
+      ["totalTasks", "total_tasks", "total"],
+      0
+    );
+    const successfulTasks = this.getNumberWithFallback(
+      rawItem,
+      ["successfulTasks", "successful_tasks", "completedTasks", "completed_tasks", "successes"],
+      0
+    );
+    const completedTasks = this.getNumberWithFallback(
+      rawItem,
+      ["completedTasks", "completed_tasks", "successfulTasks", "successful_tasks", "successes"],
+      successfulTasks
+    );
+    const tasksAttempted = this.getNumberWithFallback(
+      rawItem,
+      ["tasksAttempted", "tasks_attempted"],
+      Number.NaN
+    );
+
+    return {
+      runId: rawItem.runId ?? rawItem.run_id ?? "",
+      agentId: rawItem.agentId ?? rawItem.agent_id ?? "",
+      agentUid: rawItem.agentUid ?? rawItem.agent_uid ?? null,
+      agentHotkey: rawItem.agentHotkey ?? rawItem.agent_hotkey ?? null,
+      agentName: rawItem.agentName ?? rawItem.agent_name ?? null,
+      agentImage: rawItem.agentImage ?? rawItem.agent_image ?? null,
+      roundId: rawItem.roundId ?? rawItem.round_id ?? 0,
+      validatorId: rawItem.validatorId ?? rawItem.validator_id ?? "",
+      validatorName: rawItem.validatorName ?? rawItem.validator_name ?? undefined,
+      validatorImage: rawItem.validatorImage ?? rawItem.validator_image ?? undefined,
+      status: rawItem.status ?? "failed",
+      startTime: rawItem.startTime ?? rawItem.start_time ?? "",
+      endTime: rawItem.endTime ?? rawItem.end_time ?? null,
+      totalTasks,
+      tasksAttempted: Number.isNaN(tasksAttempted) ? null : tasksAttempted,
+      completedTasks,
+      successfulTasks,
+      overallReward: this.normalizePercentage(
+        this.getNumberWithFallback(
+          rawItem,
+          ["overallReward", "overall_reward", "averageReward", "average_reward", "reward", "score"],
+          0
+        )
+      ),
+      successRate: this.normalizePercentage(
+        this.getNumberWithFallback(rawItem, ["successRate", "success_rate"], totalTasks > 0 ? successfulTasks / totalTasks : 0)
+      ),
+      ranking: (typeof rawItem.ranking === "number" ? rawItem.ranking : typeof rawItem.rank === "number" ? rawItem.rank : undefined),
+      averageEvaluationTime: this.getNumberWithFallback(
+        rawItem,
+        ["averageEvaluationTime", "average_evaluation_time", "averageExecutionTime", "average_execution_time"],
+        0
+      ),
+      earlyStopReason: rawItem.earlyStopReason ?? rawItem.early_stop_reason ?? null,
+      earlyStopMessage: rawItem.earlyStopMessage ?? rawItem.early_stop_message ?? null,
+    };
+  }
+
   private normalizeStats(
     stats: AgentRunStats | Record<string, any>
   ): AgentRunStats {
     const raw = stats as Record<string, any>;
+    const tasksAttempted = this.getNumberWithFallback(
+      raw,
+      ["tasksAttempted", "tasks_attempted"],
+      Number.NaN
+    );
+    const avgCost = this.getNumberWithFallback(
+      raw,
+      ["avg_cost", "averageCost", "average_cost"],
+      Number.NaN
+    );
     const rawScoreDistribution =
       raw.scoreDistribution ?? raw.score_distribution ?? {};
 
@@ -707,6 +788,7 @@ export class AgentRunsRepository {
         ["totalTasks", "total_tasks", "total"],
         0
       ),
+      tasksAttempted: Number.isNaN(tasksAttempted) ? null : tasksAttempted,
       successfulTasks: this.getNumberWithFallback(
         raw,
         ["successfulTasks", "successful_tasks", "successes"],
@@ -726,10 +808,14 @@ export class AgentRunsRepository {
       avg_reward: this.normalizePercentage(
         this.getNumberWithFallback(raw, ["avg_reward", "averageReward", "average_reward"], 0)
       ),
+      avg_score: this.normalizePercentage(
+        this.getNumberWithFallback(raw, ["avg_score", "averageScore", "average_score"], 0)
+      ),
       avg_time: this.roundTo(
         this.getNumberWithFallback(raw, ["avg_time", "averageTime", "average_time"], 0),
         1
       ),
+      avg_cost: Number.isNaN(avgCost) ? null : this.roundTo(avgCost, 4),
       averageTaskDuration: this.roundTo(
         this.getNumberWithFallback(
           raw,
@@ -741,6 +827,8 @@ export class AgentRunsRepository {
       successRate: this.normalizePercentage(
         this.getNumberWithFallback(raw, ["successRate", "success_rate"], 0)
       ),
+      earlyStopReason: raw.earlyStopReason ?? raw.early_stop_reason ?? null,
+      earlyStopMessage: raw.earlyStopMessage ?? raw.early_stop_message ?? null,
       scoreDistribution: normalizedScoreDistribution,
       performanceByWebsite: normalizedWebsites,
       performanceByUseCase: normalizedUseCases,

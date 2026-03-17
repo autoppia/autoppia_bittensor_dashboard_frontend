@@ -362,6 +362,7 @@ export interface TasksListQueryParams {
   page?: number;
   limit?: number;
   agentRunId?: string;
+  minerUid?: number;
   website?: string;
   useCase?: string;
   status?: "pending" | "running" | "completed" | "failed";
@@ -398,8 +399,12 @@ export interface TaskSearchParams {
   useCase?: string;
   status?: string;
   agentRunId?: string;
+  minerUid?: number;
   minScore?: number;
   maxScore?: number;
+  /** When true, filter to tasks with reward > 0 (success) */
+  successOnly?: boolean;
+  successMode?: "all" | "successful" | "non_successful";
   startDate?: string;
   endDate?: string;
   page?: number;

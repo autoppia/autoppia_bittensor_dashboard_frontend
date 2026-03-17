@@ -16,11 +16,13 @@ import {
   PiHashDuotone,
   PiRobotDuotone,
   PiCaretDownDuotone,
+  PiInfoDuotone,
 } from "react-icons/pi";
+import { LuSearch } from "react-icons/lu";
 import { overviewRepository } from "@/repositories/overview/overview.repository";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import { routes } from "@/config/routes";
-import { useRoundsData } from "@/services/hooks/useAgents";
+import { useRoundsData, useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -67,6 +69,14 @@ function formatPercentage(value: number | null | undefined) {
     return "0%";
   }
   return `${value.toFixed(1)}%`;
+}
+
+function formatRewardPercentage(value: number | null | undefined) {
+  const normalized = normalizePercentage(value);
+  return `${new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(normalized)}%`;
 }
 
 function formatDate(value: string | null | undefined) {
@@ -179,11 +189,14 @@ export default function AgentRunSearch() {
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedRound, setSelectedRound] = useState<number | undefined>();
   const [selectedValidator, setSelectedValidator] = useState<string>("");
-  const [agentInput, setAgentInput] = useState<string>("");
+  const [selectedMinerUid, setSelectedMinerUid] = useState<number | null>(null);
+  const [selectedMinerName, setSelectedMinerName] = useState<string>("");
+  const [minerSearchQuery, setMinerSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
   const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
   const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
+  const [isMinerDropdownOpen, setIsMinerDropdownOpen] = useState(false);
   const [manualResults, setManualResults] = useState<AgentRunListItem[] | null>(
     null
   );
@@ -194,9 +207,24 @@ export default function AgentRunSearch() {
   const validatorDropdownRef = useRef<HTMLDivElement>(null);
   const seasonDropdownRef = useRef<HTMLDivElement>(null);
   const roundDropdownRef = useRef<HTMLDivElement>(null);
+  const minerDropdownRef = useRef<HTMLDivElement>(null);
 
   // Get available rounds
   const { data: roundsData, loading: roundsLoading } = useRoundsData();
+  const { data: seasonRankData } = useSeasonRank("latest");
+  const minerOptions = useMemo(() => {
+    const miners = seasonRankData?.miners ?? [];
+    return miners.map((miner) => ({ uid: miner.uid, name: miner.name }));
+  }, [seasonRankData?.miners]);
+  const filteredMinerOptions = useMemo(() => {
+    const query = minerSearchQuery.trim().toLowerCase();
+    if (!query) return minerOptions;
+    return minerOptions.filter(
+      (miner) =>
+        miner.name.toLowerCase().includes(query) ||
+        miner.uid.toString().includes(query)
+    );
+  }, [minerOptions, minerSearchQuery]);
 
   // Parse available rounds to extract seasons
   const seasonOptions = useMemo(() => {
@@ -231,6 +259,8 @@ export default function AgentRunSearch() {
 
     return parsed;
   }, [roundsData?.rounds, selectedSeason]);
+  const isRoundInProgress =
+    selectedSeason !== undefined && !roundsLoading && roundOptions.length === 0;
 
   const debouncedFilters = useDebouncedValue(
     useMemo(
@@ -238,9 +268,9 @@ export default function AgentRunSearch() {
         season: selectedSeason,
         round: selectedRound,
         validator: selectedValidator.trim(),
-        agent: agentInput.trim(),
+        agent: selectedMinerUid != null ? `agent-${selectedMinerUid}` : "",
       }),
-      [selectedSeason, selectedRound, selectedValidator, agentInput]
+      [selectedSeason, selectedRound, selectedValidator, selectedMinerUid]
     ),
     400
   );
@@ -294,16 +324,32 @@ export default function AgentRunSearch() {
       ) {
         setIsRoundDropdownOpen(false);
       }
+      if (
+        minerDropdownRef.current &&
+        !minerDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsMinerDropdownOpen(false);
+      }
     };
 
-    if (isValidatorDropdownOpen || isSeasonDropdownOpen || isRoundDropdownOpen) {
+    if (
+      isValidatorDropdownOpen ||
+      isSeasonDropdownOpen ||
+      isRoundDropdownOpen ||
+      isMinerDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isValidatorDropdownOpen, isSeasonDropdownOpen, isRoundDropdownOpen]);
+  }, [
+    isValidatorDropdownOpen,
+    isSeasonDropdownOpen,
+    isRoundDropdownOpen,
+    isMinerDropdownOpen,
+  ]);
 
   useEffect(() => {
     let isActive = true;
@@ -623,7 +669,8 @@ export default function AgentRunSearch() {
         ? `${selectedSeason}/${selectedRound}`
         : undefined;
     const validatorIdParam = selectedValidator || undefined;
-    const agentIdParam = agentInput.trim() || undefined;
+    const agentIdParam =
+      selectedMinerUid != null ? `agent-${selectedMinerUid}` : undefined;
 
     if (hasRunId) {
       setHasSearched(true);
@@ -685,10 +732,13 @@ export default function AgentRunSearch() {
     setSelectedSeason(undefined);
     setSelectedRound(undefined);
     setSelectedValidator("");
-    setAgentInput("");
+    setSelectedMinerUid(null);
+    setSelectedMinerName("");
+    setMinerSearchQuery("");
     setIsValidatorDropdownOpen(false);
     setIsSeasonDropdownOpen(false);
     setIsRoundDropdownOpen(false);
+    setIsMinerDropdownOpen(false);
     setManualResults(null);
     setManualError(null);
     setManualLoading(false);
@@ -704,7 +754,7 @@ export default function AgentRunSearch() {
     selectedSeason !== undefined ||
     selectedRound !== undefined ||
     selectedValidator !== "" ||
-    agentInput !== "";
+    selectedMinerUid !== null;
 
   const handlePageChange = (nextPage: number) => {
     if (
@@ -880,21 +930,21 @@ export default function AgentRunSearch() {
                       type="button"
                       aria-labelledby="filter-round-label"
                       onClick={() => {
-                        if (selectedSeason === undefined) {
+                        if (selectedSeason === undefined || isRoundInProgress) {
                           return; // Don't open if no season selected
                         }
                         setIsRoundDropdownOpen(!isRoundDropdownOpen);
                       }}
-                      disabled={selectedSeason === undefined}
+                      disabled={selectedSeason === undefined || isRoundInProgress}
                       className={`w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0 ${
-                        selectedSeason === undefined
+                        selectedSeason === undefined || isRoundInProgress
                           ? "opacity-50 cursor-not-allowed"
                           : ""
                       }`}
                     >
                       <span>
                         {selectedSeason === undefined && "Select season first"}
-                        {selectedSeason !== undefined && roundOptions.length === 0 && "No rounds"}
+                        {selectedSeason !== undefined && roundOptions.length === 0 && "Round in progress"}
                         {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound === undefined && "All Rounds"}
                         {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound !== undefined && `Round ${selectedRound}`}
                       </span>
@@ -1014,53 +1064,88 @@ export default function AgentRunSearch() {
                   </div>
                 </div>
 
-                {/* Agent Filter */}
+                {/* Miner Filter */}
                 <div className="space-y-2">
-                  <label id="filter-agent-label" htmlFor="filter-agent-input" className="text-sm font-medium text-purple-300">
-                    AGENT
+                  <label id="filter-agent-label" htmlFor="filter-agent-button" className="text-sm font-medium text-purple-300">
+                    MINER
                   </label>
-                  <div className="relative">
-                    <input
-                      id="filter-agent-input"
-                      type="text"
-                      value={agentInput}
-                      onChange={(e) => setAgentInput(e.target.value)}
-                      placeholder="Enter Agent UID or Run UID"
-                      className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 text-sm placeholder-gray-400 focus:border-purple-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <PiRobotDuotone className="w-4 h-4 text-purple-400" />
-                    </div>
+                  <div className="relative" ref={minerDropdownRef}>
+                    <button
+                      id="filter-agent-button"
+                      type="button"
+                      onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
+                      className="flex w-full items-center justify-between rounded-xl border-2 border-purple-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-400/70 focus:ring-0"
+                    >
+                      <span className="truncate">
+                        {selectedMinerUid != null && selectedMinerName
+                          ? `${selectedMinerName} (UID ${selectedMinerUid})`
+                          : "All Miners"}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`w-4 h-4 text-purple-400 shrink-0 ml-2 transition-transform duration-200 ${isMinerDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isMinerDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl flex flex-col">
+                        <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
+                          <div className="relative">
+                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
+                            <input
+                              type="text"
+                              value={minerSearchQuery}
+                              onChange={(e) => setMinerSearchQuery(e.target.value)}
+                              placeholder="Search miners..."
+                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedMinerUid(null);
+                              setSelectedMinerName("");
+                              setMinerSearchQuery("");
+                              setIsMinerDropdownOpen(false);
+                            }}
+                            className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2 text-left text-slate-100 transition-colors duration-200 hover:bg-purple-500/16 hover:text-white"
+                          >
+                            All Miners
+                          </button>
+                          {filteredMinerOptions.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-sm text-slate-400">
+                              No miners match your search
+                            </div>
+                          ) : (
+                            filteredMinerOptions.map((miner) => (
+                              <button
+                                key={miner.uid}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMinerUid(miner.uid);
+                                  setSelectedMinerName(miner.name);
+                                  setMinerSearchQuery("");
+                                  setIsMinerDropdownOpen(false);
+                                }}
+                                className={`w-full border-b border-slate-800/80 px-3 py-2 text-left transition-colors duration-200 last:border-b-0 ${
+                                  selectedMinerUid === miner.uid
+                                    ? "bg-gradient-to-r from-purple-500/35 to-fuchsia-500/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-purple-500/16 hover:text-white"
+                                }`}
+                              >
+                                <span className="font-medium">{miner.name}</span>
+                                <span className="ml-1 text-xs text-slate-400">
+                                  (UID {miner.uid})
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Results Limit */}
-                <div className="space-y-2">
-                  <label id="filter-limit-label" htmlFor="filter-limit-select" className="text-sm font-medium text-cyan-300">
-                    RESULTS PER PAGE
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-limit-select"
-                      value={limitValue}
-                      onChange={(event) =>
-                        handleLimitChange(Number(event.target.value))
-                      }
-                      className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
-                    >
-                      {limitOptions.map((option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          style={{ color: "#000" }}
-                        >
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -1087,11 +1172,32 @@ export default function AgentRunSearch() {
               </button>
             </div>
           </div>
-        </div>
+      </div>
 
-        {/* Error State */}
-        {hasSearched && effectiveError && !effectiveNotFound && (
-          <div className="mt-6 relative z-0">
+      {!hasSearched && seasonOptions.length > 0 && (
+        <div className="w-full max-w-[1024px] mx-auto">
+          <div className="mt-6 text-center relative z-0">
+            <div className="relative rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 p-6 shadow-lg backdrop-blur-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-orange-900/10"></div>
+              <div className="relative">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg mx-auto mb-4">
+                  <PiInfoDuotone className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent mb-2">
+                  ROUND IN PROGRESS
+                </h3>
+                <p className="text-amber-100/90 text-sm">
+                  This round is in progress. Runs and rankings will be available once evaluations are complete.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {hasSearched && effectiveError && !effectiveNotFound && (
+        <div className="mt-6 relative z-0">
             <div className="relative bg-gradient-to-br from-red-500/5 via-orange-500/5 to-red-600/5 border-2 border-red-500/40 rounded-2xl p-6 shadow-lg backdrop-blur-md">
               <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-orange-900/10"></div>
               <div className="relative text-center">
@@ -1140,17 +1246,41 @@ export default function AgentRunSearch() {
           (!effectiveError || effectiveNotFound) &&
           displayedRuns.length === 0 && (
             <div className="mt-6 text-center relative z-0">
-              <div className="relative bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-2 border-purple-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"></div>
+              <div className={`relative rounded-2xl p-6 shadow-lg backdrop-blur-md border-2 ${
+                isRoundInProgress
+                  ? "bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 border-amber-400/40"
+                  : "bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-indigo-600/5 border-purple-500/30"
+              }`}>
+                <div className={`absolute inset-0 ${
+                  isRoundInProgress
+                    ? "bg-gradient-to-br from-amber-900/10 via-transparent to-orange-900/10"
+                    : "bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"
+                }`}></div>
                 <div className="relative">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-500 rounded-xl shadow-lg mx-auto mb-4">
-                    <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl shadow-lg mx-auto mb-4 ${
+                    isRoundInProgress
+                      ? "bg-gradient-to-br from-amber-400 to-orange-500"
+                      : "bg-gradient-to-br from-purple-400 to-violet-500"
+                  }`}>
+                    {isRoundInProgress ? (
+                      <PiInfoDuotone className="w-8 h-8 text-white" />
+                    ) : (
+                      <PiMagnifyingGlassDuotone className="w-8 h-8 text-white" />
+                    )}
                   </div>
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-violet-500 bg-clip-text text-transparent mb-2">
-                    NO RESULTS FOUND
+                  <h3 className={`text-lg font-bold bg-clip-text text-transparent mb-2 ${
+                    isRoundInProgress
+                      ? "bg-gradient-to-r from-amber-300 to-orange-400"
+                      : "bg-gradient-to-r from-purple-400 to-violet-500"
+                  }`}>
+                    {isRoundInProgress ? "ROUND IN PROGRESS" : "NO RESULTS FOUND"}
                   </h3>
-                  <p className="text-purple-200 text-sm">
-                    Try a different run ID or adjust your filters.
+                  <p className={`text-sm ${
+                    isRoundInProgress ? "text-amber-100/90" : "text-purple-200"
+                  }`}>
+                    {isRoundInProgress
+                      ? "This round is in progress. Runs and rankings will be available once evaluations are complete."
+                      : "Try a different run ID or adjust your filters."}
                   </p>
                 </div>
               </div>
@@ -1188,10 +1318,7 @@ export default function AgentRunSearch() {
               const completedTasks =
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
-              const scoreOutOf100 = Math.max(
-                0,
-                Math.min(100, Math.round(run.overallReward ?? 0))
-              );
+              const rewardPercent = formatRewardPercentage(run.overallReward);
               const minerImageSrc = resolveMinerImage(run);
 
               return (
@@ -1227,7 +1354,21 @@ export default function AgentRunSearch() {
                               </>
                             );
                           }
-                          // Fallback for legacy format
+                          // Decode numeric format: season * 10000 + round_in_season
+                          if (typeof roundId === "number" && roundId > 0) {
+                            const season = Math.floor(roundId / 10000);
+                            const round = roundId % 10000;
+                            return (
+                              <>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
+                                  Season {season}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
+                                  Round {round}
+                                </span>
+                              </>
+                            );
+                          }
                           return (
                             <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
                               Round {roundId ?? "?"}
@@ -1302,10 +1443,10 @@ export default function AgentRunSearch() {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="text-center">
                           <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
-                            Score
+                            Reward
                           </div>
                           <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {scoreOutOf100}%
+                            {rewardPercent}
                           </div>
                         </div>
                         <div className="text-center">
@@ -1351,39 +1492,75 @@ export default function AgentRunSearch() {
             })}
           </div>
 
-          {!isManualSearchActive &&
-            totalPages > 1 &&
-            displayedRuns.length > 0 && (
-              <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(resolvedPage - 1)}
-                  disabled={!canGoPrev}
-                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    canGoPrev
-                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                  }`}
+          {!isManualSearchActive && displayedRuns.length > 0 && (
+            <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-sky-200 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="agent-run-results-per-page-bottom"
+                  className="text-xs font-semibold uppercase tracking-wide text-cyan-300"
                 >
-                  Previous
-                </button>
-                <span className="text-sky-100">
-                  Page {resolvedPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(resolvedPage + 1)}
-                  disabled={!canGoNext}
-                  className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    canGoNext
-                      ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                      : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                  }`}
-                >
-                  Next
-                </button>
+                  Results per page
+                </label>
+                <div className="relative">
+                  <select
+                    id="agent-run-results-per-page-bottom"
+                    value={limitValue}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="appearance-none rounded-xl border-2 border-cyan-500/20 bg-cyan-500/20 px-3 py-2 pr-9 text-sm text-white outline-none transition-all duration-300 focus:border-cyan-400 focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-300" />
+                </div>
               </div>
-            )}
+
+              {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(resolvedPage - 1)}
+                    disabled={!canGoPrev}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoPrev
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sky-100">
+                    Page {resolvedPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(resolvedPage + 1)}
+                    disabled={!canGoNext}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoNext
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-300">
+                  Page 1 of 1
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

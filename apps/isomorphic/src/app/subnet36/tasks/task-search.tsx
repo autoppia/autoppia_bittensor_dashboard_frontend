@@ -14,6 +14,7 @@ import type { TaskData } from "@/repositories/tasks/tasks.types";
 import { routes } from "@/config/routes";
 import { websitesData } from "@/data/websites-data";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { getProjectInfoByPort } from "@/utils/website-colors";
 import {
   PiMagnifyingGlassDuotone,
   PiFunnelDuotone,
@@ -24,6 +25,8 @@ import {
   PiGlobeDuotone,
   PiCodeDuotone,
 } from "react-icons/pi";
+import { LuSearch } from "react-icons/lu";
+import { useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -166,8 +169,16 @@ export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [agentRunInput, setAgentRunInput] = useState<string>("");
+  const [selectedAgentUid, setSelectedAgentUid] = useState<number | null>(null);
+  const [selectedAgentName, setSelectedAgentName] = useState<string>("");
+  const [agentSearchQuery, setAgentSearchQuery] = useState("");
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
+  const [successMode, setSuccessMode] = useState<
+    "all" | "successful" | "non_successful"
+  >("all");
+  const [isSuccessDropdownOpen, setIsSuccessDropdownOpen] = useState(false);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
   const [availableWebsites, setAvailableWebsites] =
@@ -184,16 +195,34 @@ export default function TaskSearch() {
 
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
+  const agentDropdownRef = useRef<HTMLDivElement>(null);
+  const successDropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: seasonRankData } = useSeasonRank("latest");
+  const agentsList = useMemo(() => {
+    const miners = seasonRankData?.miners ?? [];
+    return miners.map((m) => ({ uid: m.uid, name: m.name }));
+  }, [seasonRankData?.miners]);
+  const filteredAgentsForDropdown = useMemo(() => {
+    const q = agentSearchQuery.trim().toLowerCase();
+    if (!q) return agentsList;
+    return agentsList.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) || a.uid.toString().includes(q)
+    );
+  }, [agentsList, agentSearchQuery]);
 
   const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
   const debouncedFilters = useDebouncedValue(
     useMemo(
       () => ({
         agentRun: agentRunInput.trim(),
+        selectedAgentUid,
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
+        successMode,
       }),
-      [agentRunInput, selectedWebsite, selectedUseCase]
+      [agentRunInput, selectedAgentUid, selectedWebsite, selectedUseCase, successMode]
     ),
     400
   );
@@ -253,8 +282,10 @@ export default function TaskSearch() {
           const response = await tasksRepository.searchTasks({
             query: debouncedSearchTerm,
             agentRunId: debouncedFilters.agentRun || undefined,
+            minerUid: debouncedFilters.selectedAgentUid ?? undefined,
             website: debouncedFilters.website || undefined,
             useCase: debouncedFilters.useCase || undefined,
+            successMode: debouncedFilters.successMode,
             page: currentPage,
             limit: currentLimit,
             includeDetails: false,
@@ -295,8 +326,10 @@ export default function TaskSearch() {
       try {
         const response = await tasksRepository.searchTasks({
           agentRunId: debouncedFilters.agentRun || undefined,
+          minerUid: debouncedFilters.selectedAgentUid ?? undefined,
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,
+          successMode: debouncedFilters.successMode,
           page: currentPage,
           limit: currentLimit,
           includeDetails: false,
@@ -347,16 +380,33 @@ export default function TaskSearch() {
       ) {
         setIsUseCaseDropdownOpen(false);
       }
+      if (
+        agentDropdownRef.current &&
+        !agentDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsAgentDropdownOpen(false);
+      }
+      if (
+        successDropdownRef.current &&
+        !successDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSuccessDropdownOpen(false);
+      }
     };
 
-    if (isWebsiteDropdownOpen || isUseCaseDropdownOpen) {
+    if (
+      isWebsiteDropdownOpen ||
+      isUseCaseDropdownOpen ||
+      isAgentDropdownOpen ||
+      isSuccessDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen]);
+  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen, isAgentDropdownOpen, isSuccessDropdownOpen]);
 
   useEffect(() => {
     const baseUseCases = selectedWebsite
@@ -397,8 +447,14 @@ export default function TaskSearch() {
   const clearFilters = () => {
     setSearchTerm("");
     setAgentRunInput("");
+    setSelectedAgentUid(null);
+    setSelectedAgentName("");
+    setAgentSearchQuery("");
+    setIsAgentDropdownOpen(false);
     setSelectedWebsite("");
     setSelectedUseCase("");
+    setSuccessMode("all");
+    setIsSuccessDropdownOpen(false);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
     setHasSearched(false);
@@ -414,8 +470,10 @@ export default function TaskSearch() {
   const hasActiveFilters =
     searchTerm !== "" ||
     agentRunInput !== "" ||
+    selectedAgentUid != null ||
     selectedWebsite !== "" ||
-    selectedUseCase !== "";
+    selectedUseCase !== "" ||
+    successMode !== "all";
 
   const formattedWebsites = useMemo(
     () =>
@@ -452,7 +510,7 @@ export default function TaskSearch() {
               </h2>
             </div>
             <p className="text-cyan-300 text-sm">
-              Search by Evaluation ID or filter by Agent Run, Website, and Use Case
+              Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
             </p>
           </div>
 
@@ -477,7 +535,86 @@ export default function TaskSearch() {
               <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 xl:gap-5 overflow-visible items-end">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-emerald-300 block" htmlFor="task-search-agent-button">
+                  MINER
+                </label>
+                <div className="relative" ref={agentDropdownRef}>
+                  <button
+                    id="task-search-agent-button"
+                    type="button"
+                    onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+                    className="flex min-h-[46px] w-full items-center justify-between rounded-xl border-2 border-emerald-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/70 focus:ring-0"
+                  >
+                    <span className="truncate">
+                      {selectedAgentUid != null && selectedAgentName
+                        ? `${selectedAgentName} (${selectedAgentUid})`
+                        : "All Miners"}
+                    </span>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-emerald-400 shrink-0 ml-2 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isAgentDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
+                      <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
+                        <div className="relative">
+                          <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300" />
+                          <input
+                            type="text"
+                            value={agentSearchQuery}
+                            onChange={(e) => setAgentSearchQuery(e.target.value)}
+                            placeholder="Search agents..."
+                            className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-400/70 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgentUid(null);
+                            setSelectedAgentName("");
+                            setIsAgentDropdownOpen(false);
+                            setAgentSearchQuery("");
+                          }}
+                          className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
+                        >
+                          All Miners
+                        </button>
+                        {filteredAgentsForDropdown.length === 0 ? (
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
+                            No miners match your search
+                          </div>
+                        ) : (
+                          filteredAgentsForDropdown.map((agent) => (
+                            <button
+                              key={agent.uid}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAgentUid(agent.uid);
+                                setSelectedAgentName(agent.name);
+                                setIsAgentDropdownOpen(false);
+                                setAgentSearchQuery("");
+                              }}
+                              className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
+                                selectedAgentUid === agent.uid
+                                  ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white"
+                                  : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"
+                              }`}
+                            >
+                              <span className="font-medium">{agent.name}</span>
+                              <span className="ml-1 text-xs text-slate-400">(UID {agent.uid})</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="task-search-agent-run" className="text-sm font-medium text-emerald-300">
                   AGENT RUN
@@ -488,8 +625,8 @@ export default function TaskSearch() {
                     type="text"
                     value={agentRunInput}
                     onChange={(e) => setAgentRunInput(e.target.value)}
-                    placeholder="Enter Agent Run UID"
-                    className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    placeholder="Run UID (optional)"
+                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
@@ -508,7 +645,7 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
                     }
-                    className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {selectedWebsite === ""
@@ -521,14 +658,14 @@ export default function TaskSearch() {
                   </button>
 
                   {isWebsiteDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-blue-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedWebsite("");
                           setIsWebsiteDropdownOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20"
+                        className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10"
                       >
                         All Websites
                       </button>
@@ -540,7 +677,7 @@ export default function TaskSearch() {
                             setSelectedWebsite(website.value);
                             setIsWebsiteDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20 last:border-b-0"
+                          className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10 last:border-b-0"
                         >
                           {website.label}
                         </button>
@@ -561,7 +698,7 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
                     }
-                    className="w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[46px] px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
                     <span>
                       {selectedUseCase === ""
@@ -574,14 +711,14 @@ export default function TaskSearch() {
                   </button>
 
                   {isUseCaseDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-purple-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedUseCase("");
                           setIsUseCaseDropdownOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                        className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10"
                       >
                         All Use Cases
                       </button>
@@ -593,7 +730,7 @@ export default function TaskSearch() {
                             setSelectedUseCase(useCase.value);
                             setIsUseCaseDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20 last:border-b-0"
+                          className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10 last:border-b-0"
                         >
                           {useCase.label}
                         </button>
@@ -603,31 +740,53 @@ export default function TaskSearch() {
                 </div>
               </div>
 
-              {/* Results Per Page */}
               <div className="space-y-2">
-                <label htmlFor="task-search-results-per-page" className="text-sm font-medium text-cyan-300">
-                  RESULTS PER PAGE
+                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-button">
+                  SUCCESS
                 </label>
-                <div className="relative">
-                  <select
-                    id="task-search-results-per-page"
-                    value={currentLimit}
-                    onChange={(event) =>
-                      handleLimitChange(Number(event.target.value))
-                    }
-                    className="w-full appearance-none px-3 py-2 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-white text-sm focus:border-cyan-400 outline-none transition-all duration-300 backdrop-blur-md focus:ring-0"
+                <div className="relative" ref={successDropdownRef}>
+                  <button
+                    id="task-search-success-button"
+                    type="button"
+                    onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
+                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
-                    {limitOptions.map((option) => (
-                      <option
-                        key={option}
-                        value={option}
-                        style={{ color: "#000" }}
-                      >
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300" />
+                    <span>
+                      {successMode === "all" && "All Tasks"}
+                      {successMode === "successful" && "Successful Tasks"}
+                      {successMode === "non_successful" && "Non Successful Tasks"}
+                    </span>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isSuccessDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 backdrop-blur-xl">
+                      {[
+                        { value: "all", label: "All Tasks" },
+                        { value: "successful", label: "Successful Tasks" },
+                        { value: "non_successful", label: "Non Successful Tasks" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setSuccessMode(
+                              option.value as "all" | "successful" | "non_successful"
+                            );
+                            setIsSuccessDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2.5 text-left transition-colors duration-200 border-b border-emerald-400/10 last:border-b-0 ${
+                            successMode === option.value
+                              ? "bg-emerald-500/18 text-emerald-50"
+                              : "text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -694,9 +853,7 @@ export default function TaskSearch() {
                 const portMatch = portRegex.exec(url);
                 if (portMatch) {
                   const port = portMatch[1];
-                  const website = websitesData.find(
-                    (w) => w.portValidator === port
-                  );
+                  const website = getProjectInfoByPort(port);
                   return website
                     ? {
                         name: website.name,
@@ -957,36 +1114,73 @@ export default function TaskSearch() {
             })}
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && results.length > 0 && (
-            <div className="mt-6 flex items-center justify-center gap-4 text-sm text-sky-200">
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={!canGoPrev}
-                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                  canGoPrev
-                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                Previous
-              </button>
-              <span className="text-sky-100">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!canGoNext}
-                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
-                  canGoNext
-                    ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
-                    : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                Next
-              </button>
+          {results.length > 0 && (
+            <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-sky-200 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="task-search-results-per-page-bottom"
+                  className="text-xs font-semibold uppercase tracking-wide text-cyan-300"
+                >
+                  Results per page
+                </label>
+                <div className="relative">
+                  <select
+                    id="task-search-results-per-page-bottom"
+                    value={currentLimit}
+                    onChange={(event) =>
+                      handleLimitChange(Number(event.target.value))
+                    }
+                    className="appearance-none rounded-xl border-2 border-cyan-500/20 bg-cyan-500/20 px-3 py-2 pr-9 text-sm text-white outline-none transition-all duration-300 focus:border-cyan-400 focus:ring-0"
+                  >
+                    {limitOptions.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                        style={{ color: "#000" }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <PiCaretDownDuotone className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-300" />
+                </div>
+              </div>
+
+              {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={!canGoPrev}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoPrev
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sky-100">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={!canGoNext}
+                    className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                      canGoNext
+                        ? "border-sky-500/50 bg-sky-500/20 text-sky-100 hover:bg-sky-500/30 hover:border-sky-400/70"
+                        : "border-slate-600/40 bg-slate-700/40 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-300">
+                  Page 1 of 1
+                </div>
+              )}
             </div>
           )}
         </div>

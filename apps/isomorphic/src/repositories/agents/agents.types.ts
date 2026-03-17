@@ -282,6 +282,7 @@ export interface AgentPerformanceMetrics {
 export interface AgentRunOverview {
   runId: string;
   agentId: string;
+  githubUrl?: string | null;
   roundId: number;
   season?: number;
   round?: number;
@@ -293,6 +294,7 @@ export interface AgentRunOverview {
   startTime: string | null;
   endTime?: string | null;
   totalTasks: number;
+  tasksAttempted?: number | null;
   completedTasks: number;
   successfulTasks: number;
   failedTasks: number;
@@ -304,6 +306,8 @@ export interface AgentRunOverview {
   websitesCount?: number;
   totalWebsites?: number;
   zeroReason?: string | null;
+  earlyStopReason?: string | null;
+  earlyStopMessage?: string | null;
   /** @deprecated use averageReward */
   reward?: number;
   /** @deprecated use averageReward */
@@ -527,6 +531,7 @@ export interface AgentRunsByRoundValidatorEntry {
   run_score: number | null;
   run_time: number | null;
   run_total_tasks: number;
+  run_tasks_attempted?: number | null;
   run_success_tasks: number;
   run_failed_tasks: number;
   run_elapsed_sec: number | null;
@@ -534,6 +539,10 @@ export interface AgentRunsByRoundValidatorEntry {
   run_websites_count: number;
   run_started_at: string | null;
   run_ended_at: string | null;
+  run_zero_reason?: string | null;
+  run_early_stop_reason?: string | null;
+  run_early_stop_message?: string | null;
+  github_url?: string | null;
 }
 
 export interface AgentRunsByRoundEntry {
@@ -542,6 +551,8 @@ export interface AgentRunsByRoundEntry {
   round_label: string;
   season: number;
   round_in_season: number;
+  round_status?: string | null;
+  round_consensus_status?: string | null;
   validators_count: number;
   websites_count: number;
   post_consensus_available: boolean;
