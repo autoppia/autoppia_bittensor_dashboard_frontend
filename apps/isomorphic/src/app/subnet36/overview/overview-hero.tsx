@@ -2,7 +2,7 @@
 
 import cn from "@core/utils/class-names";
 import { useNetworkStatus, useSubnetStatistics } from "@/services/hooks/useOverview";
-import { PiActivityFill, PiShieldCheckFill, PiStackFill, PiListChecksFill } from "react-icons/pi";
+import { PiShieldCheckFill, PiStackFill, PiListChecksFill } from "react-icons/pi";
 
 function formatCompactNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -81,7 +81,7 @@ export default function OverviewHero({ className }: Readonly<{ className?: strin
           <>
             <span className="text-slate-500" aria-hidden>·</span>
             <span className="inline-flex items-center gap-1.5">
-              <PiActivityFill className="h-4 w-4 text-pink-400" aria-hidden />
+              <PiShieldCheckFill className="h-4 w-4 text-pink-400" aria-hidden />
               <span className="font-semibold text-white">{avgScorePct}%</span>
               <span>avg score</span>
             </span>
