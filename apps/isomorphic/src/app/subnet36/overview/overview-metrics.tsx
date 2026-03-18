@@ -164,25 +164,48 @@ export default function OverviewMetrics({
   // Create dynamic metrics data from API with safe fallbacks
   const currentRound = metrics?.round ?? 0;
   const currentSeason = metrics?.season ?? null;
+  const currentActiveSeason = metrics?.currentSeason ?? metrics?.season ?? null;
+  const currentActiveRound = metrics?.currentRound ?? metrics?.round ?? null;
+  const hasFinishedRound = Boolean(
+    metrics?.hasFinishedRound ??
+      (metrics?.season !== null &&
+        metrics?.season !== undefined &&
+        metrics?.round !== null &&
+        metrics?.round !== undefined)
+  );
   const leader = metrics?.leader ?? null;
   const leaderRewardValue = leader?.reward ?? 0;
-  const leaderInfo = leader?.minerUid
+  const leaderInfo = hasFinishedRound && leader?.minerUid
     ? `${leader.minerName || "Miner"} (UID ${leader.minerUid})`
     : null;
-  const leaderGithubUrl = leader?.minerGithubUrl ?? null;
-  const totalWebsitesCount = leader?.totalWebsitesEvaluated ?? 0;
+  const leaderGithubUrl = hasFinishedRound ? leader?.minerGithubUrl ?? null : null;
+  const totalWebsitesCount = hasFinishedRound ? leader?.totalWebsitesEvaluated ?? 0 : 0;
+  const validatorsCount = hasFinishedRound
+    ? leader?.validators ?? 0
+    : metrics?.currentValidators ?? 0;
 
   const seasonLabel = currentSeason !== null && currentSeason !== undefined
     ? `Season ${currentSeason}`
     : null;
+  const currentRoundLabel =
+    currentActiveSeason !== null &&
+    currentActiveSeason !== undefined &&
+    currentActiveRound !== null &&
+    currentActiveRound !== undefined
+      ? `Season ${currentActiveSeason} · Round ${currentActiveRound}`
+      : "Current round";
 
   const dynamicMetricsData = [
     {
       id: "score-to-win",
-      title: "Leader Reward",
-      value: formatPercentage(leaderRewardValue),
-      topLabel: leaderInfo,
-      bottomLabel: seasonLabel ? `${seasonLabel} · Round ${currentRound}` : `Round ${currentRound}`,
+      title: hasFinishedRound ? "Leader Reward" : "Leader",
+      value: hasFinishedRound ? formatPercentage(leaderRewardValue) : "Pending",
+      topLabel: hasFinishedRound ? leaderInfo : "No finished round yet",
+      bottomLabel: hasFinishedRound
+        ? seasonLabel
+          ? `${seasonLabel} · Round ${currentRound}`
+          : `Round ${currentRound}`
+        : currentRoundLabel,
       githubUrl: leaderGithubUrl,
       icon: LuTrophy,
       bgColor:
@@ -196,9 +219,13 @@ export default function OverviewMetrics({
     {
       id: "total-websites",
       title: "Websites",
-      value: totalWebsitesCount,
-      topLabel: "Evaluated by leader",
-      bottomLabel: seasonLabel ? `${seasonLabel} · Round ${currentRound}` : `Round ${currentRound}`,
+      value: hasFinishedRound ? totalWebsitesCount : "Pending",
+      topLabel: hasFinishedRound ? "Evaluated by leader" : "Visible after consensus",
+      bottomLabel: hasFinishedRound
+        ? seasonLabel
+          ? `${seasonLabel} · Round ${currentRound}`
+          : `Round ${currentRound}`
+        : currentRoundLabel,
       icon: LuGlobe,
       bgColor:
         "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -210,12 +237,16 @@ export default function OverviewMetrics({
     {
       id: "total-validators",
       title: "Validators",
-      value: leader?.validators ?? 0,
+      value: validatorsCount,
       topLabel:
         metrics?.tasksPerValidator != null
           ? `${metrics.tasksPerValidator} tasks per validator`
           : "Active validators",
-      bottomLabel: seasonLabel ? `${seasonLabel} · Round ${currentRound}` : `Round ${currentRound}`,
+      bottomLabel: hasFinishedRound
+        ? seasonLabel
+          ? `${seasonLabel} · Round ${currentRound}`
+          : `Round ${currentRound}`
+        : currentRoundLabel,
       icon: LuShield,
       bgColor:
         "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
@@ -228,8 +259,12 @@ export default function OverviewMetrics({
       id: "total-miners",
       title: "Miners",
       value: metrics?.totalMiners ?? 0,
-      topLabel: "Season miners",
-      bottomLabel: seasonLabel ? `${seasonLabel} · Round ${currentRound}` : `Round ${currentRound}`,
+      topLabel: hasFinishedRound ? "Season miners" : "Current round miners",
+      bottomLabel: hasFinishedRound
+        ? seasonLabel
+          ? `${seasonLabel} · Round ${currentRound}`
+          : `Round ${currentRound}`
+        : currentRoundLabel,
       icon: LuPickaxe,
       bgColor:
         "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",

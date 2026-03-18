@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
+import OverviewHero from "./overview-hero";
+import OverviewRecentActivity from "./overview-recent-activity";
 import { Title } from "rizzui/typography";
 import Link from "next/link";
 import { PiGithubLogoDuotone } from "react-icons/pi";
@@ -22,21 +24,36 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
-  // Last FINISHED round — drives the metric cards and "Latest round" label
+  const hasFinishedRound = Boolean(
+    metrics?.hasFinishedRound ??
+      (metrics?.season !== null &&
+        metrics?.season !== undefined &&
+        metrics?.round !== null &&
+        metrics?.round !== undefined)
+  );
+  // Last FINISHED round — drives the metric cards and "Latest finished" label
   const metricsRound = metrics?.round ?? null;
   const metricsSeason = metrics?.season ?? null;
   // Currently active round — drives the title badge and validator list
   const currentSeason = metrics?.currentSeason ?? metrics?.season ?? null;
   const currentRoundInSeason = metrics?.currentRound ?? metrics?.round ?? null;
-  const metricsRoundLabel =
-    metricsSeason !== null && metricsSeason !== undefined && metricsRound !== null && metricsRound !== undefined
+  const metricsRoundLabel = hasFinishedRound
+    ? metricsSeason !== null &&
+      metricsSeason !== undefined &&
+      metricsRound !== null &&
+      metricsRound !== undefined
       ? `Season ${metricsSeason} · Round ${metricsRound}`
-      : metricsRound ?? "—";
-  const currentRoundLabel =
-    currentSeason !== null && currentSeason !== undefined && currentRoundInSeason !== null && currentRoundInSeason !== undefined
+      : "—"
+    : currentSeason !== null &&
+        currentSeason !== undefined &&
+        currentRoundInSeason !== null &&
+        currentRoundInSeason !== undefined
       ? `Season ${currentSeason} · Round ${currentRoundInSeason}`
       : "—";
-  const leaderGithubUrl = metrics?.leader?.minerGithubUrl?.trim() || null;
+  const metricsRoundPrefix = hasFinishedRound ? "Latest finished:" : "Current round:";
+  const leaderGithubUrl = hasFinishedRound
+    ? metrics?.leader?.minerGithubUrl?.trim() || null
+    : null;
 
   // Auto-refresh metrics every 30 seconds
   useEffect(() => {
@@ -73,6 +90,9 @@ export default function Overview() {
 
   return (
     <>
+      {/* Hero: network status + one-line stats */}
+      <OverviewHero className="mb-4" />
+
       {/* Content - each component handles its own loading states */}
       <div className="flex flex-col lg:flex-row lg:items-stretch gap-6 min-w-0">
         <div className="w-full lg:w-[calc(100%-460px)] min-w-0 flex flex-col">
@@ -100,7 +120,7 @@ export default function Overview() {
           <OverviewMinerChart
             className="w-full min-w-0 flex-1"
             targetHeight={metricsHeight}
-            season={metricsSeason}
+            season={metricsSeason ?? currentSeason}
           />
         </div>
         <div
@@ -110,7 +130,7 @@ export default function Overview() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200 shadow-sm">
               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-              <span>Latest round:</span>
+              <span>{metricsRoundPrefix}</span>
               <span className="font-bold text-white">
                 {metricsRoundLabel}
               </span>
@@ -154,6 +174,7 @@ export default function Overview() {
             error={null}
             onRefetch={refetchMetrics}
           />
+          <OverviewRecentActivity className="mt-4 w-full min-w-0" />
         </div>
       </div>
       <OverviewValidators
