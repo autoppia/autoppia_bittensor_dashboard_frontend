@@ -38,7 +38,7 @@ export function AgentsListExample() {
   return (
     <div>
       <h2>Agents List</h2>
-      
+
       {/* Search and Filters */}
       <div style={{ marginBottom: '20px' }}>
         <input
@@ -74,14 +74,14 @@ export function AgentsListExample() {
 
       {/* Pagination */}
       <div>
-        <button 
-          disabled={page === 1} 
+        <button
+          disabled={page === 1}
           onClick={() => setPage(page - 1)}
         >
           Previous
         </button>
         <span>Page {page} of {Math.ceil((data?.data.total || 0) / 10)}</span>
-        <button 
+        <button
           disabled={!data?.data.agents.length || data.data.agents.length < 10}
           onClick={() => setPage(page + 1)}
         >
@@ -107,7 +107,7 @@ export function AgentDetailsExample({
   return (
     <div>
       <h2>{agent.name}</h2>
-      
+
       {/* Agent Info */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
         <Image
@@ -175,7 +175,7 @@ export function AgentDetailsExample({
 export function AgentPerformanceChartExample({
   agentId,
 }: Readonly<{ agentId: string }>) {
-  const { data: performance, loading } = useAgentPerformance(agentId, { 
+  const { data: performance, loading } = useAgentPerformance(agentId, {
     timeRange: '30d',
     granularity: 'day'
   });
@@ -207,7 +207,7 @@ export function AgentStatisticsExample() {
   return (
     <div>
       <h2>Agent Statistics</h2>
-      
+
       {/* Overall Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
         <div style={{ border: '1px solid #ccc', padding: '15px', textAlign: 'center' }}>
@@ -280,7 +280,7 @@ export function RealTimeAgentMonitorExample({
   return (
     <div>
       <h2>Real-time Agent Monitor: {data.agent?.name}</h2>
-      
+
       {/* Current Status */}
       <div style={{ marginBottom: '20px' }}>
         <h3>Current Status</h3>
@@ -319,8 +319,8 @@ export function AgentComparisonExample() {
   });
 
   const handleAgentToggle = (agentId: string) => {
-    setSelectedAgents(prev => 
-      prev.includes(agentId) 
+    setSelectedAgents(prev =>
+      prev.includes(agentId)
         ? prev.filter(id => id !== agentId)
         : [...prev, agentId]
     );
@@ -329,7 +329,7 @@ export function AgentComparisonExample() {
   return (
     <div>
       <h2>Agent Comparison</h2>
-      
+
       {/* Agent Selection */}
       <div style={{ marginBottom: '20px' }}>
         <h3>Select Agents to Compare</h3>
@@ -364,7 +364,7 @@ export function AgentComparisonExample() {
       {comparison && (
         <div>
           <h3>Comparison Results</h3>
-          
+
           {/* Comparison Metrics */}
           <div style={{ marginBottom: '20px' }}>
             <h4>Best Performers</h4>
@@ -449,7 +449,7 @@ export function DirectApiUsageExample() {
   return (
     <div>
       <h2>Direct API Service Usage</h2>
-      
+
       <div style={{ marginBottom: '20px' }}>
         <button onClick={handleGetAgents} disabled={loading}>
           Get Agents
@@ -463,7 +463,7 @@ export function DirectApiUsageExample() {
       </div>
 
       {loading && <div>Loading...</div>}
-      
+
       {result && (
         <div>
           <h3>Result:</h3>
@@ -506,7 +506,7 @@ export function AgentsApiExamples() {
   return (
     <div>
       <h1>Agents API Examples</h1>
-      
+
       {/* Example Selector */}
       <div style={{ marginBottom: '20px' }}>
         <label>
