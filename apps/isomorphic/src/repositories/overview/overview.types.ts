@@ -26,6 +26,7 @@ export interface OverviewLeader {
 }
 
 export interface OverviewMetrics {
+  hasFinishedRound?: boolean;
   leader?: OverviewLeader | null;
   /** Last FINISHED round's season number — used for metric cards and label */
   season?: number | null;
@@ -35,6 +36,7 @@ export interface OverviewMetrics {
   currentSeason?: number | null;
   /** Currently active round's round number */
   currentRound?: number | null;
+  currentValidators?: number;
   totalMiners: number;
   tasksPerValidator?: number | null;
   minerList?: MinerSummary[] | null;
