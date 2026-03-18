@@ -6,58 +6,6 @@ import cn from "@core/utils/class-names";
 import { LuShield, LuPickaxe, LuGlobe, LuTrophy } from "react-icons/lu";
 import { useOverviewMetrics } from "@/services/hooks/useOverview";
 
-const metricsData = [
-  {
-    id: "score-to-win",
-    title: "Top Reward",
-    value: 0.95,
-    icon: LuTrophy,
-    bgColor:
-      "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-    iconClassName:
-      "bg-gradient-to-br from-amber-400 to-orange-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-    metricClassName:
-      "text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent",
-    descriptionClassName: "text-amber-200",
-  },
-  {
-    id: "total-websites",
-    title: "Websites",
-    value: 11,
-    icon: LuGlobe,
-    bgColor:
-      "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-    iconClassName:
-      "bg-gradient-to-br from-pink-400 to-rose-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-    metricClassName: "text-2xl font-bold text-pink-400",
-    descriptionClassName: "text-pink-200",
-  },
-  {
-    id: "total-validators",
-    title: "Validators",
-    value: 6,
-    icon: LuShield,
-    bgColor:
-      "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-    iconClassName:
-      "bg-gradient-to-br from-blue-400 to-indigo-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-    metricClassName: "text-2xl font-bold text-blue-400",
-    descriptionClassName: "text-blue-200",
-  },
-  {
-    id: "total-miners",
-    title: "Miners",
-    value: 24,
-    icon: LuPickaxe,
-    bgColor:
-      "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-    iconClassName:
-      "bg-gradient-to-br from-emerald-400 to-green-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-    metricClassName: "text-2xl font-bold text-emerald-400",
-    descriptionClassName: "text-emerald-200",
-  },
-];
-
 interface OverviewMetricsProps {
   className?: string;
   metrics?: any; // OverviewMetrics type
@@ -113,28 +61,19 @@ export default function OverviewMetrics({
   // Show loading state
   if (loading) {
     return (
-      <div
-        className={cn(
-          "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 h-full",
-          className
-        )}
-      >
+      <div className={cn("w-full grid grid-cols-1 gap-3 h-full", className)}>
         {SKELETON_KEYS.map((skeletonKey) => (
           <div
             key={skeletonKey}
-            className="rounded-2xl p-5 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+            className="rounded-[22px] border border-white/10 bg-slate-900/70 p-4 backdrop-blur-md"
           >
-            <div className="flex space-x-4 mb-3">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
-              <div className="flex-1">
-                <div className="h-3 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-2xl bg-slate-700/60 animate-pulse"></div>
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 h-3 w-24 rounded bg-slate-700/60 animate-pulse"></div>
+                <div className="h-7 w-20 rounded bg-slate-700/60 animate-pulse"></div>
               </div>
-            </div>
-            <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
-            <div className="mt-2 flex items-center">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse mr-2"></div>
-              <div className="h-2 bg-gray-200 rounded w-20 animate-pulse"></div>
+              <div className="h-5 w-16 rounded bg-slate-700/60 animate-pulse"></div>
             </div>
           </div>
         ))}
@@ -145,16 +84,11 @@ export default function OverviewMetrics({
   // Show error state
   if (error) {
     return (
-      <div
-        className={cn(
-          "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 h-full",
-          className
-        )}
-      >
-        <div className="col-span-2 rounded-2xl p-5 bg-red-50 border border-red-200">
+      <div className={cn("w-full grid grid-cols-1 gap-3 h-full", className)}>
+        <div className="col-span-2 rounded-[24px] border border-rose-500/30 bg-rose-500/10 p-5">
           <div className="text-center">
-            <p className="text-red-600 font-medium">Error loading metrics</p>
-            <p className="text-red-500 text-sm mt-1">{error}</p>
+            <p className="font-medium text-rose-200">Error loading metrics</p>
+            <p className="mt-1 text-sm text-rose-300">{error}</p>
           </div>
         </div>
       </div>
@@ -183,6 +117,9 @@ export default function OverviewMetrics({
   const validatorsCount = hasFinishedRound
     ? leader?.validators ?? 0
     : metrics?.currentValidators ?? 0;
+  const activeMinersCount = metrics?.totalMiners ?? 0;
+  const minerUpdatesCount = metrics?.minerUpdatesThisRound ?? 0;
+  const newAgentsCount = metrics?.newAgentsThisRound ?? 0;
 
   const seasonLabel = currentSeason !== null && currentSeason !== undefined
     ? `Season ${currentSeason}`
@@ -194,160 +131,225 @@ export default function OverviewMetrics({
     currentActiveRound !== undefined
       ? `Season ${currentActiveSeason} · Round ${currentActiveRound}`
       : "Current round";
-
-  const dynamicMetricsData = [
+  const panelLabel = hasFinishedRound ? "Finalized round snapshot" : "Awaiting first finalized round";
+  const panelSeasonBadge =
+    hasFinishedRound && currentSeason !== null && currentSeason !== undefined
+      ? `Season ${currentSeason}`
+      : currentActiveSeason !== null && currentActiveSeason !== undefined
+        ? `Season ${currentActiveSeason}`
+        : "Season pending";
+  const panelRoundBadge =
+    hasFinishedRound && currentRound
+      ? `Round ${currentRound}`
+      : currentActiveRound !== null && currentActiveRound !== undefined
+        ? `Round ${currentActiveRound}`
+        : "Round pending";
+  const topMetricsData = [
     {
-      id: "score-to-win",
-      title: hasFinishedRound ? "Leader Reward" : "Leader",
+      id: "season-leader",
+      title: hasFinishedRound ? "Season leader" : "Leader",
       value: hasFinishedRound ? formatPercentage(leaderRewardValue) : "Pending",
-      topLabel: hasFinishedRound ? leaderInfo : "No finished round yet",
-      bottomLabel: hasFinishedRound
-        ? seasonLabel
-          ? `${seasonLabel} · Round ${currentRound}`
-          : `Round ${currentRound}`
-        : currentRoundLabel,
+      headline: hasFinishedRound ? leaderInfo : "No finished round yet",
+      chips: [
+        hasFinishedRound
+          ? seasonLabel
+            ? `${seasonLabel} leader`
+            : "Season leader"
+          : "Awaiting close",
+      ],
       githubUrl: leaderGithubUrl,
       icon: LuTrophy,
       bgColor:
-        "bg-gradient-to-br from-amber-500/15 via-yellow-500/15 to-orange-500/15 border-2 border-amber-500/40 hover:border-amber-400/60 hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
+        "border border-amber-400/35 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.22),_transparent_40%),linear-gradient(160deg,rgba(34,24,10,0.92),rgba(25,18,10,0.92))] shadow-[0_18px_55px_rgba(251,191,36,0.14)]",
       iconClassName:
-        "bg-gradient-to-br from-amber-400 to-orange-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
+        "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_12px_24px_rgba(251,146,60,0.35)]",
       metricClassName:
-        "text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent",
-      descriptionClassName: "text-amber-200",
-    },
-    {
-      id: "total-websites",
-      title: "Websites",
-      value: hasFinishedRound ? totalWebsitesCount : "Pending",
-      topLabel: hasFinishedRound ? "Evaluated by leader" : "Visible after consensus",
-      bottomLabel: hasFinishedRound
-        ? seasonLabel
-          ? `${seasonLabel} · Round ${currentRound}`
-          : `Round ${currentRound}`
-        : currentRoundLabel,
-      icon: LuGlobe,
-      bgColor:
-        "bg-gradient-to-br from-pink-500/15 via-rose-500/15 to-pink-600/15 border-2 border-pink-500/40 hover:border-pink-400/60 hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
-      iconClassName:
-        "bg-gradient-to-br from-pink-400 to-rose-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-      metricClassName: "text-2xl font-bold text-pink-400",
-      descriptionClassName: "text-pink-200",
+        "text-3xl font-black bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent",
+      descriptionClassName: "text-amber-100",
     },
     {
       id: "total-validators",
       title: "Validators",
       value: validatorsCount,
-      topLabel:
-        metrics?.tasksPerValidator != null
-          ? `${metrics.tasksPerValidator} tasks per validator`
-          : "Active validators",
-      bottomLabel: hasFinishedRound
-        ? seasonLabel
-          ? `${seasonLabel} · Round ${currentRound}`
-          : `Round ${currentRound}`
-        : currentRoundLabel,
+      headline: "Active validators",
+      chips: [metrics?.tasksPerValidator != null ? `${metrics.tasksPerValidator} tasks each` : null].filter(Boolean),
       icon: LuShield,
       bgColor:
-        "bg-gradient-to-br from-blue-500/15 via-indigo-500/15 to-blue-600/15 border-2 border-blue-500/40 hover:border-blue-400/60 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
+        "border border-blue-400/30 bg-[linear-gradient(160deg,rgba(16,31,71,0.88),rgba(14,20,52,0.88))] shadow-[0_18px_45px_rgba(59,130,246,0.12)]",
       iconClassName:
-        "bg-gradient-to-br from-blue-400 to-indigo-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-      metricClassName: "text-2xl font-bold text-blue-400",
-      descriptionClassName: "text-blue-200",
+        "bg-gradient-to-br from-blue-400 to-indigo-500 text-white",
+      metricClassName: "text-2xl font-black text-blue-300",
+      descriptionClassName: "text-blue-100",
     },
     {
-      id: "total-miners",
+      id: "miners",
       title: "Miners",
-      value: metrics?.totalMiners ?? 0,
-      topLabel: hasFinishedRound ? "Season miners" : "Current round miners",
-      bottomLabel: hasFinishedRound
-        ? seasonLabel
-          ? `${seasonLabel} · Round ${currentRound}`
-          : `Round ${currentRound}`
-        : currentRoundLabel,
+      value: activeMinersCount,
+      headline: "Season miner set",
+      chips: [`${newAgentsCount} new`, `${minerUpdatesCount} repo updates`],
       icon: LuPickaxe,
       bgColor:
-        "bg-gradient-to-br from-emerald-500/15 via-green-500/15 to-emerald-600/15 border-2 border-emerald-500/40 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 shadow-lg group backdrop-blur-md",
+        "border border-emerald-400/30 bg-[linear-gradient(160deg,rgba(10,54,45,0.88),rgba(9,34,29,0.88))] shadow-[0_18px_45px_rgba(16,185,129,0.12)]",
       iconClassName:
-        "bg-gradient-to-br from-emerald-400 to-green-500 text-white group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300",
-      metricClassName: "text-2xl font-bold text-emerald-400",
-      descriptionClassName: "text-emerald-200",
+        "bg-gradient-to-br from-emerald-400 to-green-500 text-white",
+      metricClassName: "text-2xl font-black text-emerald-300",
+      descriptionClassName: "text-emerald-100",
     },
   ];
+
+  const websitesMetric = {
+    id: "total-websites",
+    title: "Websites",
+    value: hasFinishedRound ? totalWebsitesCount : "Pending",
+    headline: hasFinishedRound ? "Evaluated by season leader" : "Visible after consensus",
+    chips: [
+      hasFinishedRound
+        ? "leader-evaluated"
+        : "pending consensus",
+    ],
+    icon: LuGlobe,
+    bgColor:
+      "border border-pink-400/30 bg-[linear-gradient(160deg,rgba(58,16,42,0.88),rgba(31,13,33,0.88))] shadow-[0_18px_45px_rgba(236,72,153,0.12)]",
+    iconClassName:
+      "bg-gradient-to-br from-pink-400 to-rose-500 text-white",
+    metricClassName: "text-2xl font-black text-pink-300",
+    descriptionClassName: "text-pink-100",
+  };
 
   return (
     <div
       className={cn(
-        "w-full grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0",
+        "w-full grid grid-cols-1 gap-3 min-w-0",
         className
       )}
     >
-      {dynamicMetricsData.map((metric) => {
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            {panelLabel}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-slate-300">
+            {panelSeasonBadge}
+          </span>
+          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-slate-300">
+            {panelRoundBadge}
+          </span>
+        </div>
+      </div>
+      {topMetricsData.map((metric) => {
         const Icon = metric.icon;
-        const metricCard = (
+        return (
           <div
+            key={metric.title}
             className={cn(
-              "rounded-2xl p-4 min-w-0 h-[140px] flex flex-col",
+              "min-h-[118px] rounded-[22px] p-4 min-w-0 transition duration-300 hover:-translate-y-0.5",
               metric.bgColor
             )}
           >
-            <div className="flex space-x-4 min-w-0 flex-1">
+            <div className="flex min-h-[84px] min-w-0 items-center gap-4">
               <div
                 className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg flex-shrink-0",
+                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px]",
                   metric.iconClassName
                 )}
               >
-                <Icon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                <Icon className="h-6 w-6" />
               </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="flex min-w-0 flex-1 flex-col justify-center">
                 <h3
                   className={cn(
-                    "text-xs font-medium uppercase tracking-wide mb-1 truncate",
+                    "mb-1 text-xs font-semibold uppercase tracking-[0.25em] truncate",
                     metric.descriptionClassName
                   )}
                 >
                   {metric.title}
                 </h3>
-                <div className={cn("truncate", metric.metricClassName)}>
+                <div className={cn("truncate leading-none", metric.metricClassName)}>
                   {metric.value}
                 </div>
               </div>
+              <div className="min-w-0 max-w-[190px] self-stretch flex flex-col justify-center items-center text-center">
+                {metric.headline != null && metric.headline !== "" && (
+                  <div
+                    className={cn(
+                      "text-sm font-bold leading-5",
+                      metric.descriptionClassName
+                    )}
+                  >
+                    {metric.headline}
+                  </div>
+                )}
+                {metric.chips?.length ? (
+                  <div className="mt-3 flex flex-nowrap justify-center gap-1.5">
+                    {metric.chips.map((chip: string) => (
+                      <span
+                        key={chip}
+                        className="inline-flex items-center whitespace-nowrap rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/70"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-white/10 min-w-0 space-y-1">
-              {metric.topLabel != null && metric.topLabel !== "" && (
-                <div
-                  className={cn(
-                    "text-xs text-center truncate font-bold",
-                    metric.descriptionClassName
-                  )}
-                >
-                  {metric.topLabel}
-                </div>
-              )}
-              {metric.bottomLabel != null && metric.bottomLabel !== "" && (
-                <div
-                  className={cn(
-                    "text-[10px] text-center truncate opacity-70",
-                    metric.descriptionClassName
-                  )}
-                >
-                  {metric.bottomLabel}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-        return metric.id === "total-websites" ? (
-          <Link key={metric.title} href="/websites" className="block">
-            {metricCard}
-          </Link>
-        ) : (
-          <div key={metric.title} className="block">
-            {metricCard}
           </div>
         );
       })}
+      <Link href="/websites" className="block">
+        <div
+          className={cn(
+            "min-h-[118px] rounded-[22px] p-4 min-w-0 transition duration-300 hover:-translate-y-0.5",
+            websitesMetric.bgColor
+          )}
+        >
+          <div className="flex min-h-[84px] min-w-0 items-center gap-4">
+            <div
+              className={cn(
+                "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px]",
+                websitesMetric.iconClassName
+              )}
+            >
+              <websitesMetric.icon className="h-6 w-6" />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col justify-center">
+              <h3
+                className={cn(
+                  "mb-1 text-xs font-semibold uppercase tracking-[0.25em] truncate",
+                  websitesMetric.descriptionClassName
+                )}
+              >
+                {websitesMetric.title}
+              </h3>
+              <div className={cn("truncate leading-none", websitesMetric.metricClassName)}>
+                {websitesMetric.value}
+              </div>
+            </div>
+            <div className="min-w-0 max-w-[190px] self-stretch flex flex-col justify-center items-center text-center">
+              <div
+                className={cn(
+                  "text-sm font-bold leading-5",
+                  websitesMetric.descriptionClassName
+                )}
+              >
+                {websitesMetric.headline}
+              </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {websitesMetric.chips.map((chip: string) => (
+                  <span
+                    key={chip}
+                    className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
     </div>
   );
 }

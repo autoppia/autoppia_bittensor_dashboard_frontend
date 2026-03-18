@@ -521,7 +521,7 @@ export default function MinerChart({
           }
           headerClassName="flex-row items-center space-between"
           rounded="lg"
-          className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
+          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
         >
           <div className="flex flex-col flex-1 overflow-hidden">
             <div
@@ -568,13 +568,13 @@ export default function MinerChart({
           }
           headerClassName="flex-row items-center space-between"
           rounded="lg"
-          className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
+          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
         >
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-600 font-medium">
+          <div className="rounded-[20px] border border-rose-500/30 bg-rose-500/10 p-6 text-center">
+            <p className="font-medium text-rose-200">
               Error loading leaderboard data
             </p>
-            <p className="text-red-500 text-sm mt-1">{error}</p>
+            <p className="mt-1 text-sm text-rose-300">{error}</p>
           </div>
         </WidgetCard>
       </div>
@@ -585,8 +585,8 @@ export default function MinerChart({
     <WidgetCard
       title={
         effectiveSeason !== null && effectiveSeason !== undefined
-          ? `Top Miner Reward - Season ${effectiveSeason}`
-          : "Top Miner Reward"
+          ? `Reward trajectory · Season ${effectiveSeason}`
+          : "Reward trajectory"
       }
       action={
         <ButtonGroupAction
@@ -597,10 +597,10 @@ export default function MinerChart({
       }
       headerClassName="flex-row items-center space-between"
       rounded="lg"
-      className="p-4 lg:p-4 flex h-full flex-col overflow-hidden"
+      className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
     >
       {showPreviousSeasonFallback && (
-        <p className="text-xs text-amber-200/90 mb-1">
+        <p className="mb-1 text-xs text-amber-200/90">
           No data for Season {season}; showing Season {fallbackSeason}.
         </p>
       )}
@@ -609,11 +609,18 @@ export default function MinerChart({
         style={chartContainerStyle}
       >
         {filteredData.length === 0 ? (
-          <div className="h-full w-full flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <p className="text-sm">Insufficient data for chart</p>
-              <p className="text-xs mt-1">Need at least 1 data point</p>
-              <p className="text-xs">Current: {filteredData.length} points</p>
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="max-w-md rounded-[24px] border border-white/10 bg-white/[0.03] px-6 py-8 text-center shadow-[0_18px_45px_rgba(2,6,23,0.24)]">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                <span className="text-lg font-black">01</span>
+              </div>
+              <p className="text-base font-semibold text-white">Season chart is warming up</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                The graph unlocks as soon as the first round closes and a finished consensus reward is available.
+              </p>
+              <div className="mt-4 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-3 py-1.5 text-xs font-semibold text-slate-300">
+                Current datapoints: {filteredData.length}
+              </div>
             </div>
           </div>
         ) : (

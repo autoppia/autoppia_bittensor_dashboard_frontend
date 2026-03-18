@@ -20,18 +20,12 @@ import {
   OverviewMetrics,
   SubnetStatistics,
   NetworkStatusData,
+  RecentActivityItem,
+  RecentActivityType,
 } from './overview.types';
 
 /** Network status value from API */
 type NetworkStatus = 'healthy' | 'degraded' | 'down';
-
-/** Activity type in recent activity feed */
-type RecentActivityType =
-  | 'task_completed'
-  | 'validator_joined'
-  | 'round_started'
-  | 'round_ended'
-  | 'miner_registered';
 
 export class OverviewRepository {
   private readonly baseEndpoint = '/api/v1/overview';
@@ -255,26 +249,13 @@ export class OverviewRepository {
    * Get recent activity feed
    */
   async getRecentActivity(limit: number = 10): Promise<{
-    activities: Array<{
-      id: string;
-      type: RecentActivityType;
-      message: string;
-      timestamp: string;
-      metadata?: Record<string, unknown>;
-    }>;
+    activities: RecentActivityItem[];
     total: number;
   }> {
-    type ActivityItem = {
-      id: string;
-      type: RecentActivityType;
-      message: string;
-      timestamp: string;
-      metadata?: Record<string, unknown>;
-    };
     const response = await apiClient.get<{
       success?: boolean;
-      data?: { activities: ActivityItem[]; total: number };
-      activities?: ActivityItem[];
+      data?: { activities: RecentActivityItem[]; total: number };
+      activities?: RecentActivityItem[];
       total?: number;
     }>(`${this.baseEndpoint}/recent-activity`, { limit });
 

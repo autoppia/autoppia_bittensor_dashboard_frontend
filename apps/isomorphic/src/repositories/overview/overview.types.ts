@@ -39,6 +39,16 @@ export interface OverviewMetrics {
   currentValidators?: number;
   totalMiners: number;
   tasksPerValidator?: number | null;
+  roundDurationMinutes?: number | null;
+  seasonDurationMinutes?: number | null;
+  seasonRounds?: number | null;
+  seasonTaskVolume?: number | null;
+  minerUpdatesThisRound?: number;
+  newAgentsThisRound?: number;
+  rewardDeltaFromPreviousRound?: number | null;
+  previousRoundLeaderName?: string | null;
+  previousRoundLeaderReward?: number | null;
+  previousRoundLabel?: string | null;
   minerList?: MinerSummary[] | null;
   subnetVersion: string;
   lastUpdated: string;
@@ -98,6 +108,15 @@ export interface OverviewRoundData {
   completedTasks: number;
   averageReward: number;
   topReward: number;
+  round?: number;
+  roundNumber?: number;
+  roundKey?: string;
+  season?: number | null;
+  roundInSeason?: number | null;
+  currentBlock?: number | null;
+  blocksRemaining?: number | null;
+  progress?: number | null;
+  roundIdRaw?: number | null;
 }
 
 // ===== LEADERBOARD DATA =====
@@ -205,6 +224,42 @@ export interface NetworkStatusData {
   networkLatency: number;
   season?: number | null;
   round?: number | null;
+}
+
+export type RecentActivityType =
+  | "season_started"
+  | "season_finished"
+  | "round_started"
+  | "round_ended"
+  | "evaluation_started"
+  | "evaluation_finished"
+  | "consensus_waiting"
+  | "consensus_entered"
+  | "leader_confirmed";
+
+export interface RecentActivityMetadata {
+  validatorId?: string | null;
+  validatorUid?: number | null;
+  validatorName?: string | null;
+  minerUid?: number | null;
+  minerName?: string | null;
+  score?: number | null;
+  reward?: number | null;
+  time?: number | null;
+  cost?: number | null;
+  metricSource?: "local" | "best_local" | "run" | string | null;
+  roundId?: string | null;
+  roundNumber?: number | null;
+  seasonNumber?: number | null;
+  startBlock?: number | null;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  type: RecentActivityType | string;
+  message: string;
+  timestamp: string;
+  metadata?: RecentActivityMetadata;
 }
 
 // ===== QUERY PARAMETERS =====
