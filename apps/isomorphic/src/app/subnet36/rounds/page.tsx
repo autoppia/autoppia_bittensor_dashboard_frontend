@@ -54,7 +54,7 @@ export default async function Page() {
 
   if (currentRoundId) {
     // Don't encode if it's season/round format (contains /)
-    const redirectPath = currentRoundId.includes('/') 
+    const redirectPath = currentRoundId.includes('/')
       ? `${routes.rounds}/${currentRoundId}`
       : `${routes.rounds}/${encodeURIComponent(currentRoundId)}`;
     redirect(redirectPath);

@@ -109,7 +109,7 @@ const agentRunTasksColumns = [
     cell: ({ row }) => {
       const eval_score = row.original.eval_score ?? 0;
       const scoreColor = eval_score >= 1 ? "text-green-500" : "text-red-500";
-      
+
       return (
         <Text className={`font-medium ${scoreColor}`}>
           {eval_score === 1 ? "✓" : "✗"}
@@ -136,8 +136,8 @@ const agentRunTasksColumns = [
         href={`${routes.tasks}/${row.original.taskId}`}
         className="flex items-center text-slate-200 transition-colors duration-200"
       >
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-700/60"
         >
@@ -292,7 +292,7 @@ export default function AgentRunTasksTableDynamic({
       <div className="relative mb-2">
         {tasks && tasks.length > 0 ? (
           <Table
-            table={table}
+            table={table as unknown as React.ComponentProps<typeof Table>["table"]}
             variant="modern"
             classNames={{
               container:
@@ -303,7 +303,7 @@ export default function AgentRunTasksTableDynamic({
                 "cursor-pointer border-b border-slate-700/25 transition-colors duration-150 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_8px_22px_rgba(56,189,248,0.15)]",
             }}
             components={{
-              bodyRow: TasksTableBodyRow,
+              bodyRow: TasksTableBodyRow as (c: unknown) => React.ReactNode,
             }}
           />
         ) : (

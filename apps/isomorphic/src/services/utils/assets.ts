@@ -28,7 +28,7 @@ try {
 const allowedHosts = new Set<string>(
   [
     ...DEFAULT_ALLOWED_IMAGE_HOSTS,
-    
+
     ...parseHosts(process.env.NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS),
     defaultAssetHost,
   ].filter(Boolean)
@@ -121,15 +121,15 @@ const rewriteToLocalAsset = (value: string): string => {
     return value;
   }
 
-  // S3 URLs should be returned as-is (not rewritten to local paths)
-  if (
-    value.includes("s3.amazonaws.com") ||
-    value.includes("s3.eu-west-1.amazonaws.com")
-  ) {
-    return value;
-  }
-
   try {
+    // S3 URLs should be returned as-is (not rewritten to local paths).
+    // Check the hostname explicitly instead of using substring matching.
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    if (host === "s3.amazonaws.com" || host === "s3.eu-west-1.amazonaws.com") {
+      return value;
+    }
+
     const baseUrl = new URL(DEFAULT_ASSET_BASE);
     const candidateUrl = new URL(value);
     if (

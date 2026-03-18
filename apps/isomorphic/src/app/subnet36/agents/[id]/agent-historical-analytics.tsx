@@ -35,19 +35,19 @@ type TaskDataWithEval = TaskData & { evaluationId?: string };
 // Or if it's just a UUID, prepends "evaluation_" to maintain consistency
 function normalizeEvaluationId(evaluationId: string): string {
   if (!evaluationId) return evaluationId;
-  
+
   // If it already starts with "evaluation_", use it as-is (full format)
   if (evaluationId.startsWith("evaluation_")) {
     return evaluationId;
   }
-  
+
   // If it's just a UUID, prepend "evaluation_" to maintain the format
   // Pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(evaluationId);
   if (isUUID) {
     return `evaluation_${evaluationId}`;
   }
-  
+
   // Otherwise return as-is
   return evaluationId;
 }
@@ -529,7 +529,7 @@ export default function AgentHistoricalAnalytics({
     // Prevent double execution in React Strict Mode
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
-    
+
     // Always use minerHistorical if available - never fetch from agent-runs
     setLoading(false);
     setError(null);
@@ -904,7 +904,7 @@ export default function AgentHistoricalAnalytics({
 
   // Use external loading state if provided
   const isLoading = externalLoading ?? loading;
-  
+
   if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>

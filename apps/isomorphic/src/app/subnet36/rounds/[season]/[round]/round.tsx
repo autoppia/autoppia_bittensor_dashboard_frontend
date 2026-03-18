@@ -61,6 +61,7 @@ import type {
   ValidatorPerformance,
   BenchmarkPerformance,
   PostConsensusSummary,
+  MinerPerformance,
 } from "@/repositories/rounds/rounds.types";
 
 // ============================================================================
@@ -1561,20 +1562,94 @@ function RoundValidatorsInline({
   const roundParam = params.round as string | undefined;
   const roundKey = seasonParam && roundParam ? `${seasonParam}/${roundParam}` : undefined;
   // ✅ Validators ahora vienen de roundData (useGetRound)
-  const validatorsData = React.useMemo(() => {
+  const validatorsData: ValidatorPerformance[] = React.useMemo(() => {
     if (!roundData?.validators) return [];
-    return (roundData.validators as any[])
-      .map((v: any) => ({
-        id: `validator-${v.validator_uid}`,
-        uid: v.validator_uid,
-        name: v.validator_name || `Validator ${v.validator_uid}`,
-        icon: resolveValidatorImage(v.validator_name, v.validator_image),
-        topReward: v.topReward || 0,
-        topMiner: v.winner,
-        hotkey: v.validator_hotkey || null,
-        stake: v.stake ?? 0,
-      }))
-      .sort((a: any, b: any) => (b.stake ?? 0) - (a.stake ?? 0)) as ValidatorPerformance[];
+
+    const mapped = (roundData.validators as any[]).map((v: any) => {
+      const id = `validator-${v.validator_uid}`;
+      const name = v.validator_name || `Validator ${v.validator_uid}`;
+      const hotkey = v.validator_hotkey || "";
+      const icon = resolveValidatorImage(v.validator_name, v.validator_image);
+      const topReward = typeof v.topReward === "number" ? v.topReward : 0;
+      const stake = typeof v.stake === "number" ? v.stake : 0;
+
+      const topMiner: MinerPerformance | undefined = v.winner
+        ? {
+            uid: v.winner.uid,
+            name: v.winner.name,
+            hotkey: v.winner.hotkey ?? null,
+            image: v.winner.image ?? null,
+            success: true,
+            reward: typeof v.winner.reward === "number" ? v.winner.reward : 0,
+            duration:
+              typeof v.winner.duration === "number" ? v.winner.duration : 0,
+            ranking:
+              typeof v.winner.ranking === "number" ? v.winner.ranking : 0,
+            tasksCompleted:
+              typeof v.winner.tasksCompleted === "number"
+                ? v.winner.tasksCompleted
+                : 0,
+            tasksTotal:
+              typeof v.winner.tasksTotal === "number" ? v.winner.tasksTotal : 0,
+            stake:
+              typeof v.winner.stake === "number" ? v.winner.stake : stake,
+            emission:
+              typeof v.winner.emission === "number" ? v.winner.emission : 0,
+            lastSeen:
+              typeof v.winner.lastSeen === "string"
+                ? v.winner.lastSeen
+                : new Date().toISOString(),
+          }
+        : undefined;
+
+      // Fill required ValidatorPerformance fields with safe defaults when backend
+      // does not provide them directly.
+      const status: ValidatorPerformance["status"] = "active";
+      const totalTasks =
+        typeof v.totalTasks === "number" ? v.totalTasks : v.tasks_total ?? 0;
+      const completedTasks =
+        typeof v.completedTasks === "number"
+          ? v.completedTasks
+          : v.tasks_completed ?? 0;
+      const totalMiners =
+        typeof v.totalMiners === "number" ? v.totalMiners : 0;
+      const activeMiners =
+        typeof v.activeMiners === "number" ? v.activeMiners : 0;
+      const averageReward =
+        typeof v.averageReward === "number" ? v.averageReward : topReward;
+      const weight = typeof v.weight === "number" ? v.weight : 0;
+      const trust = typeof v.trust === "number" ? v.trust : 0;
+      const version = typeof v.version === "number" ? v.version : 0;
+      const emission = typeof v.emission === "number" ? v.emission : 0;
+      const lastSeen =
+        typeof v.lastSeen === "string" ? v.lastSeen : new Date().toISOString();
+      const uptime = typeof v.uptime === "number" ? v.uptime : 0;
+
+      const base: ValidatorPerformance = {
+        id,
+        name,
+        hotkey,
+        icon,
+        status,
+        totalTasks,
+        completedTasks,
+        totalMiners,
+        activeMiners,
+        averageReward,
+        topReward,
+        weight,
+        trust,
+        version,
+        stake,
+        emission,
+        lastSeen,
+        uptime,
+      };
+
+      return topMiner ? { ...base, topMiner } : base;
+    });
+
+    return mapped.sort((a, b) => (b.stake ?? 0) - (a.stake ?? 0));
   }, [roundData]);
   const [selectedValidatorId, setSelectedValidatorId] = React.useState<
     string | null
@@ -3676,7 +3751,11 @@ export default function Round() {
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close dialog"
-            onClick={closeIpfsDialog}
+            onClick={() => {
+            setIpfsConsensusDetail(null);
+            setIncludeOwnDownloadedPayload(false);
+            setIpfsUploadFullPayload(null);
+          }}
           />
           <div
             className={cn("relative z-10 max-h-[90vh] w-full max-w-3xl rounded-2xl border border-white/30 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden", roundGlassBackgroundClass)}

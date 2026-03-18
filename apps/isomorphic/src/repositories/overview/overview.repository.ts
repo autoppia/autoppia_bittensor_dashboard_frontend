@@ -56,7 +56,7 @@ export class OverviewRepository {
       }
 
       // Handle both nested and flat response structures
-      const payload = response.data as Record<string, unknown> | undefined;
+      const payload = response.data as unknown as Record<string, unknown> | undefined;
       if (payload && typeof payload === "object") {
         const data = payload.data as { metrics?: OverviewMetrics } | undefined;
         if (data?.metrics) return data.metrics;

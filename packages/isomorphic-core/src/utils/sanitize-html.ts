@@ -1,6 +1,7 @@
 /**
  * Sanitize HTML for safe display (e.g. when rendering content from Quill getHTML()/getSemanticHTML()).
- * Mitigates CVE-2025-15056 (Quill XSS via HTML export).
+ * Mitigates CVE-2025-15056 (Quill XSS via HTML export). Always use SafeQuillHtml or this when
+ * rendering Quill output; we also use quill override to @lufrai/quill@2.0.4 for defense in depth.
  */
 import DOMPurify from "isomorphic-dompurify";
 

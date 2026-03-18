@@ -265,11 +265,11 @@ export default function MinerChart({
   const chartData = useMemo<NormalizedLeaderboardDatum[]>(() => {
     return effectiveChartSource.map((entry) => ({
       ...entry,
-      reward: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
-      subnet36: scaleScoreValue(entry.reward ?? (entry as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
-      openai_cua: scaleScoreValue((entry as Record<string, unknown>).openai_cua as number | null | undefined),
-      anthropic_cua: scaleScoreValue((entry as Record<string, unknown>).anthropic_cua as number | null | undefined),
-      browser_use: scaleScoreValue((entry as Record<string, unknown>).browser_use as number | null | undefined),
+      reward: scaleScoreValue(entry.reward ?? (entry as unknown as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      subnet36: scaleScoreValue(entry.reward ?? (entry as unknown as Record<string, unknown>).post_consensus_reward ?? entry.subnet36) ?? 0,
+      openai_cua: scaleScoreValue((entry as unknown as Record<string, unknown>).openai_cua as number | null | undefined),
+      anthropic_cua: scaleScoreValue((entry as unknown as Record<string, unknown>).anthropic_cua as number | null | undefined),
+      browser_use: scaleScoreValue((entry as unknown as Record<string, unknown>).browser_use as number | null | undefined),
     }));
   }, [effectiveChartSource]);
 
@@ -431,7 +431,7 @@ export default function MinerChart({
 
       const data = payload[0].payload as NormalizedLeaderboardDatum;
       const roundNum = data.round;
-      const reward = (data as Record<string, unknown>).reward ?? (data as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
+      const reward = (data as unknown as Record<string, unknown>).reward ?? (data as unknown as Record<string, unknown>).post_consensus_reward ?? data.subnet36;
       const winnerName = data.winnerName ?? (data as LeaderboardEntryWithSnake).winner_name;
       const winnerUid = data.winnerUid ?? (data as LeaderboardEntryWithSnake).winner_uid;
 
@@ -490,7 +490,7 @@ export default function MinerChart({
                 Reward:
               </span>
               <span style={{ color: "#10b981" }} className="text-lg font-bold">
-                {reward.toFixed(1)}%
+                {typeof reward === "number" && Number.isFinite(reward) ? reward.toFixed(1) : "0"}%
               </span>
             </div>
           </div>
