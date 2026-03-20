@@ -9,7 +9,6 @@ import {
   FaBolt,
   FaCrown,
   FaFire,
-  FaDownload,
 } from "react-icons/fa";
 import { motion } from "motion/react";
 import {
@@ -27,249 +26,133 @@ import {
   LabelList,
 } from "recharts";
 import { Text, Title } from "rizzui/typography";
-import { apiClient } from "@/repositories/client";
-import { OverviewRepository } from "@/repositories/overview/overview.repository";
 
 /* -------------------- DATA -------------------- */
 const leaderboardData = [
   {
     rank: 1,
-    name: "Autoppia Operator",
-    score: 72,
-    avgCostPerTask: 0.18,
-    avgDuration: 78,
-    type: "Autoppia",
+    completedTasks: 10,
+    totalTasks: 50,
+    name: "OJO Agent",
+    score: 20,
+    avgCostPerTask: 0.002,
+    avgDuration: 42,
+    type: "Round 9 leader",
     medal: "🥇",
-    logoUrl: "/images/icons/validators/Autoppia.png",
+    logoUrl: "/miners/46.svg",
   },
   {
     rank: 2,
-    name: "Browser Use GPT-5",
-    score: 65,
-    avgCostPerTask: 0.22,
-    avgDuration: 92,
-    type: "GPT Agent",
+    completedTasks: 10,
+    totalTasks: 50,
+    name: "Autoppia Operator",
+    score: 20,
+    avgCostPerTask: 0.12,
+    avgDuration: 58,
+    type: "Round 9 contender",
     medal: "🥈",
-    logoUrl: "/images/icons/validators/gpt5.png",
+    logoUrl: "/images/icons/validators/Autoppia.png",
   },
   {
     rank: 3,
-    name: "Browser Use Claude 4.5 Sonnet",
-    score: 56,
-    avgCostPerTask: 0.19,
-    avgDuration: 105,
-    type: "Claude Agent",
+    completedTasks: 6,
+    totalTasks: 50,
+    name: "Browser Use Claude",
+    score: 12,
+    avgCostPerTask: 0.18,
+    avgDuration: 73,
+    type: "Claude stack",
     medal: "🥉",
     logoUrl: "/images/icons/validators/claude.png",
   },
   {
     rank: 4,
-    name: "Anthropic CUA",
-    score: 55,
-    avgCostPerTask: 0.17,
-    avgDuration: 118,
-    type: "Anthropic",
-    logoUrl: "/images/icons/validators/ac.png",
+    completedTasks: 5,
+    totalTasks: 50,
+    name: "Browser Use GPT",
+    score: 10,
+    avgCostPerTask: 0.06,
+    avgDuration: 61,
+    type: "GPT stack",
+    logoUrl: "/images/icons/validators/gpt5.png",
   },
   {
     rank: 5,
+    completedTasks: 3,
+    totalTasks: 50,
     name: "OpenAI CUA",
-    score: 50,
-    avgCostPerTask: 0.21,
-    avgDuration: 132,
+    score: 6,
+    avgCostPerTask: 0.2,
+    avgDuration: 88,
     type: "OpenAI",
     logoUrl: "/images/icons/validators/openai.png",
   },
-  {
-    rank: 6,
-    name: "Agent-Q",
-    score: 48,
-    avgCostPerTask: 0.14,
-    avgDuration: 90,
-    type: "AI Agent",
-    logoUrl:
-      "https://images.unsplash.com/photo-1684369586188-bad829e7c51f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdXRvbm9tb3VzJTIwYWdlbnQlMjBpY29ufGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
-  },
-  {
-    rank: 7,
-    name: "Gemini Web Agent",
-    score: 45,
-    avgCostPerTask: 0.16,
-    avgDuration: 148,
-    type: "Google",
-    logoUrl:
-      "https://images.unsplash.com/photo-1706426629246-2a3c3e3e3ff2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnb29nbGUlMjBnZW1pbmklMjBsb2dvfGVufDF8fHx8MTc2MDYxNTE5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
-  },
-  {
-    rank: 8,
-    name: "GPT Researcher",
-    score: 42,
-    avgCostPerTask: 0.12,
-    avgDuration: 160,
-    type: "Research Agent",
-    logoUrl:
-      "https://images.unsplash.com/photo-1760493828288-d2dbb70d18c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNlYXJjaCUyMG1pY3Jvc2NvcGUlMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc2MDYxNTE5NHww&ixlib=rb-4.1.0&q=80&w=1080",
-  },
 ];
 
-const benchmarkTasks = [
-  {
-    id: 1,
-    project: "AutoCinema",
-    task: "HERO FEATURE",
-    prompt:
-      "Open the featured film banner for 'The Matrix' from the home carousel.",
-    success: true,
-    time: "5.12s",
-    actions: "Scroll hero carousel, Select featured film, View details",
-    gif: "Available",
-  },
-  {
-    id: 2,
-    project: "AutoBooks",
-    task: "CREATE INVOICE",
-    prompt: "Create a new invoice for customer 'Acme Corp' totaling $1,250.00.",
-    success: true,
-    time: "4.52s",
-    actions: "Click invoice button, Fill form, Submit",
-    gif: "Available",
-  },
-  {
-    id: 3,
-    project: "AutoZone",
-    task: "SEARCH PRODUCT",
-    prompt: "Search for products where the query contains 'wireless charger'.",
-    success: false,
-    time: "2.94s",
-    actions: "Opened search, Entered query, No results returned",
-    gif: "Coming soon",
-  },
-  {
-    id: 4,
-    project: "AutoDining",
-    task: "BOOK TABLE",
-    prompt:
-      "Reserve a table for four at 'Copper Kitchen' next Friday at 7:00 PM.",
-    success: true,
-    time: "6.08s",
-    actions: "Select restaurant, Choose date & time, Confirm reservation",
-    gif: "Available",
-  },
-  {
-    id: 5,
-    project: "AutoCRM",
-    task: "UPDATE PIPELINE",
-    prompt: "Move the deal 'Orbit Launch' to the 'Negotiation' pipeline stage.",
-    success: true,
-    time: "3.87s",
-    actions: "Locate deal, Drag to new stage, Save",
-    gif: "Available",
-  },
-  {
-    id: 6,
-    project: "AutoMail",
-    task: "SEND CAMPAIGN",
-    prompt: "Draft and send the 'Holiday Promo' campaign to the VIP segment.",
-    success: true,
-    time: "7.21s",
-    actions: "Compose email, Select audience, Launch",
-    gif: "Available",
-  },
-  {
-    id: 7,
-    project: "AutoDelivery",
-    task: "TRACK ORDER",
-    prompt: "Update order #DLV-4821 with a new status of 'Out for delivery'.",
-    success: false,
-    time: "2.11s",
-    actions: "Open order list, Attempt status change, Validation error",
-    gif: "Coming soon",
-  },
-  {
-    id: 8,
-    project: "AutoLodge",
-    task: "EXTEND STAY",
-    prompt: "Extend the reservation for 'Riverfront Suites' by two nights.",
-    success: true,
-    time: "5.46s",
-    actions: "Open booking, Adjust dates, Confirm",
-    gif: "Available",
-  },
-  {
-    id: 9,
-    project: "AutoCinema",
-    task: "CURATE LIST",
-    prompt:
-      "Add three sci-fi films to a new playlist called 'Weekend Marathon'.",
-    success: true,
-    time: "4.63s",
-    actions: "Create playlist, Search titles, Add selections",
-    gif: "Available",
-  },
-  {
-    id: 10,
-    project: "AutoConnect",
-    task: "SEND INVITE",
-    prompt: "Send a connection request to 'Jordan Reyes' with a custom note.",
-    success: false,
-    time: "3.05s",
-    actions: "Search profile, Compose note, Invite blocked",
-    gif: "Coming soon",
-  },
-  {
-    id: 11,
-    project: "AutoWork",
-    task: "COMPLETE TASK",
-    prompt: "Mark the task 'Finalize proposal' as completed and add a comment.",
-    success: true,
-    time: "2.78s",
-    actions: "Open task, Toggle complete, Add comment",
-    gif: "Available",
-  },
-  {
-    id: 12,
-    project: "AutoZone",
-    task: "SUBMIT REVIEW",
-    prompt:
-      "Submit a 5-star review for 'Premium Headphones' with a short comment.",
-    success: true,
-    time: "3.88s",
-    actions: "Open order history, Rate product, Publish review",
-    gif: "Available",
-  },
-  {
-    id: 13,
-    project: "AutoCalendar",
-    task: "PLAN EVENT",
-    prompt:
-      "Create the event 'Sprint Demo' for Monday at 10:00 AM with video link.",
-    success: true,
-    time: "4.01s",
-    actions: "Open calendar, Fill event form, Add conferencing",
-    gif: "Available",
-  },
-  {
-    id: 14,
-    project: "AutoFinance",
-    task: "APPROVE LOAN",
-    prompt: "Approve loan application 'LN-9042' for $25,000 with tier B terms.",
-    success: false,
-    time: "6.14s",
-    actions: "Review applicant, Attempt approval, Policy flag triggered",
-    gif: "Coming soon",
-  },
-  {
-    id: 15,
-    project: "AutoDrive",
-    task: "ASSIGN PICKUP",
-    prompt:
-      "Assign driver 'Lena Ortiz' to pickup request 'PKP-772' at 5:30 PM.",
-    success: true,
-    time: "2.95s",
-    actions: "Open dispatcher, Select driver, Confirm assignment",
-    gif: "Available",
-  },
+const autoppiaRound9Prompts = [
+  "Update the pricing rule for premium listings and save the season 9 config.",
+  "Review the miner leaderboard card and flag the agent with the highest cost spike.",
+  "Open the validator dashboard and export the round 9 summary for internal review.",
+  "Create a follow-up note for the miner that lost the leader position in round 9.",
+  "Filter the round 9 evaluations to only show failed tasks above $0.10 cost.",
+  "Assign a rerun to the miner with the slowest benchmark completion time.",
+  "Open the Autoppia operator profile and copy its best reward into the report.",
+  "Update the benchmark board headline to mention the March 19, 2026 snapshot.",
+  "Mark the round 9 review checklist as completed for the production release.",
+  "Compare Autoppia operator against OJO Agent and save the decision note.",
+  "Add a comment to the task explaining why the leader was not dethroned.",
+  "Open the benchmark results modal and validate the top five agents ordering.",
+  "Tag the failed evaluation that exceeded the expected retry budget.",
+  "Prepare the public changelog entry for the round 9 benchmark publication.",
+  "Update the round notes to mention the lower cost profile of OJO Agent.",
+  "Open the task archive and pin the round 9 operator regression ticket.",
+  "Create a summary card for the best Autoppia operator run in the season.",
+  "Locate the evaluation with the largest price delta and attach it to the note.",
+  "Confirm that the benchmark score chart matches the manual round 9 report.",
+  "Open the leaderboard page and verify the current winner badge styling.",
+  "Review the benchmark prompt list and remove deprecated draft tasks.",
+  "Save the cost-per-task comparison between OJO Agent and Autoppia operator.",
+  "Flag the benchmark scenario that produced the highest operator accuracy.",
+  "Generate the release-ready note for Autoppia round 9 benchmark results.",
+  "Check the round 9 task list and mark all Autoppia prompts as published.",
 ];
+
+const rizzoRound9Prompts = [
+  "Search the Rizzo product catalog for the lowest-cost portable monitor bundle.",
+  "Add a Rizzo storefront note about delayed shipping on limited-stock items.",
+  "Update the featured offer on the Rizzo homepage for the round 9 campaign.",
+  "Open the Rizzo support inbox and reply to the benchmark fulfillment thread.",
+  "Create a discount rule for returning customers purchasing two accessories.",
+  "Review the abandoned carts list and recover the highest-value Rizzo order.",
+  "Tag the product page with the strongest conversion lift in the Rizzo experiment.",
+  "Publish the Rizzo landing page copy for the March 19, 2026 benchmark snapshot.",
+  "Filter Rizzo orders by wireless accessories and export the resulting list.",
+  "Update the Rizzo campaign brief with the new benchmark winner commentary.",
+  "Create a support ticket for the checkout flow that timed out during evaluation.",
+  "Open the Rizzo analytics board and save the top-converting traffic source.",
+  "Approve the revised image set for the Rizzo seasonal promotion banner.",
+  "Review the benchmark notes and attach the Rizzo product page screenshot.",
+  "Prepare the Rizzo comparison sheet against the Autoppia storefront tasks.",
+  "Open the Rizzo fulfillment panel and mark the express shipment as packed.",
+  "Draft the benchmark observation for the Rizzo search relevance scenario.",
+  "Pin the Rizzo task that exposed the largest latency regression in round 9.",
+  "Update the merchandising board to promote the best-selling charger bundle.",
+  "Verify the Rizzo pricing widget still reflects the benchmark test discount.",
+  "Create an internal note on the Rizzo checkout success rate for round 9.",
+  "Open the seasonal campaign planner and schedule the Rizzo offer refresh.",
+  "Review the Rizzo prompt set and remove duplicate tasks before publication.",
+  "Export the Rizzo benchmark outcomes and attach them to the release memo.",
+  "Publish the final Rizzo round 9 task pack for the public leaderboard page.",
+];
+
+const benchmarkTasks = [...autoppiaRound9Prompts, ...rizzoRound9Prompts].map(
+  (prompt, index) => ({
+    id: index + 1,
+    project: index < autoppiaRound9Prompts.length ? "Autoppia" : "Rizzo",
+    task: `ROUND 9 TASK ${String(index + 1).padStart(2, "0")}`,
+    prompt,
+  })
+);
 
 const efficiencySeries = leaderboardData.map((entry) => ({
   label: entry.name,
@@ -280,17 +163,14 @@ const efficiencySeries = leaderboardData.map((entry) => ({
 }));
 
 const efficiencyColors: Record<string, string> = {
-  Autoppia: "#22d3ee",
-  "GPT Agent": "#60a5fa",
-  "Claude Agent": "#fb923c",
-  Anthropic: "#f472b6",
+  "Round 9 leader": "#22d3ee",
+  "Round 9 contender": "#60a5fa",
+  "Claude stack": "#fb923c",
+  "GPT stack": "#a78bfa",
   OpenAI: "#22c55e",
-  "AI Agent": "#a78bfa",
-  Google: "#38bdf8",
-  "Research Agent": "#facc15",
 };
 
-const lastBenchmarkUpdate = "November 1, 2025";
+const lastBenchmarkUpdate = "March 19, 2026";
 const evaluatedBenchmarks = benchmarkTasks.length;
 
 const logoByAgentName = leaderboardData.reduce<Record<string, string>>(
@@ -303,32 +183,34 @@ const logoByAgentName = leaderboardData.reduce<Record<string, string>>(
 
 const previewAgents = [
   {
-    name: "Browser Use GPT-5",
-    tagline: "Preview agent • GPT stack",
+    name: "OJO Agent",
+    tagline: "10/50 tasks solved • $0.002 per task",
     accent: "from-cyan-500/30 to-blue-500/20 border-cyan-400/40",
-    logoUrl:
-      logoByAgentName["browser use gpt-5"] ??
-      "/images/icons/validators/gpt5.png",
+    logoUrl: logoByAgentName["ojo agent"] ?? "/miners/46.svg",
   },
   {
-    name: "Anthropic CUA",
-    tagline: "Preview agent • Anthropic",
+    name: "Autoppia Operator",
+    tagline: "10/50 tasks solved • $0.12 per task",
     accent: "from-amber-500/25 to-orange-500/15 border-amber-300/40",
     logoUrl:
-      logoByAgentName["anthropic cua"] ?? "/images/icons/validators/ac.png",
+      logoByAgentName["autoppia operator"] ??
+      "/images/icons/validators/Autoppia.png",
   },
   {
-    name: "OpenAI CUA",
-    tagline: "Preview agent • OpenAI",
+    name: "Browser Use Claude",
+    tagline: "6/50 tasks solved • $0.18 per task",
     accent: "from-violet-500/25 to-purple-500/20 border-violet-300/40",
     logoUrl:
-      logoByAgentName["openai cua"] ?? "/images/icons/validators/openai.png",
+      logoByAgentName["browser use claude"] ??
+      "/images/icons/validators/claude.png",
   },
   {
-    name: "Automata",
-    tagline: "Preview agent • Autonomous runner",
+    name: "Browser Use GPT",
+    tagline: "5/50 tasks solved • $0.06 per task",
     accent: "from-emerald-500/25 to-teal-500/15 border-emerald-300/40",
-    logoUrl: "/images/icons/validators/Autoppia.png",
+    logoUrl:
+      logoByAgentName["browser use gpt"] ??
+      "/images/icons/validators/gpt5.png",
   },
 ];
 
@@ -340,6 +222,8 @@ const baseData = leaderboardData.map((d) => ({
   type: d.type,
   medal: d.medal,
   logoUrl: d.logoUrl,
+  completedTasks: d.completedTasks,
+  totalTasks: d.totalTasks,
   avgCostPerTask: d.avgCostPerTask,
 }));
 
@@ -512,7 +396,7 @@ function ScorePillLabel(props: any) {
         <div
           className={`inline-flex min-w-[78px] items-center justify-center rounded-full px-3 py-1.5 text-base font-black ${rankTheme.pill}`}
         >
-          <span>{Number(value).toFixed(1)}%</span>
+          <span>{`${d.completedTasks}/${d.totalTasks}`}</span>
         </div>
         <div className="inline-flex min-w-[92px] items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
           {costText}
@@ -673,44 +557,9 @@ function LeftAxisLabel({ viewBox, value }: any) {
   );
 }
 
-async function fetchExportPayload(season: number): Promise<{
-  season: number;
-  evaluations: unknown[];
-}> {
-  const response = await apiClient.get<{
-    data?: { season: number; evaluations: unknown[] };
-    season?: number;
-    evaluations?: unknown[];
-  }>("/api/v1/evaluations/export", { season });
-  const payload: { season?: number; evaluations?: unknown[] } =
-    response.data?.data ?? response.data ?? {};
-  return {
-    season: payload.season ?? season,
-    evaluations: payload.evaluations ?? [],
-  };
-}
-
-function triggerJsonDownload(season: number, evaluations: unknown[]) {
-  const blob = new Blob(
-    [JSON.stringify({ season, evaluations }, null, 2)],
-    { type: "application/json" }
-  );
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `iwap_evaluations_season_${season}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 /* -------------------- COMPONENT -------------------- */
 export default function App() {
   const isMobile = useIsMobile();
-  const [showAllTasks, setShowAllTasks] = useState(false);
-  const [seasonToDownload, setSeasonToDownload] = useState<number | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   const chartData = useMemo(
     () =>
@@ -732,35 +581,6 @@ export default function App() {
       leaderboardData.reduce((s, d) => s + d.score, 0) / leaderboardData.length
     ).toFixed(1)
   );
-
-  const displayedTasks = showAllTasks
-    ? benchmarkTasks
-    : benchmarkTasks.slice(0, 6);
-
-  useEffect(() => {
-    const repo = new OverviewRepository();
-    repo
-      .getMetrics()
-      .then((metrics) => {
-        setSeasonToDownload(metrics.season ?? null);
-      })
-      .catch(() => {
-        setSeasonToDownload(null);
-      });
-  }, []);
-
-  const downloadEvaluations = async () => {
-    if (!seasonToDownload || isDownloading) return;
-    setIsDownloading(true);
-    try {
-      const { season, evaluations } = await fetchExportPayload(
-        seasonToDownload
-      );
-      triggerJsonDownload(season, evaluations);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -942,7 +762,7 @@ export default function App() {
                     <dl className="flex flex-col items-start xl:items-end gap-2 text-center sm:text-right">
                       <div className="flex items-center gap-2">
                         <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                          Last Update
+                          Benchmark Date
                         </dt>
                         <dd className="text-xs sm:text-sm font-black text-white">
                           {lastBenchmarkUpdate}
@@ -1059,7 +879,7 @@ export default function App() {
                     <dl className="flex flex-col items-start xl:items-end gap-2 text-right">
                       <div className="flex items-center gap-2">
                         <dt className="text-[10px] sm:text-xs uppercase tracking-[0.32em] font-semibold text-cyan-300/60">
-                          Last Update
+                          Benchmark Date
                         </dt>
                         <dd className="text-xs sm:text-sm font-black text-white">
                           {lastBenchmarkUpdate}
@@ -1247,7 +1067,7 @@ export default function App() {
                         <XAxis
                           type="number"
                           dataKey="accuracy"
-                          domain={[40, 75]}
+                          domain={[0, 25]}
                           tick={{
                             fill: "#8fb0d6",
                             fontSize: 12,
@@ -1348,7 +1168,7 @@ export default function App() {
                         <YAxis
                           type="number"
                           dataKey="cost"
-                          domain={[0.1, 0.25]}
+                          domain={[0, 0.2]}
                           width={72}
                           tick={{
                             fill: "#8fb0d6",
@@ -1398,25 +1218,14 @@ export default function App() {
                         Benchmark Tasks
                       </h2>
                       <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
-                        Web project and its benchmark prompt
+                        Round 9 task pack for Autoppia and Rizzo
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={downloadEvaluations}
-                    disabled={isDownloading || !seasonToDownload}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <FaDownload className="w-4 h-4" />
-                    <span>
-                      {isDownloading ? "Downloading..." : "Download evaluations"}
-                    </span>
-                  </button>
                 </div>
 
-                {/* Grid: 1 → 2 → 3 → 4 columns */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {displayedTasks.map((task, i) => (
+                  {benchmarkTasks.map((task, i) => (
                     <motion.article
                       key={task.id}
                       initial={{ opacity: 0, y: 12 }}
@@ -1470,21 +1279,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Show More */}
-                {!showAllTasks &&
-                  benchmarkTasks.length > displayedTasks.length && (
-                    <div className="mt-6 text-center">
-                      <button
-                        onClick={() => setShowAllTasks(true)}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold transition-all shadow-lg hover:shadow-xl"
-                      >
-                        <span>Show More Tasks</span>
-                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs">
-                          +{benchmarkTasks.length - displayedTasks.length}
-                        </span>
-                      </button>
-                    </div>
-                  )}
               </div>
             </motion.div>
 
