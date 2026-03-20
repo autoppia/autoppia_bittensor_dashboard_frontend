@@ -23,20 +23,27 @@ import { FaCrown } from "react-icons/fa";
 import { BiInfoCircle } from "react-icons/bi";
 import { useSeasonRank } from "@/services/hooks/useAgents";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
-import type {
-  MinimalAgentData,
-} from "@/repositories/agents/agents.types";
+import type { MinimalAgentData } from "@/repositories/agents/agents.types";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 
-function getMinerCardContainerClass(isActive: boolean, highlightTop: boolean): string {
-  if (isActive) return "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]";
-  if (highlightTop) return "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]";
+function getMinerCardContainerClass(
+  isActive: boolean,
+  highlightTop: boolean,
+): string {
+  if (isActive)
+    return "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]";
+  if (highlightTop)
+    return "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]";
   return "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]";
 }
 
-function getMinerAvatarRingClass(isActive: boolean, highlightTop: boolean): string {
-  if (isActive) return "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50";
+function getMinerAvatarRingClass(
+  isActive: boolean,
+  highlightTop: boolean,
+): string {
+  if (isActive)
+    return "ring-3 ring-emerald-400/70 shadow-lg shadow-emerald-500/50";
   if (highlightTop) return "ring-2 ring-amber-400/50";
   return "ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-white/30";
 }
@@ -48,12 +55,19 @@ function getMinerNameClass(isActive: boolean, highlightTop: boolean): string {
 }
 
 function getMinerSotaBadgeClass(isActive: boolean): string {
-  return isActive ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50" : "bg-purple-500/30 text-purple-100 border-purple-400/60";
+  return isActive
+    ? "bg-yellow-400/30 text-yellow-100 border-yellow-300/50"
+    : "bg-purple-500/30 text-purple-100 border-purple-400/60";
 }
 
-function getRankBadgeRingClass(isActive: boolean, highlightTop: boolean, displayRank: number | undefined): string {
+function getRankBadgeRingClass(
+  isActive: boolean,
+  highlightTop: boolean,
+  displayRank: number | undefined,
+): string {
   if (isActive && displayRank != null) return "ring-2 ring-white/40 shadow-md";
-  if (highlightTop && displayRank != null) return "ring-1 ring-amber-400/50 shadow-sm";
+  if (highlightTop && displayRank != null)
+    return "ring-1 ring-amber-400/50 shadow-sm";
   return "";
 }
 
@@ -63,12 +77,14 @@ function getMinerMetaClass(isActive: boolean, highlightTop: boolean): string {
   return "text-white/70 group-hover:text-white/90";
 }
 
-function SidebarRoundInProgress({ className }: Readonly<{ className?: string }>) {
+function SidebarRoundInProgress({
+  className,
+}: Readonly<{ className?: string }>) {
   return (
     <aside
       className={cn(
         "fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
-        className
+        className,
       )}
     >
       <div className="flex h-full flex-col items-center justify-center px-5 text-center">
@@ -79,14 +95,17 @@ function SidebarRoundInProgress({ className }: Readonly<{ className?: string }>)
           Round in progress
         </p>
         <p className="mt-2 text-xs leading-5 text-white/75">
-          The current round is still running. Agents and rankings will appear once evaluations are complete.
+          The current round is still running. Agents and rankings will appear
+          once evaluations are complete.
         </p>
       </div>
     </aside>
   );
 }
 
-export default function AgentsSidebar({ className }: Readonly<{ className?: string }>) {
+export default function AgentsSidebar({
+  className,
+}: Readonly<{ className?: string }>) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -96,11 +115,15 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   const [includeSota, setIncludeSota] = useState<boolean>(false);
   const [filteredAgents, setFilteredAgents] = useState<MinimalAgentData[]>([]);
 
-  const SOTA_ALLOWED_NAMES = new Set(["openai cua", "anthropic cua", "browser use"]);
+  const SOTA_ALLOWED_NAMES = new Set([
+    "openai cua",
+    "anthropic cua",
+    "browser use",
+  ]);
 
   const applySotaFilter = (
     miners: MinimalAgentData[],
-    includeSota: boolean
+    includeSota: boolean,
   ) => {
     if (includeSota) {
       return miners.filter((m) => SOTA_ALLOWED_NAMES.has(m.name.toLowerCase()));
@@ -116,8 +139,12 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       if (aIsReigning && !bIsReigning) return -1;
       if (!aIsReigning && bIsReigning) return 1;
 
-      const aRank = Number.isFinite(a.ranking) ? a.ranking : Number.MAX_SAFE_INTEGER;
-      const bRank = Number.isFinite(b.ranking) ? b.ranking : Number.MAX_SAFE_INTEGER;
+      const aRank = Number.isFinite(a.ranking)
+        ? a.ranking
+        : Number.MAX_SAFE_INTEGER;
+      const bRank = Number.isFinite(b.ranking)
+        ? b.ranking
+        : Number.MAX_SAFE_INTEGER;
       if (aRank !== bRank) return aRank - bRank;
 
       const bReward = Number.isFinite(b.reward) ? b.reward : 0;
@@ -145,16 +172,13 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       label: "Loading...",
       value: "__loading__",
     }),
-    []
+    [],
   );
 
   const seasonRef = selectedSeason ?? "latest";
-  const {
-    data: seasonRankData,
-    loading,
-    error,
-  } = useSeasonRank(seasonRef);
-  const hasSeasonRankData = seasonRankData !== null && seasonRankData !== undefined;
+  const { data: seasonRankData, loading, error } = useSeasonRank(seasonRef);
+  const hasSeasonRankData =
+    seasonRankData !== null && seasonRankData !== undefined;
 
   const { seasonOptions, latestSeason, effectiveSeason } = useMemo(() => {
     const seasons = seasonRankData?.availableSeasons ?? [];
@@ -168,10 +192,14 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       latestSeason: latest,
       effectiveSeason: selectedSeason ?? latest,
     };
-  }, [seasonRankData?.availableSeasons, seasonRankData?.latestSeason, selectedSeason]);
+  }, [
+    seasonRankData?.availableSeasons,
+    seasonRankData?.latestSeason,
+    selectedSeason,
+  ]);
 
   const [seasonSelectValue, setSeasonSelectValue] = useState<SelectOption>(
-    seasonOptions.length > 0 ? seasonOptions[0] : loadingOption
+    seasonOptions.length > 0 ? seasonOptions[0] : loadingOption,
   );
   // Ref para evitar loops infinitos en la redirección
   const hasRedirectedRef = useRef(false);
@@ -188,7 +216,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       seasonOptions[0];
 
     setSeasonSelectValue((current) =>
-      current?.value === nextOption.value ? current : nextOption
+      current?.value === nextOption.value ? current : nextOption,
     );
   }, [effectiveSeason, loadingOption, seasonOptions]);
 
@@ -219,7 +247,10 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
     if (!option || option.value === loadingOption.value) {
       return;
     }
-    const season = typeof option.value === "number" ? option.value : Number.parseInt(String(option.value), 10);
+    const season =
+      typeof option.value === "number"
+        ? option.value
+        : Number.parseInt(String(option.value), 10);
 
     if (!Number.isFinite(season)) {
       return;
@@ -233,7 +264,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
 
   const minersFromApi = useMemo(
     () => seasonRankData?.miners ?? [],
-    [seasonRankData?.miners]
+    [seasonRankData?.miners],
   );
 
   const minerScoreMetaByUid = useMemo(() => {
@@ -242,11 +273,9 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       const uid = Number(miner?.uid);
       if (!Number.isFinite(uid)) return;
       const best = Number(
-        miner?.best_reward_in_season ?? miner?.post_consensus_avg_reward ?? 0
+        miner?.best_reward_in_season ?? miner?.post_consensus_avg_reward ?? 0,
       );
-      const effective = Number(
-        miner?.best_local_round_reward ?? best
-      );
+      const effective = Number(miner?.best_local_round_reward ?? best);
       byUid.set(uid, {
         best: Number.isFinite(best) ? best : 0,
         effective: Number.isFinite(effective) ? effective : 0,
@@ -258,7 +287,14 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   // Map miners from API format to MinimalAgentData format
   // Use JSON.stringify to create a stable dependency key
   const minersFromApiKey = useMemo(() => {
-    return JSON.stringify(minersFromApi.map(m => ({ uid: m.uid, name: m.name, rank: m.post_consensus_rank, reward: m.best_reward_in_season ?? m.post_consensus_avg_reward })));
+    return JSON.stringify(
+      minersFromApi.map((m) => ({
+        uid: m.uid,
+        name: m.name,
+        rank: m.post_consensus_rank,
+        reward: m.best_reward_in_season ?? m.post_consensus_avg_reward,
+      })),
+    );
   }, [minersFromApi]);
 
   const minersData = useMemo(() => {
@@ -266,15 +302,21 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       return { miners: [] };
     }
 
-    const miners: MinimalAgentData[] = minersFromApi.map((miner) => ({
-      uid: miner.uid,
-      name: miner.name,
-      ranking: miner.post_consensus_rank,
-      reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
-      isSota: false, // TODO: Determine SOTA from miner data if available
-      imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
-      slug: miner.is_reigning_leader ? "reigning-leader" : undefined,
-    }));
+    const miners: MinimalAgentData[] = minersFromApi.map((miner) => {
+      const minerImage =
+        (miner as { image?: string | null; imageUrl?: string | null }).image ??
+        (miner as { image?: string | null; imageUrl?: string | null }).imageUrl;
+
+      return {
+        uid: miner.uid,
+        name: miner.name,
+        ranking: miner.post_consensus_rank,
+        reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
+        isSota: false, // TODO: Determine SOTA from miner data if available
+        imageUrl: minerImage || `/miners/${Math.abs(miner.uid % 50)}.svg`,
+        slug: miner.is_reigning_leader ? "reigning-leader" : undefined,
+      };
+    });
 
     return { miners };
   }, [minersFromApiKey, minersFromApi]);
@@ -305,12 +347,19 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       filtered = filtered.filter(
         (miner) =>
           miner.name.toLowerCase().includes(q) ||
-          miner.uid.toString().includes(q)
+          miner.uid.toString().includes(q),
       );
     }
 
     setFilteredAgents(prioritizeReigningLeader(filtered));
-  }, [minersData, includeSota, query, minersFromApiKey, applySotaFilter, prioritizeReigningLeader]);
+  }, [
+    minersData,
+    includeSota,
+    query,
+    minersFromApiKey,
+    applySotaFilter,
+    prioritizeReigningLeader,
+  ]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextQuery = event.target.value;
@@ -325,7 +374,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       filtered = filtered.filter(
         (miner) =>
           miner.name.toLowerCase().includes(q) ||
-          miner.uid.toString().includes(q)
+          miner.uid.toString().includes(q),
       );
     }
 
@@ -333,10 +382,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
   };
 
   // Show loading placeholder
-  if (
-    loading ||
-    !hasSeasonRankData
-  ) {
+  if (loading || !hasSeasonRankData) {
     return <AgentSidebarPlaceholder />;
   }
 
@@ -346,7 +392,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
       <aside
         className={cn(
           "fixed bottom-0 start-0 z-50 h-[calc(100vh-90px)] w-[320px] pb-4 flex items-center justify-center backdrop-blur-xl rounded-r-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
-          className
+          className,
         )}
       >
         <div className="text-center px-6">
@@ -370,13 +416,13 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
     <aside
       className={cn(
         "fixed top-0 start-0 z-50 h-screen w-[320px] flex flex-col overflow-hidden backdrop-blur-xl border-r border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gray-0/80 dark:bg-gray-50/50",
-        className
+        className,
       )}
     >
       <div
         className={cn(
           "h-full flex flex-col overflow-hidden",
-          !isInDrawer && "pt-[90px]"
+          !isInDrawer && "pt-[90px]",
         )}
       >
         <div className="sticky top-0 border-b border-white/20 backdrop-blur-xl agents-round-select z-10 bg-gray-0/80 dark:bg-gray-50/50">
@@ -439,7 +485,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                   if (minersData?.miners) {
                     const filtered = applySotaFilter(
                       minersData.miners,
-                      includeSota
+                      includeSota,
                     );
                     setFilteredAgents(prioritizeReigningLeader(filtered));
                   }
@@ -455,7 +501,8 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                   <BiInfoCircle className="h-3.5 w-3.5 text-cyan-200" />
                 </div>
                 <p className="text-[11px] leading-5 text-cyan-50/90">
-                  To dethrone the current season leader, a miner must beat its best reward by{" "}
+                  To dethrone the current season leader, a miner must beat its
+                  best reward by{" "}
                   <span className="font-bold text-white">5%</span>.
                 </p>
               </div>
@@ -483,20 +530,20 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
               })();
 
               return (
-                  <NavLink
-                    key={`miner-menu-${miner.uid}`}
-                    href={
-                      effectiveSeason
-                        ? `${routes.agents}/${miner.uid}?season=${effectiveSeason}`
-                        : `${routes.agents}/${miner.uid}`
-                    }
-                  >
+                <NavLink
+                  key={`miner-menu-${miner.uid}`}
+                  href={
+                    effectiveSeason
+                      ? `${routes.agents}/${miner.uid}?season=${effectiveSeason}`
+                      : `${routes.agents}/${miner.uid}`
+                  }
+                >
                   <div
                     className={cn(
                       "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
                       highlightTop
                         ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                        : "bg-gradient-to-r from-emerald-500/14 via-teal-500/10 to-cyan-500/14 text-white border border-emerald-400/35 shadow-md shadow-emerald-500/10 hover:border-emerald-300/55 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.01]"
+                        : "bg-gradient-to-r from-emerald-500/14 via-teal-500/10 to-cyan-500/14 text-white border border-emerald-400/35 shadow-md shadow-emerald-500/10 hover:border-emerald-300/55 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.01]",
                     )}
                   >
                     {/* Animated gradient shimmer for active state */}
@@ -508,7 +555,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                       className={cn(
                         "absolute -top-1 -right-1 min-w-[28px] h-7 px-2 rounded-full flex items-center justify-center shadow-xl border z-10",
                         cornerBadgePalette,
-                        showCrown && "animate-pulse"
+                        showCrown && "animate-pulse",
                       )}
                     >
                       {showCrown ? (
@@ -526,15 +573,15 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                     <div
                       className={cn(
                         "relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10 mr-2.5 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110",
-                        getMinerAvatarRingClass(isActive, highlightTop)
+                        getMinerAvatarRingClass(isActive, highlightTop),
                       )}
                     >
                       <Image
                         src={resolveAssetUrl(
                           miner.imageUrl,
                           resolveAssetUrl(
-                            `/miners/${Math.abs(miner.uid % 50)}.svg`
-                          )
+                            `/miners/${Math.abs(miner.uid % 50)}.svg`,
+                          ),
                         )}
                         alt={miner.name}
                         fill
@@ -548,7 +595,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                         <span
                           className={cn(
                             "text-sm font-bold truncate transition-all duration-300",
-                            getMinerNameClass(isActive, highlightTop)
+                            getMinerNameClass(isActive, highlightTop),
                           )}
                         >
                           {miner.name}
@@ -558,7 +605,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                           <span
                             className={cn(
                               "px-1.5 py-0.5 text-[10px] font-bold rounded-full border shadow-sm",
-                              getMinerSotaBadgeClass(isActive)
+                              getMinerSotaBadgeClass(isActive),
                             )}
                           >
                             SOTA
@@ -570,7 +617,7 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                         <span
                           className={cn(
                             "text-[11px] font-mono font-medium transition-all duration-300",
-                            getMinerMetaClass(isActive, highlightTop)
+                            getMinerMetaClass(isActive, highlightTop),
                           )}
                         >
                           UID: {miner.uid}
@@ -581,8 +628,8 @@ export default function AgentsSidebar({ className }: Readonly<{ className?: stri
                             isActive
                               ? "text-emerald-200"
                               : highlightTop
-                              ? "text-amber-300"
-                              : "text-white/70 group-hover:text-white/90"
+                                ? "text-amber-300"
+                                : "text-white/70 group-hover:text-white/90",
                           )}
                           title="Best reward achieved in this season"
                         >

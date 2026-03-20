@@ -41,7 +41,8 @@ function RoundInProgressState() {
               Round in progress
             </p>
             <p className="mx-auto max-w-2xl text-sm font-medium text-white/80 sm:text-base">
-              This round is in progress. Results and rankings will be available once evaluations are complete.
+              This round is in progress. Results and rankings will be available
+              once evaluations are complete.
             </p>
           </div>
         </div>
@@ -63,7 +64,8 @@ function AgentsLanding() {
 
   // Check if we're on the landing page (no agent ID in URL path)
   // We redirect if we're on /subnet36/agents (without agent ID) and don't have agentParam.
-  const isOnAgentsLanding = pathname === routes.agents || pathname === "/subnet36/agents";
+  const isOnAgentsLanding =
+    pathname === routes.agents || pathname === "/subnet36/agents";
   const needsRedirect = isOnAgentsLanding;
 
   const seasonRef = selectedSeason ?? "latest";
@@ -80,14 +82,20 @@ function AgentsLanding() {
   // Get miners from roundsDataWithMiners.round_selected.miners
   const miners = useMemo(() => {
     const minersFromRounds = seasonRankData?.miners ?? [];
-    return minersFromRounds.map((miner) => ({
-      uid: miner.uid,
-      name: miner.name,
-      ranking: miner.post_consensus_rank,
-      reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
-      isSota: false, // TODO: Determine SOTA from miner data if available
-      imageUrl: miner.image || `/miners/${Math.abs(miner.uid % 50)}.svg`,
-    }));
+    return minersFromRounds.map((miner) => {
+      const minerImage =
+        (miner as { image?: string | null; imageUrl?: string | null }).image ??
+        (miner as { image?: string | null; imageUrl?: string | null }).imageUrl;
+
+      return {
+        uid: miner.uid,
+        name: miner.name,
+        ranking: miner.post_consensus_rank,
+        reward: miner.best_reward_in_season ?? miner.post_consensus_avg_reward,
+        isSota: false, // TODO: Determine SOTA from miner data if available
+        imageUrl: minerImage || `/miners/${Math.abs(miner.uid % 50)}.svg`,
+      };
+    });
   }, [seasonRankData?.miners]);
   const hasMiners = miners.length > 0;
 
@@ -115,11 +123,11 @@ function AgentsLanding() {
     const sortedMiners = [...miners].sort(
       (a, b) =>
         (a.ranking ?? Number.MAX_SAFE_INTEGER) -
-        (b.ranking ?? Number.MAX_SAFE_INTEGER)
+        (b.ranking ?? Number.MAX_SAFE_INTEGER),
     );
     const topMiner =
       sortedMiners.find(
-        (miner) => !miner.isSota && miner.uid !== undefined && miner.uid >= 0
+        (miner) => !miner.isSota && miner.uid !== undefined && miner.uid >= 0,
       ) ??
       sortedMiners.find((miner) => miner.uid !== undefined && miner.uid >= 0) ??
       sortedMiners[0];
@@ -167,8 +175,8 @@ function AgentsLanding() {
             Unable to load agents
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            {seasonRankError}. Please try refreshing the page once the service is
-            available again.
+            {seasonRankError}. Please try refreshing the page once the service
+            is available again.
           </p>
         </div>
       </div>
