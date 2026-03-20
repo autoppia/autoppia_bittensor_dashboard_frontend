@@ -134,22 +134,21 @@ const rewriteToLocalAsset = (value: string): string => {
   }
 
   try {
-    // S3 URLs should be returned as-is (not rewritten to local paths).
-    // Check the hostname explicitly instead of using substring matching.
     const parsed = new URL(value);
-    const host = parsed.hostname.toLowerCase();
-    if (host === "s3.amazonaws.com" || host === "s3.eu-west-1.amazonaws.com") {
-      return value;
-    }
-
     const baseUrl = new URL(DEFAULT_ASSET_BASE);
     const candidateUrl = new URL(value);
+
     if (
       candidateUrl.hostname.toLowerCase() === baseUrl.hostname.toLowerCase() &&
       candidateUrl.protocol === baseUrl.protocol
     ) {
       const path = candidateUrl.pathname || "/";
       return path + candidateUrl.search;
+    }
+
+    // Preserve allowed remote asset URLs such as S3 bucket hosts.
+    if (isAllowedHost(candidateUrl.hostname)) {
+      return candidateUrl.toString();
     }
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
