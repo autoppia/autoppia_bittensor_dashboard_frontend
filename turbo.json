@@ -26,6 +26,14 @@
       "cache": false,
       "persistent": true
     },
+    "dev:fast": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:stable": {
+      "cache": false,
+      "persistent": true
+    },
     "clean": {
       "dependsOn": ["^clean"]
     },

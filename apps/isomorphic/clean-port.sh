@@ -27,14 +27,18 @@ else
         fi
     done
 
-    # Esperar un momento para que los procesos se terminen
-    sleep 1
-
-    # Verificar que el puerto esté libre
+    # Esperar a que el SO libere el puerto (evita EADDRINUSE al arrancar Next)
+    for i in 1 2 3 4 5; do
+        sleep 1
+        REMAINING=$(lsof -ti :$PORT 2>/dev/null || echo "")
+        if [ -z "$REMAINING" ]; then
+            echo "✅ Puerto $PORT liberado correctamente"
+            break
+        fi
+        echo "   Esperando liberación del puerto... ($i/5)"
+    done
     REMAINING=$(lsof -ti :$PORT 2>/dev/null || echo "")
-    if [ -z "$REMAINING" ]; then
-        echo "✅ Puerto $PORT liberado correctamente"
-    else
-        echo "⚠️  Algunos procesos aún podrían estar usando el puerto $PORT"
+    if [ -n "$REMAINING" ]; then
+        echo "⚠️  El puerto $PORT sigue en uso. Ejecuta: kill -9 $REMAINING"
     fi
 fi

@@ -3,7 +3,10 @@
   "version": "7.6.2",
   "private": true,
   "scripts": {
-    "dev": "./clean-port.sh && WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
+    "dev": "rm -rf .next && ./clean-port.sh && sleep 2 && next dev -p 3000 --turbopack",
+    "dev:fast": "./clean-port.sh && sleep 2 && next dev -p 3000 --turbopack",
+    "dev:stable": "rm -rf .next && ./clean-port.sh && sleep 2 && next dev -p 3000",
+    "dev:polling": "rm -rf .next && ./clean-port.sh && sleep 2 && WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev -p 3000 --turbopack",
     "lint": "next lint",
     "build": "rimraf .next/export && next build",
     "build:local": "rimraf .next/export && NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 NEXT_PUBLIC_API_URL=http://localhost:8080 next build",
