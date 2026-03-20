@@ -55,7 +55,19 @@ const isAllowedHost = (hostname: string | null): boolean => {
 
 const normalizeRelativePath = (value: string): string => {
   const cleaned = value.replace(/^\/+/, "");
-  return cleaned ? `/${cleaned}` : "/";
+  if (!cleaned) {
+    return "/";
+  }
+
+  const minerMatch = cleaned.match(/^miners\/(-?\d+)\.svg$/i);
+  if (minerMatch) {
+    const parsed = Number.parseInt(minerMatch[1] ?? "", 10);
+    if (Number.isFinite(parsed)) {
+      return `/miners/${Math.abs(parsed % 50)}.svg`;
+    }
+  }
+
+  return `/${cleaned}`;
 };
 
 const sanitizeUrl = (value?: string | null): string => {
