@@ -803,24 +803,26 @@ export default function AgentRunSearch() {
     <div className="w-full max-w-[1400px] mx-auto h-full py-8 px-4">
       <div className="w-full max-w-[1024px] mx-auto">
         {/* Main Search Card */}
-        <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
+        <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border border-emerald-500/20 hover:border-emerald-400/40 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
           <div className="relative p-6 overflow-visible">
             {/* Header */}
-            <div className="text-center mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
+            <div className="text-left mb-5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 self-center sm:self-auto">
+                  <PiMagnifyingGlassDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
                 </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                  AGENT RUN SEARCH
-                </h2>
+                <div className="flex flex-col">
+                  <h2 className="text-xl font-semibold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    AGENT RUN SEARCH
+                  </h2>
+                  <p className="text-cyan-300/90 text-xs mt-1">
+                    Search by Run UID or filter by Round, Validator, and Agent
+                  </p>
+                </div>
               </div>
-              <p className="text-cyan-300 text-sm">
-                Search by Run UID or filter by Round, Validator, and Agent
-              </p>
             </div>
 
             {/* Search Input */}
@@ -831,7 +833,7 @@ export default function AgentRunSearch() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Enter Run UID (e.g., round_020_42_005)"
-                  className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                  className="w-full px-4 py-2.5 min-h-[48px] placeholder:text-sm bg-white/90 border border-white/60 rounded-xl text-slate-900 placeholder:text-slate-500 focus:border-cyan-300/80 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <PiHashDuotone className="w-5 h-5 text-cyan-400" />
@@ -841,15 +843,19 @@ export default function AgentRunSearch() {
 
             {/* Filter Section */}
             <div className="mb-6 overflow-visible">
-              <div className="flex items-center gap-2 mb-4">
-                <PiFunnelDuotone className="w-5 h-5 text-purple-300" />
-                <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <PiFunnelDuotone className="w-4 h-4 text-slate-300/90" />
+                <h3 className="text-sm font-semibold text-slate-200">Filters</h3>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
+              <div className="flex w-full flex-wrap gap-2 items-end overflow-visible">
                 {/* Season Filter */}
-                <div className="space-y-2">
-                  <label id="filter-season-label" htmlFor="filter-season-btn" className="text-sm font-medium text-emerald-300">
+                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                  <label
+                    id="filter-season-label"
+                    htmlFor="filter-season-btn"
+                    className="sr-only"
+                  >
                     SEASON
                   </label>
                   <div className="relative" ref={seasonDropdownRef}>
@@ -862,11 +868,16 @@ export default function AgentRunSearch() {
                       }}
                       className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                     >
-                      <span>
-                        {roundsLoading && seasonOptions.length === 0 && "Loading seasons..."}
-                        {!roundsLoading && selectedSeason === undefined && "All Seasons"}
-                        {!roundsLoading && selectedSeason !== undefined && `Season ${selectedSeason}`}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
+                          <PiHashDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                        </span>
+                        <span className="truncate">
+                          {roundsLoading && seasonOptions.length === 0 && "Loading seasons..."}
+                          {!roundsLoading && selectedSeason === undefined && "All Seasons"}
+                          {!roundsLoading && selectedSeason !== undefined && `Season ${selectedSeason}`}
+                        </span>
+                      </div>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${
                           isSeasonDropdownOpen ? "rotate-180" : ""
@@ -920,8 +931,12 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Round Filter */}
-                <div className="space-y-2">
-                  <label id="filter-round-label" htmlFor="filter-round-btn" className="text-sm font-medium text-purple-300">
+                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                  <label
+                    id="filter-round-label"
+                    htmlFor="filter-round-btn"
+                    className="sr-only"
+                  >
                     ROUND
                   </label>
                   <div className="relative" ref={roundDropdownRef}>
@@ -942,12 +957,17 @@ export default function AgentRunSearch() {
                           : ""
                       }`}
                     >
-                      <span>
-                        {selectedSeason === undefined && "Select season first"}
-                        {selectedSeason !== undefined && roundOptions.length === 0 && "Round in progress"}
-                        {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound === undefined && "All Rounds"}
-                        {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound !== undefined && `Round ${selectedRound}`}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-purple-300" />
+                        </span>
+                        <span className="truncate">
+                          {selectedSeason === undefined && "Select season first"}
+                          {selectedSeason !== undefined && roundOptions.length === 0 && "Round in progress"}
+                          {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound === undefined && "All Rounds"}
+                          {selectedSeason !== undefined && roundOptions.length > 0 && selectedRound !== undefined && `Round ${selectedRound}`}
+                        </span>
+                      </div>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${
                           isRoundDropdownOpen ? "rotate-180" : ""
@@ -990,8 +1010,12 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Validator Filter */}
-                <div className="space-y-2">
-                  <label id="filter-validator-label" htmlFor="filter-validator-btn" className="text-sm font-medium text-blue-300">
+                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                  <label
+                    id="filter-validator-label"
+                    htmlFor="filter-validator-btn"
+                    className="sr-only"
+                  >
                     VALIDATOR
                   </label>
                   <div className="relative" ref={validatorDropdownRef}>
@@ -1004,11 +1028,16 @@ export default function AgentRunSearch() {
                       }}
                       className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                     >
-                      <span>
-                        {validatorLoading && validatorOptions.length === 0 && "Loading validators..."}
-                        {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator === "" && "All Validators"}
-                        {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator !== "" && (selectedValidatorLabel ?? formatValidatorLabel(selectedValidator))}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-400/20 flex-shrink-0">
+                          <PiInfoDuotone className="w-3.5 h-3.5 text-blue-300" />
+                        </span>
+                        <span className="truncate">
+                          {validatorLoading && validatorOptions.length === 0 && "Loading validators..."}
+                          {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator === "" && "All Validators"}
+                          {(validatorLoading === false || validatorOptions.length > 0) && selectedValidator !== "" && (selectedValidatorLabel ?? formatValidatorLabel(selectedValidator))}
+                        </span>
+                      </div>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${
                           isValidatorDropdownOpen ? "rotate-180" : ""
@@ -1065,8 +1094,12 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Miner Filter */}
-                <div className="space-y-2">
-                  <label id="filter-agent-label" htmlFor="filter-agent-button" className="text-sm font-medium text-purple-300">
+                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                  <label
+                    id="filter-agent-label"
+                    htmlFor="filter-agent-button"
+                    className="sr-only"
+                  >
                     MINER
                   </label>
                   <div className="relative" ref={minerDropdownRef}>
@@ -1076,11 +1109,16 @@ export default function AgentRunSearch() {
                       onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
                       className="flex w-full items-center justify-between rounded-xl border-2 border-purple-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-400/70 focus:ring-0"
                     >
-                      <span className="truncate">
-                        {selectedMinerUid != null && selectedMinerName
-                          ? `${selectedMinerName} (UID ${selectedMinerUid})`
-                          : "All Miners"}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                          <PiRobotDuotone className="w-3.5 h-3.5 text-purple-300" />
+                        </span>
+                        <span className="truncate">
+                          {selectedMinerUid != null && selectedMinerName
+                            ? `${selectedMinerName} (UID ${selectedMinerUid})`
+                            : "All Miners"}
+                        </span>
+                      </div>
                       <PiCaretDownDuotone
                         className={`w-4 h-4 text-purple-400 shrink-0 ml-2 transition-transform duration-200 ${isMinerDropdownOpen ? "rotate-180" : ""}`}
                       />
@@ -1150,7 +1188,7 @@ export default function AgentRunSearch() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 flex-col sm:flex-row justify-center">
+            <div className="flex gap-3 flex-col sm:flex-row sm:justify-end items-stretch sm:items-center z-50">
               {/* <button
                 onClick={handleSearch}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 backdrop-blur-md"
@@ -1162,10 +1200,10 @@ export default function AgentRunSearch() {
               <button
                 onClick={clearFilters}
                 disabled={!hasActiveFilters}
-                className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-md ${
+                className={`w-full sm:w-auto px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-md ${
                   hasActiveFilters
-                    ? "bg-gradient-to-r from-red-500/60 to-orange-500/60 border-2 border-red-500/60 text-white hover:from-red-500 hover:to-orange-500 hover:border-red-500 cursor-pointer"
-                    : "bg-gray-500/30 border-2 border-gray-500/30 text-gray-400 cursor-not-allowed"
+                    ? "bg-slate-900/40 border border-slate-700/70 text-slate-100 hover:bg-slate-900/60 hover:border-cyan-400/40 cursor-pointer"
+                    : "bg-slate-900/20 border border-slate-700/40 text-slate-400 cursor-not-allowed"
                 }`}
               >
                 CLEAR FILTERS

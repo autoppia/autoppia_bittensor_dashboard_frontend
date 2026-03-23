@@ -4,6 +4,7 @@ import Image from "next/image";
 import {
   useEffect,
   useMemo,
+  useCallback,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
@@ -246,26 +247,27 @@ export default function TaskSearch() {
 
   const headerCount = total || results.length;
 
-  const applyFacetsToAvailability = (
-    facets: { websites: { name: string }[]; useCases: { name: string }[] }
-  ) => {
-    setAvailableWebsites((prev) =>
-      mergeAndSortUnique([
-        prev,
-        BASE_WEBSITE_SLUGS,
-        facets.websites.map((item) => item.name),
-      ])
-    );
-    setAvailableUseCases((prev) =>
-      mergeAndSortUnique([
-        prev,
-        selectedWebsite
-          ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
-          : BASE_USE_CASES,
-        facets.useCases.map((item) => item.name),
-      ])
-    );
-  };
+  const applyFacetsToAvailability = useCallback(
+    (facets: { websites: { name: string }[]; useCases: { name: string }[] }) => {
+      setAvailableWebsites((prev) =>
+        mergeAndSortUnique([
+          prev,
+          BASE_WEBSITE_SLUGS,
+          facets.websites.map((item) => item.name),
+        ])
+      );
+      setAvailableUseCases((prev) =>
+        mergeAndSortUnique([
+          prev,
+          selectedWebsite
+            ? (BASE_USE_CASES_BY_WEBSITE[selectedWebsite] ?? [])
+            : BASE_USE_CASES,
+          facets.useCases.map((item) => item.name),
+        ])
+      );
+    },
+    [selectedWebsite]
+  );
 
   // Auto-search when filters or search term changes
   useEffect(() => {
@@ -364,7 +366,7 @@ export default function TaskSearch() {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit, selectedWebsite]);
+  }, [debouncedSearchTerm, debouncedFilters, currentPage, currentLimit, selectedWebsite, applyFacetsToAvailability]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -495,23 +497,25 @@ export default function TaskSearch() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto h-full py-8 px-4">
-      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50 max-w-[1024px] mx-auto">
+      <div className="group relative w-full max-w-[1024px] mx-auto bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border border-emerald-500/20 hover:border-emerald-400/40 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
 
         <div className="relative p-6 overflow-visible">
-          <div className="text-center mb-6">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
+          <div className="text-left mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 self-center sm:self-auto">
+                <PiMagnifyingGlassDuotone className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                EVALUATION SEARCH
-              </h2>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-semibold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                  EVALUATION SEARCH
+                </h2>
+                <p className="text-cyan-300/90 text-xs mt-1">
+                  Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
+                </p>
+              </div>
             </div>
-            <p className="text-cyan-300 text-sm">
-              Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
-            </p>
           </div>
 
           <div className="mb-6">
@@ -521,40 +525,42 @@ export default function TaskSearch() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter Evaluation ID or Prompt (e.g., 3413)"
-                className="w-full px-4 py-3 placeholder:text-sm bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    className="w-full px-4 py-2.5 min-h-[48px] placeholder:text-sm bg-white/90 border border-white/60 rounded-xl text-slate-900 placeholder:text-slate-500 focus:border-cyan-300/80 transition-all duration-300 outline-none focus:ring-0"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <PiHashDuotone className="w-5 h-5 text-cyan-400" />
+                <PiHashDuotone className="w-4 h-4 text-cyan-400/90" />
               </div>
             </div>
           </div>
 
-          <div className="mb-6 overflow-visible z-100">
-            <div className="flex items-center gap-2 mb-4">
-              <PiFunnelDuotone className="w-5 h-5 text-purple-300" />
-              <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
+          <div className="mb-6 overflow-visible z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <PiFunnelDuotone className="w-4 h-4 text-slate-300/90" />
+              <h3 className="text-sm font-semibold text-slate-200">Filters</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 xl:gap-5 overflow-visible items-end">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-emerald-300 block" htmlFor="task-search-agent-button">
-                  MINER
-                </label>
-                <div className="relative" ref={agentDropdownRef}>
+            <div className="flex w-full flex-wrap gap-2 items-end">
+              <div
+                className="relative flex-1 min-w-[160px] max-w-[230px]"
+                ref={agentDropdownRef}
+              >
                   <button
                     id="task-search-agent-button"
                     type="button"
                     onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
-                    className="flex min-h-[46px] w-full items-center justify-between rounded-xl border-2 border-emerald-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/70 focus:ring-0"
+                    className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/60 focus:ring-0"
                   >
-                    <span className="truncate">
-                      {selectedAgentUid != null && selectedAgentName
-                        ? `${selectedAgentName} (${selectedAgentUid})`
-                        : "All Miners"}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-emerald-400 shrink-0 ml-2 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
+                        <PiRobotDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                      </span>
+                      <span className="truncate">
+                        {selectedAgentUid != null && selectedAgentName
+                          ? `${selectedAgentName} (${selectedAgentUid})`
+                          : "All miners"}
+                      </span>
+                    </div>
+                    <PiCaretDownDuotone className={`w-4 h-4 text-emerald-400 shrink-0 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isAgentDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
@@ -612,13 +618,9 @@ export default function TaskSearch() {
                       </div>
                     </div>
                   )}
-                </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="task-search-agent-run" className="text-sm font-medium text-emerald-300">
-                  AGENT RUN
-                </label>
+              <div className="flex-1 min-w-[160px] max-w-[230px]">
                 <div className="relative">
                   <input
                     id="task-search-agent-run"
@@ -626,7 +628,7 @@ export default function TaskSearch() {
                     value={agentRunInput}
                     onChange={(e) => setAgentRunInput(e.target.value)}
                     placeholder="Run UID (optional)"
-                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[40px] px-3 py-2 bg-slate-950/55 border border-slate-700/60 rounded-xl text-slate-100 text-sm placeholder:text-slate-400 focus:border-emerald-400/60 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
@@ -634,10 +636,7 @@ export default function TaskSearch() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-blue-300 block" htmlFor="task-search-website-button">
-                  WEBSITE
-                </label>
+              <div className="flex-1 min-w-[160px] max-w-[230px]">
                 <div className="relative" ref={websiteDropdownRef}>
                   <button
                     id="task-search-website-button"
@@ -645,16 +644,19 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
                     }
-                    className="w-full min-h-[46px] px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[40px] px-3 py-2 bg-slate-950/55 border border-slate-700/60 rounded-xl text-slate-100 focus:border-blue-400/60 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
-                    <span>
-                      {selectedWebsite === ""
-                        ? "All Websites"
-                        : formatLabel(selectedWebsite)}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-400/20 flex-shrink-0">
+                        <PiGlobeDuotone className="w-3.5 h-3.5 text-blue-300" />
+                      </span>
+                      <span className="truncate">
+                        {selectedWebsite === ""
+                          ? "All websites"
+                          : formatLabel(selectedWebsite)}
+                      </span>
+                    </div>
+                    <PiCaretDownDuotone className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {isWebsiteDropdownOpen && (
@@ -687,10 +689,7 @@ export default function TaskSearch() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-300 block" htmlFor="task-search-use-case-button">
-                  USE CASE
-                </label>
+              <div className="flex-1 min-w-[160px] max-w-[230px]">
                 <div className="relative" ref={useCaseDropdownRef}>
                   <button
                     id="task-search-use-case-button"
@@ -698,16 +697,19 @@ export default function TaskSearch() {
                     onClick={() =>
                       setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
                     }
-                    className="w-full min-h-[46px] px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[40px] px-3 py-2 bg-slate-950/55 border border-slate-700/60 rounded-xl text-slate-100 focus:border-purple-400/60 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
-                    <span>
-                      {selectedUseCase === ""
-                        ? "All Use Cases"
-                        : formatLabel(selectedUseCase)}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${isUseCaseDropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                        <PiCodeDuotone className="w-3.5 h-3.5 text-purple-300" />
+                      </span>
+                      <span className="truncate">
+                        {selectedUseCase === ""
+                          ? "All use cases"
+                          : formatLabel(selectedUseCase)}
+                      </span>
+                    </div>
+                    <PiCaretDownDuotone className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${isUseCaseDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {isUseCaseDropdownOpen && (
@@ -740,25 +742,25 @@ export default function TaskSearch() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-button">
-                  SUCCESS
-                </label>
+              <div className="flex-1 min-w-[160px] max-w-[230px]">
                 <div className="relative" ref={successDropdownRef}>
                   <button
                     id="task-search-success-button"
                     type="button"
                     onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
-                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                    className="w-full min-h-[40px] px-3 py-2 bg-slate-950/55 border border-slate-700/60 rounded-xl text-slate-100 focus:border-emerald-400/60 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
                   >
-                    <span>
-                      {successMode === "all" && "All Tasks"}
-                      {successMode === "successful" && "Successful Tasks"}
-                      {successMode === "non_successful" && "Non Successful Tasks"}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
+                        <PiFunnelDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                      </span>
+                      <span className="truncate">
+                        {successMode === "all" && "All Tasks"}
+                        {successMode === "successful" && "Successful Tasks"}
+                        {successMode === "non_successful" && "Non Successful Tasks"}
+                      </span>
+                    </div>
+                    <PiCaretDownDuotone className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isSuccessDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 backdrop-blur-xl">
@@ -792,14 +794,14 @@ export default function TaskSearch() {
             </div>
           </div>
 
-          <div className="flex gap-4 flex-col sm:flex-row items-center justify-center z-50">
+          <div className="flex gap-3 flex-col sm:flex-row sm:justify-end items-stretch sm:items-center z-50">
             <button
               onClick={clearFilters}
               disabled={!hasActiveFilters && !hasSearched}
-              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-md ${
+              className={`w-full sm:w-auto px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-md ${
                 hasActiveFilters || hasSearched
-                  ? "bg-gradient-to-r from-red-500/60 to-orange-500/60 border-2 border-red-500/60 text-white hover:from-red-500 hover:to-orange-500 hover:border-red-500 cursor-pointer"
-                  : "bg-gray-500/30 border-2 border-gray-500/30 text-gray-400 cursor-not-allowed"
+                  ? "bg-slate-900/40 border border-slate-700/70 text-slate-100 hover:bg-slate-900/60 hover:border-cyan-400/40 cursor-pointer"
+                  : "bg-slate-900/20 border border-slate-700/40 text-slate-400 cursor-not-allowed"
               }`}
             >
               CLEAR FILTERS
