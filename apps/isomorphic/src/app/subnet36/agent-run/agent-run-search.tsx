@@ -850,7 +850,7 @@ export default function AgentRunSearch() {
 
               <div className="flex w-full flex-wrap gap-2 items-end overflow-visible">
                 {/* Season Filter */}
-                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                <div className="flex-1 min-w-[160px] max-w-[230px]">
                   <label
                     id="filter-season-label"
                     htmlFor="filter-season-btn"
@@ -866,7 +866,7 @@ export default function AgentRunSearch() {
                       onClick={() => {
                         setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
                       }}
-                      className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                      className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/60 focus:ring-0"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
@@ -886,7 +886,7 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isSeasonDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-emerald-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute top-full left-0 right-0 mt-2 overflow-y-auto custom-scrollbar scroll-smooth rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
                         <button
                           type="button"
                           onClick={() => {
@@ -894,7 +894,7 @@ export default function AgentRunSearch() {
                             setSelectedRound(undefined);
                             setIsSeasonDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors duration-200 border-b border-emerald-500/20"
+                          className="w-full border-b border-slate-800/80 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
                         >
                           All Seasons
                         </button>
@@ -910,10 +910,10 @@ export default function AgentRunSearch() {
                                   setSelectedRound(undefined); // Reset round when season changes
                                   setIsSeasonDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                                className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
                                   isActive
-                                    ? "bg-emerald-500/30 text-emerald-100"
-                                    : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                                    ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"
                                 }`}
                               >
                                 Season {season}
@@ -921,7 +921,7 @@ export default function AgentRunSearch() {
                             );
                           })}
                         {!roundsLoading && seasonOptions.length === 0 && (
-                          <div className="px-3 py-2 text-emerald-300 text-sm">
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
                             No seasons available
                           </div>
                         )}
@@ -931,7 +931,7 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Round Filter */}
-                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                <div className="flex-1 min-w-[160px] max-w-[230px]">
                   <label
                     id="filter-round-label"
                     htmlFor="filter-round-btn"
@@ -951,7 +951,7 @@ export default function AgentRunSearch() {
                         setIsRoundDropdownOpen(!isRoundDropdownOpen);
                       }}
                       disabled={selectedSeason === undefined || isRoundInProgress}
-                      className={`w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0 ${
+                      className={`flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0 focus:border-purple-400/60 ${
                         selectedSeason === undefined || isRoundInProgress
                           ? "opacity-50 cursor-not-allowed"
                           : ""
@@ -976,14 +976,14 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isRoundDropdownOpen && selectedSeason !== undefined && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute top-full left-0 right-0 mt-2 overflow-y-auto custom-scrollbar scroll-smooth rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedRound(undefined);
                             setIsRoundDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                          className="w-full border-b border-slate-800/80 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-purple-500/16 hover:text-white"
                         >
                           All Rounds
                         </button>
@@ -998,7 +998,11 @@ export default function AgentRunSearch() {
                                   setSelectedRound(round);
                                   setIsRoundDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${isActive ? "bg-purple-500/30 text-purple-100" : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"}`}
+                                className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
+                                  isActive
+                                    ? "bg-gradient-to-r from-purple-500/35 to-purple-400/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-purple-500/16 hover:text-white"
+                                }`}
                               >
                                 Round {round}
                               </button>
@@ -1010,7 +1014,7 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Validator Filter */}
-                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                <div className="flex-1 min-w-[160px] max-w-[230px]">
                   <label
                     id="filter-validator-label"
                     htmlFor="filter-validator-btn"
@@ -1026,7 +1030,7 @@ export default function AgentRunSearch() {
                       onClick={() => {
                         setIsValidatorDropdownOpen(!isValidatorDropdownOpen);
                       }}
-                      className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                      className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0 focus:border-blue-400/60"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-400/20 flex-shrink-0">
@@ -1046,19 +1050,19 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isValidatorDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute top-full left-0 right-0 mt-2 overflow-y-auto custom-scrollbar scroll-smooth rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedValidator("");
                             setIsValidatorDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20"
+                          className="w-full border-b border-slate-800/80 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-blue-500/16 hover:text-white"
                         >
                           All Validators
                         </button>
                         {validatorLoading && validatorOptions.length === 0 && (
-                          <div className="px-3 py-2 text-blue-300 text-sm">
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
                             Loading validators...
                           </div>
                         )}
@@ -1073,10 +1077,10 @@ export default function AgentRunSearch() {
                                   setSelectedValidator(validator.id);
                                   setIsValidatorDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-blue-500/20 last:border-b-0 ${
+                                className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
                                   isActive
-                                    ? "bg-blue-500/30 text-blue-100"
-                                    : "text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200"
+                                    ? "bg-gradient-to-r from-blue-500/35 to-blue-400/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-blue-500/16 hover:text-white"
                                 }`}
                               >
                                 {validator.label}
@@ -1084,7 +1088,7 @@ export default function AgentRunSearch() {
                             );
                           })}
                         {!validatorLoading && validatorOptions.length === 0 && (
-                          <div className="px-3 py-2 text-blue-300 text-sm">
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
                             {validatorError ?? "No validators available"}
                           </div>
                         )}
@@ -1094,7 +1098,7 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Miner Filter */}
-                <div className="flex-1 min-w-[160px] max-w-[230px] space-y-2">
+                <div className="flex-1 min-w-[160px] max-w-[230px]">
                   <label
                     id="filter-agent-label"
                     htmlFor="filter-agent-button"
@@ -1107,11 +1111,11 @@ export default function AgentRunSearch() {
                       id="filter-agent-button"
                       type="button"
                       onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
-                      className="flex w-full items-center justify-between rounded-xl border-2 border-purple-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-400/70 focus:ring-0"
+                      className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/60 focus:ring-0"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-400/20 flex-shrink-0">
-                          <PiRobotDuotone className="w-3.5 h-3.5 text-purple-300" />
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
+                          <PiRobotDuotone className="w-3.5 h-3.5 text-emerald-300" />
                         </span>
                         <span className="truncate">
                           {selectedMinerUid != null && selectedMinerName
@@ -1120,20 +1124,20 @@ export default function AgentRunSearch() {
                         </span>
                       </div>
                       <PiCaretDownDuotone
-                        className={`w-4 h-4 text-purple-400 shrink-0 ml-2 transition-transform duration-200 ${isMinerDropdownOpen ? "rotate-180" : ""}`}
+                        className={`w-4 h-4 text-emerald-400 shrink-0 ml-2 transition-transform duration-200 ${isMinerDropdownOpen ? "rotate-180" : ""}`}
                       />
                     </button>
                     {isMinerDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl flex flex-col">
                         <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
                           <div className="relative">
-                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
+                            <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300" />
                             <input
                               type="text"
                               value={minerSearchQuery}
                               onChange={(e) => setMinerSearchQuery(e.target.value)}
                               placeholder="Search miners..."
-                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-400/70 focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1146,7 +1150,7 @@ export default function AgentRunSearch() {
                               setMinerSearchQuery("");
                               setIsMinerDropdownOpen(false);
                             }}
-                            className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2 text-left text-slate-100 transition-colors duration-200 hover:bg-purple-500/16 hover:text-white"
+                            className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
                           >
                             All Miners
                           </button>
@@ -1167,8 +1171,8 @@ export default function AgentRunSearch() {
                                 }}
                                 className={`w-full border-b border-slate-800/80 px-3 py-2 text-left transition-colors duration-200 last:border-b-0 ${
                                   selectedMinerUid === miner.uid
-                                    ? "bg-gradient-to-r from-purple-500/35 to-fuchsia-500/20 text-white"
-                                    : "bg-slate-950 text-slate-100 hover:bg-purple-500/16 hover:text-white"
+                                    ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white"
+                                    : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"
                                 }`}
                               >
                                 <span className="font-medium">{miner.name}</span>
@@ -1342,7 +1346,7 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedRuns.map((run) => {
               const validatorLabel = formatValidatorLabel(
                 run.validatorId,

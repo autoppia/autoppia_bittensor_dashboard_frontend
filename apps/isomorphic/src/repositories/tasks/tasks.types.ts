@@ -397,6 +397,10 @@ export interface TaskSearchParams {
   query?: string;
   website?: string;
   useCase?: string;
+  /** Season number for evaluations (rounds expressed as season/round) */
+  season?: number;
+  /** Round number within the selected season */
+  round?: number;
   status?: string;
   agentRunId?: string;
   minerUid?: number;

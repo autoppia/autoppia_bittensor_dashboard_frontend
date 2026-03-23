@@ -23,11 +23,12 @@ import {
   PiHashDuotone,
   PiRobotDuotone,
   PiCaretDownDuotone,
+  PiInfoDuotone,
   PiGlobeDuotone,
   PiCodeDuotone,
 } from "react-icons/pi";
 import { LuSearch } from "react-icons/lu";
-import { useSeasonRank } from "@/services/hooks/useAgents";
+import { useRoundsData, useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -112,6 +113,14 @@ function extractRoundNumber(value?: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function parseSeasonRound(r: unknown): { season: number; round: number } | null {
+  if (typeof r !== "string" || !r.includes("/")) return null;
+  const parts = r.split("/");
+  const season = Number.parseInt(parts[0], 10);
+  const round = Number.parseInt(parts[1], 10);
+  return Number.isFinite(season) && Number.isFinite(round) ? { season, round } : null;
+}
+
 function CopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = useState(false);
 
@@ -176,9 +185,13 @@ export default function TaskSearch() {
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<string>("");
   const [selectedUseCase, setSelectedUseCase] = useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedRound, setSelectedRound] = useState<number | undefined>();
   const [successMode, setSuccessMode] = useState<
     "all" | "successful" | "non_successful"
   >("all");
+  const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
+  const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
   const [isSuccessDropdownOpen, setIsSuccessDropdownOpen] = useState(false);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
@@ -197,9 +210,12 @@ export default function TaskSearch() {
   const websiteDropdownRef = useRef<HTMLDivElement>(null);
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
   const agentDropdownRef = useRef<HTMLDivElement>(null);
+  const seasonDropdownRef = useRef<HTMLDivElement>(null);
+  const roundDropdownRef = useRef<HTMLDivElement>(null);
   const successDropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: seasonRankData } = useSeasonRank("latest");
+  const { data: roundsData, loading: roundsLoading } = useRoundsData();
   const agentsList = useMemo(() => {
     const miners = seasonRankData?.miners ?? [];
     return miners.map((m) => ({ uid: m.uid, name: m.name }));
@@ -213,6 +229,36 @@ export default function TaskSearch() {
     );
   }, [agentsList, agentSearchQuery]);
 
+  const seasonOptions = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) return [];
+
+    const parsed = rounds
+      .map((r) => parseSeasonRound(r))
+      .filter((r): r is { season: number; round: number } => r !== null);
+
+    return Array.from(new Set(parsed.map((r) => r.season))).sort((a, b) => b - a);
+  }, [roundsData?.rounds]);
+
+  const roundOptions = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (selectedSeason === undefined) return [];
+
+    const parsed = rounds
+      .map((r) => parseSeasonRound(r))
+      .filter(
+        (r): r is { season: number; round: number } =>
+          r !== null && r.season === selectedSeason
+      )
+      .map((r) => r.round)
+      .sort((a, b) => b - a);
+
+    return parsed;
+  }, [roundsData?.rounds, selectedSeason]);
+
+  const isRoundInProgress =
+    selectedSeason !== undefined && !roundsLoading && roundOptions.length === 0;
+
   const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
   const debouncedFilters = useDebouncedValue(
     useMemo(
@@ -222,8 +268,18 @@ export default function TaskSearch() {
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
         successMode,
+          season: selectedSeason,
+          round: selectedRound,
       }),
-      [agentRunInput, selectedAgentUid, selectedWebsite, selectedUseCase, successMode]
+        [
+          agentRunInput,
+          selectedAgentUid,
+          selectedWebsite,
+          selectedUseCase,
+          successMode,
+          selectedSeason,
+          selectedRound,
+        ]
     ),
     400
   );
@@ -288,6 +344,8 @@ export default function TaskSearch() {
             website: debouncedFilters.website || undefined,
             useCase: debouncedFilters.useCase || undefined,
             successMode: debouncedFilters.successMode,
+            season: debouncedFilters.season ?? undefined,
+            round: debouncedFilters.round ?? undefined,
             page: currentPage,
             limit: currentLimit,
             includeDetails: false,
@@ -332,6 +390,8 @@ export default function TaskSearch() {
           website: debouncedFilters.website || undefined,
           useCase: debouncedFilters.useCase || undefined,
           successMode: debouncedFilters.successMode,
+          season: debouncedFilters.season ?? undefined,
+          round: debouncedFilters.round ?? undefined,
           page: currentPage,
           limit: currentLimit,
           includeDetails: false,
@@ -389,6 +449,18 @@ export default function TaskSearch() {
         setIsAgentDropdownOpen(false);
       }
       if (
+        seasonDropdownRef.current &&
+        !seasonDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSeasonDropdownOpen(false);
+      }
+      if (
+        roundDropdownRef.current &&
+        !roundDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRoundDropdownOpen(false);
+      }
+      if (
         successDropdownRef.current &&
         !successDropdownRef.current.contains(event.target as Node)
       ) {
@@ -400,6 +472,8 @@ export default function TaskSearch() {
       isWebsiteDropdownOpen ||
       isUseCaseDropdownOpen ||
       isAgentDropdownOpen ||
+      isSeasonDropdownOpen ||
+      isRoundDropdownOpen ||
       isSuccessDropdownOpen
     ) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -408,7 +482,14 @@ export default function TaskSearch() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen, isAgentDropdownOpen, isSuccessDropdownOpen]);
+  }, [
+    isWebsiteDropdownOpen,
+    isUseCaseDropdownOpen,
+    isAgentDropdownOpen,
+    isSeasonDropdownOpen,
+    isRoundDropdownOpen,
+    isSuccessDropdownOpen,
+  ]);
 
   useEffect(() => {
     const baseUseCases = selectedWebsite
@@ -455,10 +536,14 @@ export default function TaskSearch() {
     setIsAgentDropdownOpen(false);
     setSelectedWebsite("");
     setSelectedUseCase("");
+    setSelectedSeason(undefined);
+    setSelectedRound(undefined);
     setSuccessMode("all");
     setIsSuccessDropdownOpen(false);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
+    setIsSeasonDropdownOpen(false);
+    setIsRoundDropdownOpen(false);
     setHasSearched(false);
     setSearchError(null);
     setResults([]);
@@ -473,6 +558,8 @@ export default function TaskSearch() {
     searchTerm !== "" ||
     agentRunInput !== "" ||
     selectedAgentUid != null ||
+    selectedSeason !== undefined ||
+    selectedRound !== undefined ||
     selectedWebsite !== "" ||
     selectedUseCase !== "" ||
     successMode !== "all";
@@ -512,7 +599,7 @@ export default function TaskSearch() {
                   EVALUATION SEARCH
                 </h2>
                 <p className="text-cyan-300/90 text-xs mt-1">
-                  Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
+                  Search by Evaluation ID or prompt, then filter by Season, Round, Miner, Agent Run, Website, Use Case, and Outcome
                 </p>
               </div>
             </div>
@@ -540,6 +627,176 @@ export default function TaskSearch() {
             </div>
 
             <div className="flex w-full flex-wrap gap-2 items-end">
+              {/* Season Filter */}
+              <div
+                className="relative flex-1 min-w-[160px] max-w-[230px]"
+                ref={seasonDropdownRef}
+              >
+                <button
+                  id="task-search-season-button"
+                  type="button"
+                  onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
+                  className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-slate-700/60 bg-slate-950/55 px-3 py-2 text-left text-slate-100 transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/60 focus:ring-0"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex-shrink-0">
+                      <PiHashDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                    </span>
+                    <span className="truncate">
+                      {selectedSeason === undefined
+                        ? "All seasons"
+                        : `Season ${selectedSeason}`}
+                    </span>
+                  </div>
+                  <PiCaretDownDuotone
+                    className={`w-4 h-4 text-emerald-400 shrink-0 transition-transform duration-200 ${
+                      isSeasonDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isSeasonDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
+                    <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSeason(undefined);
+                          setSelectedRound(undefined);
+                          setIsSeasonDropdownOpen(false);
+                          setIsRoundDropdownOpen(false);
+                        }}
+                        className="w-full border-b border-slate-800/80 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
+                      >
+                        All Seasons
+                      </button>
+
+                      {roundsLoading && seasonOptions.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-sm text-slate-400">
+                          Loading seasons...
+                        </div>
+                      ) : seasonOptions.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-sm text-slate-400">
+                          No seasons available
+                        </div>
+                      ) : (
+                        seasonOptions.map((season) => (
+                          <button
+                            key={season}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSeason(season);
+                              setSelectedRound(undefined);
+                              setIsSeasonDropdownOpen(false);
+                              setIsRoundDropdownOpen(false);
+                            }}
+                            className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
+                              selectedSeason === season
+                                ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white"
+                                : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"
+                            }`}
+                          >
+                            <span className="font-medium">
+                              Season {season}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Round Filter */}
+              <div className="relative flex-1 min-w-[160px] max-w-[230px]">
+                <div className="relative" ref={roundDropdownRef}>
+                  <button
+                    id="task-search-round-button"
+                    type="button"
+                    aria-labelledby="task-search-round-label"
+                    onClick={() => {
+                      if (selectedSeason === undefined || isRoundInProgress)
+                        return;
+                      setIsRoundDropdownOpen(!isRoundDropdownOpen);
+                    }}
+                    disabled={selectedSeason === undefined || isRoundInProgress}
+                    className={`w-full min-h-[40px] px-3 py-2 bg-slate-950/55 border border-slate-700/60 rounded-xl text-slate-100 focus:ring-0 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:border-purple-400/60 ${
+                      selectedSeason === undefined || isRoundInProgress
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
+                    }`}
+                  >
+                    <span className="sr-only" id="task-search-round-label">
+                      ROUND
+                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                        <PiInfoDuotone className="w-3.5 h-3.5 text-purple-300" />
+                      </span>
+                      <span className="truncate">
+                        {selectedSeason === undefined
+                          ? "Round"
+                          : roundsLoading && roundOptions.length === 0
+                            ? "Loading rounds..."
+                            : isRoundInProgress
+                              ? "Round in progress"
+                              : selectedRound === undefined
+                                ? "All rounds"
+                                : `Round ${selectedRound}`}
+                      </span>
+                    </div>
+                    <PiCaretDownDuotone
+                      className={`w-4 h-4 text-purple-400 shrink-0 transition-transform duration-200 ${
+                        isRoundDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isRoundDropdownOpen && selectedSeason !== undefined && (
+                    <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
+                      <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRound(undefined);
+                            setIsRoundDropdownOpen(false);
+                          }}
+                          className="w-full border-b border-slate-800/80 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-purple-500/16 hover:text-white"
+                        >
+                          All Rounds
+                        </button>
+
+                        {roundOptions.length === 0 ? (
+                          <div className="px-3 py-4 text-center text-sm text-slate-400">
+                            Round in progress
+                          </div>
+                        ) : (
+                          roundOptions.map((round) => (
+                            <button
+                              key={round}
+                              type="button"
+                              onClick={() => {
+                                setSelectedRound(round);
+                                setIsRoundDropdownOpen(false);
+                              }}
+                              className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
+                                selectedRound === round
+                                  ? "bg-gradient-to-r from-purple-500/35 to-purple-400/20 text-white"
+                                  : "bg-slate-950 text-slate-100 hover:bg-purple-500/16 hover:text-white"
+                              }`}
+                            >
+                              <span className="font-medium">
+                                Round {round}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div
                 className="relative flex-1 min-w-[160px] max-w-[230px]"
                 ref={agentDropdownRef}
