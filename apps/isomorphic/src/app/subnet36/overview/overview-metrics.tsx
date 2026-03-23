@@ -283,14 +283,16 @@ export default function OverviewMetrics({
                 )}
                 {metric.chips?.length ? (
                   <div className="mt-3 flex flex-nowrap justify-center gap-1.5">
-                    {metric.chips.map((chip: string) => (
-                      <span
-                        key={chip}
-                        className="inline-flex items-center whitespace-nowrap rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/70"
-                      >
-                        {chip}
-                      </span>
-                    ))}
+                    {metric.chips
+                      .filter((chip): chip is string => chip != null && chip !== "")
+                      .map((chip) => (
+                        <span
+                          key={chip}
+                          className="inline-flex items-center whitespace-nowrap rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/70"
+                        >
+                          {chip}
+                        </span>
+                      ))}
                   </div>
                 ) : null}
               </div>
