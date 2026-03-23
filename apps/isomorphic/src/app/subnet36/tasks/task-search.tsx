@@ -26,7 +26,7 @@ import {
   PiCodeDuotone,
 } from "react-icons/pi";
 import { LuSearch } from "react-icons/lu";
-import { useSeasonRank } from "@/services/hooks/useAgents";
+import { useRoundsData, useSeasonRank } from "@/services/hooks/useAgents";
 
 const DEFAULT_LIMIT = 50;
 const LIMIT_OPTIONS = [25, 50, 100, 200];
@@ -111,6 +111,14 @@ function extractRoundNumber(value?: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function parseSeasonRound(r: unknown): { season: number; round: number } | null {
+  if (typeof r !== "string" || !r.includes("/")) return null;
+  const parts = r.split("/");
+  const season = Number.parseInt(parts[0], 10);
+  const round = Number.parseInt(parts[1], 10);
+  return Number.isFinite(season) && Number.isFinite(round) ? { season, round } : null;
+}
+
 function CopyButton({ text }: Readonly<{ text: string }>) {
   const [copied, setCopied] = useState(false);
 
@@ -168,6 +176,8 @@ function CopyButton({ text }: Readonly<{ text: string }>) {
 export default function TaskSearch() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedRound, setSelectedRound] = useState<number | undefined>();
   const [agentRunInput, setAgentRunInput] = useState<string>("");
   const [selectedAgentUid, setSelectedAgentUid] = useState<number | null>(null);
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
@@ -179,6 +189,8 @@ export default function TaskSearch() {
     "all" | "successful" | "non_successful"
   >("all");
   const [isSuccessDropdownOpen, setIsSuccessDropdownOpen] = useState(false);
+  const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
+  const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
   const [isWebsiteDropdownOpen, setIsWebsiteDropdownOpen] = useState(false);
   const [isUseCaseDropdownOpen, setIsUseCaseDropdownOpen] = useState(false);
   const [availableWebsites, setAvailableWebsites] =
@@ -197,7 +209,10 @@ export default function TaskSearch() {
   const useCaseDropdownRef = useRef<HTMLDivElement>(null);
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const successDropdownRef = useRef<HTMLDivElement>(null);
+  const seasonDropdownRef = useRef<HTMLDivElement>(null);
+  const roundDropdownRef = useRef<HTMLDivElement>(null);
 
+  const { data: roundsData, loading: roundsLoading } = useRoundsData();
   const { data: seasonRankData } = useSeasonRank("latest");
   const agentsList = useMemo(() => {
     const miners = seasonRankData?.miners ?? [];
@@ -212,28 +227,84 @@ export default function TaskSearch() {
     );
   }, [agentsList, agentSearchQuery]);
 
+  const seasonOptions = useMemo(() => {
+    const rounds = roundsData?.rounds ?? [];
+    if (rounds.length === 0) return [];
+    const parsed = rounds
+      .map((r) => parseSeasonRound(r))
+      .filter((r): r is { season: number; round: number } => r !== null);
+    return Array.from(new Set(parsed.map((r) => r.season))).sort((a, b) => b - a);
+  }, [roundsData?.rounds]);
+
+  const roundOptions = useMemo(() => {
+    if (selectedSeason === undefined) return [];
+    const rounds = roundsData?.rounds ?? [];
+    return rounds
+      .map((r) => parseSeasonRound(r))
+      .filter(
+        (r): r is { season: number; round: number } =>
+          r !== null && r.season === selectedSeason
+      )
+      .map((r) => r.round)
+      .sort((a, b) => b - a);
+  }, [roundsData?.rounds, selectedSeason]);
+
   const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), 400);
   const debouncedFilters = useDebouncedValue(
     useMemo(
       () => ({
+        season: selectedSeason,
+        round: selectedRound,
         agentRun: agentRunInput.trim(),
         selectedAgentUid,
         website: selectedWebsite.trim(),
         useCase: selectedUseCase.trim(),
         successMode,
       }),
-      [agentRunInput, selectedAgentUid, selectedWebsite, selectedUseCase, successMode]
+      [
+        selectedSeason,
+        selectedRound,
+        agentRunInput,
+        selectedAgentUid,
+        selectedWebsite,
+        selectedUseCase,
+        successMode,
+      ]
     ),
     400
   );
+
+  const filteredResults = useMemo(() => {
+    return results.filter((task) => {
+      const season = (task as any).season;
+      const roundNumber = (task as any).roundNumber;
+
+      if (
+        selectedSeason !== undefined &&
+        (!Number.isFinite(season) || season !== selectedSeason)
+      ) {
+        return false;
+      }
+
+      if (
+        selectedRound !== undefined &&
+        (!Number.isFinite(roundNumber) || roundNumber !== selectedRound)
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [results, selectedSeason, selectedRound]);
 
   // Pagination calculations
   const totalPages = Math.max(1, Math.ceil(total / currentLimit));
 
   const startIndex =
-    results.length === 0 ? 0 : (currentPage - 1) * currentLimit + 1;
+    filteredResults.length === 0 ? 0 : (currentPage - 1) * currentLimit + 1;
 
-  const endIndex = results.length === 0 ? 0 : startIndex + results.length - 1;
+  const endIndex =
+    filteredResults.length === 0 ? 0 : startIndex + filteredResults.length - 1;
 
   const canGoPrev = currentPage > 1;
   const canGoNext = currentPage < totalPages;
@@ -244,7 +315,7 @@ export default function TaskSearch() {
     return Array.from(options).sort((a, b) => a - b);
   }, [currentLimit]);
 
-  const headerCount = total || results.length;
+  const headerCount = filteredResults.length;
 
   const applyFacetsToAvailability = (
     facets: { websites: { name: string }[]; useCases: { name: string }[] }
@@ -281,6 +352,10 @@ export default function TaskSearch() {
         try {
           const response = await tasksRepository.searchTasks({
             query: debouncedSearchTerm,
+            startDate:
+              debouncedFilters.season !== undefined && debouncedFilters.round !== undefined
+                ? undefined
+                : undefined,
             agentRunId: debouncedFilters.agentRun || undefined,
             minerUid: debouncedFilters.selectedAgentUid ?? undefined,
             website: debouncedFilters.website || undefined,
@@ -392,13 +467,27 @@ export default function TaskSearch() {
       ) {
         setIsSuccessDropdownOpen(false);
       }
+      if (
+        seasonDropdownRef.current &&
+        !seasonDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSeasonDropdownOpen(false);
+      }
+      if (
+        roundDropdownRef.current &&
+        !roundDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRoundDropdownOpen(false);
+      }
     };
 
     if (
       isWebsiteDropdownOpen ||
       isUseCaseDropdownOpen ||
       isAgentDropdownOpen ||
-      isSuccessDropdownOpen
+      isSuccessDropdownOpen ||
+      isSeasonDropdownOpen ||
+      isRoundDropdownOpen
     ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
@@ -406,7 +495,14 @@ export default function TaskSearch() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isWebsiteDropdownOpen, isUseCaseDropdownOpen, isAgentDropdownOpen, isSuccessDropdownOpen]);
+  }, [
+    isWebsiteDropdownOpen,
+    isUseCaseDropdownOpen,
+    isAgentDropdownOpen,
+    isSuccessDropdownOpen,
+    isSeasonDropdownOpen,
+    isRoundDropdownOpen,
+  ]);
 
   useEffect(() => {
     const baseUseCases = selectedWebsite
@@ -446,6 +542,8 @@ export default function TaskSearch() {
 
   const clearFilters = () => {
     setSearchTerm("");
+    setSelectedSeason(undefined);
+    setSelectedRound(undefined);
     setAgentRunInput("");
     setSelectedAgentUid(null);
     setSelectedAgentName("");
@@ -455,6 +553,8 @@ export default function TaskSearch() {
     setSelectedUseCase("");
     setSuccessMode("all");
     setIsSuccessDropdownOpen(false);
+    setIsSeasonDropdownOpen(false);
+    setIsRoundDropdownOpen(false);
     setIsWebsiteDropdownOpen(false);
     setIsUseCaseDropdownOpen(false);
     setHasSearched(false);
@@ -468,7 +568,8 @@ export default function TaskSearch() {
   };
 
   const hasActiveFilters =
-    searchTerm !== "" ||
+    selectedSeason !== undefined ||
+    selectedRound !== undefined ||
     agentRunInput !== "" ||
     selectedAgentUid != null ||
     selectedWebsite !== "" ||
@@ -494,316 +595,413 @@ export default function TaskSearch() {
   );
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto h-full py-8 px-4">
-      <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50 max-w-[1024px] mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+    <div className="w-full max-w-[1440px] mx-auto h-full py-8 px-4">
+      <div className="group relative mx-auto max-w-[1280px] overflow-visible rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(125deg,rgba(7,26,31,0.96)_0%,rgba(15,35,60,0.92)_52%,rgba(39,17,55,0.9)_100%)] shadow-[0_24px_90px_rgba(3,8,20,0.45)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-300/35 z-50">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.12),transparent_24%),radial-gradient(circle_at_78%_18%,rgba(59,130,246,0.14),transparent_26%),radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.12),transparent_30%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
 
-        <div className="relative p-6 overflow-visible">
-          <div className="text-center mb-6">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+        <div className="relative overflow-visible p-6 md:p-8">
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-600 shadow-[0_16px_30px_rgba(14,165,233,0.28)]">
+              <PiMagnifyingGlassDuotone className="h-8 w-8 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="mb-2 text-[2rem] font-black tracking-[0.04em] text-white">
                 EVALUATION SEARCH
               </h2>
+              <p className="text-sm leading-6 text-cyan-100/78">
+                Search by evaluation ID or prompt, then narrow results by season, round, miner, agent run, website, use case, and success.
+              </p>
             </div>
-            <p className="text-cyan-300 text-sm">
-              Search by Evaluation ID or prompt, then filter by Miner, Agent Run, Website, Use Case, and Outcome
-            </p>
           </div>
 
           <div className="mb-6">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200/88">
+              EVALUATION QUERY
+            </label>
             <div className="relative">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter Evaluation ID or Prompt (e.g., 3413)"
-                className="w-full px-4 py-3 placeholder:text-sm bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                placeholder="Evaluation ID or prompt"
+                className="min-h-[58px] w-full rounded-2xl border border-cyan-400/28 bg-cyan-500/10 px-5 py-3 pr-12 text-base text-cyan-50 outline-none backdrop-blur-md transition-all duration-300 placeholder:text-cyan-100/35 focus:border-cyan-300/55 focus:bg-cyan-500/14"
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <PiHashDuotone className="w-5 h-5 text-cyan-400" />
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <PiHashDuotone className="h-5 w-5 text-cyan-300/90" />
               </div>
             </div>
           </div>
 
-          <div className="mb-6 overflow-visible z-100">
-            <div className="flex items-center gap-2 mb-4">
-              <PiFunnelDuotone className="w-5 h-5 text-purple-300" />
-              <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 xl:gap-5 overflow-visible items-end">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-emerald-300 block" htmlFor="task-search-agent-button">
-                  MINER
-                </label>
-                <div className="relative" ref={agentDropdownRef}>
-                  <button
-                    id="task-search-agent-button"
-                    type="button"
-                    onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
-                    className="flex min-h-[46px] w-full items-center justify-between rounded-xl border-2 border-emerald-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-400/70 focus:ring-0"
-                  >
-                    <span className="truncate">
-                      {selectedAgentUid != null && selectedAgentName
-                        ? `${selectedAgentName} (${selectedAgentUid})`
-                        : "All Miners"}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-emerald-400 shrink-0 ml-2 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {isAgentDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] z-50 max-h-72 flex flex-col backdrop-blur-xl">
-                      <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
-                        <div className="relative">
-                          <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300" />
-                          <input
-                            type="text"
-                            value={agentSearchQuery}
-                            onChange={(e) => setAgentSearchQuery(e.target.value)}
-                            placeholder="Search agents..."
-                            className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-400/70 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedAgentUid(null);
-                            setSelectedAgentName("");
-                            setIsAgentDropdownOpen(false);
-                            setAgentSearchQuery("");
-                          }}
-                          className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
-                        >
-                          All Miners
-                        </button>
-                        {filteredAgentsForDropdown.length === 0 ? (
-                          <div className="px-3 py-4 text-center text-sm text-slate-400">
-                            No miners match your search
-                          </div>
-                        ) : (
-                          filteredAgentsForDropdown.map((agent) => (
-                            <button
-                              key={agent.uid}
-                              type="button"
-                              onClick={() => {
-                                setSelectedAgentUid(agent.uid);
-                                setSelectedAgentName(agent.name);
-                                setIsAgentDropdownOpen(false);
-                                setAgentSearchQuery("");
-                              }}
-                              className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
-                                selectedAgentUid === agent.uid
-                                  ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white"
-                                  : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"
-                              }`}
-                            >
-                              <span className="font-medium">{agent.name}</span>
-                              <span className="ml-1 text-xs text-slate-400">(UID {agent.uid})</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
+          <div className="mb-6 overflow-visible">
+            <div className="rounded-[24px] border border-white/8 bg-slate-950/18 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-md md:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-purple-300/20 bg-purple-500/10">
+                  <PiFunnelDuotone className="h-4 w-4 text-purple-200" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-100">
+                    Filters
+                  </h3>
+                  <p className="text-xs text-slate-300/55">
+                    Refine the local result set without changing the main query.
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="task-search-agent-run" className="text-sm font-medium text-emerald-300">
-                  AGENT RUN
-                </label>
-                <div className="relative">
-                  <input
-                    id="task-search-agent-run"
-                    type="text"
-                    value={agentRunInput}
-                    onChange={(e) => setAgentRunInput(e.target.value)}
-                    placeholder="Run UID (optional)"
-                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 text-sm placeholder-gray-400 focus:border-emerald-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <PiRobotDuotone className="w-4 h-4 text-emerald-400" />
+              <div className="grid grid-cols-1 items-end gap-4 overflow-visible md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90" htmlFor="task-search-season-button">
+                    SEASON
+                  </label>
+                  <div className="relative" ref={seasonDropdownRef}>
+                    <button
+                      id="task-search-season-button"
+                      type="button"
+                      onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-3 text-left text-emerald-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    >
+                      <span>
+                        {roundsLoading && seasonOptions.length === 0 && "Loading seasons..."}
+                        {!roundsLoading && selectedSeason === undefined && "All Seasons"}
+                        {!roundsLoading && selectedSeason !== undefined && `Season ${selectedSeason}`}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`h-4 w-4 text-emerald-400 transition-transform duration-200 ${isSeasonDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isSeasonDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-emerald-300/25 bg-[linear-gradient(180deg,rgba(7,16,28,0.98),rgba(10,20,34,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeason(undefined);
+                            setSelectedRound(undefined);
+                            setIsSeasonDropdownOpen(false);
+                          }}
+                          className="w-full border-b border-emerald-400/10 bg-transparent px-3 py-2.5 text-left text-emerald-200 transition-colors duration-200 hover:bg-emerald-500/12 hover:text-emerald-100"
+                        >
+                          All Seasons
+                        </button>
+                        {seasonOptions.map((season) => (
+                          <button
+                            key={season}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSeason(season);
+                              setSelectedRound(undefined);
+                              setIsSeasonDropdownOpen(false);
+                            }}
+                            className="w-full border-b border-emerald-400/10 bg-transparent px-3 py-2.5 text-left text-emerald-200 transition-colors duration-200 last:border-b-0 hover:bg-emerald-500/12 hover:text-emerald-100"
+                          >
+                            Season {season}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-blue-300 block" htmlFor="task-search-website-button">
-                  WEBSITE
-                </label>
-                <div className="relative" ref={websiteDropdownRef}>
-                  <button
-                    id="task-search-website-button"
-                    type="button"
-                    onClick={() =>
-                      setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)
-                    }
-                    className="w-full min-h-[46px] px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
-                  >
-                    <span>
-                      {selectedWebsite === ""
-                        ? "All Websites"
-                        : formatLabel(selectedWebsite)}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {isWebsiteDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-blue-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedWebsite("");
-                          setIsWebsiteDropdownOpen(false);
-                        }}
-                        className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10"
-                      >
-                        All Websites
-                      </button>
-                      {formattedWebsites.map((website) => (
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-purple-200/90" htmlFor="task-search-round-button">
+                    ROUND
+                  </label>
+                  <div className="relative" ref={roundDropdownRef}>
+                    <button
+                      id="task-search-round-button"
+                      type="button"
+                      onClick={() => {
+                        if (selectedSeason === undefined) return;
+                        setIsRoundDropdownOpen(!isRoundDropdownOpen);
+                      }}
+                      disabled={selectedSeason === undefined}
+                      className={`flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-purple-400/25 bg-purple-500/12 px-4 py-3 text-left text-purple-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0 ${selectedSeason === undefined ? "cursor-not-allowed opacity-50" : ""}`}
+                    >
+                      <span>
+                        {selectedSeason === undefined && "Select season first"}
+                        {selectedSeason !== undefined && selectedRound === undefined && "All Rounds"}
+                        {selectedSeason !== undefined && selectedRound !== undefined && `Round ${selectedRound}`}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`h-4 w-4 text-purple-400 transition-transform duration-200 ${isRoundDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isRoundDropdownOpen && selectedSeason !== undefined && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(12,15,34,0.985),rgba(18,19,42,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
                         <button
-                          key={website.value}
                           type="button"
                           onClick={() => {
-                            setSelectedWebsite(website.value);
+                            setSelectedRound(undefined);
+                            setIsRoundDropdownOpen(false);
+                          }}
+                          className="w-full border-b border-purple-400/10 bg-transparent px-3 py-2.5 text-left text-purple-200 transition-colors duration-200 hover:bg-purple-500/12 hover:text-purple-100"
+                        >
+                          All Rounds
+                        </button>
+                        {roundOptions.map((round) => (
+                          <button
+                            key={round}
+                            type="button"
+                            onClick={() => {
+                              setSelectedRound(round);
+                              setIsRoundDropdownOpen(false);
+                            }}
+                            className="w-full border-b border-purple-400/10 bg-transparent px-3 py-2.5 text-left text-purple-200 transition-colors duration-200 last:border-b-0 hover:bg-purple-500/12 hover:text-purple-100"
+                          >
+                            Round {round}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90" htmlFor="task-search-agent-button">
+                    MINER
+                  </label>
+                  <div className="relative" ref={agentDropdownRef}>
+                    <button
+                      id="task-search-agent-button"
+                      type="button"
+                      onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-emerald-400/25 bg-slate-950/60 px-4 py-3 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-emerald-300/45 focus:ring-0"
+                    >
+                      <span className="truncate">
+                        {selectedAgentUid != null && selectedAgentName
+                          ? `${selectedAgentName} (${selectedAgentUid})`
+                          : "All Miners"}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`ml-2 h-4 w-4 shrink-0 text-emerald-400 transition-transform duration-200 ${isAgentDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isAgentDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 flex max-h-72 flex-col overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                        <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
+                          <div className="relative">
+                            <LuSearch className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-300" />
+                            <input
+                              type="text"
+                              value={agentSearchQuery}
+                              onChange={(e) => setAgentSearchQuery(e.target.value)}
+                              placeholder="Search agents..."
+                              className="w-full rounded-lg border border-slate-700/80 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-400/70 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedAgentUid(null);
+                              setSelectedAgentName("");
+                              setIsAgentDropdownOpen(false);
+                              setAgentSearchQuery("");
+                            }}
+                            className="w-full border-b border-slate-800/80 bg-slate-950 px-3 py-2.5 text-left text-slate-100 transition-colors duration-200 hover:bg-emerald-500/16 hover:text-white"
+                          >
+                            All Miners
+                          </button>
+                          {filteredAgentsForDropdown.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-sm text-slate-400">
+                              No miners match your search
+                            </div>
+                          ) : (
+                            filteredAgentsForDropdown.map((agent) => (
+                              <button
+                                key={agent.uid}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAgentUid(agent.uid);
+                                  setSelectedAgentName(agent.name);
+                                  setIsAgentDropdownOpen(false);
+                                  setAgentSearchQuery("");
+                                }}
+                                className={`w-full border-b border-slate-800/80 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${selectedAgentUid === agent.uid ? "bg-gradient-to-r from-emerald-500/35 to-emerald-400/20 text-white" : "bg-slate-950 text-slate-100 hover:bg-emerald-500/16 hover:text-white"}`}
+                              >
+                                <span className="font-medium">{agent.name}</span>
+                                <span className="ml-1 text-xs text-slate-400">(UID {agent.uid})</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="task-search-agent-run" className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200/90">
+                    AGENT RUN
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="task-search-agent-run"
+                      type="text"
+                      value={agentRunInput}
+                      onChange={(e) => setAgentRunInput(e.target.value)}
+                      placeholder="Run UID"
+                      className="min-h-[52px] w-full rounded-2xl border border-cyan-400/25 bg-slate-950/60 px-4 py-3 pr-11 text-sm text-cyan-50 outline-none backdrop-blur-md transition-all duration-300 placeholder:text-cyan-100/35 focus:border-cyan-300/50 focus:ring-0"
+                    />
+                    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                      <PiRobotDuotone className="h-4 w-4 text-cyan-300/90" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200/90" htmlFor="task-search-website-button">
+                    WEBSITE
+                  </label>
+                  <div className="relative" ref={websiteDropdownRef}>
+                    <button
+                      id="task-search-website-button"
+                      type="button"
+                      onClick={() => setIsWebsiteDropdownOpen(!isWebsiteDropdownOpen)}
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-blue-400/25 bg-blue-500/12 px-4 py-3 text-left text-blue-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    >
+                      <span>
+                        {selectedWebsite === "" ? "All Websites" : formatLabel(selectedWebsite)}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`h-4 w-4 text-blue-400 transition-transform duration-200 ${isWebsiteDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isWebsiteDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-blue-300/25 bg-[linear-gradient(180deg,rgba(8,18,34,0.985),rgba(11,24,40,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedWebsite("");
                             setIsWebsiteDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2.5 text-left text-blue-200 bg-transparent hover:bg-blue-500/12 hover:text-blue-100 transition-colors duration-200 border-b border-blue-400/10 last:border-b-0"
+                          className="w-full border-b border-blue-400/10 bg-transparent px-3 py-2.5 text-left text-blue-200 transition-colors duration-200 hover:bg-blue-500/12 hover:text-blue-100"
                         >
-                          {website.label}
+                          All Websites
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        {formattedWebsites.map((website) => (
+                          <button
+                            key={website.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedWebsite(website.value);
+                              setIsWebsiteDropdownOpen(false);
+                            }}
+                            className="w-full border-b border-blue-400/10 bg-transparent px-3 py-2.5 text-left text-blue-200 transition-colors duration-200 last:border-b-0 hover:bg-blue-500/12 hover:text-blue-100"
+                          >
+                            {website.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-300 block" htmlFor="task-search-use-case-button">
-                  USE CASE
-                </label>
-                <div className="relative" ref={useCaseDropdownRef}>
-                  <button
-                    id="task-search-use-case-button"
-                    type="button"
-                    onClick={() =>
-                      setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)
-                    }
-                    className="w-full min-h-[46px] px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
-                  >
-                    <span>
-                      {selectedUseCase === ""
-                        ? "All Use Cases"
-                        : formatLabel(selectedUseCase)}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-purple-400 transition-transform duration-200 ${isUseCaseDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {isUseCaseDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-purple-400/25 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-xl z-50 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedUseCase("");
-                          setIsUseCaseDropdownOpen(false);
-                        }}
-                        className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10"
-                      >
-                        All Use Cases
-                      </button>
-                      {formattedUseCases.map((useCase) => (
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-purple-200/90" htmlFor="task-search-use-case-button">
+                    USE CASE
+                  </label>
+                  <div className="relative" ref={useCaseDropdownRef}>
+                    <button
+                      id="task-search-use-case-button"
+                      type="button"
+                      onClick={() => setIsUseCaseDropdownOpen(!isUseCaseDropdownOpen)}
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-purple-400/25 bg-purple-500/12 px-4 py-3 text-left text-purple-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    >
+                      <span>
+                        {selectedUseCase === "" ? "All Use Cases" : formatLabel(selectedUseCase)}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`h-4 w-4 text-purple-400 transition-transform duration-200 ${isUseCaseDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isUseCaseDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(14,13,34,0.985),rgba(21,18,45,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
                         <button
-                          key={useCase.value}
                           type="button"
                           onClick={() => {
-                            setSelectedUseCase(useCase.value);
+                            setSelectedUseCase("");
                             setIsUseCaseDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2.5 text-left text-purple-200 bg-transparent hover:bg-purple-500/12 hover:text-purple-100 transition-colors duration-200 border-b border-purple-400/10 last:border-b-0"
+                          className="w-full border-b border-purple-400/10 bg-transparent px-3 py-2.5 text-left text-purple-200 transition-colors duration-200 hover:bg-purple-500/12 hover:text-purple-100"
                         >
-                          {useCase.label}
+                          All Use Cases
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        {formattedUseCases.map((useCase) => (
+                          <button
+                            key={useCase.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedUseCase(useCase.value);
+                              setIsUseCaseDropdownOpen(false);
+                            }}
+                            className="w-full border-b border-purple-400/10 bg-transparent px-3 py-2.5 text-left text-purple-200 transition-colors duration-200 last:border-b-0 hover:bg-purple-500/12 hover:text-purple-100"
+                          >
+                            {useCase.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-emerald-300" htmlFor="task-search-success-button">
-                  SUCCESS
-                </label>
-                <div className="relative" ref={successDropdownRef}>
-                  <button
-                    id="task-search-success-button"
-                    type="button"
-                    onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
-                    className="w-full min-h-[46px] px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
-                  >
-                    <span>
-                      {successMode === "all" && "All Tasks"}
-                      {successMode === "successful" && "Successful Tasks"}
-                      {successMode === "non_successful" && "Non Successful Tasks"}
-                    </span>
-                    <PiCaretDownDuotone
-                      className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {isSuccessDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-emerald-400/25 rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 backdrop-blur-xl">
-                      {[
-                        { value: "all", label: "All Tasks" },
-                        { value: "successful", label: "Successful Tasks" },
-                        { value: "non_successful", label: "Non Successful Tasks" },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            setSuccessMode(
-                              option.value as "all" | "successful" | "non_successful"
-                            );
-                            setIsSuccessDropdownOpen(false);
-                          }}
-                          className={`w-full px-3 py-2.5 text-left transition-colors duration-200 border-b border-emerald-400/10 last:border-b-0 ${
-                            successMode === option.value
-                              ? "bg-emerald-500/18 text-emerald-50"
-                              : "text-emerald-200 bg-transparent hover:bg-emerald-500/12 hover:text-emerald-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90" htmlFor="task-search-success-button">
+                    SUCCESS
+                  </label>
+                  <div className="relative" ref={successDropdownRef}>
+                    <button
+                      id="task-search-success-button"
+                      type="button"
+                      onClick={() => setIsSuccessDropdownOpen(!isSuccessDropdownOpen)}
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-3 text-left text-emerald-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
+                    >
+                      <span>
+                        {successMode === "all" && "All Tasks"}
+                        {successMode === "successful" && "Successful Tasks"}
+                        {successMode === "non_successful" && "Non Successful Tasks"}
+                      </span>
+                      <PiCaretDownDuotone
+                        className={`h-4 w-4 text-emerald-400 transition-transform duration-200 ${isSuccessDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isSuccessDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-emerald-300/25 bg-[linear-gradient(180deg,rgba(8,18,24,0.985),rgba(10,24,26,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
+                        {[
+                          { value: "all", label: "All Tasks" },
+                          { value: "successful", label: "Successful Tasks" },
+                          { value: "non_successful", label: "Non Successful Tasks" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setSuccessMode(option.value as "all" | "successful" | "non_successful");
+                              setIsSuccessDropdownOpen(false);
+                            }}
+                            className={`w-full border-b border-emerald-400/10 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${successMode === option.value ? "bg-emerald-500/18 text-emerald-50" : "bg-transparent text-emerald-200 hover:bg-emerald-500/12 hover:text-emerald-100"}`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="block h-[15px]" aria-hidden="true" />
+                <button
+                  onClick={clearFilters}
+                  disabled={!hasActiveFilters}
+                  className={`inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold tracking-[0.04em] transition-all duration-300 whitespace-nowrap ${hasActiveFilters ? "border border-orange-300/30 bg-[linear-gradient(135deg,rgba(239,68,68,0.82),rgba(249,115,22,0.78))] text-white shadow-[0_12px_28px_rgba(239,68,68,0.24)] hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(249,115,22,0.28)]" : "cursor-not-allowed border border-white/10 bg-white/6 text-slate-400"}`}
+                >
+                  CLEAR FILTERS
+                </button>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="flex gap-4 flex-col sm:flex-row items-center justify-center z-50">
-            <button
-              onClick={clearFilters}
-              disabled={!hasActiveFilters && !hasSearched}
-              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-md ${
-                hasActiveFilters || hasSearched
-                  ? "bg-gradient-to-r from-red-500/60 to-orange-500/60 border-2 border-red-500/60 text-white hover:from-red-500 hover:to-orange-500 hover:border-red-500 cursor-pointer"
-                  : "bg-gray-500/30 border-2 border-gray-500/30 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              CLEAR FILTERS
-            </button>
           </div>
         </div>
       </div>
@@ -825,7 +1023,7 @@ export default function TaskSearch() {
         </div>
       )}
 
-      {hasSearched && !isSearching && results.length > 0 && (
+      {hasSearched && !isSearching && filteredResults.length > 0 && (
         <div className="mt-6 relative z-0">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
@@ -834,13 +1032,13 @@ export default function TaskSearch() {
             </h3>
             <p className="text-purple-200/80 text-sm">
               {`Showing ${startIndex}-${endIndex} of ${Number(
-                total ?? results.length
+                filteredResults.length
               ).toLocaleString()} results`}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {results.map((task) => {
+            {filteredResults.map((task) => {
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
 
@@ -1114,7 +1312,7 @@ export default function TaskSearch() {
             })}
           </div>
 
-          {results.length > 0 && (
+          {filteredResults.length > 0 && (
             <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-sky-200 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
                 <label
@@ -1186,7 +1384,7 @@ export default function TaskSearch() {
         </div>
       )}
 
-      {hasSearched && !isSearching && results.length === 0 && !searchError && (
+      {hasSearched && !isSearching && filteredResults.length === 0 && !searchError && (
         <div className="mt-6 text-center relative z-0">
           <div className="relative bg-gradient-to-br from-purple-500/5 via-indigo-500/5 to-purple-600/5 border-2 border-purple-500/40 hover:border-purple-400/60 rounded-2xl p-6 shadow-lg backdrop-blur-md transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-indigo-900/10"></div>

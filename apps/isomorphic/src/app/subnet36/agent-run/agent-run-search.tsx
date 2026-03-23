@@ -191,6 +191,7 @@ export default function AgentRunSearch() {
   const [selectedValidator, setSelectedValidator] = useState<string>("");
   const [selectedMinerUid, setSelectedMinerUid] = useState<number | null>(null);
   const [selectedMinerName, setSelectedMinerName] = useState<string>("");
+  const [successOnly, setSuccessOnly] = useState(false);
   const [minerSearchQuery, setMinerSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [isValidatorDropdownOpen, setIsValidatorDropdownOpen] = useState(false);
@@ -464,10 +465,16 @@ export default function AgentRunSearch() {
       return Number.isNaN(parsed) ? 0 : parsed;
     };
 
-    return [...activeRuns].sort(
+    const sortedRuns = [...activeRuns].sort(
       (a, b) => getTime(b.startTime) - getTime(a.startTime)
     );
-  }, [activeRuns]);
+
+    if (!successOnly) {
+      return sortedRuns;
+    }
+
+    return sortedRuns.filter((run) => (run.overallReward ?? 0) > 0);
+  }, [activeRuns, successOnly]);
 
   const totalPages = isManualSearchActive
     ? 1
@@ -496,9 +503,10 @@ export default function AgentRunSearch() {
     return Array.from(options).sort((a, b) => a - b);
   }, [limitValue]);
 
-  const headerCount = isManualSearchActive
-    ? displayedRuns.length
-    : total || displayedRuns.length;
+  const headerCount =
+    successOnly || isManualSearchActive
+      ? displayedRuns.length
+      : total || displayedRuns.length;
 
   const effectiveLoading =
     manualLoading || (isManualSearchActive === false && isLoading);
@@ -734,6 +742,7 @@ export default function AgentRunSearch() {
     setSelectedValidator("");
     setSelectedMinerUid(null);
     setSelectedMinerName("");
+    setSuccessOnly(false);
     setMinerSearchQuery("");
     setIsValidatorDropdownOpen(false);
     setIsSeasonDropdownOpen(false);
@@ -754,7 +763,8 @@ export default function AgentRunSearch() {
     selectedSeason !== undefined ||
     selectedRound !== undefined ||
     selectedValidator !== "" ||
-    selectedMinerUid !== null;
+    selectedMinerUid !== null ||
+    successOnly;
 
   const handlePageChange = (nextPage: number) => {
     if (
@@ -800,56 +810,65 @@ export default function AgentRunSearch() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto h-full py-8 px-4">
-      <div className="w-full max-w-[1024px] mx-auto">
-        {/* Main Search Card */}
-        <div className="group relative bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border-2 border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 backdrop-blur-md z-50">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-purple-900/5"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]"></div>
+    <div className="w-full max-w-[1440px] mx-auto h-full py-8 px-4">
+      <div className="group relative mx-auto max-w-[1280px] overflow-visible rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(125deg,rgba(7,26,31,0.96)_0%,rgba(15,35,60,0.92)_52%,rgba(39,17,55,0.9)_100%)] shadow-[0_24px_90px_rgba(3,8,20,0.45)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-300/35 z-50">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.12),transparent_24%),radial-gradient(circle_at_78%_18%,rgba(59,130,246,0.14),transparent_26%),radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.12),transparent_30%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
 
-          <div className="relative p-6 overflow-visible">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  <PiMagnifyingGlassDuotone className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
-                </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                  AGENT RUN SEARCH
-                </h2>
-              </div>
-              <p className="text-cyan-300 text-sm">
-                Search by Run UID or filter by Round, Validator, and Agent
+        <div className="relative overflow-visible p-6 md:p-8">
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-600 shadow-[0_16px_30px_rgba(14,165,233,0.28)]">
+              <PiMagnifyingGlassDuotone className="h-8 w-8 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="mb-2 text-[2rem] font-black tracking-[0.04em] text-white">
+                AGENT RUN SEARCH
+              </h2>
+              <p className="text-sm leading-6 text-cyan-100/78">
+                Find a run by UID or narrow the list with season, round, validator, miner, and success filters.
               </p>
             </div>
+          </div>
 
-            {/* Search Input */}
-            <div className="mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Enter Run UID (e.g., round_020_42_005)"
-                  className="w-full px-4 py-3 bg-cyan-500/20 border-2 border-cyan-500/20 rounded-xl text-cyan-300 placeholder-gray-400 focus:border-cyan-500 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <PiHashDuotone className="w-5 h-5 text-cyan-400" />
-                </div>
+          <div className="mb-6">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200/88">
+              RUN UID
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Run UID"
+                className="min-h-[58px] w-full rounded-2xl border border-cyan-400/28 bg-cyan-500/10 px-5 py-3 pr-12 text-base text-cyan-50 outline-none backdrop-blur-md transition-all duration-300 placeholder:text-cyan-100/35 focus:border-cyan-300/55 focus:bg-cyan-500/14"
+              />
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <PiHashDuotone className="h-5 w-5 text-cyan-300/90" />
               </div>
             </div>
+            <p className="mt-2 text-xs text-slate-400">
+              Exact lookup only. Leave empty to browse runs with filters.
+            </p>
+          </div>
 
-            {/* Filter Section */}
-            <div className="mb-6 overflow-visible">
-              <div className="flex items-center gap-2 mb-4">
-                <PiFunnelDuotone className="w-5 h-5 text-purple-300" />
-                <h3 className="text-sm font-medium text-purple-300">FILTERS</h3>
+          <div className="mb-6 overflow-visible">
+            <div className="rounded-[24px] border border-white/8 bg-slate-950/18 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-md md:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-purple-300/20 bg-purple-500/10">
+                  <PiFunnelDuotone className="h-4 w-4 text-purple-200" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-100">Filters</h3>
+                  <p className="text-xs text-slate-300/55">
+                    Refine the run list without changing the main query.
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-visible">
+              <div className="grid grid-cols-1 gap-4 overflow-visible md:grid-cols-2 xl:grid-cols-6 xl:gap-4">
                 {/* Season Filter */}
-                <div className="space-y-2">
-                  <label id="filter-season-label" htmlFor="filter-season-btn" className="text-sm font-medium text-emerald-300">
+                <div className="space-y-2 xl:col-span-1">
+                  <label id="filter-season-label" htmlFor="filter-season-btn" className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">
                     SEASON
                   </label>
                   <div className="relative" ref={seasonDropdownRef}>
@@ -860,7 +879,7 @@ export default function AgentRunSearch() {
                       onClick={() => {
                         setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
                       }}
-                      className="w-full px-3 py-2 bg-emerald-500/20 border-2 border-emerald-500/20 rounded-xl text-emerald-300 focus:border-emerald-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-3 text-left text-emerald-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                     >
                       <span>
                         {roundsLoading && seasonOptions.length === 0 && "Loading seasons..."}
@@ -875,7 +894,7 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isSeasonDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-emerald-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-emerald-300/25 bg-[linear-gradient(180deg,rgba(7,16,28,0.98),rgba(10,20,34,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
                         <button
                           type="button"
                           onClick={() => {
@@ -883,7 +902,7 @@ export default function AgentRunSearch() {
                             setSelectedRound(undefined);
                             setIsSeasonDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors duration-200 border-b border-emerald-500/20"
+                          className="w-full border-b border-emerald-400/10 bg-transparent px-3 py-2.5 text-left text-emerald-200 transition-colors duration-200 hover:bg-emerald-500/12 hover:text-emerald-100"
                         >
                           All Seasons
                         </button>
@@ -899,10 +918,10 @@ export default function AgentRunSearch() {
                                   setSelectedRound(undefined); // Reset round when season changes
                                   setIsSeasonDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-emerald-500/20 last:border-b-0 ${
+                                className={`w-full border-b border-emerald-400/10 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
                                   isActive
-                                    ? "bg-emerald-500/30 text-emerald-100"
-                                    : "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                                    ? "bg-emerald-500/20 text-emerald-50"
+                                    : "bg-transparent text-emerald-200 hover:bg-emerald-500/12 hover:text-emerald-100"
                                 }`}
                               >
                                 Season {season}
@@ -920,8 +939,8 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Round Filter */}
-                <div className="space-y-2">
-                  <label id="filter-round-label" htmlFor="filter-round-btn" className="text-sm font-medium text-purple-300">
+                <div className="space-y-2 xl:col-span-1">
+                  <label id="filter-round-label" htmlFor="filter-round-btn" className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-purple-200/90">
                     ROUND
                   </label>
                   <div className="relative" ref={roundDropdownRef}>
@@ -936,7 +955,7 @@ export default function AgentRunSearch() {
                         setIsRoundDropdownOpen(!isRoundDropdownOpen);
                       }}
                       disabled={selectedSeason === undefined || isRoundInProgress}
-                      className={`w-full px-3 py-2 bg-purple-500/20 border-2 border-purple-500/20 rounded-xl text-purple-300 focus:border-purple-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0 ${
+                      className={`flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-purple-400/25 bg-purple-500/12 px-4 py-3 text-left text-purple-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0 ${
                         selectedSeason === undefined || isRoundInProgress
                           ? "opacity-50 cursor-not-allowed"
                           : ""
@@ -956,14 +975,14 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isRoundDropdownOpen && selectedSeason !== undefined && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-purple-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(12,15,34,0.985),rgba(18,19,42,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedRound(undefined);
                             setIsRoundDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200 transition-colors duration-200 border-b border-purple-500/20"
+                          className="w-full border-b border-purple-400/10 bg-transparent px-3 py-2.5 text-left text-purple-200 transition-colors duration-200 hover:bg-purple-500/12 hover:text-purple-100"
                         >
                           All Rounds
                         </button>
@@ -978,7 +997,7 @@ export default function AgentRunSearch() {
                                   setSelectedRound(round);
                                   setIsRoundDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-purple-500/20 last:border-b-0 ${isActive ? "bg-purple-500/30 text-purple-100" : "text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-200"}`}
+                                className={`w-full border-b border-purple-400/10 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${isActive ? "bg-purple-500/20 text-purple-50" : "bg-transparent text-purple-200 hover:bg-purple-500/12 hover:text-purple-100"}`}
                               >
                                 Round {round}
                               </button>
@@ -990,8 +1009,8 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Validator Filter */}
-                <div className="space-y-2">
-                  <label id="filter-validator-label" htmlFor="filter-validator-btn" className="text-sm font-medium text-blue-300">
+                <div className="space-y-2 xl:col-span-1">
+                  <label id="filter-validator-label" htmlFor="filter-validator-btn" className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
                     VALIDATOR
                   </label>
                   <div className="relative" ref={validatorDropdownRef}>
@@ -1002,7 +1021,7 @@ export default function AgentRunSearch() {
                       onClick={() => {
                         setIsValidatorDropdownOpen(!isValidatorDropdownOpen);
                       }}
-                      className="w-full px-3 py-2 bg-blue-500/20 border-2 border-blue-500/20 rounded-xl text-blue-300 focus:border-blue-500 transition-all duration-300 outline-none text-left flex items-center justify-between backdrop-blur-md focus:ring-0"
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-blue-400/25 bg-blue-500/12 px-4 py-3 text-left text-blue-100 transition-all duration-300 outline-none backdrop-blur-md focus:ring-0"
                     >
                       <span>
                         {validatorLoading && validatorOptions.length === 0 && "Loading validators..."}
@@ -1017,14 +1036,14 @@ export default function AgentRunSearch() {
                     </button>
 
                     {isValidatorDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-50 border border-blue-500/20 rounded-xl max-h-60 overflow-y-auto custom-scrollbar scroll-smooth backdrop-blur-md z-50">
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-blue-300/25 bg-[linear-gradient(180deg,rgba(8,18,34,0.985),rgba(11,24,40,0.985))] shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedValidator("");
                             setIsValidatorDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200 transition-colors duration-200 border-b border-blue-500/20"
+                          className="w-full border-b border-blue-400/10 bg-transparent px-3 py-2.5 text-left text-blue-200 transition-colors duration-200 hover:bg-blue-500/12 hover:text-blue-100"
                         >
                           All Validators
                         </button>
@@ -1044,10 +1063,10 @@ export default function AgentRunSearch() {
                                   setSelectedValidator(validator.id);
                                   setIsValidatorDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left transition-colors duration-200 border-b border-blue-500/20 last:border-b-0 ${
+                                className={`w-full border-b border-blue-400/10 px-3 py-2.5 text-left transition-colors duration-200 last:border-b-0 ${
                                   isActive
-                                    ? "bg-blue-500/30 text-blue-100"
-                                    : "text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-200"
+                                    ? "bg-blue-500/20 text-blue-50"
+                                    : "bg-transparent text-blue-200 hover:bg-blue-500/12 hover:text-blue-100"
                                 }`}
                               >
                                 {validator.label}
@@ -1065,8 +1084,8 @@ export default function AgentRunSearch() {
                 </div>
 
                 {/* Miner Filter */}
-                <div className="space-y-2">
-                  <label id="filter-agent-label" htmlFor="filter-agent-button" className="text-sm font-medium text-purple-300">
+                <div className="space-y-2 xl:col-span-1">
+                  <label id="filter-agent-label" htmlFor="filter-agent-button" className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-purple-200/90">
                     MINER
                   </label>
                   <div className="relative" ref={minerDropdownRef}>
@@ -1074,7 +1093,7 @@ export default function AgentRunSearch() {
                       id="filter-agent-button"
                       type="button"
                       onClick={() => setIsMinerDropdownOpen(!isMinerDropdownOpen)}
-                      className="flex w-full items-center justify-between rounded-xl border-2 border-purple-400/35 bg-slate-900/95 px-3 py-2 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-400/70 focus:ring-0"
+                      className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-purple-400/25 bg-slate-950/60 px-4 py-3 text-left text-white transition-all duration-300 outline-none backdrop-blur-md focus:border-purple-300/45 focus:ring-0"
                     >
                       <span className="truncate">
                         {selectedMinerUid != null && selectedMinerName
@@ -1086,7 +1105,7 @@ export default function AgentRunSearch() {
                       />
                     </button>
                     {isMinerDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl flex flex-col">
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 flex max-h-72 flex-col overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl">
                         <div className="sticky top-0 border-b border-slate-700/80 bg-slate-950 p-2">
                           <div className="relative">
                             <LuSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
@@ -1146,36 +1165,50 @@ export default function AgentRunSearch() {
                   </div>
                 </div>
 
+                <div className="space-y-2 xl:col-span-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">
+                    SUCCESS
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSuccessOnly((prev) => !prev)}
+                    className={`inline-flex min-h-[52px] w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-all duration-300 ${
+                      successOnly
+                        ? "border-emerald-400/40 bg-emerald-500/14 text-emerald-100 shadow-[0_12px_30px_rgba(16,185,129,0.16)]"
+                        : "border-emerald-400/25 bg-slate-950/60 text-slate-300 hover:border-emerald-300/40 hover:text-emerald-100"
+                    }`}
+                  >
+                    <span>{successOnly ? "Successful Runs" : "All Runs"}</span>
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        successOnly ? "bg-emerald-300" : "bg-slate-500"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="space-y-2 xl:col-span-1">
+                  <div className="block h-[15px]" aria-hidden="true" />
+                  <button
+                    onClick={clearFilters}
+                    disabled={!hasActiveFilters}
+                    className={`inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold tracking-[0.04em] transition-all duration-300 whitespace-nowrap ${
+                      hasActiveFilters
+                        ? "border border-orange-300/30 bg-[linear-gradient(135deg,rgba(239,68,68,0.82),rgba(249,115,22,0.78))] text-white shadow-[0_12px_28px_rgba(239,68,68,0.24)] hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(249,115,22,0.28)]"
+                        : "cursor-not-allowed border border-white/10 bg-white/6 text-slate-400"
+                    }`}
+                  >
+                    CLEAR FILTERS
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 flex-col sm:flex-row justify-center">
-              {/* <button
-                onClick={handleSearch}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 border-2 border-emerald-500/60 rounded-xl font-bold text-white hover:from-emerald-500 hover:to-blue-500 hover:border-emerald-400 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 backdrop-blur-md"
-              >
-                <PiMagnifyingGlassDuotone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
-                SEARCH
-              </button> */}
-
-              <button
-                onClick={clearFilters}
-                disabled={!hasActiveFilters}
-                className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 backdrop-blur-md ${
-                  hasActiveFilters
-                    ? "bg-gradient-to-r from-red-500/60 to-orange-500/60 border-2 border-red-500/60 text-white hover:from-red-500 hover:to-orange-500 hover:border-red-500 cursor-pointer"
-                    : "bg-gray-500/30 border-2 border-gray-500/30 text-gray-400 cursor-not-allowed"
-                }`}
-              >
-                CLEAR FILTERS
-              </button>
-            </div>
           </div>
+        </div>
       </div>
 
       {!hasSearched && seasonOptions.length > 0 && (
-        <div className="w-full max-w-[1024px] mx-auto">
+        <div className="w-full max-w-[1280px] mx-auto">
           <div className="mt-6 text-center relative z-0">
             <div className="relative rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 p-6 shadow-lg backdrop-blur-md">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-orange-900/10"></div>
@@ -1286,7 +1319,6 @@ export default function AgentRunSearch() {
               </div>
             </div>
           )}
-      </div>
 
       {/* Search Results */}
       {hasSearched && displayedRuns.length > 0 && (
