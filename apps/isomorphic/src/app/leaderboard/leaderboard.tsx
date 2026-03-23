@@ -234,12 +234,20 @@ function NameInsideBarLabel(props: any) {
   if (width < minForInside) {
     return (
       <foreignObject
-        x={x + width + 6}
-        y={y + height / 2 - labelHeight / 2}
-        width={220}
-        height={labelHeight}
+        x={x + 4}
+        y={y - 18}
+        width={190}
+        height={34}
       >
-        <div className="flex h-full items-center justify-center text-sm sm:text-base font-semibold tracking-wide text-white">
+        <div
+          className="inline-flex h-full max-w-full items-center rounded-full border border-cyan-300/35 bg-slate-950/85 px-3 text-xs sm:text-sm font-semibold tracking-wide text-white shadow-[0_10px_24px_rgba(8,15,30,0.45)]"
+          style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={d.label}
+        >
           {d.label}
         </div>
       </foreignObject>
