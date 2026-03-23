@@ -228,7 +228,7 @@ function NameInsideBarLabel(props: any) {
     return null;
 
   const d = baseData[index];
-  const minForInside = 136;
+  const minForInside = 110;
   const labelHeight = 48;
 
   if (width < minForInside) {
@@ -898,8 +898,8 @@ export default function App() {
 
                         <XAxis
                           type="number"
-                          domain={[0, 75]}
-                          ticks={[0, 25, 50, 75]}
+                          domain={[0, 40]}
+                          ticks={[0, 10, 20, 30, 40]}
                           tick={{
                             fill: "#8fb0d6",
                             fontSize: isMobile ? 10 : 12,
