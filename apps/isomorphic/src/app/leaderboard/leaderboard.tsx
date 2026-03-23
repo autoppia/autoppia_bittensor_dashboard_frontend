@@ -898,8 +898,8 @@ export default function App() {
 
                         <XAxis
                           type="number"
-                          domain={[0, 100]}
-                          ticks={[0, 25, 50, 75, 100]}
+                          domain={[0, 75]}
+                          ticks={[0, 25, 50, 75]}
                           tick={{
                             fill: "#8fb0d6",
                             fontSize: isMobile ? 10 : 12,
