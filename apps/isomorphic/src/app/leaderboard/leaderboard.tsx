@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { routes } from "@/config/routes";
+import { currentSeasonBenchmarkTasks } from "@/data/current-season-benchmark-tasks";
 import {
   FaTrophy,
   FaMedal,
@@ -31,128 +32,68 @@ import { Text, Title } from "rizzui/typography";
 const leaderboardData = [
   {
     rank: 1,
-    completedTasks: 10,
-    totalTasks: 50,
-    name: "OJO Agent",
-    score: 20,
-    avgCostPerTask: 0.002,
-    avgDuration: 42,
-    type: "Round 9 leader",
-    medal: "🥇",
-    logoUrl: "/miners/46.svg",
-  },
-  {
-    rank: 2,
-    completedTasks: 10,
-    totalTasks: 50,
-    name: "Autoppia Operator",
-    score: 20,
-    avgCostPerTask: 0.12,
-    avgDuration: 58,
-    type: "Round 9 contender",
-    medal: "🥈",
-    logoUrl: "/images/icons/validators/Autoppia.png",
-  },
-  {
-    rank: 3,
-    completedTasks: 6,
-    totalTasks: 50,
+    completedTasks: 34,
+    totalTasks: 150,
     name: "Browser Use Claude",
-    score: 12,
+    score: 22.7,
     avgCostPerTask: 0.18,
     avgDuration: 73,
-    type: "Claude stack",
-    medal: "🥉",
+    type: "Anthropic Claude",
+    medal: "🥇",
     logoUrl: "/images/icons/validators/claude.png",
   },
   {
-    rank: 4,
-    completedTasks: 5,
-    totalTasks: 50,
+    rank: 2,
+    completedTasks: 30,
+    totalTasks: 150,
     name: "Browser Use GPT",
-    score: 10,
-    avgCostPerTask: 0.06,
+    score: 20,
+    avgCostPerTask: 0.1,
     avgDuration: 61,
-    type: "GPT stack",
+    type: "OpenAI GPT",
+    medal: "🥈",
     logoUrl: "/images/icons/validators/gpt5.png",
   },
   {
-    rank: 5,
-    completedTasks: 3,
-    totalTasks: 50,
+    rank: 3,
+    completedTasks: 26,
+    totalTasks: 150,
     name: "OpenAI CUA",
-    score: 6,
+    score: 17.3,
     avgCostPerTask: 0.2,
     avgDuration: 88,
-    type: "OpenAI",
+    type: "OpenAI CUA",
+    medal: "🥉",
     logoUrl: "/images/icons/validators/openai.png",
+  },
+  {
+    rank: 4,
+    completedTasks: 21,
+    totalTasks: 150,
+    name: "OJO Agent",
+    score: 14,
+    avgCostPerTask: 0.03,
+    avgDuration: 42,
+    type: "OJO Agent",
+    logoUrl: "/miners/46.svg",
+  },
+  {
+    rank: 5,
+    completedTasks: 7,
+    totalTasks: 150,
+    name: "Autoppia Operator",
+    score: 4.7,
+    avgCostPerTask: 0.05,
+    avgDuration: 58,
+    type: "Autoppia Operator",
+    logoUrl: "/images/icons/validators/Autoppia.png",
   },
 ];
 
-const autoppiaRound9Prompts = [
-  "Update the pricing rule for premium listings and save the season 9 config.",
-  "Review the miner leaderboard card and flag the agent with the highest cost spike.",
-  "Open the validator dashboard and export the round 9 summary for internal review.",
-  "Create a follow-up note for the miner that lost the leader position in round 9.",
-  "Filter the round 9 evaluations to only show failed tasks above $0.10 cost.",
-  "Assign a rerun to the miner with the slowest benchmark completion time.",
-  "Open the Autoppia operator profile and copy its best reward into the report.",
-  "Update the benchmark board headline to mention the March 19, 2026 snapshot.",
-  "Mark the round 9 review checklist as completed for the production release.",
-  "Compare Autoppia operator against OJO Agent and save the decision note.",
-  "Add a comment to the task explaining why the leader was not dethroned.",
-  "Open the benchmark results modal and validate the top five agents ordering.",
-  "Tag the failed evaluation that exceeded the expected retry budget.",
-  "Prepare the public changelog entry for the round 9 benchmark publication.",
-  "Update the round notes to mention the lower cost profile of OJO Agent.",
-  "Open the task archive and pin the round 9 operator regression ticket.",
-  "Create a summary card for the best Autoppia operator run in the season.",
-  "Locate the evaluation with the largest price delta and attach it to the note.",
-  "Confirm that the benchmark score chart matches the manual round 9 report.",
-  "Open the leaderboard page and verify the current winner badge styling.",
-  "Review the benchmark prompt list and remove deprecated draft tasks.",
-  "Save the cost-per-task comparison between OJO Agent and Autoppia operator.",
-  "Flag the benchmark scenario that produced the highest operator accuracy.",
-  "Generate the release-ready note for Autoppia round 9 benchmark results.",
-  "Check the round 9 task list and mark all Autoppia prompts as published.",
-];
-
-const rizzoRound9Prompts = [
-  "Search the Rizzo product catalog for the lowest-cost portable monitor bundle.",
-  "Add a Rizzo storefront note about delayed shipping on limited-stock items.",
-  "Update the featured offer on the Rizzo homepage for the round 9 campaign.",
-  "Open the Rizzo support inbox and reply to the benchmark fulfillment thread.",
-  "Create a discount rule for returning customers purchasing two accessories.",
-  "Review the abandoned carts list and recover the highest-value Rizzo order.",
-  "Tag the product page with the strongest conversion lift in the Rizzo experiment.",
-  "Publish the Rizzo landing page copy for the March 19, 2026 benchmark snapshot.",
-  "Filter Rizzo orders by wireless accessories and export the resulting list.",
-  "Update the Rizzo campaign brief with the new benchmark winner commentary.",
-  "Create a support ticket for the checkout flow that timed out during evaluation.",
-  "Open the Rizzo analytics board and save the top-converting traffic source.",
-  "Approve the revised image set for the Rizzo seasonal promotion banner.",
-  "Review the benchmark notes and attach the Rizzo product page screenshot.",
-  "Prepare the Rizzo comparison sheet against the Autoppia storefront tasks.",
-  "Open the Rizzo fulfillment panel and mark the express shipment as packed.",
-  "Draft the benchmark observation for the Rizzo search relevance scenario.",
-  "Pin the Rizzo task that exposed the largest latency regression in round 9.",
-  "Update the merchandising board to promote the best-selling charger bundle.",
-  "Verify the Rizzo pricing widget still reflects the benchmark test discount.",
-  "Create an internal note on the Rizzo checkout success rate for round 9.",
-  "Open the seasonal campaign planner and schedule the Rizzo offer refresh.",
-  "Review the Rizzo prompt set and remove duplicate tasks before publication.",
-  "Export the Rizzo benchmark outcomes and attach them to the release memo.",
-  "Publish the final Rizzo round 9 task pack for the public leaderboard page.",
-];
-
-const benchmarkTasks = [...autoppiaRound9Prompts, ...rizzoRound9Prompts].map(
-  (prompt, index) => ({
-    id: index + 1,
-    project: index < autoppiaRound9Prompts.length ? "Autoppia" : "Rizzo",
-    task: `ROUND 9 TASK ${String(index + 1).padStart(2, "0")}`,
-    prompt,
-  })
-);
+const benchmarkTasks = currentSeasonBenchmarkTasks.map((task) => ({
+  ...task,
+  badge: `S1 · R4 · T${String(task.id).padStart(3, "0")}`,
+}));
 
 const efficiencySeries = leaderboardData.map((entry) => ({
   label: entry.name,
@@ -163,14 +104,14 @@ const efficiencySeries = leaderboardData.map((entry) => ({
 }));
 
 const efficiencyColors: Record<string, string> = {
-  "Round 9 leader": "#22d3ee",
-  "Round 9 contender": "#60a5fa",
-  "Claude stack": "#fb923c",
-  "GPT stack": "#a78bfa",
-  OpenAI: "#22c55e",
+  "Anthropic Claude": "#fb923c",
+  "OpenAI GPT": "#a78bfa",
+  "OpenAI CUA": "#22c55e",
+  "OJO Agent": "#22d3ee",
+  "Autoppia Operator": "#60a5fa",
 };
 
-const lastBenchmarkUpdate = "March 19, 2026";
+const lastBenchmarkUpdate = "23 March 2026";
 const evaluatedBenchmarks = benchmarkTasks.length;
 
 const logoByAgentName = leaderboardData.reduce<Record<string, string>>(
@@ -183,22 +124,8 @@ const logoByAgentName = leaderboardData.reduce<Record<string, string>>(
 
 const previewAgents = [
   {
-    name: "OJO Agent",
-    tagline: "10/50 tasks solved • $0.002 per task",
-    accent: "from-cyan-500/30 to-blue-500/20 border-cyan-400/40",
-    logoUrl: logoByAgentName["ojo agent"] ?? "/miners/46.svg",
-  },
-  {
-    name: "Autoppia Operator",
-    tagline: "10/50 tasks solved • $0.12 per task",
-    accent: "from-amber-500/25 to-orange-500/15 border-amber-300/40",
-    logoUrl:
-      logoByAgentName["autoppia operator"] ??
-      "/images/icons/validators/Autoppia.png",
-  },
-  {
     name: "Browser Use Claude",
-    tagline: "6/50 tasks solved • $0.18 per task",
+    tagline: "34/150 tasks solved • $0.18 per task",
     accent: "from-violet-500/25 to-purple-500/20 border-violet-300/40",
     logoUrl:
       logoByAgentName["browser use claude"] ??
@@ -206,11 +133,26 @@ const previewAgents = [
   },
   {
     name: "Browser Use GPT",
-    tagline: "5/50 tasks solved • $0.06 per task",
+    tagline: "30/150 tasks solved • $0.10 per task",
     accent: "from-emerald-500/25 to-teal-500/15 border-emerald-300/40",
     logoUrl:
       logoByAgentName["browser use gpt"] ??
       "/images/icons/validators/gpt5.png",
+  },
+  {
+    name: "OpenAI CUA",
+    tagline: "26/150 tasks solved • $0.20 per task",
+    accent: "from-emerald-500/20 to-lime-500/10 border-emerald-300/40",
+    logoUrl:
+      logoByAgentName["openai cua"] ??
+      "/images/icons/validators/openai.png",
+  },
+  {
+    name: "OJO Agent",
+    tagline: "21/150 tasks solved • $0.03 per task",
+    accent: "from-cyan-500/30 to-blue-500/20 border-cyan-400/40",
+    logoUrl:
+      logoByAgentName["ojo agent"] ?? "/miners/46.svg",
   },
 ];
 
@@ -1218,7 +1160,7 @@ export default function App() {
                         Benchmark Tasks
                       </h2>
                       <p className="text-xs text-center sm:text-left sm:text-sm text-slate-400 font-medium mt-0.5">
-                        Round 9 task pack for Autoppia and Rizzo
+                        Production task pack for season 1, round 4
                       </p>
                     </div>
                   </div>
@@ -1258,8 +1200,11 @@ export default function App() {
                         <div className="mb-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/30">
                             <span className="text-xs font-bold uppercase tracking-wide text-cyan-300">
-                              {task.task}
+                              {task.badge}
                             </span>
+                          </span>
+                          <span className="ml-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-400/30 text-xs font-bold uppercase tracking-wide text-emerald-300">
+                            Validator {task.validatorUid}
                           </span>
                         </div>
 
