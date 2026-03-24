@@ -65,7 +65,7 @@
     "qrcode.react": "^4.2.0",
     "rc-pagination": "^5.1.0",
     "rc-rate": "^2.13.1",
-    "rc-slider": "^11.1.8",
+    "rc-slider": "^11.1.9",
     "rc-table": "7.50.4",
     "react": "^19.0.1",
     "react-calendar": "^5.1.0",
