@@ -73,10 +73,6 @@ export default function LandingPage() {
   const highlightStart = fullText.indexOf(highlightWord);
   const [activeTab, setActiveTab] = useState(0);
 
-  // Use websitesData as source of truth for demo websites count (backend's totalWebsites
-  // counts websites used in rounds/tasks, not the total available demo websites)
-  const activeWebsitesCount = websitesData.filter((w) => !w.isComingSoon).length;
-
   useEffect(() => {
     setIsVisible(true);
     let currentIndex = 0;
@@ -185,7 +181,7 @@ export default function LandingPage() {
           >
             {[
               {
-                value: `+${activeWebsitesCount}`,
+                value: "+16",
                 label: "Websites",
                 gradient: "from-cyan-400 to-blue-500",
                 glow: "group-hover:shadow-cyan-400/20",
