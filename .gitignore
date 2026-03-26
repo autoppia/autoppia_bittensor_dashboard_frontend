@@ -52,3 +52,5 @@ sonar-report.json
 sonar-report.html
 *.scannerwork
 .sonar/
+
+**.idea/
