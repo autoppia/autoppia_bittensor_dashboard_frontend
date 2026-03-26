@@ -1,0 +1,153 @@
+name: Test Coverage
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  discover:
+    name: Discover apps with tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app_paths: ${{ steps.discover-apps.outputs.app_paths }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Discover apps with test/coverage scripts
+        id: discover-apps
+        run: |
+          apps_json=$(
+            node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const appsDir = "apps";
+            const results = [];
+            for (const entry of fs.readdirSync(appsDir, { withFileTypes: true })) {
+              if (!entry.isDirectory()) continue;
+              const appPath = path.join(appsDir, entry.name);
+              const pkgPath = path.join(appPath, "package.json");
+              if (!fs.existsSync(pkgPath)) continue;
+              const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+              const scripts = pkg.scripts || {};
+              if (scripts.test || scripts.coverage) results.push(appPath);
+            }
+            process.stdout.write(JSON.stringify(results));
+            '
+          )
+
+          echo "Detected apps matrix: $apps_json"
+          echo "app_paths=$apps_json" >> "$GITHUB_OUTPUT"
+
+  coverage_check:
+    name: Run tests and coverage
+    needs: discover
+    if: ${{ needs.discover.outputs.app_paths != '[]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.app_paths) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run coverage
+        run: |
+          if pnpm run | grep -q "coverage"; then
+            pnpm run coverage
+          elif pnpm run | grep -q "test"; then
+            pnpm run test -- --coverage
+          else
+            echo "No coverage or test script found in $(pwd)/package.json"
+            exit 1
+          fi
+
+      - name: Build coverage summary
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          const summaryPath = "coverage/coverage-summary.json";
+          const appName = process.env.APP_NAME || "app";
+          let md = `## Coverage Report (${appName})\n\n`;
+          if (!fs.existsSync(summaryPath)) {
+            md += "Coverage summary file not found at `coverage/coverage-summary.json`.\n";
+            fs.writeFileSync("coverage-report.md", md);
+            process.exit(0);
+          }
+          const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
+          const total = summary.total || {};
+          const lines = total.lines?.pct ?? "n/a";
+          const statements = total.statements?.pct ?? "n/a";
+          const functions = total.functions?.pct ?? "n/a";
+          const branches = total.branches?.pct ?? "n/a";
+          md += "| Metric | Coverage |\n|---|---:|\n";
+          md += `| Lines | ${lines}% |\n`;
+          md += `| Statements | ${statements}% |\n`;
+          md += `| Functions | ${functions}% |\n`;
+          md += `| Branches | ${branches}% |\n`;
+          fs.writeFileSync("coverage-report.md", md);
+          '
+        env:
+          APP_NAME: ${{ matrix.app }}
+
+      - name: Add coverage summary to workflow
+        if: always()
+        run: cat coverage-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+          path: |
+            ${{ matrix.app }}/coverage
+            ${{ matrix.app }}/coverage-report.md
+          if-no-files-found: warn
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request' && always()
+        with:
+          recreate: true
+          path: ${{ matrix.app }}/coverage-report.md
+
+  no_test_apps:
+    name: No testable apps found
+    needs: discover
+    if: ${{ needs.discover.outputs.app_paths == '[]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when no test apps are configured
+        run: |
+          echo "No apps with test/coverage scripts were found under apps/*."
+          echo "Please add a test or coverage script to at least one app package.json."
+          exit 1

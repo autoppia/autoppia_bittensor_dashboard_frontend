@@ -13,6 +13,8 @@
     "build:development": "rimraf .next/export && NEXT_PUBLIC_API_BASE_URL=https://dev-api-leaderboard.autoppia.com NEXT_PUBLIC_API_URL=https://dev-api-leaderboard.autoppia.com next build",
     "build:production": "rimraf .next/export && NEXT_PUBLIC_API_BASE_URL=https://api-leaderboard.autoppia.com NEXT_PUBLIC_API_URL=https://api-leaderboard.autoppia.com next build",
     "type:check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "coverage": "vitest run --coverage --passWithNoTests",
     "start": "./clean-port.sh && next build && next start -p 3000",
     "clean": "rm -rf node_modules .next .cache .turbo",
     "cache:clean": "rm -rf .next .cache .turbo"
@@ -117,6 +119,7 @@
     "@types/react-color": "^3.0.13",
     "@types/react-dom": "^19.0.4",
     "@types/react-scroll": "^1.8.10",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "prettier": "3.5.3",
@@ -124,6 +127,7 @@
     "rimraf": "^6.0.1",
     "tailwind-config": "workspace:*",
     "tailwindcss": "^3.4.17",
-    "typescript-config": "workspace:*"
+    "typescript-config": "workspace:*",
+    "vitest": "^3.2.4"
   }
 }
