@@ -123,8 +123,8 @@ importers:
         specifier: 0.0.16
         version: 0.0.16(react@19.2.1)
       '@react-email/tailwind':
-        specifier: 1.0.4
-        version: 1.0.4(react@19.2.1)
+        specifier: 2.0.6
+        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
       '@react-email/text':
         specifier: 0.1.0
         version: 0.1.0(react@19.2.1)
@@ -465,8 +465,8 @@ importers:
         specifier: 0.0.16
         version: 0.0.16(react@19.2.1)
       '@react-email/tailwind':
-        specifier: 1.0.4
-        version: 1.0.4(react@19.2.1)
+        specifier: 2.0.6
+        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
       '@react-email/text':
         specifier: 0.1.0
         version: 0.1.0(react@19.2.1)
@@ -1805,6 +1805,44 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
+
+  '@react-email/tailwind@2.0.6':
+    resolution: {integrity: sha512-3PgL/GYWmgS+puLPQ2aLlsplHSOFztRl70fowBkbLIb8ZUIgvx5YId6zYCCHeM2+DQ/EG3iXXqLNTahVztuMqQ==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      '@react-email/body': '>=0'
+      '@react-email/button': '>=0'
+      '@react-email/code-block': '>=0'
+      '@react-email/code-inline': '>=0'
+      '@react-email/container': '>=0'
+      '@react-email/heading': '>=0'
+      '@react-email/hr': '>=0'
+      '@react-email/img': '>=0'
+      '@react-email/link': '>=0'
+      '@react-email/preview': '>=0'
+      '@react-email/text': '>=0'
+      react: ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@react-email/body':
+        optional: true
+      '@react-email/button':
+        optional: true
+      '@react-email/code-block':
+        optional: true
+      '@react-email/code-inline':
+        optional: true
+      '@react-email/container':
+        optional: true
+      '@react-email/heading':
+        optional: true
+      '@react-email/hr':
+        optional: true
+      '@react-email/img':
+        optional: true
+      '@react-email/link':
+        optional: true
+      '@react-email/preview':
+        optional: true
 
   '@react-email/text@0.1.0':
     resolution: {integrity: sha512-LG+gEuxpoIiOojkv40iktP8UVjkJVZ+ksEEuf7zRvrcwLcVuzYyirlWdkGr4Vu/AhsD4FDRoxDWlWvLTx+WHUg==}
@@ -5372,6 +5410,9 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
+  tailwindcss@4.1.18:
+    resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
+
   test-exclude@7.0.2:
     resolution: {integrity: sha512-u9E6A+ZDYdp7a4WnarkXPZOx8Ilz46+kby6p1yZ8zsGTz9gYa6FIS7lj2oezzNKmtdyyJNNmmXDppga5GB7kSw==}
     engines: {node: '>=18'}
@@ -6841,6 +6882,23 @@ snapshots:
   '@react-email/tailwind@1.0.4(react@19.2.1)':
     dependencies:
       react: 19.2.1
+
+  '@react-email/tailwind@2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)':
+    dependencies:
+      '@react-email/text': 0.1.0(react@19.2.1)
+      react: 19.2.1
+      tailwindcss: 4.1.18
+    optionalDependencies:
+      '@react-email/body': 0.0.11(react@19.2.1)
+      '@react-email/button': 0.0.19(react@19.2.1)
+      '@react-email/code-block': 0.0.11(react@19.2.1)
+      '@react-email/code-inline': 0.0.5(react@19.2.1)
+      '@react-email/container': 0.0.15(react@19.2.1)
+      '@react-email/heading': 0.0.15(react@19.2.1)
+      '@react-email/hr': 0.0.11(react@19.2.1)
+      '@react-email/img': 0.0.11(react@19.2.1)
+      '@react-email/link': 0.0.12(react@19.2.1)
+      '@react-email/preview': 0.0.12(react@19.2.1)
 
   '@react-email/text@0.1.0(react@19.2.1)':
     dependencies:
@@ -10841,6 +10899,8 @@ snapshots:
       sucrase: 3.35.0
     transitivePeerDependencies:
       - ts-node
+
+  tailwindcss@4.1.18: {}
 
   test-exclude@7.0.2:
     dependencies:
