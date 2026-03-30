@@ -243,8 +243,8 @@ importers:
         specifier: ^19.0.1
         version: 19.2.1(react@19.2.1)
       react-dropzone:
-        specifier: ^14.3.8
-        version: 14.3.8(react@19.2.1)
+        specifier: ^15.0.0
+        version: 15.0.0(react@19.2.1)
       react-email:
         specifier: 3.0.7
         version: 3.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -579,8 +579,8 @@ importers:
         specifier: ^19.0.1
         version: 19.2.1(react@19.2.1)
       react-dropzone:
-        specifier: ^14.3.8
-        version: 14.3.8(react@19.2.1)
+        specifier: ^15.0.0
+        version: 15.0.0(react@19.2.1)
       react-email:
         specifier: 3.0.7
         version: 3.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -4796,8 +4796,8 @@ packages:
     peerDependencies:
       react: ^19.2.1
 
-  react-dropzone@14.3.8:
-    resolution: {integrity: sha512-sBgODnq+lcA4P296DY4wacOZz3JFpD99fp+hb//iBO2HHnyeZU3FwWyXJ6salNpqQdsZrgMrotuko/BdJMV8Ug==}
+  react-dropzone@15.0.0:
+    resolution: {integrity: sha512-lGjYV/EoqEjEWPnmiSvH4v5IoIAwQM2W4Z1C0Q/Pw2xD0eVzKPS359BQTUMum+1fa0kH2nrKjuavmTPOGhpLPg==}
     engines: {node: '>= 10.13'}
     peerDependencies:
       react: '>= 16.8 || 18.0.0'
@@ -10058,7 +10058,7 @@ snapshots:
       react: 19.2.1
       scheduler: 0.27.0
 
-  react-dropzone@14.3.8(react@19.2.1):
+  react-dropzone@15.0.0(react@19.2.1):
     dependencies:
       attr-accept: 2.2.5
       file-selector: 2.1.2
