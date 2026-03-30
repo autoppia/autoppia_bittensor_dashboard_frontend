@@ -35,15 +35,22 @@
   },
   "pnpm": {
     "overrides": {
-      "next": ">=15.5.12",
+      "next": ">=15.5.14 <16",
       "minimatch": ">=10.2.3",
       "basic-ftp": ">=5.2.0",
       "glob": ">=11.1.0",
-      "@isaacs/brace-expansion": ">=5.0.1",
+      "brace-expansion": ">=5.0.5",
+      "@isaacs/brace-expansion": ">=5.0.5",
       "lodash": ">=4.17.23",
       "lodash-es": ">=4.17.23",
       "next-auth": ">=4.24.12",
-      "nodemailer": ">=7.0.7",
+      "nodemailer": ">=8.0.4",
+      "handlebars": ">=4.7.9",
+      "socket.io-parser": ">=4.2.6",
+      "effect": ">=3.21.0",
+      "picomatch": ">=4.0.4",
+      "yaml": ">=2.8.3",
+      "flatted": ">=3.4.2",
       "@babel/helpers": ">=7.26.10",
       "@babel/runtime": ">=7.26.10",
       "@babel/runtime-corejs3": ">=7.26.10",
@@ -57,8 +64,7 @@
       "@eslint/eslintrc": "3.3.5",
       "dompurify": ">=3.3.2",
       "quill": "npm:@lufrai/quill@2.0.4",
-      "undici": ">=7.24.0",
-      "flatted": ">=3.4.0"
+      "undici": ">=7.24.0"
     }
   }
 }
