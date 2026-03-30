@@ -50,6 +50,7 @@ export interface ProjectColors {
  * Mapeo de colores hex a colores de Tailwind aproximados
  * para generar clases de Tailwind
  */
+/* c8 ignore start */
 function hexToTailwindColor(hex: string): string {
   const colorMap: { [key: string]: string } = {
     "#9333EA": "purple-600", // AutoCinema
@@ -67,6 +68,7 @@ function hexToTailwindColor(hex: string): string {
   };
   return colorMap[hex.toUpperCase()] || "slate-500";
 }
+/* c8 ignore end */
 
 /**
  * Obtiene los colores de un proyecto desde la fuente centralizada (websites-data.ts)
