@@ -1772,7 +1772,7 @@ function RoundValidatorsInline({
           <div className="w-full overflow-hidden px-6">
             <div
               ref={sliderEl}
-              className="flex gap-1 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0"
+              className="flex justify-center gap-1 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0"
             >
               {validatorsData?.map((validator) => {
                 const iconSrc = resolveValidatorImage(validator.name, validator.icon);
