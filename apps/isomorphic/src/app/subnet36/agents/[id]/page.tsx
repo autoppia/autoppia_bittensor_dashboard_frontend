@@ -2033,10 +2033,16 @@ export default function Page() {
   const hasRoundDetailsData =
     viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
 
-  // Show loading only if we don't have data yet
+  // Show loading only if we don't have data yet.
+  // When there is no `round` in the URL, miner round details resolve immediately (null) and
+  // minerRoundDetailsLoading becomes false while useAgent is still fetching — that caused a
+  // flash of "Agent not found" on every refresh. Include agent fetch loading whenever we
+  // still have nothing to render (no effectiveAgent from any source).
   const isLoading =
     (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
+    (viewMode !== "historical" &&
+      ((!minerRoundDetails && minerRoundDetailsLoading) ||
+        (Boolean(loading) && !effectiveAgent)));
 
   if (isLoading) {
     return (
