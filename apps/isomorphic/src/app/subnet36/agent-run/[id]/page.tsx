@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { routes } from "@/config/routes";
 import {
   formatWebsiteName,
@@ -2454,6 +2454,8 @@ function AgentRunTasksSection({
   refetch?: () => void;
   selectedWebsite?: string | null;
 }>) {
+  const router = useRouter();
+
   // Filter evaluations by selected website
   const filteredEvaluations = useMemo(() => {
     if (!selectedWebsite || selectedWebsite === "__all__") {
@@ -2597,6 +2599,10 @@ function AgentRunTasksSection({
           <Table
             table={table as unknown as TanStackTableType<Record<string, unknown>>}
             variant="modern"
+            onRowClick={(row: any) => {
+              const evalId = row.original?.evaluationId;
+              if (evalId) router.push(`${routes.evaluations}/${evalId}`);
+            }}
             classNames={{
               container:
                 "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-transparent",

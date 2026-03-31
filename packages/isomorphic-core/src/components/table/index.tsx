@@ -26,6 +26,7 @@ export default function MainTable<TData extends Record<string, unknown>>({
   showLoadingText = false,
   components,
   stickyHeader = false,
+  onRowClick,
 }: Readonly<MainTableProps<TData>>) {
   const { containerRef, tableRef, isLeftScrollable, isRightScrollable } =
     useScrollPosition();
@@ -145,7 +146,7 @@ export default function MainTable<TData extends Record<string, unknown>>({
               <>
                 {mainRows.map((row) => (
                   <Fragment key={row.id}>
-                    <Table.Row className={classNames?.rowClassName}>
+                    <Table.Row className={classNames?.rowClassName} onClick={onRowClick ? () => onRowClick(row) : undefined}>
                       {row.getVisibleCells().map((cell) => {
                         const bodyCellParam = {
                           cell,
