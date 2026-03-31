@@ -71,7 +71,7 @@ export default function OverviewValidators({
     loading: validatorsLoading,
     error: validatorsError,
     refetch,
-  } = useValidators({ limit: 4, sortBy: "stake", sortOrder: "desc" });
+  } = useValidators({ limit: 50, sortBy: "stake", sortOrder: "desc" });
 
   // Auto-refresh validators every 20 seconds to show live updates
   useEffect(() => {
@@ -239,7 +239,7 @@ export default function OverviewValidators({
 
           return validatorLink ? (
             <Link key={`validator-${validator.id}`} href={validatorLink}>
-              <div className="group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,15,27,0.95),rgba(9,11,21,0.92))] shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
+              <div className="group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent opacity-70" />
                 {/* Header - Validator Info & Status */}
                 <div className="border-b border-white/10 bg-white/[0.03] p-4">
@@ -265,13 +265,16 @@ export default function OverviewValidators({
                         </Text>
                       </div>
                     </div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100/90 shadow-[0_12px_28px_-20px_rgba(16,185,129,0.85)]">
-                      <span className="uppercase tracking-[0.18em] text-emerald-100/55">
-                        UID
-                      </span>
-                      <span className="text-white">
-                        {validator.validatorUid ?? "—"}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 whitespace-nowrap">{lastSeenLabel}</span>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100/90 shadow-[0_12px_28px_-20px_rgba(16,185,129,0.85)]">
+                        <span className="uppercase tracking-[0.18em] text-emerald-100/55">
+                          UID
+                        </span>
+                        <span className="text-white">
+                          {validator.validatorUid ?? "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -300,7 +303,7 @@ export default function OverviewValidators({
 
                       return (
                         <>
-                          <div className="rounded-[20px] bg-[linear-gradient(180deg,rgba(10,14,28,0.62),rgba(7,10,22,0.78))] px-3.5 py-3.5">
+                          <div className="rounded-[20px] dark:bg-gray-50/30 px-3.5 py-3.5">
                             <div className="grid grid-cols-1 gap-2 border-b border-white/8 pb-3">
                               <div className="inline-flex min-w-0 items-center gap-2 rounded-full bg-fuchsia-400/[0.07] px-3 py-1.5">
                                 <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-fuchsia-100/55">
@@ -387,9 +390,6 @@ export default function OverviewValidators({
                         </>
                       );
                     })()}
-                    <div className="mt-auto pt-4 text-right text-[11px] text-slate-500">
-                      {lastSeenLabel}
-                    </div>
                   </div>
                 </div>
               </div>

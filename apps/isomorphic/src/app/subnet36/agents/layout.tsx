@@ -45,7 +45,7 @@ export default function AgentsLayout({
         </ActionIcon>
       </div>
 
-      <div className="ml-0 lg:ml-[300px]">{children}</div>
+      <div className="ml-0 lg:ml-[300px] lg:h-[calc(100vh-90px)] lg:overflow-y-auto">{children}</div>
     </>
   );
 }

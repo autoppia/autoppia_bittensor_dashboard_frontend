@@ -1037,15 +1037,13 @@ export default function TaskSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-3">
             {filteredResults.map((task) => {
               const useCaseLabel = formatLabel(task.useCase);
               const scorePercent = Math.round((task.score ?? 0) * 100);
 
-              // Use task.website directly (actions are empty with includeDetails=false)
               const taskUrl = task.website;
 
-              // Extract port from URL to determine web project
               const getWebProject = (url: string) => {
                 const portRegex = /:(\d+)/;
                 const portMatch = portRegex.exec(url);
@@ -1053,11 +1051,7 @@ export default function TaskSearch() {
                   const port = portMatch[1];
                   const website = getProjectInfoByPort(port);
                   return website
-                    ? {
-                        name: website.name,
-                        color: website.color,
-                        slug: website.slug,
-                      }
+                    ? { name: website.name, color: website.color, slug: website.slug }
                     : null;
                 }
                 return null;
@@ -1066,12 +1060,8 @@ export default function TaskSearch() {
               const webProject = getWebProject(taskUrl);
 
               const websiteLabel = (() => {
-                if (webProject) {
-                  return webProject.name;
-                }
-                if (!taskUrl) {
-                  return formatLabel(task.website);
-                }
+                if (webProject) return webProject.name;
+                if (!taskUrl) return formatLabel(task.website);
                 try {
                   const parsed = new URL(taskUrl);
                   return parsed.hostname.replace(/^www\./, "");
@@ -1086,39 +1076,26 @@ export default function TaskSearch() {
                 ? `Validator ${validatorIdMatch[1]}`
                 : "Validator";
 
-              // Use data directly from task (no need for relationships fetch)
               const validatorName =
                 (task as any).validatorName || fallbackValidator;
-
               const minerName = (task as any).minerName || "Miner";
 
               const validatorImageSrc = resolveAssetUrl(
                 (task as any).validatorImage,
                 "/validators/Other.png"
               );
-
               const minerImageSrc = resolveAssetUrl(
                 (task as any).minerImage,
                 "/miners/30.svg "
               );
 
-              // Season and round from backend for "Season-Round" display
               const season = (task as any).season;
               const roundNumber = (task as any).roundNumber;
               const hasSeason = typeof season === "number" && Number.isFinite(season);
               const hasRound = typeof roundNumber === "number" && Number.isFinite(roundNumber);
-              let seasonRoundDisplay: string;
-              if (hasSeason && hasRound) {
-                seasonRoundDisplay = `${season}/${roundNumber}`;
-              } else if (hasRound) {
-                seasonRoundDisplay = `—/${roundNumber}`;
-              } else if (hasSeason) {
-                seasonRoundDisplay = `${season}/—`;
-              } else {
-                seasonRoundDisplay = "—";
-              }
+              const seasonLabel = hasSeason ? `S${season}` : "";
+              const roundLabel = hasRound ? `R${roundNumber}` : "";
 
-              // Evaluation cost in USD (from backend llmCost; support both camelCase and snake_case)
               const evaluationCost = (task as any).llmCost ?? (task as any).llm_cost;
 
               const taskDetailUrl = task.evaluationId
@@ -1130,180 +1107,130 @@ export default function TaskSearch() {
                   type="button"
                   key={task.evaluationId || task.taskId}
                   onClick={() => router.push(taskDetailUrl)}
-                  className="group relative w-full rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20 text-left"
+                  className="group relative w-full rounded-xl border border-slate-700/60 bg-slate-900/40 text-white transition-all duration-200 backdrop-blur-sm cursor-pointer overflow-hidden hover:border-cyan-500/60 hover:bg-slate-800/50 text-left"
                 >
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
-
-                  {/* Content container */}
-                  <div className="relative flex h-full flex-col p-5 gap-4">
-                    {/* Evaluation ID and Run ID - Same Row */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CopyButton text={task.taskId} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-cyan-400 font-semibold mb-0.5">
-                            Evaluation ID
-                          </div>
-                          <div className="font-mono text-xs font-bold text-cyan-100 truncate">
-                            {truncateMiddle(task.taskId, 6)}
-                          </div>
-                        </div>
+                  <div className="relative flex flex-col gap-2 px-4 py-3 sm:px-5 sm:py-3.5">
+                    {/* Top row: main info */}
+                    <div className="flex items-center gap-4">
+                      {/* Season/Round */}
+                      <div className="flex flex-col items-center gap-0.5 flex-shrink-0 min-w-[44px]">
+                        {seasonLabel && (
+                          <span className="text-[10px] font-bold text-emerald-400 tracking-wide">
+                            {seasonLabel}
+                          </span>
+                        )}
+                        {roundLabel && (
+                          <span className="text-[10px] font-bold text-purple-400 tracking-wide">
+                            {roundLabel}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CopyButton text={task.agentRunId} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-violet-400 font-semibold mb-0.5">
-                            Run ID
-                          </div>
-                          <div className="font-mono text-xs font-bold text-violet-100 truncate">
-                            {truncateMiddle(task.agentRunId, 6)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Validator & Miner */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2.5 rounded-lg border border-indigo-500/40 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-indigo-400/60 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-indigo-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-indigo-500/20">
+                      <div className="h-10 w-px bg-slate-700/60 flex-shrink-0" />
+
+                      {/* Validator */}
+                      <div className="flex items-center gap-2 min-w-0 flex-shrink-0 w-[120px] sm:w-[150px]">
+                        <div className="relative h-7 w-7 overflow-hidden rounded-full border border-indigo-400/40 bg-slate-900 flex-shrink-0">
                           <Image
                             src={validatorImageSrc}
                             alt={validatorName}
-                            width={40}
-                            height={40}
-                            sizes="40px"
+                            width={28}
+                            height={28}
+                            sizes="28px"
                             className="h-full w-full object-cover"
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold mb-0.5">
+                        <div className="min-w-0">
+                          <div className="text-[9px] uppercase tracking-wider text-indigo-300/70 font-semibold">
                             Validator
                           </div>
-                          <div className="text-xs font-bold text-indigo-50 truncate">
+                          <div className="text-xs font-semibold text-slate-100 truncate">
                             {validatorName}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-emerald-400/60 group-hover:shadow-lg group-hover:shadow-emerald-500/10">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-emerald-500/20">
+
+                      {/* Miner */}
+                      <div className="flex items-center gap-2 min-w-0 flex-shrink-0 w-[120px] sm:w-[150px]">
+                        <div className="relative h-7 w-7 overflow-hidden rounded-full border border-emerald-400/40 bg-slate-900 flex-shrink-0">
                           <Image
                             src={minerImageSrc}
                             alt={minerName}
-                            width={40}
-                            height={40}
-                            sizes="40px"
+                            width={28}
+                            height={28}
+                            sizes="28px"
                             className="h-full w-full object-cover"
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold mb-0.5">
+                        <div className="min-w-0">
+                          <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold">
                             Miner
                           </div>
-                          <div className="text-xs font-bold text-emerald-50 truncate">
+                          <div className="text-xs font-semibold text-slate-100 truncate">
                             {minerName}
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Website & Use Case */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div
-                        className="relative rounded-lg border p-2.5 shadow-md transition-all duration-200 group-hover:shadow-lg"
-                        style={
-                          webProject
-                            ? {
-                                backgroundColor: webProject.color,
-                                borderColor: "rgba(255,255,255,0.4)",
-                                boxShadow:
-                                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                              }
-                            : {
-                                backgroundColor: "rgba(51, 65, 85, 0.5)",
-                                borderColor: "rgba(100, 116, 139, 0.4)",
-                              }
-                        }
-                      >
-                        <div className="flex items-center gap-2">
-                          <PiGlobeDuotone className="h-3.5 w-3.5 flex-shrink-0 text-white drop-shadow-sm" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[8px] uppercase tracking-wider text-white/70 font-semibold mb-0.5">
-                              Website
-                            </div>
-                            <div className="text-xs font-bold text-white truncate drop-shadow-sm">
-                              {websiteLabel}
-                            </div>
-                          </div>
-                        </div>
+                      {/* Website badge */}
+                      <div className="hidden md:flex items-center gap-1.5 flex-shrink-0">
+                        <span
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold text-white"
+                          style={{
+                            backgroundColor: webProject?.color ?? "rgba(51, 65, 85, 0.7)",
+                          }}
+                        >
+                          <PiGlobeDuotone className="h-3 w-3" />
+                          {websiteLabel}
+                        </span>
                       </div>
-                      <div className="relative rounded-lg border border-blue-500/40 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-blue-400/60 group-hover:shadow-lg">
-                        <div className="flex items-center gap-2">
-                          <PiCodeDuotone className="h-3.5 w-3.5 flex-shrink-0 text-sky-300" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[8px] uppercase tracking-wider text-sky-300 font-semibold mb-0.5">
-                              Use Case
-                            </div>
-                            <div className="text-xs font-bold text-sky-50 truncate">
-                              {useCaseLabel}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Prompt */}
-                    <div className="rounded-lg border border-slate-600/60 bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-3 shadow-inner backdrop-blur-sm">
-                      <div className="text-[9px] uppercase tracking-wider text-slate-300 font-semibold mb-1.5">
-                        Prompt
-                      </div>
-                      <p className="text-sm leading-relaxed text-slate-100 line-clamp-2">
-                        {task.prompt}
-                      </p>
-                    </div>
-
-                    {/* Stats - Season-Round, Score, Cost; Reason (when score 0) */}
-                    <div className="mt-auto pt-3 border-t border-slate-600/60">
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold mb-1">
-                            Season-Round
-                          </div>
-                          <div className="text-base font-bold text-amber-300 drop-shadow-sm">
-                            {seasonRoundDisplay}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 sm:gap-5 flex-shrink-0 ml-auto">
+                        <div className="text-center min-w-[40px]">
+                          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
                             Score
                           </div>
-                          <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {Number.isFinite(scorePercent)
-                              ? `${scorePercent}%`
-                              : "—"}
+                          <div className={`text-sm font-bold ${scorePercent > 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                            {Number.isFinite(scorePercent) ? `${scorePercent}%` : "—"}
                           </div>
                         </div>
-                        <div className="text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-sky-300/70 font-semibold mb-1">
+                        <div className="hidden sm:block text-center min-w-[40px]">
+                          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
                             Cost
                           </div>
-                          <div className="text-base font-bold text-sky-300 drop-shadow-sm">
+                          <div className="text-sm font-bold text-sky-400">
                             {formatCost(evaluationCost)}
                           </div>
                         </div>
                       </div>
-                      {(scorePercent === 0 || !Number.isFinite(scorePercent)) && task.zeroReason && (
-                        <div className="mt-2 pt-2 border-t border-slate-600/40 text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-amber-400/80 font-semibold mb-0.5">
-                            Reason
-                          </div>
-                          <div className="text-xs font-medium text-amber-300/90">
-                            {task.zeroReason
-                              .split("_")
-                              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                              .join(" ")}
-                          </div>
+                    </div>
+
+                    {/* Bottom row: prompt preview + IDs */}
+                    <div className="flex items-center gap-3 pt-1 border-t border-slate-700/40">
+                      <p className="text-[11px] leading-snug text-slate-400 line-clamp-1 flex-1 min-w-0">
+                        {task.prompt}
+                      </p>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-1">
+                          <CopyButton text={task.taskId} />
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {truncateMiddle(task.taskId, 4)}
+                          </span>
                         </div>
+                        {useCaseLabel && (
+                          <span className="hidden lg:inline text-[10px] text-sky-400/70 font-medium">
+                            {useCaseLabel}
+                          </span>
+                        )}
+                      </div>
+                      {(scorePercent === 0 || !Number.isFinite(scorePercent)) && task.zeroReason && (
+                        <span className="flex-shrink-0 rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                          {task.zeroReason
+                            .split("_")
+                            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                            .join(" ")}
+                        </span>
                       )}
                     </div>
                   </div>

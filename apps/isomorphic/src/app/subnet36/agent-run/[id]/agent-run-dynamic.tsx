@@ -59,7 +59,7 @@ export default function AgentRunDynamic() {
   }
 
   // Show error state if there's a critical error
-  if (error && !data.personas && !data.stats && !data.summary) {
+  if (error && !isLoading && !data.personas && !data.stats && !data.summary) {
     return (
       <div className="w-full max-w-[1280px] mx-auto">
         <PageHeader
