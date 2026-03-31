@@ -2603,7 +2603,7 @@ function AgentRunTasksSection({
               headerClassName:
                 "bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 border-b border-blue-500/30",
               rowClassName:
-                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_12px_28px_rgba(56,189,248,0.18)]",
+                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:!bg-white/[0.04] hover:border-slate-600/40",
             }}
           />
         ) : (
