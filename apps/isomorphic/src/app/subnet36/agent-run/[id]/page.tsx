@@ -559,7 +559,7 @@ export default function Page() {
       </div>
 
       {isLoading && (
-        <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+        <div className="fixed bottom-4 right-4 hidden sm:flex bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg items-center gap-2 z-50">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm">Updating data...</span>
         </div>

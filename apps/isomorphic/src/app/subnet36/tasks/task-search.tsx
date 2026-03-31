@@ -603,16 +603,16 @@ export default function TaskSearch() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.12),transparent_24%),radial-gradient(circle_at_78%_18%,rgba(59,130,246,0.14),transparent_26%),radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.12),transparent_30%)]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
 
-        <div className="relative overflow-visible p-6 md:p-8">
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-600 shadow-[0_16px_30px_rgba(14,165,233,0.28)]">
-              <PiMagnifyingGlassDuotone className="h-8 w-8 text-white" />
+        <div className="relative overflow-visible p-4 sm:p-6 md:p-8">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="inline-flex h-12 w-12 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-600 shadow-[0_16px_30px_rgba(14,165,233,0.28)]">
+              <PiMagnifyingGlassDuotone className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="mb-2 text-[2rem] font-black tracking-[0.04em] text-white">
+              <h2 className="mb-1 sm:mb-2 text-xl sm:text-[2rem] font-black tracking-[0.04em] text-white">
                 EVALUATION SEARCH
               </h2>
-              <p className="text-sm leading-6 text-cyan-100/78">
+              <p className="text-xs sm:text-sm leading-5 sm:leading-6 text-cyan-100/78">
                 Search by evaluation ID or prompt, then narrow results by season, round, miner, agent run, website, use case, and success.
               </p>
             </div>
@@ -1028,8 +1028,8 @@ export default function TaskSearch() {
 
       {hasSearched && !isSearching && filteredResults.length > 0 && (
         <div className="mt-6 relative z-0">
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
+          <div className="text-center mb-5 sm:mb-8">
+            <h3 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-violet-500 bg-clip-text text-transparent mb-2">
               {headerCount} {headerCount === 1 ? "EVALUATION" : "EVALUATIONS"}{" "}
               FOUND
             </h3>
@@ -1112,104 +1112,118 @@ export default function TaskSearch() {
                   onClick={() => router.push(taskDetailUrl)}
                   className="group relative w-full rounded-xl border border-slate-700/60 bg-slate-900/40 text-white transition-all duration-200 backdrop-blur-sm cursor-pointer overflow-hidden hover:border-cyan-500/60 hover:bg-slate-800/50 text-left"
                 >
-                  <div className="relative flex items-center gap-3 px-4 py-2.5 sm:px-5">
-                    {/* Season/Round */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {seasonLabel && (
-                        <span className="text-[10px] font-bold text-emerald-400 tracking-wide">
-                          {seasonLabel}
-                        </span>
-                      )}
-                      {roundLabel && (
-                        <span className="text-[10px] font-bold text-purple-400 tracking-wide">
-                          {roundLabel}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="h-8 w-px bg-slate-700/60 flex-shrink-0" />
-
-                    {/* Validator */}
-                    <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
-                      <div className="relative h-6 w-6 overflow-hidden rounded-full border border-indigo-400/40 bg-slate-900 flex-shrink-0">
-                        <Image
-                          src={validatorImageSrc}
-                          alt={validatorName}
-                          width={24}
-                          height={24}
-                          sizes="24px"
-                          className="h-full w-full object-cover"
-                        />
+                  <div className="relative flex flex-col gap-2 px-3 py-2.5 sm:px-4 sm:flex-row sm:items-center sm:gap-3">
+                    {/* Row 1 on mobile: Season/Round + Website + Pass/Fail + Stats */}
+                    <div className="flex items-center gap-2 sm:contents">
+                      {/* Season/Round */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {seasonLabel && (
+                          <span className="text-[10px] font-bold text-emerald-400 tracking-wide">
+                            {seasonLabel}
+                          </span>
+                        )}
+                        {roundLabel && (
+                          <span className="text-[10px] font-bold text-purple-400 tracking-wide">
+                            {roundLabel}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[80px]">
-                        {validatorName}
-                      </span>
-                    </div>
 
-                    {/* Miner */}
-                    <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
-                      <div className="relative h-6 w-6 overflow-hidden rounded-full border border-emerald-400/40 bg-slate-900 flex-shrink-0">
-                        <Image
-                          src={minerImageSrc}
-                          alt={minerName}
-                          width={24}
-                          height={24}
-                          sizes="24px"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[80px]">
-                        {minerName}
-                      </span>
-                    </div>
+                      <div className="hidden sm:block h-8 w-px bg-slate-700/60 flex-shrink-0" />
 
-                    <div className="h-8 w-px bg-slate-700/60 flex-shrink-0" />
-
-                    {/* Website + UseCase + Prompt */}
-                    <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
-                      <span
-                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white flex-shrink-0"
-                        style={{
-                          backgroundColor: webProject?.color ?? "rgba(51, 65, 85, 0.7)",
-                        }}
-                      >
-                        <PiGlobeDuotone className="h-3 w-3" />
-                        {websiteLabel}
-                      </span>
-                      {useCaseLabel && (
-                        <span className="hidden sm:inline text-[10px] text-sky-400/70 font-medium flex-shrink-0 max-w-[140px] truncate">
-                          {useCaseLabel}
+                      {/* Validator — hidden on mobile */}
+                      <div className="hidden sm:flex items-center gap-1.5 min-w-0 flex-shrink-0">
+                        <div className="relative h-6 w-6 overflow-hidden rounded-full border border-indigo-400/40 bg-slate-900 flex-shrink-0">
+                          <Image
+                            src={validatorImageSrc}
+                            alt={validatorName}
+                            width={24}
+                            height={24}
+                            sizes="24px"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[80px]">
+                          {validatorName}
                         </span>
+                      </div>
+
+                      {/* Miner — hidden on mobile */}
+                      <div className="hidden sm:flex items-center gap-1.5 min-w-0 flex-shrink-0">
+                        <div className="relative h-6 w-6 overflow-hidden rounded-full border border-emerald-400/40 bg-slate-900 flex-shrink-0">
+                          <Image
+                            src={minerImageSrc}
+                            alt={minerName}
+                            width={24}
+                            height={24}
+                            sizes="24px"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[80px]">
+                          {minerName}
+                        </span>
+                      </div>
+
+                      <div className="hidden sm:block h-8 w-px bg-slate-700/60 flex-shrink-0" />
+
+                      {/* Website + UseCase + Prompt */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                        <span
+                          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white flex-shrink-0"
+                          style={{
+                            backgroundColor: webProject?.color ?? "rgba(51, 65, 85, 0.7)",
+                          }}
+                        >
+                          <PiGlobeDuotone className="h-3 w-3" />
+                          {websiteLabel}
+                        </span>
+                        {useCaseLabel && (
+                          <span className="hidden md:inline text-[10px] text-sky-400/70 font-medium flex-shrink-0 max-w-[140px] truncate">
+                            {useCaseLabel}
+                          </span>
+                        )}
+                        <p className="hidden lg:block text-[11px] leading-snug text-slate-500 line-clamp-1 min-w-0 flex-1">
+                          {task.prompt}
+                        </p>
+                      </div>
+
+                      {/* Pass/fail icon — always visible */}
+                      {scorePercent >= 100 ? (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-emerald-400 ml-auto sm:ml-0 sm:order-last" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-red-400 ml-auto sm:ml-0 sm:order-last" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 6L6 18" />
+                          <path d="M6 6l12 12" />
+                        </svg>
                       )}
-                      <p className="hidden lg:block text-[11px] leading-snug text-slate-500 line-clamp-1 min-w-0 flex-1">
-                        {task.prompt}
-                      </p>
                     </div>
 
-                    <div className="h-8 w-px bg-slate-700/60 flex-shrink-0" />
-
-                    {/* Stats: Reward | Score | Cost | Time */}
-                    <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                    {/* Row 2 on mobile: Stats — on desktop inline */}
+                    <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 border-t border-slate-700/30 pt-2 sm:border-0 sm:pt-0">
+                      <div className="hidden sm:block h-8 w-px bg-slate-700/60 flex-shrink-0" />
                       <div className="text-center min-w-[38px]">
-                        <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Reward</div>
+                        <div className="text-[9px] sm:text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Reward</div>
                         <div className={`text-xs font-bold ${scorePercent > 0 ? "text-amber-400" : "text-slate-500"}`}>
                           {Number.isFinite(scorePercent) ? `${scorePercent}%` : "—"}
                         </div>
                       </div>
                       <div className="text-center min-w-[34px]">
-                        <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Score</div>
+                        <div className="text-[9px] sm:text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Score</div>
                         <div className={`text-xs font-bold ${scorePercent > 0 ? "text-emerald-400" : "text-slate-500"}`}>
                           {Number.isFinite(scorePercent) ? `${scorePercent}%` : "—"}
                         </div>
                       </div>
                       <div className="text-center min-w-[34px]">
-                        <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Cost</div>
+                        <div className="text-[9px] sm:text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Cost</div>
                         <div className={`text-xs font-bold ${evaluationCost != null && evaluationCost > 0 ? "text-sky-400" : "text-slate-500"}`}>
                           {formatCost(evaluationCost)}
                         </div>
                       </div>
                       <div className="text-center min-w-[34px]">
-                        <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Time</div>
+                        <div className="text-[9px] sm:text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Time</div>
                         <div className={`text-xs font-bold ${task.duration > 0 ? "text-violet-400" : "text-slate-500"}`}>
                           {typeof task.duration === "number" && task.duration > 0
                             ? `${task.duration}s`
@@ -1217,18 +1231,6 @@ export default function TaskSearch() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Pass/fail icon */}
-                    {scorePercent >= 100 ? (
-                      <svg className="h-5 w-5 flex-shrink-0 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5 flex-shrink-0 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6L6 18" />
-                        <path d="M6 6l12 12" />
-                      </svg>
-                    )}
                   </div>
                 </button>
               );
