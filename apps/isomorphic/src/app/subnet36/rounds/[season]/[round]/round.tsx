@@ -3173,21 +3173,18 @@ export default function Round() {
               </div>
             ) : (
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20 flex-shrink-0">
-                  <PiCheckCircleDuotone className="w-5 h-5 text-emerald-300" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-lg ring-2 ring-amber-400/20 flex-shrink-0">
+                  <PiChartLineUpDuotone className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <p className="text-base font-black text-white leading-tight">
                     {isWaitingForConsensus
                       ? "Waiting for consensus…"
-                      : (() => {
-                          const rNum = roundNumberForLinks;
-                          return rNum != null ? `Season rank after round ${rNum}` : "Season rank";
-                        })()}
+                      : "Round Results — All Validators"}
                   </p>
                   <p className="mt-0.5 inline-flex items-center gap-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                      Post-Consensus Metrics
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/70">
+                      Aggregated post-consensus data
                     </span>
                   </p>
                 </div>
@@ -3357,19 +3354,38 @@ export default function Round() {
           );
         }
         if (selectedValidator) {
+          const validatorDisplayName = selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`;
+          const validatorIcon = resolveValidatorImage(selectedValidator.name, selectedValidator.icon);
           return (
             <>
+              {/* ── Per-Validator Section Divider ── */}
+              <div className="mt-8 mb-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
+                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-sky-400/25 bg-sky-500/8">
+                    <div className="relative h-6 w-6 overflow-hidden rounded-full border border-sky-400/40 ring-2 ring-sky-400/15 flex-shrink-0">
+                      <Image src={validatorIcon} alt={validatorDisplayName} fill sizes="24px" className="object-contain" />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-wider text-sky-300">
+                      {validatorDisplayName}
+                    </span>
+                    <span className="text-[10px] text-white/40 font-medium">
+                      — Local validator view
+                    </span>
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
+                </div>
+              </div>
+
               {/* Local metrics header */}
-              <div className="flex items-center gap-3 mt-6 mb-4">
-                <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20 flex-shrink-0">
+                  <PiListChecksDuotone className="w-5 h-5 text-sky-300" />
+                </div>
                 <div>
-                  <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
-                    Validator competition state
-                  </span>
-                  <span className="mx-2 text-white/30">·</span>
-                  <span className="text-sm font-semibold text-sky-300">
-                    {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
-                  </span>
+                  <p className="text-base font-black text-white leading-tight">
+                    Competition State
+                  </p>
                   <p className="text-xs text-white/50 mt-0.5">
                     Best local rewards used by this validator for round competition
                   </p>
@@ -3567,6 +3583,7 @@ export default function Round() {
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <PiCirclesThreeDuotone className="h-5 w-5 text-cyan-400" />
                 Consensus & IPFS
+                <span className="text-sm font-medium text-sky-400/60">— {selectedValidator.name ?? `Validator ${validatorUid}`}</span>
               </h3>
               <button
                 type="button"
