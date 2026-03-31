@@ -3949,19 +3949,21 @@ export default function Round() {
                 </button>
               )}
             </div>
-            {/* Validators carousel - bottom level */}
-            <div className="border-t border-white/10 px-6 pb-2.5 pt-2">
-              <div className="flex justify-center gap-1 flex-wrap">
-                <RoundValidatorsInline
-                  onValidatorSelect={handleValidatorSelect}
-                  selectedValidatorId={selectedValidator?.id ?? null}
-                  requestedValidatorId={requestedValidatorId}
-                  roundData={roundData}
-                  loading={roundDataLoading}
-                  error={roundDataError ?? undefined}
-                />
+            {/* Validators carousel - bottom level (hidden on active/in-progress rounds) */}
+            {!isActive && (
+              <div className="border-t border-white/10 px-6 pb-2.5 pt-2">
+                <div className="flex justify-center gap-1 flex-wrap">
+                  <RoundValidatorsInline
+                    onValidatorSelect={handleValidatorSelect}
+                    selectedValidatorId={selectedValidator?.id ?? null}
+                    requestedValidatorId={requestedValidatorId}
+                    roundData={roundData}
+                    loading={roundDataLoading}
+                    error={roundDataError ?? undefined}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
