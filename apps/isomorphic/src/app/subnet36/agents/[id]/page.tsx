@@ -43,6 +43,10 @@ import type {
   AgentRunOverview,
   AgentRunsByRoundEntry,
 } from "@/repositories/agents/agents.types";
+import {
+  computeAgentDetailPageShowFatalError,
+  computeAgentDetailPageShowLoading,
+} from "../_lib/agent-detail-view-gate";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
@@ -2027,22 +2031,21 @@ export default function Page() {
     return msg;
   }, [minerHistoricalError]);
 
-  // In historical mode, we can use minerHistorical data even if agent is null
-  const hasHistoricalData = viewMode === "historical" && minerHistorical;
-  // In current/runs mode, we can use minerRoundDetails data
-  const hasRoundDetailsData =
-    viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
-
-  // Show loading only if we don't have data yet.
-  // When there is no `round` in the URL, miner round details resolve immediately (null) and
-  // minerRoundDetailsLoading becomes false while useAgent is still fetching — that caused a
-  // flash of "Agent not found" on every refresh. Include agent fetch loading whenever we
-  // still have nothing to render (no effectiveAgent from any source).
-  const isLoading =
-    (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" &&
-      ((!minerRoundDetails && minerRoundDetailsLoading) ||
-        (Boolean(loading) && !effectiveAgent)));
+  const gateInput = {
+    hasRouteAgentId: Boolean(trimmedId),
+    viewMode,
+    agentDetail,
+    agentFromPayload: agent,
+    effectiveAgent,
+    agentFetchLoading: loading,
+    agentFetchError: error,
+    minerHistorical,
+    minerHistoricalLoading,
+    minerRoundDetails,
+    minerRoundDetailsLoading,
+  };
+  const isLoading = computeAgentDetailPageShowLoading(gateInput);
+  const showFatalError = computeAgentDetailPageShowFatalError(gateInput, isLoading);
 
   if (isLoading) {
     return (
@@ -2060,8 +2063,7 @@ export default function Page() {
     );
   }
 
-  // Show error only if we don't have any data source available
-  if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
+  if (showFatalError) {
     const is404OrNotFound =
       error != null &&
       (String(error).toLowerCase().includes("not found") ||
