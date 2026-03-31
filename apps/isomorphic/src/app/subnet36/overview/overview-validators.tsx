@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
@@ -18,6 +18,7 @@ import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
 import { useValidators } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { tasksRepository } from "@/repositories/tasks/tasks.repository";
 
 const DEFAULT_TASK_MESSAGES = new Set([
   "Awaiting round start",
@@ -73,11 +74,42 @@ export default function OverviewValidators({
     refetch,
   } = useValidators({ limit: 50, sortBy: "stake", sortOrder: "desc" });
 
+  // Fetch latest evaluation prompts per validator
+  const [latestPrompts, setLatestPrompts] = useState<Record<string, string>>({});
+  const promptsFetched = useRef(false);
+  useEffect(() => {
+    if (promptsFetched.current) return;
+    promptsFetched.current = true;
+    tasksRepository.searchTasks({ limit: 50, includeDetails: false }).then((res) => {
+      const tasks = res.data?.tasks ?? [];
+      const map: Record<string, string> = {};
+      for (const t of tasks) {
+        const vName = (t as any).validatorName;
+        if (vName && !map[vName] && t.prompt) {
+          map[vName] = t.prompt;
+        }
+      }
+      setLatestPrompts(map);
+    }).catch(() => {});
+  }, []);
+
   // Auto-refresh validators every 20 seconds to show live updates
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 20000); // 20 seconds
+      // Also refresh prompts
+      tasksRepository.searchTasks({ limit: 50, includeDetails: false }).then((res) => {
+        const tasks = res.data?.tasks ?? [];
+        const map: Record<string, string> = {};
+        for (const t of tasks) {
+          const vName = (t as any).validatorName;
+          if (vName && !map[vName] && t.prompt) {
+            map[vName] = t.prompt;
+          }
+        }
+        setLatestPrompts(map);
+      }).catch(() => {});
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [refetch]);
@@ -293,13 +325,17 @@ export default function OverviewValidators({
                           ? validator.currentUseCase
                           : "__";
 
-                      const liveText = showCurrentTask
+                      const isRoundLabel = /^round\s+\d+$/i.test(rawCurrentTask);
+                      const validatorPrompt = latestPrompts[validator.name] ?? null;
+                      const liveText = showCurrentTask && !isRoundLabel
                         ? validator.currentTask
-                        : normalizedStatus === "Finished"
-                          ? "Round finished"
-                          : normalizedStatus === "Waiting"
-                            ? "Idle"
-                            : "Preparing";
+                        : validatorPrompt
+                          ? validatorPrompt
+                          : normalizedStatus === "Finished"
+                            ? "Round finished"
+                            : normalizedStatus === "Waiting"
+                              ? "Idle"
+                              : "Preparing";
 
                       return (
                         <>
@@ -342,7 +378,7 @@ export default function OverviewValidators({
                                 </span>
                               </div>
                               <div className="mt-2 min-h-[24px] text-sm font-medium text-slate-100">
-                                {showCurrentTask ? (
+                                {(showCurrentTask && !isRoundLabel) || validatorPrompt ? (
                                   <MarqueeText
                                     text={liveText}
                                     className="text-sm font-medium text-slate-100"
@@ -472,23 +508,31 @@ export default function OverviewValidators({
                       );
                     })()}
                   </div>
-                  {showCurrentTask ? (
-                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900">
-                      {validator.currentTask}
-                    </div>
-                  ) : (
-                    <div
-                      className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
-                      aria-disabled="true"
-                    >
-                      <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
-                      <span>
-                        {normalizedStatus === "Finished"
+                  {(() => {
+                    const isRoundLbl = /^round\s+\d+$/i.test(rawCurrentTask);
+                    const vPrompt = latestPrompts[validator.name] ?? null;
+                    const text = showCurrentTask && !isRoundLbl
+                      ? validator.currentTask
+                      : vPrompt
+                        ? vPrompt
+                        : normalizedStatus === "Finished"
                           ? "Round finished — no task prompt available"
-                          : "No task prompt available yet"}
-                      </span>
-                    </div>
-                  )}
+                          : "No task prompt available yet";
+                    const hasPrompt = (showCurrentTask && !isRoundLbl) || !!vPrompt;
+                    return hasPrompt ? (
+                      <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900 truncate">
+                        {text}
+                      </div>
+                    ) : (
+                      <div
+                        className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
+                        aria-disabled="true"
+                      >
+                        <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
+                        <span>{text}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 md:justify-around">
                   {secondaryStats.map((stat) => {
