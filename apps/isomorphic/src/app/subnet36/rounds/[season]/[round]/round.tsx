@@ -673,27 +673,11 @@ function RoundHeaderInline({
               </div>
               <div className="relative h-4 w-full overflow-hidden rounded-full bg-white/10 border border-white/20 shadow-inner">
                 <div
-                  className={cn(
-                    "absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg",
-                    isActive &&
-                      "bg-emerald-500 shadow-emerald-500/50",
-                    status === "completed" &&
-                      "bg-emerald-500 shadow-emerald-500/50",
-                    status === "pending" &&
-                      "bg-amber-500/50 shadow-amber-500/30"
-                  )}
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg bg-white shadow-white/30"
                   style={{ width: `${progressPercentage}%` }}
                 />
                 <div
-                  className={cn(
-                    "absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20",
-                    isActive &&
-                      "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)]",
-                    status === "completed" &&
-                      "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)]",
-                    status === "pending" &&
-                      "bg-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.4)]"
-                  )}
+                  className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20 bg-white shadow-[0_0_25px_rgba(255,255,255,0.5)]"
                   style={{ left: `calc(${progressPercentage}% - 10px)` }}
                 />
               </div>
