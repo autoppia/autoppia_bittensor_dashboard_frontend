@@ -3920,7 +3920,7 @@ export default function Round() {
       )}
 
       {/* Floating bottom bar: round nav (top) + validator selector (bottom) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-[1100px]">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-auto max-w-[90vw]">
         <div className="rounded-2xl border border-white/15 bg-[rgb(12,12,14)]/95 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col">
             {/* Round nav - top level, centered */}
@@ -3949,15 +3949,17 @@ export default function Round() {
               )}
             </div>
             {/* Validators carousel - bottom level */}
-            <div className="border-t border-white/10 px-4 pb-2.5 pt-2">
-              <RoundValidatorsInline
-                onValidatorSelect={handleValidatorSelect}
-                selectedValidatorId={selectedValidator?.id ?? null}
-                requestedValidatorId={requestedValidatorId}
-                roundData={roundData}
-                loading={roundDataLoading}
-                error={roundDataError ?? undefined}
-              />
+            <div className="border-t border-white/10 px-6 pb-2.5 pt-2">
+              <div className="flex justify-center gap-1 flex-wrap">
+                <RoundValidatorsInline
+                  onValidatorSelect={handleValidatorSelect}
+                  selectedValidatorId={selectedValidator?.id ?? null}
+                  requestedValidatorId={requestedValidatorId}
+                  roundData={roundData}
+                  loading={roundDataLoading}
+                  error={roundDataError ?? undefined}
+                />
+              </div>
             </div>
           </div>
         </div>
