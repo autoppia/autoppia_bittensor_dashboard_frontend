@@ -9,7 +9,7 @@ import { Title } from "rizzui/typography";
 import Link from "next/link";
 import Image from "next/image";
 import { PiGithubLogoDuotone, PiInfoDuotone, PiXBold } from "react-icons/pi";
-import { useOverviewMetrics } from "@/services/hooks/useOverview";
+import { useOverviewMetrics, useRecentActivity } from "@/services/hooks/useOverview";
 import { useModal } from "@/app/shared/modal-views/use-modal";
 
 export default function Overview() {
@@ -26,6 +26,8 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
+  const { data: recentData } = useRecentActivity(5);
+  const latestActivity = (recentData?.activities ?? [])[0] ?? null;
   const hasFinishedRound = Boolean(
     metrics?.hasFinishedRound ??
       (metrics?.season !== null &&
@@ -260,27 +262,25 @@ export default function Overview() {
           <h3 className="text-[40px] font-black tracking-tight text-white">
             Validators <span className="text-slate-500">—</span> <span className="text-slate-400">What&apos;s happening right now</span>
           </h3>
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm whitespace-nowrap">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4 text-blue-300 animate-spin"
-              aria-hidden
-            >
-              <path d="M12 3a9 9 0 1 0 9 9" />
-              <path d="M12 7v5l3 3" />
-            </svg>
-            <span>Current round:</span>
-            <span className="font-extrabold text-white">
-              {currentSeason != null && currentRoundInSeason != null
-                ? `Season ${currentSeason} - Round ${currentRoundInSeason}`
-                : "Pending"}
-            </span>
-          </div>
+          {latestActivity ? (
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3.5 py-1.5 text-sm font-medium text-slate-200 shadow-sm max-w-[600px]">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              <span className="truncate text-slate-300">
+                {latestActivity.message}
+              </span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm font-semibold text-slate-200 shadow-sm">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-400" />
+              </span>
+              <span>Waiting for activity…</span>
+            </div>
+          )}
         </div>
         <OverviewValidators
           currentRound={currentRoundInSeason}
