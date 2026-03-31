@@ -522,7 +522,7 @@ function RoundHeaderInline({
       <div
         className={cn(
           roundGlassBackgroundClass,
-          "rounded-3xl px-4 py-4 sm:p-6 text-white shadow-2xl relative",
+          "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
             : status === "completed"
@@ -532,8 +532,8 @@ function RoundHeaderInline({
                 : undefined
         )}
       >
-        <div className="relative space-y-5">
-          <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="relative space-y-3">
+          <header className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-3 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-black leading-none md:text-4xl text-white">
@@ -661,68 +661,22 @@ function RoundHeaderInline({
             </div>
           </header>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex flex-1 flex-col gap-3 min-w-0">
-              <div className="flex items-center justify-between gap-2 text-sm min-w-0">
-                <span className="font-bold text-white/80 uppercase tracking-wider truncate">
-                  Round Progress
-                </span>
-                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent shrink-0">
-                  {progressPercentage}%
-                </span>
-              </div>
-              <div className="relative h-4 w-full overflow-hidden rounded-full bg-white/10 border border-white/20 shadow-inner">
+          {/* Progress bar + block info — compact */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/10 border border-white/15">
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg bg-white shadow-white/30"
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out bg-white shadow-white/30"
                   style={{ width: `${progressPercentage}%` }}
                 />
-                <div
-                  className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20 bg-white shadow-[0_0_25px_rgba(255,255,255,0.5)]"
-                  style={{ left: `calc(${progressPercentage}% - 10px)` }}
-                />
-              </div>
-              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3 min-w-0">
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 dark:bg-gray-50/50 px-5 py-4 hover:border-white/20 hover:shadow-lg transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-white/10 ring-1 ring-white/20 shrink-0">
-                    <PiClockDuotone className="h-7 w-7 text-white/70" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
-                      Start Block
-                    </span>
-                    <div className="text-lg font-black text-white mt-0.5 break-all">
-                      {startBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 dark:bg-gray-50/50 px-5 py-4 hover:border-white/20 hover:shadow-lg transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-white/10 ring-1 ring-white/20 shrink-0">
-                    <PiPulseDuotone className="h-7 w-7 text-white/70" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
-                      Current Block
-                    </span>
-                    <div className="text-lg font-black text-white mt-0.5 break-all">
-                      {currentBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 dark:bg-gray-50/50 px-5 py-4 hover:border-white/20 hover:shadow-lg transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-white/10 ring-1 ring-white/20 shrink-0">
-                    <PiFlagCheckeredDuotone className="h-7 w-7 text-white/70" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
-                      End Block
-                    </span>
-                    <div className="text-lg font-black text-white mt-0.5 break-all">
-                      {endBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
+            <span className="text-lg font-black text-white shrink-0">{progressPercentage}%</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-white/50">
+            <span><span className="font-semibold text-white/70">Start</span> {startBlock.toLocaleString()}</span>
+            <span><span className="font-semibold text-white/70">Current</span> {currentBlock.toLocaleString()}</span>
+            <span><span className="font-semibold text-white/70">End</span> {endBlock.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -3125,28 +3079,20 @@ export default function Round() {
 
       {/* Show message if round is active, otherwise show metrics */}
       {isActive ? (
-        <div className="mt-6 mb-4">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-4 sm:p-5 shadow-lg backdrop-blur">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
-            <div className="relative flex flex-col items-center text-center gap-4">
-              <div className="h-16 w-16 rounded-xl border-2 border-amber-300/60 bg-white/10 flex items-center justify-center shadow-inner">
-                <PiInfoDuotone className="h-8 w-8 text-amber-200" />
-              </div>
-              <div className="flex-1">
-                <p className="text-lg sm:text-xl font-bold text-amber-100 uppercase tracking-wide mb-2">
-                  Round in progress
-                </p>
-                <p className="text-sm sm:text-base text-white/80 font-medium max-w-2xl">
-                  This round is in progress. Results and rankings will be available once evaluations are complete.
-                </p>
-              </div>
+        <div className="mt-4 mb-3">
+          <div className="relative overflow-hidden rounded-xl border border-amber-400/30 bg-amber-500/8 px-4 py-3 backdrop-blur">
+            <div className="relative flex items-center gap-3">
+              <PiInfoDuotone className="h-5 w-5 text-amber-300 flex-shrink-0" />
+              <p className="text-sm font-semibold text-amber-100">
+                Round in progress — results will be available once evaluations are complete.
+              </p>
             </div>
           </div>
         </div>
       ) : (
         <>
       {/* Post-Consensus Metrics */}
-      <div className="mt-6 mb-4">
+      <div className="mt-4 mb-3">
             {roundDataLoading ? (
               <div className="flex items-center gap-3 mb-3">
                 <Skeleton className="w-8 h-8 rounded-xl bg-white/10 flex-shrink-0" />
@@ -3343,7 +3289,7 @@ export default function Round() {
           return (
             <>
               {/* ── Per-Validator Section Divider ── */}
-              <div className="mt-8 mb-5">
+              <div className="mt-5 mb-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
                   <div className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-sky-400/25 bg-sky-500/8">
@@ -3375,13 +3321,10 @@ export default function Round() {
                   </p>
                 </div>
               </div>
-              <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)]">
-                <LocalMetricCard card={selectedValidatorCards[0]} />
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  {selectedValidatorCards.slice(1).map((card) => (
-                    <LocalMetricCard key={(card as any).key} card={card} />
-                  ))}
-                </div>
+              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {selectedValidatorCards.map((card) => (
+                  <LocalMetricCard key={(card as any).key} card={card} />
+                ))}
               </div>
             </>
           );
