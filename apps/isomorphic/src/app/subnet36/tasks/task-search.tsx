@@ -1188,8 +1188,14 @@ export default function TaskSearch() {
 
                     <div className="h-8 w-px bg-slate-700/60 flex-shrink-0" />
 
-                    {/* Stats: Score | Cost | Time */}
+                    {/* Stats: Reward | Score | Cost | Time */}
                     <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                      <div className="text-center min-w-[38px]">
+                        <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Reward</div>
+                        <div className={`text-xs font-bold ${scorePercent > 0 ? "text-amber-400" : "text-slate-500"}`}>
+                          {Number.isFinite(scorePercent) ? `${scorePercent}%` : "—"}
+                        </div>
+                      </div>
                       <div className="text-center min-w-[34px]">
                         <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Score</div>
                         <div className={`text-xs font-bold ${scorePercent > 0 ? "text-emerald-400" : "text-slate-500"}`}>
@@ -1198,13 +1204,13 @@ export default function TaskSearch() {
                       </div>
                       <div className="text-center min-w-[34px]">
                         <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Cost</div>
-                        <div className="text-xs font-bold text-sky-400">
+                        <div className={`text-xs font-bold ${evaluationCost != null && evaluationCost > 0 ? "text-sky-400" : "text-slate-500"}`}>
                           {formatCost(evaluationCost)}
                         </div>
                       </div>
                       <div className="text-center min-w-[34px]">
                         <div className="text-[8px] uppercase tracking-wider text-slate-500 font-semibold">Time</div>
-                        <div className="text-xs font-bold text-violet-400">
+                        <div className={`text-xs font-bold ${task.duration > 0 ? "text-violet-400" : "text-slate-500"}`}>
                           {typeof task.duration === "number" && task.duration > 0
                             ? `${task.duration}s`
                             : "—"}
