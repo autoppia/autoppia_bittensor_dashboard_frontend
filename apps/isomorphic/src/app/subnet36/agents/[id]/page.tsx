@@ -1051,11 +1051,8 @@ function AgentValidators({
 
       <div className="space-y-8">
         {visibleRounds.map((roundEntry) => {
-          const consensus = roundEntry.consensus;
           const isRoundFinished =
             String(roundEntry.round_status ?? "").toLowerCase() === "finished";
-          const hasConsensus =
-            roundEntry.post_consensus_available && isRoundFinished;
           const validatorsWithRuns = isRoundFinished
             ? roundEntry.validators.filter((validator) => Boolean(validator.run_id))
             : [];
@@ -1067,6 +1064,11 @@ function AgentValidators({
                   <Text className="text-lg sm:text-xl font-bold text-white">
                     {roundEntry.round_label}
                   </Text>
+                  {isRoundFinished ? (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-sky-500/10 text-sky-100 border border-sky-300/20">
+                      Local validator runs only
+                    </span>
+                  ) : null}
                   {String(roundEntry.round_status ?? "").toLowerCase() !== "finished" && (
                     <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-amber-500/15 text-amber-100 border border-amber-300/30">
                       In progress
@@ -1097,43 +1099,6 @@ function AgentValidators({
                 </div>
               ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 sm:px-2 sm:py-2">
-                {/* Consensus card */}
-                {hasConsensus && (
-                  <div className="group rounded-2xl border-2 border-cyan-400/35 bg-cyan-500/10">
-                    <div className="relative p-5 border-b border-white/15 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent backdrop-blur-sm rounded-t-2xl">
-                      <Text className="font-bold text-white text-base">Validator consensus</Text>
-                      <Text className="text-xs text-white/60 tracking-wide">
-                        Results Averaged Across All Validators After Consensus
-                      </Text>
-                    </div>
-                    <div className="relative p-2 sm:p-5">
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-transparent border border-white/15 rounded-xl p-3 sm:p-5">
-                        {[
-                          { title: "Reward", metric: `${((consensus.reward ?? 0) * 100).toFixed(2)}%`, icon: PiChartLineUpDuotone, iconClassName: "bg-gradient-to-br from-emerald-500 to-green-600" },
-                          { title: "Score", metric: `${((consensus.score ?? 0) * 100).toFixed(1)}%`, icon: PiTargetDuotone, iconClassName: "bg-gradient-to-br from-violet-500 to-fuchsia-600" },
-                          { title: "Time", metric: `${Number(consensus.time ?? 0).toFixed(2)}s`, icon: PiTimerDuotone, iconClassName: "bg-gradient-to-br from-blue-500 to-indigo-600" },
-                          { title: "Tasks", metric: `${consensus.tasks_success ?? 0}/${consensus.tasks_received ?? 0}`, icon: PiListChecksDuotone, iconClassName: "bg-gradient-to-br from-indigo-500 to-blue-600" },
-                          { title: "Websites", metric: String(roundEntry.websites_count ?? 0), icon: PiChartBarDuotone, iconClassName: "bg-gradient-to-br from-pink-500 to-rose-600" },
-                          { title: "Avg Cost", metric: consensus.avg_cost != null ? `$${Number(consensus.avg_cost).toFixed(3)}` : "N/A", icon: PiCurrencyDollarDuotone, iconClassName: "bg-gradient-to-br from-amber-500 to-orange-600" },
-                        ].map((stat) => {
-                          const Icon = stat.icon as any;
-                          return (
-                            <div key={stat.title} className="flex items-center sm:gap-2.5 gap-2 min-w-0">
-                              <div className={cn("flex items-center justify-center w-7 h-7 sm:w-11 sm:h-11 rounded-md sm:rounded-xl text-white flex-shrink-0 shadow-lg ring-2 ring-white/20", stat.iconClassName)}>
-                                <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <Text className="text-xs text-white/70 font-medium">{stat.title}</Text>
-                                <Text className="font-bold text-xs sm:text-base truncate text-white">{stat.metric}</Text>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Per-validator cards — show the actual run metrics for this validator */}
                 {validatorsWithRuns.map((v) => {
                   const attemptedTasks =
