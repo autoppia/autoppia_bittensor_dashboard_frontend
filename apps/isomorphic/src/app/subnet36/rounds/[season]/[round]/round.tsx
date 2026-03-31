@@ -3307,24 +3307,24 @@ export default function Round() {
                 </div>
               </div>
 
-              {/* Local metrics header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20 flex-shrink-0">
-                  <PiListChecksDuotone className="w-5 h-5 text-sky-300" />
+              {/* Competition State — inside glass panel */}
+              <div className={cn(roundGlassBackgroundClass, "rounded-2xl p-4 border-white/20 mb-4")}>
+                <div className="flex items-center gap-3 mb-4">
+                  <PiListChecksDuotone className="w-5 h-5 text-sky-300 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-white leading-tight">
+                      Competition State
+                    </p>
+                    <p className="text-[11px] text-white/50">
+                      Best local rewards used by this validator for round competition
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-base font-black text-white leading-tight">
-                    Competition State
-                  </p>
-                  <p className="text-xs text-white/50 mt-0.5">
-                    Best local rewards used by this validator for round competition
-                  </p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {selectedValidatorCards.map((card) => (
+                    <LocalMetricCard key={(card as any).key} card={card} />
+                  ))}
                 </div>
-              </div>
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {selectedValidatorCards.map((card) => (
-                  <LocalMetricCard key={(card as any).key} card={card} />
-                ))}
               </div>
             </>
           );
