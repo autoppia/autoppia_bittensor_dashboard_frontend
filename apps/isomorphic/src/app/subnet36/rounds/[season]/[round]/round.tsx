@@ -617,7 +617,7 @@ function RoundHeaderInline({
                       (option) =>
                         option.value ===
                         String(round?.season ?? seasonParam ?? progressData?.season ?? "")
-                    )}
+                    ) ?? null}
                     onChange={(option: { label: string; value: string }) =>
                       goToSeason(Number.parseInt(option.value, 10))
                     }
@@ -3339,50 +3339,6 @@ export default function Round() {
 
       </div>
 
-      {/* Floating bottom bar: round nav (top) + validator selector (bottom) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-[1100px]">
-        <div className="rounded-2xl border border-white/15 bg-[rgb(12,12,14)]/95 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
-          <div className="flex flex-col">
-            {/* Round nav - top level, centered */}
-            <div className="flex items-center justify-center gap-1.5 px-4 pt-2.5 pb-2">
-              <button
-                type="button"
-                onClick={() => goToRound(neighborRounds.previous?.roundKey)}
-                disabled={!neighborRounds.previous?.roundKey}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white disabled:text-white/20 disabled:cursor-not-allowed"
-              >
-                <PiCaretLeftBold className="h-3 w-3" />
-                <span className="hidden sm:inline">R{neighborRounds.previous?.roundNumber ?? "—"}</span>
-              </button>
-              <span className="text-sm font-black text-white px-2">
-                Round {roundParam}
-              </span>
-              {neighborRounds.next?.roundKey && (
-                <button
-                  type="button"
-                  onClick={() => goToRound(neighborRounds.next?.roundKey)}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
-                >
-                  <span className="hidden sm:inline">R{neighborRounds.next?.roundNumber ?? "—"}</span>
-                  <PiCaretRightBold className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-            {/* Validators carousel - bottom level */}
-            <div className="border-t border-white/10 px-4 pb-2.5 pt-2">
-              <RoundValidatorsInline
-                onValidatorSelect={handleValidatorSelect}
-                selectedValidatorId={selectedValidator?.id ?? null}
-                requestedValidatorId={requestedValidatorId}
-                roundData={roundData}
-                loading={roundDataLoading}
-                error={roundDataError ?? undefined}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Selected validator metric cards */}
       {(() => {
         if (roundDataLoading) {
@@ -3962,6 +3918,50 @@ export default function Round() {
       </div>
         </>
       )}
+
+      {/* Floating bottom bar: round nav (top) + validator selector (bottom) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-[1100px]">
+        <div className="rounded-2xl border border-white/15 bg-[rgb(12,12,14)]/95 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
+          <div className="flex flex-col">
+            {/* Round nav - top level, centered */}
+            <div className="flex items-center justify-center gap-1.5 px-4 pt-2.5 pb-2">
+              <button
+                type="button"
+                onClick={() => goToRound(neighborRounds.previous?.roundKey)}
+                disabled={!neighborRounds.previous?.roundKey}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white disabled:text-white/20 disabled:cursor-not-allowed"
+              >
+                <PiCaretLeftBold className="h-3 w-3" />
+                <span className="hidden sm:inline">R{neighborRounds.previous?.roundNumber ?? "—"}</span>
+              </button>
+              <span className="text-sm font-black text-white px-2">
+                Round {roundParam}
+              </span>
+              {neighborRounds.next?.roundKey && (
+                <button
+                  type="button"
+                  onClick={() => goToRound(neighborRounds.next?.roundKey)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                >
+                  <span className="hidden sm:inline">R{neighborRounds.next?.roundNumber ?? "—"}</span>
+                  <PiCaretRightBold className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            {/* Validators carousel - bottom level */}
+            <div className="border-t border-white/10 px-4 pb-2.5 pt-2">
+              <RoundValidatorsInline
+                onValidatorSelect={handleValidatorSelect}
+                selectedValidatorId={selectedValidator?.id ?? null}
+                requestedValidatorId={requestedValidatorId}
+                roundData={roundData}
+                loading={roundDataLoading}
+                error={roundDataError ?? undefined}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
         </>
       ) : null}
