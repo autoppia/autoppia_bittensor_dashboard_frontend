@@ -2346,6 +2346,43 @@ export default function Page() {
                         {effectiveAgent.status}
                       </span>
                     )}
+                  {githubAvailable ? (
+                    <a
+                      href={effectiveAgent?.githubUrl ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/[0.1] hover:text-white"
+                    >
+                      <PiGithubLogoDuotone className="w-3.5 h-3.5" />
+                      GitHub
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-2.5 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
+                      <PiGithubLogoDuotone className="w-3.5 h-3.5" />
+                      GitHub
+                    </span>
+                  )}
+                  {taoStatsAvailable ? (
+                    <a
+                      href={
+                        effectiveAgent?.taostatsUrl ||
+                        (effectiveAgent?.hotkey
+                          ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(effectiveAgent.hotkey)}`
+                          : "#")
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/[0.05] px-2.5 py-1 text-[11px] font-semibold text-cyan-300/70 transition hover:bg-cyan-400/[0.1] hover:text-cyan-200"
+                    >
+                      <PiInfoDuotone className="w-3.5 h-3.5" />
+                      TaoStats
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-2.5 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
+                      <PiInfoDuotone className="w-3.5 h-3.5" />
+                      TaoStats
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
                   <span className="font-mono font-semibold text-white/60">
@@ -2378,46 +2415,6 @@ export default function Page() {
                       )}
                     </button>
                   )}
-                  <span className="text-white/20">·</span>
-                  <div className="flex items-center gap-2">
-                    {githubAvailable ? (
-                      <a
-                        href={effectiveAgent?.githubUrl ?? "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/[0.1] hover:text-white"
-                      >
-                        <PiGithubLogoDuotone className="w-3.5 h-3.5" />
-                        GitHub
-                      </a>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-3 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
-                        <PiGithubLogoDuotone className="w-3.5 h-3.5" />
-                        GitHub
-                      </span>
-                    )}
-                    {taoStatsAvailable ? (
-                      <a
-                        href={
-                          effectiveAgent?.taostatsUrl ||
-                          (effectiveAgent?.hotkey
-                            ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(effectiveAgent.hotkey)}`
-                            : "#")
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/[0.05] px-3 py-1 text-[11px] font-semibold text-cyan-300/70 transition hover:bg-cyan-400/[0.1] hover:text-cyan-200"
-                      >
-                        <PiInfoDuotone className="w-3.5 h-3.5" />
-                        TaoStats
-                      </a>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-3 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
-                        <PiInfoDuotone className="w-3.5 h-3.5" />
-                        TaoStats
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
