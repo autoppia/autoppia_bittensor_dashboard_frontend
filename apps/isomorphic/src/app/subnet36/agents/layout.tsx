@@ -15,7 +15,7 @@ export default function AgentsLayout({
   const { openDrawer } = useDrawer();
 
   return (
-    <>
+    <div className="lg:h-[calc(100vh-90px)] lg:overflow-hidden">
       {/* Desktop Sidebar - Hidden on mobile */}
       <Suspense fallback={<AgentSidebarPlaceholder />}>
         <AgentsSidebar className="hidden lg:block" />
@@ -45,7 +45,7 @@ export default function AgentsLayout({
         </ActionIcon>
       </div>
 
-      <div className="ml-0 lg:ml-[300px] lg:h-[calc(100vh-90px)] lg:overflow-y-auto">{children}</div>
-    </>
+      <div className="ml-0 lg:ml-[300px] lg:h-full lg:overflow-y-auto">{children}</div>
+    </div>
   );
 }
