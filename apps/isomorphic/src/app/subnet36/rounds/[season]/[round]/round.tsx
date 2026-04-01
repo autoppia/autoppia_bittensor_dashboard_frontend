@@ -533,10 +533,10 @@ function RoundHeaderInline({
         )}
       >
         <div className="relative space-y-3">
-          <header className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-3 min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-black leading-none md:text-4xl text-white">
+          <header className="flex flex-wrap items-start justify-between gap-2 sm:gap-3">
+            <div className="space-y-2 sm:space-y-3 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h1 className="text-xl sm:text-2xl font-black leading-none md:text-4xl text-white">
                   ROUND {String(roundTyped?.roundInSeason ?? roundParam ?? (progressData as { roundInSeason?: number })?.roundInSeason ?? roundNumber ?? "—")}
                 </h1>
                 <span
@@ -622,7 +622,7 @@ function RoundHeaderInline({
                       goToSeason(Number.parseInt(option.value, 10))
                     }
                     disabled={seasonsLoading || !seasonOptions.length}
-                    className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-white/20 bg-white/[0.08] text-sm font-bold transition-all duration-300 hover:bg-white/[0.14] hover:border-white/30 hover:scale-105 active:scale-95 !px-0 !py-0"
+                    className="inline-flex items-center h-[38px] sm:h-[42px] min-w-[100px] sm:min-w-[132px] rounded-xl border-2 border-white/20 bg-white/[0.08] text-xs sm:text-sm font-bold transition-all duration-300 hover:bg-white/[0.14] hover:border-white/30 hover:scale-105 active:scale-95 !px-0 !py-0"
                     selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
                     dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
                   />
@@ -673,7 +673,7 @@ function RoundHeaderInline({
             </div>
             <span className="text-lg font-black text-white shrink-0">{progressPercentage}%</span>
           </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-white/50">
+          <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-6 gap-y-1 text-[11px] sm:text-xs text-white/50">
             <span><span className="font-semibold text-white/70">Start</span> {startBlock.toLocaleString()}</span>
             <span><span className="font-semibold text-white/70">Current</span> {currentBlock.toLocaleString()}</span>
             <span><span className="font-semibold text-white/70">End</span> {endBlock.toLocaleString()}</span>
@@ -1067,32 +1067,32 @@ function RoundStatsInline({
           <div className="flex flex-1 flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
 
             {/* Avg Reward */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-4">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl border border-emerald-500/25 bg-emerald-500/10 mb-0.5">
-                <PiTrophyDuotone className="h-4 w-4 text-emerald-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-emerald-500/25 bg-emerald-500/10 mb-0.5">
+                <PiTrophyDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Reward</p>
-              <p className="text-2xl font-black text-emerald-300 leading-none">{rewardPct}</p>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Reward</p>
+              <p className="text-xl sm:text-2xl font-black text-emerald-300 leading-none">{rewardPct}</p>
             </div>
 
             {/* Avg Time */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-4">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl border border-sky-500/25 bg-sky-500/10 mb-0.5">
-                <PiClockDuotone className="h-4 w-4 text-sky-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-sky-500/25 bg-sky-500/10 mb-0.5">
+                <PiClockDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Time</p>
-              <p className="text-2xl font-black text-sky-300 leading-none">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Time</p>
+              <p className="text-xl sm:text-2xl font-black text-sky-300 leading-none">
                 {`${formatNumber(averageEvalTime, 1)}s`}
               </p>
             </div>
 
             {/* Avg Cost */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-4">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl border border-violet-500/25 bg-violet-500/10 mb-0.5">
-                <PiChartLineUpDuotone className="h-4 w-4 text-violet-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-violet-500/25 bg-violet-500/10 mb-0.5">
+                <PiChartLineUpDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Cost</p>
-              <p className={cn("text-2xl font-black leading-none", averageEvalCost != null ? "text-violet-300" : "text-white/20")}>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Cost</p>
+              <p className={cn("text-xl sm:text-2xl font-black leading-none", averageEvalCost != null ? "text-violet-300" : "text-white/20")}>
                 {costStr}
               </p>
             </div>

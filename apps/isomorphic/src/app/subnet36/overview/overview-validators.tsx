@@ -120,7 +120,7 @@ export default function OverviewValidators({
   // Show loading state
   if (validatorsLoading || roundLoading) {
     return (
-      <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2", className)}>
+      <div className={cn("grid grid-cols-1 gap-3 sm:gap-6 md:grid-cols-2", className)}>
           {Array.from({ length: 6 }, (_, i) => `validator-skeleton-${i}`).map((skeletonId) => (
             <div
               key={skeletonId}
@@ -184,7 +184,7 @@ export default function OverviewValidators({
   }
 
   return (
-      <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2", className)}>
+      <div className={cn("grid grid-cols-1 gap-3 sm:gap-6 md:grid-cols-2", className)}>
         {(validatorsData?.data?.validators || []).map((validator, index) => {
           const iconSrc = resolveAssetUrl(
             validator.icon,
@@ -271,7 +271,7 @@ export default function OverviewValidators({
 
           return validatorLink ? (
             <Link key={`validator-${validator.id}`} href={validatorLink}>
-              <div className="group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
+              <div className="group relative flex h-full min-h-[360px] sm:min-h-[420px] flex-col overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent opacity-70" />
                 {/* Header - Validator Info & Status */}
                 <div className="border-b border-white/10 bg-white/[0.03] p-4">
@@ -401,7 +401,7 @@ export default function OverviewValidators({
                               return (
                                 <div
                                   key={stat.title}
-                                  className="inline-flex min-h-[50px] min-w-[98px] flex-1 items-center gap-2 rounded-full bg-white/[0.05] px-3 py-2"
+                                  className="inline-flex min-h-[44px] sm:min-h-[50px] min-w-[80px] sm:min-w-[98px] flex-1 items-center gap-1.5 sm:gap-2 rounded-full bg-white/[0.05] px-2.5 sm:px-3 py-2"
                                 >
                                   <div
                                     className={cn(

@@ -176,7 +176,7 @@ export default function Overview() {
   return (
     <div className="-mx-4 -mt-4 min-h-screen bg-[rgb(4,6,14)] px-4 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       {/* Compact top bar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 dark:bg-gray-50/50 px-5 py-3.5 shadow-[0_12px_40px_rgba(2,6,23,0.3)]">
+      <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/10 dark:bg-gray-50/50 px-3 sm:px-5 py-3 sm:py-3.5 shadow-[0_12px_40px_rgba(2,6,23,0.3)]">
         <div className="flex items-center gap-3">
           <span className="relative inline-flex h-2.5 w-2.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60 opacity-75" />
@@ -233,7 +233,7 @@ export default function Overview() {
       </div>
 
       {/* Chart + Metrics */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_430px] min-w-0">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_430px] min-w-0">
         <div className="min-w-0">
           <OverviewMinerChart
             className="w-full min-w-0 flex-1"
@@ -257,13 +257,13 @@ export default function Overview() {
       </div>
 
       {/* Validators */}
-      <section className="mt-12">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[40px] font-black tracking-tight text-white">
-            Validators <span className="text-slate-500">—</span> <span className="text-slate-400">What&apos;s happening right now</span>
+      <section className="mt-8 sm:mt-12">
+        <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <h3 className="text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
+            Validators <span className="text-slate-500">—</span> <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">What&apos;s happening right now</span>
           </h3>
           {latestActivity ? (
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3.5 py-1.5 text-sm font-medium text-slate-200 shadow-sm max-w-[600px]">
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-200 shadow-sm max-w-full sm:max-w-[600px]">
               <span className="relative flex h-2 w-2 flex-shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
@@ -290,10 +290,10 @@ export default function Overview() {
       </section>
 
       {/* Recent Activity */}
-      <section className="mt-12 pb-8">
-        <h3 className="mb-5 text-[40px] font-black tracking-tight text-white">
+      <section className="mt-8 sm:mt-12 pb-8">
+        <h3 className="mb-4 sm:mb-5 text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
           Recent activity <span className="text-slate-500">—</span>{" "}
-          <span className="text-slate-400">Live feed</span>
+          <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">Live feed</span>
         </h3>
         <OverviewRecentActivity className="min-w-0" />
       </section>
