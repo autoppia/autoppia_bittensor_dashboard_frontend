@@ -43,6 +43,10 @@ import type {
   AgentRunOverview,
   AgentRunsByRoundEntry,
 } from "@/repositories/agents/agents.types";
+import {
+  computeAgentDetailPageShowFatalError,
+  computeAgentDetailPageShowLoading,
+} from "../_lib/agent-detail-view-gate";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
@@ -2009,16 +2013,21 @@ export default function Page() {
     return msg;
   }, [minerHistoricalError]);
 
-  // In historical mode, we can use minerHistorical data even if agent is null
-  const hasHistoricalData = viewMode === "historical" && minerHistorical;
-  // In current/runs mode, we can use minerRoundDetails data
-  const hasRoundDetailsData =
-    viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
-
-  // Show loading only if we don't have data yet
-  const isLoading =
-    (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
+  const gateInput = {
+    hasRouteAgentId: Boolean(trimmedId),
+    viewMode,
+    agentDetail,
+    agentFromPayload: agent,
+    effectiveAgent,
+    agentFetchLoading: loading,
+    agentFetchError: error,
+    minerHistorical,
+    minerHistoricalLoading,
+    minerRoundDetails,
+    minerRoundDetailsLoading,
+  };
+  const isLoading = computeAgentDetailPageShowLoading(gateInput);
+  const showFatalError = computeAgentDetailPageShowFatalError(gateInput, isLoading);
 
   if (isLoading) {
     return (

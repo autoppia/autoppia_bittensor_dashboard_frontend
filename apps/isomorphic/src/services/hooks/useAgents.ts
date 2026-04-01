@@ -3,7 +3,18 @@
  * Provides easy-to-use hooks for fetching and managing agents data
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
+
+/** useLayoutEffect skips SSR warning; runs before paint on client to avoid loading flashes. */
+const useIsoLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 import { agentsRepository } from '@/repositories/agents/agents.repository';
 import type {
   AgentData,
@@ -80,7 +91,7 @@ function useApiCall<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiCall]);
 
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     // Don't fetch if disabled
     if (!enabled) {
       setLoading(false);
@@ -109,6 +120,11 @@ function useApiCall<T>(
 
     // Don't cancel this new fetch
     cancelledRef.current = false;
+
+    // Before browser paint (client): loading must be true before any frame that could
+    // render the fatal "Agent not found" card. useEffect ran too late; useLayoutEffect does not.
+    setLoading(true);
+    setError(null);
 
     fetchData();
   }, [dependencyKey, enabled, fetchData]);
