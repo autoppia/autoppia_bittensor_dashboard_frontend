@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { routes } from "@/config/routes";
 import {
   formatWebsiteName,
@@ -559,7 +559,7 @@ export default function Page() {
       </div>
 
       {isLoading && (
-        <div className="fixed bottom-4 right-4 bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+        <div className="fixed bottom-4 right-4 hidden sm:flex bg-transparent border border-blue-600/60 text-white px-4 py-2 rounded-lg shadow-lg items-center gap-2 z-50">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm">Updating data...</span>
         </div>
@@ -2454,6 +2454,8 @@ function AgentRunTasksSection({
   refetch?: () => void;
   selectedWebsite?: string | null;
 }>) {
+  const router = useRouter();
+
   // Filter evaluations by selected website
   const filteredEvaluations = useMemo(() => {
     if (!selectedWebsite || selectedWebsite === "__all__") {
@@ -2597,13 +2599,17 @@ function AgentRunTasksSection({
           <Table
             table={table as unknown as TanStackTableType<Record<string, unknown>>}
             variant="modern"
+            onRowClick={(row: any) => {
+              const evalId = row.original?.evaluationId;
+              if (evalId) router.push(`${routes.evaluations}/${evalId}`);
+            }}
             classNames={{
               container:
                 "custom-scrollbar scroll-smooth overflow-x-auto rounded-2xl border border-slate-700/25 bg-transparent",
               headerClassName:
                 "bg-gradient-to-r from-blue-600/20 to-sky-600/20 text-blue-100 border-b border-blue-500/30",
               rowClassName:
-                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:bg-sky-500/15 hover:border-sky-400/40 hover:shadow-[0_12px_28px_rgba(56,189,248,0.18)]",
+                "group cursor-pointer relative border-b border-slate-700/25 transition-colors duration-200 hover:!bg-white/[0.04] hover:border-slate-600/40",
             }}
           />
         ) : (

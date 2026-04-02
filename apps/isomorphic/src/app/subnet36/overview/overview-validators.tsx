@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import cn from "@core/utils/class-names";
@@ -18,6 +18,7 @@ import { Text } from "rizzui";
 import MarqueeText from "@/app/shared/marquee-text";
 import { useValidators } from "@/services/hooks/useOverview";
 import { resolveAssetUrl } from "@/services/utils/assets";
+import { tasksRepository } from "@/repositories/tasks/tasks.repository";
 
 const DEFAULT_TASK_MESSAGES = new Set([
   "Awaiting round start",
@@ -71,13 +72,44 @@ export default function OverviewValidators({
     loading: validatorsLoading,
     error: validatorsError,
     refetch,
-  } = useValidators({ limit: 4, sortBy: "stake", sortOrder: "desc" });
+  } = useValidators({ limit: 50, sortBy: "stake", sortOrder: "desc" });
+
+  // Fetch latest evaluation prompts per validator
+  const [latestPrompts, setLatestPrompts] = useState<Record<string, string>>({});
+  const promptsFetched = useRef(false);
+  useEffect(() => {
+    if (promptsFetched.current) return;
+    promptsFetched.current = true;
+    tasksRepository.searchTasks({ limit: 50, includeDetails: false }).then((res) => {
+      const tasks = res.data?.tasks ?? [];
+      const map: Record<string, string> = {};
+      for (const t of tasks) {
+        const vName = (t as any).validatorName;
+        if (vName && !map[vName] && t.prompt) {
+          map[vName] = t.prompt;
+        }
+      }
+      setLatestPrompts(map);
+    }).catch(() => {});
+  }, []);
 
   // Auto-refresh validators every 20 seconds to show live updates
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 20000); // 20 seconds
+      // Also refresh prompts
+      tasksRepository.searchTasks({ limit: 50, includeDetails: false }).then((res) => {
+        const tasks = res.data?.tasks ?? [];
+        const map: Record<string, string> = {};
+        for (const t of tasks) {
+          const vName = (t as any).validatorName;
+          if (vName && !map[vName] && t.prompt) {
+            map[vName] = t.prompt;
+          }
+        }
+        setLatestPrompts(map);
+      }).catch(() => {});
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [refetch]);
@@ -88,7 +120,7 @@ export default function OverviewValidators({
   // Show loading state
   if (validatorsLoading || roundLoading) {
     return (
-      <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2", className)}>
+      <div className={cn("grid grid-cols-1 gap-3 sm:gap-6 md:grid-cols-2", className)}>
           {Array.from({ length: 6 }, (_, i) => `validator-skeleton-${i}`).map((skeletonId) => (
             <div
               key={skeletonId}
@@ -152,7 +184,7 @@ export default function OverviewValidators({
   }
 
   return (
-      <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2", className)}>
+      <div className={cn("grid grid-cols-1 gap-3 sm:gap-6 md:grid-cols-2", className)}>
         {(validatorsData?.data?.validators || []).map((validator, index) => {
           const iconSrc = resolveAssetUrl(
             validator.icon,
@@ -239,7 +271,7 @@ export default function OverviewValidators({
 
           return validatorLink ? (
             <Link key={`validator-${validator.id}`} href={validatorLink}>
-              <div className="group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,15,27,0.95),rgba(9,11,21,0.92))] shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
+              <div className="group relative flex h-full min-h-[360px] sm:min-h-[420px] flex-col overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent opacity-70" />
                 {/* Header - Validator Info & Status */}
                 <div className="border-b border-white/10 bg-white/[0.03] p-4">
@@ -265,13 +297,16 @@ export default function OverviewValidators({
                         </Text>
                       </div>
                     </div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100/90 shadow-[0_12px_28px_-20px_rgba(16,185,129,0.85)]">
-                      <span className="uppercase tracking-[0.18em] text-emerald-100/55">
-                        UID
-                      </span>
-                      <span className="text-white">
-                        {validator.validatorUid ?? "—"}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 whitespace-nowrap">{lastSeenLabel}</span>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100/90 shadow-[0_12px_28px_-20px_rgba(16,185,129,0.85)]">
+                        <span className="uppercase tracking-[0.18em] text-emerald-100/55">
+                          UID
+                        </span>
+                        <span className="text-white">
+                          {validator.validatorUid ?? "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -290,17 +325,21 @@ export default function OverviewValidators({
                           ? validator.currentUseCase
                           : "__";
 
-                      const liveText = showCurrentTask
+                      const isRoundLabel = /^round\s+\d+$/i.test(rawCurrentTask);
+                      const validatorPrompt = latestPrompts[validator.name] ?? null;
+                      const liveText = showCurrentTask && !isRoundLabel
                         ? validator.currentTask
-                        : normalizedStatus === "Finished"
-                          ? "Round finished"
-                          : normalizedStatus === "Waiting"
-                            ? "Idle"
-                            : "Preparing";
+                        : validatorPrompt
+                          ? validatorPrompt
+                          : normalizedStatus === "Finished"
+                            ? "Round finished"
+                            : normalizedStatus === "Waiting"
+                              ? "Idle"
+                              : "Preparing";
 
                       return (
                         <>
-                          <div className="rounded-[20px] bg-[linear-gradient(180deg,rgba(10,14,28,0.62),rgba(7,10,22,0.78))] px-3.5 py-3.5">
+                          <div className="rounded-[20px] dark:bg-gray-50/30 px-3.5 py-3.5">
                             <div className="grid grid-cols-1 gap-2 border-b border-white/8 pb-3">
                               <div className="inline-flex min-w-0 items-center gap-2 rounded-full bg-fuchsia-400/[0.07] px-3 py-1.5">
                                 <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-fuchsia-100/55">
@@ -339,7 +378,7 @@ export default function OverviewValidators({
                                 </span>
                               </div>
                               <div className="mt-2 min-h-[24px] text-sm font-medium text-slate-100">
-                                {showCurrentTask ? (
+                                {(showCurrentTask && !isRoundLabel) || validatorPrompt ? (
                                   <MarqueeText
                                     text={liveText}
                                     className="text-sm font-medium text-slate-100"
@@ -362,7 +401,7 @@ export default function OverviewValidators({
                               return (
                                 <div
                                   key={stat.title}
-                                  className="inline-flex min-h-[50px] min-w-[98px] flex-1 items-center gap-2 rounded-full bg-white/[0.05] px-3 py-2"
+                                  className="inline-flex min-h-[44px] sm:min-h-[50px] min-w-[80px] sm:min-w-[98px] flex-1 items-center gap-1.5 sm:gap-2 rounded-full bg-white/[0.05] px-2.5 sm:px-3 py-2"
                                 >
                                   <div
                                     className={cn(
@@ -387,9 +426,6 @@ export default function OverviewValidators({
                         </>
                       );
                     })()}
-                    <div className="mt-auto pt-4 text-right text-[11px] text-slate-500">
-                      {lastSeenLabel}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -472,23 +508,31 @@ export default function OverviewValidators({
                       );
                     })()}
                   </div>
-                  {showCurrentTask ? (
-                    <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900">
-                      {validator.currentTask}
-                    </div>
-                  ) : (
-                    <div
-                      className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
-                      aria-disabled="true"
-                    >
-                      <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
-                      <span>
-                        {normalizedStatus === "Finished"
+                  {(() => {
+                    const isRoundLbl = /^round\s+\d+$/i.test(rawCurrentTask);
+                    const vPrompt = latestPrompts[validator.name] ?? null;
+                    const text = showCurrentTask && !isRoundLbl
+                      ? validator.currentTask
+                      : vPrompt
+                        ? vPrompt
+                        : normalizedStatus === "Finished"
                           ? "Round finished — no task prompt available"
-                          : "No task prompt available yet"}
-                      </span>
-                    </div>
-                  )}
+                          : "No task prompt available yet";
+                    const hasPrompt = (showCurrentTask && !isRoundLbl) || !!vPrompt;
+                    return hasPrompt ? (
+                      <div className="bg-gray-900/5 border border-muted rounded-lg p-3 text-sm font-medium text-gray-900 truncate">
+                        {text}
+                      </div>
+                    ) : (
+                      <div
+                        className="bg-gray-900/5 border border-dashed border-gray-300 rounded-lg p-3 text-sm font-medium text-gray-600 flex items-center justify-center gap-2 text-center"
+                        aria-disabled="true"
+                      >
+                        <PiHourglassMediumFill className="w-4 h-4 text-gray-500" />
+                        <span>{text}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 md:justify-around">
                   {secondaryStats.map((stat) => {

@@ -43,6 +43,10 @@ import type {
   AgentRunOverview,
   AgentRunsByRoundEntry,
 } from "@/repositories/agents/agents.types";
+import {
+  computeAgentDetailPageShowFatalError,
+  computeAgentDetailPageShowLoading,
+} from "../_lib/agent-detail-view-gate";
 import { routes } from "@/config/routes";
 import { resolveAssetUrl } from "@/services/utils/assets";
 import {
@@ -910,24 +914,6 @@ function AgentValidators({
             className="w-full sm:w-[240px]"
             placeholder="Filter rounds"
           />
-          <button
-            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-            className="group flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md backdrop-blur-sm w-full sm:w-auto"
-          >
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
-                <PiInfoDuotone className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span>How it works</span>
-            </div>
-            <div className="transition-transform duration-300 group-hover:scale-110">
-              {isInfoExpanded ? (
-                <PiCaretUpDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-              ) : (
-                <PiCaretDownDuotone className="w-4 h-4 text-white/80 group-hover:text-white" />
-              )}
-            </div>
-          </button>
         </div>
       </div>
 
@@ -1992,16 +1978,21 @@ export default function Page() {
     return msg;
   }, [minerHistoricalError]);
 
-  // In historical mode, we can use minerHistorical data even if agent is null
-  const hasHistoricalData = viewMode === "historical" && minerHistorical;
-  // In current/runs mode, we can use minerRoundDetails data
-  const hasRoundDetailsData =
-    viewMode !== "historical" && (Boolean(minerRoundDetails) || Boolean(agent));
-
-  // Show loading only if we don't have data yet
-  const isLoading =
-    (viewMode === "historical" && minerHistoricalLoading) ||
-    (viewMode !== "historical" && !minerRoundDetails && minerRoundDetailsLoading);
+  const gateInput = {
+    hasRouteAgentId: Boolean(trimmedId),
+    viewMode,
+    agentDetail,
+    agentFromPayload: agent,
+    effectiveAgent,
+    agentFetchLoading: loading,
+    agentFetchError: error,
+    minerHistorical,
+    minerHistoricalLoading,
+    minerRoundDetails,
+    minerRoundDetailsLoading,
+  };
+  const isLoading = computeAgentDetailPageShowLoading(gateInput);
+  const showFatalError = computeAgentDetailPageShowFatalError(gateInput, isLoading);
 
   if (isLoading) {
     return (
@@ -2019,12 +2010,28 @@ export default function Page() {
     );
   }
 
-  // Show error only if we don't have any data source available
+  // Show error only if we have an actual error AND nothing is loading
+  // If there's no error and no data, show placeholder (data may still be arriving)
   if (!effectiveAgent && !hasHistoricalData && !hasRoundDetailsData) {
+    // Still loading or no error yet — show placeholder
+    if (!error || minerRoundDetailsLoading || minerHistoricalLoading) {
+      return (
+        <>
+          <AgentHeaderPlaceholder />
+          <div className="space-y-6">
+            <div className="h-32 bg-gray-100/50 rounded-xl animate-pulse" />
+            <div className="flex flex-col xl:flex-row gap-6">
+              <div className="w-full xl:w-[calc(100%-320px)] h-80 bg-gray-100/50 rounded-xl animate-pulse" />
+              <div className="w-full xl:w-[320px] h-80 bg-gray-100/50 rounded-xl animate-pulse" />
+            </div>
+          </div>
+        </>
+      );
+    }
+
     const is404OrNotFound =
-      error != null &&
-      (String(error).toLowerCase().includes("not found") ||
-        String(error).toLowerCase().includes("404"));
+      String(error).toLowerCase().includes("not found") ||
+      String(error).toLowerCase().includes("404");
     const hasSeasonFilter = seasonParam != null && seasonParam !== "" && Number.isFinite(Number(seasonParam));
 
     return (
@@ -2038,7 +2045,7 @@ export default function Page() {
           <div className="text-gray-500 text-sm mb-4">
             {hasSeasonFilter && is404OrNotFound
               ? `This miner has no rounds in Season ${seasonParam}. Try viewing without a season filter.`
-              : error || "Agent not found"}
+              : error}
           </div>
           {hasSeasonFilter && is404OrNotFound && (
             <Link
@@ -2127,67 +2134,78 @@ export default function Page() {
     return total > 0 ? `${completed}/${total}` : "0/0";
   })();
 
+  const statStyle = {
+    bgGradient: "from-white/[0.04] to-white/[0.02]",
+    iconGradient: "from-slate-500 to-slate-600",
+    borderColor: "border-white/10",
+    glowColor: "transparent",
+  };
+
   const currentStats = [
-    // Col1 naranja (amber), Col2 azul (indigo), Col3 verde (green), Col4 morado (violet)
     {
-      title: "Season Rank",
-      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "N/A",
+      title: "Rank",
+      metric: seasonRank && seasonRank > 0 ? `#${seasonRank}` : "—",
       icon: LuAward,
-      ...METRIC_CARD_GRADIENTS.amber,
+      ...statStyle,
+      iconGradient: "from-amber-400 to-orange-500",
     },
     {
       title: "Best Round",
-      metric:
-        Number.isFinite(sourceRound)
-          ? `${sourceRound}`
-          : "N/A",
-      badge: seasonParam ? `Season ${seasonParam}` : "Best in season",
+      metric: Number.isFinite(sourceRound) ? `${sourceRound}` : "—",
+      badge: seasonParam ? `Season ${seasonParam}` : null,
       icon: PiClockDuotone,
-      ...METRIC_CARD_GRADIENTS.indigo,
-    },
-    {
-      title: "Avg Reward",
-      metric: `${((displayedReward ?? 0) * 100).toFixed(2)}%`,
-      icon: LuTarget,
-      ...METRIC_CARD_GRADIENTS.green,
-    },
-    {
-      title: "Success Rate",
-      metric: roundSuccessRate,
-      icon: PiCheckDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
-    },
-    {
-      title: "Avg Cost Per Task",
-      metric: effectiveAvgCostPerTask != null && Number.isFinite(effectiveAvgCostPerTask)
-        ? `$${Number(effectiveAvgCostPerTask).toFixed(3)}`
-        : "—",
-      badge: isAvgCostOverLimit ? `Over $${maxTaskCostUsd.toFixed(3)} limit` : null,
-      badgeClassName: isAvgCostOverLimit ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
-      icon: PiCurrencyDollarDuotone,
-      ...METRIC_CARD_GRADIENTS.amber,
-    },
-    {
-      title: "Avg Response Time",
-      metric: effectiveEvalTime !== null
-        ? `${effectiveEvalTime.toFixed(1)}s`
-        : (preAvg?.avgResp ?? "0s"),
-      badge: isAvgResponseTimeout ? `Timeout >= ${Math.round(timeoutThresholdSeconds)}s` : null,
-      badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
-      icon: PiTimerDuotone,
-      ...METRIC_CARD_GRADIENTS.indigo,
+      ...statStyle,
+      iconGradient: "from-cyan-400 to-sky-500",
     },
     {
       title: "Validators",
       metric: effectiveValidatorsCount.toString(),
       icon: PiTrophyDuotone,
-      ...METRIC_CARD_GRADIENTS.green,
+      ...statStyle,
+      iconGradient: "from-blue-400 to-indigo-500",
     },
     {
       title: "Websites",
       metric: effectiveWebsitesCount.toString(),
       icon: PiChartBarDuotone,
-      ...METRIC_CARD_GRADIENTS.violet,
+      ...statStyle,
+      iconGradient: "from-pink-400 to-rose-500",
+    },
+    {
+      title: "Avg Reward",
+      metric: `${((displayedReward ?? 0) * 100).toFixed(2)}%`,
+      icon: LuTarget,
+      ...statStyle,
+      iconGradient: "from-amber-400 to-yellow-500",
+    },
+    {
+      title: "Success Rate",
+      metric: roundSuccessRate,
+      icon: PiCheckDuotone,
+      ...statStyle,
+      iconGradient: "from-emerald-400 to-green-500",
+    },
+    {
+      title: "Avg Cost",
+      metric: effectiveAvgCostPerTask != null && Number.isFinite(effectiveAvgCostPerTask)
+        ? `$${Number(effectiveAvgCostPerTask).toFixed(3)}`
+        : "—",
+      badge: isAvgCostOverLimit ? `Over limit` : null,
+      badgeClassName: isAvgCostOverLimit ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
+      icon: PiCurrencyDollarDuotone,
+      ...statStyle,
+      iconGradient: "from-violet-400 to-purple-500",
+    },
+    {
+      title: "Avg Time",
+      metric: effectiveEvalTime !== null
+        ? `${effectiveEvalTime.toFixed(1)}s`
+        : (preAvg?.avgResp ?? "0s"),
+      badge: isAvgResponseTimeout ? `Timeout` : null,
+      badgeClassName: isAvgResponseTimeout ? "bg-red-500/20 text-red-200 border-red-300/40" : undefined,
+      icon: PiTimerDuotone,
+      ...statStyle,
+      iconGradient: "from-blue-400 to-indigo-500",
     },
   ];
 
@@ -2302,116 +2320,75 @@ export default function Page() {
                         {effectiveAgent.status}
                       </span>
                     )}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={cn(
-                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
-                        githubAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
-                          : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
-                      )}
-                      title={
-                        effectiveAgent?.isSota
-                          ? "GitHub repository not available for SOTA benchmarks"
-                          : effectiveAgent?.githubUrl
-                            ? "View GitHub repository"
-                            : "GitHub repository not available"
-                      }
+                  {githubAvailable ? (
+                    <a
+                      href={effectiveAgent?.githubUrl ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/[0.1] hover:text-white"
                     >
-                      {githubAvailable ? (
-                        <a
-                          href={effectiveAgent?.githubUrl ?? "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center gap-1.5 group"
-                        >
-                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
-                          <span className="text-[11px] font-semibold text-white">GitHub</span>
-                        </a>
-                      ) : (
-                        <>
-                          <PiGithubLogoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
-                          <span className="text-[11px] font-semibold text-white/30">GitHub</span>
-                        </>
-                      )}
-                    </div>
-                    <div
-                      className={cn(
-                        "flex items-center justify-center h-7 px-2.5 rounded-lg transition-all duration-300 gap-1.5",
-                        taoStatsAvailable
-                          ? "bg-white/15 hover:bg-white/25 cursor-pointer border border-white/20 hover:border-white/40 shadow-sm hover:scale-105 active:scale-95"
-                          : "bg-white/5 cursor-not-allowed opacity-40 border border-white/10"
-                      )}
-                      title={
-                        effectiveAgent?.isSota
-                          ? "On-chain explorer is not available for SOTA benchmarks"
-                          : effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey
-                            ? "View on TaoStats"
-                            : "TaoStats link not available"
+                      <PiGithubLogoDuotone className="w-3.5 h-3.5" />
+                      GitHub
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-2.5 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
+                      <PiGithubLogoDuotone className="w-3.5 h-3.5" />
+                      GitHub
+                    </span>
+                  )}
+                  {taoStatsAvailable ? (
+                    <a
+                      href={
+                        effectiveAgent?.taostatsUrl ||
+                        (effectiveAgent?.hotkey
+                          ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(effectiveAgent.hotkey)}`
+                          : "#")
                       }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/[0.05] px-2.5 py-1 text-[11px] font-semibold text-cyan-300/70 transition hover:bg-cyan-400/[0.1] hover:text-cyan-200"
                     >
-                      {taoStatsAvailable ? (
-                        <a
-                          href={
-                            effectiveAgent?.taostatsUrl ||
-                            (effectiveAgent?.hotkey
-                              ? `https://taostats.io/subnets/36/metagraph?filter=${encodeURIComponent(effectiveAgent.hotkey)}`
-                              : "#")
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-full w-full items-center justify-center gap-1.5 group"
-                        >
-                          <PiInfoDuotone className="w-3.5 h-3.5 text-white transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
-                          <span className="text-[11px] font-semibold text-white">TaoStats</span>
-                        </a>
-                      ) : (
-                        <>
-                          <PiInfoDuotone className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
-                          <span className="text-[11px] font-semibold text-white/30">TaoStats</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                      <PiInfoDuotone className="w-3.5 h-3.5" />
+                      TaoStats
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-2.5 py-1 text-[11px] font-semibold text-white/20 cursor-not-allowed">
+                      <PiInfoDuotone className="w-3.5 h-3.5" />
+                      TaoStats
+                    </span>
+                  )}
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
-                  <div className="flex items-center gap-2">
-                    <PiHashDuotone className="w-4 h-4 text-emerald-300" />
-                    <span className="font-mono font-semibold">
-                      UID: {effectiveAgent?.isSota ? "—" : (effectiveAgent?.uid ?? "unknown")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <PiKeyDuotone className="w-4 h-4 text-sky-300" />
-                    <span className="font-mono text-xs font-semibold">
-                      {effectiveAgent?.isSota
-                        ? "No on-chain hotkey"
-                        : effectiveAgent?.hotkey
-                          ? effectiveAgent.hotkey
-                          : "unknown"}
-                    </span>
-                    {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(effectiveAgent?.hotkey ?? "");
-                            setCopiedHotkey(true);
-                            setTimeout(() => setCopiedHotkey(false), 2000);
-                          } catch (err) {
-                            console.error("Failed to copy:", err);
-                          }
-                        }}
-                        className="p-1.5 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-110 active:scale-95"
-                        title="Copy hotkey"
-                      >
-                        {copiedHotkey ? (
-                          <PiCheckDuotone className="w-3.5 h-3.5 text-emerald-300" />
-                        ) : (
-                          <PiCopyDuotone className="w-3.5 h-3.5 text-white" />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
+                  <span className="font-mono font-semibold text-white/60">
+                    # {effectiveAgent?.isSota ? "—" : (effectiveAgent?.uid ?? "?")}
+                  </span>
+                  <span className="text-white/20">·</span>
+                  <span className="font-mono text-xs text-white/50 truncate max-w-[280px]">
+                    {effectiveAgent?.isSota
+                      ? "No on-chain hotkey"
+                      : effectiveAgent?.hotkey ?? "unknown"}
+                  </span>
+                  {!effectiveAgent?.isSota && effectiveAgent?.hotkey && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(effectiveAgent?.hotkey ?? "");
+                          setCopiedHotkey(true);
+                          setTimeout(() => setCopiedHotkey(false), 2000);
+                        } catch (err) {
+                          console.error("Failed to copy:", err);
+                        }
+                      }}
+                      className="p-1 hover:bg-white/15 rounded-md transition-all"
+                      title="Copy hotkey"
+                    >
+                      {copiedHotkey ? (
+                        <PiCheckDuotone className="w-3.5 h-3.5 text-emerald-300" />
+                      ) : (
+                        <PiCopyDuotone className="w-3.5 h-3.5 text-white/50" />
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -2504,64 +2481,30 @@ export default function Page() {
                 return (
                   <div
                     key={stat.title}
-                    className="group relative overflow-hidden rounded-xl md:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] cursor-pointer isolate"
+                    className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-white/10 dark:bg-gray-50/50 transition-all duration-200 hover:-translate-y-0.5"
                   >
-                    {/* Card background with gradient */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 rounded-xl md:rounded-2xl opacity-90 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-100 z-0",
-                        stat.bgGradient
-                      )}
-                    />
-
-                    {/* Animated shimmer effect */}
-                    <div
-                      className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none"
-                      style={{
-                        backgroundSize: "200% 100%",
-                        animation: "shimmer 3.5s linear infinite",
-                      }}
-                    />
-
-                    {/* Border gradient */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 rounded-xl md:rounded-2xl border transition-all duration-300",
-                        stat.borderColor,
-                        "group-hover:shadow-lg"
-                      )}
-                      style={{
-                        boxShadow: `0 0 12px ${stat.glowColor ?? "transparent"}33`,
-                      }}
-                    />
-
-                    {/* Content */}
-                    <div className="relative p-4 flex items-center gap-2 md:gap-4">
-                      {/* Icon on left */}
+                    <div className="relative p-3 md:p-4 flex items-center gap-3">
                       <div
                         className={cn(
-                          "flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl shadow-md transition-all duration-300 group-hover:scale-105 bg-gradient-to-br flex-shrink-0",
-                          "border border-white/40 group-hover:border-white/60",
+                          "flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-xl bg-gradient-to-br flex-shrink-0",
                           stat.iconGradient
                         )}
                       >
-                        <Icon className="w-5 h-5 md:w-7 md:h-7 text-white drop-shadow" />
+                        <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                       </div>
-
-                      {/* Metrics in middle */}
-                      <div className="flex flex-col gap-0.5 md:gap-1 flex-1 min-w-0">
-                        <Text className="text-[9px] md:text-xs font-bold text-white/80 uppercase tracking-wider md:tracking-widest leading-tight">
+                      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                        <Text className="text-[10px] md:text-xs font-bold text-white/60 uppercase tracking-wider leading-tight">
                           {stat.title}
                         </Text>
-                        <div className="flex items-center justify-between gap-1 md:gap-2">
-                          <Text className="text-xs sm:text-3xl font-black text-white leading-none tracking-tight group-hover:scale-105 transition-transform duration-300 origin-left">
+                        <div className="flex items-center justify-between gap-2">
+                          <Text className="text-lg sm:text-2xl font-black text-white leading-none tracking-tight">
                             {stat.metric}
                           </Text>
                           {(stat as any).badge ? (
                             <span
                               className={cn(
-                                "hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase shadow-sm flex-shrink-0",
-                                (stat as any).badgeClassName ?? "bg-white/15 text-white/90 border border-white/25"
+                                "hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase",
+                                (stat as any).badgeClassName ?? "bg-white/10 text-white/70 border border-white/15"
                               )}
                             >
                               {(stat as any).badge}
