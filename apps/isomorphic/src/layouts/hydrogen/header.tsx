@@ -172,7 +172,7 @@ export default function Header() {
   return (
     <StickyHeader className="z-[990] 2xl:py-5 3xl:px-8 4xl:px-10 max-w-full overflow-hidden">
       <div className="flex w-full items-center justify-between min-w-0 max-w-full">
-        <div className="flex items-center min-w-0 flex-1 max-w-[75%]">
+        <div className="flex items-center min-w-0 flex-1 max-w-full sm:max-w-[75%]">
           <Link
             href={"/"}
             aria-label="Site Logo"
@@ -289,7 +289,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0 max-w-[25%] min-w-0">
+        <div className="flex items-center gap-1 flex-shrink-0 max-w-fit sm:max-w-[25%] min-w-0">
           {/* Social Media Buttons */}
           <div className="hidden sm:flex items-center gap-0.5 min-w-0 overflow-hidden">
             <Tooltip content="Visit Autoppia Website" placement="bottom">

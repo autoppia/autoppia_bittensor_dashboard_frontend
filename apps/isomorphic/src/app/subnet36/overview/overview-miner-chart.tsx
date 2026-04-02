@@ -521,7 +521,7 @@ export default function MinerChart({
           }
           headerClassName="flex-row items-center space-between"
           rounded="lg"
-          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
+          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
         >
           <div className="flex flex-col flex-1 overflow-hidden">
             <div
@@ -568,7 +568,7 @@ export default function MinerChart({
           }
           headerClassName="flex-row items-center space-between"
           rounded="lg"
-          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
+          className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
         >
           <div className="rounded-[20px] border border-rose-500/30 bg-rose-500/10 p-6 text-center">
             <p className="font-medium text-rose-200">
@@ -585,8 +585,8 @@ export default function MinerChart({
     <WidgetCard
       title={
         effectiveSeason !== null && effectiveSeason !== undefined
-          ? `Reward trajectory · Season ${effectiveSeason}`
-          : "Reward trajectory"
+          ? `Reward per round · Season ${effectiveSeason}`
+          : "Reward per round"
       }
       action={
         <ButtonGroupAction
@@ -597,7 +597,7 @@ export default function MinerChart({
       }
       headerClassName="flex-row items-center space-between"
       rounded="lg"
-      className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,11,24,0.88))] p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
+      className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 p-4 shadow-[0_22px_60px_rgba(2,6,23,0.3)]"
     >
       {showPreviousSeasonFallback && (
         <p className="mb-1 text-xs text-amber-200/90">
@@ -698,41 +698,6 @@ export default function MinerChart({
             </ComposedChart>
           </ResponsiveContainer>
         )}
-      </div>
-      <div className="mt-3 self-end flex flex-wrap items-center justify-end gap-3 text-white">
-        <CheckboxGroup
-          values={compareWith}
-          setValues={handleCompareChange}
-          className="flex flex-wrap items-center gap-3"
-        >
-          {sotaAgents.map((agent) => (
-            <Checkbox
-              key={`checkbox-${agent.value}`}
-              label={
-                <div className="flex items-center">
-                  <Image
-                    src={agent.image}
-                    alt={agent.label}
-                    width={16}
-                    height={16}
-                    className="rounded-md"
-                  />
-                  <span className="ms-1">{agent.label}</span>
-                </div>
-              }
-              labelClassName={cn(
-                "w-full",
-                !availableSotaSet.has(agent.value) && "text-gray-400"
-              )}
-              labelPlacement="left"
-              size="sm"
-              iconClassName="top-0"
-              disabled={!availableSotaSet.has(agent.value)}
-              name={agent.value}
-              value={agent.value}
-            />
-          ))}
-        </CheckboxGroup>
       </div>
     </WidgetCard>
   );

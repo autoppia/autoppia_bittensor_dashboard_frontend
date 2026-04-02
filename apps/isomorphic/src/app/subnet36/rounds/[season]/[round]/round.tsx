@@ -104,37 +104,37 @@ function extractRoundNumber(
 }
 
 // ============================================================================
-// STYLE CONSTANTS - Enhanced Modern Design System
+// STYLE CONSTANTS - Unified dark palette
 // ============================================================================
 const roundGlassBackgroundClass =
-  "relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl";
+  "relative overflow-hidden border border-white/10 dark:bg-gray-50/50 shadow-lg";
 const roundAccentActive =
-  "border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.4)]";
+  "border-emerald-400/30 dark:bg-gray-50/50 shadow-lg";
 const roundAccentCompleted =
-  "border-indigo-400/50 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-violet-500/5 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.4)]";
+  "border-white/10 dark:bg-gray-50/50 shadow-lg";
 const roundAccentPending =
-  "border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.4)]";
-const roundSectionHeaderClass = `${roundGlassBackgroundClass} rounded-2xl border-white/30 px-8 py-4 text-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center gap-4 hover:border-white/40 transition-all duration-300`;
+  "border-amber-400/20 dark:bg-gray-50/50 shadow-lg";
+const roundSectionHeaderClass = `${roundGlassBackgroundClass} rounded-2xl px-8 py-4 text-white flex items-center gap-4 transition-all duration-300`;
 const chipBase =
-  "inline-flex items-center gap-2.5 rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300";
+  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all duration-200";
 const chipActive =
-  "border-emerald-400/70 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] hover:scale-105";
+  "border-emerald-400/40 bg-emerald-500/20 text-emerald-200";
 const BURN_UID = 5;
 const chipCompleted =
-  "border-indigo-400/70 bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_30px_rgba(99,102,241,0.6)] hover:scale-105";
+  "border-white/20 bg-white/10 text-white";
 const chipPending =
-  "border-amber-400/70 bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)] hover:scale-105";
+  "border-amber-400/30 bg-amber-500/15 text-amber-200";
 const chipEvaluating =
-  "border-orange-400/70 bg-gradient-to-r from-orange-500/90 to-amber-500/90 text-white shadow-[0_4px_20px_rgba(251,146,60,0.4)] hover:shadow-[0_6px_30px_rgba(251,146,60,0.6)] hover:scale-105";
+  "border-amber-400/30 bg-amber-500/15 text-amber-200";
 const roundNavButton =
-  "inline-flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-300 border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/40 disabled:hover:scale-100";
-const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:border-white/30`;
-const tallCardClass = `${roundGlassBackgroundClass} rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]`;
+  "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition-all duration-200 border-white/20 bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/30 disabled:cursor-not-allowed disabled:border-white/8 disabled:bg-white/[0.02] disabled:text-white/30";
+const metricCardClass = `${roundGlassBackgroundClass} group relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5`;
+const tallCardClass = `${roundGlassBackgroundClass} rounded-2xl transition-all duration-200`;
 const listRowHover =
-  "hover:bg-white/15 hover:shadow-lg hover:border-white/30 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]";
+  "hover:bg-white/[0.06] rounded-xl transition-all duration-200";
 const listRowHighlight = "";
 const skeletonCard =
-  "rounded-2xl border border-white/15 bg-white/5 animate-pulse";
+  "rounded-2xl border border-white/10 bg-white/5 animate-pulse";
 
 // Modals
 import { useModal } from "@/app/shared/modal-views/use-modal";
@@ -475,9 +475,9 @@ function RoundHeaderInline({
 
   if (isLoading) {
     return (
-      <section className="mb-10">
-        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl px-4 py-6 sm:p-8 text-white">
-          <div className="relative space-y-8">
+      <section className="mb-6">
+        <div className="relative overflow-hidden border border-white/20 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-2xl rounded-3xl px-4 py-4 sm:p-6 text-white">
+          <div className="relative space-y-6">
             <header className="flex flex-wrap items-start justify-between gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -518,11 +518,11 @@ function RoundHeaderInline({
   }
 
   return (
-    <section className="mb-10">
+    <section className="mb-6">
       <div
         className={cn(
           roundGlassBackgroundClass,
-          "rounded-3xl px-4 py-6 sm:p-8 text-white shadow-2xl relative",
+          "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-white shadow-2xl relative",
           isActive
             ? roundAccentActive
             : status === "completed"
@@ -532,11 +532,11 @@ function RoundHeaderInline({
                 : undefined
         )}
       >
-        <div className="relative space-y-8">
-          <header className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-4 min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-4">
-                <h1 className="text-3xl font-black leading-none md:text-5xl text-white">
+        <div className="relative space-y-3">
+          <header className="flex flex-wrap items-start justify-between gap-2 sm:gap-3">
+            <div className="space-y-2 sm:space-y-3 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h1 className="text-xl sm:text-2xl font-black leading-none md:text-4xl text-white">
                   ROUND {String(roundTyped?.roundInSeason ?? roundParam ?? (progressData as { roundInSeason?: number })?.roundInSeason ?? roundNumber ?? "—")}
                 </h1>
                 <span
@@ -617,12 +617,12 @@ function RoundHeaderInline({
                       (option) =>
                         option.value ===
                         String(round?.season ?? seasonParam ?? progressData?.season ?? "")
-                    )}
+                    ) ?? null}
                     onChange={(option: { label: string; value: string }) =>
                       goToSeason(Number.parseInt(option.value, 10))
                     }
                     disabled={seasonsLoading || !seasonOptions.length}
-                    className="inline-flex items-center h-[42px] min-w-[132px] rounded-xl border-2 border-violet-400/60 bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-sm font-bold transition-all duration-300 hover:border-violet-300 hover:from-violet-500/90 hover:to-purple-500/90 hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 !px-0 !py-0"
+                    className="inline-flex items-center h-[38px] sm:h-[42px] min-w-[100px] sm:min-w-[132px] rounded-xl border-2 border-white/20 bg-white/[0.08] text-xs sm:text-sm font-bold transition-all duration-300 hover:bg-white/[0.14] hover:border-white/30 hover:scale-105 active:scale-95 !px-0 !py-0"
                     selectClassName="!h-[42px] !rounded-xl !border-0 !ring-0 !outline-none !bg-transparent !px-4 !py-0 !text-sm !font-bold !text-white !shadow-none focus:!border-0 focus:!ring-0 hover:!border-0 hover:!ring-0"
                     dropdownClassName="!rounded-xl !border-2 !border-white/20 !bg-slate-950/95 !shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)]"
                   />
@@ -652,7 +652,7 @@ function RoundHeaderInline({
               {currentRoundKey && currentRoundKey !== roundKey && (
                 <Link
                   href={`${routes.rounds}/${currentRoundKey}`}
-                  className="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:border-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 hover:shadow-lg hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm font-bold text-white transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-400/40 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
                   Current (Round {roundNumber ?? "—"})
@@ -661,84 +661,22 @@ function RoundHeaderInline({
             </div>
           </header>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex flex-1 flex-col gap-5 min-w-0">
-              <div className="flex items-center justify-between gap-2 text-sm min-w-0">
-                <span className="font-bold text-white/80 uppercase tracking-wider truncate">
-                  Round Progress
-                </span>
-                <span className="font-black text-2xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent shrink-0">
-                  {progressPercentage}%
-                </span>
-              </div>
-              <div className="relative h-4 w-full overflow-hidden rounded-full bg-white/10 border border-white/20 shadow-inner">
+          {/* Progress bar + block info — compact */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/10 border border-white/15">
                 <div
-                  className={cn(
-                    "absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out shadow-lg",
-                    isActive &&
-                      "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 shadow-emerald-500/50",
-                    status === "completed" &&
-                      "bg-gradient-to-r from-indigo-400 via-purple-400 to-violet-500 shadow-indigo-500/50",
-                    status === "pending" &&
-                      "bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 shadow-amber-500/50"
-                  )}
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out bg-white shadow-white/30"
                   style={{ width: `${progressPercentage}%` }}
                 />
-                <div
-                  className={cn(
-                    "absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-3 border-white transition-[left] duration-700 ease-out ring-4 ring-white/20",
-                    isActive &&
-                      "bg-emerald-400 shadow-[0_0_25px_rgba(110,231,183,0.6)] animate-pulse",
-                    status === "completed" &&
-                      "bg-indigo-400 shadow-[0_0_25px_rgba(129,140,248,0.6)]",
-                    status === "pending" &&
-                      "bg-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)]"
-                  )}
-                  style={{ left: `calc(${progressPercentage}% - 10px)` }}
-                />
-              </div>
-              <div className="grid gap-5 text-sm text-white/70 sm:grid-cols-3 min-w-0">
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-400/15 to-purple-400/10 px-5 py-4 hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/30 to-purple-400/30 ring-2 ring-indigo-400/40 shrink-0">
-                    <PiClockDuotone className="h-7 w-7 text-indigo-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
-                      Start Block
-                    </span>
-                    <div className="text-lg font-black text-white mt-0.5 break-all">
-                      {startBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-400/15 to-orange-400/10 px-5 py-4 hover:border-amber-300/50 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400/30 to-orange-400/30 ring-2 ring-amber-400/40 shrink-0">
-                    <PiPulseDuotone className="h-7 w-7 text-amber-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-amber-200/80 font-bold">
-                      Current Block
-                    </span>
-                    <div className="text-lg font-black text-amber-100 mt-0.5 break-all">
-                      {currentBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 px-5 py-4  hover:border-white/30 hover:shadow-lg transition-all duration-300 min-w-0">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 ring-2 ring-indigo-400/30 shrink-0">
-                    <PiFlagCheckeredDuotone className="h-7 w-7 text-indigo-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-white/60 font-bold">
-                      End Block
-                    </span>
-                    <div className="text-lg font-black text-white mt-0.5 break-all">
-                      {endBlock.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
+            <span className="text-lg font-black text-white shrink-0">{progressPercentage}%</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-6 gap-y-1 text-[11px] sm:text-xs text-white/50">
+            <span><span className="font-semibold text-white/70">Start</span> {startBlock.toLocaleString()}</span>
+            <span><span className="font-semibold text-white/70">Current</span> {currentBlock.toLocaleString()}</span>
+            <span><span className="font-semibold text-white/70">End</span> {endBlock.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -1032,9 +970,9 @@ function RoundStatsInline({
         <div className="flex flex-col md:flex-row gap-0">
 
           {/* ——— LEFT: Season leader identity (wider, more prominent) ——— */}
-          <div className="relative flex flex-col gap-5 px-7 py-7 md:w-[42%] md:flex-shrink-0 border-b md:border-b-0 md:border-r border-white/[0.06]">
+          <div className="relative flex flex-col gap-3 px-5 py-5 md:w-[42%] md:flex-shrink-0 border-b md:border-b-0 md:border-r border-white/[0.06]">
             {/* Subtle inner glow */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] to-transparent rounded-l-2xl" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent rounded-l-2xl" />
 
             {/* Top row: label + round badge + link icon */}
             <div className="relative flex items-center justify-between">
@@ -1057,13 +995,13 @@ function RoundStatsInline({
             </div>
 
             {/* Avatar + name block */}
-            <div className="relative flex items-center gap-5">
+            <div className="relative flex items-center gap-4">
               <div className="relative flex-shrink-0">
-                <div className="h-20 w-20 overflow-hidden rounded-2xl border-2 border-amber-400/40 shadow-2xl shadow-amber-900/40 ring-4 ring-amber-400/10">
-                  <Image src={winnerAvatar} alt={displayName} width={80} height={80} className="object-cover w-full h-full" />
+                <div className="h-14 w-14 overflow-hidden rounded-2xl border-2 border-amber-400/40 shadow-2xl shadow-amber-900/40 ring-4 ring-amber-400/10">
+                  <Image src={winnerAvatar} alt={displayName} width={56} height={56} className="object-cover w-full h-full" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg ring-2 ring-black/60">
-                  <PiCrownFill className="h-3.5 w-3.5 text-white" />
+                <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg ring-2 ring-black/60">
+                  <PiCrownFill className="h-3 w-3 text-white" />
                 </div>
               </div>
 
@@ -1129,32 +1067,32 @@ function RoundStatsInline({
           <div className="flex flex-1 flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
 
             {/* Avg Reward */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
-              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-emerald-500/25 bg-emerald-500/10 mb-1">
-                <PiTrophyDuotone className="h-4.5 w-4.5 text-emerald-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-emerald-500/25 bg-emerald-500/10 mb-0.5">
+                <PiTrophyDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Reward</p>
-              <p className="text-3xl font-black text-emerald-300 leading-none">{rewardPct}</p>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Reward</p>
+              <p className="text-xl sm:text-2xl font-black text-emerald-300 leading-none">{rewardPct}</p>
             </div>
 
             {/* Avg Time */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
-              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-sky-500/25 bg-sky-500/10 mb-1">
-                <PiClockDuotone className="h-4.5 w-4.5 text-sky-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-sky-500/25 bg-sky-500/10 mb-0.5">
+                <PiClockDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Time</p>
-              <p className="text-3xl font-black text-sky-300 leading-none">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Time</p>
+              <p className="text-xl sm:text-2xl font-black text-sky-300 leading-none">
                 {`${formatNumber(averageEvalTime, 1)}s`}
               </p>
             </div>
 
             {/* Avg Cost */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-7">
-              <div className="flex items-center justify-center h-9 w-9 rounded-xl border border-violet-500/25 bg-violet-500/10 mb-1">
-                <PiChartLineUpDuotone className="h-4.5 w-4.5 text-violet-300" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 sm:gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl border border-violet-500/25 bg-violet-500/10 mb-0.5">
+                <PiChartLineUpDuotone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-300" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg Cost</p>
-              <p className={cn("text-3xl font-black leading-none", averageEvalCost != null ? "text-violet-300" : "text-white/20")}>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/30">Avg Cost</p>
+              <p className={cn("text-xl sm:text-2xl font-black leading-none", averageEvalCost != null ? "text-violet-300" : "text-white/20")}>
                 {costStr}
               </p>
             </div>
@@ -1219,7 +1157,7 @@ function MetricCard({ card }: Readonly<{ card: any }>) {
                 sizes="(max-width: 768px) 100vw"
                 className="object-cover"
               />
-              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 shadow-2xl ring-2 ring-white/30 animate-pulse">
+              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 shadow-2xl ring-2 ring-white/30">
                 <PiCrownDuotone className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -1315,7 +1253,7 @@ function MetricCard({ card }: Readonly<{ card: any }>) {
                 sizes="(max-width: 768px) 100vw"
                 className="object-cover"
               />
-              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-2.5 shadow-2xl ring-3 ring-white/30 animate-pulse">
+              <div className="pointer-events-none absolute -bottom-2 -right-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-2.5 shadow-2xl ring-3 ring-white/30">
                 <PiCrownDuotone className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -1743,7 +1681,7 @@ function RoundValidatorsInline({
     );
   }
 
-  if (error) {
+  if (error && !loading) {
     return (
       <div className={cn(className)}>
         <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
@@ -1757,125 +1695,79 @@ function RoundValidatorsInline({
 
   return (
     <div className={cn(className)}>
-      <div className="relative flex w-auto items-center overflow-hidden">
-        <Button
-          title="Prev"
-          variant="text"
-          ref={sliderPrevBtn}
-          onClick={() => scrollToTheLeft()}
-          className="!absolute -left-1 top-0 z-10 !h-full w-20 !justify-start rounded-none bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent px-0 ps-1 text-white/70 hover:text-white 3xl:hidden"
-        >
-          <PiCaretLeftBold className="h-5 w-5" />
-        </Button>
-
-        <div className="w-full overflow-hidden">
-          <div
-            ref={sliderEl}
-            className="custom-scrollbar grid grid-flow-col gap-8 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0 px-4 py-6"
+      <div className="relative">
+        <div className="relative flex items-center">
+          <Button
+            title="Prev"
+            variant="text"
+            ref={sliderPrevBtn}
+            onClick={() => scrollToTheLeft()}
+            className="!absolute left-0 z-10 !h-full w-8 !justify-center bg-gradient-to-r from-[rgb(12,12,14)] to-transparent px-0 text-white/50 hover:text-white"
           >
-            {validatorsData?.map((validator) => {
-              const iconSrc = resolveValidatorImage(validator.name, validator.icon);
-              const isActive = selectedValidatorId === validator.id;
-              return (
-                <button
-                  type="button"
-                  key={`validator-${validator.id}`}
-                  onClick={() => {
-                    if (validator.id === selectedValidatorId) return;
-                    setSelectedValidatorId(validator.id);
-                    lastNotifiedValidator.current = validator.id;
-                    onValidatorSelect?.(validator);
-                  }}
-                  className="cursor-pointer border-0 bg-transparent p-0 w-full text-left"
-                >
-                  <div
+            <PiCaretLeftBold className="h-3.5 w-3.5" />
+          </Button>
+
+          <div className="w-full overflow-hidden px-6">
+            <div
+              ref={sliderEl}
+              className="flex justify-center gap-1 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:h-0"
+            >
+              {validatorsData?.map((validator) => {
+                const iconSrc = resolveValidatorImage(validator.name, validator.icon);
+                const isActive = selectedValidatorId === validator.id;
+                return (
+                  <button
+                    type="button"
+                    key={`validator-${validator.id}`}
+                    onClick={() => {
+                      if (validator.id === selectedValidatorId) return;
+                      setSelectedValidatorId(validator.id);
+                      lastNotifiedValidator.current = validator.id;
+                      onValidatorSelect?.(validator);
+                    }}
                     className={cn(
-                      "relative w-full min-w-[200px] px-5 py-5 transition-all duration-500 shadow-2xl group rounded-2xl",
-                      tallCardClass,
+                      "flex items-center gap-2 rounded-lg px-3 py-2 transition-all duration-200 whitespace-nowrap flex-shrink-0",
                       isActive
-                        ? "border-sky-400/70 bg-gradient-to-br from-sky-500/20 via-cyan-500/15 to-blue-500/20 ring-4 ring-sky-400/30"
-                        : "hover:border-white/40 hover:bg-white/10 hover:scale-102 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]"
+                        ? "bg-cyan-500/15 border border-cyan-400/30 text-white"
+                        : "bg-transparent border border-transparent text-white/70 hover:bg-white/[0.06] hover:text-white"
                     )}
                   >
-                    <div className="relative flex flex-col items-center text-white">
-                      <div
+                    <div className="relative w-8 h-8 flex-shrink-0">
+                      <Image
+                        src={iconSrc}
+                        alt={validator.name}
+                        fill
+                        sizes="32px"
                         className={cn(
-                          "relative aspect-square w-16 h-16 mb-4 transition-all duration-500",
-                          "group-hover:scale-110 group-hover:rotate-3"
+                          "rounded-full object-contain",
+                          isActive ? "ring-2 ring-cyan-400/40" : "ring-1 ring-white/15"
                         )}
-                      >
-                        <Image
-                          src={iconSrc}
-                          alt={validator.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw"
-                          className={cn(
-                            "h-full w-full rounded-full object-contain transition-all duration-500 shadow-xl",
-                            isActive
-                              ? "ring-4 ring-sky-300/70 ring-offset-2 ring-offset-sky-500/20 shadow-[0_8px_30px_rgba(56,189,248,0.5)]"
-                              : "ring-2 ring-white/20 group-hover:ring-4 group-hover:ring-white/40"
-                          )}
-                        />
-                      </div>
-                      <span
-                        className={cn(
-                          "text-lg font-black tracking-wide text-center transition-all duration-300",
-                          isActive &&
-                            "bg-gradient-to-r from-sky-200 via-white to-cyan-200 bg-clip-text text-transparent"
-                        )}
-                      >
-                        {validator.name}
-                      </span>
-                      <span
-                        className={cn(
-                          "mt-2 text-xs font-bold tracking-wider font-inter truncate max-w-full px-3 py-1.5 rounded-full transition-all duration-300",
-                          isActive
-                            ? "text-sky-200 bg-sky-500/20 border border-sky-400/40"
-                            : "text-white/60 group-hover:text-white/80 border border-transparent group-hover:border-white/20 group-hover:bg-white/10"
-                        )}
-                      >
-                        {validator.hotkey
-                          ? `${validator.hotkey.slice(0, 6)}...${validator.hotkey.slice(-6)}`
-                          : "No hotkey"}
-                      </span>
+                      />
                     </div>
-                  </div>
-                </button>
-              );
-            })}
+                    <span className={cn(
+                      "text-xs font-bold",
+                      isActive ? "text-white" : "text-white/70"
+                    )}>
+                      {validator.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          <Button
+            title="Next"
+            variant="text"
+            ref={sliderNextBtn}
+            onClick={() => scrollToTheRight()}
+            className="!absolute right-0 z-10 !h-full w-8 !justify-center bg-gradient-to-l from-[rgb(12,12,14)] to-transparent px-0 text-white/50 hover:text-white"
+          >
+            <PiCaretRightBold className="h-4 w-4" />
+          </Button>
         </div>
-        <Button
-          title="Next"
-          variant="text"
-          ref={sliderNextBtn}
-          onClick={() => scrollToTheRight()}
-          className="!absolute -right-2 top-0 z-10 !h-full w-20 !justify-end rounded-none bg-gradient-to-l from-slate-900 via-slate-900/60 to-transparent px-0 pe-2 text-white/70 hover:text-white 3xl:hidden"
-        >
-          <PiCaretRightBold className="h-5 w-5" />
-        </Button>
       </div>
 
-      <div className="mt-10 mb-8">
-        <div className="flex items-center gap-8">
-          <div className="flex-1 h-[3px] bg-gradient-to-r from-transparent via-white/30 to-transparent shadow-lg"></div>
-          <div
-            className={cn(
-              roundSectionHeaderClass,
-              "shadow-[0_10px_40px_rgba(0,0,0,0.15)]"
-            )}
-          >
-            <div className="relative">
-              <div className="w-4 h-4 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 rounded-full animate-pulse shadow-[0_0_20px_rgba(251,191,36,0.7)] ring-4 ring-amber-400/20"></div>
-              <div className="absolute inset-0 w-4 h-4 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full animate-ping opacity-75"></div>
-            </div>
-            <RizzText className="text-xl font-black tracking-wide bg-gradient-to-r from-white via-amber-100 to-white bg-clip-text text-transparent">
-              {selectedValidator?.name || "Selected Validator"}
-            </RizzText>
-          </div>
-          <div className="flex-1 h-[3px] bg-gradient-to-r from-transparent via-white/30 to-transparent shadow-lg"></div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -2123,14 +2015,14 @@ function RoundMinerScoresInline({
     );
   }
 
-  if (error) {
+  if (error && !loading) {
     return (
       <WidgetCard
         title={
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
-                <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 ring-1 ring-white/10">
+                <PiTrophyDuotone className="h-5 w-5 text-white/70" />
               </div>
               <div>
                 <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
@@ -2171,8 +2063,8 @@ function RoundMinerScoresInline({
         title={
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
-                <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 ring-1 ring-white/10">
+                <PiTrophyDuotone className="h-5 w-5 text-white/70" />
               </div>
               <div>
                 <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
@@ -2212,8 +2104,8 @@ function RoundMinerScoresInline({
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-indigo-400/40 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 shadow-lg ring-2 ring-indigo-400/20">
-              <PiTrophyDuotone className="h-5 w-5 text-indigo-300" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 ring-1 ring-white/10">
+              <PiTrophyDuotone className="h-5 w-5 text-white/70" />
             </div>
             <div>
               <p className="text-base font-black text-white uppercase tracking-wider">Local round and best rewards</p>
@@ -2429,7 +2321,7 @@ function RoundTopMinersInline({
     );
   }
 
-  if (error) {
+  if (error && !loading) {
     return (
       <WidgetCard
         title={rewardsTitle}
@@ -2522,7 +2414,7 @@ function RoundTopMinersInline({
                     "relative flex items-center w-full px-5 py-4 mb-3 rounded-2xl transition-all duration-300 cursor-pointer group border-2",
                     listRowHover,
                     rank === 1
-                      ? "border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10"
+                      ? "border-amber-400/20 bg-amber-500/[0.06]"
                       : "border-transparent"
                   )}
                 >
@@ -2736,6 +2628,38 @@ export default function Round() {
       previousRound: roundStatusData.previous_round ?? null,
     };
   }, [roundStatusData]);
+
+  // Neighbor rounds for floating nav bar
+  const neighborRounds = React.useMemo(() => {
+    const prev = progressData?.previousRound;
+    const next = progressData?.nextRound;
+    const toKey = (v: string | number | null | undefined) => {
+      if (v == null) return null;
+      const s = String(v);
+      if (s.includes("/")) return s;
+      const sn = progressData?.season ?? seasonFromKey;
+      return sn != null ? `${sn}/${s}` : null;
+    };
+    const toNum = (v: string | number | null | undefined) => {
+      if (v == null) return undefined;
+      const s = String(v);
+      const parts = s.includes("/") ? s.split("/") : [s];
+      const n = Number(parts[parts.length - 1]);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    return {
+      previous: toKey(prev) ? { roundKey: toKey(prev)!, roundNumber: toNum(prev) } : null,
+      next: toKey(next) ? { roundKey: toKey(next)!, roundNumber: toNum(next) } : null,
+    };
+  }, [progressData, seasonFromKey]);
+
+  const goToRound = React.useCallback(
+    (targetKey?: string | null) => {
+      if (!targetKey) return;
+      router.push(`${routes.rounds}/${targetKey}`);
+    },
+    [router]
+  );
 
   const roundNumberForLinks = roundStatusData?.round_in_season ?? roundFromKey;
   const seasonSummary = seasonSummaryData?.summary ?? null;
@@ -2977,11 +2901,11 @@ export default function Round() {
                 ? `${selectedValidator.name} latest champion`
                 : "Champion for this validator",
           icon: PiCrownDuotone,
-          gradient: "from-amber-500/30 via-yellow-500/25 to-orange-500/30",
-          bgGradient: "from-amber-500/20 via-yellow-500/15 to-orange-500/10",
+          gradient: "from-white/[0.04] to-white/[0.02]",
+          bgGradient: "from-white/[0.04] to-white/[0.02]",
           iconGradient: "from-amber-400 to-orange-500",
-          borderColor: "border-amber-400/50",
-          glowColor: "rgba(251,191,36,0.5)",
+          borderColor: "border-white/10",
+          glowColor: "transparent",
           valueClass: "text-base md:text-2xl",
         },
         {
@@ -2996,11 +2920,11 @@ export default function Round() {
           })()}%`, // ✅ Mostrar como porcentaje con 2 decimales
           helper: "Best local reward in this validator",
           icon: PiTrophyDuotone,
-          gradient: "from-emerald-500/30 via-teal-500/25 to-cyan-500/30",
-          bgGradient: "from-emerald-500/20 via-teal-500/15 to-cyan-500/10",
+          gradient: "from-white/[0.04] to-white/[0.02]",
+          bgGradient: "from-white/[0.04] to-white/[0.02]",
           iconGradient: "from-emerald-400 to-teal-500",
-          borderColor: "border-emerald-400/50",
-          glowColor: "rgba(16,185,129,0.5)",
+          borderColor: "border-white/10",
+          glowColor: "transparent",
           valueClass: "text-lg md:text-4xl",
         },
         {
@@ -3022,11 +2946,11 @@ export default function Round() {
           })()),
           helper: "Agents evaluated this round",
           icon: PiUsersThreeDuotone,
-          gradient: "from-violet-500/30 via-purple-500/25 to-fuchsia-500/30",
-          bgGradient: "from-violet-500/20 via-purple-500/15 to-fuchsia-500/10",
+          gradient: "from-white/[0.04] to-white/[0.02]",
+          bgGradient: "from-white/[0.04] to-white/[0.02]",
           iconGradient: "from-violet-400 to-fuchsia-500",
-          borderColor: "border-violet-400/50",
-          glowColor: "rgba(139,92,246,0.5)",
+          borderColor: "border-white/10",
+          glowColor: "transparent",
           valueClass: "text-lg md:text-4xl",
         },
         {
@@ -3047,11 +2971,11 @@ export default function Round() {
           })()),
           helper: "Tasks per agent evaluation run",
           icon: PiListChecksDuotone,
-          gradient: "from-blue-500/30 via-indigo-500/25 to-sky-500/30",
-          bgGradient: "from-blue-500/20 via-indigo-500/15 to-sky-500/10",
+          gradient: "from-white/[0.04] to-white/[0.02]",
+          bgGradient: "from-white/[0.04] to-white/[0.02]",
           iconGradient: "from-blue-400 to-indigo-500",
-          borderColor: "border-blue-400/50",
-          glowColor: "rgba(59,130,246,0.5)",
+          borderColor: "border-white/10",
+          glowColor: "transparent",
           valueClass: "text-lg md:text-4xl",
         },
       ]
@@ -3096,7 +3020,7 @@ export default function Round() {
     <div className="w-full max-w-[1600px] mx-auto pb-24">
       <PageHeader title={""} className="mt-4" />
 
-      {roundDataError && (
+      {roundDataError && !roundDataLoading && (
         <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 mb-6 text-rose-200">
           <p className="text-sm">⚠️ Failed to load round data: {roundDataError}</p>
         </div>
@@ -3104,12 +3028,12 @@ export default function Round() {
 
       {/* Show "Data Not Available" only when round is pending (not yet started) */}
       {!roundDataError && isRoundStarting ? (
-        <div className="mt-10 mb-10">
+        <div className="mt-6 mb-6">
           <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-50"></div>
-            <div className="relative px-8 py-12 text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
-                <PiInfoDuotone className="h-10 w-10 text-amber-300" />
+            <div className="relative px-6 py-8 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-4 border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-2xl">
+                <PiInfoDuotone className="h-8 w-8 text-amber-300" />
               </div>
               <h3 className="mb-3 text-2xl font-bold text-white tracking-wide">
                 Round Data Not Available Yet
@@ -3155,53 +3079,42 @@ export default function Round() {
 
       {/* Show message if round is active, otherwise show metrics */}
       {isActive ? (
-        <div className="mt-10 mb-8">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-orange-500/10 p-6 sm:p-8 shadow-lg backdrop-blur">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-60" />
-            <div className="relative flex flex-col items-center text-center gap-4">
-              <div className="h-16 w-16 rounded-xl border-2 border-amber-300/60 bg-white/10 flex items-center justify-center shadow-inner">
-                <PiInfoDuotone className="h-8 w-8 text-amber-200" />
-              </div>
-              <div className="flex-1">
-                <p className="text-lg sm:text-xl font-bold text-amber-100 uppercase tracking-wide mb-2">
-                  Round in progress
-                </p>
-                <p className="text-sm sm:text-base text-white/80 font-medium max-w-2xl">
-                  This round is in progress. Results and rankings will be available once evaluations are complete.
-                </p>
-              </div>
+        <div className="mt-4 mb-3">
+          <div className="relative overflow-hidden rounded-xl border border-amber-400/30 bg-amber-500/8 px-4 py-3 backdrop-blur">
+            <div className="relative flex items-center gap-3">
+              <PiInfoDuotone className="h-5 w-5 text-amber-300 flex-shrink-0" />
+              <p className="text-sm font-semibold text-amber-100">
+                Round in progress — results will be available once evaluations are complete.
+              </p>
             </div>
           </div>
         </div>
       ) : (
         <>
       {/* Post-Consensus Metrics */}
-      <div className="mt-10 mb-6">
+      <div className="mt-4 mb-3">
             {roundDataLoading ? (
-              <div className="flex items-center gap-4 mb-5">
-                <Skeleton className="w-10 h-10 rounded-xl bg-white/10 flex-shrink-0" />
+              <div className="flex items-center gap-3 mb-3">
+                <Skeleton className="w-8 h-8 rounded-xl bg-white/10 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-5 w-56 bg-white/10" />
                   <Skeleton className="h-3 w-36 bg-white/10" />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-lg ring-2 ring-emerald-400/20 flex-shrink-0">
-                  <PiCheckCircleDuotone className="w-6 h-6 text-emerald-300" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-lg ring-2 ring-amber-400/20 flex-shrink-0">
+                  <PiChartLineUpDuotone className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <p className="text-base font-black text-white leading-tight">
                     {isWaitingForConsensus
                       ? "Waiting for consensus…"
-                      : (() => {
-                          const rNum = roundNumberForLinks;
-                          return rNum != null ? `Season rank after round ${rNum}` : "Season rank";
-                        })()}
+                      : "Round Results — All Validators"}
                   </p>
                   <p className="mt-0.5 inline-flex items-center gap-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                      Post-Consensus Metrics
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/70">
+                      Aggregated post-consensus data
                     </span>
                   </p>
                 </div>
@@ -3353,32 +3266,6 @@ export default function Round() {
 
       </div>
 
-      {/* Validators selector */}
-      <div className="mt-10 mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/20 to-cyan-500/20 shadow-lg ring-2 ring-sky-400/20">
-            <PiUsersThreeDuotone className="w-6 h-6 text-sky-300" />
-          </div>
-          <div className="flex-1">
-            <Text className="text-base font-black text-white uppercase tracking-wider">
-              Validators
-            </Text>
-            <Text className="text-xs text-white/60 font-semibold">
-              Each validator carries its own competition state — select one to inspect best-local rewards, IPFS and consensus payloads
-            </Text>
-          </div>
-        </div>
-      </div>
-
-      <RoundValidatorsInline
-        onValidatorSelect={handleValidatorSelect}
-        selectedValidatorId={selectedValidator?.id ?? null}
-        requestedValidatorId={requestedValidatorId}
-        roundData={roundData}
-        loading={roundDataLoading}
-              error={roundDataError ?? undefined}
-      />
-
       {/* Selected validator metric cards */}
       {(() => {
         if (roundDataLoading) {
@@ -3397,28 +3284,44 @@ export default function Round() {
           );
         }
         if (selectedValidator) {
+          const validatorDisplayName = selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`;
+          const validatorIcon = resolveValidatorImage(selectedValidator.name, selectedValidator.icon);
           return (
             <>
-              {/* Local metrics header */}
-              <div className="flex items-center gap-3 mt-6 mb-4">
-                <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500 shadow shadow-sky-500/40" />
-                <div>
-                  <span className="text-sm font-bold text-white/90 uppercase tracking-wider">
-                    Validator competition state
-                  </span>
-                  <span className="mx-2 text-white/30">·</span>
-                  <span className="text-sm font-semibold text-sky-300">
-                    {selectedValidator.name ?? `Validator ${selectedValidator.id.replace("validator-", "")}`}
-                  </span>
-                  <p className="text-xs text-white/50 mt-0.5">
-                    Best local rewards used by this validator for round competition
-                  </p>
+              {/* ── Per-Validator Section Divider ── */}
+              <div className="mt-5 mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
+                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-sky-400/25 bg-sky-500/8">
+                    <div className="relative h-6 w-6 overflow-hidden rounded-full border border-sky-400/40 ring-2 ring-sky-400/15 flex-shrink-0">
+                      <Image src={validatorIcon} alt={validatorDisplayName} fill sizes="24px" className="object-contain" />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-wider text-sky-300">
+                      {validatorDisplayName}
+                    </span>
+                    <span className="text-[10px] text-white/40 font-medium">
+                      — Local validator view
+                    </span>
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
                 </div>
               </div>
-              <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)]">
-                <LocalMetricCard card={selectedValidatorCards[0]} />
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  {selectedValidatorCards.slice(1).map((card) => (
+
+              {/* Competition State — inside glass panel */}
+              <div className={cn(roundGlassBackgroundClass, "rounded-2xl p-4 border-white/20 mb-4")}>
+                <div className="flex items-center gap-3 mb-4">
+                  <PiListChecksDuotone className="w-5 h-5 text-sky-300 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-white leading-tight">
+                      Competition State
+                    </p>
+                    <p className="text-[11px] text-white/50">
+                      Best local rewards used by this validator for round competition
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {selectedValidatorCards.map((card) => (
                     <LocalMetricCard key={(card as any).key} card={card} />
                   ))}
                 </div>
@@ -3602,11 +3505,12 @@ export default function Round() {
         };
         const cardTitleRowClass = "flex items-center gap-2 min-h-6 mb-2";
         return (
-          <div className={cn("mt-6 mb-6", roundGlassBackgroundClass, "rounded-2xl p-6 border-white/20")}>
+          <div className={cn("mt-4 mb-4", roundGlassBackgroundClass, "rounded-2xl p-4 border-white/20")}>
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <PiCirclesThreeDuotone className="h-5 w-5 text-cyan-400" />
                 Consensus & IPFS
+                <span className="text-sm font-medium text-sky-400/60">— {selectedValidator.name ?? `Validator ${validatorUid}`}</span>
               </h3>
               <button
                 type="button"
@@ -3959,20 +3863,54 @@ export default function Round() {
         </>
       )}
 
-      {/* Floating Glossary Button */}
-      <button
-        type="button"
-        onClick={handleOpenGlossary}
-        className="fixed bottom-8 left-8 z-40 group inline-flex items-center gap-3 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-emerald-400/60 hover:from-emerald-500/20 hover:to-teal-500/20 hover:shadow-[0_20px_60px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95"
-      >
-        <div className="relative">
-          <LuInfo className="h-5 w-5 text-emerald-300 transition-transform duration-300 group-hover:rotate-12" />
-          <div className="absolute inset-0 h-5 w-5 text-emerald-300 animate-ping opacity-0 group-hover:opacity-75">
-            <LuInfo className="h-5 w-5" />
+      {/* Floating bottom bar: round nav (top) + validator selector (bottom) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-auto max-w-[90vw]">
+        <div className="rounded-2xl border border-white/15 bg-[rgb(12,12,14)]/95 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
+          <div className="flex flex-col">
+            {/* Round nav - top level, centered */}
+            <div className="flex items-center justify-center gap-1.5 px-4 pt-2.5 pb-2">
+              <button
+                type="button"
+                onClick={() => goToRound(neighborRounds.previous?.roundKey)}
+                disabled={!neighborRounds.previous?.roundKey}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white disabled:text-white/20 disabled:cursor-not-allowed"
+              >
+                <PiCaretLeftBold className="h-3 w-3" />
+                <span className="hidden sm:inline">R{neighborRounds.previous?.roundNumber ?? "—"}</span>
+              </button>
+              <span className="text-sm font-black text-white px-2">
+                Round {roundParam}
+              </span>
+              {neighborRounds.next?.roundKey && (
+                <button
+                  type="button"
+                  onClick={() => goToRound(neighborRounds.next?.roundKey)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                >
+                  <span className="hidden sm:inline">R{neighborRounds.next?.roundNumber ?? "—"}</span>
+                  <PiCaretRightBold className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            {/* Validators carousel - bottom level (hidden on active/in-progress rounds) */}
+            {!isActive && (
+              <div className="border-t border-white/10 px-6 pb-2.5 pt-2">
+                <div className="flex justify-center gap-1 flex-wrap">
+                  <RoundValidatorsInline
+                    onValidatorSelect={handleValidatorSelect}
+                    selectedValidatorId={selectedValidator?.id ?? null}
+                    requestedValidatorId={requestedValidatorId}
+                    roundData={roundData}
+                    loading={roundDataLoading}
+                    error={roundDataError ?? undefined}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        <span className="uppercase tracking-wider">Glossary</span>
-      </button>
+      </div>
+
         </>
       ) : null}
     </div>
@@ -4036,7 +3974,7 @@ export default function Round() {
     );
   }
 
-  if (progressError || roundError) {
+  if ((progressError || roundError) && !progressLoading && !roundLoading) {
     return (
       <div className="w-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-red-500/30 rounded-2xl mt-4 px-7 py-5 ">
         <div className="text-center text-red-200">

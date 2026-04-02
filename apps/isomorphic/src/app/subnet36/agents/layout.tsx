@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import AgentsSidebar from "./agents-sidebar";
 import { AgentSidebarPlaceholder } from "@/components/placeholders/agent-placeholders";
 import { useDrawer } from "@/app/shared/drawer-views/use-drawer";
 import { BsChevronCompactLeft } from "react-icons/bs";
 import { ActionIcon } from "rizzui";
+import { useMedia } from "@core/hooks/use-media";
 
 export default function AgentsLayout({
   children,
@@ -13,9 +14,20 @@ export default function AgentsLayout({
   children: React.ReactNode;
 }>) {
   const { openDrawer } = useDrawer();
+  const isDesktop = useMedia("(min-width: 1024px)", false);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [isDesktop]);
 
   return (
-    <>
+    <div className="lg:h-[calc(100vh-90px)] lg:overflow-hidden">
       {/* Desktop Sidebar - Hidden on mobile */}
       <Suspense fallback={<AgentSidebarPlaceholder />}>
         <AgentsSidebar className="hidden lg:block" />
@@ -45,7 +57,7 @@ export default function AgentsLayout({
         </ActionIcon>
       </div>
 
-      <div className="ml-0 lg:ml-[300px]">{children}</div>
-    </>
+      <div className="ml-0 lg:ml-[300px] lg:h-full lg:overflow-y-auto">{children}</div>
+    </div>
   );
 }
