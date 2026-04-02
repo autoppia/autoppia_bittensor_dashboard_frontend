@@ -162,7 +162,7 @@ function AgentsLanding() {
   // Below this point, we're not on the landing page anymore
   // (we have an agent param in the URL)
 
-  if (seasonRankError) {
+  if (seasonRankError && !seasonRankLoading) {
     return (
       <div className="flex h-full min-h-[360px] w-full items-center justify-center">
         <div

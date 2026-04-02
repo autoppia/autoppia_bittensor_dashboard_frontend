@@ -1336,7 +1336,7 @@ export default function AgentRunSearch() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="flex flex-col gap-3">
             {displayedRuns.map((run) => {
               const validatorLabel = formatValidatorLabel(
                 run.validatorId,
@@ -1351,7 +1351,22 @@ export default function AgentRunSearch() {
                 run.successfulTasks ?? run.completedTasks ?? 0;
               const totalTasks = run.totalTasks ?? 0;
               const rewardPercent = formatRewardPercentage(run.overallReward);
+              const rewardValue = normalizePercentage(run.overallReward);
               const minerImageSrc = resolveMinerImage(run);
+
+              const roundId = run.roundId;
+              let seasonLabel = "";
+              let roundLabel = "";
+              if (typeof roundId === "string" && roundId.includes("/")) {
+                const [s, r] = roundId.split("/");
+                seasonLabel = `S${s}`;
+                roundLabel = `R${r}`;
+              } else if (typeof roundId === "number" && roundId > 0) {
+                seasonLabel = `S${Math.floor(roundId / 10000)}`;
+                roundLabel = `R${roundId % 10000}`;
+              } else {
+                roundLabel = `R${roundId ?? "?"}`;
+              }
 
               return (
                 <button
@@ -1360,162 +1375,115 @@ export default function AgentRunSearch() {
                   onClick={() =>
                     router.push(`${routes.agent_run}/${run.runId}`)
                   }
-                  className="group relative w-full rounded-xl border-2 border-slate-700/80 bg-transparent text-white shadow-xl transition-all duration-300 backdrop-blur-md cursor-pointer flex flex-col overflow-hidden hover:border-cyan-500/80 hover:shadow-2xl hover:shadow-cyan-500/20 text-left"
+                  className="group relative w-full rounded-xl border border-slate-700/60 bg-slate-900/40 text-white transition-all duration-200 backdrop-blur-sm cursor-pointer overflow-hidden hover:border-cyan-500/60 hover:bg-slate-800/50 text-left"
                 >
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-800/30 to-slate-900/40 pointer-events-none" />
-
-                  {/* Content container */}
-                  <div className="relative flex h-full flex-col p-5 gap-4">
-                    {/* Season & Round Badges */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const roundId = run.roundId;
-                          // Parse "season/round" format
-                          if (typeof roundId === "string" && roundId.includes("/")) {
-                            const [season, round] = roundId.split("/");
-                            return (
-                              <>
-                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
-                                  Season {season}
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
-                                  Round {round}
-                                </span>
-                              </>
-                            );
-                          }
-                          // Decode numeric format: season * 10000 + round_in_season
-                          if (typeof roundId === "number" && roundId > 0) {
-                            const season = Math.floor(roundId / 10000);
-                            const round = roundId % 10000;
-                            return (
-                              <>
-                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 px-3 py-1.5 text-sm font-bold text-emerald-200 shadow-md">
-                                  Season {season}
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/60 bg-gradient-to-br from-purple-500/20 to-purple-600/10 px-3 py-1.5 text-sm font-bold text-purple-200 shadow-md">
-                                  Round {round}
-                                </span>
-                              </>
-                            );
-                          }
-                          return (
-                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/60 bg-gradient-to-br from-sky-500/20 to-sky-600/10 px-3 py-1.5 text-sm font-bold text-sky-200 shadow-md">
-                              Round {roundId ?? "?"}
-                            </span>
-                          );
-                        })()}
-                      </div>
+                  <div className="relative flex items-center gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
+                    {/* Season/Round compact badge */}
+                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0 min-w-[52px]">
+                      {seasonLabel && (
+                        <span className="text-[10px] font-bold text-emerald-400 tracking-wide">
+                          {seasonLabel}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-bold text-purple-400 tracking-wide">
+                        {roundLabel}
+                      </span>
                       {typeof run.ranking === "number" && run.ranking > 0 && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-amber-500/70 bg-gradient-to-br from-amber-500/25 to-amber-600/15 px-3 py-1.5 text-sm font-bold text-amber-200 shadow-md">
-                          🏆 #{run.ranking}
+                        <span className="mt-0.5 text-[10px] font-bold text-amber-400">
+                          #{run.ranking}
                         </span>
                       )}
                     </div>
 
+                    {/* Divider */}
+                    <div className="h-10 w-px bg-slate-700/60 flex-shrink-0" />
+
                     {/* Validator */}
-                    <div className="flex items-center gap-2.5 rounded-lg border border-indigo-500/40 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-indigo-400/60 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
-                      <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-indigo-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-indigo-500/20">
+                    <div className="flex items-center gap-2 min-w-0 flex-shrink-0 w-[140px] sm:w-[170px]">
+                      <div className="relative h-8 w-8 overflow-hidden rounded-full border border-indigo-400/40 bg-slate-900 flex-shrink-0">
                         <Image
                           src={validatorImageSrc}
                           alt={validatorLabel}
-                          width={40}
-                          height={40}
-                          sizes="40px"
+                          width={32}
+                          height={32}
+                          sizes="32px"
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold mb-0.5">
-                          Validator {extractUidNumber(run.validatorId) ?? "—"}
+                      <div className="min-w-0">
+                        <div className="text-[9px] uppercase tracking-wider text-indigo-300/70 font-semibold">
+                          Val {extractUidNumber(run.validatorId) ?? "—"}
                         </div>
-                        <div className="text-xs font-bold text-indigo-50 truncate">
+                        <div className="text-xs font-semibold text-slate-100 truncate">
                           {validatorLabel}
                         </div>
                       </div>
                     </div>
 
                     {/* Miner */}
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5 shadow-md transition-all duration-200 group-hover:border-emerald-400/60 group-hover:shadow-lg group-hover:shadow-emerald-500/10">
-                      <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-400/50 bg-slate-900 shadow-lg flex-shrink-0 ring-2 ring-emerald-500/20">
+                    <div className="flex items-center gap-2 min-w-0 flex-shrink-0 w-[140px] sm:w-[170px]">
+                      <div className="relative h-8 w-8 overflow-hidden rounded-full border border-emerald-400/40 bg-slate-900 flex-shrink-0">
                         <Image
                           src={minerImageSrc}
                           alt={agentLabel}
-                          width={40}
-                          height={40}
-                          sizes="40px"
+                          width={32}
+                          height={32}
+                          sizes="32px"
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold mb-0.5">
-                          Miner{" "}
-                          {run.agentUid ?? extractUidNumber(run.agentId) ?? "—"}
+                      <div className="min-w-0">
+                        <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold">
+                          Miner {run.agentUid ?? extractUidNumber(run.agentId) ?? "—"}
                         </div>
-                        <div className="text-xs font-bold text-emerald-50 truncate">
+                        <div className="text-xs font-semibold text-slate-100 truncate">
                           {agentLabel}
                         </div>
                       </div>
                     </div>
 
-                    {/* Run ID */}
-                    <div className="rounded-lg border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-2.5 shadow-sm">
-                      <div className="text-[9px] uppercase tracking-wider text-orange-300 font-semibold mb-1">
+                    {/* Run ID - hidden on small screens */}
+                    <div className="hidden lg:block min-w-0 flex-1">
+                      <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">
                         Run ID
                       </div>
-                      <div className="text-xs font-mono font-bold text-orange-50 truncate">
+                      <div className="text-xs font-mono text-slate-300 truncate">
                         {run.runId}
                       </div>
                     </div>
 
-                    {/* Footer Stats */}
-                    <div className="mt-auto pt-3 border-t border-slate-600/60">
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div className="text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-1">
-                            Reward
-                          </div>
-                          <div className="text-base font-bold text-emerald-400 drop-shadow-sm">
-                            {rewardPercent}
-                          </div>
+                    {/* Stats */}
+                    <div className="flex items-center gap-4 sm:gap-6 flex-shrink-0 ml-auto">
+                      <div className="text-center min-w-[50px]">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
+                          Reward
                         </div>
-                        <div className="text-center">
-                          <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold mb-1">
-                            Tasks
-                          </div>
-                          <div className="text-base font-bold text-amber-300 drop-shadow-sm">
-                            {completedTasks}/{totalTasks}
-                          </div>
+                        <div className={`text-sm font-bold ${rewardValue > 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                          {rewardPercent}
                         </div>
                       </div>
-                      <div className="flex items-center justify-center gap-1.5 text-xs text-slate-300 font-medium">
-                        <svg
-                          className="w-3.5 h-3.5 text-sky-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>
+                      <div className="text-center min-w-[44px]">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
+                          Tasks
+                        </div>
+                        <div className={`text-sm font-bold ${completedTasks > 0 ? "text-amber-400" : "text-slate-500"}`}>
+                          {completedTasks}/{totalTasks}
+                        </div>
+                      </div>
+                      <div className="hidden sm:block text-right min-w-[70px]">
+                        <div className="text-[10px] text-slate-400">
                           {new Date(run.startTime).toLocaleTimeString("en-US", {
                             hour: "2-digit",
                             minute: "2-digit",
                             hour12: true,
-                          })}{" "}
-                          ·{" "}
+                          })}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
                           {new Date(run.startTime).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>

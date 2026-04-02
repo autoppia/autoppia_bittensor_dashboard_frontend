@@ -13,8 +13,24 @@ export default function ErrorPage({
   reset,
 }: ErrorPageProps) {
   useEffect(() => {
-    // Log the error to an error reporting service
     console.error('Application error:', error);
+
+    // Auto-reload on ChunkLoadError (stale deploy / cache mismatch)
+    if (
+      error?.name === 'ChunkLoadError' ||
+      error?.message?.includes('Loading chunk') ||
+      error?.message?.includes('Failed to fetch dynamically imported module')
+    ) {
+      const key = `chunk-reload-${window.location.pathname}`;
+      const lastReload = sessionStorage.getItem(key);
+      const now = Date.now();
+      // Only auto-reload once per 30s to avoid infinite loops
+      if (!lastReload || now - Number(lastReload) > 30_000) {
+        sessionStorage.setItem(key, String(now));
+        window.location.reload();
+        return;
+      }
+    }
   }, [error]);
 
   return (

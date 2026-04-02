@@ -8,8 +8,9 @@ import OverviewRecentActivity from "./overview-recent-activity";
 import { Title } from "rizzui/typography";
 import Link from "next/link";
 import Image from "next/image";
-import { PiGithubLogoDuotone } from "react-icons/pi";
-import { useOverviewMetrics } from "@/services/hooks/useOverview";
+import { PiGithubLogoDuotone, PiInfoDuotone, PiXBold } from "react-icons/pi";
+import { useOverviewMetrics, useRecentActivity } from "@/services/hooks/useOverview";
+import { useModal } from "@/app/shared/modal-views/use-modal";
 
 export default function Overview() {
   const metricsColumnRef = useRef<HTMLDivElement | null>(null);
@@ -17,6 +18,7 @@ export default function Overview() {
     undefined
   );
   const subnetGithubUrl = "https://github.com/autoppia/autoppia_web_agents_subnet";
+  const { openModal } = useModal();
 
   // Only load metrics for the "Latest finished round" label
   const {
@@ -24,6 +26,8 @@ export default function Overview() {
     loading,
     refetch: refetchMetrics,
   } = useOverviewMetrics();
+  const { data: recentData } = useRecentActivity(5);
+  const latestActivity = (recentData?.activities ?? [])[0] ?? null;
   const hasFinishedRound = Boolean(
     metrics?.hasFinishedRound ??
       (metrics?.season !== null &&
@@ -153,138 +157,89 @@ export default function Overview() {
     return () => observer.disconnect();
   }, [loading]);
 
+  const openSubnetInfoModal = () => {
+    openModal({
+      view: (
+        <SubnetInfoModal
+          headerTone={headerTone}
+          currentHeaderBadges={currentHeaderBadges}
+          rulesHeaderBadges={rulesHeaderBadges}
+          leaderGithubUrl={leaderGithubUrl}
+          subnetGithubUrl={subnetGithubUrl}
+        />
+      ),
+      size: "xl",
+      customSize: 720,
+    });
+  };
+
   return (
-    <>
-      <section className="relative mb-6 overflow-hidden rounded-[30px] border border-slate-700/60 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_32%),radial-gradient(circle_at_80%_10%,_rgba(249,115,22,0.14),_transparent_25%),linear-gradient(135deg,_rgba(8,15,30,0.96),_rgba(17,12,36,0.92))] p-5 shadow-[0_30px_80px_rgba(2,6,23,0.45)] sm:p-6 xl:p-7">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:34px_34px] opacity-[0.18]" />
-        <div className="relative">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-200">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400/18 bg-emerald-400/10 text-emerald-200" aria-hidden>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-3.5 w-3.5"
-                  >
-                    <path d="M4 6h16v12H4z" />
-                    <path d="M8 14l2-3 2 2 3-5 1 2" />
-                  </svg>
-                </span>
-                Network operational
-              </span>
-              <Title
-                as="h2"
-                className="text-3xl font-black tracking-tight text-white sm:text-4xl 4xl:text-[42px]"
-              >
-                Subnet 36 · Web Agents
-              </Title>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300 sm:text-base">
-                {headerTone}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {currentHeaderBadges.map((badge) => (
-                  <div
-                    key={badge.label}
-                    className="rounded-full border border-sky-400/18 bg-sky-400/[0.08] px-3 py-1.5 text-xs text-slate-100"
-                  >
-                    <span className="mr-2 uppercase tracking-[0.22em] text-sky-200/55">
-                      {badge.label}
-                    </span>
-                    <span className="font-semibold text-white">{badge.value}</span>
-                  </div>
-                ))}
-                <span className="mx-1 hidden h-5 w-px bg-white/10 lg:inline-flex" aria-hidden />
-                {rulesHeaderBadges.map((badge) => (
-                  <div
-                    key={badge.label}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-200"
-                  >
-                    <span className="mr-2 uppercase tracking-[0.22em] text-slate-500">
-                      {badge.label}
-                    </span>
-                    <span className="font-semibold text-white">{badge.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex w-full max-w-[420px] flex-col items-end gap-4">
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <Link
-                  href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-full border border-cyan-400/35 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-cyan-300/55 hover:text-white"
-                >
-                  IM: Dynamic Zero V1
-                </Link>
-                {leaderGithubUrl && (
-                  <Link
-                    href={leaderGithubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:border-emerald-300/55 hover:text-white"
-                    title="View Leader Repository"
-                  >
-                    <PiGithubLogoDuotone className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                    <span>Leader repo</span>
-                  </Link>
-                )}
-                <Link
-                  href={subnetGithubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 rounded-full border border-sky-400/35 bg-sky-400/10 px-3 py-1.5 text-xs font-semibold text-sky-100 transition hover:border-sky-300/55 hover:text-white"
-                  title="View Subnet Repository"
-                >
-                  <PiGithubLogoDuotone className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Subnet repo</span>
-                </Link>
-              </div>
-
-              <div className="relative flex w-full items-end justify-center px-2 pt-1">
-                <Image
-                  src="/images/automata.png"
-                  alt="Automata artwork"
-                  width={360}
-                  height={220}
-                  className="relative h-auto w-full max-w-[240px] -translate-x-2 object-contain opacity-90"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
+    <div className="-mx-4 -mt-4 min-h-screen bg-[rgb(4,6,14)] px-4 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      {/* Compact top bar */}
+      <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/10 dark:bg-gray-50/50 px-3 sm:px-5 py-3 sm:py-3.5 shadow-[0_12px_40px_rgba(2,6,23,0.3)]">
+        <div className="flex items-center gap-3">
+          <span className="relative inline-flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+          </span>
+          <Title
+            as="h2"
+            className="text-lg font-bold tracking-tight text-white sm:text-xl"
+          >
+            Subnet 36 · Web Agents
+          </Title>
+          <button
+            type="button"
+            onClick={openSubnetInfoModal}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-slate-400 transition hover:bg-white/[0.08] hover:text-white"
+            title="Subnet info"
+          >
+            <PiInfoDuotone className="h-4 w-4" />
+          </button>
         </div>
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_430px] min-w-0">
-        <div className="min-w-0">
-          <div className="rounded-[28px] border border-slate-700/70 bg-[linear-gradient(180deg,rgba(10,14,30,0.95),rgba(7,10,23,0.88))] p-4 shadow-[0_28px_80px_rgba(2,6,23,0.38)] sm:p-5">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="text-xl font-bold tracking-tight text-white">
-                  Season reward trajectory
-                </h3>
-                <p className="mt-1 text-sm text-slate-400">
-                  {hasFinishedRound
-                    ? "Consensus history across the latest completed rounds."
-                    : "Waiting for the first finished round. Until then, this panel follows the current season and stays ready to populate."}
-                </p>
-              </div>
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300">
-                {metricsSeason ?? currentSeason ? `Season ${metricsSeason ?? currentSeason}` : "Season pending"}
+        <div className="flex flex-wrap items-center gap-2">
+          {currentHeaderBadges.map((badge) => (
+            <div
+              key={badge.label}
+              className="rounded-full border border-sky-400/18 bg-sky-400/[0.08] px-2.5 py-1 text-[11px] text-slate-100"
+            >
+              <span className="mr-1.5 uppercase tracking-[0.18em] text-sky-200/55">
+                {badge.label}
               </span>
+              <span className="font-semibold text-white">{badge.value}</span>
             </div>
-            <OverviewMinerChart
-              className="w-full min-w-0 flex-1"
-              targetHeight={metricsHeight}
-              season={metricsSeason ?? currentSeason}
-            />
-          </div>
+          ))}
+          <Link
+            href={subnetGithubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-sky-400/25 bg-sky-400/[0.06] px-2.5 py-1 text-[11px] font-semibold text-sky-200 transition hover:border-sky-300/45 hover:text-white"
+          >
+            <PiGithubLogoDuotone className="h-3.5 w-3.5" />
+            <span>Repo</span>
+          </Link>
+          {leaderGithubUrl && (
+            <Link
+              href={leaderGithubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/[0.06] px-2.5 py-1 text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-300/45 hover:text-white"
+            >
+              <PiGithubLogoDuotone className="h-3.5 w-3.5" />
+              <span>Leader</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Chart + Metrics */}
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_430px] min-w-0">
+        <div className="min-w-0">
+          <OverviewMinerChart
+            className="w-full min-w-0 flex-1"
+            targetHeight={metricsHeight}
+            season={metricsSeason ?? currentSeason}
+          />
         </div>
 
         <div
@@ -301,42 +256,169 @@ export default function Overview() {
         </div>
       </div>
 
-      <section className="mt-8">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[40px] font-black tracking-tight text-white">
-            Validator status
+      {/* Validators */}
+      <section className="mt-8 sm:mt-12">
+        <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <h3 className="text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
+            Validators <span className="text-slate-500">—</span> <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">What&apos;s happening right now</span>
           </h3>
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm md:text-base font-semibold text-slate-200 shadow-sm whitespace-nowrap">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4 text-blue-300"
-              aria-hidden
-            >
-              <path d="M12 3a9 9 0 1 0 9 9" />
-              <path d="M12 7v5l3 3" />
-            </svg>
-            <span>Current round:</span>
-            <span className="font-extrabold text-white">
-              {currentSeason != null && currentRoundInSeason != null
-                ? `Season ${currentSeason} - Round ${currentRoundInSeason}`
-                : "Pending"}
-            </span>
+          {latestActivity ? (
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-200 shadow-sm max-w-full sm:max-w-[600px]">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              <span className="truncate text-slate-300">
+                {latestActivity.message}
+              </span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-500/40 bg-slate-900/60 px-3.5 py-1.5 text-sm font-semibold text-slate-200 shadow-sm">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-400" />
+              </span>
+              <span>Waiting for activity…</span>
+            </div>
+          )}
+        </div>
+        <OverviewValidators
+          currentRound={currentRoundInSeason}
+          currentSeason={currentSeason}
+          className="min-w-0 content-start"
+        />
+      </section>
+
+      {/* Recent Activity */}
+      <section className="mt-8 sm:mt-12 pb-8">
+        <h3 className="mb-4 sm:mb-5 text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
+          Recent activity <span className="text-slate-500">—</span>{" "}
+          <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">Live feed</span>
+        </h3>
+        <OverviewRecentActivity className="min-w-0" />
+      </section>
+    </div>
+  );
+}
+
+function SubnetInfoModal({
+  headerTone,
+  currentHeaderBadges,
+  rulesHeaderBadges,
+  leaderGithubUrl,
+  subnetGithubUrl,
+}: Readonly<{
+  headerTone: string;
+  currentHeaderBadges: Array<{ label: string; value: string }>;
+  rulesHeaderBadges: Array<{ label: string; value: string }>;
+  leaderGithubUrl: string | null;
+  subnetGithubUrl: string;
+}>) {
+  const { closeModal } = useModal();
+
+  return (
+    <div className="m-auto w-full max-w-[720px] rounded-[28px] border border-white/10 dark:bg-gray-50/50 px-6 py-6 text-white shadow-[0_30px_90px_rgba(2,6,23,0.55)] sm:px-7 sm:py-7">
+      <div className="flex items-start justify-between gap-6 border-b border-white/10 pb-5">
+        <div className="flex items-center gap-4">
+          <Image
+            src="/images/automata.png"
+            alt="Automata artwork"
+            width={64}
+            height={64}
+            className="h-16 w-16 object-contain"
+          />
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight text-white">
+              Subnet 36 · Web Agents
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">{headerTone}</p>
           </div>
         </div>
-        <div className="grid min-w-0 items-stretch gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <OverviewValidators
-            currentRound={currentRoundInSeason}
-            currentSeason={currentSeason}
-            className="min-w-0 content-start"
-          />
-          <OverviewRecentActivity className="min-w-0 h-full min-h-0" />
+        <button
+          type="button"
+          onClick={() => closeModal()}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
+          aria-label="Close"
+        >
+          <PiXBold className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <div>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Current state
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {currentHeaderBadges.map((badge) => (
+              <div
+                key={badge.label}
+                className="rounded-full border border-sky-400/18 bg-sky-400/[0.08] px-3 py-1.5 text-xs text-slate-100"
+              >
+                <span className="mr-2 uppercase tracking-[0.22em] text-sky-200/55">
+                  {badge.label}
+                </span>
+                <span className="font-semibold text-white">{badge.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
-    </>
+
+        <div>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Subnet parameters
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {rulesHeaderBadges.map((badge) => (
+              <div
+                key={badge.label}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-200"
+              >
+                <span className="mr-2 uppercase tracking-[0.22em] text-slate-500">
+                  {badge.label}
+                </span>
+                <span className="font-semibold text-white">{badge.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Links
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="https://autoppia.substack.com/p/dynamic-zero-the-overfitting-punisher"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full border border-cyan-400/35 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-cyan-300/55 hover:text-white"
+            >
+              IM: Dynamic Zero V1
+            </Link>
+            <Link
+              href={subnetGithubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 rounded-full border border-sky-400/35 bg-sky-400/10 px-3 py-1.5 text-xs font-semibold text-sky-100 transition hover:border-sky-300/55 hover:text-white"
+            >
+              <PiGithubLogoDuotone className="h-4 w-4" />
+              <span>Subnet repo</span>
+            </Link>
+            {leaderGithubUrl && (
+              <Link
+                href={leaderGithubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:border-emerald-300/55 hover:text-white"
+              >
+                <PiGithubLogoDuotone className="h-4 w-4" />
+                <span>Leader repo</span>
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

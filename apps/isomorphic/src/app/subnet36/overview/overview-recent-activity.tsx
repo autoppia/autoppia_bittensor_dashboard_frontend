@@ -201,7 +201,7 @@ function RecentActivityModal({
   const { closeModal } = useModal();
 
   return (
-    <div className="m-auto w-full max-w-[920px] rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,12,28,0.98),rgba(6,10,22,0.96))] px-6 py-6 text-white shadow-[0_30px_90px_rgba(2,6,23,0.55)] sm:px-7 sm:py-7">
+    <div className="m-auto w-full max-w-[920px] rounded-[28px] border border-white/10 dark:bg-gray-50/50 px-6 py-6 text-white shadow-[0_30px_90px_rgba(2,6,23,0.55)] sm:px-7 sm:py-7">
       <div className="flex items-start justify-between gap-6 border-b border-white/10 pb-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
@@ -253,7 +253,7 @@ export default function OverviewRecentActivity({ className }: Readonly<{ classNa
     return (
       <div
         className={cn(
-          "overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,10,24,0.88))] shadow-[0_18px_50px_rgba(2,6,23,0.28)] backdrop-blur-md",
+          "overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_50px_rgba(2,6,23,0.28)] backdrop-blur-md",
           className
         )}
       >
@@ -279,23 +279,10 @@ export default function OverviewRecentActivity({ className }: Readonly<{ classNa
   return (
     <div
       className={cn(
-        "flex h-full min-h-[880px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,10,24,0.88))] shadow-[0_18px_50px_rgba(2,6,23,0.28)] backdrop-blur-md",
+        "flex flex-col overflow-hidden rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_50px_rgba(2,6,23,0.28)] backdrop-blur-md",
         className
       )}
     >
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-200">Recent activity</h3>
-          <p className="mt-1 text-xs text-slate-500">Consensus, seasons and validator evaluation flow.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => openModal({ view: <RecentActivityModal activities={activities} />, size: "xl", customSize: 980 })}
-          className="text-xs font-medium text-sky-400 transition hover:text-sky-300"
-        >
-          View all
-        </button>
-      </div>
       <div className="flex-1 space-y-2 px-4 py-4">
         {visibleActivities.map((activity) => (
           <ActivityRow key={activity.id} activity={activity} compact />
