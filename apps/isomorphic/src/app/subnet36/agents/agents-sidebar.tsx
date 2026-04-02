@@ -32,10 +32,10 @@ function getMinerCardContainerClass(
   highlightTop: boolean,
 ): string {
   if (isActive)
-    return "bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-white border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 scale-[1.02]";
+    return "bg-white/[0.08] border border-cyan-400/40 text-white";
   if (highlightTop)
-    return "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]";
-  return "text-white/90 hover:bg-white/15 hover:text-white border border-white/15 hover:border-white/30 hover:shadow-md hover:scale-[1.01]";
+    return "bg-white/[0.04] border border-amber-400/30 text-white";
+  return "bg-transparent border border-white/8 text-white/90 hover:bg-white/[0.04] hover:border-white/15";
 }
 
 function getMinerAvatarRingClass(
@@ -387,7 +387,7 @@ export default function AgentsSidebar({
   }
 
   // Show error state
-  if (error) {
+  if (error && !loading && !hasSeasonRankData) {
     return (
       <aside
         className={cn(
@@ -519,13 +519,13 @@ export default function AgentsSidebar({
               const cornerBadgePalette = (() => {
                 switch (displayRank) {
                   case 1:
-                    return "bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-500 text-white border-amber-300";
+                    return "bg-amber-500 text-white border-amber-400";
                   case 2:
-                    return "bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-black border-slate-100";
+                    return "bg-slate-400 text-white border-slate-300";
                   case 3:
-                    return "bg-gradient-to-br from-amber-800 via-amber-700 to-orange-800 text-white border-amber-500/60";
+                    return "bg-amber-700 text-white border-amber-600";
                   default:
-                    return "bg-gradient-to-br from-sky-700 via-cyan-700 to-blue-800 text-cyan-50 border-cyan-300/40";
+                    return "bg-slate-600 text-white border-slate-500";
                 }
               })();
 
@@ -541,28 +541,21 @@ export default function AgentsSidebar({
                   <div
                     className={cn(
                       "relative flex items-center w-full p-2.5 rounded-xl transition-all duration-300 group overflow-visible backdrop-blur-sm",
-                      highlightTop
-                        ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/70 text-white shadow-lg hover:shadow-xl hover:border-amber-500/80 hover:scale-[1.02]"
-                        : "bg-gradient-to-r from-emerald-500/14 via-teal-500/10 to-cyan-500/14 text-white border border-emerald-400/35 shadow-md shadow-emerald-500/10 hover:border-emerald-300/55 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.01]",
+                      isActive
+                        ? "bg-white/[0.08] border border-cyan-400/40 text-white shadow-md"
+                        : highlightTop
+                          ? "bg-white/[0.04] border border-amber-400/30 text-white hover:bg-white/[0.07]"
+                          : "bg-transparent border border-white/8 text-white/90 hover:bg-white/[0.04] hover:border-white/15",
                     )}
                   >
-                    {/* Animated gradient shimmer for active state */}
-                    {isActive && (
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 animate-pulse pointer-events-none" />
-                    )}
-
                     <div
                       className={cn(
                         "absolute -top-1 -right-1 min-w-[28px] h-7 px-2 rounded-full flex items-center justify-center shadow-xl border z-10",
                         cornerBadgePalette,
-                        showCrown && "animate-pulse",
                       )}
                     >
                       {showCrown ? (
-                        <>
-                          <FaCrown className="w-3 h-3 drop-shadow-lg" />
-                          <div className="absolute inset-0 rounded-full bg-amber-400 blur-md opacity-60 animate-pulse pointer-events-none" />
-                        </>
+                        <FaCrown className="w-3 h-3 drop-shadow-lg" />
                       ) : (
                         <span className="text-[10px] font-black tracking-wide">
                           #{displayRank}

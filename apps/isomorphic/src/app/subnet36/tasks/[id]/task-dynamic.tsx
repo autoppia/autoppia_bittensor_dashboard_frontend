@@ -342,7 +342,7 @@ function TaskDetailsDynamic({
       </div>
     );
   }
-  if ((error && !details) || !details) {
+  if ((error && !isLoading && !details) || !details) {
     return (
       <div className="mb-8">
         <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10 backdrop-blur-sm">

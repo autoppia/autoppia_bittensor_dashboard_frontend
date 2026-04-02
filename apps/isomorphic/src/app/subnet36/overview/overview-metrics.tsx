@@ -147,20 +147,14 @@ export default function OverviewMetrics({
   const topMetricsData = [
     {
       id: "season-leader",
-      title: hasFinishedRound ? "Season leader" : "Leader",
-      value: hasFinishedRound ? formatPercentage(leaderRewardValue) : "Pending",
-      headline: hasFinishedRound ? leaderInfo : "No finished round yet",
-      chips: [
-        hasFinishedRound
-          ? seasonLabel
-            ? `${seasonLabel} leader`
-            : "Season leader"
-          : "Awaiting close",
-      ],
+      title: hasFinishedRound ? "Leader" : "Leader",
+      value: hasFinishedRound ? formatPercentage(leaderRewardValue) : "—",
+      headline: hasFinishedRound ? leaderInfo : null,
+      chips: [],
       githubUrl: leaderGithubUrl,
       icon: LuTrophy,
       bgColor:
-        "border border-amber-400/35 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.22),_transparent_40%),linear-gradient(160deg,rgba(34,24,10,0.92),rgba(25,18,10,0.92))] shadow-[0_18px_55px_rgba(251,191,36,0.14)]",
+        "border border-amber-400/25 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.15),_transparent_40%),linear-gradient(160deg,rgba(16,12,4,0.94),rgba(10,8,3,0.94))] shadow-[0_18px_55px_rgba(251,191,36,0.1)]",
       iconClassName:
         "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_12px_24px_rgba(251,146,60,0.35)]",
       metricClassName:
@@ -171,11 +165,11 @@ export default function OverviewMetrics({
       id: "total-validators",
       title: "Validators",
       value: validatorsCount,
-      headline: "Active validators",
-      chips: [metrics?.tasksPerValidator != null ? `${metrics.tasksPerValidator} tasks each` : null].filter(Boolean),
+      headline: metrics?.tasksPerValidator != null ? `${metrics.tasksPerValidator} tasks each` : "Active",
+      chips: [],
       icon: LuShield,
       bgColor:
-        "border border-blue-400/30 bg-[linear-gradient(160deg,rgba(16,31,71,0.88),rgba(14,20,52,0.88))] shadow-[0_18px_45px_rgba(59,130,246,0.12)]",
+        "border border-blue-400/20 bg-[linear-gradient(160deg,rgba(6,12,32,0.92),rgba(4,8,24,0.92))] shadow-[0_18px_45px_rgba(59,130,246,0.08)]",
       iconClassName:
         "bg-gradient-to-br from-blue-400 to-indigo-500 text-white",
       metricClassName: "text-2xl font-black text-blue-300",
@@ -185,11 +179,11 @@ export default function OverviewMetrics({
       id: "miners",
       title: "Miners",
       value: activeMinersCount,
-      headline: "Season miner set",
-      chips: [`${newAgentsCount} new`, `${minerUpdatesCount} repo updates`],
+      headline: [newAgentsCount > 0 ? `${newAgentsCount} new` : null, minerUpdatesCount > 0 ? `${minerUpdatesCount} updated` : null].filter(Boolean).join(" · ") || "Season set",
+      chips: [],
       icon: LuPickaxe,
       bgColor:
-        "border border-emerald-400/30 bg-[linear-gradient(160deg,rgba(10,54,45,0.88),rgba(9,34,29,0.88))] shadow-[0_18px_45px_rgba(16,185,129,0.12)]",
+        "border border-emerald-400/20 bg-[linear-gradient(160deg,rgba(4,24,20,0.92),rgba(3,16,14,0.92))] shadow-[0_18px_45px_rgba(16,185,129,0.08)]",
       iconClassName:
         "bg-gradient-to-br from-emerald-400 to-green-500 text-white",
       metricClassName: "text-2xl font-black text-emerald-300",
@@ -200,16 +194,12 @@ export default function OverviewMetrics({
   const websitesMetric = {
     id: "total-websites",
     title: "Websites",
-    value: hasFinishedRound ? totalWebsitesCount : "Pending",
-    headline: hasFinishedRound ? "Evaluated by season leader" : "Visible after consensus",
-    chips: [
-      hasFinishedRound
-        ? "leader-evaluated"
-        : "pending consensus",
-    ],
+    value: hasFinishedRound ? totalWebsitesCount : "—",
+    headline: hasFinishedRound ? "Leader evaluated" : null,
+    chips: [],
     icon: LuGlobe,
     bgColor:
-      "border border-pink-400/30 bg-[linear-gradient(160deg,rgba(58,16,42,0.88),rgba(31,13,33,0.88))] shadow-[0_18px_45px_rgba(236,72,153,0.12)]",
+      "border border-pink-400/20 bg-[linear-gradient(160deg,rgba(24,6,18,0.92),rgba(14,4,14,0.92))] shadow-[0_18px_45px_rgba(236,72,153,0.08)]",
     iconClassName:
       "bg-gradient-to-br from-pink-400 to-rose-500 text-white",
     metricClassName: "text-2xl font-black text-pink-300",
@@ -241,117 +231,65 @@ export default function OverviewMetrics({
       {topMetricsData.map((metric) => {
         const Icon = metric.icon;
         return (
-          <div
-            key={metric.title}
-            className={cn(
-              "min-h-[118px] rounded-[22px] p-4 min-w-0 transition duration-300 hover:-translate-y-0.5",
-              metric.bgColor
-            )}
-          >
-            <div className="flex min-h-[84px] min-w-0 items-center gap-4">
-              <div
-                className={cn(
-                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px]",
-                  metric.iconClassName
-                )}
-              >
-                <Icon className="h-6 w-6" />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center">
-                <h3
-                  className={cn(
-                    "mb-1 text-xs font-semibold uppercase tracking-[0.25em] truncate",
-                    metric.descriptionClassName
-                  )}
-                >
-                  {metric.title}
-                </h3>
-                <div className={cn("truncate leading-none", metric.metricClassName)}>
-                  {metric.value}
-                </div>
-              </div>
-              <div className="min-w-0 max-w-[190px] self-stretch flex flex-col justify-center items-center text-center">
-                {metric.headline != null && metric.headline !== "" && (
-                  <div
-                    className={cn(
-                      "text-sm font-bold leading-5",
-                      metric.descriptionClassName
-                    )}
-                  >
-                    {metric.headline}
-                  </div>
-                )}
-                {metric.chips?.length ? (
-                  <div className="mt-3 flex flex-nowrap justify-center gap-1.5">
-                    {metric.chips
-                      .filter((chip): chip is string => typeof chip === "string" && chip.length > 0)
-                      .map((chip) => (
-                      <span
-                        key={chip}
-                        className="inline-flex items-center whitespace-nowrap rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/70"
-                      >
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
+          <MetricCard key={metric.id} metric={metric} Icon={Icon} />
         );
       })}
       <Link href="/websites" className="block">
+        <MetricCard metric={websitesMetric} Icon={websitesMetric.icon} />
+      </Link>
+    </div>
+  );
+}
+
+function MetricCard({
+  metric,
+  Icon,
+}: Readonly<{
+  metric: {
+    bgColor: string;
+    iconClassName: string;
+    title: string;
+    descriptionClassName: string;
+    headline?: string | null;
+    chips?: (string | null)[];
+    value: string | number;
+    metricClassName: string;
+  };
+  Icon: React.ComponentType<{ className?: string }>;
+}>) {
+  return (
+    <div
+      className={cn(
+        "flex flex-1 items-center justify-between rounded-[22px] px-5 py-4 min-w-0 transition duration-300 hover:-translate-y-0.5",
+        metric.bgColor
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0">
         <div
           className={cn(
-            "min-h-[118px] rounded-[22px] p-4 min-w-0 transition duration-300 hover:-translate-y-0.5",
-            websitesMetric.bgColor
+            "flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[16px]",
+            metric.iconClassName
           )}
         >
-          <div className="flex min-h-[84px] min-w-0 items-center gap-4">
-            <div
-              className={cn(
-                "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px]",
-                websitesMetric.iconClassName
-              )}
-            >
-              <websitesMetric.icon className="h-6 w-6" />
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col justify-center">
-              <h3
-                className={cn(
-                  "mb-1 text-xs font-semibold uppercase tracking-[0.25em] truncate",
-                  websitesMetric.descriptionClassName
-                )}
-              >
-                {websitesMetric.title}
-              </h3>
-              <div className={cn("truncate leading-none", websitesMetric.metricClassName)}>
-                {websitesMetric.value}
-              </div>
-            </div>
-            <div className="min-w-0 max-w-[190px] self-stretch flex flex-col justify-center items-center text-center">
-              <div
-                className={cn(
-                  "text-sm font-bold leading-5",
-                  websitesMetric.descriptionClassName
-                )}
-              >
-                {websitesMetric.headline}
-              </div>
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-                {websitesMetric.chips.map((chip: string) => (
-                  <span
-                    key={chip}
-                    className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+          <Icon className="h-5 w-5" />
         </div>
-      </Link>
+        <div className="min-w-0">
+          <h3
+            className={cn(
+              "text-sm font-bold uppercase tracking-[0.18em]",
+              metric.descriptionClassName
+            )}
+          >
+            {metric.title}
+          </h3>
+          {metric.headline != null && metric.headline !== "" && (
+            <p className="mt-0.5 text-xs text-white/45">{metric.headline}</p>
+          )}
+        </div>
+      </div>
+      <div className={cn("flex-shrink-0 text-right text-4xl font-black leading-none", metric.metricClassName)}>
+        {metric.value}
+      </div>
     </div>
   );
 }
