@@ -5,6 +5,7 @@ import Image from "next/image";
 import WidgetCard from "@core/components/cards/widget-card";
 import PageHeader from "@/app/shared/page-header";
 import cn from "@core/utils/class-names";
+import { PiTrophyFill } from "react-icons/pi";
 import {
   LineChart,
   Line,
@@ -24,10 +25,9 @@ import {
   FaStepForward,
 } from "react-icons/fa";
 import { CustomYAxisTick } from "@core/components/charts/custom-yaxis-tick";
+import { agentsRepository } from "@/repositories/agents/agents.repository";
 import { subnetsRepository } from "@/repositories/subnets/subnets.repository";
 import type {
-  ApiMinerRosterEntry,
-  ApiTimelinePoint,
   SubnetTimelineMeta,
   SubnetTimelineResponse,
 } from "@/repositories/subnets/subnets.types";
@@ -42,6 +42,8 @@ type MinerProfile = {
 
 type MinerSnapshot = MinerProfile & {
   score: number;
+  reward: number;
+  seasonScore: number;
   rank: number;
   previousRank: number | null;
   rankChange: number;
@@ -73,6 +75,7 @@ interface MinerAnimationExperienceProps {
   condensed?: boolean;
   subnetId?: string;
   rounds?: number;
+  initialSeason?: number;
   mockTimeline?: ProcessedTimeline | null;
 }
 
@@ -109,24 +112,51 @@ function normalizeScore(value: number | null | undefined): number {
   return numeric <= 1 ? Number((numeric * 10).toFixed(3)) : numeric;
 }
 
+function formatRoundNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "--";
+  }
+  const rounded = Math.round(value);
+  return rounded >= 10000 ? String(rounded % 10000) : String(rounded);
+}
+
+function rankSnapshots(miners: MinerSnapshot[]): MinerSnapshot[] {
+  const ordered = [...miners].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.reward !== a.reward) return b.reward - a.reward;
+    return a.order - b.order;
+  });
+
+  return ordered.map((miner, index) => ({
+    ...miner,
+    rank: index + 1,
+  }));
+}
+
 function transformTimelineResponse(
-  payload: SubnetTimelineResponse
+  payload: SubnetTimelineResponse,
+  seasonSummaryMap?: Map<string, { seasonScore: number; image: string | null }>
 ): ProcessedTimeline {
   const roster: MinerProfile[] = payload.roster.map((entry, index) => {
     const fallbackName = entry.miner_id.replace(/[_-]/g, " ").toUpperCase();
+    const seasonSummary = seasonSummaryMap?.get(entry.miner_id);
     return {
       id: entry.miner_id,
       name: entry.display_name || fallbackName,
       color: entry.color_hex || FALLBACK_COLOR,
-      image: entry.avatar_url || FALLBACK_AVATAR,
+      image: seasonSummary?.image || entry.avatar_url || FALLBACK_AVATAR,
       order: entry.order ?? index,
     };
   });
 
   const rosterMap = new Map(roster.map((miner) => [miner.id, miner]));
 
+  let priorRanks = new Map<string, number>();
+  let priorBestScores = new Map<string, number>();
+
   const timeline: TimelinePoint[] = payload.timeline.map((point) => {
-    const miners = point.snapshots
+    const miners = rankSnapshots(
+      point.snapshots
       .map((snapshot) => {
         const baseProfile =
           rosterMap.get(snapshot.miner_id) ??
@@ -138,26 +168,47 @@ function transformTimelineResponse(
             order: snapshot.rank - 1,
           } as MinerProfile);
 
-        const previousRankValue = snapshot.previous_rank ?? snapshot.rank;
-
-        const computedRankChange =
-          snapshot.rank_change ?? previousRankValue - snapshot.rank;
+        const reward = normalizeScore(snapshot.reward ?? snapshot.score);
+        const rawScore = normalizeScore(snapshot.score ?? snapshot.reward);
+        const score = Math.max(
+          priorBestScores.get(snapshot.miner_id) ?? 0,
+          rawScore
+        );
+        const previousRankValue = priorRanks.get(snapshot.miner_id) ?? null;
+        const previousBestScore = priorBestScores.get(snapshot.miner_id);
 
         return {
           ...baseProfile,
-          score: normalizeScore(snapshot.score),
-          rank: snapshot.rank,
+          score,
+          reward,
+          seasonScore: seasonSummaryMap?.get(snapshot.miner_id)?.seasonScore ?? 0,
+          rank: 0,
           previousRank: previousRankValue,
-          rankChange: computedRankChange,
-          scoreChange: normalizeScore(snapshot.score_change ?? 0),
+          rankChange: 0,
+          scoreChange: normalizeScore(
+            score - (previousBestScore ?? score)
+          ),
         };
       })
-      .sort((a, b) => a.rank - b.rank);
+    );
+
+    const rankedMiners = miners.map((miner) => {
+      const previousRankValue = miner.previousRank ?? miner.rank;
+      return {
+        ...miner,
+        rankChange: previousRankValue - miner.rank,
+      };
+    });
+
+    priorRanks = new Map(rankedMiners.map((miner) => [miner.id, miner.rank]));
+    priorBestScores = new Map(
+      rankedMiners.map((miner) => [miner.id, miner.score])
+    );
 
     return {
       round: point.round,
       date: point.timestamp,
-      miners,
+      miners: rankedMiners,
     };
   });
 
@@ -213,11 +264,16 @@ function interpolateSnapshots(
   const interpolatedMiners: MinerSnapshot[] = currentPoint.miners.map((miner) => {
     const next = nextMap.get(miner.id) ?? miner;
     const score = Number(lerp(miner.score, next.score, fraction).toFixed(2));
+    const reward = Number(lerp(miner.reward, next.reward, fraction).toFixed(2));
     const previousRank = miner.rank;
 
     return {
       ...miner,
       score,
+      reward,
+      seasonScore: Number(
+        lerp(miner.seasonScore, next.seasonScore, fraction).toFixed(4)
+      ),
       previousRank,
       rank: miner.rank,
       rankChange: 0,
@@ -227,10 +283,9 @@ function interpolateSnapshots(
     };
   });
 
-  const ranked = [...interpolatedMiners].sort((a, b) => b.score - a.score);
+  const ranked = rankSnapshots(interpolatedMiners);
   ranked.forEach((miner, rankIndex) => {
     const origin = currentMap.get(miner.id);
-    miner.rank = rankIndex + 1;
     miner.rankChange = (origin?.rank ?? miner.rank) - miner.rank;
   });
 
@@ -287,7 +342,7 @@ function ScoreTooltip({ active, payload }: TooltipProps<number, string>) {
   return (
     <div className="min-w-[220px] rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-2xl dark:bg-gray-100/95">
       <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-        <span>Round {Math.round(roundValue)}</span>
+        <span>Round {formatRoundNumber(roundValue)}</span>
         <span>{dateLabel}</span>
       </div>
       <div className="mt-3 space-y-2">
@@ -346,12 +401,17 @@ export function MinerAnimationExperience({
   condensed = false,
   subnetId = DEFAULT_SUBNET_ID,
   rounds = DEFAULT_ROUND_COUNT,
+  initialSeason,
   mockTimeline = null,
 }: MinerAnimationExperienceProps) {
   const [data, setData] = useState<ProcessedTimeline | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<number | null>(
+    initialSeason ?? null
+  );
+  const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
 
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -370,6 +430,39 @@ export function MinerAnimationExperience({
     [roster]
   );
 
+  const sanitizeTimeline = useCallback((payload: SubnetTimelineResponse) => {
+    const timeline = [...payload.timeline];
+    while (timeline.length > 1) {
+      const lastPoint = timeline[timeline.length - 1];
+      const hasUsableSnapshot = lastPoint.snapshots.some((snapshot) => {
+        const value = snapshot.reward ?? snapshot.score ?? 0;
+        return value > 0 && snapshot.rank < 9999;
+      });
+      if (hasUsableSnapshot) {
+        break;
+      }
+      timeline.pop();
+    }
+    return {
+      ...payload,
+      timeline,
+      meta: {
+        ...payload.meta,
+        round_count: timeline.length,
+        start_round: timeline[0]?.round ?? payload.meta.start_round,
+        end_round:
+          timeline[timeline.length - 1]?.round ?? payload.meta.end_round,
+      },
+    };
+  }, []);
+
+  const fetchSeasonMeta = useCallback(async () => {
+    const summary = await agentsRepository.getSeasonRank("latest");
+    const seasons = summary.availableSeasons ?? [];
+    setAvailableSeasons(seasons);
+    setSelectedSeason((previous) => previous ?? summary.season ?? summary.latestSeason ?? seasons[0] ?? null);
+  }, []);
+
   const fetchTimeline = useCallback(
     async (withLoader: boolean) => {
       if (withLoader) {
@@ -379,10 +472,53 @@ export function MinerAnimationExperience({
       }
 
       try {
+        const seasonRef = selectedSeason ?? initialSeason ?? 1;
+        const [seasonRank, roundsData] = await Promise.all([
+          agentsRepository.getSeasonRank(seasonRef),
+          agentsRepository.getRoundsData({ season: seasonRef }),
+        ]);
+
+        if (withLoader) {
+          setAvailableSeasons(seasonRank.availableSeasons ?? []);
+        }
+
+        const roundKeys = (roundsData.rounds ?? [])
+          .map((value) => String(value))
+          .filter((value) => value.includes("/"))
+          .sort((a, b) => {
+            const [aSeason, aRound] = a.split("/").map(Number);
+            const [bSeason, bRound] = b.split("/").map(Number);
+            if (aSeason !== bSeason) return aSeason - bSeason;
+            return aRound - bRound;
+          });
+
+        if (!roundKeys.length) {
+          throw new Error(`No completed rounds available for season ${seasonRef}`);
+        }
+
+        const lastRoundKey = roundKeys[roundKeys.length - 1];
+        const [lastSeason, lastRound] = lastRoundKey.split("/").map(Number);
+        const endRound = lastSeason * 10000 + lastRound;
+
         const response = await subnetsRepository.getSubnetTimeline(subnetId, {
-          rounds: Math.max(1, Math.floor(rounds)),
+          rounds: Math.min(Math.max(1, roundKeys.length), Math.floor(rounds)),
+          end_round: endRound,
         });
-        const processed = transformTimelineResponse(response);
+
+        const seasonMap = new Map<string, { seasonScore: number; image: string | null }>(
+          seasonRank.miners.map((miner) => [
+            `miner-${miner.uid}`,
+            {
+              seasonScore: normalizeScore(miner.post_consensus_avg_reward),
+              image: miner.image,
+            },
+          ])
+        );
+
+        const processed = transformTimelineResponse(
+          sanitizeTimeline(response),
+          seasonMap
+        );
         setData(processed);
         setError(null);
 
@@ -404,7 +540,7 @@ export function MinerAnimationExperience({
         }
       }
     },
-    [subnetId, rounds]
+    [initialSeason, rounds, sanitizeTimeline, selectedSeason, subnetId]
   );
 
   useEffect(() => {
@@ -425,15 +561,27 @@ export function MinerAnimationExperience({
       return;
     }
 
-    fetchTimeline(true);
+    fetchSeasonMeta().catch((err: unknown) => {
+      const message =
+        err instanceof Error ? err.message : "Failed to load season metadata";
+      setError(message);
+      setIsInitialLoading(false);
+    });
   }, [
-    fetchTimeline,
+    fetchSeasonMeta,
     mockTimeline,
     shouldUseMock,
   ]);
 
   useEffect(() => {
-    if (shouldUseMock) {
+    if (shouldUseMock || selectedSeason === null) {
+      return;
+    }
+    fetchTimeline(true);
+  }, [fetchTimeline, selectedSeason, shouldUseMock]);
+
+  useEffect(() => {
+    if (shouldUseMock || selectedSeason === null) {
       return;
     }
 
@@ -442,7 +590,7 @@ export function MinerAnimationExperience({
     }, REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [fetchTimeline, shouldUseMock]);
+  }, [fetchTimeline, selectedSeason, shouldUseMock]);
 
   useEffect(() => {
     if (totalSnapshots === 0) {
@@ -558,8 +706,11 @@ export function MinerAnimationExperience({
 
   const activeData = visibleData.length ? visibleData : chartData;
 
-  const latestSnapshot = chartData[chartData.length - 1]?.minersSnapshot ?? [];
-  const topMiner = latestSnapshot[0];
+  const animatedSnapshot = chartData[chartData.length - 1]?.minersSnapshot ?? [];
+  const displayIndex =
+    totalSnapshots > 0 ? Math.min(Math.round(progress), totalSnapshots - 1) : 0;
+  const displaySnapshot = timeline[displayIndex]?.miners ?? animatedSnapshot;
+  const topMiner = animatedSnapshot[0];
   const currentRound = interpolatedPoint
     ? Math.round(interpolatedPoint.round)
     : null;
@@ -567,10 +718,11 @@ export function MinerAnimationExperience({
     ? DATE_LABEL_FORMATTER.format(new Date(interpolatedPoint.date))
     : "--";
   const topMinerDisplayCount = condensed ? 3 : 6;
-  const topMiners = latestSnapshot.slice(
+  const topMiners = displaySnapshot.slice(
     0,
-    Math.min(latestSnapshot.length, topMinerDisplayCount)
+    Math.min(displaySnapshot.length, topMinerDisplayCount)
   );
+  const seasonLeader = topMiners[0];
 
   const [minScore, maxScore] = useMemo(() => {
     if (!activeData.length) {
@@ -601,11 +753,11 @@ export function MinerAnimationExperience({
     const span = Math.max(max - min, 1.5);
     const padding = Math.max(0.4, span * 0.18);
     const lower = Math.max(0, min - padding);
-    const upper = Math.min(10, max + padding);
+    const upper = max + padding;
 
     return [
       Math.max(0, Math.floor(lower * 10) / 10),
-      Math.min(10, Math.ceil(upper * 10) / 10),
+      Math.ceil(upper * 10) / 10,
     ];
   }, [activeData, roster]);
 
@@ -681,7 +833,7 @@ export function MinerAnimationExperience({
         stroke ?? rosterMap.get(minerId)?.color ?? FALLBACK_COLOR;
       const isLeader = topMinerId === minerId;
       const minerData =
-        latestSnapshot.find((snapshot) => snapshot.id === minerId) ??
+        animatedSnapshot.find((snapshot) => snapshot.id === minerId) ??
         rosterMap.get(minerId);
       const imageHref = minerData?.image ?? FALLBACK_AVATAR;
       const imageRadius = isLeader ? 12 : 10;
@@ -735,7 +887,7 @@ export function MinerAnimationExperience({
         return <g />;
       }
 
-      const miner = latestSnapshot.find((snapshot) => snapshot.id === minerId);
+      const miner = animatedSnapshot.find((snapshot) => snapshot.id === minerId);
       if (!miner) {
         return <g />;
       }
@@ -787,8 +939,8 @@ export function MinerAnimationExperience({
     <div className={containerSpacing}>
       {!condensed && (
         <PageHeader
-          title="Miner Score Cinematic"
-          description="Three months of subnet performance rendered as a continuous Elo race."
+          title="Miner Season Race"
+          description="Live season replay of miner competition with round reward, current rank, and season score."
         />
       )}
 
@@ -810,44 +962,96 @@ export function MinerAnimationExperience({
             Loading subnet timeline…
           </div>
         )}
-        <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap gap-3">
+        <div className="relative z-10">
+          {!condensed && availableSeasons.length > 0 && (
+            <div className="mb-4 flex justify-end">
+              <label className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-black shadow-sm">
+                <span className="uppercase tracking-[0.2em] text-gray-400">
+                  Season
+                </span>
+                <select
+                  value={selectedSeason ?? ""}
+                  onChange={(event) =>
+                    setSelectedSeason(Number(event.target.value))
+                  }
+                  className="bg-transparent text-sm font-semibold text-black outline-none"
+                >
+                  {availableSeasons.map((season) => (
+                    <option key={season} value={season}>
+                      Season {season}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {topMiners.length > 0 ? (
               topMiners.map((miner, index) => {
-                const scale = 1 - index * 0.06;
-                const baseImage = condensed ? 64 : 72;
-                const imageSize = Math.max(46, Math.round(baseImage * scale));
+                const imageSize = condensed ? 56 : 64;
                 const accentClass =
                   index === 0
-                    ? "border-amber-200 bg-gradient-to-br from-amber-100 via-amber-50 to-white"
+                    ? "border-amber-300 bg-gradient-to-br from-amber-200 via-yellow-100 to-white shadow-[0_16px_40px_rgba(245,158,11,0.22)]"
                     : index === 1
-                    ? "border-slate-200 bg-gradient-to-br from-slate-100 via-slate-50 to-white"
+                    ? "border-slate-300 bg-gradient-to-br from-slate-200 via-slate-100 to-white shadow-[0_14px_34px_rgba(148,163,184,0.18)]"
                     : index === 2
-                    ? "border-orange-200 bg-gradient-to-br from-orange-100 via-orange-50 to-white"
+                    ? "border-orange-300 bg-gradient-to-br from-orange-200 via-amber-100 to-white shadow-[0_14px_34px_rgba(249,115,22,0.18)]"
                     : "border-gray-200 bg-white";
+                const rankBadgeClass =
+                  index === 0
+                    ? "bg-amber-500 text-white"
+                    : index === 1
+                    ? "bg-slate-500 text-white"
+                    : index === 2
+                    ? "bg-orange-500 text-white"
+                    : "bg-amber-100/80 text-amber-700";
+                const podiumLabel =
+                  index === 0
+                    ? "1st Place"
+                    : index === 1
+                    ? "2nd Place"
+                    : index === 2
+                    ? "3rd Place"
+                    : null;
                 return (
                   <div
                     key={`top-five-${miner.id}`}
                     className={cn(
-                      "flex min-w-[220px] flex-1 items-center gap-4 rounded-xl border px-5 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                      "relative flex min-h-[122px] items-center gap-4 overflow-hidden rounded-xl border px-5 py-4 shadow-sm",
                       accentClass
                     )}
                   >
+                    {podiumLabel && (
+                      <div className="absolute right-3 top-3 rounded-full border border-white/60 bg-white/70 px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 backdrop-blur-sm">
+                        {podiumLabel}
+                      </div>
+                    )}
                     <Image
                       src={miner.image}
                       alt={miner.name}
                       width={imageSize}
                       height={imageSize}
-                      className="z-20 rounded-full border border-white/80 shadow"
+                      className={cn(
+                        "z-20 rounded-full border border-white/80 shadow",
+                        index === 0 && "ring-4 ring-amber-400/65",
+                        index === 1 && "ring-4 ring-slate-400/55",
+                        index === 2 && "ring-4 ring-orange-400/55"
+                      )}
                     />
                     <div className="leading-tight text-black">
-                      <p className="inline-flex items-center gap-1 rounded-full bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+                      <p className="text-sm font-semibold text-black">{miner.name}</p>
+                      <p className={cn(
+                        "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em]",
+                        rankBadgeClass
+                      )}>
                         Rank #{miner.rank}
                       </p>
-                      <p className="text-sm font-semibold text-black">{miner.name}</p>
-                      <p className="text-xs font-semibold text-black">
-                        Score: {miner.score.toFixed(2)}
-                      </p>
+                      <div className="mt-1 grid gap-1 text-xs font-semibold text-black">
+                        <p>Round reward: {miner.reward.toFixed(2)}</p>
+                        <p>Season score: {miner.seasonScore.toFixed(3)}</p>
+                        <p>Top score: {miner.score.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -860,13 +1064,23 @@ export function MinerAnimationExperience({
           </div>
           <div className="flex flex-col items-end gap-2 text-right">
             <div className="flex flex-col items-end">
+              {seasonLeader && !condensed && (
+                <p className="mb-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-700">
+                  <PiTrophyFill className="h-3.5 w-3.5" />
+                  {`Leader ${seasonLeader.name}`}
+                </p>
+              )}
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-500">
-                Current Round
+                {selectedSeason ? `Season ${selectedSeason}` : "Current Season"}
               </p>
               <p className="text-xl font-bold text-gray-900">
-                {`Current Round : ${currentRound !== null ? currentRound : "--"}`}
+                {`Round ${formatRoundNumber(timeline[displayIndex]?.round ?? currentRound)}`}
               </p>
-              <p className="text-xs font-medium text-gray-500">{currentDateLabel}</p>
+              <p className="text-xs font-medium text-gray-500">
+                {timeline[displayIndex]?.date
+                  ? DATE_LABEL_FORMATTER.format(new Date(timeline[displayIndex].date))
+                  : currentDateLabel}
+              </p>
             </div>
             {isRefreshing && (
               <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-sky-600">
@@ -1016,6 +1230,54 @@ export function MinerAnimationExperience({
             </span>
             <span>{progressPercent.toFixed(0)}% complete</span>
           </div>
+        </div>
+
+        {!condensed && displaySnapshot.length > 0 && (
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-[0.22em] text-gray-400">
+                  <th className="px-3 py-2">Rank</th>
+                  <th className="px-3 py-2">Miner</th>
+                  <th className="px-3 py-2">Season Score</th>
+                  <th className="px-3 py-2">Round Reward</th>
+                  <th className="px-3 py-2">Round Peak</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displaySnapshot.slice(0, 10).map((miner) => (
+                  <tr
+                    key={`leaderboard-${miner.id}`}
+                    className="rounded-2xl bg-gray-50 text-gray-800 shadow-sm"
+                  >
+                    <td className="px-3 py-3 font-bold">#{miner.rank}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={miner.image}
+                          alt={miner.name}
+                          width={28}
+                          height={28}
+                          className="rounded-full border border-white shadow-sm"
+                        />
+                        <span className="font-semibold">{miner.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 font-semibold">
+                      {miner.seasonScore.toFixed(3)}
+                    </td>
+                    <td className="px-3 py-3 font-semibold">
+                      {miner.reward.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3 font-semibold">
+                      {miner.score.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         </div>
 
       </WidgetCard>

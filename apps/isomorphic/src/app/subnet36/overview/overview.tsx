@@ -5,6 +5,7 @@ import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
 import OverviewRecentActivity from "./overview-recent-activity";
+import { MinerAnimationExperience } from "@/app/animation/experience";
 import { Title } from "rizzui/typography";
 import Link from "next/link";
 import Image from "next/image";
@@ -255,6 +256,21 @@ export default function Overview() {
           />
         </div>
       </div>
+
+      <section className="mt-8 sm:mt-12">
+        <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <h3 className="text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
+            Season race <span className="text-slate-500">—</span>{" "}
+            <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">
+              Best score progression
+            </span>
+          </h3>
+        </div>
+        <MinerAnimationExperience
+          condensed
+          initialSeason={currentSeason ?? metricsSeason ?? undefined}
+        />
+      </section>
 
       {/* Validators */}
       <section className="mt-8 sm:mt-12">

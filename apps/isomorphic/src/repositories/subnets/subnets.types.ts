@@ -15,10 +15,12 @@ export type ApiMinerRosterEntry = {
 
 export type ApiTimelineSnapshot = {
   miner_id: string;
-  score: number;
+  score?: number;
+  reward?: number;
   rank: number;
   rank_change?: number;
   score_change?: number;
+  reward_change?: number;
   previous_rank?: number | null;
 };
 

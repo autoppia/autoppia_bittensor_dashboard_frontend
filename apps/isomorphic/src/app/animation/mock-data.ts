@@ -192,6 +192,8 @@ const timeline = rawRounds.map((entry, index) => {
     return {
       ...profile,
       score,
+      reward: score,
+      seasonScore: Number((score / 10).toFixed(3)),
       rank: 0,
       previousRank: previousRanks.has(id) ? previousRanks.get(id)! : null,
       rankChange: 0,
