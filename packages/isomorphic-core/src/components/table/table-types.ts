@@ -65,6 +65,7 @@ export type MainTableProps<T extends Record<string, any>> = {
   table?: ReactTableType<T>;
   variant?: TableVariantProps;
   dataIds?: UniqueIdentifier[];
+  onRowClick?: (row: Row<T>) => void;
   components?: {
     header?: (c: CustomHeaderProps<T>) => React.ReactNode;
     headerCell?: (c: CustomHeaderCellProps<T>) => React.ReactNode;
