@@ -195,8 +195,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nextjs-toploader:
-        specifier: ^3.8.15
-        version: 3.8.15(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^3.9.17
+        version: 3.9.17(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nodemailer:
         specifier: '>=8.0.4'
         version: 8.0.4
@@ -534,8 +534,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nextjs-toploader:
-        specifier: ^3.8.15
-        version: 3.8.15(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^3.9.17
+        version: 3.9.17(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nodemailer:
         specifier: '>=8.0.4'
         version: 8.0.4
@@ -4344,8 +4344,8 @@ packages:
       sass:
         optional: true
 
-  nextjs-toploader@3.8.15:
-    resolution: {integrity: sha512-f/ggKImRjI1EMk5af/4VBVpH49iEuDNQgSpRvTezEleqSl20lDCsQof2q9H2q59L/kBOOpR0xBzorjrHKe1mQg==}
+  nextjs-toploader@3.9.17:
+    resolution: {integrity: sha512-9OF0KSSLtoSAuNg2LZ3aTl4hR9mBDj5L9s9DZiFCbMlXehyICGjkIz5dVGzuATU2bheJZoBdFgq9w07AKSuQQw==}
     peerDependencies:
       next: '>=15.5.14 <16'
       react: '>= 16.0.0'
@@ -9607,7 +9607,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  nextjs-toploader@3.8.15(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  nextjs-toploader@3.9.17(next@15.5.14(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       next: 15.5.14(@babel/core@7.24.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nprogress: 0.2.0
