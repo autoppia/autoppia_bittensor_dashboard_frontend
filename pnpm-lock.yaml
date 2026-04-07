@@ -105,8 +105,8 @@ importers:
         specifier: 0.0.15
         version: 0.0.15(react@19.2.1)
       '@react-email/hr':
-        specifier: 0.0.11
-        version: 0.0.11(react@19.2.1)
+        specifier: 0.0.12
+        version: 0.0.12(react@19.2.1)
       '@react-email/html':
         specifier: 0.0.11
         version: 0.0.11(react@19.2.1)
@@ -130,7 +130,7 @@ importers:
         version: 0.0.16(react@19.2.1)
       '@react-email/tailwind':
         specifier: 2.0.6
-        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
+        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.12(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
       '@react-email/text':
         specifier: 0.1.0
         version: 0.1.0(react@19.2.1)
@@ -447,8 +447,8 @@ importers:
         specifier: 0.0.15
         version: 0.0.15(react@19.2.1)
       '@react-email/hr':
-        specifier: 0.0.11
-        version: 0.0.11(react@19.2.1)
+        specifier: 0.0.12
+        version: 0.0.12(react@19.2.1)
       '@react-email/html':
         specifier: 0.0.11
         version: 0.0.11(react@19.2.1)
@@ -472,7 +472,7 @@ importers:
         version: 0.0.16(react@19.2.1)
       '@react-email/tailwind':
         specifier: 2.0.6
-        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
+        version: 2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.12(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)
       '@react-email/text':
         specifier: 0.1.0
         version: 0.1.0(react@19.2.1)
@@ -1759,6 +1759,12 @@ packages:
   '@react-email/hr@0.0.11':
     resolution: {integrity: sha512-S1gZHVhwOsd1Iad5IFhpfICwNPMGPJidG/Uysy1AwmspyoAP5a4Iw3OWEpINFdgh9MHladbxcLKO2AJO+cA9Lw==}
     engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^18.0 || ^19.0 || ^19.0.0-rc
+
+  '@react-email/hr@0.0.12':
+    resolution: {integrity: sha512-TwmOmBDibavUQpXBxpmZYi2Iks/yeZOzFYh+di9EltMSnEabH8dMZXrl+pxNXzCgZ2XE8HY7VmUL65Lenfu5PA==}
+    engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
 
@@ -6845,6 +6851,10 @@ snapshots:
     dependencies:
       react: 19.2.1
 
+  '@react-email/hr@0.0.12(react@19.2.1)':
+    dependencies:
+      react: 19.2.1
+
   '@react-email/html@0.0.11(react@19.2.1)':
     dependencies:
       react: 19.2.1
@@ -6886,7 +6896,7 @@ snapshots:
     dependencies:
       react: 19.2.1
 
-  '@react-email/tailwind@2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.11(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)':
+  '@react-email/tailwind@2.0.6(@react-email/body@0.0.11(react@19.2.1))(@react-email/button@0.0.19(react@19.2.1))(@react-email/code-block@0.0.11(react@19.2.1))(@react-email/code-inline@0.0.5(react@19.2.1))(@react-email/container@0.0.15(react@19.2.1))(@react-email/heading@0.0.15(react@19.2.1))(@react-email/hr@0.0.12(react@19.2.1))(@react-email/img@0.0.11(react@19.2.1))(@react-email/link@0.0.12(react@19.2.1))(@react-email/preview@0.0.12(react@19.2.1))(@react-email/text@0.1.0(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@react-email/text': 0.1.0(react@19.2.1)
       react: 19.2.1
@@ -6898,7 +6908,7 @@ snapshots:
       '@react-email/code-inline': 0.0.5(react@19.2.1)
       '@react-email/container': 0.0.15(react@19.2.1)
       '@react-email/heading': 0.0.15(react@19.2.1)
-      '@react-email/hr': 0.0.11(react@19.2.1)
+      '@react-email/hr': 0.0.12(react@19.2.1)
       '@react-email/img': 0.0.11(react@19.2.1)
       '@react-email/link': 0.0.12(react@19.2.1)
       '@react-email/preview': 0.0.12(react@19.2.1)
