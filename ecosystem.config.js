@@ -2,6 +2,7 @@ const path = require('path');
 
 // Get the directory where this config file is located
 const projectRoot = path.resolve(__dirname);
+const appRoot = path.join(projectRoot, "apps", "isomorphic");
 const userHome = require('os').homedir();
 
 module.exports = {
@@ -9,8 +10,8 @@ module.exports = {
     {
       name: "dev-infinitewebarena.autoppia.com",
       script: "pnpm",
-      args: "start",
-      cwd: projectRoot,
+      args: "exec next start -p 3000 -H 0.0.0.0",
+      cwd: appRoot,
       instances: 1,
       autorestart: true,
       watch: false,
@@ -33,8 +34,8 @@ module.exports = {
     {
       name: "infinitewebarena.autoppia.com",
       script: "pnpm",
-      args: "start",
-      cwd: projectRoot,
+      args: "exec next start -p 3000 -H 0.0.0.0",
+      cwd: appRoot,
       instances: 1,
       autorestart: true,
       watch: false,
