@@ -123,6 +123,18 @@ function formatPercentage(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+function formatCompactMetric(value: number | null | undefined, digits = 1): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  const numeric = Number(value);
+  if (numeric >= 1000) {
+    return `${(numeric / 1000).toFixed(numeric >= 10_000 ? 0 : 1)}K`;
+  }
+  if (numeric >= 100) {
+    return numeric.toFixed(0);
+  }
+  return numeric.toFixed(digits);
+}
+
 // Capitalize first letter of web name
 function capitalizeWebName(name: string): string {
   if (!name?.length) return name;
@@ -455,6 +467,256 @@ function ValidatorDetailsCard({ data }: Readonly<{ data: ValidatorDetailsData }>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+type ValidatorMonitorPoint = {
+  roundInSeason: number;
+  agentRuns: number;
+  minersParticipated: number;
+  estimatedRoundCost: number;
+  totalTasks: number;
+  averageCostPerTask: number;
+};
+
+function ValidatorMonitorMiniChart({
+  title,
+  subtitle,
+  points,
+  colorClassName,
+  valueAccessor,
+  valueFormatter,
+  tooltipDetail,
+  tooltipClassName,
+}: Readonly<{
+  title: string;
+  subtitle: string;
+  points: ValidatorMonitorPoint[];
+  colorClassName: string;
+  valueAccessor: (point: ValidatorMonitorPoint) => number;
+  valueFormatter: (value: number) => string;
+  tooltipDetail?: (point: ValidatorMonitorPoint) => React.ReactNode;
+  tooltipClassName?: string;
+}>) {
+  const values = points.map(valueAccessor);
+  const peak = values.length ? Math.max(...values) : 0;
+  const latest = values.length ? values[values.length - 1] : 0;
+
+  return (
+    <div className="rounded-2xl border border-white/15 bg-gradient-to-br from-slate-900/55 via-slate-800/35 to-slate-900/55 p-5 shadow-xl backdrop-blur-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">
+            {title}
+          </p>
+          <p className="mt-1 text-sm text-white/65">{subtitle}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+            Latest
+          </p>
+          <p className="mt-1 text-xl font-black text-white">{valueFormatter(latest)}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex h-28 items-end gap-2">
+        {points.map((point) => {
+          const value = valueAccessor(point);
+          const height = peak > 0 ? Math.max(10, Math.round((value / peak) * 100)) : 10;
+          return (
+            <div key={`validator-monitor-${point.roundInSeason}`} className="group relative flex flex-1 flex-col items-center gap-2">
+              <div
+                className={cn(
+                  "pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 rounded-lg border border-white/10 bg-slate-950/95 px-2.5 py-2 text-center opacity-0 shadow-[0_18px_40px_rgba(0,0,0,0.45)] transition-opacity duration-150 group-hover:opacity-100",
+                  tooltipClassName ?? "-top-12",
+                )}
+              >
+                <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Round {point.roundInSeason}
+                </p>
+                <p className="mt-1 whitespace-nowrap text-xs font-bold text-white">
+                  {valueFormatter(value)}
+                </p>
+                {tooltipDetail ? (
+                  <div className="mt-1 text-[10px] font-medium leading-4 text-white/65">
+                    {tooltipDetail(point)}
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex h-24 w-full items-end">
+                <div
+                  className={cn("w-full rounded-t-[10px] transition-opacity duration-150 group-hover:opacity-90", colorClassName)}
+                  style={{ height: `${height}%` }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold text-white/45">R{point.roundInSeason}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between text-xs font-semibold text-white/45">
+        <span>{points.length} rounds</span>
+        <span>Peak {valueFormatter(peak)}</span>
+      </div>
+    </div>
+  );
+}
+
+function ValidatorRoundMonitor({
+  validatorUid,
+  availableRounds,
+  selectedSeason,
+}: Readonly<{
+  validatorUid: number;
+  availableRounds: number[];
+  selectedSeason: number | null;
+}>) {
+  const [points, setPoints] = useState<ValidatorMonitorPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const activeSeason = useMemo(() => {
+    if (selectedSeason != null) {
+      return selectedSeason;
+    }
+
+    const seasons = availableRounds
+      .map((roundValue) => {
+        const [season] = String(roundValue).split("/").map(Number);
+        return season;
+      })
+      .filter((season) => Number.isFinite(season));
+
+    return seasons.length ? Math.max(...seasons) : null;
+  }, [availableRounds, selectedSeason]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMonitor() {
+      if (activeSeason == null) {
+        setPoints([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const seasonRounds = availableRounds
+          .map((roundValue) => String(roundValue))
+          .filter((value) => value.startsWith(`${activeSeason}/`))
+          .map((value) => Number(value.split("/")[1]))
+          .filter((roundInSeason) => Number.isFinite(roundInSeason))
+          .sort((a, b) => a - b)
+          .slice(-8);
+
+        if (!seasonRounds.length) {
+          if (!cancelled) {
+            setPoints([]);
+          }
+          return;
+        }
+
+        const response = await fetch(
+          `/api/validator-monitor/${validatorUid}?season=${activeSeason}&t=${Date.now()}`,
+          {
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed validator monitor: ${response.status}`);
+        }
+
+        const payload = await response.json();
+
+        if (cancelled) {
+          return;
+        }
+
+        const nextPoints = Array.isArray(payload?.points)
+          ? payload.points.map((point: any) => ({
+              roundInSeason: Number(point.roundInSeason ?? 0),
+              agentRuns: Number(point.agentRuns ?? 0),
+              minersParticipated: Number(point.agentRuns ?? 0),
+              estimatedRoundCost: Number(point.estimatedRoundCost ?? 0),
+              totalTasks: Number(point.totalTasks ?? 0),
+              averageCostPerTask: Number(point.averageCostPerTask ?? 0),
+            }))
+          : [];
+
+        setPoints(nextPoints);
+      } catch {
+        if (!cancelled) {
+          setPoints([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadMonitor().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSeason, availableRounds, validatorUid]);
+
+  return (
+    <div className="mb-8 rounded-2xl border border-white/15 bg-gradient-to-br from-slate-900/55 via-slate-800/35 to-slate-900/55 p-6 shadow-xl backdrop-blur-sm">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-white">Validator Round Monitor</h3>
+          <p className="mt-1 text-sm text-white/60">
+            Recent eval load and spend proxy for this validator across completed rounds.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 font-semibold text-cyan-200">
+            {activeSeason != null ? `Season ${activeSeason}` : "No season"}
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-white/55">
+            Tokens not exposed by current API
+          </span>
+        </div>
+      </div>
+
+      {points.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          <ValidatorMonitorMiniChart
+            title="Agent runs / round"
+            subtitle="How many agent runs this validator executed"
+            points={points}
+            colorClassName="bg-gradient-to-t from-cyan-500 to-sky-400"
+            valueAccessor={(point) => point.agentRuns}
+            valueFormatter={(value) => `${formatCompactMetric(value, 0)} evals`}
+          />
+          <ValidatorMonitorMiniChart
+            title="Estimated total round cost"
+            subtitle="Tasks x avg cost per task x agent runs"
+            points={points}
+            colorClassName="bg-gradient-to-t from-emerald-500 to-teal-300"
+            valueAccessor={(point) => point.estimatedRoundCost}
+            valueFormatter={(value) => `$${formatCompactMetric(value, 4)}`}
+            tooltipClassName="-top-24 min-w-[18rem] max-w-[20rem] px-4 py-3"
+            tooltipDetail={(point) => (
+              <div className="space-y-1 text-left">
+                <div className="whitespace-normal">
+                  {point.agentRuns} agent runs x {formatCompactMetric(point.averageCostPerTask, 4)} avg cost/task x {formatCompactMetric(point.totalTasks, 0)} tasks
+                </div>
+              </div>
+            )}
+          />
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-5 text-sm text-white/55">
+          {loading
+            ? "Loading validator monitor…"
+            : "No recent per-round validator monitor data is available yet."}
+        </div>
+      )}
     </div>
   );
 }
@@ -1470,6 +1732,12 @@ export default function ValidatorDetailsPage() {
           />
         </div>
       </div>
+
+      <ValidatorRoundMonitor
+        validatorUid={data.validator.uid}
+        availableRounds={data.availableRounds}
+        selectedSeason={selectedSeason}
+      />
 
       {/* Tabs Navigation */}
       <TabsSection

@@ -140,6 +140,8 @@ export function useTaskPersonas(taskId: string) {
 export function useEvaluationComplete(evaluationId: string) {
   const [data, setData] = useState<{
     actions: any[];
+    trajectory?: any[];
+    replayExecutionHistory?: any[];
     screenshots: any[];
     task_details: TaskDetails | null;
     result: {
@@ -186,7 +188,9 @@ export function useEvaluationComplete(evaluationId: string) {
     // Convenience getters
     details: data?.task_details ?? null,
     result: data?.result ?? null,
-    actions: data?.actions ?? [],
+    actions: data?.trajectory ?? data?.actions ?? [],
+    trajectory: data?.trajectory ?? data?.actions ?? [],
+    replayExecutionHistory: data?.replayExecutionHistory ?? [],
     screenshots: data?.screenshots ?? [],
     info: data?.info ?? null,
   };

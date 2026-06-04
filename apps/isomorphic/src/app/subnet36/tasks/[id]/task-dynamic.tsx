@@ -490,7 +490,7 @@ function TaskDetailsDynamic({
     if (normalized === "task_failed" || normalized === "tests_failed" || normalized === "ref_not_found") {
       return {
         title: "Reason: Task Failed",
-        description: "After executing all actions, the task was not completed successfully.",
+        description: "After replaying the submitted trajectory, the task was not completed successfully.",
         color: "amber" as const,
       };
     }
@@ -975,19 +975,19 @@ function TaskDetailsDynamic({
                   Icon={PiTimer}
                 />
                 <RunStatCard
-                  label="Actions"
+                  label="Trajectory Tools"
                   value={String(actionsTotal ?? "—")}
                   color="amber"
                   Icon={PiPlay}
                 />
                 <RunStatCard
-                  label="Actions Successful"
+                  label="Tools Successful"
                   value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
-                  label="Actions Failed"
+                  label="Tools Failed"
                   value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
@@ -1005,7 +1005,7 @@ function TaskDetailsDynamic({
                   Icon={PiTimer}
                 />
                 <RunStatCard
-                  label="Actions"
+                  label="Trajectory Tools"
                   value={String(actionsTotal ?? "—")}
                   color="amber"
                   Icon={PiPlay}
@@ -1046,13 +1046,13 @@ function TaskDetailsDynamic({
               </div>
               <div className="grid grid-cols-2 gap-4 justify-end">
                 <RunStatCard
-                  label="Actions Successful"
+                  label="Tools Successful"
                   value={String(successCount ?? "—")}
                   color="emerald"
                   Icon={PiCheckCircle}
                 />
                 <RunStatCard
-                  label="Actions Failed"
+                  label="Tools Failed"
                   value={String(failCount ?? "—")}
                   color="rose"
                   Icon={PiXCircle}
@@ -1552,16 +1552,16 @@ function TaskResults({ evaluationData, taskId }: Readonly<TaskResultsProps>) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Actions (left) */}
+      {/* Submitted trajectory (left) */}
       <section className="rounded-2xl border border-slate-700/50 bg-transparent p-5 backdrop-blur-sm shadow-[0_14px_44px_rgba(4,8,20,0.45)]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <Text className="text-white text-lg font-semibold">
-              Actions Timeline
+              Submitted Trajectory
             </Text>
             {!actionsLoading && (
               <p className="text-sm text-slate-400">
-                {actionsTotal} total actions · {successCount} successful ·{" "}
+                {actionsTotal} tools · {successCount} successful ·{" "}
                 {failCount} failed
               </p>
             )}
@@ -1608,7 +1608,7 @@ function TaskResults({ evaluationData, taskId }: Readonly<TaskResultsProps>) {
                   <div className="text-center space-y-1">
                     <PiXCircle className="w-8 h-8 mx-auto" />
                     <Text className="text-sm text-red-200">
-                      {actionsError || "Failed to load actions"}
+                      {actionsError || "Failed to load trajectory"}
                     </Text>
                   </div>
                 </div>
@@ -1620,7 +1620,7 @@ function TaskResults({ evaluationData, taskId }: Readonly<TaskResultsProps>) {
                   <div className="text-center space-y-1">
                     <PiPlay className="w-8 h-8 mx-auto" />
                     <Text className="text-sm text-slate-300">
-                      No actions available
+                      No trajectory tools available
                     </Text>
                   </div>
                 </div>

@@ -5,11 +5,11 @@ import OverviewMinerChart from "./overview-miner-chart";
 import OverviewMetrics from "./overview-metrics";
 import OverviewValidators from "./overview-validators";
 import OverviewRecentActivity from "./overview-recent-activity";
-import { MinerAnimationExperience } from "@/app/animation/experience";
+import MinerAnimationModal from "@/app/shared/modal-views/miner-animation-modal";
 import { Title } from "rizzui/typography";
 import Link from "next/link";
 import Image from "next/image";
-import { PiGithubLogoDuotone, PiInfoDuotone, PiXBold } from "react-icons/pi";
+import { PiGithubLogoDuotone, PiInfoDuotone, PiPlayFill, PiXBold } from "react-icons/pi";
 import { useOverviewMetrics, useRecentActivity } from "@/services/hooks/useOverview";
 import { useModal } from "@/app/shared/modal-views/use-modal";
 
@@ -174,6 +174,18 @@ export default function Overview() {
     });
   };
 
+  const openSeasonRaceModal = () => {
+    openModal({
+      view: (
+        <MinerAnimationModal
+          initialSeason={currentSeason ?? metricsSeason ?? undefined}
+        />
+      ),
+      size: "xl",
+      customSize: 1400,
+    });
+  };
+
   return (
     <div className="-mx-4 -mt-4 min-h-screen bg-[rgb(4,6,14)] px-4 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       {/* Compact top bar */}
@@ -196,6 +208,14 @@ export default function Overview() {
             title="Subnet info"
           >
             <PiInfoDuotone className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={openSeasonRaceModal}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300 transition hover:bg-emerald-400/[0.14] hover:text-white"
+            title="Open season race"
+          >
+            <PiPlayFill className="h-4 w-4" />
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -256,21 +276,6 @@ export default function Overview() {
           />
         </div>
       </div>
-
-      <section className="mt-8 sm:mt-12">
-        <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-          <h3 className="text-2xl sm:text-[32px] md:text-[40px] font-black tracking-tight text-white">
-            Season race <span className="text-slate-500">—</span>{" "}
-            <span className="text-slate-400 text-lg sm:text-2xl md:text-[32px]">
-              Best score progression
-            </span>
-          </h3>
-        </div>
-        <MinerAnimationExperience
-          condensed
-          initialSeason={currentSeason ?? metricsSeason ?? undefined}
-        />
-      </section>
 
       {/* Validators */}
       <section className="mt-8 sm:mt-12">

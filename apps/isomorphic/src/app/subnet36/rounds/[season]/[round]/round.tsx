@@ -121,7 +121,7 @@ const chipActive =
   "border-emerald-400/40 bg-emerald-500/20 text-emerald-200";
 const BURN_UID = 5;
 const chipCompleted =
-  "border-white/20 bg-white/10 text-white";
+  "border-emerald-400/40 bg-emerald-500/20 text-emerald-200";
 const chipPending =
   "border-amber-400/30 bg-amber-500/15 text-amber-200";
 const chipEvaluating =
@@ -203,14 +203,18 @@ function CustomTooltip({ label, active, payload, className }: any) {
   return (
     <div
       className={cn(
-        "rounded-2xl border-2 border-white/30 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]",
+        "rounded-2xl border-2 border-slate-800 bg-slate-950 text-slate-50 shadow-[0_24px_70px_-18px_rgba(0,0,0,0.85)]",
         className
       )}
+      style={{ backgroundColor: "#020617", color: "#f8fafc" }}
     >
-      <Text className="label mb-1 block bg-gradient-to-r from-white/15 to-white/5 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-white border-b border-white/10">
+      <Text
+        className="label mb-1 block border-b border-slate-800 bg-slate-900 p-3 px-4 text-center font-inter text-sm font-bold capitalize text-slate-50"
+        style={{ backgroundColor: "#0f172a", color: "#f8fafc" }}
+      >
         {minerData?.name}
       </Text>
-      <div className="px-4 py-3 text-sm space-y-2">
+      <div className="space-y-2 px-4 py-3 text-sm text-slate-100">
         {[
           {
             label: "Score",
@@ -253,7 +257,7 @@ function CustomTooltip({ label, active, payload, className }: any) {
             key={item.label}
             className={cn(
               "chart-tooltip-item flex items-center justify-between gap-4",
-              item.divider && "pt-1 border-t border-white/10"
+              item.divider && "border-t border-slate-700/70 pt-1"
             )}
           >
             <div className="flex items-center gap-2.5">
@@ -839,6 +843,12 @@ const formatRewardPercent = (value?: number | null): string => {
   return `${(Number(value) * 100).toFixed(2)}%`;
 };
 
+const truncateMiddleText = (value?: string | null, visible = 6): string => {
+  if (!value) return "—";
+  if (value.length <= visible * 2) return value;
+  return `${value.slice(0, visible)}...${value.slice(-visible)}`;
+};
+
 function RoundStatsInline({
   selectedValidator,
   statistics,
@@ -1347,6 +1357,7 @@ function LocalMetricCard({ card }: Readonly<{ card: any }>) {
   const Icon = card.icon;
   const isWinner = card.key === "winner" && typeof card.uid === "number";
   const [copied, setCopied] = React.useState(false);
+  const iconGradientClass = card.iconGradient ?? "from-sky-400 to-cyan-500";
   const fallbackAvatarIndex = (() => {
     const uidValue = card?.uid;
     if (typeof uidValue === "number" && Number.isFinite(uidValue)) return Math.abs(uidValue % 50);
@@ -1368,25 +1379,15 @@ function LocalMetricCard({ card }: Readonly<{ card: any }>) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden border backdrop-blur-md shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:shadow-sky-500/10",
-        isWinner
-          ? "rounded-[28px] border-sky-400/18 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_38%),linear-gradient(135deg,rgba(14,23,41,0.96),rgba(10,16,31,0.94))]"
-          : "rounded-[28px] border-sky-400/18 bg-[linear-gradient(145deg,rgba(12,20,38,0.94),rgba(8,14,29,0.92))]"
+        "group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] backdrop-blur-md shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06] hover:shadow-white/5"
       )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.03),transparent)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-      <div className="absolute right-3 top-3 z-10">
-        <span
-          className="inline-flex items-center gap-1 rounded-full border border-sky-300/25 bg-sky-400/12 px-2 py-1 text-[9px] font-black uppercase tracking-[0.22em] text-sky-200/85"
-        >
-          Local
-        </span>
-      </div>
+      <div className={cn("pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r opacity-80", iconGradientClass)} />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.035),transparent)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
       {isWinner ? (
-        <div className="grid gap-3 px-4 py-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-          <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-sky-400/30 shadow-xl ring-4 ring-sky-400/10">
+        <div className="grid h-full gap-3 px-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center lg:gap-x-4 lg:px-4">
+          <div className="relative mx-auto h-14 w-14 overflow-hidden rounded-2xl border border-white/15 bg-white/[0.05] shadow-xl ring-4 ring-white/8">
             <Image
               src={winnerAvatar}
               alt={`UID ${card.uid ?? "winner"}`}
@@ -1394,73 +1395,75 @@ function LocalMetricCard({ card }: Readonly<{ card: any }>) {
               sizes="80px"
               className="object-cover"
             />
-            <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 shadow-lg ring-2 ring-[#08111f]">
+            <div className={cn("absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br shadow-lg ring-2 ring-[#08111f]", iconGradientClass)}>
               <PiCrownFill className="h-3 w-3 text-white" />
             </div>
           </div>
 
-          <div className="min-w-0">
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300/70">
-                {card.title}
-              </span>
+          <div className="min-w-0 text-center lg:col-start-2 lg:text-left">
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/72">
+              {card.title}
             </div>
-            <div className={cn("font-black text-white leading-tight", card.valueClass ?? "text-xl md:text-2xl")}>
-              {card.value}
-            </div>
-            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-              {typeof card.uid === "number" ? (
-                <span className="inline-flex items-center rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-black text-sky-100">
-                  UID {card.uid}
-                </span>
-              ) : null}
-              {typeof card.githubUrl === "string" && card.githubUrl.trim().length > 0 ? (
-                <Link
-                  href={card.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-white/70 transition-all duration-200 hover:border-sky-300/20 hover:bg-sky-400/10 hover:text-sky-100"
-                  title="Open GitHub URL"
-                >
-                  <PiGithubLogoDuotone className="h-4 w-4" />
-                  <span>GitHub</span>
-                </Link>
-              ) : null}
-            </div>
-            {card.hotkey ? (
-              <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-                <span className="flex-1 break-all text-[11px] font-mono text-white/55">
-                  {card.hotkey}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCopyHotkey(card.hotkey);
-                  }}
-                  className="flex-shrink-0 rounded-lg bg-white/8 p-1.5 transition-all duration-150 hover:bg-white/15"
-                  title="Copy hotkey"
-                >
-                  {copied ? (
-                    <PiCheckDuotone className="h-3.5 w-3.5 text-emerald-300" />
-                  ) : (
-                    <PiCopyDuotone className="h-3.5 w-3.5 text-white/60" />
-                  )}
-                </button>
+            <div className="mt-2 flex flex-col items-center gap-3 lg:items-start">
+              <div className="min-w-0">
+                <div className={cn("font-black text-white leading-tight", card.valueClass ?? "text-xl md:text-2xl")}>
+                  {card.value}
+                </div>
+                {card.hotkey ? (
+                  <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full border border-white/8 bg-black/20 px-2.5 py-1">
+                    <span className="text-[9px] font-mono tracking-[0.08em] text-white/45">
+                      {truncateMiddleText(card.hotkey, 6)}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCopyHotkey(card.hotkey);
+                      }}
+                      className="flex-shrink-0 rounded-md bg-white/8 p-1 transition-all duration-150 hover:bg-white/15"
+                      title="Copy hotkey"
+                    >
+                      {copied ? (
+                        <PiCheckDuotone className="h-3 w-3 text-emerald-300" />
+                      ) : (
+                        <PiCopyDuotone className="h-3 w-3 text-white/55" />
+                      )}
+                    </button>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+              <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 lg:justify-start">
+                {typeof card.uid === "number" ? (
+                  <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[11px] font-black text-white/88">
+                    UID {card.uid}
+                  </span>
+                ) : null}
+                {typeof card.githubUrl === "string" && card.githubUrl.trim().length > 0 ? (
+                  <Link
+                    href={card.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-white/72 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                    title="Open GitHub URL"
+                  >
+                    <PiGithubLogoDuotone className="h-4 w-4" />
+                    <span>GitHub</span>
+                  </Link>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         <div className="relative flex h-full min-h-[188px] flex-col px-4 py-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-sky-400/18 bg-gradient-to-br from-sky-500/16 to-cyan-500/10 shadow-md">
-              {Icon && <Icon className="h-5 w-5 text-sky-300" />}
+            <div className={cn("flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br shadow-md", iconGradientClass)}>
+              {Icon && <Icon className="h-5 w-5 text-white" />}
             </div>
           </div>
 
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <span className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-sky-300/70">
+            <span className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/72">
               {card.title}
             </span>
             <div className={cn("font-black leading-none text-white", card.valueClass ?? "text-3xl")}>
@@ -2721,6 +2724,7 @@ export default function Round() {
   }, [seasonSummary]);
 
   const roundData = React.useMemo(() => {
+    const kingOverfitJudge = seasonSummary?.king_overfit_judge ?? null;
     const leadershipRule = seasonSummary
       ? (() => {
           const reigningUid = seasonSummary.leader_before?.uid ?? null;
@@ -2759,6 +2763,7 @@ export default function Round() {
             miners_evaluated: seasonSummary.miners_evaluated,
             tasks_evaluated: seasonSummary.tasks_evaluated,
             leadership_rule: leadershipRule,
+            king_overfit_judge: kingOverfitJudge,
           }
         : null,
       validators: validatorsDataPayload.map((validator: any) => ({
@@ -2928,27 +2933,55 @@ export default function Round() {
           valueClass: "text-lg md:text-4xl",
         },
         {
-          key: "miners",
-          title: "Agents evaluated",
+          key: "participating",
+          title: "Agents participating",
           value: formatNumber((() => {
-            // ✅ Obtener desde roundData.validators[selectedValidator].miners.length o local_miners_evaluated
             if (roundData?.validators && selectedValidator?.id) {
               const validatorUid = selectedValidator.id.replace("validator-", "");
               const validator = roundData.validators.find(
                 (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
               );
               if (validator) {
-                // Priorizar local_miners_evaluated, sino usar length de miners
                 return validator.local_miners_evaluated ?? validator.miners?.length ?? 0;
               }
             }
             return selectedValidator.totalMiners ?? 0;
           })()),
-          helper: "Agents evaluated this round",
+          helper: "Agents in local competition",
           icon: PiUsersThreeDuotone,
           gradient: "from-white/[0.04] to-white/[0.02]",
           bgGradient: "from-white/[0.04] to-white/[0.02]",
           iconGradient: "from-violet-400 to-fuchsia-500",
+          borderColor: "border-white/10",
+          glowColor: "transparent",
+          valueClass: "text-lg md:text-4xl",
+        },
+        {
+          key: "evaluated",
+          title: "Agents evaluated",
+          value: formatNumber((() => {
+            if (roundData?.validators && selectedValidator?.id) {
+              const validatorUid = selectedValidator.id.replace("validator-", "");
+              const validator = roundData.validators.find(
+                (v: any) => v.validator_uid?.toString() === validatorUid || v.validator_uid?.toString() === selectedValidator.id
+              ) as any;
+              const consensusMiners = Array.isArray(validator?.evaluation_post_consensus?.miners)
+                ? validator.evaluation_post_consensus.miners
+                : Array.isArray(validator?.post_consensus_evaluation?.miners)
+                  ? validator.post_consensus_evaluation.miners
+                  : [];
+              if (consensusMiners.length > 0) {
+                return consensusMiners.filter((miner: any) => miner?.current_run_consensus != null).length;
+              }
+              return validator.miners?.length ?? 0;
+            }
+            return selectedValidator.totalMiners ?? 0;
+          })()),
+          helper: "Agents evaluated this round",
+          icon: PiCheckCircleDuotone,
+          gradient: "from-white/[0.04] to-white/[0.02]",
+          bgGradient: "from-white/[0.04] to-white/[0.02]",
+          iconGradient: "from-emerald-400 to-teal-500",
           borderColor: "border-white/10",
           glowColor: "transparent",
           valueClass: "text-lg md:text-4xl",
@@ -2980,6 +3013,7 @@ export default function Round() {
         },
       ]
     : [];
+
 
   const handleValidatorSelect = React.useCallback(
     (validator: ValidatorPerformance) => {
@@ -3247,6 +3281,76 @@ export default function Round() {
               );
             })()}
 
+            {(() => {
+              const judge = roundData?.post_consensus_json?.king_overfit_judge;
+              if (!judge?.enabled) return null;
+              const latest = judge.latest ?? {};
+              const verdict = String(latest.verdict ?? latest.decision ?? "reviewed");
+              const confidence =
+                typeof latest.confidence === "number"
+                  ? `${Math.round(latest.confidence * 100)}%`
+                  : null;
+              const rejectedUids = judge.rejected_uids ?? [];
+              const hasRejects = rejectedUids.length > 0;
+              return (
+                <div
+                  className={cn(
+                    "mb-4 rounded-xl border px-4 py-3",
+                    hasRejects
+                      ? "border-rose-400/25 bg-rose-950/35"
+                      : "border-emerald-400/20 bg-emerald-950/30"
+                  )}
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-lg border",
+                          hasRejects
+                            ? "border-rose-400/30 bg-rose-500/15"
+                            : "border-emerald-400/30 bg-emerald-500/15"
+                        )}
+                      >
+                        <PiInfoDuotone
+                          className={cn(
+                            "h-4 w-4",
+                            hasRejects ? "text-rose-300" : "text-emerald-300"
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/45">
+                          KingOverfitLLMJudge
+                        </p>
+                        <p className="text-sm font-bold text-white">
+                          {hasRejects
+                            ? `Rejected UID${rejectedUids.length > 1 ? "s" : ""} ${rejectedUids.join(", ")}`
+                            : "Candidate reviewed"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider">
+                      <span
+                        className={cn(
+                          "rounded-md border px-2 py-1",
+                          hasRejects
+                            ? "border-rose-400/25 bg-rose-500/10 text-rose-200"
+                            : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                        )}
+                      >
+                        {verdict}
+                      </span>
+                      {confidence && (
+                        <span className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-white/55">
+                          {confidence}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {seasonSummary ? (
               <RoundStatsInline
                 selectedValidator={selectedValidator}
@@ -3320,12 +3424,13 @@ export default function Round() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
                   {selectedValidatorCards.map((card) => (
                     <LocalMetricCard key={(card as any).key} card={card} />
                   ))}
                 </div>
               </div>
+
             </>
           );
         }

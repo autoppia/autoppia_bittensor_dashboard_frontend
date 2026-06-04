@@ -1748,6 +1748,8 @@ export default function Page() {
       : agent ?? null;
 
   const githubAvailable = Boolean(effectiveAgent?.githubUrl && !effectiveAgent?.isSota);
+  const hasHistoricalData = Boolean(minerHistorical?.miner || minerHistorical?.summary);
+  const hasRoundDetailsData = Boolean(minerRoundDetails?.miner);
   const taoStatsAvailable = Boolean(
     !effectiveAgent?.isSota && (effectiveAgent?.taostatsUrl || effectiveAgent?.hotkey)
   );

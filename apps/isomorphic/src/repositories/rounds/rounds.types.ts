@@ -315,6 +315,15 @@ export interface PostConsensusSummary {
     dethroned: boolean;
     season_leader_uid: number | null;
   } | null;
+  king_overfit_judge?: KingOverfitJudgeSummary | null;
+}
+
+export interface KingOverfitJudgeSummary {
+  enabled: boolean;
+  judgements: Array<Record<string, unknown>>;
+  rejected_uids: number[];
+  latest?: Record<string, unknown> | null;
+  rejected_count: number;
 }
 
 export interface GetRoundResponse {
@@ -376,6 +385,9 @@ export interface RoundSeasonSummaryView {
     avg_eval_score: number;
     avg_eval_time: number;
     avg_eval_cost?: number | null;
+    king_overfit_judge?: KingOverfitJudgeSummary | null;
+    king_overfit_judgements?: Array<Record<string, unknown>>;
+    king_overfit_rejected_uids?: number[];
     post_consensus_json?: unknown;
   } | null;
 }

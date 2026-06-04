@@ -2,25 +2,21 @@
 
 import { useModal } from "@/app/shared/modal-views/use-modal";
 import { MinerAnimationExperience } from "@/app/animation/experience";
-import { mockSubnetTimeline } from "@/app/animation/mock-data";
 import { ActionIcon } from "rizzui";
-import { Title, Text } from "rizzui/typography";
 import { PiXBold } from "react-icons/pi";
 
-export default function MinerAnimationModal() {
+export default function MinerAnimationModal({
+  initialSeason,
+}: Readonly<{ initialSeason?: number }>) {
   const { closeModal } = useModal();
+  const modalTitle = initialSeason
+    ? `Season ${initialSeason} Replay`
+    : "Season Replay";
 
   return (
     <div className="m-auto rounded-2xl border border-white bg-white px-5 pb-6 pt-5 text-black shadow-2xl sm:px-8 sm:pt-7">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-[540px]">
-          <Title as="h3" className="text-lg font-semibold !text-black">
-            Subnet Timeline Replay
-          </Title>
-          <Text className="mt-1 text-sm !text-black">
-            Navigate the past 90 rounds of miner percentage scores without leaving your dashboard.
-          </Text>
-        </div>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h3 className="text-xl font-semibold !text-black">{modalTitle}</h3>
         <ActionIcon
           size="sm"
           variant="text"
@@ -31,7 +27,7 @@ export default function MinerAnimationModal() {
         </ActionIcon>
       </div>
       <div className="max-h-[80vh] overflow-y-auto pr-1">
-        <MinerAnimationExperience condensed mockTimeline={mockSubnetTimeline} />
+        <MinerAnimationExperience condensed initialSeason={initialSeason} showTable={false} />
       </div>
     </div>
   );

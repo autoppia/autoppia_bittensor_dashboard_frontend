@@ -77,6 +77,7 @@ interface MinerAnimationExperienceProps {
   rounds?: number;
   initialSeason?: number;
   mockTimeline?: ProcessedTimeline | null;
+  showTable?: boolean;
 }
 
 const DEFAULT_SUBNET_ID = "subnet36";
@@ -392,7 +393,7 @@ function ScoreTooltip({ active, payload }: TooltipProps<number, string>) {
 }
 
 const speedPresets = [
-  { label: "0.5x", value: 0.45 },
+  { label: "0.75x", value: 0.675 },
   { label: "1x", value: 0.9 },
   { label: "2x", value: 1.6 },
 ];
@@ -403,6 +404,7 @@ export function MinerAnimationExperience({
   rounds = DEFAULT_ROUND_COUNT,
   initialSeason,
   mockTimeline = null,
+  showTable = true,
 }: MinerAnimationExperienceProps) {
   const [data, setData] = useState<ProcessedTimeline | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -415,7 +417,7 @@ export function MinerAnimationExperience({
 
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [speed, setSpeed] = useState(speedPresets[1].value);
+  const [speed, setSpeed] = useState(speedPresets[0].value);
 
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
@@ -714,6 +716,12 @@ export function MinerAnimationExperience({
   const currentRound = interpolatedPoint
     ? Math.round(interpolatedPoint.round)
     : null;
+  const startRound = timeline[0]?.round ?? null;
+  const endRound = timeline[totalSnapshots - 1]?.round ?? null;
+  const displayRound =
+    typeof timeline[displayIndex]?.round === "number"
+      ? timeline[displayIndex].round
+      : currentRound;
   const currentDateLabel = interpolatedPoint
     ? DATE_LABEL_FORMATTER.format(new Date(interpolatedPoint.date))
     : "--";
@@ -762,7 +770,19 @@ export function MinerAnimationExperience({
   }, [activeData, roster]);
 
   const progressPercent =
-    totalSnapshots > 1
+    typeof displayRound === "number" &&
+    typeof startRound === "number" &&
+    typeof endRound === "number"
+      ? endRound > startRound
+        ? Math.min(
+            100,
+            Math.max(
+              0,
+              ((displayRound - startRound) / (endRound - startRound)) * 100
+            )
+          )
+        : 100
+      : totalSnapshots > 1
       ? Math.min(
           100,
           Math.max(
@@ -985,8 +1005,18 @@ export function MinerAnimationExperience({
               </label>
             </div>
           )}
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div
+            className={cn(
+              "flex flex-wrap items-start justify-between gap-4",
+              condensed && "lg:flex-nowrap"
+            )}
+          >
+            <div
+              className={cn(
+                "grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6",
+                condensed && "order-2 min-w-0 lg:order-2 lg:grid-cols-3 2xl:grid-cols-3"
+              )}
+            >
             {topMiners.length > 0 ? (
               topMiners.map((miner, index) => {
                 const imageSize = condensed ? 56 : 64;
@@ -1006,53 +1036,71 @@ export function MinerAnimationExperience({
                     : index === 2
                     ? "bg-orange-500 text-white"
                     : "bg-amber-100/80 text-amber-700";
-                const podiumLabel =
+                const rankTextClass =
                   index === 0
-                    ? "1st Place"
+                    ? "text-amber-500"
                     : index === 1
-                    ? "2nd Place"
+                    ? "text-slate-500"
                     : index === 2
-                    ? "3rd Place"
-                    : null;
+                    ? "text-orange-500"
+                    : "text-gray-300";
                 return (
                   <div
                     key={`top-five-${miner.id}`}
                     className={cn(
-                      "relative flex min-h-[122px] items-center gap-4 overflow-hidden rounded-xl border px-5 py-4 shadow-sm",
+                      "relative flex min-h-[122px] items-center justify-between gap-4 overflow-hidden rounded-xl border px-5 py-4 shadow-sm",
                       accentClass
                     )}
                   >
-                    {podiumLabel && (
-                      <div className="absolute right-3 top-3 rounded-full border border-white/60 bg-white/70 px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 backdrop-blur-sm">
-                        {podiumLabel}
-                      </div>
-                    )}
-                    <Image
-                      src={miner.image}
-                      alt={miner.name}
-                      width={imageSize}
-                      height={imageSize}
-                      className={cn(
-                        "z-20 rounded-full border border-white/80 shadow",
-                        index === 0 && "ring-4 ring-amber-400/65",
-                        index === 1 && "ring-4 ring-slate-400/55",
-                        index === 2 && "ring-4 ring-orange-400/55"
-                      )}
-                    />
-                    <div className="leading-tight text-black">
-                      <p className="text-sm font-semibold text-black">{miner.name}</p>
-                      <p className={cn(
-                        "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em]",
-                        rankBadgeClass
-                      )}>
-                        Rank #{miner.rank}
-                      </p>
-                      <div className="mt-1 grid gap-1 text-xs font-semibold text-black">
-                        <p>Round reward: {miner.reward.toFixed(2)}</p>
-                        <p>Season score: {miner.seasonScore.toFixed(3)}</p>
-                        <p>Top score: {miner.score.toFixed(2)}</p>
+                    <div className="flex min-w-0 items-center gap-4">
+                      <Image
+                        src={miner.image}
+                        alt={miner.name}
+                        width={imageSize}
+                        height={imageSize}
+                        className={cn(
+                          "z-20 rounded-full border border-white/80 shadow",
+                          index === 0 && "ring-4 ring-amber-400/65",
+                          index === 1 && "ring-4 ring-slate-400/55",
+                          index === 2 && "ring-4 ring-orange-400/55"
+                        )}
+                      />
+                      <div className="min-w-0 leading-tight text-black">
+                        <p className="truncate text-sm font-semibold text-black">{miner.name}</p>
+                        {index > 2 && (
+                          <p className={cn(
+                            "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em]",
+                            rankBadgeClass
+                          )}>
+                            Rank #{miner.rank}
+                          </p>
+                        )}
+                        <div className="mt-1 grid gap-1 text-xs font-semibold text-black">
+                          <p>Score: {miner.score.toFixed(2)}</p>
+                        </div>
                       </div>
                     </div>
+                    {index <= 2 ? (
+                      <div className="shrink-0 text-right leading-none">
+                        <p
+                          className={cn(
+                            "text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500",
+                            condensed && "text-[10px]"
+                          )}
+                        >
+                          Rank
+                        </p>
+                        <p
+                          className={cn(
+                            "mt-1 text-4xl font-black",
+                            condensed ? "text-3xl" : "text-4xl",
+                            rankTextClass
+                          )}
+                        >
+                          #{miner.rank}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 );
               })
@@ -1062,11 +1110,23 @@ export function MinerAnimationExperience({
               </div>
             )}
           </div>
-          <div className="flex flex-col items-end gap-2 text-right">
-            <div className="flex flex-col items-end">
+          <div
+            className={cn(
+              "flex flex-col gap-2",
+              condensed
+                ? "order-1 min-w-[180px] text-left lg:order-1"
+                : "items-end text-right"
+            )}
+          >
+            <div className={cn("flex flex-col", condensed ? "items-start" : "items-end")}>
               {seasonLeader && !condensed && (
                 <p className="mb-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-700">
                   <PiTrophyFill className="h-3.5 w-3.5" />
+                  {`Leader ${seasonLeader.name}`}
+                </p>
+              )}
+              {seasonLeader && condensed && (
+                <p className="mb-1 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-700">
                   {`Leader ${seasonLeader.name}`}
                 </p>
               )}
@@ -1204,10 +1264,10 @@ export function MinerAnimationExperience({
                   type="button"
                   onClick={() => setSpeed(preset.value)}
                   className={cn(
-                    "rounded-full border px-3 py-1 transition",
+                    "rounded-full border px-3 py-1 text-black transition",
                     speed === preset.value
-                      ? "border-gray-300 bg-white text-gray-900 shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                      ? "border-gray-300 bg-white text-black shadow-sm"
+                      : "border-gray-200 bg-white text-black hover:border-gray-300 hover:text-black"
                   )}
                 >
                   {preset.label}
@@ -1226,13 +1286,15 @@ export function MinerAnimationExperience({
           </div>
           <div className="mt-2 flex items-center justify-between text-xs font-semibold text-gray-500">
             <span>
-              {Math.round(progress)} / {totalSnapshots} rounds
+              {typeof displayRound === "number" && typeof endRound === "number"
+                ? `Round ${formatRoundNumber(displayRound)} / ${formatRoundNumber(endRound)}`
+                : `${Math.round(progress)} / ${totalSnapshots} rounds`}
             </span>
             <span>{progressPercent.toFixed(0)}% complete</span>
           </div>
         </div>
 
-        {!condensed && displaySnapshot.length > 0 && (
+        {!condensed && showTable && displaySnapshot.length > 0 && (
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
               <thead>

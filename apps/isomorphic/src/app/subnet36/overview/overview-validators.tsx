@@ -271,7 +271,7 @@ export default function OverviewValidators({
 
           return validatorLink ? (
             <Link key={`validator-${validator.id}`} href={validatorLink}>
-              <div className="group relative flex h-full min-h-[360px] sm:min-h-[420px] flex-col overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 cursor-pointer">
+              <div className="group relative z-0 flex h-full min-h-[360px] sm:min-h-[420px] flex-col overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 dark:bg-gray-50/50 shadow-[0_18px_55px_rgba(2,6,23,0.34)] transition-all duration-300 hover:z-20 hover:-translate-y-3 hover:scale-[1.05] hover:border-cyan-400/35 hover:shadow-[0_28px_85px_rgba(2,6,23,0.48)] cursor-pointer">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent opacity-70" />
                 {/* Header - Validator Info & Status */}
                 <div className="border-b border-white/10 bg-white/[0.03] p-4">
@@ -326,7 +326,7 @@ export default function OverviewValidators({
                           : "__";
 
                       const isRoundLabel = /^round\s+\d+$/i.test(rawCurrentTask);
-                      const validatorPrompt = latestPrompts[validator.name] ?? null;
+                      const validatorPrompt = validator.name ? latestPrompts[validator.name] ?? null : null;
                       const liveText = showCurrentTask && !isRoundLabel
                         ? validator.currentTask
                         : validatorPrompt
@@ -510,7 +510,7 @@ export default function OverviewValidators({
                   </div>
                   {(() => {
                     const isRoundLbl = /^round\s+\d+$/i.test(rawCurrentTask);
-                    const vPrompt = latestPrompts[validator.name] ?? null;
+                    const vPrompt = validator.name ? latestPrompts[validator.name] ?? null : null;
                     const text = showCurrentTask && !isRoundLbl
                       ? validator.currentTask
                       : vPrompt

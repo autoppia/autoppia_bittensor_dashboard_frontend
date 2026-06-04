@@ -22,6 +22,8 @@ export interface TaskData {
   updatedAt: string;
   error?: string;
   actions: TaskAction[];
+  trajectory?: TaskAction[];
+  replayExecutionHistory?: any[];
   screenshots?: string[];
   logs?: string[];
   metadata?: {
@@ -85,6 +87,8 @@ export interface TaskDetails {
   updatedAt: string;
   error?: string;
   actions: TaskAction[];
+  trajectory?: TaskAction[];
+  replayExecutionHistory?: any[];
   screenshots: string[];
   logs: string[];
   relationships: TaskRelationships;
@@ -188,6 +192,7 @@ export interface TaskSolutionSummary {
   minerUid?: number | null;
   validatorUid: number;
   actionsCount: number;
+  trajectoryToolsCount?: number;
   webAgentId?: string | null;
   hasRecording: boolean;
 }

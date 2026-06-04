@@ -45,6 +45,8 @@ export class TasksRepository {
    */
   async getEvaluationComplete(evaluationId: string): Promise<{
     actions: any[];
+    trajectory?: any[];
+    replayExecutionHistory?: any[];
     screenshots: any[];
     task_details: TaskDetails;
     result: {
@@ -68,6 +70,8 @@ export class TasksRepository {
       success: boolean;
       data: {
         actions: any[];
+        trajectory?: any[];
+        replayExecutionHistory?: any[];
         screenshots: any[];
         task_details: TaskDetails;
         result: {
@@ -200,8 +204,15 @@ export class TasksRepository {
         },
       };
 
+      const fallbackTrajectory = Array.isArray(evaluation?.trajectory)
+        ? evaluation.trajectory
+        : Array.isArray(evaluation?.actions)
+          ? evaluation.actions
+          : [];
       return {
-        actions: Array.isArray(evaluation?.actions) ? evaluation.actions : [],
+        actions: fallbackTrajectory,
+        trajectory: fallbackTrajectory,
+        replayExecutionHistory: Array.isArray(evaluation?.replayExecutionHistory) ? evaluation.replayExecutionHistory : [],
         screenshots: Array.isArray(evaluation?.screenshots) ? evaluation.screenshots : [],
         task_details,
         result: {
@@ -232,7 +243,17 @@ export class TasksRepository {
         },
       };
     }
-    return payload;
+    const trajectory = Array.isArray(payload?.trajectory)
+      ? payload.trajectory
+      : Array.isArray(payload?.actions)
+        ? payload.actions
+        : [];
+    return {
+      ...payload,
+      actions: trajectory,
+      trajectory,
+      replayExecutionHistory: Array.isArray(payload?.replayExecutionHistory) ? payload.replayExecutionHistory : [],
+    };
   }
 
   /**
