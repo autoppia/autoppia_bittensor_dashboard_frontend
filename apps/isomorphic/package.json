@@ -94,7 +94,7 @@
     "react-svg-worldmap": "2.0.0-alpha.16",
     "react-to-print": "^3.0.5",
     "react-use": "^17.6.0",
-    "recharts": "^2.15.1",
+    "recharts": "^3.8.1",
     "resend": "6.10.0",
     "rizzui": "^1.0.1",
     "sharp": "^0.33.5",
