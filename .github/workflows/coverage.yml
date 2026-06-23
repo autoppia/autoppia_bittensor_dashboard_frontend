@@ -19,7 +19,7 @@ jobs:
       app_paths: ${{ steps.discover-apps.outputs.app_paths }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Discover apps with test/coverage scripts
         id: discover-apps
@@ -63,7 +63,7 @@ jobs:
         working-directory: ${{ matrix.app }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
